@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -27,10 +26,10 @@ public class RecoveryJobGetCommandTests : CommandUnitTestsBase<RecoveryJobGetCom
     public async Task ExecuteAsync_ListsRecoveryJobs_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "job1"), new("id2", "job2") };
-        Service.ListRecoveryJobsAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryJobsAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobGetCommandResult);
         Assert.NotNull(result.RecoveryJobs);
@@ -40,10 +39,10 @@ public class RecoveryJobGetCommandTests : CommandUnitTestsBase<RecoveryJobGetCom
     [Fact]
     public async Task ExecuteAsync_GetsRecoveryJob_WhenNameProvided()
     {
-        Service.GetRecoveryJobAsync(ServiceGroup, RecoveryPlan, "job1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetRecoveryJobAsync(ServiceGroup, RecoveryPlan, "job1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Element("job1"));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan, "--name", "job1");
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan, "--name", "job1");
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.RecoveryJobGetCommandResult);
         Assert.Null(result.RecoveryJobs);
@@ -54,10 +53,10 @@ public class RecoveryJobGetCommandTests : CommandUnitTestsBase<RecoveryJobGetCom
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListRecoveryJobsAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListRecoveryJobsAsync(ServiceGroup, RecoveryPlan, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recovery-plan", RecoveryPlan);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--recoveryplan", RecoveryPlan);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);

@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.EventHub;
         Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub
         will be permanently deleted.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
                 options.ResourceGroup,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

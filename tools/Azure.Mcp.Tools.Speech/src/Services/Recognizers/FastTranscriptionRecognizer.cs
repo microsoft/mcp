@@ -7,10 +7,8 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
@@ -18,15 +16,10 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for Fast Transcription using Azure AI Services Speech REST API.
 /// </summary>
-public class FastTranscriptionRecognizer(
-    ITenantService tenantService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<FastTranscriptionRecognizer> logger)
-    : BaseAzureService(tenantService), IFastTranscriptionRecognizer
+public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<FastTranscriptionRecognizer> logger)
+    : BaseAzureService(azureService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
-    private readonly ITenantService _tenantService = tenantService;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc/>
     public async Task<FastTranscriptionResult> RecognizeAsync(
@@ -35,10 +28,11 @@ public class FastTranscriptionRecognizer(
         string? language = null,
         string[]? phrases = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
+        Uri apiUrl = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(AzureService,
+            endpoint);
 
         // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
         filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
@@ -55,11 +49,8 @@ public class FastTranscriptionRecognizer(
             throw new InvalidOperationException($"Audio file is too large ({fileInfo.Length / (1024.0 * 1024):F1} MB). Fast Transcription supports files up to 300 MB.");
         }
 
-        // Apply retry policy configuration
-        var maxRetries = retryPolicy?.MaxRetries ?? 3;
-        var delaySeconds = retryPolicy?.DelaySeconds ?? 1.0;
-        var maxDelaySeconds = retryPolicy?.MaxDelaySeconds ?? 30.0;
-        var isExponentialBackoff = retryPolicy?.Mode == RetryMode.Exponential;
+        const int maxRetries = 3;
+        const double delaySeconds = 1.0;
 
         Exception? lastException = null;
 
@@ -68,21 +59,11 @@ public class FastTranscriptionRecognizer(
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential(cancellationToken);
+                var credential = await GetCredential(null, cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
-                // Build the Fast Transcription API URL
-                var apiVersion = "2024-11-15";
-                var baseUri = new UriBuilder(endpoint.TrimEnd('/'))
-                {
-                    Scheme = "https",
-                    Port = -1 // Use default port for scheme
-                }.Uri;
-
-                var apiPath = $"speechtotext/transcriptions:transcribe?api-version={apiVersion}";
-                var apiUrl = new Uri(baseUri, apiPath);
                 _logger.LogDebug("Fast Transcription API URL: {ApiUrl}", apiUrl);
 
                 // Create the request definition
@@ -129,7 +110,7 @@ public class FastTranscriptionRecognizer(
                 };
 
                 // Make the request using HttpClient from factory
-                var client = _httpClientFactory.CreateClient();
+                var client = AzureService.GetClient();
                 var response = await client.SendAsync(requestMessage, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -171,12 +152,8 @@ public class FastTranscriptionRecognizer(
                 // Calculate delay for next attempt
                 if (attempt < maxRetries)
                 {
-                    var delay = isExponentialBackoff
-                        ? Math.Min(delaySeconds * Math.Pow(2, attempt), maxDelaySeconds)
-                        : delaySeconds;
-
-                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
-                    await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
+                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delaySeconds, attempt + 2);
+                    await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
                 }
             }
             catch (Exception ex)
@@ -253,7 +230,7 @@ public class FastTranscriptionRecognizer(
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

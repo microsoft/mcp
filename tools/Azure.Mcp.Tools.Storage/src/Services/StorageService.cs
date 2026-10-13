@@ -6,30 +6,20 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Data.Tables;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services.Models;
 using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public sealed class StorageService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<StorageService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+public sealed class StorageService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
     {
         "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
@@ -43,7 +33,6 @@ public sealed class StorageService(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -57,7 +46,6 @@ public sealed class StorageService(
                 "Microsoft.Storage/storageAccounts",
                 resourceGroup,
                 subscription,
-                retryPolicy,
                 ConvertToAccountInfoModel,
                 tenant: tenant,
                 cancellationToken: cancellationToken);
@@ -66,10 +54,9 @@ public sealed class StorageService(
         {
             var storageAccount = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
-                resourceGroup: resourceGroup,
-                subscription: subscription,
-                retryPolicy: retryPolicy,
-                converter: ConvertToAccountInfoModel,
+                resourceGroup,
+                subscription,
+                ConvertToAccountInfoModel,
                 additionalFilter: $"name =~ '{EscapeKqlString(account)}'",
                 tenant: tenant,
                 cancellationToken: cancellationToken) ?? throw new KeyNotFoundException($"Storage account '{account}' not found in subscription '{subscription}'.");
@@ -87,7 +74,7 @@ public sealed class StorageService(
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
+        bool allowSharedKeyAccess = false,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -96,14 +83,22 @@ public sealed class StorageService(
             (nameof(location), location),
             (nameof(subscription), subscription));
 
+        // Fail fast on invalid account names (3-24 lowercase letters/numbers) instead of relying on the
+        // ARM service to reject the request, which surfaces a less specific error.
+        ValidateStorageAccountName(account);
+
         // Create ArmClient for deployments
-        ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.Storage/storageAccounts", "2024-01-01", tenant, retryPolicy, cancellationToken);
+        ArmClient armClient = await CreateArmClientWithApiVersionAsync(
+            "Microsoft.Storage/storageAccounts",
+            "2024-01-01",
+            tenant: tenant,
+            cancellationToken: cancellationToken);
 
         // Resolve subscription display name to GUID (consistent with all other storage operations).
         // Skip resolution when subscription is already a GUID to avoid an unnecessary round-trip.
-        var subscriptionId = _subscriptionService.IsSubscriptionId(subscription)
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
-            : (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)).Data.SubscriptionId;
+            : (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
         // Prepare data
         ResourceIdentifier accountId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
@@ -121,6 +116,7 @@ public sealed class StorageService(
                 AccessTier = string.IsNullOrEmpty(accessTier) ? "Hot" : ParseAccessTier(accessTier),
                 EnableHttpsTrafficOnly = true,
                 AllowBlobPublicAccess = false,
+                AllowSharedKeyAccess = allowSharedKeyAccess,
                 IsHnsEnabled = enableHierarchicalNamespace ?? false,
                 MinimumTlsVersion = "TLS1_2"
             }
@@ -165,24 +161,24 @@ public sealed class StorageService(
         string account,
         string container,
         string? blob,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
-            (nameof(container), container),
-            (nameof(subscription), subscription));
+            (nameof(container), container));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         var blobInfos = new List<Storage.Models.BlobInfo>();
         if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
+            await foreach (var blobItem in containerClient.GetBlobsAsync(new()
+            {
+                Prefix = prefix
+            }, cancellationToken: cancellationToken))
             {
                 blobInfos.Add(new(
                     blobItem.Name,
@@ -242,15 +238,13 @@ public sealed class StorageService(
     public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
-        string subscription,
         string? prefix = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(account), account));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containers = new List<ContainerInfo>();
 
         if (string.IsNullOrEmpty(container))
@@ -302,17 +296,14 @@ public sealed class StorageService(
     public async Task<ContainerInfo> CreateContainer(
         string account,
         string container,
-        string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
-            (nameof(container), container),
-            (nameof(subscription), subscription));
+            (nameof(container), container));
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         await containerClient.CreateAsync(PublicAccessType.None, cancellationToken: cancellationToken);
@@ -337,13 +328,13 @@ public sealed class StorageService(
     private async Task<BlobServiceClient> CreateBlobServiceClient(
         string account,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var uri = GetBlobEndpoint(account);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
-        return new BlobServiceClient(new(uri), await GetCredential(tenant, cancellationToken), options);
+        Uri uri = ValidateBlobEndpoint(AzureService,
+            new Uri(GetBlobEndpoint(account)));
+        var options = AddDefaultPolicies(new BlobClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
+        return new BlobServiceClient(uri, await GetCredential(tenant, cancellationToken), options);
     }
 
     private static string ParseStorageSkuName(string sku)
@@ -376,24 +367,21 @@ public sealed class StorageService(
         string container,
         string blob,
         string localFilePath,
-        string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(account), account),
             (nameof(container), container),
             (nameof(blob), blob),
-            (nameof(localFilePath), localFilePath),
-            (nameof(subscription), subscription));
+            (nameof(localFilePath), localFilePath));
 
         if (!File.Exists(localFilePath))
         {
             throw new FileNotFoundException($"Local file not found: {localFilePath}");
         }
 
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy, cancellationToken);
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
         var blobClient = blobContainerClient.GetBlobClient(blob);
 
@@ -431,34 +419,29 @@ public sealed class StorageService(
 
     private async Task<TableServiceClient> CreateTableServiceClient(
         string account,
-        string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
-        var defaultUri = GetTableEndpoint(account);
-        return new TableServiceClient(new(defaultUri), await GetCredential(tenant, cancellationToken), options);
+        var options = AddDefaultPolicies(new TableClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
+        Uri defaultUri = ValidateTableEndpoint(AzureService,
+            new Uri(GetTableEndpoint(account)));
+        return new TableServiceClient(defaultUri, await GetCredential(tenant, cancellationToken), options);
     }
 
     public async Task<List<string>> ListTables(
         string account,
-        string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(account), account));
 
         var tables = new List<string>();
 
         // First attempt with requested auth method
         var tableServiceClient = await CreateTableServiceClient(
             account,
-            subscription,
             tenant,
-            retryPolicy,
             cancellationToken);
 
         await foreach (var table in tableServiceClient.QueryAsync(cancellationToken: cancellationToken))
@@ -495,12 +478,16 @@ public sealed class StorageService(
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return _tenantService.CloudConfiguration.CloudType switch
+        // These suffixes must stay in sync with the "storage-blob" allow-list in
+        // EndpointValidator.AllowLists.cs; otherwise ValidateBlobEndpoint rejects the constructed endpoint.
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.blob.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.blob.core.chinacloudapi.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.blob.core.usgovcloudapi.net",
-            _ => $"https://{account}.blob.core.windows.net"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for Azure Storage endpoints. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
     }
 
@@ -508,12 +495,44 @@ public sealed class StorageService(
     {
         account = account.ToLowerInvariant();
         ValidateStorageAccountName(account);
-        return _tenantService.CloudConfiguration.CloudType switch
+        // These suffixes must stay in sync with the "storage-table" allow-list in
+        // EndpointValidator.AllowLists.cs; otherwise ValidateTableEndpoint rejects the constructed endpoint.
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{account}.table.core.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{account}.table.core.chinacloudapi.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{account}.table.core.usgovcloudapi.net",
-            _ => $"https://{account}.table.core.windows.net"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported for Azure Storage endpoints. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
+    }
+
+    /// <summary>
+    /// Validates that the given Azure Storage blob endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The URI of the blob service endpoint to validate.</param>
+    /// <returns>The validated URI of the blob service endpoint.</returns>
+    internal static Uri ValidateBlobEndpoint(IAzureService azureService, Uri endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "storage-blob");
+        return endpoint;
+    }
+
+    /// <summary>
+    /// Validates that the given Azure Storage table endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="endpoint">The URI of the table service endpoint to validate.</param>
+    /// <returns>The validated URI of the table service endpoint.</returns>
+    internal static Uri ValidateTableEndpoint(IAzureService azureService, Uri endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "storage-table");
+        return endpoint;
     }
 }

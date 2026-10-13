@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,8 +43,7 @@ public sealed class VisualStudioToolNameTests
         var serviceCollection = new ServiceCollection()
             .AddLogging()
             .AddSingleton<ITelemetryService, NoopTelemetryService>()
-            .AddSingleton(Substitute.For<ISubscriptionService>())
-            .AddSingleton(Substitute.For<Core.Services.Azure.Tenant.ITenantService>())
+            .AddSingleton(Substitute.For<IAzureService>())
             .AddSingleton(Substitute.For<IHttpClientFactory>())
             .AddSingleton(Substitute.For<IDateTimeProvider>())
             .AddSingleton(Substitute.For<IExternalProcessService>())

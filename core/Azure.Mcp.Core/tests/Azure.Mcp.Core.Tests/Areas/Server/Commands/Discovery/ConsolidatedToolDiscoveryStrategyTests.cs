@@ -3,8 +3,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
-using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
@@ -15,13 +15,12 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 public class ConsolidatedToolDiscoveryStrategyTests
 {
     private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
-        ICommandFactory? commandFactory = null,
-        ServerStartOptions? options = null,
-        string? entryPoint = null)
+        ServerRuntimeConfiguration? configuration = null,
+        ICommandFactory? commandFactory = null)
     {
-        var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
+        ICommandFactory factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServerStartOptions());
+        var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
             Name = "Test Server",
@@ -38,12 +37,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
 
         ResourceConsolidatedToolDefinitionProvider definitionProvider = new(providerLogger, serverAssembly, "consolidated-tools.json");
 
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, startOptions, configurationOptions, logger);
-        if (entryPoint != null)
-        {
-            strategy.EntryPoint = entryPoint;
-        }
-        return strategy;
+        return new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, definitionProvider, runtimeConfiguration, configurationOptions, logger);
     }
 
     [Fact]
@@ -75,11 +69,28 @@ public class ConsolidatedToolDiscoveryStrategyTests
     }
 
     [Fact]
+    public void CreateConsolidatedCommandFactory_PreservesOriginalRegistrations()
+    {
+        ICommandFactory original = CommandFactoryHelpers.CreateCommandFactory();
+        ConsolidatedToolDiscoveryStrategy strategy = CreateStrategy(commandFactory: original);
+        ICommandFactory consolidated = strategy.CreateConsolidatedCommandFactory();
+
+        Assert.NotEmpty(consolidated.AllCommands);
+        foreach ((string routingName, CommandRegistration registration) in consolidated.AllCommands)
+        {
+            string displayedArea = Assert.IsType<string>(consolidated.GetServiceArea(routingName));
+            string originalName = routingName[(displayedArea.Length + 1)..];
+            Assert.Same(original.FindCommandRegistration(originalName), registration);
+            Assert.Equal(original.GetServiceArea(originalName), registration.ToolNamespaceName);
+        }
+    }
+
+    [Fact]
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServerStartOptions { Namespace = ["storage"] };
-        var strategy = CreateStrategy(options: options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = ["storage"] };
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();
@@ -94,8 +105,8 @@ public class ConsolidatedToolDiscoveryStrategyTests
     public void CreateConsolidatedCommandFactory_WithReadOnlyFilter_FiltersCommands()
     {
         // Arrange
-        var options = new ServerStartOptions { ReadOnly = true };
-        var strategy = CreateStrategy(options: options);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();
@@ -105,15 +116,15 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var allCommands = factory.AllCommands;
         Assert.NotEmpty(allCommands);
         // All commands should be read-only
-        Assert.All(allCommands.Values, cmd => Assert.True(cmd.Metadata.ReadOnly));
+        Assert.All(allCommands.Values, registration => Assert.True(registration.Command.Metadata.ReadOnly));
     }
 
     [Fact]
     public void CreateConsolidatedCommandFactory_HandlesEmptyNamespaceFilter()
     {
         // Arrange
-        var options = new ServerStartOptions { Namespace = [] };
-        var strategy = CreateStrategy(options: options);
+        var configuration = new ServerRuntimeConfiguration { Namespace = [] };
+        var strategy = CreateStrategy(configuration: configuration);
 
         // Act
         var factory = strategy.CreateConsolidatedCommandFactory();

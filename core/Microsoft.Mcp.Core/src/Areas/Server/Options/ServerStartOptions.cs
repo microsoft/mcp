@@ -29,8 +29,8 @@ public sealed class ServerStartOptions
     /// Gets or sets the mode mode for the server.
     /// Defaults to 'namespace' mode which exposes one tool per namespace.
     /// </summary>
-    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = "namespace")]
-    public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
+    [Option(Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.", DefaultValue = ModeTypes.Default)]
+    public string? Mode { get; set; } = ModeTypes.Default;
 
     /// <summary>
     /// Gets or sets the specific tool names to expose.
@@ -66,6 +66,15 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.", DefaultValue = false)]
     public bool DangerouslyDisableElicitation { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the tool namespaces for which SSRF protections will be disabled.
+    /// The special value <c>ALL</c> represents every tool namespace.
+    /// </summary>
+    [Option(
+        Name = "dangerously-disable-ssrf-protections-by-namespace",
+        Description = "Dangerously disables SSRF protections for specified tool namespaces. Repeat this option to include multiple namespaces, or specify ALL to cover every namespace.")]
+    public string[]? DangerouslyDisableSsrfProtectionsByNamespace { get; set; } = null;
 
     /// <summary>
     /// Gets or sets the outgoing authentication strategy for requests.
@@ -108,4 +117,17 @@ public sealed class ServerStartOptions
     /// </summary>
     [Option(Description = "Disable caching of resource responses, requiring repeated requests to fetch fresh data each time.", DefaultValue = false)]
     public bool DisableCaching { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets how tools advertise and return structured output.
+    /// A <see langword="null"/> value preserves content-only responses.
+    /// </summary>
+    [Option(Description = "Enable structured output using 'duplicated' to retain complete content or 'compact' to return concise content. Both modes return complete structuredContent.")]
+    public StructuredOutputMode? StructuredOutputMode { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether proxy tools that are proxied from external sources configured by the server's /Resources/registry.json are disabled.
+    /// </summary>
+    [Option(Description = "Disable tools that are proxied from external sources configured by the server's /Resources/registry.json.", DefaultValue = false)]
+    public bool DisableProxyTools { get; set; } = false;
 }

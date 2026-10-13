@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob;
 
-public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploadCommand, IStorageService>
+public class BlobUploadCommandTests : CommandUnitTestsBase<BlobUploadCommand, IStorageService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,13 +21,13 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
         Assert.Equal("upload", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 
     [Fact]
     public async Task ExecuteAsync_UploadsBlob_WhenValidParametersProvided()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
         var container = "testcontainer";
         var blob = "testblob.txt";
@@ -41,15 +40,12 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
             Arg.Is(container),
             Arg.Is(blob),
             Arg.Is(localFilePath),
-            Arg.Is(subscription),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", subscription,
             "--account", account,
             "--container", container,
             "--blob", blob,
@@ -73,15 +69,12 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123",
             "--account", "testaccount",
             "--container", "testcontainer",
             "--blob", "testblob",
@@ -94,12 +87,11 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
     }
 
     [Theory]
-    [InlineData("--subscription sub123 --account acct --container cont --blob b --local-file-path /f", true)]
-    [InlineData("--account acct --container cont --blob b --local-file-path /f", false)] // Missing subscription
-    [InlineData("--subscription sub123 --container cont --blob b --local-file-path /f", false)] // Missing account
-    [InlineData("--subscription sub123 --account acct --blob b --local-file-path /f", false)] // Missing container
-    [InlineData("--subscription sub123 --account acct --container cont --local-file-path /f", false)] // Missing blob
-    [InlineData("--subscription sub123 --account acct --container cont --blob b", false)] // Missing local-file-path
+    [InlineData("--account acct --container cont --blob b --local-file-path /f", true)]
+    [InlineData("--container cont --blob b --local-file-path /f", false)] // Missing account
+    [InlineData("--account acct --blob b --local-file-path /f", false)] // Missing container
+    [InlineData("--account acct --container cont --local-file-path /f", false)] // Missing blob
+    [InlineData("--account acct --container cont --blob b", false)] // Missing local-file-path
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -113,9 +105,7 @@ public class BlobUploadCommandTests : SubscriptionCommandUnitTestsBase<BlobUploa
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }

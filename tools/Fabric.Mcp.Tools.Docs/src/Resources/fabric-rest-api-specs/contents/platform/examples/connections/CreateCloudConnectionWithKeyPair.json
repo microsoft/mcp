@@ -37,6 +37,7 @@
         "201": {
             "body": {
                 "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
+                "gatewayId": "8f72eea3-d989-4a5a-aeed-02b3aaa2ddd0",
                 "displayName": "ContosoCloudConnection",
                 "connectivityType": "ShareableCloud",
                 "connectionDetails": {

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     Name = "test",
     Title = "Test SRE Agent Connector",
     Description = "Test a connector and list the tools it exposes.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,

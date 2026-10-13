@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vm;
     Name = "get",
     Title = "Get Virtual Machine(s)",
     Description = "List or get all Azure Virtual Machines (VMs) in a subscription, or query VMs in a specific resource group. Show all VMs or retrieve a specific VM by name. Returns read-only VM details including name, location, VM size, provisioning state, OS type, and network interfaces. Use --instance-view to query and check the current runtime status and power state of a VM along with provisioning state. This is a read-only inspection and inventory tool for viewing VM configuration, properties, and runtime status.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -62,7 +63,6 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.ResourceGroup!,
                         options.Subscription!,
                         options.Tenant,
-                        options.RetryPolicy,
                         cancellationToken);
 
                     context.Response.Results = ResponseResult.Create(
@@ -76,7 +76,6 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                         options.ResourceGroup!,
                         options.Subscription!,
                         options.Tenant,
-                        options.RetryPolicy,
                         cancellationToken);
 
                     context.Response.Results = ResponseResult.Create(new(vm, null, null), ComputeJsonContext.Default.VmGetResult);
@@ -89,7 +88,6 @@ public sealed class VmGetCommand(ILogger<VmGetCommand> logger, IComputeService c
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, null, vms), ComputeJsonContext.Default.VmGetResult);

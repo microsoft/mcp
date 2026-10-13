@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -43,7 +42,6 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedItems);
 
@@ -78,7 +76,6 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedItem);
 
@@ -105,7 +102,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         var resourceGroup = "myRg";
 
         Service.ListProtectedItemsAsync(
-            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is(vault), Arg.Is(resourceGroup), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
@@ -125,7 +122,7 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     {
         // Arrange
         Service.ListProtectedItemsAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -140,11 +137,35 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     }
 
     [Fact]
+    public async Task ExecuteAsync_SurfacesTruncation_WhenListingIsIncomplete()
+    {
+        // A deserialization failure that truncates the listing must not be reported as an empty
+        // success; the command surfaces the descriptive error from the service.
+        Service.ListProtectedItemsAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(
+                "Listing protected items in vault 'v' is incomplete: 0 item(s) were returned before a backup " +
+                "instance repeatedly failed to deserialize (commonly caused by an empty or malformed resourceGroupId " +
+                "on the instance), so the remaining instances could not be enumerated."));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg");
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("incomplete", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("resourceGroupId", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
         Service.GetProtectedItemAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("nonexistent"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Item not found"));
 
         // Act
@@ -168,11 +189,11 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         if (shouldSucceed)
         {
             Service.ListProtectedItemsAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns([]);
 
             Service.GetProtectedItemAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("item1"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new ProtectedItemInfo("id", "item1", "rsv", "Protected", "VM", "/sub/vm", "pol", null, null)));
         }
 

@@ -1,23 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
 public class SpeechService(
-    ITenantService tenantService,
+    IAzureService azureService,
     ILogger<SpeechService> logger,
     IFastTranscriptionRecognizer fastTranscriptionRecognizer,
     IRealtimeTranscriptionRecognizer realtimeTranscriptionRecognizer,
     IRealtimeTtsSynthesizer speechSynthesizer)
-    : BaseAzureService(tenantService), ISpeechService
+    : BaseAzureService(azureService), ISpeechService
 {
     private readonly ILogger<SpeechService> _logger = logger;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer = fastTranscriptionRecognizer;
@@ -33,7 +32,6 @@ public class SpeechService(
     /// <param name="phrases">Optional phrases to improve recognition accuracy (ignored for Fast Transcription)</param>
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
     /// <returns>Continuous recognition result containing full text and individual segments</returns>
     public async Task<SpeechRecognitionResult> RecognizeSpeechFromFile(
@@ -43,7 +41,6 @@ public class SpeechService(
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
@@ -65,12 +62,13 @@ public class SpeechService(
                 try
                 {
                     var fastResult = await _fastTranscriptionRecognizer.RecognizeAsync(
-                        endpoint, filePath, locale, phrases, profanity, retryPolicy, cancellationToken);
+                        endpoint, filePath, locale, phrases, profanity, cancellationToken);
 
                     // Convert to unified result
                     return SpeechRecognitionResult.FromFastTranscriptionResult(fastResult);
                 }
-                catch (Exception ex)
+                // Security validation failures are terminal; switching recognizers must not retry rejected input.
+                catch (Exception ex) when (ex is not SecurityException)
                 {
                     _logger.LogWarning(ex, "Fast Transcription failed for language '{Language}', falling back to Realtime Transcription", language);
                     // Fall through to use Realtime Transcription
@@ -80,7 +78,7 @@ public class SpeechService(
             // Use Realtime Transcription as fallback or primary choice
             _logger.LogInformation("Using Realtime Transcription for language '{Language}' with file '{FilePath}'", language, filePath);
             var realtimeResult = await _realtimeTranscriptionRecognizer.RecognizeAsync(
-                endpoint, filePath, locale, phrases, format, profanity, retryPolicy, cancellationToken);
+                endpoint, filePath, locale, phrases, format, profanity, cancellationToken);
 
             // Convert to unified result
             return SpeechRecognitionResult.FromRealtimeResult(realtimeResult);
@@ -103,7 +101,6 @@ public class SpeechService(
     /// <param name="voice">Voice name to use (e.g., en-US-JennyNeural). If not specified, default voice for language is used</param>
     /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
     /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
     /// <returns>Synthesis result with file information</returns>
     public async Task<SynthesisResult> SynthesizeSpeechToFile(
@@ -114,7 +111,6 @@ public class SpeechService(
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         return await _speechSynthesizer.SynthesizeToFileAsync(
@@ -125,7 +121,6 @@ public class SpeechService(
             voice,
             format,
             endpointId,
-            retryPolicy,
             cancellationToken);
     }
 }

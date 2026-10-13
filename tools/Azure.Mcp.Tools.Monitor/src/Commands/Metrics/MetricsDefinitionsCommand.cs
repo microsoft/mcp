@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
     Name = "definitions",
     Title = "List Azure Monitor Metric Definitions",
     Description = "List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -45,7 +46,6 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
                 options.MetricNamespace,
                 options.SearchString,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             if (allResults?.Count > 0)

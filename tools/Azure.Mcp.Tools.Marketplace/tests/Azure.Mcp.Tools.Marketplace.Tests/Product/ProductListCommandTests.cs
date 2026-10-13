@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -54,7 +53,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
@@ -93,7 +91,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
@@ -137,7 +134,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = [] });
 
@@ -167,7 +163,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -207,7 +202,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 
@@ -260,7 +254,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(productsListResult);
 
@@ -305,7 +298,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(productsListResult);
 
@@ -344,7 +336,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
             Arg.Any<string?>(),
             Arg.Is(expand),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new ProductListResponseWithNextCursor { Items = expectedProducts });
 

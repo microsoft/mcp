@@ -7,7 +7,7 @@
             "definition": {
                 "parts": [
                     {
-                        "path": "OrgAppV1.json",
+                        "path": "definition.json",
                         "payload": "eyJleGVjdXRhYmxlRm..OWRmNDhhY2ZmZTgifQ==",
                         "payloadType": "InlineBase64"
                     },

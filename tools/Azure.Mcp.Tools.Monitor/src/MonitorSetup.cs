@@ -29,6 +29,7 @@ public class MonitorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMonitorService, MonitorService>();
+        services.AddSingleton<IMonitorLogSearchService, MonitorLogSearchService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
@@ -71,6 +72,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<SendBrownfieldAnalysisTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
+        services.AddSingleton<WorkspaceLogSearchCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
         services.AddSingleton<WorkspaceListCommand>();
@@ -82,6 +84,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<HealthModelGetCommand>();
 
         services.AddSingleton<MetricsQueryCommand>();
+        services.AddSingleton<MetricsBatchQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
 
         services.AddSingleton<ActivityLogListCommand>();
@@ -100,14 +103,13 @@ public class MonitorSetup : IAreaSetup
     {
         // Create Monitor command group
         var monitor = new CommandGroup(Name,
-            """
-            Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and metrics, listing
-            tables and table types, working with health models and entities, web tests, and orchestrating instrumentation
-            workflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace
-            and resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity
-            logs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor
-            observability workflows. Set learn=true to discover sub-commands.
-            """,
+            "Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and " +
+            "metrics, listing tables and table types, working with health models and entities, web tests, and " +
+            "orchestrating instrumentation workflows. Use this tool to list Log Analytics workspaces, tables, and " +
+            "table types; run KQL queries against workspace and resource logs; retrieve health for monitor entities; " +
+            "query metrics and metric definitions; inspect resource activity logs; manage availability web tests; " +
+            "and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor observability " +
+            "workflows. Set learn=true to discover sub-commands.",
             Title);
 
         // Create Monitor subgroups
@@ -131,6 +133,7 @@ public class MonitorSetup : IAreaSetup
 
         // Register Monitor commands
         workspaceLogs.AddCommand<WorkspaceLogQueryCommand>(serviceProvider);
+        workspaceLogs.AddCommand<WorkspaceLogSearchCommand>(serviceProvider);
 
         resourceLogs.AddCommand<ResourceLogQueryCommand>(serviceProvider);
 
@@ -151,6 +154,7 @@ public class MonitorSetup : IAreaSetup
         monitor.AddSubGroup(metrics);
 
         metrics.AddCommand<MetricsQueryCommand>(serviceProvider);
+        metrics.AddCommand<MetricsBatchQueryCommand>(serviceProvider);
         metrics.AddCommand<MetricsDefinitionsCommand>(serviceProvider);
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");

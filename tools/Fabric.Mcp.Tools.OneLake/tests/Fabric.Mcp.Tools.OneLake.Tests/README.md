@@ -113,7 +113,7 @@ The `OneLakePathTraversalTests` class validates the traversal guard in `OneLakeS
 
 - **Literal traversal** — paths containing `..` segments (e.g., `../../secret.txt`, `Files/../../other`)
 - **URL-encoded traversal** — percent-encoded variants (`%2e%2e`, `%2E%2E`) that would decode to `..` server-side
-- **Backslash variants** — Windows-style separators normalised before checking
+- **Backslash variants** — Windows-style separators normalized before checking
 - **Valid paths** — confirm that legitimate paths are not blocked and proceed to the HTTP layer
 
 Each method also has a corresponding command-level test that confirms the `ArgumentException` propagates correctly through the command handler.

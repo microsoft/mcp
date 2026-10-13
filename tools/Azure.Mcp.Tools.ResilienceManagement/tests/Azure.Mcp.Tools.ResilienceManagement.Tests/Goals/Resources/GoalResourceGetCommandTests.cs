@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -23,7 +22,7 @@ public class GoalResourceGetCommandTests : CommandUnitTestsBase<GoalResourceGetC
     public async Task ExecuteAsync_ListsGoalResources_WhenNameOmitted()
     {
         var expected = new List<ResourceSummary> { new("id1", "resource1"), new("id2", "resource2") };
-        Service.ListGoalResourcesAsync(ServiceGroup, GoalAssignment, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalResourcesAsync(ServiceGroup, GoalAssignment, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--goal-assignment", GoalAssignment);
@@ -38,7 +37,7 @@ public class GoalResourceGetCommandTests : CommandUnitTestsBase<GoalResourceGetC
     public async Task ExecuteAsync_GetsGoalResource_WhenNameProvided()
     {
         var expected = new GoalResourceInfo("id1", "resource1");
-        Service.GetGoalResourceAsync(ServiceGroup, GoalAssignment, "resource1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetGoalResourceAsync(ServiceGroup, GoalAssignment, "resource1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--goal-assignment", GoalAssignment, "--name", "resource1");
@@ -53,7 +52,7 @@ public class GoalResourceGetCommandTests : CommandUnitTestsBase<GoalResourceGetC
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        Service.ListGoalResourcesAsync(ServiceGroup, GoalAssignment, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListGoalResourcesAsync(ServiceGroup, GoalAssignment, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--goal-assignment", GoalAssignment);

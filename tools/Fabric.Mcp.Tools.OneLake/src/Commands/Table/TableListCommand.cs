@@ -13,9 +13,10 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Table;
 
 [CommandMetadata(
     Id = "7b1688e5-2a16-475d-8fd1-9bf3b0acf4f7",
-    Name = "list_tables",
+    Name = "list-tables",
     Title = "List OneLake Tables",
     Description = "Lists tables in OneLake. Use this when the user needs to see available tables.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,

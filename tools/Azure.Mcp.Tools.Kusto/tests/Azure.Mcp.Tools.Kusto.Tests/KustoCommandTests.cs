@@ -3,8 +3,10 @@
 
 using System.Text.Json;
 using Azure.Identity;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -21,7 +23,9 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
     private const string TestTableName = "ToDoList";
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private const string Sanitized = "Sanitized";
-    private readonly ServiceProvider _httpClientProvider = TestHttpClientFactoryProvider.Create(fixture);
+    private readonly ServiceProvider _serviceProvider = TestHttpClientFactoryProvider.Create(
+        fixture,
+        serviceCollection => serviceCollection.AddCommandContextAccessor().AddSingleton<IAzureService, AzureService>());
 
     public override List<BodyKeySanitizer> BodyKeySanitizers { get; } =
     [
@@ -75,7 +79,7 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
-        _httpClientProvider.Dispose();
+        _serviceProvider.Dispose();
     }
 
     #region Init
@@ -103,9 +107,9 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
                 });
             var clusterUri = clusterInfo.AssertProperty("cluster").AssertProperty("clusterUri").GetString();
 
-            var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+            var azureService = _serviceProvider.GetRequiredService<IAzureService>();
 
-            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientFactory);
+            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", azureService);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",

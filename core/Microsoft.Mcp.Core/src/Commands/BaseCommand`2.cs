@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
 using Microsoft.Identity.Client;
@@ -54,6 +55,16 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     public string Description { get; }
     public string Title { get; }
     public ToolMetadata Metadata { get; }
+
+    /// <summary>
+    /// Gets the source-generated <see cref="JsonTypeInfo{TResult}"/> for this command's result type.
+    /// Migrated commands override this so the server can advertise an MCP <c>outputSchema</c> and emit
+    /// <c>structuredContent</c>. Commands that have not been migrated return <see langword="null"/> and
+    /// simply advertise no output schema.
+    /// </summary>
+    public virtual JsonTypeInfo<TResult>? ResultTypeInfo => null;
+
+    JsonTypeInfo? IBaseCommand.ResultTypeInfo => ResultTypeInfo;
 
     public Command GetCommand() => _command;
 
@@ -103,11 +114,44 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             var errorMessage = string.Join('\n', validationResult.Errors);
             SetValidationError(context.Response, errorMessage, HttpStatusCode.BadRequest);
+            context.Response.TelemetryFailureMessage = validationResult.TelemetrySafeMessage;
+            CaptureTelemetryFailureMessage(context, context.Response);
             return context.Response!;
         }
 
         CommandResponse response = await ExecuteAsync(context, options, cancellationToken);
+        CaptureTelemetryFailureMessage(context, response);
         return response;
+    }
+
+    /// <summary>
+    /// Stores the command result on the response using <see cref="ResultTypeInfo"/> so it is serialized
+    /// with the same source-generated <see cref="JsonTypeInfo{TResult}"/> used to advertise the
+    /// <c>outputSchema</c>. Only call this from commands that override <see cref="ResultTypeInfo"/>.
+    /// </summary>
+    protected void SetResult(CommandContext context, TResult result)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var typeInfo = ResultTypeInfo
+            ?? throw new InvalidOperationException(
+                $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(ResultTypeInfo)}.");
+
+        context.Response.Results = ResponseResult.Create(result, typeInfo);
+    }
+
+    /// <summary>
+    /// Adds a command-provided, sanitized message to telemetry for failed responses.
+    /// </summary>
+    /// <param name="context">The command execution context containing the telemetry activity.</param>
+    /// <param name="response">The command response containing the optional telemetry message.</param>
+    private static void CaptureTelemetryFailureMessage(CommandContext context, CommandResponse response)
+    {
+        var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
+        if (isError && !string.IsNullOrWhiteSpace(response.TelemetryFailureMessage))
+        {
+            context.Activity?.SetTag(TagName.ToolFailureMessage, response.TelemetryFailureMessage);
+        }
     }
 
     protected virtual void HandleException(CommandContext context, Exception ex)
@@ -132,9 +176,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
                 response.Message = cve.Message;
             }
 
-            // Include the command validation exception message as it should be safe. Requires custom validators to
-            // exclude any sensitive information from their error messages.
-            context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
+            response.TelemetryFailureMessage = cve.TelemetrySafeMessage;
+            context.Activity?.SetTag(TagName.ExceptionMessage, cve.TelemetrySafeMessage);
             response.Results = null;
             return;
         }
@@ -215,6 +258,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = string.Join('\n', result.Errors);
+            commandResponse.TelemetryFailureMessage = result.TelemetrySafeMessage;
         }
 
         return result;

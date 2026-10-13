@@ -21,7 +21,7 @@ public class McpServerToolAttributeTests
         foreach (var (commandName, command) in commandFactory.AllCommands)
         {
             // Get the ExecuteAsync method
-            var executeAsyncMethod = command.GetType().GetMethod("ExecuteAsync");
+            var executeAsyncMethod = command.Command.GetType().GetMethod("ExecuteAsync");
 
             if (executeAsyncMethod == null)
                 continue;
@@ -32,7 +32,7 @@ public class McpServerToolAttributeTests
             if (mcpServerToolAttribute == null)
                 continue;
 
-            var commandTypeName = command.GetType().FullName;
+            var commandTypeName = command.Command.GetType().FullName;
 
             // Check 1: Title property must not be null or whitespace
             if (string.IsNullOrWhiteSpace(mcpServerToolAttribute.Title))

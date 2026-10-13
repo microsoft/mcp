@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
         description, and more. If a specific index name is not provided, the command will return details for all
         indexes.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -38,7 +39,6 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
             var indexes = await _searchService.GetIndexDetails(
                 options.Service,
                 options.Index,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);

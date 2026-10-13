@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.DeviceRegistry.Commands.Namespace;
         name, location, provisioning state, and UUID. If a resource group is specified, only namespaces within that
         resource group are returned. Otherwise, all namespaces in the subscription are listed.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -44,7 +45,6 @@ public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger, I
             var namespaces = await _deviceRegistryService.ListNamespacesAsync(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

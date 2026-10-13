@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -38,7 +37,6 @@ public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsB
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns([]);
         }
@@ -82,7 +80,6 @@ public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -109,7 +106,6 @@ public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException(expectedError));
 
@@ -139,7 +135,6 @@ public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthRequestFailedException(HttpStatusCode.Conflict, errorCode, errorMessage));
 
@@ -165,7 +160,6 @@ public class ServiceHealthEventsListCommandTests : SubscriptionCommandUnitTestsB
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException($"Could not find subscription with name {subscription}", "subscriptionName"));
 

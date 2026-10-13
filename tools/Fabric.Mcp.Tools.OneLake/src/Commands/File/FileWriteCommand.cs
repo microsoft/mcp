@@ -18,6 +18,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     Name = "write",
     Title = "Write OneLake File",
     Description = "Write content to a file in OneLake storage. Can write text content directly or upload from a local file.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     LocalRequired = false,
@@ -55,7 +56,7 @@ public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeS
 
         if (!string.IsNullOrWhiteSpace(options.LocalFilePath) && !System.IO.File.Exists(options.LocalFilePath))
         {
-            validationResult.Errors.Add($"Local file not found: {options.LocalFilePath}");
+            validationResult.AddError($"Local file not found: {options.LocalFilePath}", "Local file not found.");
         }
     }
 

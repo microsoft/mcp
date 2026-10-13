@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
         Requires a backup policy name via --policy. The operation is asynchronous;
         use 'azurebackup job get' to monitor the protection job progress.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -42,6 +43,12 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
     {
         base.ValidateOptions(options, validationResult);
 
+        DiskExclusionValidator.ValidateDiskExclusionOptions(
+            options.DiskListSetting,
+            options.DisksList,
+            options.ExcludeAllDataDisks,
+            validationResult);
+
         if (options.DatasourceType is null)
         {
             return;
@@ -50,10 +57,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         var value = options.DatasourceType.Trim();
         if (value.Length == 0)
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Unknown datasource type '{options.DatasourceType}'. " +
                 $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
-                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.",
+                "Invalid backup datasource type.");
             return;
         }
 
@@ -62,10 +70,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         if (!isRsv && !isDpp)
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Unknown datasource type '{options.DatasourceType}'. " +
                 $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}. " +
-                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+                $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.",
+                "Invalid backup datasource type.");
             return;
         }
 
@@ -74,15 +83,17 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
         {
             if (options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) && !isRsv)
             {
-                validationResult.Errors.Add(
+                validationResult.AddError(
                     $"Datasource type '{options.DatasourceType}' is not valid for RSV (Recovery Services) vaults. " +
-                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}.");
+                    $"RSV types: {string.Join(", ", RsvDatasourceRegistry.KnownTypeNames)}.",
+                    "Invalid backup datasource type.");
             }
             else if (options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase) && !isDpp)
             {
-                validationResult.Errors.Add(
+                validationResult.AddError(
                     $"Datasource type '{options.DatasourceType}' is not valid for DPP (Backup) vaults. " +
-                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.");
+                    $"DPP types: {string.Join(", ", DppDatasourceRegistry.KnownTypeNames)}.",
+                    "Invalid backup datasource type.");
             }
         }
     }
@@ -95,6 +106,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
 
         try
         {
+            var diskExclusion = DiskExclusionValidator.BuildDiskExclusionSpec(
+                options.DiskListSetting,
+                options.DisksList,
+                options.ExcludeAllDataDisks);
+
             var result = await _azureBackupService.ProtectItemAsync(
                 options.Vault,
                 options.ResourceGroup,
@@ -104,13 +120,11 @@ public sealed class ProtectedItemProtectCommand(ILogger<ProtectedItemProtectComm
                 options.VaultType,
                 options.Container,
                 options.DatasourceType,
-                options.AksIncludedNamespaces,
-                options.AksExcludedNamespaces,
                 options.AksLabelSelectors,
                 options.AksIncludeClusterScopeResources ? "true" : null,
                 options.AksSnapshotResourceGroup,
+                diskExclusion,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

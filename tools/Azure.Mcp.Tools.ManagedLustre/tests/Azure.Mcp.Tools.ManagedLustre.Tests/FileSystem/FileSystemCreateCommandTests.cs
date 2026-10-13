@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -74,7 +73,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
@@ -142,7 +140,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -186,7 +183,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -260,7 +256,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -304,7 +299,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null,
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -334,7 +328,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("error"));
 
@@ -380,7 +373,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(409, "conflict"));
 
@@ -426,7 +418,6 @@ public class FileSystemCreateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 

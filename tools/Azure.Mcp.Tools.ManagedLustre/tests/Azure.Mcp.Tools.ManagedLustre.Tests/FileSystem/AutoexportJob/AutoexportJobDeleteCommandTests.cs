@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,7 +32,6 @@ public class AutoexportJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<
         Service.DeleteAutoexportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -54,7 +52,6 @@ public class AutoexportJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -87,7 +84,6 @@ public class AutoexportJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Autoexport job not found"));
 
@@ -113,7 +109,6 @@ public class AutoexportJobDeleteCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 

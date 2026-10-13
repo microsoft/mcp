@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,7 +47,6 @@ public class IncidentsCreateCommandTests : SubscriptionCommandUnitTestsBase<Inci
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -80,7 +78,6 @@ public class IncidentsCreateCommandTests : SubscriptionCommandUnitTestsBase<Inci
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -105,7 +102,6 @@ public class IncidentsCreateCommandTests : SubscriptionCommandUnitTestsBase<Inci
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 
@@ -130,7 +126,6 @@ public class IncidentsCreateCommandTests : SubscriptionCommandUnitTestsBase<Inci
             null,
             "agent1",
             "tenant1",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
 

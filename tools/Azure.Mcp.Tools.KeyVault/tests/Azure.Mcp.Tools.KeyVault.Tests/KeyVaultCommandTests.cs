@@ -55,7 +55,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_key_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName }
             });
 
@@ -73,7 +72,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_key_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
                 { "key", knownKeyName}
             });
@@ -97,7 +95,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_key_create",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
                 { "key", keyName},
                 { "key-type", KeyType.Rsa.ToString() }
@@ -119,7 +116,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_secret_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName }
             });
 
@@ -137,7 +133,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_secret_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
                 { "secret", secretName }
             });
@@ -159,7 +154,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_certificate_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName }
             });
 
@@ -177,7 +171,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_certificate_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
                 { "certificate", certificateName }
             });
@@ -200,7 +193,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_certificate_create",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
                 { "certificate", certificateName}
             });
@@ -217,6 +209,11 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_import_certificate()
     {
+        if (await AssertLocalToolIsUnavailableInHttpMode("keyvault_certificate_import"))
+        {
+            return;
+        }
+
         var fakePassword = _importCertificateAssets.Password;
         var tempPath = _importCertificateAssets.CreateTempCopy();
 
@@ -228,7 +225,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
                 "keyvault_certificate_import",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "vault", Settings.ResourceBaseName },
                     { "certificate", certificateName },
                     { "certificate-data", tempPath },
@@ -256,7 +252,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             "keyvault_admin_settings_get",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName }
             });
 

@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
     Name = "get",
     Title = "Retrieve Confidential Ledger Entry",
     Description = "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

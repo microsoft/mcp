@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
 
@@ -132,7 +133,9 @@ public class ToolsListCommandTests
         var result = DeserializeCommandsResults(response);
 
         Assert.NotNull(result.Commands);
-        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
+        // CommandInfo.Command is the full command path, e.g., "tool list" or "tool get"
+        // Make sure we don't have any hidden commands.
+        Assert.DoesNotContain(result.Commands, cmd => cmd.Name == "list" && cmd.Command == "tool list");
         Assert.Contains(result.Commands, cmd => !string.IsNullOrEmpty(cmd.Name));
     }
 
@@ -158,6 +161,51 @@ public class ToolsListCommandTests
         var option = commandWithOptions.Options.First();
         Assert.NotNull(option.Name);
         Assert.NotNull(option.Description);
+    }
+
+    /// <summary>
+    /// Regression test for https://github.com/microsoft/mcp/issues/3768: option types in the CLI
+    /// tools list output must reflect each option's actual value type instead of always reporting
+    /// "string". Verifies that non-string JSON Schema keywords (e.g. boolean, array) are emitted,
+    /// and that array options additionally carry their element type.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_PopulatesOptionTypesFromValueType()
+    {
+        // Arrange & Act
+        var response = await ExecuteAsync();
+
+        // Assert
+        var result = DeserializeCommandsResults(response);
+        Assert.NotNull(result.Commands);
+
+        var options = result.Commands
+            .Where(cmd => cmd.Options is not null)
+            .SelectMany(cmd => cmd.Options!)
+            .ToList();
+
+        var optionTypes = options
+            .Select(option => option.Type)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        // Before the fix, every option reported "string". There must now be multiple distinct
+        // types, including keywords derived from non-string value types.
+        Assert.True(
+            optionTypes.Count > 1,
+            $"Expected multiple option types but found only: {string.Join(", ", optionTypes)}");
+        Assert.Contains("boolean", optionTypes);
+        Assert.Contains("array", optionTypes);
+
+        // Array options must carry a non-empty element type, and scalar options must not.
+        var arrayOptions = options.Where(option => option.Type == "array").ToList();
+        Assert.NotEmpty(arrayOptions);
+        Assert.All(arrayOptions, option => Assert.False(string.IsNullOrEmpty(option.ElementType)));
+        Assert.Contains(arrayOptions, option => option.ElementType == "string");
+
+        var scalarOption = options.FirstOrDefault(option => option.Type == "string");
+        Assert.NotNull(scalarOption);
+        Assert.Null(scalarOption.ElementType);
     }
 
     /// <summary>
@@ -371,6 +419,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(metadata);
+        Assert.Equal(ToolOperationPlane.NotApplicable, metadata.OperationPlane);
         Assert.False(metadata.Destructive, "Tool list command should not be destructive");
         Assert.True(metadata.ReadOnly, "Tool list command should be read-only");
     }
@@ -396,10 +445,11 @@ public class ToolsListCommandTests
             Assert.NotNull(command.Metadata);
 
             // Verify that metadata has the expected properties
-            // Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
+            // OperationPlane, Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
             var metadata = command.Metadata;
 
             // Check that at least the main properties are accessible
+            Assert.True(Enum.IsDefined(metadata.OperationPlane), "OperationPlane should be defined");
             Assert.True(metadata.Destructive || !metadata.Destructive, "Destructive should be defined");
             Assert.True(metadata.ReadOnly || !metadata.ReadOnly, "ReadOnly should be defined");
             Assert.True(metadata.Idempotent || !metadata.Idempotent, "Idempotent should be defined");
@@ -429,17 +479,17 @@ public class ToolsListCommandTests
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
 
         // Verify that only the "names" property exists
-        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+        jsonElement.AssertProperty("names");
 
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();
         Assert.Equal(1, propertyCount);
 
         // Explicitly verify that description and command fields are not present
-        Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("command", out _), "Response should not contain 'command' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("options", out _), "Response should not contain 'options' property when using --name-only option");
-        Assert.False(jsonElement.TryGetProperty("metadata", out _), "Response should not contain 'metadata' property when using --name-only option");
+        jsonElement.AssertPropertyDoesNotExist("description");
+        jsonElement.AssertPropertyDoesNotExist("command");
+        jsonElement.AssertPropertyDoesNotExist("options");
+        jsonElement.AssertPropertyDoesNotExist("metadata");
 
         // Verify that all names are properly formatted tokenized names
         foreach (var name in result.Names)
@@ -656,7 +706,7 @@ public class ToolsListCommandTests
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
 
         // Verify that only the "names" property exists
-        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+        jsonElement.AssertProperty("names");
 
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();

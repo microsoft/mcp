@@ -49,30 +49,24 @@ public interface IPostgresService
     Task<string> GetServerConfigAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> GetServerParameterAsync(
         string subscriptionId,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> SetServerParameterAsync(
         string subscription,
         string resourceGroup,
-        string user,
         string server,
         string param,
         string value,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

@@ -14,6 +14,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
     Name = "generate",
     Title = "Generate Workflow YAML",
     Description = "Generate a YAML workflow definition for a named SRE Agent tool or agent. Creates validated YAML configuration for ExtendedAgent, KustoTool, or LinkTool resources.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

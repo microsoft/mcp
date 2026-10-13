@@ -4,7 +4,6 @@
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -21,7 +20,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -34,7 +32,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
             Arg.Is<string?>(rg => rg == null),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -75,7 +72,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(namespaceDetails);
             }
@@ -105,7 +101,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>(),
                     Arg.Any<CancellationToken>())
                     .Returns(namespaces);
             }
@@ -135,7 +130,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource Group 'rg-eventhubs-test' could not be found"));
 
@@ -157,7 +151,6 @@ public class NamespaceGetCommandTests : SubscriptionCommandUnitTestsBase<Namespa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 

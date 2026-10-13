@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
 [CommandMetadata(
     Id = "3bf1b82d-ff44-4984-9b97-0e6d9e4917a3",
-    Name = "list_files",
+    Name = "list-files",
     Title = "List OneLake Path Structure",
     Description = """
         List files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2.
@@ -24,6 +24,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
         Use --format=raw to get the unprocessed OneLake DFS API response for debugging and analysis.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

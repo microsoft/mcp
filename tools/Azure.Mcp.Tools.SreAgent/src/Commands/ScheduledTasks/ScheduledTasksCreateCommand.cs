@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.ScheduledTasks;
     Name = "create",
     Title = "Create Scheduled Task",
     Description = "Create an SRE Agent scheduled task.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,

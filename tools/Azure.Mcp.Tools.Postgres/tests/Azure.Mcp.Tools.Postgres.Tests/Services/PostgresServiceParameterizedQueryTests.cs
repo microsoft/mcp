@@ -3,12 +3,13 @@
 
 using System.Data.Common;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
+using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -21,16 +22,15 @@ namespace Azure.Mcp.Tools.Postgres.Tests.Services;
 /// </summary>
 public class PostgresServiceParameterizedQueryTests
 {
-    private readonly IResourceGroupService _resourceGroupService;
+    private readonly IAzureService _azureService;
     private readonly IEntraTokenProvider _entraTokenAuth;
     private readonly IDbProvider _dbProvider;
     private readonly PostgresService _postgresService;
 
     public PostgresServiceParameterizedQueryTests()
     {
-        _resourceGroupService = Substitute.For<IResourceGroupService>();
-        var subscriptionService = Substitute.For<ISubscriptionService>();
-        var tenantService = Substitute.For<ITenantService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         _entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
@@ -44,7 +44,7 @@ public class PostgresServiceParameterizedQueryTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(_resourceGroupService, subscriptionService, tenantService, _entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(_azureService, _entraTokenAuth, _dbProvider);
     }
 
     [Theory]
@@ -245,4 +245,3 @@ public class PostgresServiceParameterizedQueryTests
         Assert.NotNull(task);
     }
 }
-

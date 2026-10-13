@@ -38,6 +38,13 @@ jobs:
       ExportAsOutputVariable: true
 
   - pwsh: |
+      Write-Host "##vso[task.setvariable variable=GH_TOKEN;issecret=true;isOutput=true]$env:GH_TOKEN"
+    name: ExportGitHubTokenForMcpb
+    displayName: "Export GitHub token for MCPB publishing"
+    env:
+      GH_TOKEN: $(GH_TOKEN)
+
+  - pwsh: |
       $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
       $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 

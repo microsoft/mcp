@@ -125,7 +125,7 @@ public class RecommendationMetadataListCommandTests
                 filters.Impact == "High" &&
                 filters.Category == "HighAvailability" &&
                 filters.SubCategory == "ServiceUpgradeAndRetirement" &&
-                filters.TrackingId == "QNY1-HB8" &&
+                filters.TrackingIds!.Single() == "QNY1-HB8" &&
                 filters.RetirementDateOperator == "ge" &&
                 filters.RetirementDate == new DateOnly(2026, 3, 31)),
             Arg.Any<CancellationToken>());

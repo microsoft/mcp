@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -19,7 +18,6 @@ public interface IResourceResolverService
     /// <param name="resourceType">The resource type (optional, e.g., 'Microsoft.Storage/storageAccounts')</param>
     /// <param name="resourceName">The resource name or full resource ID</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
-    /// <param name="retryPolicy">Optional retry policy parameters</param>
     /// <returns>The full Azure resource ID</returns>
     Task<ResourceIdentifier> ResolveResourceIdAsync(
         string subscription,
@@ -27,6 +25,5 @@ public interface IResourceResolverService
         string? resourceType,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

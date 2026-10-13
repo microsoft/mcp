@@ -8,7 +8,6 @@ public static class SreAgentOptionDefinitions
     public const string AgentNameName = "agent";
     public const string NameName = "name";
     public const string DescriptionName = "description";
-    public const string ConfirmName = "confirm";
     public const string AuthTypeName = "auth-type";
     public const string HeadersJsonName = "headers-json";
     public const string MessageName = "message";
@@ -31,7 +30,6 @@ public static class SreAgentOptionDefinitions
     internal const string DescriptionDescription = "A description for the SRE Agent item.";
     internal const string ToolsDescription = "Tool names to attach. Multiple values are supported.";
     internal const string HandoffsDescription = "Sub-agent handoff names. Multiple values are supported.";
-    internal const string ConfirmDescription = "Confirm a destructive operation.";
     internal const string ConnectorDescription = "The connector name for Kusto tools.";
     internal const string DatabaseDescription = "The Kusto database for Kusto tools.";
     internal const string QueryDescription = "The Kusto query for Kusto tools.";

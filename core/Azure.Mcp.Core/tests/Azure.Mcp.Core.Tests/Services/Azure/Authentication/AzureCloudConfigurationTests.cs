@@ -3,7 +3,7 @@
 
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Xunit;
 
@@ -123,13 +123,13 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that ServiceStartOptions (command-line arguments) take priority over appsettings.json configuration.
+    /// Tests that ServerRuntimeConfiguration (command-line arguments) take priority over appsettings.json configuration.
     /// </summary>
     [Fact]
     public void ConfigurationPriority_CommandLineOverridesAppsettings()
     {
-        // Arrange - ServiceStartOptions takes priority
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Cloud = "AzureChinaCloud" });
+        // Arrange - ServerRuntimeConfiguration takes priority
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "AzureUSGovernment" })
             .Build();
@@ -142,7 +142,7 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests that appsettings.json configuration is used when ServiceStartOptions is not set.
+    /// Tests that appsettings.json configuration is used when ServerRuntimeConfiguration is not set.
     /// </summary>
     [Fact]
     public void ConfigurationPriority_AppsettingsUsedWhenNoCommandLine()
@@ -286,13 +286,13 @@ public class AzureCloudConfigurationTests
     }
 
     /// <summary>
-    /// Tests complete priority chain: ServiceStartOptions > cloud config > AZURE_CLOUD env var > default
+    /// Tests complete priority chain: ServerRuntimeConfiguration > cloud config > AZURE_CLOUD env var > default
     /// </summary>
     [Fact]
     public void ConfigurationPriority_FullPriorityChain()
     {
         // Arrange - Set up multiple configuration sources
-        var options = Microsoft.Extensions.Options.Options.Create(new ServerStartOptions { Cloud = "AzureChinaCloud" });
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Cloud = "AzureChinaCloud" });
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -304,15 +304,15 @@ public class AzureCloudConfigurationTests
         // Act
         var cloudConfig = new AzureCloudConfiguration(config, options);
 
-        // Assert - Should use ServiceStartOptions (highest priority)
+        // Assert - Should use ServerRuntimeConfiguration (highest priority)
         Assert.Equal(new Uri("https://login.chinacloudapi.cn"), cloudConfig.AuthorityHost);
     }
 
     /// <summary>
-    /// Tests that when ServiceStartOptions is null, configuration falls back to appsettings.
+    /// Tests that when ServerRuntimeConfiguration is null, configuration falls back to appsettings.
     /// </summary>
     [Fact]
-    public void ConfigurationPriority_NullServiceStartOptions_FallsBackToConfig()
+    public void ConfigurationPriority_NullServerRuntimeConfiguration_FallsBackToConfig()
     {
         // Arrange
         var config = new ConfigurationBuilder()
@@ -320,7 +320,7 @@ public class AzureCloudConfigurationTests
             .Build();
 
         // Act
-        var cloudConfig = new AzureCloudConfiguration(config, serviceStartOptions: null);
+        var cloudConfig = new AzureCloudConfiguration(config, runtimeConfiguration: null);
 
         // Assert
         Assert.Equal(new Uri("https://login.chinacloudapi.cn"), cloudConfig.AuthorityHost);

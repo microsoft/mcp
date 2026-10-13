@@ -69,7 +69,7 @@ CopilotCliTester/
 
 ## Prerequisites
 
-1. **.NET 10 SDK** — [Download](https://dotnet.microsoft.com/download/dotnet/10.0)
+1. **Latest .NET 10 SDK LTS** — [Download](https://dotnet.microsoft.com/download/dotnet)
 2. **GitHub Copilot subscription** — Required for Copilot SDK authentication
 3. **GitHub Copilot CLI** — Authenticated (`gh auth login` or VS Code Copilot extension sign-in)
 4. **Azure CLI** — Authenticated for MCP tool execution

@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.Postgres.Options.Server;
 
 public class BaseServerOptions : ISubscriptionOption
 {
-    [Option(Description = PostgresOptionDefinitions.UserDescription)]
-    public required string User { get; set; }
-
     [Option(Description = PostgresOptionDefinitions.ServerDescription)]
     public required string Server { get; set; }
 
@@ -22,7 +19,4 @@ public class BaseServerOptions : ISubscriptionOption
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
-
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

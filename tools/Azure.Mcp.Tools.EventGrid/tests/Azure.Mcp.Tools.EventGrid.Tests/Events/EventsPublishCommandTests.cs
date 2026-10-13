@@ -8,7 +8,7 @@ using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,12 +30,25 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
     public void Command_Metadata_IsCorrect()
     {
         var metadata = Command.Metadata;
+        Assert.Equal(ToolOperationPlane.Data, metadata.OperationPlane);
         Assert.False(metadata.Destructive);
         Assert.False(metadata.Idempotent);
         Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.LocalRequired);
         Assert.False(metadata.Secret);
+    }
+
+    /// <summary>
+    /// Publishing resolves the topic through ARM to read its endpoint before sending. That lookup is
+    /// setup, not the tool's action, so the tool is Data rather than Both. See
+    /// docs/design/operation-plane-metadata.md.
+    /// </summary>
+    [Fact]
+    public void Command_OperationPlane_IgnoresArmLookupUsedOnlyForSetup()
+    {
+        Assert.Equal(ToolOperationPlane.Data, Command.Metadata.OperationPlane);
+        Assert.NotEqual(ToolOperationPlane.Both, Command.Metadata.OperationPlane);
     }
 
     [Fact]
@@ -67,7 +80,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -124,7 +136,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -158,7 +169,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new JsonException("Invalid JSON format"));
 
@@ -196,7 +206,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
 
@@ -239,7 +248,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
@@ -289,7 +297,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -337,7 +344,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("CloudEvents"), // Verify CloudEvents schema is passed
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -386,7 +392,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("Custom"), // Verify Custom schema is passed
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -452,7 +457,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is(schema), // Verify the schema parameter is passed correctly
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -496,7 +500,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is<string?>(schema => schema == null), // Should be null when not specified
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -532,7 +535,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(403, "Access denied to Event Grid topic"));
 
@@ -569,7 +571,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
 
@@ -607,7 +608,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(400, "Invalid event data or schema format"));
 
@@ -670,7 +670,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -716,7 +715,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -766,7 +764,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -814,7 +811,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("Custom"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -869,7 +865,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is(schema),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -928,7 +923,6 @@ public class EventsPublishCommandTests : SubscriptionCommandUnitTestsBase<EventG
             Arg.Any<string>(),
             Arg.Is("Custom"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 

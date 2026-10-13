@@ -2,20 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Certificate;
 
-public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<CertificateImportCommand, IKeyVaultService>
+public class CertificateImportCommandTests : CommandUnitTestsBase<CertificateImportCommand, IKeyVaultService>
 {
-
-    private const string _knownSubscription = "knownSubscription";
     private const string _knownVault = "knownVault";
     private const string _knownCertName = "knownCertificate";
     // Generate a deterministic base64 string from readable words to avoid cspell warnings on opaque text.
@@ -30,9 +27,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             _fakePfxBase64,
             null,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
@@ -40,8 +35,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
             "--certificate", _knownCertName,
-            "--certificate-data", _fakePfxBase64,
-            "--subscription", _knownSubscription);
+            "--certificate-data", _fakePfxBase64);
 
         // Assert
         await Service.Received(1).ImportCertificate(
@@ -49,20 +43,17 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             _fakePfxBase64,
             null,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
 
     public static IEnumerable<object[]> InvalidArgumentCases()
     {
-        // Build scenarios with missing required parameters (subscription-independent)
+        // Build scenarios with missing required parameters.
         yield return new object[] { "" };
         yield return new object[] { "--vault knownVault" };
         yield return new object[] { "--vault knownVault --certificate knownCertificate" };
-        yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription" };
     }
 
     [Theory]
@@ -77,14 +68,9 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
     }
 
     [Fact]
-    public async Task ExecuteAsync_RejectsArguments_WhenSubscriptionMissing()
+    public void Command_DoesNotExposeSubscription()
     {
-        var response = await ExecuteCommandAsync(
-            "--vault", _knownVault,
-            "--certificate", _knownCertName,
-            "--certificate-data", _fakePfxBase64);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 
     [Fact]
@@ -96,17 +82,14 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expected));
 
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
             "--certificate", _knownCertName,
-            "--certificate-data", _fakePfxBase64,
-            "--subscription", _knownSubscription);
+            "--certificate-data", _fakePfxBase64);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
@@ -123,9 +106,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             pem,
             null,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -133,8 +114,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
             "--certificate", _knownCertName,
-            "--certificate-data", pem,
-            "--subscription", _knownSubscription);
+            "--certificate-data", pem);
 
         // Assert - ensure the PEM (with header) was passed through untouched
         await Service.Received(1).ImportCertificate(
@@ -142,9 +122,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             pem,
             null,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
@@ -159,9 +137,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             _fakePfxBase64,
             password,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -169,17 +145,14 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,
-            "--password", password,
-            "--subscription", _knownSubscription);
+            "--password", password);
 
         await Service.Received(1).ImportCertificate(
             _knownVault,
             _knownCertName,
             _fakePfxBase64,
             password,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
@@ -197,9 +170,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
                 _knownCertName,
                 tempPath,
                 null,
-                _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
 
@@ -207,8 +178,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             var response = await ExecuteCommandAsync(
                 "--vault", _knownVault,
                 "--certificate", _knownCertName,
-                "--certificate-data", tempPath,
-                "--subscription", _knownSubscription);
+                "--certificate-data", tempPath);
 
             // Assert - ensure the raw path was passed through
             await Service.Received(1).ImportCertificate(
@@ -216,9 +186,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
                 _knownCertName,
                 tempPath,
                 null,
-                _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>());
             Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
@@ -244,17 +212,14 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             invalidData,
             null,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException(errorMessage));
 
         var response = await ExecuteCommandAsync(
             "--vault", _knownVault,
             "--certificate", _knownCertName,
-            "--certificate-data", invalidData,
-            "--subscription", _knownSubscription);
+            "--certificate-data", invalidData);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("certificate-data", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -272,9 +237,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             _knownCertName,
             _fakePfxBase64,
             password,
-            _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(mismatchMessage));
 
@@ -282,8 +245,7 @@ public class CertificateImportCommandTests : SubscriptionCommandUnitTestsBase<Ce
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,
-            "--password", password,
-            "--subscription", _knownSubscription);
+            "--password", password);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);

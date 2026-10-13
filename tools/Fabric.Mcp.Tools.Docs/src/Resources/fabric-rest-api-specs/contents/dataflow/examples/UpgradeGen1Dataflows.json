@@ -1,0 +1,67 @@
+{
+  "parameters": {
+    "workspaceId": "afced311-0e76-4b74-9d59-6cdcbab44653",
+    "upgradeGen1DataflowsRequest": {
+      "dataflows": [
+        {
+          "id": "6b1f3d2e-8a4c-4b6e-9f1a-2c3d4e5f6a7b"
+        },
+        {
+          "id": "7c2a4e3f-9b5d-4c7f-a02b-3d4e5f6a7b8c"
+        }
+      ]
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "summary": {
+          "totalCount": 2,
+          "succeededCount": 1,
+          "failedCount": 1
+        },
+        "migrations": [
+          {
+            "dataflowId": "6b1f3d2e-8a4c-4b6e-9f1a-2c3d4e5f6a7b",
+            "dataflowName": "Sales Ingestion (Gen1)",
+            "targetDataflowName": "Sales Ingestion",
+            "workspaceId": "afced311-0e76-4b74-9d59-6cdcbab44653",
+            "workspaceName": "Test Workspace",
+            "assessmentStatus": "ReadyToMigrate",
+            "migrationStatus": "Succeeded",
+            "migrationEndDateTime": "2026-08-19T10:15:42Z"
+          },
+          {
+            "dataflowId": "7c2a4e3f-9b5d-4c7f-a02b-3d4e5f6a7b8c",
+            "dataflowName": "Marketing Blend (Gen1)",
+            "targetDataflowName": "Marketing Blend (Gen1)",
+            "workspaceId": "afced311-0e76-4b74-9d59-6cdcbab44653",
+            "workspaceName": "Test Workspace",
+            "assessmentStatus": "NeedsAttention",
+            "requiredActions": [
+              {
+                "status": "NeedsAttention",
+                "code": "HasUnresolvedConnections",
+                "message": "One or more data source connections could not be resolved. Recreate or rebind them before upgrading."
+              }
+            ],
+            "migrationStatus": "Failed",
+            "migrationError": {
+              "errorCode": "DataflowRequiresChanges",
+              "message": "The dataflow could not be upgraded because one or more data source connections could not be resolved.",
+              "requestId": "0f8fad5b-d9cb-469f-a165-70867728950e",
+              "isRetriable": false
+            }
+          }
+        ]
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

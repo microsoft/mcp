@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Speech.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 
@@ -21,7 +20,6 @@ public interface IRealtimeTtsSynthesizer
     /// <param name="voice">Voice name to use (e.g., en-US-JennyNeural)</param>
     /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
     /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Synthesis result with file information</returns>
     Task<SynthesisResult> SynthesizeToFileAsync(
@@ -32,6 +30,5 @@ public interface IRealtimeTtsSynthesizer
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

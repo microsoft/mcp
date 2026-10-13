@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,6 +15,18 @@ namespace Azure.Mcp.Tools.Storage.Tests.Account;
 
 public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<AccountCreateCommand, IStorageService>
 {
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("--allow-shared-key-access true", true)]
+    [InlineData("--allow-shared-key-access false", false)]
+    public async Task ExecuteAsync_InsecureSettingsRequireOptIn(string options, bool sharedKey)
+    {
+        var response = await ExecuteCommandAsync($"--account testaccount --resource-group testrg --location eastus --subscription sub123 {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var call = Assert.Single(Service.ReceivedCalls());
+        Assert.Equal(sharedKey, call.GetArguments()[8]);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -66,8 +77,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+                cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(expectedAccount);
         }
 
@@ -103,8 +113,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
         // Act
@@ -134,8 +143,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
         // Act
@@ -165,8 +173,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
         // Act
@@ -194,8 +201,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
         // Act
@@ -243,8 +249,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
         // Act
@@ -268,7 +273,6 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>());
+            cancellationToken: Arg.Any<CancellationToken>());
     }
 }

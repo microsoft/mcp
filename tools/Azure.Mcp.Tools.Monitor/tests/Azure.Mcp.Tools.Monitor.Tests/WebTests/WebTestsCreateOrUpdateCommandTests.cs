@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -120,7 +119,7 @@ public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBa
         };
 
         // Setup GetWebTest to throw (resource doesn't exist - CREATE scenario)
-        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 
         Service.CreateWebTest(
@@ -147,7 +146,6 @@ public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -174,7 +172,7 @@ public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBa
         };
 
         // Setup GetWebTest to throw (resource doesn't exist - CREATE scenario)
-        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "newwebtest", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 
         // Act
@@ -223,7 +221,7 @@ public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBa
         };
 
         // Setup GetWebTest to return existing resource (UPDATE scenario)
-        Service.GetWebTest("sub1", "rg1", "existingwebtest", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.GetWebTest("sub1", "rg1", "existingwebtest", Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(existingWebTest);
 
         Service.UpdateWebTest(
@@ -250,7 +248,6 @@ public class WebTestsCreateOrUpdateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(updatedWebTest);
 

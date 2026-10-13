@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -59,7 +58,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Is(true),
             Arg.Is(DatabaseReadScale.Disabled),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -118,7 +116,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -153,7 +150,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -187,7 +183,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(badRequestException);
 
@@ -248,7 +243,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
                 Arg.Any<string?>(),
                 Arg.Any<bool?>(),
                 Arg.Any<DatabaseReadScale?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
         }
@@ -306,7 +300,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Is((string?)null), // ElasticPoolName
             Arg.Is((bool?)null),   // ZoneRedundant
             Arg.Is((DatabaseReadScale?)null), // ReadScale
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -337,7 +330,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             (string?)null, // ElasticPoolName
             (bool?)null, // ZoneRedundant
             (DatabaseReadScale?)null, // ReadScale
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -381,7 +373,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -429,7 +420,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -463,7 +453,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid server name"));
 
@@ -497,7 +486,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
@@ -548,7 +536,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -602,7 +589,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -656,7 +642,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -710,7 +695,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -764,7 +748,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -818,7 +801,6 @@ public class DatabaseUpdateCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
             Arg.Any<DatabaseReadScale?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 

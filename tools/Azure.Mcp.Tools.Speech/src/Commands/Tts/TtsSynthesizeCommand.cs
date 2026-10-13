@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Speech.Options.Tts;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
@@ -21,14 +22,15 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
         Optional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.
         The command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService)
-    : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>()
+public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
+    : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>(endpointValidator)
 {
     public sealed record TtsSynthesizeCommandResult(SynthesisResult Result);
 
@@ -60,7 +62,8 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
                 // Check if file already exists (don't allow overwriting)
                 if (File.Exists(canonicalPath))
                 {
-                    validationResult.Errors.Add($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.");
+                    validationResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.",
+                        "Speech output file already exists.");
                 }
 
                 // Validate file extension
@@ -68,12 +71,13 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
 
                 if (!s_supportedExtensions.Contains(extension))
                 {
-                    validationResult.Errors.Add($"Unsupported output file format: {extension}. Only {string.Join(", ", s_supportedExtensions)} are supported.");
+                    validationResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", s_supportedExtensions)} are supported.",
+                        "Unsupported Speech output format.");
                 }
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add($"Invalid output file path: {ex.Message}");
+                validationResult.AddError($"Invalid output file path: {ex.Message}", "Invalid Speech output file path.");
             }
         }
 
@@ -83,7 +87,8 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
             // Basic validation: language should be in format like "en-US", "es-ES"
             if (!LanguageRegex().IsMatch(options.Language))
             {
-                validationResult.Errors.Add($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {options.Language}");
+                validationResult.AddError($"Language must be in format 'xx-XX' (e.g., 'en-US', 'es-ES'). Got: {options.Language}",
+                    "Invalid Speech language.");
             }
         }
     }
@@ -100,7 +105,6 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
                 options.Voice,
                 options.Format,
                 options.EndpointId,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

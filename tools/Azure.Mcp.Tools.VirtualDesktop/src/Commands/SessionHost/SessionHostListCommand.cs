@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
         in the specified --subscription and hostpool. Results include SessionHost details and are
         returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -45,7 +46,6 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.Subscription!,
                     options.HostpoolResourceId,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
@@ -55,7 +55,6 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.ResourceGroup,
                     options.Hostpool!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -64,7 +63,6 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.Subscription!,
                     options.Hostpool!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

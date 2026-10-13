@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Quota.Commands.Usage;
     Name = "check",
     Title = "Check Azure resources usage and quota in a region",
     Description = "This tool will check the usage and quota information for Azure resources in a region.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

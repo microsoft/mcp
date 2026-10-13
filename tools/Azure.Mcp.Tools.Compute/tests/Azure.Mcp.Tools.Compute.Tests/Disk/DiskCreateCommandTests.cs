@@ -9,8 +9,9 @@ using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -94,7 +95,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -170,7 +170,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -244,7 +243,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -314,7 +312,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -378,7 +375,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service unavailable"));
 
@@ -479,7 +475,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -545,7 +540,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -617,7 +611,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -668,7 +661,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -722,7 +714,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -808,7 +799,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             uploadSizeBytes,
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -891,7 +881,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             uploadSizeBytes,
             "TrustedLaunch",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -961,7 +950,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -1028,7 +1016,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDisk);
 
@@ -1073,7 +1060,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -1085,7 +1071,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
 
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud));
         Assert.Contains("HTTPS", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -1104,7 +1093,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     {
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud));
         Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -1117,7 +1109,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidPublicCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for public cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud);
+        new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzurePublicCloud);
     }
 
     [Theory]
@@ -1125,7 +1120,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidChinaCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for China cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureChina);
+        new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzureChina);
     }
 
     [Theory]
@@ -1133,7 +1131,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
     public void CreateDiskFromValidGovCloudBlobUri_DoesNotThrow(string source)
     {
         // Act & Assert - should not throw for US Government cloud
-        EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzureGovernment);
+        new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+            endpoint: source,
+            serviceType: "storage-blob",
+            armEnvironment: ArmEnvironment.AzureGovernment);
     }
 
     [Fact]
@@ -1144,7 +1145,10 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
 
         // Act & Assert
         var ex = Assert.Throws<SecurityException>(() =>
-            EndpointValidator.ValidateAzureServiceEndpoint(source, "storage-blob", ArmEnvironment.AzurePublicCloud));
+            new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()).ValidateAzureServiceEndpoint(
+                endpoint: source,
+                serviceType: "storage-blob",
+                armEnvironment: ArmEnvironment.AzurePublicCloud));
         Assert.Contains("storage-blob", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -1181,7 +1185,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint must use HTTPS protocol. Got: http"));
 
@@ -1231,7 +1234,6 @@ public class DiskCreateCommandTests : SubscriptionCommandUnitTestsBase<DiskCreat
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new SecurityException("Endpoint host 'evil-server.com' is not a valid storage-blob domain for Azure Public Cloud."));
 

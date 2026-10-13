@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Name = "get",
     Title = "Get Cloud Endpoint",
     Description = "List all cloud endpoints in a sync group or retrieve details about a specific cloud endpoint. Returns cloud endpoint properties including Azure File Share configuration, storage account details, and provisioning state. Use --cloud-endpoint-name for a specific endpoint.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.SyncGroupName,
                     options.CloudEndpointName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (endpoint == null)
@@ -71,7 +71,6 @@ public sealed class CloudEndpointGetCommand(ILogger<CloudEndpointGetCommand> log
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.CloudEndpointGetCommandResult);

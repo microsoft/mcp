@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -21,8 +21,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
 {
     public RequestCommandTests()
     {
-        Services.AddSingleton(Substitute.For<ISubscriptionService>());
-        Services.AddSingleton(Substitute.For<ITenantService>());
+        Services.AddSingleton(AzureServiceTestHelpers.CreateAzureService());
         Services.AddSingleton<AzureMigrateProjectHelper>();
     }
 

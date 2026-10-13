@@ -6,7 +6,6 @@ using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -32,14 +31,14 @@ public sealed class SampleCommandTests : SubscriptionCommandUnitTestsBase<Sample
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "['table1'] | sample 10",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "['table1'] | sample 10",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
 
@@ -66,14 +65,14 @@ public sealed class SampleCommandTests : SubscriptionCommandUnitTestsBase<Sample
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "['table1'] | sample 10",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "['table1'] | sample 10",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -95,14 +94,14 @@ public sealed class SampleCommandTests : SubscriptionCommandUnitTestsBase<Sample
     //             "https://mycluster.kusto.windows.net",
     //             "db1",
     //             "table1 | sample 10",
-    //             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+    //             Arg.Any<string>())
     //             .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
     //     }
     //     else
     //     {
     //         _kusto.QueryItems(
     //             "sub1", "mycluster", "db1", "table1 | sample 10",
-    //             Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+    //             Arg.Any<string>())
     //             .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
     //     }
     //     var command = new SampleCommand(_logger, _kusto);

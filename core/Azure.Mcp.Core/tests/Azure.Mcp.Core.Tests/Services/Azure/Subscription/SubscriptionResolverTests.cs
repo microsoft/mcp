@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Helpers;
@@ -171,7 +171,7 @@ public class SubscriptionResolverTests
 
     private static ISubscriptionOption BindSubscriptionOption(ISubscriptionResolver subscriptionResolver, params string[] args)
     {
-        var command = new GroupListCommand(NullLogger<GroupListCommand>.Instance, Substitute.For<IResourceGroupService>(), subscriptionResolver);
+        var command = new GroupListCommand(NullLogger<GroupListCommand>.Instance, Substitute.For<IAzureService>(), subscriptionResolver);
         var commandDefinition = command.GetCommand();
         return command.BindOptions(commandDefinition.Parse(args));
     }

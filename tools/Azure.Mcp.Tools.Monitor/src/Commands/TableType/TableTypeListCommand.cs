@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
     Name = "list",
     Title = "List Log Analytics Table Types",
     Description = "List available table types in a Log Analytics workspace. Returns table type names.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -37,7 +38,6 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
                 options.ResourceGroup,
                 options.Workspace,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);

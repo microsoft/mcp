@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
         Requires `datadog-resource`, `resource-group` and `subscription`.
         Result is a list of monitored resources as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

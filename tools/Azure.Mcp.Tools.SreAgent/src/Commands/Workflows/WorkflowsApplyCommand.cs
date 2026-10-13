@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Workflows;
     Name = "apply",
     Title = "Apply Workflow YAML",
     Description = "Apply and deploy a YAML workflow to an SRE Agent. Uploads and activates ExtendedAgent or ExtendedAgentTool YAML configuration on the specified SRE Agent resource.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

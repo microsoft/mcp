@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -30,8 +29,11 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
     {
         // Arrange
         Service.ConfigureImmutabilityAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Is(AzureBackupImmutabilityState.Unlocked),
+            Arg.Is(AzureBackupImmutabilityType.AsPerPolicy),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new OperationResult("Succeeded", null, "Immutability configured"));
 
         // Act
@@ -39,7 +41,8 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--immutability-state", "Enabled");
+            "--immutability-state", "Unlocked",
+            "--immutability-type", "AsPerPolicy");
 
         // Assert
         var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.GovernanceImmutabilityCommandResult);
@@ -52,8 +55,11 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
     {
         // Arrange
         Service.ConfigureImmutabilityAsync(
-            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Is(AzureBackupImmutabilityState.Unlocked),
+            Arg.Is(AzureBackupImmutabilityType.AsPerPolicy),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -61,7 +67,8 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
             "--subscription", "sub",
             "--vault", "v",
             "--resource-group", "rg",
-            "--immutability-state", "Enabled");
+            "--immutability-state", "Unlocked",
+            "--immutability-type", "AsPerPolicy");
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -69,16 +76,25 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
     }
 
     [Theory]
-    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Enabled", true)]
-    [InlineData("--subscription sub --vault v --resource-group rg", false)] // immutability-state is required
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type AsPerPolicy", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked", false)] // missing --immutability-type
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-type AsPerPolicy", false)] // missing --immutability-state
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased", false)] // TimeBased requires duration
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased --immutability-duration-days 5", false)] // duration below 30
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Unlocked --immutability-type TimeBased --immutability-duration-days 90", true)]
+    [InlineData("--subscription sub --vault v --resource-group rg --immutability-state Disabled --immutability-type TimeBased", true)] // Disabled ignores duration
+    [InlineData("--subscription sub --vault v --resource-group rg", false)] // Missing both required
     [InlineData("--subscription sub", false)] // Missing vault and resource-group
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
         {
             Service.ConfigureImmutabilityAsync(
-                Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("Enabled"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+                Arg.Any<AzureBackupImmutabilityState>(),
+                Arg.Any<AzureBackupImmutabilityType>(),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new OperationResult("Succeeded", null, null));
         }
 
@@ -108,5 +124,7 @@ public class GovernanceImmutabilityCommandTests : SubscriptionCommandUnitTestsBa
         Assert.Contains(options, o => o.Name == "--vault");
         Assert.Contains(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--immutability-state");
+        Assert.Contains(options, o => o.Name == "--immutability-type");
+        Assert.Contains(options, o => o.Name == "--immutability-duration-days");
     }
 }

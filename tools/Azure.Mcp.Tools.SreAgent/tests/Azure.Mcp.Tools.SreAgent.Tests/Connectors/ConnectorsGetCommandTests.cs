@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -48,7 +47,6 @@ public class ConnectorsGetCommandTests : SubscriptionCommandUnitTestsBase<Connec
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.GetConnectorAsync(
@@ -81,7 +79,6 @@ public class ConnectorsGetCommandTests : SubscriptionCommandUnitTestsBase<Connec
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.GetConnectorAsync(
@@ -108,7 +105,6 @@ public class ConnectorsGetCommandTests : SubscriptionCommandUnitTestsBase<Connec
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.GetConnectorAsync(
@@ -134,7 +130,6 @@ public class ConnectorsGetCommandTests : SubscriptionCommandUnitTestsBase<Connec
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.GetConnectorAsync("sub", "rg", "agent1", "connector1", null, Arg.Any<CancellationToken>())

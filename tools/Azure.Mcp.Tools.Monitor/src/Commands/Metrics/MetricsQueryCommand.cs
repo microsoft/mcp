@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Metrics;
     Name = "query",
     Title = "Query Azure Monitor Metrics",
     Description = "Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -79,7 +80,6 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger, IMo
                 options.Aggregation,
                 options.Filter,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             // Validate bucket count limit

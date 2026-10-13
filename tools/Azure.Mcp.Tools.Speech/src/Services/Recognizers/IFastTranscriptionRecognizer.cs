@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 
@@ -19,7 +18,6 @@ public interface IFastTranscriptionRecognizer
     /// <param name="language">Speech recognition language</param>
     /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
     /// <param name="profanity">Profanity filtering option</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
     /// <returns>Continuous recognition result converted from Fast Transcription response</returns>
     Task<FastTranscriptionResult> RecognizeAsync(
         string endpoint,
@@ -27,6 +25,5 @@ public interface IFastTranscriptionRecognizer
         string? language = null,
         string[]? phrases = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

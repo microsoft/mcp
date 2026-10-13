@@ -6,43 +6,49 @@ using System.Security;
 using System.Text.Json.Nodes;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 
-public class FoundryExtensionsService(
-    IHttpClientFactory httpClientFactory,
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IFoundryExtensionsService
+public class FoundryExtensionsService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IFoundryExtensionsService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-
-    private ArmEnvironment GetArmEnvironment() => TenantService.CloudConfiguration.ArmEnvironment;
-
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
-    internal void ValidateProjectEndpoint(string endpoint)
+    internal Uri ValidateProjectEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", GetArmEnvironment());
+            var uri = new Uri(endpoint);
+            AzureService.ValidateAzureServiceEndpoint(
+                endpoint: uri.AbsoluteUri,
+                serviceType: "foundry");
+
+            // Additional validation after anti-SSRF validation based on the requirements outlined by
+            // FoundryExtensionsOptionDescriptions.Endpoint's description where the endpoint must be in the format
+            // "https://<foundry-resource-name>.services.ai.azure.com/api/projects/<project-name>"
+            var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (pathSegments.Length != 3 ||
+                !pathSegments[0].Equals("api", StringComparison.Ordinal) ||
+                !pathSegments[1].Equals("projects", StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    $"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
+                    nameof(endpoint));
+            }
+
+            return uri;
         }
-        catch (SecurityException ex)
+        catch (Exception ex) when (ex is SecurityException || ex is UriFormatException)
         {
             throw new ArgumentException($"Invalid Foundry project endpoint: '{TruncateForLogging(endpoint)}'",
                 nameof(endpoint), ex);
@@ -52,33 +58,36 @@ public class FoundryExtensionsService(
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of an Azure OpenAI endpoint.
     /// </summary>
-    internal void ValidateAzureOpenAiEndpoint(string endpoint)
+    internal Uri ValidateAzureOpenAiEndpoint(string endpoint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(endpoint, nameof(endpoint));
 
         try
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "azure-openai", GetArmEnvironment());
+            var uri = new Uri(endpoint);
+            AzureService.ValidateAzureServiceEndpoint(
+                endpoint: uri.AbsoluteUri,
+                serviceType: "azure-openai");
 
             // Azure OpenAI-specific structural checks beyond domain validation
-            var parsedUri = new Uri(endpoint);
-
             // Azure OpenAI endpoints should not contain path segments
-            var paths = parsedUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var paths = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (paths.Length != 0)
             {
                 throw new ArgumentException("Azure OpenAI endpoint should not contain path segments");
             }
 
             // Validate the resource name portion of the host
+            // This set of values must be kept in sync with the allowed 'azure-openai' suffixes defined in EndpointValidator.AllowLists.
             string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com",
                 ".openai.azure.cn", ".cognitiveservices.azure.cn",
                 ".openai.azure.us", ".cognitiveservices.azure.us",
                 ".openai.azure.de", ".cognitiveservices.azure.de"];
-            var host = parsedUri.Host;
+            var host = uri.Host;
             var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             if (matchedSuffix != null)
             {
+                // Naming requirements are based on https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules#microsoftcognitiveservices
                 var resourceName = host[..^matchedSuffix.Length];
                 if (resourceName.Length < 2 || resourceName.Length > 64)
                 {
@@ -95,11 +104,19 @@ public class FoundryExtensionsService(
                     throw new ArgumentException("Azure OpenAI resource name must contain only alphanumeric characters and hyphens");
                 }
             }
+            else
+            {
+                throw new ArgumentException("Azure OpenAI endpoint must use one of the known suffixes: " + string.Join(", ", knownSuffixes));
+            }
+
+            return uri;
         }
-        catch (SecurityException ex)
+        catch (Exception ex) when (ex is SecurityException or UriFormatException)
         {
-            throw new ArgumentException($"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
-                nameof(endpoint), ex);
+            throw new ArgumentException(
+                $"Invalid Azure OpenAI endpoint: '{TruncateForLogging(endpoint)}'",
+                nameof(endpoint),
+                ex);
         }
         catch (ArgumentException ex) when (!ex.Message.StartsWith("Invalid Azure OpenAI endpoint", StringComparison.Ordinal))
         {
@@ -117,24 +134,21 @@ public class FoundryExtensionsService(
     public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
-        ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         var indexes = new List<KnowledgeIndexInformation>();
-        await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
+        await foreach (var index in projectClient.Indexes.GetIndexesAsync(cancellationToken))
         {
             // Determine the type based on the actual type of the index
             string indexType = index switch
             {
                 AzureAISearchIndex => "AzureAISearchIndex",
                 ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                CosmosDBIndex => "CosmosDBIndex",
+                AIProjectCosmosDBIndex => "CosmosDBIndex",
                 _ => index.GetType().Name
             };
 
@@ -156,19 +170,16 @@ public class FoundryExtensionsService(
         string endpoint,
         string indexName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(endpoint), endpoint),
             (nameof(indexName), indexName));
-        ValidateProjectEndpoint(endpoint);
 
         var projectClient = await CreateAIProjectClientWithAuth(endpoint, tenantId, cancellationToken);
-        var indexesClient = projectClient.GetIndexesClient();
 
         // Find the index by name using async enumerable
-        var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
+        var index = await projectClient.Indexes.GetIndexesAsync(cancellationToken: cancellationToken)
             .Where(i => string.Equals(i.Name, indexName, StringComparisons.ResourceName))
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
@@ -182,7 +193,7 @@ public class FoundryExtensionsService(
         {
             AzureAISearchIndex => "AzureAISearchIndex",
             ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-            CosmosDBIndex => "CosmosDBIndex",
+            AIProjectCosmosDBIndex => "CosmosDBIndex",
             _ => index.GetType().Name
         };
 
@@ -207,7 +218,6 @@ public class FoundryExtensionsService(
         double? temperature = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -217,7 +227,7 @@ public class FoundryExtensionsService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -255,7 +265,7 @@ public class FoundryExtensionsService(
         }
 
         // Create the completion request
-        var messages = new List<OpenAI.Chat.ChatMessage>
+        var messages = new List<ChatMessage>
         {
             new UserChatMessage(promptText)
         };
@@ -278,12 +288,8 @@ public class FoundryExtensionsService(
         string inputText,
         string subscription,
         string resourceGroup,
-        string? user = null,
-        string encodingFormat = "float",
-        int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -293,7 +299,7 @@ public class FoundryExtensionsService(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -338,13 +344,11 @@ public class FoundryExtensionsService(
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -415,12 +419,10 @@ public class FoundryExtensionsService(
         double? frequencyPenalty = null,
         double? presencePenalty = null,
         string? stop = null,
-        bool? stream = null,
         int? seed = null,
         string? user = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -434,7 +436,7 @@ public class FoundryExtensionsService(
             throw new ArgumentException("Messages array cannot be null or empty", nameof(messages));
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
@@ -566,11 +568,11 @@ public class FoundryExtensionsService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        // Configure AzureOpenAIClientOptions with HttpClient transport for test proxy support
-        var httpClient = _httpClientFactory.CreateClient();
+        var openAiUri = ValidateAzureOpenAiEndpoint(endpoint);
+
         var clientOptions = new AzureOpenAIClientOptions
         {
-            Transport = new HttpClientPipelineTransport(httpClient)
+            Transport = new HttpClientPipelineTransport(AzureService.GetClient())
         };
 
         switch (authMethod)
@@ -585,12 +587,12 @@ public class FoundryExtensionsService(
                     throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
                 }
 
-                return new(new(endpoint), new AzureKeyCredential(key), clientOptions);
+                return new(openAiUri, new AzureKeyCredential(key), clientOptions);
 
             case AuthMethod.Credential:
             default:
                 var credential = await GetCredential(tenant, cancellationToken);
-                return new(new(endpoint), credential, clientOptions);
+                return new(openAiUri, credential, clientOptions);
         }
     }
 
@@ -599,29 +601,26 @@ public class FoundryExtensionsService(
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        var projectUri = ValidateProjectEndpoint(endpoint);
         var credential = await GetCredential(tenant, cancellationToken);
-        var transport = CreateTransport();
 
         var clientOptions = new AIProjectClientOptions
         {
-            Transport = transport
+            Transport = new HttpClientPipelineTransport(AzureService.GetClient())
         };
 
-        return new(new(endpoint), credential, clientOptions);
+        return new(projectUri, credential, clientOptions);
     }
-
-    private HttpClientTransport CreateTransport() => new(_httpClientFactory.CreateClient());
 
     public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
 
         var resources = new List<AiResourceInformation>();
 
@@ -659,7 +658,6 @@ public class FoundryExtensionsService(
         string resourceGroup,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -667,7 +665,7 @@ public class FoundryExtensionsService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(resourceName), resourceName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         if (rgResource?.Value == null)

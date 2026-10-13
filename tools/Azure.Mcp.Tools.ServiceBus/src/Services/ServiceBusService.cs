@@ -1,45 +1,79 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureService(tenantService), IServiceBusService
+public sealed class ServiceBusService(IAzureService azureService)
+    : BaseAzureService(azureService), IServiceBusService
 {
-    private void ValidateNamespace(string namespaceName)
+    /// <summary>
+    /// Authorizes a bare Service Bus namespace host for the configured cloud and returns its parsed host.
+    /// </summary>
+    /// <param name="namespaceName">
+    /// The fully qualified DNS hostname of the Service Bus namespace, without a scheme, port, path,
+    /// query, fragment, or user information.
+    /// </param>
+    /// <returns>
+    /// The parsed ASCII hostname to pass to <see cref="ServiceBusAdministrationClient"/> or <see cref="ServiceBusClient"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="namespaceName"/> is null.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the namespace is empty, whitespace, not a DNS hostname, or the allow-list is unavailable.
+    /// </exception>
+    /// <exception cref="SecurityException">
+    /// Thrown when the namespace cannot form a valid endpoint or is outside the configured cloud's Service Bus domains.
+    /// </exception>
+    private string GetValidatedNamespace(string namespaceName)
     {
-        // Reject any characters that would introduce scheme, path, query, fragment, or port components.
-        // A fully-qualified namespace must be a bare hostname (e.g. "mynamespace.servicebus.windows.net").
-        if (namespaceName.AsSpan().IndexOfAny("/:?#@") >= 0)
+        ArgumentException.ThrowIfNullOrWhiteSpace(namespaceName);
+
+        // ServiceBusAdministrationClient and ServiceBusClient document fullyQualifiedNamespace as a namespace hostname:
+        // https://learn.microsoft.com/dotnet/api/azure.messaging.servicebus.administration.servicebusadministrationclient.-ctor
+        // https://learn.microsoft.com/dotnet/api/azure.messaging.servicebus.servicebusclient.-ctor
+        // Check the entire input as a DNS hostname before URI construction so URL components cannot be parsed
+        // separately and then discarded by IdnHost. CheckHostName checks syntax without a DNS lookup;
+        // EndpointValidator below still authorizes the cloud-specific domain.
+        // https://learn.microsoft.com/dotnet/api/system.uri.checkhostname
+        if (Uri.CheckHostName(namespaceName) != UriHostNameType.Dns)
         {
             throw new ArgumentException(
-                $"Namespace name contains invalid characters. A fully-qualified namespace must be a bare hostname (e.g. 'mynamespace.servicebus.windows.net'). Received: '{namespaceName}'.",
+                $"Namespace name must be a bare DNS hostname (e.g. 'mynamespace.servicebus.windows.net'). Received: '{namespaceName}'.",
                 nameof(namespaceName));
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(
-            $"https://{namespaceName}/",
-            "servicebus",
-            TenantService.CloudConfiguration.ArmEnvironment);
+        if (!Uri.TryCreate($"https://{namespaceName}/", UriKind.Absolute, out Uri? endpoint))
+        {
+            throw new SecurityException($"Service Bus namespace is not a valid hostname. Received: '{namespaceName}'.");
+        }
+
+        // HTTPS is an authorization-only representation here, not a transport choice for ServiceBusClient.
+        // Reuse the shared cloud and namespace-bypass policy, then pass only the parsed host to
+        // ServiceBusAdministrationClient or ServiceBusClient so each receives the authorized destination.
+        AzureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "servicebus");
+
+        return endpoint.IdnHost;
     }
 
     private async Task<ServiceBusAdministrationClient> CreateAdministrationClient(
         string namespaceName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         var credential = await GetCredential(tenantId, cancellationToken);
-        var options = ConfigureRetryPolicy(AddDefaultPolicies(new ServiceBusAdministrationClientOptions()), retryPolicy);
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        var options = AddDefaultPolicies(new ServiceBusAdministrationClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new ServiceBusAdministrationClient(namespaceName, credential, options);
     }
 
@@ -47,11 +81,10 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         string namespaceName,
         string queueName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        namespaceName = GetValidatedNamespace(namespaceName);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName, cancellationToken)).Value;
         var properties = (await client.GetQueueAsync(queueName, cancellationToken)).Value;
 
@@ -85,11 +118,10 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         string topicName,
         string subscriptionName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        namespaceName = GetValidatedNamespace(namespaceName);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName, cancellationToken)).Value;
         var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName, cancellationToken)).Value;
 
@@ -116,11 +148,10 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         string namespaceName,
         string topicName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateNamespace(namespaceName);
-        var client = await CreateAdministrationClient(namespaceName, tenantId, retryPolicy, cancellationToken);
+        namespaceName = GetValidatedNamespace(namespaceName);
+        var client = await CreateAdministrationClient(namespaceName, tenantId, cancellationToken);
         var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName, cancellationToken)).Value;
         var properties = (await client.GetTopicAsync(topicName, cancellationToken)).Value;
 
@@ -144,10 +175,9 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         string queueName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateNamespace(namespaceName);
+        namespaceName = GetValidatedNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
@@ -165,10 +195,9 @@ public sealed class ServiceBusService(ITenantService tenantService) : BaseAzureS
         string subscriptionName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateNamespace(namespaceName);
+        namespaceName = GetValidatedNamespace(namespaceName);
         var credential = await GetCredential(tenantId, cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))

@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Vmss;
     Name = "get",
     Title = "Get Virtual Machine Scale Set(s)",
     Description = "List, show, or get Azure Virtual Machine Scale Sets (VMSS) and their instances in a subscription or resource group. Show all scale sets or get a specific VMSS by name. Get VMSS instance details by instance ID. Returns scale set details including name, location, SKU, capacity, upgrade policy, and individual VM instance information. Do not use this for single standalone VMs (use VM get instead).",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -61,7 +62,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, vmInstance, null), ComputeJsonContext.Default.VmssGetResult);
@@ -74,7 +74,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(vmss, null, null), ComputeJsonContext.Default.VmssGetResult);
@@ -86,7 +85,6 @@ public sealed class VmssGetCommand(ILogger<VmssGetCommand> logger, IComputeServi
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, null, vmssList ?? []), ComputeJsonContext.Default.VmssGetResult);

@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Security;
         Use --identity-type to specify SystemAssigned or UserAssigned identity, and
         --user-assigned-identity-id when using a user-assigned identity.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -99,7 +100,6 @@ public sealed class SecurityConfigureEncryptionCommand(ILogger<SecurityConfigure
                 options.UserAssignedIdentityId,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

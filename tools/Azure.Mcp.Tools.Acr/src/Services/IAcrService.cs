@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Acr.Models;
-using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Acr.Services;
 
 public interface IAcrService
@@ -12,7 +11,6 @@ public interface IAcrService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<Dictionary<string, List<string>>> ListRegistryRepositories(
@@ -20,6 +18,5 @@ public interface IAcrService
         string? resourceGroup = null,
         string? registry = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

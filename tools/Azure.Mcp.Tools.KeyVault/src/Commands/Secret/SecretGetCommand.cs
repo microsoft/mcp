@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -17,14 +15,15 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Secret;
     Name = "get",
     Title = "Get Key Vault Secret",
     Description = """List all secrets in your Key Vault or get a specific secret by name. Shows all secret names in the vault (without values), or retrieves the secret value and full details including enabled status and expiration dates.""",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = true,
     LocalRequired = false)]
-public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService, ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<SecretGetOptions, SecretGetCommand.SecretGetCommandResult>(subscriptionResolver)
+public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<SecretGetOptions, SecretGetCommand.SecretGetCommandResult>
 {
     private readonly ILogger<SecretGetCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
@@ -38,9 +37,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                 // List all secrets
                 var secrets = await _keyVaultService.ListSecrets(
                     options.Vault,
-                    options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(Secrets: secrets ?? [], Secret: null), KeyVaultJsonContext.Default.SecretGetCommandResult);
@@ -51,9 +48,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger, IKeyVault
                 var secret = await _keyVaultService.GetSecret(
                     options.Vault,
                     options.Secret,
-                    options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, SecretDetails.FromSecret(secret)), KeyVaultJsonContext.Default.SecretGetCommandResult);

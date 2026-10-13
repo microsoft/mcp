@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions;
 
 internal static class FoundryExtensionsHelpers
 {
-    internal static void ValidateFoundryEndpoint(string endpoint, ValidationResult validationResult)
+    internal static void ValidateFoundryEndpoint(IEndpointValidator endpointValidator, string endpoint, ValidationResult validationResult)
     {
         ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
         string? lastError = null;
@@ -18,7 +18,10 @@ internal static class FoundryExtensionsHelpers
         {
             try
             {
-                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
+                endpointValidator.ValidateAzureServiceEndpoint(
+                    endpoint: endpoint,
+                    serviceType: "foundry",
+                    armEnvironment: cloud);
                 return;
             }
             catch (Exception ex)
@@ -27,6 +30,7 @@ internal static class FoundryExtensionsHelpers
             }
         }
 
-        validationResult.Errors.Add(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
+        validationResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}",
+            "Invalid Foundry project endpoint.");
     }
 }

@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ManagedLustre.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using Xunit;
 
@@ -49,7 +48,6 @@ public class SkuGetCommandTests : SubscriptionCommandUnitTestsBase<SkuGetCommand
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
@@ -77,7 +75,6 @@ public class SkuGetCommandTests : SubscriptionCommandUnitTestsBase<SkuGetCommand
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns([new("n", "eastus", false, [])]);
         }

@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Name = "list-dataflows",
     Title = "List Dataflows",
     Description = "Lists all dataflows in a specified Microsoft Fabric workspace.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     ReadOnly = true,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class ListDataflowsCommand(
     ILogger<ListDataflowsCommand> logger,
     DataflowHandler handler) : AuthenticatedCommand<ListDataflowsOptions, ListDataflowsCommandResult>

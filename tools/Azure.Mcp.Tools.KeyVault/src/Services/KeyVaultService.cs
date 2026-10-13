@@ -1,31 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(IAzureService azureService)
+    : BaseAzureService(azureService), IKeyVaultService
 {
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = CreateKeyClient(vaultName, credential);
         var keys = new List<string>();
 
         await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => includeManagedKeys || !x.Managed))
@@ -39,15 +40,13 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     public async Task<KeyVaultKey> GetKey(
         string vaultName,
         string keyName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = CreateKeyClient(vaultName, credential);
 
         return await client.GetKeyAsync(keyName, cancellationToken: cancellationToken);
     }
@@ -56,31 +55,27 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
         string vaultName,
         string keyName,
         string keyType,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType));
 
         var type = new KeyType(keyType);
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = CreateKeyClient(vaultName, credential);
 
         return await client.CreateKeyAsync(keyName, type, cancellationToken: cancellationToken);
     }
 
     public async Task<List<string>> ListSecrets(
         string vaultName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = CreateSecretClient(vaultName, credential);
         var secrets = new List<string>();
 
         await foreach (var secret in client.GetPropertiesOfSecretsAsync(cancellationToken))
@@ -95,15 +90,13 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
         string vaultName,
         string secretName,
         string secretValue,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = CreateSecretClient(vaultName, credential);
 
         return await client.SetSecretAsync(secretName, secretValue, cancellationToken);
     }
@@ -111,30 +104,26 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     public async Task<KeyVaultSecret> GetSecret(
         string vaultName,
         string secretName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = CreateSecretClient(vaultName, credential);
 
         return await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
     }
 
     public async Task<List<string>> ListCertificates(
         string vaultName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = CreateCertificateClient(vaultName, credential);
         var certificates = new List<string>();
 
         await foreach (var certificate in client.GetPropertiesOfCertificatesAsync(cancellationToken: cancellationToken))
@@ -148,15 +137,13 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     public async Task<KeyVaultCertificateWithPolicy> GetCertificate(
         string vaultName,
         string certificateName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = CreateCertificateClient(vaultName, credential);
 
         return await client.GetCertificateAsync(certificateName, cancellationToken);
     }
@@ -164,15 +151,13 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     public async Task<KeyVaultCertificateWithPolicy> CreateCertificate(
         string vaultName,
         string certificateName,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = CreateCertificateClient(vaultName, credential);
 
         var certificateOperation = await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
         await WaitForLroCompletionAsync(certificateOperation, cancellationToken);
@@ -184,15 +169,13 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
         string certificateName,
         string certificateData,
         string? password,
-        string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData));
 
         var credential = await GetCredential(tenantId, cancellationToken);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = CreateCertificateClient(vaultName, credential);
 
         // certificateData expected as base64 PFX bytes or raw PEM text.
         byte[] bytes;
@@ -235,7 +218,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     {
         ValidateVaultName(vaultName);
 
-        switch (TenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.vault.azure.net";
@@ -253,7 +236,7 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     {
         ValidateVaultName(vaultName);
 
-        switch (TenantService.CloudConfiguration.CloudType)
+        switch (AzureService.CloudConfiguration.CloudType)
         {
             case AzureCloudConfiguration.AzureCloud.AzurePublicCloud:
                 return $"https://{vaultName}.managedhsm.azure.net";
@@ -294,62 +277,82 @@ public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureSer
     }
 
     // Create clients with injected HttpClient, this will enable record/playback during testing.
-    private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    private KeyClient CreateKeyClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
-        httpClient.BaseAddress = vaultUri;
-        var options = new KeyClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
+        var options = AddDefaultPolicies(new KeyClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
     }
 
-    private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    private SecretClient CreateSecretClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
-        httpClient.BaseAddress = vaultUri;
-        var options = new SecretClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
+        var options = AddDefaultPolicies(new SecretClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
     }
 
-    private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    private CertificateClient CreateCertificateClient(string vaultName, TokenCredential credential)
     {
-        var vaultUri = new Uri(BuildVaultUri(vaultName));
-        var httpClient = TenantService.GetClient();
-        httpClient.BaseAddress = vaultUri;
-        var options = new CertificateClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        Uri vaultUri = ValidateVaultEndpoint(AzureService,
+            new Uri(BuildVaultUri(vaultName)));
+        var options = AddDefaultPolicies(new CertificateClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(vaultUri, credential, options);
     }
 
     public async Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
-        string subscription,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(vaultName), vaultName));
         var credential = await GetCredential(tenantId, cancellationToken);
-        var hsmUri = new Uri(GetHsmUri(vaultName));
+        Uri hsmUri = ValidateManagedHsmEndpoint(AzureService,
+            new Uri(GetHsmUri(vaultName)));
 
-        var hsmClient = CreateSettingsClient(hsmUri, credential, retryPolicy);
+        var hsmClient = CreateSettingsClient(hsmUri, credential);
         var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
         return hsmResponse.Value;
     }
 
-    private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
+    /// <summary>
+    /// Validates that the given Key Vault endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The URI of the Key Vault endpoint to validate.</param>
+    /// <returns>The validated URI of the Key Vault endpoint.</returns>
+    internal static Uri ValidateVaultEndpoint(IAzureService azureService, Uri endpoint)
     {
-        var httpClient = TenantService.GetClient();
-        httpClient.BaseAddress = hsmUri;
-        var options = new KeyVaultAdministrationClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        ArgumentNullException.ThrowIfNull(endpoint);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "keyvault");
+        return endpoint;
+    }
+
+    /// <summary>
+    /// Validates that the given Managed HSM endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The URI of the Managed HSM endpoint to validate.</param>
+    /// <returns>The validated URI of the Managed HSM endpoint.</returns>
+    internal static Uri ValidateManagedHsmEndpoint(IAzureService azureService, Uri endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "managedhsm");
+        return endpoint;
+    }
+
+    private KeyVaultSettingsClient CreateSettingsClient(Uri hsmUri, TokenCredential credential)
+    {
+        var options = AddDefaultPolicies(new KeyVaultAdministrationClientOptions());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(hsmUri, credential, options);
     }
 }

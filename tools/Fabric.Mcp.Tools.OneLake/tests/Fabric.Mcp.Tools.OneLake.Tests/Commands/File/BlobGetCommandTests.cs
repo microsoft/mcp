@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.TestUtilities;
 using Microsoft.Mcp.Tests.Client;
@@ -19,18 +20,18 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = Substitute.For<IOptions<ServerRuntimeConfiguration>>();
 
     public BlobGetCommandTests()
     {
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serviceStartOptions);
+        _configuration.Value.Returns(new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_configuration);
     }
 
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        Assert.Equal("download_file", Command.Name);
+        Assert.Equal("download-file", Command.Name);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.Destructive);
@@ -230,7 +231,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IOneLake
     [Fact]
     public async Task ExecuteAsync_RejectsDownloadPath_WhenTransportIsHttp()
     {
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.Http });
+        _configuration.Value.Returns(new ServerRuntimeConfiguration { Transport = TransportTypes.Http });
 
         var response = await ExecuteCommandAsync(
             "--workspace-id", "workspace",

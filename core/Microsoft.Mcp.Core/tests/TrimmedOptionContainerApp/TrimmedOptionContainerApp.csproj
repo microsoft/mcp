@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!--
+      Trimming and self-contained publishing are supplied by OptionBinderTrimmedTests on the
+      publish command line. Setting them here would force every solution build to resolve a
+      runtime identifier and restore a runtime pack for this fixture.
+    -->
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Mcp.Core.csproj" />
+    <TrimmerRootAssembly Include="System.Net.Primitives" />
+  </ItemGroup>
+</Project>

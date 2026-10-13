@@ -1,0 +1,27 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920",
+    "createPlanRequest": {
+      "displayName": "Plan 1",
+      "description": "A plan description."
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+        "type": "Plan",
+        "displayName": "Plan 1",
+        "description": "A plan description.",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-28571e947920"
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/8f7aa34a-52f2-4620-a864-3567f9afb7df",
+        "x-ms-operation-id": "8f7aa34a-52f2-4620-a864-3567f9afb7df",
+        "Retry-After": 30
+      }
+    }
+  }
+}

@@ -19,8 +19,14 @@ public sealed class VaultUpdateOptions : BaseAzureBackupOptions
     [Option(Description = AzureBackupOptionDefinitions.ImmutabilityState)]
     public string? ImmutabilityState { get; set; }
 
-    [Option(Description = "Managed identity type: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', or 'None'.")]
+    [Option(Description = AzureBackupOptionDefinitions.VaultUpdateIdentityType)]
     public string? IdentityType { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.VaultUpdateUserAssignedIdentity)]
+    public string? UserAssignedIdentity { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.VaultUpdatePublicNetworkAccess)]
+    public string? PublicNetworkAccess { get; set; }
 
     [Option(Description = "Resource tags as JSON key-value object.")]
     public string? Tags { get; set; }

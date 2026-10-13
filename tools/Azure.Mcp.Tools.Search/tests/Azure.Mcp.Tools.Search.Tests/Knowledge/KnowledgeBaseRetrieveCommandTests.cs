@@ -4,7 +4,6 @@
 using System.Net;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
 using Azure.Mcp.Tools.Search.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -23,7 +22,6 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Is("base1"),
             Arg.Is("life"),
             Arg.Is<List<(string role, string message)>?>(m => m == null),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(json);
 
@@ -45,7 +43,6 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Is("base1"),
             Arg.Is<string?>(q => q == null),
             Arg.Is<List<(string role, string message)>?>(m => m != null && m.Count == 1 && m[0].role == "user"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(json);
 
@@ -99,7 +96,6 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<List<(string role, string message)>?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test failure"));
 

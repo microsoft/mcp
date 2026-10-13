@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.Compute.Models;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -54,7 +53,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
                 Arg.Any<bool>(),
                 Arg.Any<bool>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new VmPowerStateResult("test-vm", null, "test-rg", "start", "Operation completed.", true));
         }
@@ -93,7 +91,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -125,7 +122,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Is(true),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -149,7 +145,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             true,
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -169,7 +164,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Is(true),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -192,7 +186,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             true,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -210,7 +203,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -240,7 +232,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
@@ -270,7 +261,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -301,7 +291,6 @@ public class VmPowerStateCommandTests : SubscriptionCommandUnitTestsBase<VmPower
             Arg.Any<bool>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 

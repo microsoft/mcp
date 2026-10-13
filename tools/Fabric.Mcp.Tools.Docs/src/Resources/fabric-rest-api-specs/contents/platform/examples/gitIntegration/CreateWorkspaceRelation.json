@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "workspaceId": "55555555-5555-5555-5555-555555555555",
+        "createWorkspaceRelationRequest": {
+            "relatedWorkspaceId": "33333333-3333-3333-3333-333333333333",
+            "relationType": "Base"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+                "workspaceId": "55555555-5555-5555-5555-555555555555",
+                "relatedWorkspaceId": "33333333-3333-3333-3333-333333333333",
+                "relationType": "Base"
+            }
+        }
+    }
+}

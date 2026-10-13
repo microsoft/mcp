@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.CloudEndpoint;
     Name = "changedetection",
     Title = "Trigger Change Detection",
     Description = "Trigger change detection on a cloud endpoint to sync file changes.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -45,7 +46,6 @@ public sealed class CloudEndpointTriggerChangeDetectionCommand(ILogger<CloudEndp
                 options.ChangeDetectionMode,
                 options.Paths,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Change detection triggered successfully";

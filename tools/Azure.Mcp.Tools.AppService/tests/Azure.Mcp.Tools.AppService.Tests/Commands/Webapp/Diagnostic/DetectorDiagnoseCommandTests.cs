@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.AppService.Commands.Webapp.Diagnostic;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
 using Azure.ResourceManager.AppService.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -41,7 +40,7 @@ public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<Det
         // Set up the mock to return success for any arguments
         Service.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown", startTime, endTime,
 
-            interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            interval, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expectedValue);
 
         List<string> unparsedArgs = [
@@ -71,7 +70,7 @@ public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<Det
 
         await Service.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown",
 
-            startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            startTime, endTime, interval, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, AppServiceJsonContext.Default.DetectorDiagnoseResult);
@@ -121,7 +120,6 @@ public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<Det
             Arg.Any<DateTimeOffset?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -140,7 +138,7 @@ public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<Det
         // Arrange
         // Set up the mock to return success for any arguments
         Service.DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown", startTime, endTime,
-            interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            interval, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         List<string> unparsedArgs = [
@@ -170,7 +168,7 @@ public class DetectorDiagnoseCommandTests : SubscriptionCommandUnitTestsBase<Det
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
 
         await Service.Received(1).DiagnoseDetectorAsync("sub123", "rg1", "test-app", "LinuxMemoryDrillDown",
-            startTime, endTime, interval, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(),
+            startTime, endTime, interval, Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 }

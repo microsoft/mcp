@@ -56,8 +56,34 @@ Regardless of which credential is used, the authenticated identity must have the
 | Environment | Recommended setup |
 |---|---|
 | **Local development** | Sign in with `az login`, VS Code Azure extension, or Azure PowerShell. The chain picks it up automatically. |
-| **CI / CD pipelines** | Set `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` environment variables (service principal). |
-| **Production (hosted)** | HTTP transport is recommended for production hosting — see Remote [Authentication (HTTP Transport)](#remote-authentication-http-transport). If STDIO is required, set AZURE_TOKEN_CREDENTIALS=prod to restrict the chain to Environment, Workload Identity, and Managed Identity credentials only — no interactive browser fallback. |
+| **Azure Pipelines** | Use an Azure Resource Manager service connection with workload identity federation and select `AzurePipelinesCredential` as described below. |
+| **Other CI / CD pipelines** | Set `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` environment variables (service principal). |
+| **Production (hosted)** | HTTP transport is recommended for production hosting — see Remote [Authentication (HTTP Transport)](#remote-authentication-http-transport). If STDIO is required, set AZURE_TOKEN_CREDENTIALS=prod to restrict the chain to Environment, Azure Pipelines (when configured), Workload Identity, and Managed Identity credentials only — no interactive browser fallback. |
+
+### Azure Pipelines workload identity
+
+Azure MCP Server can authenticate as an Azure Resource Manager service connection configured with workload identity federation. This avoids client secrets and does not depend on Azure CLI or Azure PowerShell login state.
+
+Set `AZURE_TOKEN_CREDENTIALS=AzurePipelinesCredential` in an `AzureCLI@2` or `AzurePowerShell@5` task and map `SYSTEM_ACCESSTOKEN` explicitly:
+
+```yaml
+- task: AzurePowerShell@5
+  displayName: Run Azure MCP
+  env:
+    AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+  inputs:
+    azureSubscription: my-workload-identity-service-connection
+    azurePowerShellVersion: LatestVersion
+    scriptType: InlineScript
+    Inline: |
+      # Run Azure MCP commands here.
+    pwsh: true
+```
+
+The task provides `AZURESUBSCRIPTION_TENANT_ID`, `AZURESUBSCRIPTION_CLIENT_ID`, and `AZURESUBSCRIPTION_SERVICE_CONNECTION_ID`. Azure Pipelines does not map `SYSTEM_ACCESSTOKEN` automatically, so the `env` entry shown above is required. These service connection variables are supported only by `AzureCLI@2` and `AzurePowerShell@5` tasks.
+
+When `AZURE_TOKEN_CREDENTIALS=prod`, Azure MCP adds `AzurePipelinesCredential` after `EnvironmentCredential` only when all four variables are available, then preserves the `WorkloadIdentityCredential` and `ManagedIdentityCredential` fallbacks. The service connection identity must have the Azure RBAC permissions required by the commands being run.
 
 ---
 
@@ -167,7 +193,7 @@ External MCP servers configured in the registry with `OAuthScopes` must meet the
 | **Issuer validation** | A deployment requirement: the server's issuer identity should be resolvable and validated by its OAuth provider. Azure Identity bearer tokens carry issuer/audience claims that the downstream resource validates; the Azure MCP registry client does not perform additional client-side issuer binding |
 | **Application type** | A deployment requirement: registry servers should be registered as the correct OAuth application type (confidential vs public client) with their OAuth provider |
 | **Scope registration** | A deployment requirement: all scopes in `OAuthScopes` should be registered with the OAuth provider |
-| **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per OAuth Protected Resources spec |
+| **Protected resource metadata** | Recommended: Publish `.well-known/oauth-protected-resource` metadata per [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) (OAuth 2.0 Protected Resource Metadata) |
 
 ### Known Limitation: MCP Protocol Resource Parameter
 

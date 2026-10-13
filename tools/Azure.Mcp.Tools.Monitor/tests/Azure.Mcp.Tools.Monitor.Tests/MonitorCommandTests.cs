@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using System.Text.Json;
 using Azure.ResourceManager.CloudHealth.Models;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -15,10 +17,13 @@ namespace Azure.Mcp.Tools.Monitor.Tests;
 public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
+
     private string? _appInsightsName;
     private string? _bingWebTestName;
     private string? _healthModelParentName;
     private string? _healthModelChildName;
+    private string? _storageAccountName;
 
     private static readonly string[] s_validHealthStates =
     [
@@ -51,6 +56,18 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
             Regex = "webtests/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
+        }),
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "timespan=([^&]+)",
+            Value = "P1D",
+            GroupForReplace = "1"
+        }),
+        new(new UriRegexSanitizerBody
+        {
+            Regex = "/v1/workspaces/([^?\\/]+)/(?:query|search)",
+            Value = EmptyGuid,
+            GroupForReplace = "1"
         })
     ];
 
@@ -60,6 +77,10 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..TimeZone")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..customerId")
+        {
+            Value = EmptyGuid
+        }),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..id"){
             Regex = "resource[Gg]roups/([^?\\/]+)",
             Value = "Sanitized",
@@ -85,7 +106,222 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
         _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
+        _storageAccountName = $"{Settings.ResourceBaseName}mon";
     }
+
+    #region Workspace Log Search Integration Tests
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Search_Basic_Table()
+    {
+        var table = GetLogSearchDeploymentOutput("logSearchBasicTableName");
+        var fixtureId = GetLogSearchDeploymentOutput("logSearchBasicFixtureId");
+        var result = await SearchWorkspaceLogsAsync(
+            table,
+            "| where FixtureId startswith 'mcp-log-search-basic-' | order by Count asc | project FixtureId, Message, Count, Enabled, OptionalValue");
+
+        AssertLogSearchResult(
+            result,
+            table,
+            "Basic",
+            fixtureId,
+            "basic fixture",
+            7,
+            expectedEnabled: true);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Search_Auxiliary_Table()
+    {
+        var table = GetLogSearchDeploymentOutput("logSearchAuxiliaryTableName");
+        var fixtureId = GetLogSearchDeploymentOutput("logSearchAuxiliaryFixtureId");
+        var result = await SearchWorkspaceLogsAsync(
+            table,
+            "| where FixtureId startswith 'mcp-log-search-auxiliary-' | order by Count asc | project FixtureId, Message, Count, Enabled, OptionalValue");
+
+        AssertLogSearchResult(
+            result,
+            table,
+            "Auxiliary",
+            fixtureId,
+            "auxiliary fixture",
+            11,
+            expectedEnabled: false);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Return_Empty_Log_Search_Result()
+    {
+        var table = GetLogSearchDeploymentOutput("logSearchBasicTableName");
+        var result = await SearchWorkspaceLogsAsync(
+            table,
+            "| where FixtureId == 'missing-log-search-fixture' | project Message, Count");
+
+        Assert.NotNull(result);
+        Assert.Equal(table, result.Value.AssertProperty("table").GetString());
+        Assert.Equal("Basic", result.Value.AssertProperty("plan").GetString());
+        Assert.Equal(0, result.Value.AssertProperty("rowCount").GetInt32());
+        Assert.Empty(result.Value.AssertProperty("rows").EnumerateArray());
+        Assert.False(result.Value.AssertProperty("isPartial").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, result.Value.AssertProperty("error").ValueKind);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Reject_Analytics_Search_And_Preserve_Analytics_Query()
+    {
+        var table = GetLogSearchDeploymentOutput("logSearchAnalyticsTableName");
+        var searchResponse = await CallToolAsync(
+            "monitor_workspace_log_search",
+            CreateLogSearchArguments(table, "| take 1", "P1D", 1),
+            resultProcessor: element => element);
+
+        AssertErrorContains(searchResponse, "Analytics");
+
+        var queryResult = await CallToolAsync(
+            "monitor_workspace_log_query",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "workspace", Settings.ResourceBaseName },
+                { "table", table },
+                { "query", $"{table} | take 1" },
+                { "hours", 24 },
+                { "limit", 1 },
+                { "tenant", Settings.TenantId }
+            });
+
+        Assert.NotNull(queryResult);
+        Assert.Equal(JsonValueKind.Array, queryResult.Value.AssertProperty("results").ValueKind);
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Reject_Log_Search_Over_Thirty_Days()
+    {
+        var table = GetLogSearchDeploymentOutput("logSearchBasicTableName");
+        var response = await CallToolAsync(
+            "monitor_workspace_log_search",
+            CreateLogSearchArguments(
+                table,
+                "| where FixtureId startswith 'mcp-log-search-basic-'",
+                "P31D",
+                1),
+            resultProcessor: element => element);
+
+        AssertErrorContains(response, "30");
+    }
+
+    [Fact]
+    [CustomMatcher(compareBody: true)]
+    public async Task Should_Reject_Log_Search_Crossing_Plan_Transition()
+    {
+        var transition = DateTimeOffset.Parse(
+            GetLogSearchDeploymentOutput("logSearchAuxiliaryLastPlanModifiedDate"),
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind);
+        var timespan = $"{transition.AddMinutes(-1):o}/{transition.AddMinutes(1):o}";
+        var table = GetLogSearchDeploymentOutput("logSearchAuxiliaryTableName");
+
+        var response = await CallToolAsync(
+            "monitor_workspace_log_search",
+            CreateLogSearchArguments(
+                table,
+                "| where FixtureId startswith 'mcp-log-search-auxiliary-'",
+                timespan,
+                1),
+            resultProcessor: element => element);
+
+        AssertErrorContains(response, "boundary");
+    }
+
+    private async Task<JsonElement?> SearchWorkspaceLogsAsync(string table, string query)
+    {
+        var playbackEnd = DateTimeOffset.UtcNow;
+        var timespan = TestMode == TestMode.Playback
+            ? $"{playbackEnd.AddMinutes(-5):o}/{playbackEnd:o}"
+            : $"{GetLogSearchDeploymentOutput("logSearchFixtureStartTime")}/{GetLogSearchDeploymentOutput("logSearchFixtureEndTime")}";
+        var result = await CallToolAsync(
+            "monitor_workspace_log_search",
+            CreateLogSearchArguments(
+                table,
+                query,
+                timespan,
+                1));
+
+        Assert.NotNull(result);
+        return result;
+    }
+
+    private Dictionary<string, object?> CreateLogSearchArguments(
+        string table,
+        string query,
+        string timespan,
+        int limit)
+    {
+        return new()
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", Settings.ResourceGroupName },
+            { "workspace", Settings.ResourceBaseName },
+            { "table", table },
+            { "query", query },
+            { "timespan", timespan },
+            { "limit", limit },
+            { "tenant", Settings.TenantId }
+        };
+    }
+
+    private string GetLogSearchDeploymentOutput(string name) =>
+        RegisterOrRetrieveDeploymentOutputVariable(name, name);
+
+    private static void AssertLogSearchResult(
+        JsonElement? result,
+        string expectedTable,
+        string expectedPlan,
+        string expectedFixtureId,
+        string expectedMessage,
+        long expectedCount,
+        bool expectedEnabled)
+    {
+        Assert.NotNull(result);
+        Assert.Equal(expectedTable, result.Value.AssertProperty("table").GetString());
+        Assert.Equal(expectedPlan, result.Value.AssertProperty("plan").GetString());
+        Assert.Equal(1, result.Value.AssertProperty("rowCount").GetInt32());
+        Assert.Equal(1, result.Value.AssertProperty("limit").GetInt32());
+        Assert.False(result.Value.AssertProperty("isPartial").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, result.Value.AssertProperty("error").ValueKind);
+
+        // Recordings scrub column names; the explicit project clause fixes their order.
+        var columns = result.Value.AssertProperty("columns").EnumerateArray().ToArray();
+        Assert.Equal<string?>(
+            ["string", "string", "long", "bool", "string"],
+            columns.Select(column => column.AssertProperty("type").GetString()));
+        Assert.All(columns, column => Assert.Equal(
+            JsonValueKind.String,
+            column.AssertProperty("name").ValueKind));
+        var row = result.Value.AssertProperty("rows")[0];
+
+        Assert.Equal(columns.Length, row.GetArrayLength());
+        Assert.Equal(expectedFixtureId, row[0].GetString());
+        Assert.Equal(expectedMessage, row[1].GetString());
+        Assert.Equal(expectedCount, row[2].GetInt64());
+        Assert.Equal(expectedEnabled, row[3].GetBoolean());
+        Assert.Equal(string.Empty, row[4].GetString());
+    }
+
+    private static void AssertErrorContains(JsonElement? response, string expected)
+    {
+        Assert.NotNull(response);
+        var message = response.Value.AssertProperty("message").GetString();
+        Assert.NotNull(message);
+        Assert.Contains(expected, message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
 
     // [Fact]
     // public async Task Should_list_monitor_tables()
@@ -491,6 +727,79 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
     //     }
     // }
 
+    #region Metrics Integration Tests
+
+    [Fact]
+    public async Task Should_Batch_Query_Metrics()
+    {
+        // The command defaults start/end time to "now" when not supplied, which would produce a different
+        // query string URI on every run and break playback matching. Registering the computed values as
+        // variables pins the values used at record time so they're replayed exactly during playback.
+        var startTime = RegisterOrRetrieveVariable("startTime", DateTime.UtcNow.AddHours(-24).ToString("o"));
+        var endTime = RegisterOrRetrieveVariable("endTime", DateTime.UtcNow.ToString("o"));
+
+        var result = await CallToolAsync(
+            "monitor_metrics_batchquery",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "resource-type", "Microsoft.Storage/storageAccounts" },
+                { "resources", _storageAccountName },
+                { "metric-namespace", "Microsoft.Storage/storageAccounts" },
+                { "metric-names", "UsedCapacity" },
+                { "start-time", startTime },
+                { "end-time", endTime }
+            });
+
+        var resultsArray = result.AssertProperty("results");
+        Assert.Equal(JsonValueKind.Array, resultsArray.ValueKind);
+        var resources = resultsArray.EnumerateArray().ToList();
+        Assert.NotEmpty(resources);
+
+        var firstResource = resources[0];
+
+        var resourceId = firstResource.AssertProperty("resourceId");
+        Assert.Equal(JsonValueKind.String, resourceId.ValueKind);
+        Assert.Contains(_storageAccountName!, resourceId.GetString(), StringComparison.OrdinalIgnoreCase);
+
+        var metrics = firstResource.AssertProperty("metrics");
+        Assert.Equal(JsonValueKind.Array, metrics.ValueKind);
+        var metricsList = metrics.EnumerateArray().ToList();
+        Assert.NotEmpty(metricsList);
+
+        var firstMetric = metricsList[0];
+
+        var name = firstMetric.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, name.ValueKind);
+        Assert.Equal("UsedCapacity", name.GetString());
+
+        var unit = firstMetric.AssertProperty("unit");
+        Assert.Equal(JsonValueKind.String, unit.ValueKind);
+        Assert.False(string.IsNullOrEmpty(unit.GetString()));
+
+        var timeSeries = firstMetric.AssertProperty("timeSeries");
+        Assert.Equal(JsonValueKind.Array, timeSeries.ValueKind);
+        var timeSeriesList = timeSeries.EnumerateArray().ToList();
+        Assert.NotEmpty(timeSeriesList);
+
+        var firstTimeSeries = timeSeriesList[0];
+
+        var start = firstTimeSeries.AssertProperty("start");
+        Assert.Equal(JsonValueKind.String, start.ValueKind);
+        Assert.True(DateTime.TryParse(start.GetString(), out _));
+
+        var end = firstTimeSeries.AssertProperty("end");
+        Assert.Equal(JsonValueKind.String, end.ValueKind);
+        Assert.True(DateTime.TryParse(end.GetString(), out _));
+
+        var interval = firstTimeSeries.AssertProperty("interval");
+        Assert.Equal(JsonValueKind.String, interval.ValueKind);
+        Assert.StartsWith("PT", interval.GetString());
+    }
+
+    #endregion
+
     #region WebTests Integration Tests
 
     [Fact]
@@ -683,10 +992,10 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
                 { "resource-group", Settings.ResourceGroupName }
             });
 
-        Assert.NotNull(result);
-        Assert.Equal(JsonValueKind.Array, result.Value.ValueKind);
+        var healthModels = result.AssertProperty("healthModels");
+        Assert.Equal(JsonValueKind.Array, healthModels.ValueKind);
 
-        var models = result.Value.EnumerateArray().ToList();
+        var models = healthModels.EnumerateArray().ToList();
         Assert.NotEmpty(models);
 
         Assert.All(models, model =>

@@ -3,24 +3,16 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.IoTHub.Commands;
 using Azure.Mcp.Tools.IoTHub.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Services;
 
-public class IoTHubService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<IoTHubService> logger)
-    : BaseAzureService(tenantService), IIoTHubService
+public class IoTHubService(IAzureService azureService, ILogger<IoTHubService> logger)
+    : BaseAzureService(azureService), IIoTHubService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<IoTHubService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<IoTHubDescription> GetIoTHub(
@@ -28,7 +20,6 @@ public class IoTHubService(
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -38,8 +29,13 @@ public class IoTHubService(
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(
+                subscription,
+                tenant,
+                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(
+                tenant,
+                cancellationToken: cancellationToken);
             var iotHubResourceId = new ResourceIdentifier(
                 $"/subscriptions/{subscriptionResource.Data.SubscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Devices/IotHubs/{hubName}");
             var hub = await armClient.GetGenericResource(iotHubResourceId).GetAsync(cancellationToken);

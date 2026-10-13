@@ -19,15 +19,19 @@ public sealed class ProtectedItemProtectOptions : BaseProtectedItemOptions
     [Option(Description = "Resource group used to store AKS volume snapshots created by Backup. DPP AKS only.")]
     public string? AksSnapshotResourceGroup { get; set; }
 
-    [Option(Description = "Comma-separated list of namespaces to include in the AKS backup policy default scope. DPP AKS only.")]
-    public string? AksIncludedNamespaces { get; set; }
-
-    [Option(Description = "Comma-separated list of namespaces to exclude from the AKS backup policy default scope. DPP AKS only.")]
-    public string? AksExcludedNamespaces { get; set; }
-
     [Option(Description = "Comma-separated label selectors (e.g. 'app=frontend,tier=web') applied to the AKS backup policy default scope. DPP AKS only.")]
     public string? AksLabelSelectors { get; set; }
 
     [Option(Description = "Include cluster-scoped resources in the AKS backup policy. DPP AKS only.")]
     public bool AksIncludeClusterScopeResources { get; set; }
+
+    // Selective Disk Backup (RSV IaaS VM only) - see https://learn.microsoft.com/azure/backup/selective-disk-backup-restore
+    [Option(Description = AzureBackupOptionDefinitions.DiskListSetting)]
+    public string? DiskListSetting { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.DisksList)]
+    public string? DisksList { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.ExcludeAllDataDisks)]
+    public bool ExcludeAllDataDisks { get; set; }
 }

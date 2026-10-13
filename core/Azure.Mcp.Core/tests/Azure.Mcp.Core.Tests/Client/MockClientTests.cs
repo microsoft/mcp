@@ -28,8 +28,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_Ping_Request_To_Server()
     {
-        await Invoke_Request_To_Server(
-            method: "ping",
+        await InvokeRequestToServer(
+            method: RequestMethods.Ping,
             serverHandlers: null,
             configureOptions: null,
             assertResult: response =>
@@ -42,8 +42,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_Init_Command()
     {
-        await Invoke_Request_To_Server(
-            method: "initialize",
+        await InvokeRequestToServer(
+            method: RequestMethods.Initialize,
             serverHandlers: null,
             configureOptions: null,
             assertResult: response =>
@@ -59,8 +59,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_Az_List_Subscription_Command()
     {
-        await Invoke_Request_To_Server(
-            method: "tools/call",
+        await InvokeRequestToServer(
+            method: RequestMethods.ToolsCall,
             new()
             {
                 CallToolHandler = (request, ct) =>
@@ -117,8 +117,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_List_Tools_Command()
     {
-        await Invoke_Request_To_Server(
-            method: "tools/list",
+        await InvokeRequestToServer(
+            method: RequestMethods.ToolsList,
             new()
             {
                 ListToolsHandler = (request, ct) =>
@@ -143,8 +143,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_Dummy_Tool()
     {
-        await Invoke_Request_To_Server(
-            method: "tools/call",
+        await InvokeRequestToServer(
+            method: RequestMethods.ToolsCall,
             new()
             {
                 CallToolHandler = (request, ct) =>
@@ -169,8 +169,8 @@ public class MockClientTests
     [Fact]
     public async Task Invoke_Invalid_Tool_Returns_Error()
     {
-        await Invoke_Request_To_Server(
-            method: "tools/call",
+        await InvokeRequestToServer(
+            method: RequestMethods.ToolsCall,
             new()
             {
                 CallToolHandler = (request, ct) =>
@@ -203,9 +203,9 @@ public class MockClientTests
     }
 
 
-    private async Task Invoke_Request_To_Server(string method, McpServerHandlers? serverHandlers, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
+    private static async Task InvokeRequestToServer(string method, McpServerHandlers? serverHandlers, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
     {
-        await Invoke_Request_To_Server(
+        await InvokeRequestToServer(
             serverHandlers: serverHandlers,
             method: method,
             requestParams: null,
@@ -214,7 +214,7 @@ public class MockClientTests
         );
     }
 
-    private async Task Invoke_Request_To_Server(string method, McpServerHandlers? serverHandlers, JsonNode? requestParams, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
+    private static async Task InvokeRequestToServer(string method, McpServerHandlers? serverHandlers, JsonNode? requestParams, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
     {
         await using var transport = new CustomTestTransport();
         var options = CreateOptions(serverHandlers);

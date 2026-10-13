@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -21,6 +22,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         label otherwise the default label will be used. You can also specify a content type to indicate how the value
         should be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -33,6 +35,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
+    public override JsonTypeInfo<KeyValueSetCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueSetCommandResult;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueSetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -43,15 +47,11 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger, IAppC
                 options.Value,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 options.Label,
                 options.ContentType,
                 options.Tags,
                 cancellationToken);
-            context.Response.Results = ResponseResult.Create(
-                new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
-                AppConfigJsonContext.Default.KeyValueSetCommandResult
-            );
+            SetResult(context, new(options.Key, options.Value, options.Label, options.ContentType, options.Tags));
         }
         catch (Exception ex)
         {

@@ -193,4 +193,68 @@ public class RsvDatasourceRegistryTests
     }
 
     #endregion
+
+    #region Selective Disk Backup - IaaS-VM-only invariant
+
+    // Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks)
+    // is enforced in RsvBackupOperations.ProtectItemAsync via:
+    //     if (hasDiskExclusion && profile.ProtectedItemType != RsvProtectedItemType.IaasVm) throw;
+    // These tests pin the registry-level invariant that guard depends on: exactly ONE profile
+    // (IaasVm) maps to RsvProtectedItemType.IaasVm. If a future contributor adds a new profile
+    // and mis-tags its ProtectedItemType as IaasVm, the guard's discrimination breaks and this
+    // test will fail loudly.
+
+    [Fact]
+    public void IaasVm_IsTheOnlyProfileWithIaasVmProtectedItemType()
+    {
+        var iaasVmProfiles = RsvDatasourceRegistry.AllProfiles
+            .Where(p => p.ProtectedItemType == RsvProtectedItemType.IaasVm)
+            .ToArray();
+
+        Assert.Single(iaasVmProfiles);
+        Assert.Same(RsvDatasourceRegistry.IaasVm, iaasVmProfiles[0]);
+    }
+
+    [Theory]
+    [InlineData("SQL")]
+    [InlineData("sql")]
+    [InlineData("sqldatabase")]
+    [InlineData("mssql")]
+    [InlineData("SAPHANA")]
+    [InlineData("saphana")]
+    [InlineData("hana")]
+    [InlineData("SAPASE")]
+    [InlineData("sapase")]
+    [InlineData("sybase")]
+    [InlineData("AzureFileShare")]
+    [InlineData("fileshare")]
+    [InlineData("afs")]
+    public void InGuestWorkloadsAndFileShare_AreNotIaasVm(string datasourceType)
+    {
+        // SQL/SAP HANA/SAP ASE are in-guest workloads discovered via VMAppContainer;Compute
+        // containers - they are NOT IaaS VM protected items even though they run on VMs.
+        // Selective disk backup must be rejected for these.
+        var profile = RsvDatasourceRegistry.Resolve(datasourceType);
+
+        Assert.NotNull(profile);
+        Assert.NotEqual(RsvProtectedItemType.IaasVm, profile!.ProtectedItemType);
+    }
+
+    [Theory]
+    [InlineData("VM")]
+    [InlineData("vm")]
+    [InlineData("iaasvm")]
+    [InlineData("azurevm")]
+    [InlineData("azureiaasvm")]
+    [InlineData("virtualmachine")]
+    [InlineData("iaasvmcontainer")]
+    public void IaasVmAliases_AllResolveToIaasVmProtectedItemType(string datasourceType)
+    {
+        var profile = RsvDatasourceRegistry.Resolve(datasourceType);
+
+        Assert.NotNull(profile);
+        Assert.Equal(RsvProtectedItemType.IaasVm, profile!.ProtectedItemType);
+    }
+
+    #endregion
 }

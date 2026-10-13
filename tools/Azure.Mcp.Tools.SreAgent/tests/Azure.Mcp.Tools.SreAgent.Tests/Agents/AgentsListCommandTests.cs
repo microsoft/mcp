@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.SreAgent.Commands.Agents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -35,7 +34,6 @@ public class AgentsListCommandTests : SubscriptionCommandUnitTestsBase<AgentsLis
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new List<SreAgentResource> { new() { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" } });
         }
@@ -63,7 +61,6 @@ public class AgentsListCommandTests : SubscriptionCommandUnitTestsBase<AgentsLis
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -76,7 +73,7 @@ public class AgentsListCommandTests : SubscriptionCommandUnitTestsBase<AgentsLis
     [Fact]
     public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
     {
-        Service.ListAgentsAsync("sub", null, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListAgentsAsync("sub", null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new List<SreAgentResource>());
 
         var response = await ExecuteCommandAsync("--subscription", "sub");
@@ -88,12 +85,12 @@ public class AgentsListCommandTests : SubscriptionCommandUnitTestsBase<AgentsLis
     [Fact]
     public async Task ExecuteAsync_PassesResourceGroupAndTenant()
     {
-        Service.ListAgentsAsync("sub", "rg", "tenant", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        Service.ListAgentsAsync("sub", "rg", "tenant", Arg.Any<CancellationToken>())
             .Returns(new List<SreAgentResource>());
 
         var response = await ExecuteCommandAsync("--subscription", "sub", "--resource-group", "rg", "--tenant", "tenant");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).ListAgentsAsync("sub", "rg", "tenant", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).ListAgentsAsync("sub", "rg", "tenant", Arg.Any<CancellationToken>());
     }
 }

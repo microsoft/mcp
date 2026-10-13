@@ -2,21 +2,19 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Key;
 
-public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateCommand, IKeyVaultService>
+public class KeyCreateCommandTests : CommandUnitTestsBase<KeyCreateCommand, IKeyVaultService>
 {
-    private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownKeyName = "knownKeyName";
     private readonly KeyType _knownKeyType = KeyType.Rsa;
@@ -45,9 +43,7 @@ public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateC
             Arg.Is(_knownVaultName),
             Arg.Is(_knownKeyName),
             Arg.Is(_knownKeyType.ToString()),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
 
@@ -55,8 +51,7 @@ public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateC
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--key", _knownKeyName,
-            "--key-type", _knownKeyType.ToString(),
-            "--subscription", _knownSubscriptionId);
+            "--key-type", _knownKeyType.ToString());
 
         // Assert
         var retrievedKey = ValidateAndDeserializeResponse(response, KeyVaultJsonContext.Default.KeyDetails);
@@ -72,8 +67,7 @@ public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateC
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--key", "",
-            "--key-type", _knownKeyType.ToString(),
-            "--subscription", _knownSubscriptionId);
+            "--key-type", _knownKeyType.ToString());
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -90,9 +84,7 @@ public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateC
             Arg.Is(_knownVaultName),
             Arg.Is(_knownKeyName),
             Arg.Is(_knownKeyType.ToString()),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -100,12 +92,12 @@ public class KeyCreateCommandTests : SubscriptionCommandUnitTestsBase<KeyCreateC
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
             "--key", _knownKeyName,
-            "--key-type", _knownKeyType.ToString(),
-            "--subscription", _knownSubscriptionId);
+            "--key-type", _knownKeyType.ToString());
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+        Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 }

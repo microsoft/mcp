@@ -28,7 +28,10 @@ public class EventGridSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Event Grid top-level group
-        var eventGrid = new CommandGroup(Name, "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and event subscriptions.", Title);
+        var eventGrid = new CommandGroup(Name,
+            "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and " +
+            "event subscriptions.",
+            Title);
 
         // Events subgroup
         var events = new CommandGroup("events", "Event Grid event operations - Commands for publishing and managing events sent to Event Grid topics.");

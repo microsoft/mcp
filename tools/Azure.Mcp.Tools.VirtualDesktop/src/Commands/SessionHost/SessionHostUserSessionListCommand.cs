@@ -22,6 +22,7 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
         user session objects available on the specified session host. Results include user session details such as
         user principal name, session state, application type, and creation time.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostpoolResourceId,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
@@ -58,7 +58,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.Hostpool!,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -68,7 +67,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.Hostpool!,
                     options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

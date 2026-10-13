@@ -3,45 +3,67 @@
 
 using System.Buffers;
 using System.Text.Json;
-using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Services.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
+public class AuthorizationService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAuthorizationService
 {
     private const string ApproveReviewResult = "Approve";
     private const string InProgressStatus = "InProgress";
     private const string NotStartedStatus = "NotStarted";
     private const string PendingStatus = "Pending";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
-    // BaseAzureResourceService receives ISubscriptionService but doesn't expose it to derived classes.
-    // This field provides direct access for ARM REST calls that require tenant resolution.
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private const string RoleAssignmentsTable = "authorizationresources";
+    private const string RoleAssignmentResourceType = "Microsoft.Authorization/roleAssignments";
+
     public async Task<ResourceQueryResults<RoleAssignment>> ListRoleAssignmentsAsync(
-        string subscription,
+        string? subscription,
         string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters((nameof(scope), scope));
+        ValidateRequiredParameter(nameof(scope), scope);
 
-        var scopeId = new ResourceIdentifier(scope!);
+        // Match the scope itself, plus anything nested beneath it. The trailing separator keeps a scope
+        // ending in "rg1" from also matching "rg10".
+        var escapedScope = EscapeKqlString(scope.TrimEnd('/'));
+        var scopeFilter = $"(properties.scope =~ '{escapedScope}' or properties.scope startswith '{escapedScope}/')";
+
+        if (ManagementGroupScope.TryParse(scope, out var managementGroup))
+        {
+            if (!string.IsNullOrEmpty(subscription))
+            {
+                throw new ArgumentException(
+                    "Subscription must not be specified for a management group scope.",
+                    nameof(subscription));
+            }
+
+            // Role assignments on a management group are not part of any subscription, so a
+            // subscription-scoped Resource Graph query can never return them.
+            return await ExecuteManagementGroupResourceQueryAsync(
+                RoleAssignmentResourceType,
+                managementGroup,
+                ConvertToRoleAssignmentModel,
+                RoleAssignmentsTable,
+                additionalFilter: scopeFilter,
+                tenant: tenantId,
+                cancellationToken: cancellationToken);
+        }
+
+        ValidateRequiredParameter(nameof(subscription), subscription);
+
         return await ExecuteResourceQueryAsync(
-            "Microsoft.Authorization/roleAssignments",
+            RoleAssignmentResourceType,
             null, // all resource groups
             subscription,
-            retryPolicy,
             ConvertToRoleAssignmentModel,
-            "authorizationresources",
-            additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+            RoleAssignmentsTable,
+            additionalFilter: scopeFilter,
             tenant: tenantId,
             cancellationToken: cancellationToken);
     }
@@ -78,7 +100,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(scope), scope));
-        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, retryPolicy, cancellationToken);
+        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, cancellationToken);
 
         var approvalsPath = $"{NormalizeScope(scope)}/providers/Microsoft.Authorization/roleAssignmentApprovals";
         var requestUri = CreateArmUri($"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()");
@@ -122,7 +144,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             (nameof(approval), approval),
             (nameof(stage), stage),
             (nameof(justification), justification));
-        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, retryPolicy, cancellationToken);
+        var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, cancellationToken);
 
         var stagePath = GetApprovalStagePath(scope, approval, stage);
         var requestUri = CreateArmUri($"{stagePath}?api-version={RoleAssignmentApprovalsApiVersion}");
@@ -147,7 +169,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
         HttpContent? content = null,
         CancellationToken cancellationToken = default)
     {
-        using var httpClient = TenantService.GetClient();
+        using var httpClient = AzureService.GetClient();
         if (retryPolicy?.NetworkTimeoutSeconds is { } networkTimeoutSeconds)
         {
             httpClient.Timeout = TimeSpan.FromSeconds(networkTimeoutSeconds);
@@ -182,7 +204,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             throw new ArgumentException("ARM request path must be relative.", nameof(pathAndQuery));
         }
 
-        return new Uri(TenantService.CloudConfiguration.ArmEnvironment.Endpoint, relativePathAndQuery);
+        return new Uri(AzureService.CloudConfiguration.ArmEnvironment.Endpoint, relativePathAndQuery);
     }
 
     private static ByteArrayContent CreateApprovalContent(string justification)
@@ -276,7 +298,6 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     private async Task<string?> GetSubscriptionTenantIdAsync(
         string subscription,
         string? tenantId,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         if (!string.IsNullOrEmpty(tenantId))
@@ -284,7 +305,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
             return tenantId;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, cancellationToken);
         return subscriptionResource.Data.TenantId?.ToString();
     }
 

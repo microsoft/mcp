@@ -6,7 +6,6 @@ using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,11 +33,7 @@ public class OpenAiEmbeddingsCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Any<string?>(),
-            Arg.Is("float"),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
@@ -63,68 +58,13 @@ public class OpenAiEmbeddingsCreateCommandTests : SubscriptionCommandUnitTestsBa
     }
 
     [Fact]
-    public async Task ExecuteAsync_OptionalParameters_PassedToService()
+    public void Command_DoesNotExposeRemovedParameters()
     {
-        // Arrange
-        var resourceName = "test-openai";
-        var deploymentName = "text-embedding-ada-002";
-        var inputText = "Test embedding text";
-        var subscriptionId = "test-subscription-id";
-        var resourceGroup = "test-resource-group";
-        var user = "test-user";
-        var dimensions = 1536;
+        var optionNames = CommandDefinition.Options.Select(option => option.Name);
 
-        var expectedEmbedding = new float[dimensions];
-        for (int i = 0; i < dimensions; i++)
-        {
-            expectedEmbedding[i] = 0.1f;
-        }
-
-        var expectedResult = new EmbeddingResult("list", [new("embedding", 0, expectedEmbedding)], deploymentName, new(4, 4));
-
-        Service.CreateEmbeddingsAsync(
-            Arg.Is(resourceName),
-            Arg.Is(deploymentName),
-            Arg.Is(inputText),
-            Arg.Is(subscriptionId),
-            Arg.Is(resourceGroup),
-            Arg.Is(user),
-            Arg.Is("float"),
-            Arg.Is(dimensions),
-            Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
-
-        // Act
-        var response = await ExecuteCommandAsync(
-            "--subscription", subscriptionId,
-            "--resource-group", resourceGroup,
-            "--resource-name", resourceName,
-            "--deployment", deploymentName,
-            "--input-text", inputText,
-            "--user", user,
-            "--dimensions", dimensions.ToString());
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        // Verify the service was called at least once with the core parameters
-        await Service.Received(1).CreateEmbeddingsAsync(
-            resourceName,
-            deploymentName,
-            inputText,
-            subscriptionId,
-            resourceGroup,
-            Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>());
+        Assert.DoesNotContain("--user", optionNames);
+        Assert.DoesNotContain("--encoding-format", optionNames);
+        Assert.DoesNotContain("--dimensions", optionNames);
     }
 
     [Fact]
@@ -145,11 +85,7 @@ public class OpenAiEmbeddingsCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
             Arg.Is(AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

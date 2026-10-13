@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Sql.Commands.Database;
         or redundancy options to meet changing performance requirements.
         Returns the updated database configuration including applied scaling changes.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -52,7 +53,6 @@ public sealed class DatabaseUpdateCommand(ISqlService sqlService, ILogger<Databa
                 options.ElasticPoolName,
                 options.ZoneRedundant,
                 options.ReadScale,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseUpdateResult);

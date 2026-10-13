@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "sample",
     Title = "Sample Kusto Table Data",
     Description = "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
@@ -57,7 +57,6 @@ public sealed class SampleCommand(
                     options.Database,
                     query,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 

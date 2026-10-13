@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -32,14 +31,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
 
@@ -64,14 +63,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 
@@ -94,14 +93,14 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 
@@ -117,5 +116,17 @@ public sealed class TableSchemaCommandTests : SubscriptionCommandUnitTestsBase<T
         var response = await ExecuteCommandAsync("");
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsInvalidTableBeforeServiceCall()
+    {
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table bad|table");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("tableName contains invalid characters. Only letters, digits, underscores, spaces, hyphens, and periods are allowed.", response.Message);
+        await Service.DidNotReceive().GetTableSchemaAsync(
+            "https://mycluster.kusto.windows.net", "db1", Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

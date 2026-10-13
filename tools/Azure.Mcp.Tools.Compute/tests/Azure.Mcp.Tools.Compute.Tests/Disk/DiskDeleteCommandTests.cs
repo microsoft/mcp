@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Compute.Commands;
 using Azure.Mcp.Tools.Compute.Commands.Disk;
 using Azure.Mcp.Tools.Compute.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -41,7 +40,6 @@ public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDelet
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -71,7 +69,6 @@ public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDelet
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -101,7 +98,6 @@ public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDelet
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -157,7 +153,6 @@ public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDelet
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException("Conflict"));
 
@@ -192,7 +187,6 @@ public class DiskDeleteCommandTests : SubscriptionCommandUnitTestsBase<DiskDelet
             resourceGroup,
             subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 }

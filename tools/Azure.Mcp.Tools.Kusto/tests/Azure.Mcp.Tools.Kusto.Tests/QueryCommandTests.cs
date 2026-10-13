@@ -6,7 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -33,14 +33,14 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
 
@@ -67,14 +67,14 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -95,14 +95,14 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             Service.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
 
@@ -111,6 +111,20 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
+
+        var logCall = Assert.Single(Logger.ReceivedCalls(), call =>
+            call.GetMethodInfo().Name == nameof(ILogger.Log) &&
+            call.GetArguments()[0] is LogLevel.Error);
+        var logArguments = logCall.GetArguments();
+        var logMessage = logArguments[2]?.ToString();
+        var expectedCluster = useClusterUri ? "https://mycluster.kusto.windows.net" : "mycluster";
+
+        Assert.Equal(
+            $"An exception occurred querying Kusto. Cluster: {expectedCluster}, Database: db1, ExceptionType: Exception",
+            logMessage);
+        Assert.Null(logArguments[3]);
+        Assert.DoesNotContain("StormEvents | take 1", logMessage, StringComparison.Ordinal);
+        Assert.DoesNotContain("Test error", logMessage, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -121,5 +135,17 @@ public sealed class QueryCommandTests : SubscriptionCommandUnitTestsBase<QueryCo
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Missing Required options:", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsManagementCommandBeforeServiceCall()
+    {
+        var response = await ExecuteCommandAsync(
+            "--cluster-uri https://mycluster.kusto.windows.net --database db1 --query \"StormEvents | .drop table T\"");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Management command '.drop' is not allowed in queries for security reasons.", response.Message);
+        await Service.DidNotReceive().QueryItemsAsync(
+            "https://mycluster.kusto.windows.net", "db1", Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

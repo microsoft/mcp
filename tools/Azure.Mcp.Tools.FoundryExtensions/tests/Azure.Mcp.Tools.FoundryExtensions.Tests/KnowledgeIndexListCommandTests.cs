@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tools.FoundryExtensions.Commands;
 using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -31,7 +30,7 @@ public class KnowledgeIndexListCommandTests : CommandUnitTestsBase<KnowledgeInde
         // Arrange
         if (shouldSucceed)
         {
-            Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns([new() { Name = "test-index", Type = "aisearch", Version = "1.0", Description = "Test index" }]);
         }
 
@@ -55,7 +54,7 @@ public class KnowledgeIndexListCommandTests : CommandUnitTestsBase<KnowledgeInde
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -77,7 +76,7 @@ public class KnowledgeIndexListCommandTests : CommandUnitTestsBase<KnowledgeInde
             new() { Name = "test-index2", Type = "aisearch", Version = "1.1", Description = "Second test index" }
         };
 
-        Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+        Service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
         // Act

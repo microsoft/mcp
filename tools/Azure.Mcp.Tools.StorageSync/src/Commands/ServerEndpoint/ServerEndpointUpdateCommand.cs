@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     Name = "update",
     Title = "Update Server Endpoint",
     Description = "Update properties of a server endpoint.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class ServerEndpointUpdateCommand(ILogger<ServerEndpointUpdateComm
                 options.TierFilesOlderThanDays,
                 options.LocalCacheMode,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(endpoint), StorageSyncJsonContext.Default.ServerEndpointUpdateCommandResult);

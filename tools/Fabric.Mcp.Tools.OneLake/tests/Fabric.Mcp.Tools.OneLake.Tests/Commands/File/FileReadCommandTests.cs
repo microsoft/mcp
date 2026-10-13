@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -17,13 +18,13 @@ namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLakeService>
 {
-    private readonly IOptions<ServerStartOptions> _serviceStartOptions;
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration;
 
     public FileReadCommandTests()
     {
-        _serviceStartOptions = Substitute.For<IOptions<ServerStartOptions>>();
-        _serviceStartOptions.Value.Returns(new ServerStartOptions { Transport = TransportTypes.StdIo });
-        Services.AddSingleton(_serviceStartOptions);
+        _configuration = Substitute.For<IOptions<ServerRuntimeConfiguration>>();
+        _configuration.Value.Returns(new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo });
+        Services.AddSingleton(_configuration);
     }
 
     [Fact]
@@ -50,17 +51,17 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _serviceStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _configuration));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _serviceStartOptions));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _configuration));
     }
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenServiceStartOptionsIsNull()
+    public void Constructor_ThrowsArgumentNullException_WhenServerStartOptionsIsNull()
     {
         Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!));
     }

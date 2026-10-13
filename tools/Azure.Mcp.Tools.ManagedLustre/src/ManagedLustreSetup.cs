@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ExpansionJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.SubnetSize;
@@ -42,12 +43,18 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<ImportJobCancelCommand>();
         services.AddSingleton<ImportJobGetCommand>();
         services.AddSingleton<ImportJobDeleteCommand>();
+        services.AddSingleton<ExpansionJobCreateCommand>();
+        services.AddSingleton<ExpansionJobGetCommand>();
+        services.AddSingleton<ExpansionJobDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var managedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.", Title);
+            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure " +
+            "Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses " +
+            "on managing all the aspects related to Azure Managed Lustre file system instances.",
+            Title);
 
         var fileSystem = new CommandGroup("fs", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         managedLustre.AddSubGroup(fileSystem);
@@ -90,6 +97,13 @@ public class ManagedLustreSetup : IAreaSetup
         blobImport.AddCommand<ImportJobCancelCommand>(serviceProvider);
         blobImport.AddCommand<ImportJobGetCommand>(serviceProvider);
         blobImport.AddCommand<ImportJobDeleteCommand>(serviceProvider);
+
+        var expansion = new CommandGroup("expansion", "Expansion job operations for Azure Managed Lustre - Commands for creating jobs to expand (resize) the storage capacity of an AMLFS filesystem.");
+        fileSystem.AddSubGroup(expansion);
+
+        expansion.AddCommand<ExpansionJobCreateCommand>(serviceProvider);
+        expansion.AddCommand<ExpansionJobGetCommand>(serviceProvider);
+        expansion.AddCommand<ExpansionJobDeleteCommand>(serviceProvider);
 
         return managedLustre;
     }

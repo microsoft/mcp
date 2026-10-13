@@ -4,6 +4,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Fabric.Mcp.Tools.OneLake.Tests.TestSupport;
 using Xunit;
@@ -19,9 +20,9 @@ public class OneLakeServiceLroTests
     private const string WorkspaceId = "ws-lro-test";
     private const string ItemId = "item-lro-test";
     private const string OperationId = "op-lro-12345";
-    private const string OperationUrl = $"https://dailyapi.fabric.microsoft.com/v1/operations/{OperationId}";
-    private const string ResultUrl = $"https://dailyapi.fabric.microsoft.com/v1/operations/{OperationId}/result";
-    private const string ShortcutsUrl = $"https://dailyapi.fabric.microsoft.com/v1/workspaces/{WorkspaceId}/items/{ItemId}/shortcuts/bulkCreate";
+    private const string OperationUrl = $"{OneLakeEndpoints.FabricApiBaseUrl}/operations/{OperationId}";
+    private const string ResultUrl = $"{OneLakeEndpoints.FabricApiBaseUrl}/operations/{OperationId}/result";
+    private const string ShortcutsUrl = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{WorkspaceId}/items/{ItemId}/shortcuts/bulkCreate";
 
     private static OneLakeService CreateService(Func<HttpRequestMessage, HttpResponseMessage> handler)
     {

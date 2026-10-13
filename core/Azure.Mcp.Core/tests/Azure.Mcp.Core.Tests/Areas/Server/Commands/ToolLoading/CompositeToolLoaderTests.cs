@@ -1,42 +1,23 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class CompositeToolLoaderTests
 {
-    private static IServiceProvider CreateServiceProvider()
-    {
-        return new ServiceCollection().AddLogging().BuildServiceProvider();
-    }
-
-    private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
-    {
-        var mockServer = Substitute.For<McpServer>();
-        return new RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList }, new ListToolsRequestParams());
-    }
-
-    private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
-    {
-        var mockServer = Substitute.For<McpServer>();
-        return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, new CallToolRequestParams
-        {
-            Name = toolName,
-            Arguments = arguments ?? new Dictionary<string, JsonElement>()
-        });
-    }
-
     private static Tool CreateTestTool(string name, string description = "Test tool")
     {
         return new Tool
@@ -55,8 +36,7 @@ public class CompositeToolLoaderTests
     [Fact]
     public void ListToolsHandler_WithEmptyToolLoaderList_ThrowsArgumentException()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
         var toolLoaders = new List<IToolLoader>();
 
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -69,8 +49,7 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_WithSingleToolLoader_ReturnsToolsFromLoader()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         var expectedTools = new List<Tool>
@@ -83,7 +62,7 @@ public class CompositeToolLoaderTests
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
@@ -99,21 +78,20 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_WithMultipleToolLoaders_CombinesAllTools()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader1 = Substitute.For<IToolLoader>();
         var mockLoader2 = Substitute.For<IToolLoader>();
 
         mockLoader1.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("tool1") } });
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("tool1")] });
 
         mockLoader2.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("tool2"), CreateTestTool("tool3") } });
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("tool2"), CreateTestTool("tool3")] });
 
         var toolLoaders = new List<IToolLoader> { mockLoader1, mockLoader2 };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
@@ -128,8 +106,7 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_WithToolLoaderReturningNull_ReturnsEmptyResult()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
@@ -137,7 +114,7 @@ public class CompositeToolLoaderTests
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
@@ -148,8 +125,7 @@ public class CompositeToolLoaderTests
     [Fact]
     public void CallToolHandler_WithEmptyToolLoaderList_ThrowsArgumentException()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
         var toolLoaders = new List<IToolLoader>();
 
         var exception = Assert.Throws<ArgumentException>(() =>
@@ -159,26 +135,28 @@ public class CompositeToolLoaderTests
         Assert.Contains("At least one tool loader must be provided", exception.Message);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult()
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         // Setup a loader with a different tool to populate the map
         var mockLoader = Substitute.For<IToolLoader>();
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("existing-tool") } });
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("existing-tool")] });
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // First populate the tool map by calling ListToolsHandler
-        var listRequest = CreateListToolsRequest();
+        var listRequest = McpTestUtilities.CreateToolListRequest();
         await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Now try to call an unknown tool
-        var callRequest = CreateCallToolRequest("unknown-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
@@ -188,41 +166,55 @@ public class CompositeToolLoaderTests
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.NotNull(callRequest.Params);
         Assert.Equal($"The tool {callRequest.Params.Name} was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+        await mockLoader.DidNotReceive().CallToolHandler(
+            Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CallToolHandler_WithKnownTool_DelegatesToCorrectLoader()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock> { new TextContentBlock { Text = "Tool executed successfully" } },
+            Content = [new TextContentBlock { Text = "Tool executed successfully" }],
             IsError = false
         };
+        using var activity = new Activity("test-activity").Start();
 
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
             .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("test-tool") } });
 
         mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(expectedResult);
+            .Returns(_ =>
+            {
+                activity.AssertTagDoesNotExist(TagName.ToolName);
+                activity.AssertTagDoesNotExist(TagName.ToolArea);
+                activity.SetTag(TagName.ToolName, "test-tool")
+                    .SetTag(TagName.ToolArea, "test-area");
+                return expectedResult;
+            });
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // First populate the tool map
-        var listRequest = CreateListToolsRequest();
+        var listRequest = McpTestUtilities.CreateToolListRequest();
         await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Now call the known tool
-        var callRequest = CreateCallToolRequest("test-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest("test-tool");
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.False(result.IsError);
         Assert.Equal(expectedResult.Content, result.Content);
+        activity.AssertTagEquals(TagName.ToolName, "test-tool");
+        activity.AssertTagEquals(TagName.ToolArea, "test-area");
 
         // Verify the mock loader was called with the correct request
         await mockLoader.Received(1).CallToolHandler(callRequest, Arg.Any<CancellationToken>());
@@ -231,23 +223,22 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_WithMultipleLoaders_DelegatesToCorrectLoader()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader1 = Substitute.For<IToolLoader>();
         var mockLoader2 = Substitute.For<IToolLoader>();
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock> { new TextContentBlock { Text = "Tool2 executed" } },
+            Content = [new TextContentBlock { Text = "Tool2 executed" }],
             IsError = false
         };
 
         mockLoader1.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("tool1") } });
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("tool1")] });
 
         mockLoader2.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { CreateTestTool("tool2") } });
+            .Returns(new ListToolsResult { Tools = [CreateTestTool("tool2")] });
 
         mockLoader2.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
@@ -256,11 +247,11 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // First populate the tool map
-        var listRequest = CreateListToolsRequest();
+        var listRequest = McpTestUtilities.CreateToolListRequest();
         await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Call tool2 which should be handled by mockLoader2
-        var callRequest = CreateCallToolRequest("tool2");
+        var callRequest = McpTestUtilities.CreateToolCallRequest("tool2");
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
@@ -275,14 +266,13 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_WithNullParams_ReturnsErrorResult()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var toolLoaders = new List<IToolLoader> { mockToolLoader };
 
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var mockServer = Substitute.For<McpServer>();
-        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall }, null!);
+        var request = McpTestUtilities.CreateToolCallRequest((CallToolRequestParams)null!, Substitute.For<McpServer>());
+        using var activity = new Activity("test-activity").Start();
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -292,13 +282,14 @@ public class CompositeToolLoaderTests
         Assert.Single(result.Content);
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.Equal("Cannot call tools with null parameters.", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
     }
 
     [Fact]
     public async Task CallToolHandler_WithToolLoaderReturningNull_ReturnsErrorResult()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
@@ -306,7 +297,8 @@ public class CompositeToolLoaderTests
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateCallToolRequest("test-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool");
+        using var activity = new Activity("test-activity").Start();
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -316,20 +308,21 @@ public class CompositeToolLoaderTests
         Assert.Single(result.Content);
         var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
         Assert.Contains("Failed to initialize tool loaders", textContent.Text);
+        activity.AssertTagDoesNotExist(TagName.ToolName);
+        activity.AssertTagDoesNotExist(TagName.ToolArea);
     }
 
     [Fact]
     public async Task ListToolsHandler_WithSingleEmptyToolLoader_ReturnsEmptyResult()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         mockToolLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool>() });
+            .Returns(new ListToolsResult { Tools = [] });
 
         var toolLoaders = new List<IToolLoader> { mockToolLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
@@ -341,18 +334,17 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_WithoutListingToolsFirst_LazilyInitializesAndCallsTool()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         // Setup a loader that has the tool we want to call
         var mockLoader = Substitute.For<IToolLoader>();
         var testTool = CreateTestTool("test-tool");
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { testTool } });
+            .Returns(new ListToolsResult { Tools = [testTool] });
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock> { new TextContentBlock { Text = "Tool executed successfully" } },
+            Content = [new TextContentBlock { Text = "Tool executed successfully" }],
             IsError = false
         };
         mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
@@ -362,7 +354,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // Call tool directly WITHOUT first calling ListToolsHandler
-        var callRequest = CreateCallToolRequest("test-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest("test-tool");
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Verify the tool was found and executed successfully
@@ -383,20 +375,19 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_WithoutListingToolsFirst_ReturnsErrorForUnknownTool()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         // Setup a loader that has a different tool
         var mockLoader = Substitute.For<IToolLoader>();
         var testTool = CreateTestTool("different-tool");
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { testTool } });
+            .Returns(new ListToolsResult { Tools = [testTool] });
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // Call tool directly WITHOUT first calling ListToolsHandler
-        var callRequest = CreateCallToolRequest("unknown-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest("unknown-tool");
         var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Verify the tool was not found
@@ -417,18 +408,17 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_ConcurrentCallsWithoutListingFirst_InitializesOnlyOnce()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         // Setup a loader that has the tool we want to call
         var mockLoader = Substitute.For<IToolLoader>();
         var testTool = CreateTestTool("test-tool");
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { testTool } });
+            .Returns(new ListToolsResult { Tools = [testTool] });
 
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock> { new TextContentBlock { Text = "Tool executed successfully" } },
+            Content = [new TextContentBlock { Text = "Tool executed successfully" }],
             IsError = false
         };
         mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
@@ -443,7 +433,7 @@ public class CompositeToolLoaderTests
 
         for (int i = 0; i < concurrentCalls; i++)
         {
-            var callRequest = CreateCallToolRequest("test-tool");
+            var callRequest = McpTestUtilities.CreateToolCallRequest("test-tool");
             tasks.Add(toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken).AsTask());
         }
 
@@ -471,20 +461,19 @@ public class CompositeToolLoaderTests
     public async Task CallToolHandler_ValidToolWithoutPriorListingCall_ExecutesSuccessfully()
     {
         // Arrange
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         var expectedTool = CreateTestTool("valid-tool", "A valid test tool");
         var expectedResult = new CallToolResult
         {
-            Content = new List<ContentBlock> { new TextContentBlock { Text = "Successfully executed valid-tool" } },
+            Content = [new TextContentBlock { Text = "Successfully executed valid-tool" }],
             IsError = false
         };
 
         // Setup the mock loader to return the tool when ListToolsHandler is called
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = new List<Tool> { expectedTool } });
+            .Returns(new ListToolsResult { Tools = [expectedTool] });
 
         // Setup the mock loader to return a successful result when CallToolHandler is called
         mockLoader.CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>())
@@ -494,7 +483,7 @@ public class CompositeToolLoaderTests
         var compositeToolLoader = new CompositeToolLoader(toolLoaders, logger);
 
         // Act - Call the tool directly without first calling ListToolsHandler
-        var callRequest = CreateCallToolRequest("valid-tool");
+        var callRequest = McpTestUtilities.CreateToolCallRequest("valid-tool");
         var result = await compositeToolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Assert
@@ -516,8 +505,7 @@ public class CompositeToolLoaderTests
     [Fact]
     public async Task CallToolHandler_WithToolLoaderThrowingException_ReturnsErrorResult()
     {
-        var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var mockLoader = Substitute.For<IToolLoader>();
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
@@ -525,7 +513,7 @@ public class CompositeToolLoaderTests
 
         var toolLoaders = new List<IToolLoader> { mockLoader };
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var request = CreateCallToolRequest("test-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool");
 
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
@@ -546,8 +534,7 @@ public class CompositeToolLoaderTests
         var mockLoader3 = Substitute.For<IToolLoader>();
 
         var toolLoaders = new[] { mockLoader1, mockLoader2, mockLoader3 };
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
         var compositeLoader = new CompositeToolLoader(toolLoaders, logger);
 
@@ -565,10 +552,9 @@ public class CompositeToolLoaderTests
     {
         // Arrange
         var mockLoader = Substitute.For<IToolLoader>();
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
-        var compositeLoader = new CompositeToolLoader(new[] { mockLoader }, logger);
+        var compositeLoader = new CompositeToolLoader([mockLoader], logger);
 
         // Act
         await compositeLoader.DisposeAsync();
@@ -584,13 +570,12 @@ public class CompositeToolLoaderTests
         var mockLoader1 = Substitute.For<IToolLoader>();
         var mockLoader2 = Substitute.For<IToolLoader>();
 
-        mockLoader1.DisposeAsync().Returns(ValueTask.FromException(new InvalidOperationException("Loader 1 failed")));
+        mockLoader1.DisposeAsync().ThrowsAsync(new InvalidOperationException("Loader 1 failed"));
         mockLoader2.DisposeAsync().Returns(ValueTask.CompletedTask);
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
-        var compositeLoader = new CompositeToolLoader(new[] { mockLoader1, mockLoader2 }, logger);
+        var compositeLoader = new CompositeToolLoader([mockLoader1, mockLoader2], logger);
 
         // Act - Should complete without throwing (best-effort disposal)
         await compositeLoader.DisposeAsync();
@@ -605,10 +590,9 @@ public class CompositeToolLoaderTests
     {
         // Arrange
         var mockLoader = Substitute.For<IToolLoader>();
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
-        var compositeLoader = new CompositeToolLoader(new[] { mockLoader }, logger);
+        var compositeLoader = new CompositeToolLoader([mockLoader], logger);
 
         // Act - dispose multiple times
         await compositeLoader.DisposeAsync();
@@ -624,10 +608,9 @@ public class CompositeToolLoaderTests
     {
         // Arrange
         var mockLoader = Substitute.For<IToolLoader>();
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<CompositeToolLoader>>();
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
 
-        var compositeLoader = new CompositeToolLoader(new[] { mockLoader }, logger);
+        var compositeLoader = new CompositeToolLoader([mockLoader], logger);
 
         // Act
         await compositeLoader.DisposeAsync();

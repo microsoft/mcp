@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Cosmos.Commands.Container;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -45,7 +44,6 @@ public class ContainerSchemaInferCommandTests : SubscriptionCommandUnitTestsBase
             Arg.Is("sub"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(schema);
 
@@ -83,7 +81,7 @@ public class ContainerSchemaInferCommandTests : SubscriptionCommandUnitTestsBase
         Service.GetApproximateSchema(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(),
             Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
 
         var response = await ExecuteCommandAsync(

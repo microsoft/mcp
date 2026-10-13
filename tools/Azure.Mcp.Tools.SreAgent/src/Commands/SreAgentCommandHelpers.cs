@@ -5,7 +5,6 @@ using System.Text.Json;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands;
 
@@ -17,7 +16,6 @@ internal static class SreAgentCommandHelpers
         string? resourceGroup,
         string agentName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken)
     {
         var agent = await sreAgentService.GetAgentAsync(
@@ -25,7 +23,6 @@ internal static class SreAgentCommandHelpers
             resourceGroup,
             agentName,
             tenant,
-            retryPolicy,
             cancellationToken);
 
         if (agent is null)
@@ -55,7 +52,6 @@ internal static class SreAgentCommandHelpers
             options.ResourceGroup,
             options.Agent,
             options.Tenant,
-            options.RetryPolicy,
             cancellationToken);
     }
 
@@ -78,7 +74,6 @@ internal static class SreAgentCommandHelpers
             options.Subscription!,
             options.Agent,
             options.Tenant,
-            options.RetryPolicy,
             cancellationToken);
     }
 

@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
         SignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource
         group will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -44,7 +45,6 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger, ISignal
                 options.ResourceGroup,
                 options.SignalR,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",

@@ -28,4 +28,5 @@ internal sealed class StorageAccountProperties
     public string? AccessTier { get; set; }
     /// <summary>The minimum TLS version to be permitted on requests to storage.</summary>
     public string? MinimumTlsVersion { get; set; }
+    public bool? AllowSharedKeyAccess { get; set; }
 }

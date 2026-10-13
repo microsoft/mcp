@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
         BATCH: Accepts multiple --workbook-ids values. Partial failures reported per-workbook.
         PERFORMANCE: Use 'list' first for discovery, then 'show' for specific workbooks.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -50,7 +51,6 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger, I
         {
             var result = await _workbooksService.GetWorkbooksAsync(
                 options.WorkbookIds,
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

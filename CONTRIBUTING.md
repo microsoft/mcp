@@ -73,7 +73,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 1. **VS Code**: Install either [stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 22 or later (ensure `node` and `npm` are in your PATH)
+3. **Node.js**: Install latest [Node.js](https://nodejs.org/en/download) version (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
 
 ### Central NuGet Feed
@@ -173,6 +173,8 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
 4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 
+  Tools marked `LocalRequired = true` need special recorded-test handling. In every applicable test in a class extending `RecordedCommandTestsBase`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true` so the test verifies that remote HTTP mode excludes the local-only tool.
+
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
@@ -214,7 +216,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
    - Include tests in the `/tests` folder
    - Ensure all tests pass
    - Follow code style requirements
-   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
+   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description (excluding Fabric MCP tools) and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
 
 ## Testing
 
@@ -252,7 +254,11 @@ Real product code under unit testing must be passed `Xunit.TestContext.Current.C
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to the server's `/server/<servername>/docs/e2eTestPrompts.md` file.
+
+### Running evals with vally
+
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See [`/docs/testing-with-vally.md`](https://github.com/microsoft/mcp/blob/main/docs/testing-with-vally.md).
 
 ### Testing Local Build with VS Code
 
@@ -652,7 +658,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### Requirements
 
@@ -703,6 +709,78 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 - Use standardized response formats
 - Handle errors according to MCP specifications
 - Provide proper argument suggestions
+
+#### Executing command context
+
+Injected services can use `ICommandContextAccessor.CurrentContext` to access the current
+`CommandContext` during an in-process MCP command invocation. `ToolNamespaceName` is the
+command's original registered `IAreaSetup.Name`, even in single-tool or consolidated mode.
+`CommandFactory` stores this identity alongside the command in an immutable
+`CommandRegistration`. Tool loaders use the selected registration directly; consolidation
+preserves that same registration under its new routing name.
+Do not derive this identity from proxy names, request arguments, or telemetry tags.
+
+The local tool loaders enter an execution scope around the awaited command execution.
+Discovery, learn responses, sampling, and elicitation do not create a scope; a real
+command selected through sampling receives its own execution context. Direct CLI
+execution and external proxy forwarding do not populate the accessor.
+
+The accessor is a singleton with asynchronous-flow-local state, not per-command instance
+state. Do not retain `CurrentContext` or its response after execution. Scope disposal
+clears inherited context for work that outlives the invocation. Only one command execution
+scope can be active in an asynchronous flow; nested scopes are rejected. Dispose the scope
+in the same asynchronous flow that created it. `CurrentContext` is null outside execution.
+An active context can have a null namespace if the original identity is unresolved;
+command registration logs a warning rather than inferring an identity from the displayed group.
+
+Shared ARM clients created through `AzureHelper.CreateArmClientAsync` call
+`IAzureService.ConfigureArmClientOptions` to configure cloud, transport, and endpoint
+validation. Its injected validator reads the accessor on every send, including retries
+and paging, so cached ARM resources never retain the creating invocation's namespace. In server
+mode the domain policy validates every send, including direct CLI calls and background work
+using the shared pipeline. All factory-created HTTP clients disable automatic redirects.
+Missing contexts and unresolved namespaces cannot enable a namespace bypass, including
+`ALL`. Raw ARM HTTP requests and independently created SDK clients without the policy
+remain outside its scope.
+
+Endpoint validation uses a DI-registered `IEndpointValidator` implemented by
+`EndpointValidator` and an immutable `SsrfProtectionPolicy` owned by each host. Tool services should call
+`AzureService.ValidateAzureServiceEndpoint` with the completed URL, endpoint service
+key. The facade supplies its own configured cloud. The validator resolves the original
+tool namespace through the host's `ICommandContextAccessor` on every validation call; callers cannot supply
+a namespace to select an override. Static helpers must receive the Azure service or
+`IEndpointValidator` explicitly; do not create a separate policy at a production
+validation boundary. `IAzureService.ValidatePublicTargetUrl` shares the same policy
+for deliberately arbitrary public targets. Pure external-host and IP helpers remain
+static. The validator receives `ILogger<EndpointValidator>` through DI for diagnostics,
+rather than requiring callers to pass a logger. Tests can create independent policies
+and accessors, opening actual command scopes to exercise no overrides, selected namespaces,
+or `ALL`; no process-wide setter, reset, or isolated test execution is required.
+Proxy routing does not disable endpoint validation. Public-target validation continues
+to resolve and reject private or reserved addresses for the original URL because callers
+may pass that URL to a downstream Azure service rather than dereference it through the
+local HTTP transport.
+
+Shared factory HTTP transports additionally use `AntiSSRFPolicy` with `ExternalOnlyLatest`.
+Default, named, and ARM clients evaluate the namespace override on every send and keep
+protected, namespace-override, and proxied connection pools separate. Explicit proxy
+settings and `.NET`'s `HttpClient.DefaultProxy` are evaluated for each destination.
+Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
+the network boundary; `NO_PROXY`, operating-system bypass, and PAC `DIRECT` routes retain
+protection. Missing contexts remain protected.
+
+**Proxy security warning:** The factory selects one explicit proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport checks; requests excluded by
+`NO_PROXY` connect through the protected direct transport. When no explicit proxy is selected,
+`HttpClient.DefaultProxy` supplies destination-specific environment, operating-system, PAC,
+and bypass routing with the same protected-direct behavior. Debug recording proxies still
+take precedence over transport protection for every rewritten request. Endpoint validation
+remains active unless separately bypassed. Use only trusted proxies with appropriate network
+restrictions. System and PAC routing is evaluated once when selecting a transport and again
+by the proxy transport while connecting. A dynamic proxy-to-direct change between evaluations
+uses the proxy-designated transport without direct-route DNS/IP filtering, so configurations
+must provide a stable decision for each destination during a request.
 
 ### Package README
 
@@ -786,7 +864,7 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
-- Use `title` as the dislay name for the namespace tool (optional)
+- Use `title` as the display name for the namespace tool (optional)
 - Use `description` as the description of the namespace tool for the MCP server
 - Use `toolPrefix` to assign unique prefix to tools of the MCP server
 - If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
@@ -850,6 +928,18 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 3. Reference the original issue
 4. Wait for review and address any feedback
 
+#### Assisted Pull Request Review
+
+The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE, CLI, and GitHub Copilot Code Review sessions.
+
+1. Open the repository in the pull request branch or worktree.
+2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
+3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+In GitHub Copilot Code Review, requesting a review authorizes the agent to post qualified inline comments directly. The skill keeps these reviews read-only and comment-only: it does not modify the branch, approve or request changes, resolve threads, or invoke another agent to implement changes.
+
+The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
+
 ### Builds and Releases (Internal)
 
 **For instructions on managing Azure MCP releases, follow the [release checklist](https://eng.ms/docs/products/azure-developer-experience/mcp/release-checklist).**
@@ -881,6 +971,7 @@ All PRs automatically run the following validation checks:
 - **Spelling check** - Validates spelling across the codebase
 - **AOT compatibility** - Checks ahead-of-time compilation compatibility
 - **Tool metadata verification** - Ensures `azmcp-commands.md` is up-to-date with tool metadata (run `.\eng\scripts\Update-AzCommandsMetadata.ps1` if this fails)
+- **VSIX packaging** - On changes to a VS Code extension's `package.json` or `package-lock.json`, resolves its npm dependencies and packages the extension without signing or publishing.
 
 ## Support and Community
 

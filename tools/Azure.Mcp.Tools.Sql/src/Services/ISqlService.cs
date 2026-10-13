@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Database;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
@@ -16,7 +15,6 @@ public interface ISqlService
     /// <param name="databaseName">The name of the database</param>
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The SQL database information</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the database is not found</exception>
@@ -25,7 +23,6 @@ public interface ISqlService
         string databaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -43,7 +40,6 @@ public interface ISqlService
     /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created SQL database information</returns>
     Task<SqlDatabase> CreateDatabaseAsync(
@@ -59,7 +55,6 @@ public interface ISqlService
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
         DatabaseReadScale? readScale = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -77,7 +72,6 @@ public interface ISqlService
     /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
     /// <param name="zoneRedundant">Optional zone redundancy setting</param>
     /// <param name="readScale">Optional read scale setting</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The updated SQL database information</returns>
     Task<SqlDatabase> UpdateDatabaseAsync(
@@ -93,7 +87,6 @@ public interface ISqlService
         string? elasticPoolName = null,
         bool? zoneRedundant = null,
         DatabaseReadScale? readScale = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -104,7 +97,6 @@ public interface ISqlService
     /// <param name="newDatabaseName">The desired new database name</param>
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The renamed SQL database information</returns>
     Task<SqlDatabase> RenameDatabaseAsync(
@@ -113,7 +105,6 @@ public interface ISqlService
         string newDatabaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -122,14 +113,12 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL databases</returns>
     Task<List<SqlDatabase>> ListDatabasesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -138,14 +127,12 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL server Entra administrators</returns>
     Task<List<SqlServerEntraAdministrator>> GetEntraAdministratorsAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -154,14 +141,12 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL elastic pools</returns>
     Task<List<SqlElasticPool>> GetElasticPoolsAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -170,14 +155,12 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL server firewall rules</returns>
     Task<List<SqlServerFirewallRule>> ListFirewallRulesAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -189,7 +172,6 @@ public interface ISqlService
     /// <param name="firewallRuleName">The name of the firewall rule</param>
     /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
     /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created SQL server firewall rule</returns>
     Task<SqlServerFirewallRule> CreateFirewallRuleAsync(
@@ -199,7 +181,6 @@ public interface ISqlService
         string firewallRuleName,
         string startIpAddress,
         string endIpAddress,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -209,7 +190,6 @@ public interface ISqlService
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the firewall rule was successfully deleted</returns>
     Task<bool> DeleteFirewallRuleAsync(
@@ -217,7 +197,6 @@ public interface ISqlService
         string resourceGroup,
         string subscription,
         string firewallRuleName,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -227,7 +206,6 @@ public interface ISqlService
     /// <param name="databaseName">The name of the database to delete</param>
     /// <param name="resourceGroup">The resource group name</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the database was successfully deleted</returns>
     Task<bool> DeleteDatabaseAsync(
@@ -235,7 +213,6 @@ public interface ISqlService
         string databaseName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -249,7 +226,6 @@ public interface ISqlService
     /// <param name="administratorPassword">The administrator password for the SQL server</param>
     /// <param name="version">The version of SQL Server to create (optional, defaults to latest)</param>
     /// <param name="publicNetworkAccess">Whether public network access is enabled (optional)</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created SQL server information</returns>
     Task<SqlServer> CreateServerAsync(
@@ -261,7 +237,6 @@ public interface ISqlService
         string administratorPassword,
         string? version,
         string? publicNetworkAccess,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -270,7 +245,6 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The SQL server information</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the server is not found</exception>
@@ -278,7 +252,6 @@ public interface ISqlService
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -286,13 +259,11 @@ public interface ISqlService
     /// </summary>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of SQL servers</returns>
     Task<List<SqlServer>> ListServersAsync(
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -301,13 +272,11 @@ public interface ISqlService
     /// <param name="serverName">The name of the SQL server</param>
     /// <param name="resourceGroup">The name of the resource group</param>
     /// <param name="subscription">The subscription ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy options</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the server was successfully deleted</returns>
     Task<bool> DeleteServerAsync(
         string serverName,
         string resourceGroup,
         string subscription,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 }

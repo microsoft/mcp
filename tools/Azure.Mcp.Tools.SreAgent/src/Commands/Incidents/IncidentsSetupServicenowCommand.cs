@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "setup_servicenow",
     Title = "Setup ServiceNow Connector",
     Description = "Connect an SRE Agent to ServiceNow. Creates a ServiceNow MCP connector to enable incident management integration using credentials from environment variables.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +52,8 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             {
                 if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.TokenEnv)))
                 {
-                    validationResult.Errors.Add($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.");
+                    validationResult.AddError($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.",
+                        "ServiceNow token environment variable not set.");
                 }
             }
         }

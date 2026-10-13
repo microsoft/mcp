@@ -48,7 +48,6 @@ public class HooksThreadDeactivateCommandTests : SubscriptionCommandUnitTestsBas
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
             Service.DeactivateThreadHookAsync(
@@ -80,7 +79,6 @@ public class HooksThreadDeactivateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeactivateThreadHookAsync(
@@ -106,7 +104,6 @@ public class HooksThreadDeactivateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeactivateThreadHookAsync(
@@ -131,7 +128,6 @@ public class HooksThreadDeactivateCommandTests : SubscriptionCommandUnitTestsBas
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Microsoft.Mcp.Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
         Service.DeactivateThreadHookAsync("https://agent1.azuresre.ai", "thread1", "hook1", null, Arg.Any<CancellationToken>())

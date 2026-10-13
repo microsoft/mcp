@@ -30,6 +30,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
         FILTERS: --name-contains, --category, --kind, --source-id, --modified-after for semantic filtering.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -64,7 +65,6 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger, I
                 options.MaxResults == null || options.MaxResults.Value < 1 ? 50 : Math.Min(options.MaxResults.Value, 1000),
                 options.IncludeTotalCount ?? true,
                 ParseOutputFormat(options.OutputFormat),
-                options.RetryPolicy,
                 options.Tenant,
                 cancellationToken);
 

@@ -4,24 +4,24 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
 /// <summary>
 /// Helper for making authenticated HTTP requests to Azure APIs.
 /// </summary>
-public sealed class AzureHttpHelper(IHttpClientFactory httpClientFactory, ITenantService tenantService)
+public sealed class AzureHttpHelper(IAzureService azureService)
 {
     /// <summary>
     /// Gets an HTTP client with Azure authentication headers.
     /// </summary>
     public async Task<HttpClient> GetAuthenticatedClientAsync(CancellationToken cancellationToken = default)
     {
-        var client = httpClientFactory.CreateClient();
-        var credential = await tenantService.GetTokenCredentialAsync(null, cancellationToken);
+        var client = azureService.GetClient();
+        var credential = await azureService.GetTokenCredentialAsync(null, cancellationToken);
         var token = await credential.GetTokenAsync(
-            new([tenantService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
+            new([azureService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
         return client;
     }
@@ -66,7 +66,7 @@ public sealed class AzureHttpHelper(IHttpClientFactory httpClientFactory, ITenan
     /// </summary>
     public async Task<byte[]> DownloadBytesAsync(string url, CancellationToken cancellationToken = default)
     {
-        using var client = httpClientFactory.CreateClient();
+        using var client = azureService.GetClient();
         var response = await client.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync(cancellationToken);

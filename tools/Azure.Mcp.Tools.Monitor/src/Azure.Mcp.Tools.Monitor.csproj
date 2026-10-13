@@ -25,6 +25,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.Monitor.Query.Logs" />
+    <PackageReference Include="Azure.Monitor.Query.Metrics" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.ApplicationInsights" />
     <PackageReference Include="Azure.ResourceManager.CloudHealth" />

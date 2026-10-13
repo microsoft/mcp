@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -52,7 +51,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
@@ -79,7 +77,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
             Arg.Is("server1"),
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
@@ -104,7 +101,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -129,7 +125,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -153,7 +148,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
@@ -183,7 +177,6 @@ public class ElasticPoolListCommandTests : SubscriptionCommandUnitTestsBase<Elas
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new List<SqlElasticPool>());
         }

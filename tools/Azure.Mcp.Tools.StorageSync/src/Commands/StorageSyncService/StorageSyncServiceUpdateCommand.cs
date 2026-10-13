@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.StorageSyncService;
     Name = "update",
     Title = "Update Storage Sync Service",
     Description = "Update properties of an existing Azure Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -44,7 +45,6 @@ public sealed class StorageSyncServiceUpdateCommand(ILogger<StorageSyncServiceUp
                 options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=', 2)).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.IdentityType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceUpdateCommandResult);

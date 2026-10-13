@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
@@ -16,10 +15,9 @@ namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 /// Neural speech synthesizer using Azure AI Services Speech SDK.
 /// Implements streaming synthesis for efficient memory management with large texts.
 /// </summary>
-public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<RealtimeTtsSynthesizer> logger)
-    : BaseAzureService(tenantService), IRealtimeTtsSynthesizer
+public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<RealtimeTtsSynthesizer> logger)
+    : BaseAzureService(azureService), IRealtimeTtsSynthesizer
 {
-    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<RealtimeTtsSynthesizer> _logger = logger;
 
     /// <inheritdoc/>
@@ -31,10 +29,11 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
+        Uri wssEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(AzureService,
+            endpoint);
 
         // Canonicalize and validate the output path (rejects UNC/device paths, traversal)
         outputFilePath = FilePathValidator.ValidateAndCanonicalize(outputFilePath);
@@ -51,7 +50,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             // Use the reusable streaming synthesis method
             var (audioData, actualVoice) = await SynthesizeSpeechToStreamAsync(
-                endpoint, text, language, voice, format, endpointId, cancellationToken);
+                wssEndpoint, text, language, voice, format, endpointId, cancellationToken);
 
             // Write the complete audio data to file
             await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
@@ -97,7 +96,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
     /// This method uses push stream to collect audio data during synthesis for efficient memory management.
     /// </summary>
     private async Task<(byte[] AudioData, string Voice)> SynthesizeSpeechToStreamAsync(
-        string endpoint,
+        Uri wssEndpoint,
         string text,
         string? language = null,
         string? voice = null,
@@ -106,18 +105,13 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         CancellationToken cancellationToken = default)
     {
         // Get Azure AD credential and token
-        var credential = await GetCredential(cancellationToken);
+        TokenCredential credential = await GetCredential(null, cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
-        var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
-
-        // Convert https endpoint to wss for WebSocket-based TTS
-        var wssEndpoint = endpoint
-            .Replace("https://", "wss://", StringComparison.OrdinalIgnoreCase)
-            .TrimEnd('/') + "/tts/cognitiveservices/websocket/v1?traffictype=localmcp";
+        AccessToken accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
         // Configure Speech SDK with endpoint
-        var config = SpeechConfig.FromEndpoint(new(wssEndpoint));
+        SpeechConfig config = SpeechConfig.FromEndpoint(wssEndpoint);
 
         // Set the authorization token
         config.AuthorizationToken = accessToken.Token;
@@ -284,7 +278,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 
     private string GetCognitiveServicesScope()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",

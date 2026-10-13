@@ -18,7 +18,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="logger">Logger for tool loading operations.</param>
 public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, ILogger<CompositeToolLoader> logger) : BaseToolLoader(logger)
 {
-    private readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
+    internal readonly IEnumerable<IToolLoader> _toolLoaders = InitializeToolLoaders(toolLoaders);
     private readonly Dictionary<string, IToolLoader> _toolLoaderMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
@@ -100,8 +100,8 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Ensure tool loader map is populated before attempting tool lookup
         try
@@ -126,6 +126,8 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
 
         if (!_toolLoaderMap.TryGetValue(request.Params.Name, out var toolLoader))
         {
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found",

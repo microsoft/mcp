@@ -10,7 +10,4 @@ public sealed class ScheduledTasksDeleteOptions : BaseSreAgentOptions
 {
     [Option(Description = SreAgentOptionDefinitions.TaskIdDescription)]
     public required string TaskId { get; set; }
-
-    [Option(Description = SreAgentOptionDefinitions.ConfirmDescription)]
-    public bool Confirm { get; set; }
 }

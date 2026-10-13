@@ -1,8 +1,7 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
-#pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
@@ -17,6 +16,7 @@ namespace Azure.Mcp.Core.Tests;
 public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
 {
+    private const string StatelessProtocolVersion = "2026-07-28";
 
     [Fact]
     public async Task Should_List_Tools()
@@ -61,80 +61,111 @@ public class ClientToolTests(ITestOutputHelper output, TestProxyFixture testProx
     [Fact]
     public async Task Client_Should_Ping_Server_Successfully()
     {
-        // The `ping` method was removed in the MCP 2026-07-28 protocol revision. The client
-        // negotiates the modern protocol, so the server rejects ping as unavailable.
-        // (Method name is retained so the recorded playback session continues to match.)
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () =>
-            await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("ping", ex.Message, StringComparison.OrdinalIgnoreCase);
+        await AssertProtocolMethodBehaviorAsync(
+            async () => await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "ping",
+            Client.NegotiatedProtocolVersion);
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "resources/list");
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_Read_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/read");
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_Templates_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "resources/templates/list");
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_Subscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            () => Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/subscribe");
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            () => Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken),
+            "resources/unsubscribe");
     }
 
     [Fact]
     public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
     {
-        // logging/setLevel was removed in MCP 2026-07-28 (SDK 2.0.0-preview.3).
-        // The method is no longer supported; per-request log level is now set via
-        // _meta/io.modelcontextprotocol/logLevel. The call should throw rather than hang.
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(
-            async () => await Client.SetLoggingLevelAsync(LoggingLevel.Info,
-                cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("logging/setLevel", ex.Message, StringComparison.OrdinalIgnoreCase);
+#pragma warning disable MCP9005 // Type or member is obsolete
+        await AssertProtocolMethodBehaviorAsync(
+            () => Client.SetLoggingLevelAsync(LoggingLevel.Info,
+                cancellationToken: TestContext.Current.CancellationToken),
+            "logging/setLevel",
+            Client.NegotiatedProtocolVersion);
+#pragma warning restore MCP9005 // Type or member is obsolete
     }
 
     [Fact]
     public async Task Should_Error_When_Prompts_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken),
+            "prompts/list");
     }
 
     [Fact]
     public async Task Should_Error_When_Prompts_Get_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
-        Assert.Contains("Request failed", ex.Message);
-        Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
+        await AssertMethodNotFoundAsync(
+            async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken),
+            "prompts/get");
+    }
+
+    private static async Task AssertMethodNotFoundAsync(Func<Task> action, string method)
+    {
+        // With the C# MCP SDK 2.1.0, HTTP turns an unsupported method into an HTTP 404
+        // while stdio surfaces the JSON-RPC MethodNotFound error as McpProtocolException.
+        // This transport-dependent behavior is controlled by the SDK; if it becomes
+        // consistent across transports, these assertions can be consolidated.
+        if (string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(action);
+            Assert.Equal(HttpStatusCode.NotFound, exception.StatusCode);
+            Assert.Contains(method, exception.Message, StringComparison.OrdinalIgnoreCase);
+            return;
+        }
+
+        var protocolException = await Assert.ThrowsAsync<McpProtocolException>(action);
+        Assert.Equal(McpErrorCode.MethodNotFound, protocolException.ErrorCode);
+        Assert.Contains(method, protocolException.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task AssertProtocolMethodBehaviorAsync(
+        Func<Task> action,
+        string method,
+        string? negotiatedProtocolVersion)
+    {
+        if (string.Equals(negotiatedProtocolVersion, StatelessProtocolVersion, StringComparison.Ordinal))
+        {
+            await AssertMethodNotFoundAsync(action, method);
+            return;
+        }
+
+        await action();
     }
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers =>

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Docs;
     Name = "memories_list",
     Title = "List Memories",
     Description = "Retrieve a complete list of all indexed knowledge base documents stored in an SRE Agent's memory. Returns all document names and metadata without any search filter or query. Use this to browse everything in the knowledge base before searching.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

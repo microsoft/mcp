@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AppConfig.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
@@ -13,7 +12,6 @@ public interface IAppConfigService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
     Task<List<KeyValueSetting>> GetKeyValues(
         string accountName,
@@ -23,7 +21,6 @@ public interface IAppConfigService
         string? keyFilter = null,
         string? labelFilter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
     Task SetKeyValueLockState(
         string accountName,
@@ -31,7 +28,6 @@ public interface IAppConfigService
         bool locked,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         CancellationToken cancellationToken = default);
     Task SetKeyValue(
@@ -40,7 +36,6 @@ public interface IAppConfigService
         string value,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         string? contentType = null,
         string[]? tags = null,
@@ -50,7 +45,6 @@ public interface IAppConfigService
         string key,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         CancellationToken cancellationToken = default);
 }

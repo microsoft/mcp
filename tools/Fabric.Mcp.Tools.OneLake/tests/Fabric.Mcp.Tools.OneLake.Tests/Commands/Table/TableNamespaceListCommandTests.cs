@@ -18,7 +18,7 @@ public class TableNamespaceListCommandTests : CommandUnitTestsBase<TableNamespac
     [Fact]
     public void Constructor_InitializesMetadata()
     {
-        Assert.Equal("list_table_namespaces", Command.Name);
+        Assert.Equal("list-table-namespaces", Command.Name);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
         Assert.False(Command.Metadata.Destructive);
@@ -27,7 +27,7 @@ public class TableNamespaceListCommandTests : CommandUnitTestsBase<TableNamespac
     [Fact]
     public void GetCommand_ReturnsConfiguredCommand()
     {
-        Assert.Equal("list_table_namespaces", CommandDefinition.Name);
+        Assert.Equal("list-table-namespaces", CommandDefinition.Name);
         Assert.NotEmpty(CommandDefinition.Options);
     }
 

@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -54,7 +53,6 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedConnection);
 
@@ -68,7 +66,6 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             connectionString ?? string.Empty,
             subscription,
             tenant,
-            new RetryPolicyOptions(),
             TestContext.Current.CancellationToken);
 
         // Verify the service returns expected data
@@ -87,7 +84,6 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             Arg.Any<string>(),
             Arg.Is(subscription),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -115,21 +111,17 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("basic", null, null, null, null)]
-    [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null, null, null)]
-    [InlineData("tenant", null, "test-tenant-id", null, null)]
-    [InlineData("retry-policy", null, null, 3, 1.0)]
+    [InlineData("basic", null, null)]
+    [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null)]
+    [InlineData("tenant", null, "test-tenant-id")]
     public async Task ExecuteAsync_WithVariousParameters_AcceptsParameters(
         string scenario,
         string? connectionString,
-        string? tenant,
-        int? retryMaxRetries,
-        double? retryDelay)
+        string? tenant)
     {
         var subscription = "sub123";
         var parameters = new Dictionary<string, object?>
@@ -148,12 +140,6 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
 
         if (tenant != null)
             parameters.Add("tenant", tenant);
-
-        if (retryMaxRetries.HasValue)
-            parameters.Add("retry-max-retries", retryMaxRetries.Value);
-
-        if (retryDelay.HasValue)
-            parameters.Add("retry-delay", retryDelay.Value);
 
         // Execute the command directly in unit tests rather than via the tool runner helper
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
@@ -211,7 +197,6 @@ public class DatabaseAddCommandTests : SubscriptionCommandUnitTestsBase<Database
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 

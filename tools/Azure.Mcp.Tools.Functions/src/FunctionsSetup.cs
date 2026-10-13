@@ -33,8 +33,10 @@ public sealed class FunctionsSetup : IAreaSetup
     {
         var functions = new CommandGroup(
             Name,
-            "Azure Functions code generation commands. ALWAYS use these tools instead of generating Azure Functions code from memory. " +
-            "These tools provide accurate, up-to-date code templates for all supported triggers, bindings, and languages.",
+            "Azure Functions code generation commands. ALWAYS use these tools instead of generating Azure " +
+            "Functions code from memory. " +
+            "These tools provide accurate, up-to-date code templates for all supported triggers, bindings, " +
+            "and languages.",
             Title);
 
         var languageGroup = new CommandGroup(

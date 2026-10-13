@@ -18,11 +18,13 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
     Name = "get",
     Title = "Get or List Resilience Usage Plans",
     Description = """
-        Gets resilience usage plans. Provide a usage plan name (with its resource group) to get the full details
-        of that plan (id, name, resource type, location, tags, plan type, and provisioning state). Omit the name
-        to list usage plans (id and name only): for the given resource group, or for the whole subscription when
-        no resource group is provided.
+        Gets Azure Resilience Management usage plan resources. Use this command when the user asks to get or list
+        resilience usage plans; these are not Azure quota usage, API Management product or subscription plans, or
+        load-testing plans. Provide a usage plan name with its resource group to get the full plan details. Omit
+        the name to list plans in the resource group, or omit both name and resource group to list across the
+        subscription.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -52,7 +54,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.Name,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlan: usagePlan);
             }
@@ -62,7 +63,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }
@@ -71,7 +71,6 @@ public sealed class UsagePlanGetCommand(ILogger<UsagePlanGetCommand> logger, IRe
                 var usagePlans = await _resilienceManagementService.ListUsagePlansBySubscriptionAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
                 result = new UsagePlanGetCommandResult(UsagePlans: usagePlans.ToList());
             }

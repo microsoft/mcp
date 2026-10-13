@@ -10,6 +10,7 @@
         "200": {
             "body": {
                 "id": "7a0369b2-58c4-4b67-b3f3-92156a95f1cd",
+                "gatewayId": "8f72eea3-d989-4a5a-aeed-02b3aaa2ddd0",
                 "connectivityType": "PersonalCloud",
                 "connectionDetails": {
                     "type": "SQL",

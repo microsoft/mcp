@@ -3,7 +3,7 @@
 This document provides practical troubleshooting steps for the Microsoft Fabric MCP Server. It focuses on verifiable solutions for common issues you might encounter when setting up or running the server locally.
 
 ## Quick Checklist
-- Verify .NET 9.x SDK: `dotnet --version`
+- Verify .NET 10.x SDK: `dotnet --version`
 - Build the server: `dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj`
 - Test server startup: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help`
 - Verify available commands: `dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list`
@@ -20,7 +20,7 @@ dotnet --list-runtimes
 ```
 
 **Resolution:**
-- Install .NET 9.x SDK from https://dotnet.microsoft.com/download/dotnet/9.0
+- Install the latest .NET SDK LTS from https://dotnet.microsoft.com/download/dotnet
 - Restart your terminal after installation
 - Check `global.json` in repository root for any pinned SDK versions
 
@@ -52,11 +52,11 @@ ls tools/Fabric.Mcp.Tools.OneLake/src/Resources/
 
 2. **Test available commands:**
    ```bash
-   # List available workloads
+   # List available item types
    dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
    
-   # Get workload details
-   dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --workload-type notebook
+   # Get item type details
+   dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --item-type notebook
    ```
 
 3. **Check MCP client configuration** matches your server setup
@@ -88,12 +88,12 @@ If you're hitting the limit with multiple MCP servers, prefer one of the followi
 ```
 
 **Option 2: Use server commands to retrieve specific context**
-- Instead of exposing all workloads at once, use the server's `publicapis` commands to fetch a workload's OpenAPI or examples on-demand (for example, use `publicapis list` to discover workloads and `publicapis get --workload-type <name>` to fetch a workload's spec).
+- Instead of exposing all item types at once, use the server's `publicapis` commands to fetch an item type's OpenAPI or examples on-demand (for example, use `publicapis list` to discover item types and `publicapis get --item-type <name>` to fetch an item type's spec).
 
 **Option 3: Client-side filtering or multiple chat modes**
 - Use client-side grouping or separate chat modes to restrict the number of tools presented to the assistant for a given task.
 
-> Key point: avoid relying on unverified CLI flags in documentation. Confirm available commands for your build with `--help` and prefer code-driven commands such as `publicapis list` and `publicapis get --workload-type <name>` for reproducible automation.
+> Key point: avoid relying on unverified CLI flags in documentation. Confirm available commands for your build with `--help` and prefer code-driven commands such as `publicapis list` and `publicapis get --item-type <name>` for reproducible automation.
 
 ### VS Code only shows a subset of tools available
 
@@ -218,15 +218,15 @@ uname -a  # Platform information
 
 ## Fabric-Specific Commands
 
-### Listing Available Workloads
-To see what Fabric workloads are available in your build:
+### Listing Available Item Types
+To see what Fabric item types are available in your build:
 
 ```bash
-# List all workloads  
+# List all item types  
 dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
 
-# Get specific workload details
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --workload-type notebook
+# Get specific item type details
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis get --item-type notebook
 
 # Get platform APIs
 dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis platform get

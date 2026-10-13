@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests.Certificate;
 
-public class CertificateCreateCommandTests : SubscriptionCommandUnitTestsBase<CertificateCreateCommand, IKeyVaultService>
+public class CertificateCreateCommandTests : CommandUnitTestsBase<CertificateCreateCommand, IKeyVaultService>
 {
-    private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
     private const string _knownCertificateName = "knownCertificateName";
 
@@ -29,25 +27,20 @@ public class CertificateCreateCommandTests : SubscriptionCommandUnitTestsBase<Ce
         Service.CreateCertificate(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId);
+            "--certificate", _knownCertificateName);
 
         // Assert - Verify the service was called with correct parameters
         await Service.Received(1).CreateCertificate(
             _knownVaultName,
             _knownCertificateName,
-            _knownSubscriptionId,
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         // Should handle the exception
@@ -60,8 +53,7 @@ public class CertificateCreateCommandTests : SubscriptionCommandUnitTestsBase<Ce
         // Arrange & Act - No need to mock service since validation should fail before service is called
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--certificate", "",
-            "--subscription", _knownSubscriptionId);
+            "--certificate", "");
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -77,21 +69,19 @@ public class CertificateCreateCommandTests : SubscriptionCommandUnitTestsBase<Ce
         Service.CreateCertificate(
             Arg.Is(_knownVaultName),
             Arg.Is(_knownCertificateName),
-            Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--vault", _knownVaultName,
-            "--certificate", _knownCertificateName,
-            "--subscription", _knownSubscriptionId);
+            "--certificate", _knownCertificateName);
 
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+        Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 }

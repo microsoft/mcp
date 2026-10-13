@@ -10,5 +10,6 @@ public enum SupportedLanguages
     JavaScript,
     Java,
     CSharp,
-    PowerShell
+    PowerShell,
+    Go
 }

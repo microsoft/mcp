@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Grafana.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
@@ -14,13 +13,11 @@ public interface IGrafanaService
     /// </summary>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="tenant">Optional tenant ID for cross-tenant operations</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <returns>List of Grafana workspace details</returns>
     /// <exception cref="Exception">When the service request fails</exception>
     Task<ResourceQueryResults<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

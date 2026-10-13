@@ -16,6 +16,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [128-Tool Limit Issue](#128-tool-limit-issue)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
+    - [A new command is missing from consolidated mode or the README](#a-new-command-is-missing-from-consolidated-mode-or-the-readme)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
@@ -239,6 +240,23 @@ The Azure MCP Server can run in multiple modes. Review your MCP configuration to
 - `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
 - `azmcp server start --mode namespace` - Explicitly use namespace proxy mode (same as default)
 
+### A new command is missing from consolidated mode or the README
+
+When a newly registered command appears in `all` mode but is missing from consolidated mode or the public command examples, update all of these surfaces:
+
+1. Add the command to the best matching `mappedToolList` in `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`. The command and consolidated tool must have identical tool metadata. Update the consolidated tool description to mention the new capability.
+2. Add a representative prompt to `servers/Azure.Mcp.Server/README.md`. Update the supported-service description when the command introduces a new resource or capability.
+3. Update `servers/Azure.Mcp.Server/docs/azmcp-commands.md` and `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+4. Build the server, verify the command registration, and run the consolidated discovery tests:
+
+    ```powershell
+    dotnet build servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj
+    servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe tools list --namespace <service> --mode all
+    dotnet test core/Azure.Mcp.Core/tests/Azure.Mcp.Core.Tests/Azure.Mcp.Core.Tests.csproj -- --filter-class '*ConsolidatedToolDiscoveryStrategyTests'
+    ```
+
+See the [new command guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#consolidated-mode-requirements) for the complete authoring checklist.
+
 ### VS Code Permission Dialog for Language Model Calls
 
 When using the Azure MCP Server in VS Code, you may see a permission dialog requesting authorization for the MCP server to make language model calls:
@@ -426,7 +444,7 @@ The Azure Identity SDK supports fine-grained control over which authentication m
 
 #### Exclude Credential Categories
 
-To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
+To use only **production credentials** (Environment, Azure Pipelines when configured, Workload Identity, Managed Identity), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=prod
 ```
@@ -438,7 +456,7 @@ AZURE_TOKEN_CREDENTIALS=dev
 
 When `prod` is used, the credential chain becomes:
 ```
-Environment → Workload Identity → Managed Identity
+Environment → Azure Pipelines (when configured) → Workload Identity → Managed Identity
 ```
 **Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
@@ -462,6 +480,9 @@ AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 # Use only Environment credential (for CI/CD scenarios)
 AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
+# Use an Azure Pipelines workload identity service connection
+AZURE_TOKEN_CREDENTIALS=AzurePipelinesCredential
+
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 
@@ -475,6 +496,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 - `AzureCliCredential`
 - `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
+- `AzurePipelinesCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
 - `ManagedIdentityCredential`
@@ -564,8 +586,8 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    - Corporate proxy certificates not trusted
 
 3. **Private Endpoint Connectivity**
-   - Resources configured with private endpoints require VPN or ExpressRoute access
-   - DNS resolution issues for private endpoint addresses
+   - Azure MCP Server rejects outgoing requests to private and reserved destination addresses by default, even when VPN or ExpressRoute routing is available
+   - Private endpoint DNS resolution can therefore produce an intentional SSRF-protection error instead of a connectivity error
 
 #### Working with Network Administrators
 
@@ -595,6 +617,46 @@ Azure MCP Server requires network connectivity to Azure services and authenticat
    export NO_PROXY=localhost,127.0.0.1
    ```
 
+**Security warning:** The server selects one explicit outgoing proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport-level DNS/IP checks because
+the trusted proxy becomes the network boundary. Requests excluded by `NO_PROXY` use the
+protected direct route and retain those checks. When none of those settings selects a
+proxy, `.NET`'s `HttpClient.DefaultProxy` supplies environment, operating-system, PAC,
+and bypass rules with the same behavior. Use only trusted proxies with restricted network
+access; endpoint validation remains independently active, including public-target validation
+of the original destination's IPs.
+
+```mermaid
+flowchart TD
+    A[Outgoing HTTP request] --> B{Is an explicit ALL_PROXY,<br/>HTTPS_PROXY, or HTTP_PROXY configured?}
+    B -- Yes --> C{Does destination match NO_PROXY?}
+    C -- Yes --> D[Connect through the protected direct route]
+    C -- No --> E[Connect through the explicit proxy]
+    D --> J[SAFE: Transport IP address filtering is used]
+    E --> F[WARNING: Transport IP address filtering is not used]
+    B -- No --> G{Is the system proxy or a PAC rule applicable for this destination?}
+    G -- Yes --> H[Connect through the system proxy or PAC rule]
+    H --> F
+    G -- No --> I[Connect directly to destination]
+    I --> J[SAFE: Transport IP address filtering is used]
+```
+
+`NO_PROXY` changes whether an outgoing request is sent through the selected explicit
+proxy. Matching destinations use the protected direct route, so transport IP address
+filtering remains enabled. System and PAC rules are also evaluated per destination,
+with filtering enabled whenever their initial routing decision selects no proxy, subject
+to the dynamic-rule limitation described below.
+
+**Known limitation:** System and PAC proxy rules are evaluated once to select the protected
+direct or proxy transport, and the selected proxy transport evaluates the same rules again
+when connecting. If a dynamic proxy configuration changes its answer between those evaluations,
+routing can differ from the initial security decision. In particular, if the first evaluation
+selects a proxy but the later evaluation bypasses it, the resulting direct connection uses the
+proxy-designated transport and does not receive direct-route DNS/IP filtering. Use only trusted,
+stable system and PAC proxy configurations whose routing decision for a destination does not
+change during a request.
+
 #### Troubleshooting Network Connectivity
 
 **Test basic connectivity:**
@@ -605,9 +667,28 @@ curl -I https://management.azure.com
 
 **Check private endpoint DNS resolution:**
 ```bash
-# Should resolve to a private IP (10.x.x.x) if using private endpoints
+# Private endpoints normally resolve to a private IP such as 10.x.x.x.
+# Azure MCP Server intentionally rejects that destination by default.
 nslookup mystorageaccount.blob.core.windows.net
 ```
+
+**Temporarily allow a trusted private endpoint in server mode:**
+```bash
+azmcp server start \
+  --dangerously-disable-ssrf-protections-by-namespace storage
+```
+
+`--dangerously-disable-ssrf-protections-by-namespace` is available only on
+`server start`. Use the tool's original top-level namespace, such as `storage`,
+`keyvault`, `appconfig`, or `acr`; repeat the option for multiple namespaces.
+The special value `ALL` disables protection for every resolved tool namespace.
+This option disables both endpoint validation and transport-level private-address
+checks for those tools, so use it only temporarily in a fully trusted environment.
+Direct CLI commands do not establish a tool namespace context and cannot use this
+override; they remain protected. A trusted outgoing proxy is an alternative when it
+actually routes the destination because proxy routing takes precedence over transport-level
+DNS/IP protection. Endpoint validation remains active unless a namespace override also
+disables it.
 
 **Verify certificate trust:**
 ```bash
@@ -620,6 +701,11 @@ openssl s_client -connect login.microsoftonline.com:443 \
 - ExpressRoute connectivity
 - Point-to-site VPN configuration
 - Bastion host or jump server access
+
+These options provide network routing but do not by themselves allow Azure MCP Server
+to send requests to private addresses. Use server mode with the narrowest temporary
+namespace override, or a trusted outgoing proxy that routes the destination, when private
+endpoint access is required.
 
 #### Questions to Ask Your Network Administrator
 
@@ -942,7 +1028,7 @@ The Azure MCP wrapper automatically installs the correct platform-specific packa
 
 5. **Verify Node.js and npm versions:**
    ```bash
-   node --version  # Should be 20.0.0 or later
+   node --version  # Should be an active LTS version
    npm --version
    ```
 
@@ -1050,7 +1136,7 @@ If authentication still fails after switching clouds, check the following:
 
 #### Sovereign cloud in Remote (using Azure Container Apps)
 
-When authenicating in remote, the following environment variables need to be set on the container:
+When authenticating in remote, the following environment variables need to be set on the container:
 
 - AZURE_CLOUD
 - AzureAd__ClientCredentials__0__TokenExchangeUrl
@@ -1274,6 +1360,12 @@ By default, VS Code logs informational, warning, and error level messages. To ge
 ### Observability with OpenTelemetry
 
 The server supports observability with [OpenTelemetry](https://opentelemetry.io/).
+
+The `ServerStarted` activity reports configured SSRF namespace override scope/count
+without exporting raw override namespaces. This is startup configuration, not proof
+of protection on every request. See
+[Startup Usage Telemetry](https://github.com/microsoft/mcp/blob/main/docs/design/HttpClientFactory.md#startup-usage-telemetry)
+for tag values and limitations. These tags honor existing telemetry opt-outs.
 
 To export telemetry to an OTLP endpoint, set the `AZURE_MCP_ENABLE_OTLP_EXPORTER` environment variable to `true`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
 

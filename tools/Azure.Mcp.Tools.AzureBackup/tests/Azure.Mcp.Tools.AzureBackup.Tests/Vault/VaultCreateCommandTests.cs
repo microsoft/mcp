@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -16,6 +15,46 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests.Vault;
 
 public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCreateCommand, IAzureBackupService>
 {
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("--enable-public-network-access true", true)]
+    public async Task ExecuteAsync_PublicAccessRequiresOptIn(string options, bool publicAccess)
+    {
+        Service.CreateVaultAsync(
+            "myVault", "rg", "sub", "rsv", "eastus",
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), publicAccess, cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
+
+        var response = await ExecuteCommandAsync($"--subscription sub --vault myVault --resource-group rg --vault-type rsv --location eastus {options}");
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(publicAccess, Assert.Single(Service.ReceivedCalls()).GetArguments()[8]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsPublicAccessForUnsupportedVaultType()
+    {
+        var response = await ExecuteCommandAsync("--subscription sub --vault myVault --resource-group rg --vault-type dpp --location eastus --enable-public-network-access true");
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("rsv")]
+    [InlineData("dpp")]
+    public async Task ExecuteAsync_ExistingVault_ReturnsConflictWithUpdateGuidance(string vaultType)
+    {
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", vaultType, "eastus",
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "The vault already exists."));
+
+        var response = await ExecuteCommandAsync(
+            $"--subscription sub --vault v --resource-group rg --vault-type {vaultType} --location eastus");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("azurebackup_vault_update", response.Message);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -30,7 +69,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("myVault"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new VaultCreateResult("id1", "myVault", "rsv", "eastus", "Succeeded"));
 
         // Act
@@ -53,7 +92,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         // Arrange
         Service.CreateVaultAsync(
             Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -78,7 +117,7 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         {
             Service.CreateVaultAsync(
                 Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("rsv"), Arg.Is("eastus"),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
                 .Returns(new VaultCreateResult("id", "v", "rsv", "eastus", "Succeeded"));
         }
 

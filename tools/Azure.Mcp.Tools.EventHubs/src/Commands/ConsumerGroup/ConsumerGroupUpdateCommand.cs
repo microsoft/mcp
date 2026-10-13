@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
         The tool requires specifying the resource group, namespace name, event hub name, and consumer 
         group name. Optionally, you can provide user metadata for the consumer group.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
@@ -48,7 +49,6 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
                 options.Subscription!,
                 options.UserMetadata,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(consumerGroup), EventHubsJsonContext.Default.ConsumerGroupUpdateCommandResult);

@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
     Name = "get",
     Title = "Get Sync Group",
     Description = "Get details about a specific sync group or list all sync groups. If --sync-group-name is provided, returns a specific sync group; otherwise, lists all sync groups in the Storage Sync service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -46,7 +47,6 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (syncGroup == null)
@@ -69,7 +69,6 @@ public sealed class SyncGroupGetCommand(ILogger<SyncGroupGetCommand> logger, ISt
                     options.ResourceGroup,
                     options.Name,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(syncGroups ?? []), StorageSyncJsonContext.Default.SyncGroupGetCommandResult);

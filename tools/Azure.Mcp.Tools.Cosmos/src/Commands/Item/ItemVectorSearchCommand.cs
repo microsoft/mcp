@@ -21,13 +21,14 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Name = "vector-search",
     Title = "Vector Search Cosmos DB Documents",
     Description = "Retrieve the TOP N documents in a Cosmos DB container most similar to a given --search-text using the Cosmos VectorDistance function on the provided --vector-property. The tool first calls an Azure OpenAI embedding deployment (--openai-endpoint and --embedding-deployment) to convert --search-text into a query vector; optionally pass --embedding-dimensions to request a specific length for models that support custom dimensions (e.g., text-embedding-3-small / text-embedding-3-large). Each returned document includes a `_score` field that represents the server-side computed similarity. Requires a Cosmos DB vector index on --vector-property. Use --count to control how many documents are returned (1-20, default is 10). Optionally pass --properties-to-select to project specific fields; when omitted the full document is returned with --vector-property stripped, since a typical 1536-dim embedding adds ~30 KB / ~10K tokens per hit.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
+public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver, IEndpointValidator endpointValidator)
     : BaseCosmosCommand<ItemVectorSearchOptions, ItemVectorSearchCommand.ItemVectorSearchCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ItemVectorSearchCommand> _logger = logger;
@@ -57,7 +58,8 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
 
                 if (invalidProperties.Count > 0)
                 {
-                    validationResult.Errors.Add($"--properties-to-select contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.");
+                    validationResult.AddError($"--properties-to-select contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.",
+                        "Invalid Cosmos property selection.");
                 }
             }
         }
@@ -75,7 +77,7 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
     private static readonly ArmEnvironment[] s_openAIEndpointClouds =
         [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
 
-    private static void ValidateOpenAIEndpoint(string? endpoint, ValidationResult validationResult)
+    private void ValidateOpenAIEndpoint(string? endpoint, ValidationResult validationResult)
     {
         if (string.IsNullOrWhiteSpace(endpoint))
         {
@@ -92,7 +94,10 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             {
                 try
                 {
-                    EndpointValidator.ValidateAzureServiceEndpoint(endpoint, serviceType, cloud);
+                    endpointValidator.ValidateAzureServiceEndpoint(
+                        endpoint: endpoint,
+                        serviceType: serviceType,
+                        armEnvironment: cloud);
                     return;
                 }
                 catch (Exception ex) when (ex is SecurityException or ArgumentException)
@@ -102,8 +107,9 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
             }
         }
 
-        validationResult.Errors.Add(
-            $"The provided Azure OpenAI endpoint is not a trusted Azure OpenAI, Cognitive Services, or AI Foundry endpoint for the configured Azure cloud. The value '{endpoint}' is not allowed.");
+        validationResult.AddError(
+            $"The provided Azure OpenAI endpoint is not a trusted Azure OpenAI, Cognitive Services, or AI Foundry endpoint for the configured Azure cloud. The value '{endpoint}' is not allowed.",
+            "Untrusted Azure OpenAI endpoint.");
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemVectorSearchOptions options, CancellationToken cancellationToken)
@@ -132,7 +138,6 @@ public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> log
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

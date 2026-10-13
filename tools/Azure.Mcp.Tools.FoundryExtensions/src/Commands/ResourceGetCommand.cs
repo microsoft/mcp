@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
         returns the resource inventory in scope. This command is for Foundry resource metadata, not model
         deployment inventory. For Azure OpenAI model deployments inside a Foundry resource, use the 'openai models-list' tool.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -54,7 +55,6 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.ResourceGroup!,
                     options.ResourceName!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -68,7 +68,6 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger, IFoun
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

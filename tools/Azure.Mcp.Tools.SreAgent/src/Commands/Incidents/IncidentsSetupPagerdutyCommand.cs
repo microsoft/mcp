@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "setup_pagerduty",
     Title = "Setup PagerDuty Connector",
     Description = "Connect an SRE Agent to PagerDuty. Creates a PagerDuty MCP connector to enable incident alerting and management integration using an API key from an environment variable.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -42,7 +43,8 @@ public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetu
         var apiKey = Environment.GetEnvironmentVariable(options.ApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            validationResult.Errors.Add($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.");
+            validationResult.AddError($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.",
+                "PagerDuty API key environment variable not set.");
         }
     }
 

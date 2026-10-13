@@ -3,12 +3,13 @@
 
 using System.Data.Common;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
+using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -27,9 +28,8 @@ public class PostgresServiceConnectionStringInjectionTests
 
     public PostgresServiceConnectionStringInjectionTests()
     {
-        var resourceGroupService = Substitute.For<IResourceGroupService>();
-        var tenantService = Substitute.For<ITenantService>();
-        var subscriptionService = Substitute.For<ISubscriptionService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
+        azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         var entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
@@ -43,7 +43,7 @@ public class PostgresServiceConnectionStringInjectionTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(resourceGroupService, subscriptionService, tenantService, entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(azureService, entraTokenAuth, _dbProvider);
     }
 
     private static void AssertConnectionStringNotInjected(string connectionString, string expectedHost, string injectedHost)
@@ -170,4 +170,3 @@ public class PostgresServiceConnectionStringInjectionTests
         Assert.Equal(SslMode.Require, parsed.SslMode);
     }
 }
-

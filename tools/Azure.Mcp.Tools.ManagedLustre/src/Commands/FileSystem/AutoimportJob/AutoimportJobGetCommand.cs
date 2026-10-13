@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
         Optional options:
         - job-name: The name of a specific autoimport job (if omitted, all jobs are returned)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -51,7 +52,6 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.FilesystemName,
                     options.JobName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(result, null), ManagedLustreJsonContext.Default.AutoimportJobGetResult);
@@ -64,7 +64,6 @@ public sealed class AutoimportJobGetCommand(IManagedLustreService service, ILogg
                     options.ResourceGroup,
                     options.FilesystemName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(null, results ?? []), ManagedLustreJsonContext.Default.AutoimportJobGetResult);

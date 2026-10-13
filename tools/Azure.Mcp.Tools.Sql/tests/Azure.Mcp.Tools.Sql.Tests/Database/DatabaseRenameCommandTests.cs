@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -51,7 +50,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Is("newdb"), // Verify new-database-name is correctly bound (not null)
             Arg.Is("rg"),
             Arg.Is("sub"),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
@@ -74,7 +72,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             "newdb",
             "rg",
             "sub",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -118,7 +115,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
         }
@@ -152,7 +148,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
@@ -180,7 +175,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
@@ -209,7 +203,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(badRequestException);
 
@@ -236,7 +229,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Unexpected error"));
 
@@ -282,7 +274,6 @@ public class DatabaseRenameCommandTests : SubscriptionCommandUnitTestsBase<Datab
             Arg.Is("newdb"),
             Arg.Is("rg"),
             Arg.Is("env-sub-id"),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 

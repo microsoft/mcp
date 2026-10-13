@@ -24,11 +24,9 @@ public class DeviceRegistrySetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var deviceRegistry = new CommandGroup(Name,
-            """
-            Device Registry operations - Commands to manage Azure Device Registry resources.
-            Azure Device Registry (ADR) is a unified registry projecting assets and devices as Azure resources.
-            Supports listing namespaces and managing device registry resources in your Azure subscription.
-            """,
+            "Device Registry operations - Commands to manage Azure Device Registry resources. Azure Device " +
+            "Registry (ADR) is a unified registry projecting assets and devices as Azure resources. Supports " +
+            "listing namespaces and managing device registry resources in your Azure subscription.",
             Title);
 
         var namespaceGroup = new CommandGroup("namespace",

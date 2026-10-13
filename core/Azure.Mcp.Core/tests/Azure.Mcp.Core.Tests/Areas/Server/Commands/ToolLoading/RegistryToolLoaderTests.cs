@@ -1,15 +1,18 @@
-#pragma warning disable MCP9003
-#pragma warning disable MCP9005
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -19,49 +22,33 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class RegistryToolLoaderTests
 {
-    private static (RegistryToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (RegistryToolLoader toolLoader, IMcpDiscoveryStrategy mockDiscoveryStrategy) CreateToolLoaderAndDiscoveryStrategy()
     {
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var mockDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
 
-        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, toolLoaderOptions, logger);
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
         return (toolLoader, mockDiscoveryStrategy);
     }
 
-    private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
+    private static RegistryToolLoader CreateToolLoader(
+        IMcpDiscoveryStrategy discoveryStrategy,
+        ServerRuntimeConfiguration? configuration = null)
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
-        {
-            Params = new ListToolsRequestParams()
-        };
-    }
+        var logger = Substitute.For<ILogger<RegistryToolLoader>>();
+        var serverConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
 
-    private static ModelContextProtocol.Server.RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IDictionary<string, JsonElement>? arguments = null)
-    {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
-        {
-            Params = new CallToolRequestParams
-            {
-                Name = toolName,
-                Arguments = arguments ?? new Dictionary<string, JsonElement>()
-            }
-        };
+        return new RegistryToolLoader(discoveryStrategy, serverConfiguration, logger);
     }
 
     [Fact]
     public async Task ListToolsHandler_WithNoServers_ReturnsEmptyToolList()
     {
         // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
-        var request = CreateListToolsRequest();
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
-            .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
+            .Returns([]);
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -84,13 +71,8 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -101,6 +83,98 @@ public class RegistryToolLoaderTests
         Assert.Equal(2, result.Tools.Count);
         Assert.Contains(result.Tools, t => t.Name == "test-tool-1");
         Assert.Contains(result.Tools, t => t.Name == "test-tool-2");
+    }
+
+    [Theory]
+    [InlineData(null, "allowed_tool_extra", "allowed_tool_extra")]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool_extra")]
+    [InlineData(null, "allowed_tool", "allowed_tool")]
+    [InlineData("server_", "server_allowed_tool_extra", "server_allowed_tool_extra")]
+    [InlineData("server_", "SERVER_ALLOWED_TOOL_EXTRA", "server_allowed_tool_extra")]
+    [InlineData("server_", "server_allowed_tool", "server_allowed_tool")]
+    [InlineData("server_", "allowed_tool", null)]
+    public async Task ListToolsHandler_WithOverlappingToolNames_ReturnsOnlyExactExposedMatch(string? prefix, string configuredTool, string? expectedTool)
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("allowed_tool", "Short name", "Short response")
+            .AddTool("allowed_tool_extra", "Long name", "Long response");
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration { Tool = [configuredTool] });
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        if (expectedTool == null)
+        {
+            Assert.Empty(result.Tools);
+        }
+        else
+        {
+            Assert.Equal(expectedTool, Assert.Single(result.Tools).Name);
+        }
+    }
+
+    [Theory]
+    [InlineData(null, "allowed_tool_extra", "allowed_tool", false)]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool", false)]
+    [InlineData(null, "allowed_tool", "allowed_tool_extra", false)]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool_extra", true)]
+    [InlineData("server_", "server_allowed_tool_extra", "server_allowed_tool", false)]
+    [InlineData("server_", "server_allowed_tool", "server_allowed_tool_extra", false)]
+    [InlineData("server_", "SERVER_ALLOWED_TOOL_EXTRA", "server_allowed_tool_extra", true)]
+    public async Task CallToolHandler_WithOverlappingToolNames_DispatchesOnlyExactExposedMatch(string? prefix, string configuredTool, string requestedTool, bool allowed)
+    {
+        var executedTools = new List<string>();
+        var clientBuilder = new MockMcpClientBuilder();
+        foreach (var name in new[] { "allowed_tool", "allowed_tool_extra" })
+        {
+            clientBuilder.AddTool(name, "Test tool", () =>
+            {
+                executedTools.Add(name);
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        }
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration { Tool = [configuredTool] });
+
+        var result = await toolLoader.CallToolHandler(McpTestUtilities.CreateToolCallRequest(requestedTool), TestContext.Current.CancellationToken);
+
+        Assert.Equal(!allowed, result.IsError);
+        if (allowed)
+        {
+            Assert.Equal(requestedTool[(prefix?.Length ?? 0)..], Assert.Single(executedTools));
+        }
+        else
+        {
+            Assert.Contains($"Tool '{requestedTool}' is not available", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+            Assert.Empty(executedTools);
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("server_")]
+    public async Task ListToolsHandler_WithMultipleOverlappingToolNames_ReturnsOnlyExactExposedMatches(string? prefix)
+    {
+        var clientBuilder = new MockMcpClientBuilder();
+        foreach (var name in new[] { "tool", "tool_a", "tool_b", "prefix_tool_a", "tool_a_extra", "prefix_tool_b" })
+        {
+            clientBuilder.AddTool(name, "Test tool", "Response");
+        }
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration
+        {
+            Tool = [(prefix + "tool_a").ToUpperInvariant(), prefix + "tool_b"]
+        });
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { prefix + "tool_a", prefix + "tool_b" }, result.Tools.Select(t => t.Name).OrderBy(name => name));
     }
 
     [Fact]
@@ -131,14 +205,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -185,14 +255,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var defaultOptions = new ToolLoaderOptions(ReadOnly: false);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(defaultOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = false };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -244,14 +310,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(isHttpOptions);
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -302,14 +364,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var isHttpOptions = new ToolLoaderOptions(IsHttpMode: false);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(isHttpOptions);
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -332,12 +390,15 @@ public class RegistryToolLoaderTests
         Assert.False(McpHelper.HasHint(notLocalRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult()
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader();
-        var request = CreateCallToolRequest("unknown-tool");
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -351,33 +412,58 @@ public class RegistryToolLoaderTests
         // Verify the error message
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
-        Assert.Contains("unknown-tool", textContent.Text);
+        Assert.Contains(toolName, textContent.Text);
         Assert.Contains("was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+    }
+
+    [Theory]
+    [InlineData("blocked-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithToolFilter_RejectsToolOutsideAllowList(string toolName)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("blocked-tool", "Blocked tool", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy,
+            new ServerRuntimeConfiguration { Tool = ["allowed-tool"] });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(toolName), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Equal(0, executions);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
     }
 
     [Fact]
     public async Task RegistryToolLoader_WithDifferentOptions_BehavesConsistently()
     {
         // Arrange - Test with different service options
-        var defaultOptions = new ToolLoaderOptions();
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
+        var defaultOptions = new ServerRuntimeConfiguration();
+        var readOnlyOptions = new ServerRuntimeConfiguration { ReadOnly = true };
 
         // Create empty discovery strategies for both tests
         var defaultDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
         var readOnlyDiscoveryStrategy = new MockMcpDiscoveryStrategyBuilder().Build();
 
         // Create tool loaders with different options
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger1 = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var logger2 = loggerFactory.CreateLogger<RegistryToolLoader>();
+        var defaultToolLoader = CreateToolLoader(defaultDiscoveryStrategy, defaultOptions);
+        var readOnlyToolLoader = CreateToolLoader(readOnlyDiscoveryStrategy, readOnlyOptions);
 
-        var defaultToolLoader = new RegistryToolLoader(defaultDiscoveryStrategy,
-            Microsoft.Extensions.Options.Options.Create(defaultOptions), logger1);
-        var readOnlyToolLoader = new RegistryToolLoader(readOnlyDiscoveryStrategy,
-            Microsoft.Extensions.Options.Options.Create(readOnlyOptions), logger2);
-
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var defaultResult = await defaultToolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -412,17 +498,12 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateCallToolRequest("microsoft_docs_search",
-            new Dictionary<string, JsonElement>
-            {
-                { "question", JsonDocument.Parse("\"how to implement mcp server in azure\"").RootElement }
-            });
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var request = McpTestUtilities.CreateToolCallRequest("microsoft_docs_search", new Dictionary<string, object?>
+        {
+            { "question", "how to implement mcp server in azure" }
+        });
+        using var activity = new Activity("test-activity").Start();
 
         // Act - Call CallToolHandler, which should initialize tools first
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -437,6 +518,9 @@ public class RegistryToolLoaderTests
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
         Assert.Equal("Tool executed successfully", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "microsoft_docs_search");
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
     }
 
     [Fact]
@@ -467,15 +551,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
 
         // Act & Assert - List tools
-        var listRequest = CreateListToolsRequest();
+        var listRequest = McpTestUtilities.CreateToolListRequest();
         var listResult = await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
         Assert.NotNull(listResult);
         Assert.Equal(2, listResult.Tools.Count);
@@ -483,9 +562,9 @@ public class RegistryToolLoaderTests
         Assert.Contains(listResult.Tools, t => t.Name == "echo");
 
         // Act & Assert - Call search tool
-        var searchRequest = CreateCallToolRequest("docs-search", new Dictionary<string, JsonElement>
+        var searchRequest = McpTestUtilities.CreateToolCallRequest("docs-search", new Dictionary<string, object?>
         {
-            { "query", JsonDocument.Parse("\"MCP implementation\"").RootElement }
+            { "query", "MCP implementation" }
         });
 
         var searchResult = await toolLoader.CallToolHandler(searchRequest, TestContext.Current.CancellationToken);
@@ -498,9 +577,9 @@ public class RegistryToolLoaderTests
         Assert.Contains("Azure documentation", searchContent.Text);
 
         // Act & Assert - Call echo tool
-        var echoRequest = CreateCallToolRequest("echo", new Dictionary<string, JsonElement>
+        var echoRequest = McpTestUtilities.CreateToolCallRequest("echo", new Dictionary<string, object?>
         {
-            { "message", JsonDocument.Parse("\"Hello MCP!\"").RootElement }
+            { "message", "Hello MCP!" }
         });
         var echoResult = await toolLoader.CallToolHandler(echoRequest, TestContext.Current.CancellationToken);
         Assert.NotNull(echoResult);
@@ -538,14 +617,10 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act
         var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -569,7 +644,7 @@ public class RegistryToolLoaderTests
     public async Task DisposeAsync_ShouldDisposeOwnedResourcesOnly()
     {
         // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
 
         // Act
         await toolLoader.DisposeAsync();
@@ -582,10 +657,10 @@ public class RegistryToolLoaderTests
     public async Task DisposeAsync_ShouldClearInternalCollections()
     {
         // Arrange
-        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
+        var (toolLoader, mockDiscoveryStrategy) = CreateToolLoaderAndDiscoveryStrategy();
 
         // Initialize tool loader by calling ListToolsHandler
-        var request = CreateListToolsRequest();
+        var request = McpTestUtilities.CreateToolListRequest();
         await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Act
@@ -602,7 +677,7 @@ public class RegistryToolLoaderTests
     public async Task DisposeAsync_ShouldBeIdempotent()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader();
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
 
         // Act - dispose multiple times
         await toolLoader.DisposeAsync();
@@ -617,7 +692,7 @@ public class RegistryToolLoaderTests
     public async Task DisposeAsync_ShouldDisposeInitializationSemaphore()
     {
         // Arrange
-        var (toolLoader, _) = CreateToolLoader();
+        var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
 
         // Act
         await toolLoader.DisposeAsync();
@@ -653,7 +728,7 @@ public class RegistryToolLoaderTests
         server3.CreateMetadata().Returns(new McpServerMetadata("server-3", "server-3", "Server 3"));
 
         mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server1, server2, server3]));
+            .Returns([server1, server2, server3]);
 
         // Set up GetOrCreateClientAsync to wait on TaskCompletionSource to simulate concurrent operations
         var client1 = client1Builder.Build();
@@ -681,13 +756,8 @@ public class RegistryToolLoaderTests
                 return client3;
             });
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-
-        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act - Start initialization (it will block on TaskCompletionSources)
         var listToolsTask = toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
@@ -717,7 +787,7 @@ public class RegistryToolLoaderTests
         Assert.Contains(result.Tools, t => t.Name == "tool-3");
 
         // Verify no race conditions - calling again should use cached results without re-initialization
-        var cachedRequest = CreateListToolsRequest();
+        var cachedRequest = McpTestUtilities.CreateToolListRequest();
         var cachedResult = await toolLoader.ListToolsHandler(cachedRequest, TestContext.Current.CancellationToken);
         Assert.Equal(3, cachedResult.Tools.Count);
 
@@ -739,7 +809,7 @@ public class RegistryToolLoaderTests
         server.CreateMetadata().Returns(new McpServerMetadata("test-server", "test-server", "Test Server"));
 
         mockDiscoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>([server]));
+            .Returns([server]);
 
         // First call: throw OperationCanceledException
         var firstCall = true;
@@ -751,23 +821,18 @@ public class RegistryToolLoaderTests
                     firstCall = false;
                     throw new OperationCanceledException("Initialization canceled");
                 }
-                return Task.FromResult(clientBuilder.Build());
+                return clientBuilder.Build();
             });
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
-
-        var toolLoader = new RegistryToolLoader(mockDiscoveryStrategy, serviceOptions, logger);
-        var request = CreateListToolsRequest();
+        var toolLoader = CreateToolLoader(mockDiscoveryStrategy);
+        var request = McpTestUtilities.CreateToolListRequest();
 
         // Act & Assert - First call should throw OperationCanceledException
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
             await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken));
 
         // Act & Assert - Second call should succeed (proving initialization wasn't marked complete)
-        var retryRequest = CreateListToolsRequest();
+        var retryRequest = McpTestUtilities.CreateToolListRequest();
         var result = await toolLoader.ListToolsHandler(retryRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
@@ -791,12 +856,10 @@ public class RegistryToolLoaderTests
             .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
 
         // Act
-        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
         // Assert — exposed names have the prefix
         Assert.Equal(2, result.Tools.Count);
@@ -826,13 +889,11 @@ public class RegistryToolLoaderTests
             .AddServer("foundry", "foundry", "Foundry server", clientBuilder, toolPrefix: "foundry_")
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
 
         // Act — call using the prefixed name
         var result = await toolLoader.CallToolHandler(
-            CreateCallToolRequest(prefixedToolName),
+            McpTestUtilities.CreateToolCallRequest(prefixedToolName),
             TestContext.Current.CancellationToken);
 
         // Assert — response comes back correctly
@@ -854,20 +915,20 @@ public class RegistryToolLoaderTests
             .AddServer("docs", "docs", "Docs server", clientBuilder)
             .Build();
 
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<RegistryToolLoader>();
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions()), logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy);
 
         // Act
-        var result = await toolLoader.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
 
         // Assert — tool name is unchanged
         Assert.Single(result.Tools);
         Assert.Equal("search_docs", result.Tools[0].Name);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -894,21 +955,24 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        if (filterReadOnlyTool)
+        {
+            configuration.Tool = ["write-tool"];
+        }
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call the non-read-only tool directly
-        var request = CreateCallToolRequest("write-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("write-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to read-only mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "write-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);
@@ -942,16 +1006,12 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Call the read-only tool
-        var request = CreateCallToolRequest("readonly-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("readonly-tool");
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should allow execution of read-only tool
@@ -992,21 +1052,20 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var httpOptions = new ToolLoaderOptions(IsHttpMode: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(httpOptions);
+        var configuration = new ServerRuntimeConfiguration { Transport = TransportTypes.Http };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call the local-required tool in HTTP mode
-        var request = CreateCallToolRequest("local-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("local-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to HTTP mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "local-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("HTTP mode", errorText.Text);
@@ -1031,21 +1090,20 @@ public class RegistryToolLoaderTests
             .AddServer("test-server", "test-server", "Test Server Description", clientBuilder)
             .Build();
 
-        var readOnlyOptions = new ToolLoaderOptions(ReadOnly: true);
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<RegistryToolLoader>();
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(readOnlyOptions);
+        var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
 
-        var toolLoader = new RegistryToolLoader(discoveryStrategy, serviceOptions, logger);
+        var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call a tool with null annotations in read-only mode
-        var request = CreateCallToolRequest("no-annotations-tool");
+        var request = McpTestUtilities.CreateToolCallRequest("no-annotations-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject since null annotations means ReadOnlyHint is not true
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "no-annotations-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);

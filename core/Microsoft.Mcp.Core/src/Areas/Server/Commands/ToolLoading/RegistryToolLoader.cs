@@ -21,14 +21,14 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// </summary>
 public sealed class RegistryToolLoader(
     IMcpDiscoveryStrategy discoveryStrategy,
-    IOptions<ToolLoaderOptions> options,
+    IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<RegistryToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
-    private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
-    private List<McpClient> _discoveredClients = [];
-    private Dictionary<McpClient, string?> _clientPrefixMap = [];
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
+    private readonly Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
+    private readonly List<McpClient> _discoveredClients = [];
+    private readonly Dictionary<McpClient, string?> _clientPrefixMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -58,21 +58,22 @@ public sealed class RegistryToolLoader(
             var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
-                .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                .Where(t => !_options.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
-
-            // Filter by specific tools if provided
-            if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
-            {
-                filteredTools = filteredTools.Where(t => _options.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
-            }
+                .Where(t => !_configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                .Where(t => !_configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
 
             var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
+
+            // Filter by the exposed tool name, including the optional server prefix.
+            if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
+            {
+                filteredTools = filteredTools.Where(t => _configuration.Value.Tool.Any(tool => string.Equals(tool, prefix + t.Name, StringComparison.OrdinalIgnoreCase)));
+            }
+
             foreach (var tool in filteredTools)
             {
                 var exposedTool = string.IsNullOrEmpty(prefix)
                     ? tool
-                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, Annotations = tool.Annotations };
+                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
                 allToolsResponse.Tools.Add(exposedTool);
             }
         }
@@ -102,20 +103,22 @@ public sealed class RegistryToolLoader(
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
-            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request));
+        var activity = Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolParameters, McpHelper.CreateToolParametersTelemetry(request.Params.Arguments?.Keys));
 
         // Initialize the tool client map if not already done
         await InitializeAsync(cancellationToken);
 
         // Check if tool filtering is enabled and validate the requested tool
-        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_options.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => string.Equals(tool, request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
+                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                    .SetTag(TagName.ToolName, TagConstants.Unknown);
                 var content = new TextContentBlock
                 {
-                    Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                    Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",
                 };
 
                 return new CallToolResult
@@ -128,6 +131,8 @@ public sealed class RegistryToolLoader(
 
         if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client is null)
         {
+            activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
+                .SetTag(TagName.ToolName, TagConstants.Unknown);
             var content = new TextContentBlock
             {
                 Text = $"The tool {request.Params.Name} was not found in the tool registry.",
@@ -140,12 +145,16 @@ public sealed class RegistryToolLoader(
             };
         }
 
+        // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
         var toolId = McpHelper.GetToolIdFromMeta(kvp.Tool.Meta);
-        Activity.Current?.SetTag(TagName.ToolId, toolId)
+        activity?.SetTag(TagName.ToolArea, kvp.ServerName)
+            .SetTag(TagName.ToolName, kvp.Tool.Name)
+            .SetTag(TagName.ToolSource, "external." + kvp.Client.ServerInfo.Name)
+            .SetTag(TagName.ToolId, toolId)
             .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(kvp.Tool));
 
         // Enforce read-only mode at execution time
-        if (_options.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
+        if (_configuration.Value.ReadOnly && kvp.Tool.Annotations?.ReadOnlyHint != true)
         {
             var content = new TextContentBlock
             {
@@ -160,7 +169,7 @@ public sealed class RegistryToolLoader(
         }
 
         // Enforce HTTP mode restrictions at execution time
-        if (_options.Value.IsHttpMode && McpHelper.HasHint(kvp.Tool, McpHelper.LocalRequiredHintMetaKey))
+        if (_configuration.Value.IsHttpMode && McpHelper.HasHint(kvp.Tool, McpHelper.LocalRequiredHintMetaKey))
         {
             var content = new TextContentBlock
             {
@@ -174,11 +183,7 @@ public sealed class RegistryToolLoader(
             }, toolId);
         }
 
-        // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
-        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName)
-            .SetTag(TagName.ToolName, request.Params.Name)
-            .SetTag(TagName.ToolSource, "external." + kvp.Client.ServerInfo.Name)
-            .SetTag(TagName.IsServerCommandInvoked, true);
+        activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
 

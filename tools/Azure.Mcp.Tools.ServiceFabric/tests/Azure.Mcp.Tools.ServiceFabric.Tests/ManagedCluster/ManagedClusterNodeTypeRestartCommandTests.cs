@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Commands.ManagedCluster;
 using Azure.Mcp.Tools.ServiceFabric.Models;
 using Azure.Mcp.Tools.ServiceFabric.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -47,7 +46,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
                 Arg.Any<string[]>(),
                 Arg.Any<UpdateType>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new RestartNodeResponse { StatusCode = 202 });
         }
@@ -87,7 +85,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedResponse);
 
@@ -109,7 +106,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
 
         var result = ValidateAndDeserializeResponse(response, ServiceFabricJsonContext.Default.ManagedClusterNodeTypeRestartCommandResult);
@@ -131,7 +127,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new RestartNodeResponse { StatusCode = 202 });
 
@@ -154,7 +149,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -170,7 +164,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new RestartNodeResponse { StatusCode = 202 });
 
@@ -200,7 +193,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -230,7 +222,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
 
@@ -259,7 +250,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Any<string[]>(),
             Arg.Any<UpdateType>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(new RestartNodeResponse { StatusCode = 202 });
 
@@ -283,7 +273,6 @@ public class ManagedClusterNodeTypeRestartCommandTests : SubscriptionCommandUnit
             Arg.Is<string[]>(n => n.Length == 2 && n[0] == "Worker_0" && n[1] == "Worker_1"),
             Arg.Is(UpdateType.ByUpgradeDomain),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

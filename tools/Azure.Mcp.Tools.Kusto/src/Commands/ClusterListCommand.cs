@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     Name = "list",
     Title = "List Kusto Clusters",
     Description = "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -36,7 +37,6 @@ public sealed class ClusterListCommand(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new ClusterListCommandResult(clusterNames?.Results ?? [], clusterNames?.AreResultsTruncated ?? false), KustoJsonContext.Default.ClusterListCommandResult);

@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.Communication.Commands.Sms;
 using Azure.Mcp.Tools.Communication.Services;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -43,7 +42,7 @@ public class SmsSendCommandTests : CommandUnitTestsBase<SmsSendCommand, ICommuni
             new(MessageId: "msg1", To: to.First(), Successful: true, HttpStatusCode: 202, ErrorMessage: null)
         };
         Service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(results);
 
         var args = new List<string>
@@ -70,7 +69,7 @@ public class SmsSendCommandTests : CommandUnitTestsBase<SmsSendCommand, ICommuni
     public async Task ExecuteAsync_ServiceThrowsException_HandlesError()
     {
         Service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("fail"));
 
         // Act

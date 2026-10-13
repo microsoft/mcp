@@ -2,14 +2,23 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Tests.Areas.Server;
+using Azure.Mcp.Tools.Compute.Commands.Vmss;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
 
@@ -50,6 +59,37 @@ public class CommandFactoryTests
     }
 
     [Fact]
+    public void AllRegisteredCommands_HaveValidUniqueIds()
+    {
+        HashSet<Type> commandsWithLegacyInvalidIds =
+        [
+            typeof(VmssGetCommand),
+            typeof(AutoimportJobCancelCommand),
+            typeof(AutoimportJobDeleteCommand),
+            typeof(ImportJobCancelCommand),
+            typeof(ImportJobDeleteCommand),
+            typeof(ImportJobGetCommand)
+        ];
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        var commandIds = new HashSet<Guid>();
+
+        Assert.NotEmpty(commandFactory.AllCommands);
+        Assert.All(commandFactory.AllCommands, entry =>
+        {
+            if (commandsWithLegacyInvalidIds.Contains(entry.Value.Command.GetType()))
+            {
+                return;
+            }
+
+            Assert.True(Guid.TryParse(entry.Value.Command.Id, out var commandId),
+                $"{entry.Key} declares an invalid command ID: '{entry.Value.Command.Id}'.");
+            Assert.NotEqual(Guid.Empty, commandId);
+            Assert.True(commandIds.Add(commandId),
+                $"{entry.Key} declares a duplicate command ID: '{entry.Value.Command.Id}'.");
+        });
+    }
+
+    [Fact]
     public void Separator_Should_Be_Underscore()
     {
         // This test verifies our fix for supporting dashes in command names
@@ -60,6 +100,47 @@ public class CommandFactoryTests
 
         // Assert
         Assert.Equal('_', separator);
+    }
+
+    [Fact]
+    public async Task RootCommand_InvokeCliCommand_UsesClientAwareTelemetry()
+    {
+        using var activity = new Activity("test").Start();
+        _telemetryService.StartActivity(ActivityName.ToolExecuted, null, null).Returns(activity);
+
+        var command = Substitute.For<IBaseCommand>();
+        command.Id.Returns("00000000-0000-0000-0000-000000000001");
+        command.Name.Returns("directCommand");
+        command.GetCommand().Returns(new Command("directCommand"));
+        command.Validate(Arg.Any<CommandResult>(), Arg.Any<CommandResponse?>()).Returns(new ValidationResult());
+        command.ExecuteAsync(
+            Arg.Any<CommandContext>(),
+            Arg.Any<ParseResult>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new CommandResponse { Status = HttpStatusCode.OK });
+
+        var area = Substitute.For<IAreaSetup>();
+        area.Name.Returns("name1");
+        area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
+        {
+            var group = new CommandGroup("name1", "Test root");
+            group.AddCommand("directCommand", command);
+            return group;
+        });
+
+        var factory = new CommandFactory(
+            _serviceProvider,
+            [area],
+            _telemetryService,
+            _configurationOptions,
+            _logger);
+
+        var exitCode = await factory.RootCommand.Parse(["name1", "directCommand"])
+            .InvokeAsync(null, TestContext.Current.CancellationToken);
+
+        Assert.Equal((int)HttpStatusCode.OK, exitCode);
+        _telemetryService.Received(1).StartActivity(ActivityName.ToolExecuted, null, null);
+        Assert.Equal("cli", activity.GetTagItem(TagName.ServerMode));
     }
 
     [Theory]
@@ -286,7 +367,7 @@ public class CommandFactoryTests
         var name1Group = factory.RootGroup.SubGroup.First(g => g.Name == "name1");
         // The leaf command is in the subgroup Commands collection
         var leafCommand = name1Group.Commands.Values.FirstOrDefault();
-        var leafSystemCommand = leafCommand?.GetCommand();
+        var leafSystemCommand = leafCommand?.Command.GetCommand();
         var learnOption = leafSystemCommand?.Options.FirstOrDefault(CommandFactory.IsLearnOption);
 
         // Assert
@@ -331,10 +412,10 @@ public class CommandFactoryTests
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement;
 
-        Assert.True(root.TryGetProperty("status", out var status));
+        var status = root.AssertProperty("status");
         Assert.Equal(200, status.GetInt32());
 
-        Assert.True(root.TryGetProperty("results", out var results));
+        var results = root.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, results.ValueKind);
 
         // All 8 commands (4 per area × 2 areas) should be returned
@@ -343,9 +424,9 @@ public class CommandFactoryTests
         // Every entry must have the required shape fields
         foreach (var entry in results.EnumerateArray())
         {
-            Assert.True(entry.TryGetProperty("name", out _));
-            Assert.True(entry.TryGetProperty("description", out _));
-            Assert.True(entry.TryGetProperty("command", out _));
+            entry.AssertProperty("name");
+            entry.AssertProperty("description");
+            entry.AssertProperty("command");
         }
 
         // Results are ordered — verify both area prefixes are present
@@ -374,19 +455,19 @@ public class CommandFactoryTests
         var root = doc.RootElement;
 
         // Should have a 'status' field indicating OK (200)
-        Assert.True(root.TryGetProperty("status", out var status));
+        var status = root.AssertProperty("status");
         Assert.Equal(200, status.GetInt32());
 
         // Should have a 'results' field with a list of commands
-        Assert.True(root.TryGetProperty("results", out var results));
+        var results = root.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, results.ValueKind);
         Assert.True(results.GetArrayLength() > 0);
 
         // Each entry should have 'name', 'description', and 'command' fields
         var firstCommand = results[0];
-        Assert.True(firstCommand.TryGetProperty("name", out _));
-        Assert.True(firstCommand.TryGetProperty("description", out _));
-        Assert.True(firstCommand.TryGetProperty("command", out var commandPath));
+        firstCommand.AssertProperty("name");
+        firstCommand.AssertProperty("description");
+        var commandPath = firstCommand.AssertProperty("command");
 
         // The command path should start with the group name
         Assert.StartsWith("name1", commandPath.GetString(), StringComparison.OrdinalIgnoreCase);
@@ -409,15 +490,15 @@ public class CommandFactoryTests
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement;
 
-        Assert.True(root.TryGetProperty("status", out var status));
+        var status = root.AssertProperty("status");
         Assert.Equal(200, status.GetInt32());
 
-        Assert.True(root.TryGetProperty("results", out var results));
+        var results = root.AssertProperty("results");
         Assert.Equal(JsonValueKind.Array, results.ValueKind);
         Assert.Equal(1, results.GetArrayLength()); // Single command for leaf
 
         var commandEntry = results[0];
-        Assert.True(commandEntry.TryGetProperty("name", out var name));
+        var name = commandEntry.AssertProperty("name");
         Assert.Equal("directCommand", name.GetString());
     }
 
@@ -438,10 +519,10 @@ public class CommandFactoryTests
         using var doc = JsonDocument.Parse(output);
         var root = doc.RootElement;
 
-        Assert.True(root.TryGetProperty("status", out var status));
+        var status = root.AssertProperty("status");
         Assert.Equal(404, status.GetInt32());
 
-        Assert.True(root.TryGetProperty("message", out var message));
+        var message = root.AssertProperty("message");
         var messageText = message.GetString();
         Assert.False(string.IsNullOrEmpty(messageText));
         Assert.Contains("nonexistent", messageText, StringComparison.OrdinalIgnoreCase);
@@ -511,12 +592,12 @@ public class CommandFactoryTests
         directCommand4.GetCommand().Returns(new Command(nameof(directCommand4)));
 
         // Add commands to each group
-        group.Commands.Add(nameof(directCommand), directCommand);
+        group.AddCommand(nameof(directCommand), directCommand);
 
-        subGroup.Commands.Add(nameof(directCommand2), directCommand2);
-        subGroup.Commands.Add(nameof(directCommand3), directCommand3);
+        subGroup.AddCommand(nameof(directCommand2), directCommand2);
+        subGroup.AddCommand(nameof(directCommand3), directCommand3);
 
-        subGroup2.Commands.Add(nameof(directCommand4), directCommand4);
+        subGroup2.AddCommand(nameof(directCommand4), directCommand4);
 
         // Make subgroups
         group.SubGroup.Add(subGroup);
@@ -545,7 +626,7 @@ public class CommandFactoryTests
         baseCommand.Name.Returns("directCommand");
         baseCommand.GetCommand().Returns(command);
 
-        group.Commands.Add("directCommand", baseCommand);
+        group.AddCommand("directCommand", baseCommand);
         return group;
     }
 }

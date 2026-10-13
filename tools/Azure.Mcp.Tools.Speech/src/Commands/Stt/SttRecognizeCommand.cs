@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Speech.Options.Stt;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
@@ -21,14 +22,15 @@ namespace Azure.Mcp.Tools.Speech.Commands.Stt;
         Supported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = true)]
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService)
-    : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>()
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
+    : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>(endpointValidator)
 {
     public sealed record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
@@ -47,14 +49,14 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
         }
         catch (ArgumentException ex)
         {
-            validationResult.Errors.Add($"Invalid audio file path: {ex.Message}");
+            validationResult.AddError($"Invalid audio file path: {ex.Message}", "Invalid Speech audio file path.");
             return;
         }
 
         // Validate file path exists
         if (!File.Exists(canonicalPath))
         {
-            validationResult.Errors.Add($"Audio file not found: {canonicalPath}");
+            validationResult.AddError($"Audio file not found: {canonicalPath}", "Speech audio file not found.");
         }
         else
         {
@@ -63,7 +65,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
             var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
             if (!supportedExtensions.Contains(extension))
             {
-                validationResult.Errors.Add($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
+                validationResult.AddError($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.",
+                    "Unsupported Speech audio format.");
             }
         }
 
@@ -120,7 +123,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
                 options.Phrases,
                 options.Format,
                 options.Profanity,
-                options.RetryPolicy,
                 cancellationToken);
 
             _logger.LogInformation(

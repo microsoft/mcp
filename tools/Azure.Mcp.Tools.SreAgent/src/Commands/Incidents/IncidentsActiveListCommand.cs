@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     Name = "list",
     Title = "List Active Incidents",
     Description = "List active incidents on an SRE Agent. Returns open incident threads with title, status, affected services, and investigation details.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

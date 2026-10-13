@@ -1071,6 +1071,11 @@
                     "description": "The display name of the connection.",
                     "type": "string"
                 },
+                "gatewayId": {
+                    "description": "The gateway object ID through which the connection is made. For cloud connections, this is the virtual gateway ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
                 "connectivityType": {
                     "description": "The connectivity type of the connection.",
                     "$ref": "#/definitions/ConnectivityType"
@@ -1168,13 +1173,6 @@
                     "$ref": "#/definitions/Connection"
                 }
             ],
-            "properties": {
-                "gatewayId": {
-                    "description": "The gateway object ID of the connection.",
-                    "type": "string",
-                    "format": "uuid"
-                }
-            },
             "x-ms-discriminator-value": "OnPremisesGateway"
         },
         "OnPremisesGatewayPersonalConnection": {
@@ -1185,13 +1183,6 @@
                     "$ref": "#/definitions/Connection"
                 }
             ],
-            "properties": {
-                "gatewayId": {
-                    "description": "The gateway object ID of the connection.",
-                    "type": "string",
-                    "format": "uuid"
-                }
-            },
             "x-ms-discriminator-value": "OnPremisesGatewayPersonal"
         },
         "VirtualNetworkGatewayConnection": {
@@ -1202,13 +1193,6 @@
                     "$ref": "#/definitions/Connection"
                 }
             ],
-            "properties": {
-                "gatewayId": {
-                    "description": "The gateway object ID of the connection.",
-                    "type": "string",
-                    "format": "uuid"
-                }
-            },
             "x-ms-discriminator-value": "VirtualNetworkGateway"
         },
         "StreamingVirtualNetworkGatewayConnection": {

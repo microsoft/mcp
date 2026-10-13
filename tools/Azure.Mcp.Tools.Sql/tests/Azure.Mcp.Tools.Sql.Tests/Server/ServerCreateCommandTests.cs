@@ -6,7 +6,6 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -60,7 +59,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedServer);
         }
@@ -106,7 +104,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -133,7 +130,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -163,7 +159,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -191,7 +186,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -222,7 +216,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -249,7 +242,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             "Password123!",
             Arg.Is<string?>(v => v == null), // version not specified
             Arg.Is<string?>(p => p == null), // publicNetworkAccess not specified; service defaults to Disabled
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -266,7 +258,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid value 'Enabeld' for public-network-access. Allowed values are 'Enabled' or 'Disabled'.", "publicNetworkAccess"));
 
@@ -298,7 +289,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -331,7 +321,6 @@ public class ServerCreateCommandTests : SubscriptionCommandUnitTestsBase<ServerC
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 

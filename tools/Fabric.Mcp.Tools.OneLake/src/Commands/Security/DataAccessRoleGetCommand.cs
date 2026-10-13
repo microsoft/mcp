@@ -12,17 +12,18 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000002",
-    Name = "get_data_access_role",
+    Name = "get-data-access-role",
     Title = "Get OneLake Data Access Role",
     Description = """
         Get the full definition of a single data access role on a single item —
         members, permissions, decision rules. Scoped to one role on one item per
-        call. Use after onelake_list_data_access_roles once you know which role
-        you need on which item. Distinct from onelake_get_principal_access,
+        call. Use after onelake_list-data-access-roles once you know which role
+        you need on which item. Distinct from onelake_get-principal-access,
         which returns the effective (resolved) access for a given principal
         across all roles on an item. Caller must be a workspace Admin or Member
         on the item's workspace. Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -30,7 +31,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = true,
     Secret = false)]
 public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleGetOptions, DataAccessRole>()
+    : AuthenticatedCommand<DataAccessRoleGetOptions, DataAccessRoleGetCommand.DataAccessRoleGetCommandResult>()
 {
     private readonly ILogger<DataAccessRoleGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -57,7 +58,9 @@ public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> l
         try
         {
             var result = await _oneLakeService.GetDataAccessRoleAsync(workspaceId!, options.ItemId, options.RoleName, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRole);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleGetCommandResult(result),
+                OneLakeJsonContext.Default.DataAccessRoleGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -68,5 +71,6 @@ public sealed class DataAccessRoleGetCommand(ILogger<DataAccessRoleGetCommand> l
 
         return context.Response;
     }
-}
 
+    public sealed record DataAccessRoleGetCommandResult(DataAccessRole Role);
+}

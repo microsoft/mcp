@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.SyncGroup;
     Name = "delete",
     Title = "Delete Sync Group",
     Description = "Remove a sync group from a Storage Sync service. Deleting a sync group also removes all associated cloud endpoints and server endpoints within that group.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -41,7 +42,6 @@ public sealed class SyncGroupDeleteCommand(ILogger<SyncGroupDeleteCommand> logge
                 options.Name,
                 options.SyncGroupName,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Message = "Sync group deleted successfully";

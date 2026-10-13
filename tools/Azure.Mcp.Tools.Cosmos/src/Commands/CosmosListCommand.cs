@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     Name = "list",
     Title = "List Cosmos DB Resources",
     Description = "List Cosmos DB accounts, databases, or containers. Returns all accounts in the subscription by default. Specify --account to list databases in that account, or --account and --database to list containers in a specific database.",
+    OperationPlane = ToolOperationPlane.Both,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -53,7 +54,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
                     options.ResourceGroup,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -69,7 +69,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.AuthMethod ?? AuthMethod.Credential,
                     options.Tenant,
                     options.ResourceGroup,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
@@ -83,7 +82,6 @@ public sealed class CosmosListCommand(ILogger<CosmosListCommand> logger, ICosmos
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(

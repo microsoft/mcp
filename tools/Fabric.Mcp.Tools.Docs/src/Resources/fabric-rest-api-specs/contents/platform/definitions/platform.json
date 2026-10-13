@@ -57,10 +57,10 @@
           "readOnly": true
         },
         "apiEndpoint": {
-            "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
-            "type": "string",
-            "format": "uri",
-            "readOnly": true
+          "description": "HTTP URL that represents the API endpoint specific to the workspace. This endpoint value is returned when the user enables preferWorkspaceSpecificEndpoints. It allows for API access over private links.",
+          "type": "string",
+          "format": "uri",
+          "readOnly": true
         },
         "domainId": {
           "description": "The ID of the domain the workspace is assigned to.",
@@ -82,8 +82,7 @@
           "$ref": "#/definitions/CapacityRegion",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceInfo": {
       "description": "A workspace object.",
@@ -110,8 +109,7 @@
           "$ref": "#/definitions/OneLakeEndpoints",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityRegion": {
       "type": "string",
@@ -580,8 +578,7 @@
           "$ref": "#/definitions/CapacityState",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "CapacityState": {
       "type": "string",
@@ -598,6 +595,71 @@
           {
             "value": "Inactive",
             "description": "The capacity can't be used."
+          }
+        ]
+      }
+    },
+    "CapacityOverageConfiguration": {
+      "description": "The overage configuration for a capacity.",
+      "type": "object",
+      "required": [
+        "state",
+        "thresholdCapacityUnitHours"
+      ],
+      "properties": {
+        "state": {
+          "description": "The overage state. When the state is `Disabled`, `thresholdCapacityUnitHours` is reset to 0.",
+          "$ref": "#/definitions/CapacityOverageState",
+          "readOnly": true
+        },
+        "thresholdCapacityUnitHours": {
+          "description": "The capacity unit hours threshold for overage. Valid range is 0 to 240000.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 240000,
+          "readOnly": true
+        }
+      }
+    },
+    "UpdateCapacityOverageConfigurationRequest": {
+      "description": "The overage configuration update request payload. At least one property must be provided. When `state` is set to `Disabled`, `thresholdCapacityUnitHours` is automatically reset to 0. When `state` is set to `Enabled`, a `thresholdCapacityUnitHours` greater than 0 must be supplied (either in the same request or already configured). Setting `thresholdCapacityUnitHours` to 0 automatically disables overage.",
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "state": {
+          "description": "The overage state. When set to `Disabled`, `thresholdCapacityUnitHours` is automatically reset to 0.",
+          "$ref": "#/definitions/CapacityOverageState",
+          "readOnly": false
+        },
+        "thresholdCapacityUnitHours": {
+          "description": "The capacity unit hours threshold for overage. Valid range is 0 to 240000. Setting to 0 automatically disables overage.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 240000,
+          "readOnly": false
+        }
+      }
+    },
+    "CapacityOverageState": {
+      "description": "The state of overage. Additional overage states may be added over time.",
+      "type": "string",
+      "enum": [
+        "Disabled",
+        "Enabled"
+      ],
+      "x-ms-enum": {
+        "name": "CapacityOverageState",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Disabled",
+            "description": "Overage is disabled for the capacity."
+          },
+          {
+            "value": "Enabled",
+            "description": "Overage is enabled for the capacity."
           }
         ]
       }
@@ -635,8 +697,7 @@
             "description": "Capacity assignment operation is currently running and has not yet completed."
           }
         ]
-      },
-      "readOnly": true
+      }
     },
     "WorkspaceIdentity": {
       "type": "object",
@@ -655,8 +716,7 @@
           "format": "uuid",
           "readOnly": true
         }
-      },
-      "readOnly": true
+      }
     },
     "AssignWorkspaceToDomainRequest": {
       "type": "object",
@@ -746,6 +806,14 @@
                     "allowPairingByName": {
                         "type": "boolean",
                         "description": "Specifies how to handle an imported item without a Logical ID when an item with the same display name and item type already exists in the workspace.\n\nTrue – The imported item will be paired with the existing workspace item based on display name and type.\n\nFalse – Name-based pairing is disabled. If a workspace item with the same display name and type exists, the import fails due to a name duplication conflict.\n\nDefault value is false"
+                    },
+                    "itemOptionsByLogicalId": {
+                        "description": "Per-item options. Each entry targets its item by logical ID and applies its options to that item.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "../../common/definitions.json#/definitions/ItemOptionsByLogicalIdEntry"
+                        },
+                        "readOnly": false
                     }
                 }
             }
@@ -762,8 +830,7 @@
                     "$ref": "#/definitions/ImportItemDefinitionsDetails"
                 }
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionIndexEntry" : {
         "description": "An entry in the item definitions index.",
@@ -850,8 +917,7 @@
                 "$ref": "#/definitions/ImportItemDefinitionOperationStatus",
                 "readOnly": true
             }
-        },
-        "readOnly": true
+        }
     },
     "ItemDefinitionOperationType": {
         "type": "string",
@@ -934,6 +1000,11 @@
           "description": "The sensitivity label settings for the item.",
           "$ref": "../../common/definitions.json#/definitions/SensitivityLabelSettings",
           "readOnly": false
+        },
+        "options": {
+          "description": "Options for the item being created. Only honored when a `definition` is also provided; supplying `options` without `definition` results in a `BadRequest` error. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+          "type": "object",
+          "readOnly": false
         }
       }
     },
@@ -943,6 +1014,11 @@
       "properties": {
         "definition": {
           "$ref": "#/definitions/ItemDefinition"
+        },
+        "options": {
+          "description": "Options for the item whose definition is being updated. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+          "type": "object",
+          "readOnly": false
         }
       }
     },
@@ -952,6 +1028,32 @@
       "properties": {
         "definition": {
           "$ref": "#/definitions/ItemDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "UpdateLogicalIdRequest": {
+      "description": "Update logical ID request payload.",
+      "type": "object",
+      "required": [ "logicalId" ],
+      "properties": {
+        "logicalId": {
+          "description": "The logical ID to update for the item.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        }
+      }
+    },
+    "LogicalIdResponse": {
+      "description": "Logical ID response.",
+      "type": "object",
+      "required": [ "logicalId" ],
+      "properties": {
+        "logicalId": {
+          "description": "The logical ID of the item.",
+          "type": "string",
+          "format": "uuid",
           "readOnly": true
         }
       }
@@ -2453,6 +2555,78 @@
         }
       }
     },
+    "RecoverableItem": {
+      "description": "Recoverable item.",
+      "type": "object",
+      "required": [ "id", "type", "retentionExpirationDateTime" ],
+      "properties": {
+        "id": {
+          "description": "The recoverable item ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The recoverable item display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The recoverable item description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "type": {
+          "description": "The recoverable item type.",
+          "$ref": "../../common/definitions.json#/definitions/ItemType",
+          "readOnly": false
+        },
+        "workspaceId": {
+          "description": "The workspace ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "parentItemId": {
+          "description": "The parent item ID of the recoverable item.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "retentionExpirationDateTime": {
+          "description": "The UTC retention expiration timestamp for the recoverable item, in ISO 8601 format (for example, '2025-12-31T23:59:59.999Z').",
+          "type": "string",
+          "readOnly": true
+        },
+        "tags": {
+          "description": "List of applied tags.",
+          "type": "array",
+          "items": {
+            "$ref": "../../common/definitions.json#/definitions/ItemTag"
+
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "RecoverableItems": {
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of recoverable items.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecoverableItem"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
     "ImmutabilityPolicyRequest": {
       "description": "Immutability policy request object.",
       "type": "object",
@@ -2591,6 +2765,44 @@
         "policy": {
           "description": "Indicates whether there is at least one active lifecycle rule in the workspace.",
           "$ref": "#/definitions/OneLakeLifecyclePolicyStatus"
+        },
+        "accessTimeTracking": {
+          "description": "Indicates whether Azure Storage access time tracking (LastAccessTime updates) is enabled for OneLake files in the workspace.",
+          "$ref": "#/definitions/AccessTimeTrackingStatus"
+        }
+      }
+    },
+    "AccessTimeTrackingStatus": {
+      "description": "The status of OneLake access time tracking. When enabled, Azure Storage updates the LastAccessTime property on file reads and writes. Additional status values may be added over time.",
+      "type": "string",
+      "enum": [
+        "Enabled",
+        "Disabled"
+      ],
+      "x-ms-enum": {
+        "name": "AccessTimeTrackingStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Enabled",
+            "description": "Access time tracking is enabled. Azure Storage updates LastAccessTime on file reads and writes."
+          },
+          {
+            "value": "Disabled",
+            "description": "Access time tracking is disabled. LastAccessTime is not updated on file access."
+          }
+        ]
+      }
+    },
+    "ModifyAccessTimeTrackingRequest": {
+      "description": "Modify OneLake access time tracking request.",
+      "type": "object",
+      "required": [ "status" ],
+      "properties": {
+        "status": {
+          "description": "The desired access time tracking status.",
+          "$ref": "#/definitions/AccessTimeTrackingStatus",
+          "readOnly": false
         }
       }
     },
@@ -2690,4 +2902,3 @@
     }
   }
 }
-

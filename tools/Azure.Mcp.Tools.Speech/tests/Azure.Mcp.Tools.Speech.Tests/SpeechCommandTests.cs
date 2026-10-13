@@ -25,7 +25,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", "non-existent-test-audio.wav" }, // Intentionally non-existent for testing
                 { "language", "en-US" },
@@ -63,7 +62,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", language },
@@ -106,7 +104,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", language },
@@ -149,7 +146,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", "en-US" },
@@ -208,7 +204,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", "en-US" },
@@ -250,7 +245,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", "en-US" },
@@ -285,7 +279,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", invalidEndpoint },
                 { "file", testAudioFile },
                 { "language", "en-US" },
@@ -316,7 +309,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_stt_recognize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "file", emptyWavFile },
                     { "language", "en-US" },
@@ -361,7 +353,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_stt_recognize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "file", emptyWavFile },
                     { "language", "en-US" },
@@ -413,7 +404,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_stt_recognize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "file", brokenWavFile },
                     { "language", "en-US" },
@@ -451,44 +441,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
 
     [LiveTestOnly]
     [Fact]
-    public async Task SpeechToText_ShouldHandleRetryPolicyCorrectly()
-    {
-        // Arrange
-        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
-        Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
-
-        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-        var expectedText = "My voice is my passport. Verify me.";
-
-        // Act
-        var result = await CallToolAsync(
-            "speech_stt_recognize",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "endpoint", aiServicesEndpoint },
-                { "file", testAudioFile },
-                { "language", "en-US" },
-                { "retry-max-retries", 3 },
-                { "retry-delay", 1000 }
-            });
-
-        // Assert
-        Assert.NotNull(result);
-        using var doc = JsonDocument.Parse(result.Value.GetRawText());
-        var inner = doc.RootElement.GetProperty("result").GetRawText();
-        var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-
-        // STRICT REQUIREMENT: Speech recognition must return a result
-        Assert.NotNull(resultObj);
-        Assert.Equal(RecognizerType.Fast, resultObj.RecognizerType);
-        Assert.NotNull(resultObj.FastTranscriptionResult);
-        Assert.Null(resultObj.RealtimeContinuousResult);
-        Assert.Equal(expectedText, resultObj.FastTranscriptionResult.CombinedPhrases?.FirstOrDefault()?.Text);
-    }
-
-    [LiveTestOnly]
-    [Fact]
     public async Task SpeechToText_RecognizeCompressedAudioWithRealtimeTranscription_ShouldFailWithoutGStreamer()
     {
         // This test validates speech recognition with different audio file formats
@@ -509,7 +461,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
             "speech_stt_recognize",
             new()
             {
-                { "subscription", Settings.SubscriptionId },
                 { "endpoint", aiServicesEndpoint },
                 { "file", testAudioFile },
                 { "language", "en-US" },
@@ -555,7 +506,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello, this is a test of text to speech synthesis." },
                     { "outputAudio", outputFile },
@@ -611,7 +561,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello world" },
                     { "outputAudio", outputFile },
@@ -665,7 +614,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Testing different audio formats" },
                     { "outputAudio", outputFile },
@@ -713,7 +661,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "" }, // Empty text should fail validation
                     { "outputAudio", outputFile },
@@ -746,7 +693,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello world" },
                     { "outputAudio", outputFile },
@@ -784,7 +730,6 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
                 "speech_tts_synthesize",
                 new()
                 {
-                    { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", largeText },
                     { "outputAudio", outputFile },
@@ -856,4 +801,3 @@ public class SpeechCommandTests(ITestOutputHelper output, LiveServerFixture live
         }
     }
 }
-

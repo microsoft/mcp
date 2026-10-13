@@ -1,0 +1,156 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Plan data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "Plans": {
+            "description": "A list of plans.",
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of plans.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Plan"
+                    }
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Plan": {
+            "description": "A plan object.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "CreatePlanRequest": {
+            "description": "The request payload for creating a plan.",
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "description": "The plan display name.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The plan description. Maximum length is 256 characters.",
+                    "type": "string"
+                },
+                "definition": {
+                    "description": "The plan public definition. This property is optional and can be omitted to create an empty plan.",
+                    "$ref": "#/definitions/PlanDefinition"
+                }
+            },
+            "required": [
+                "displayName"
+            ]
+        },
+        "UpdatePlanRequest": {
+            "description": "The request payload for updating a plan.",
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "description": "The plan display name.",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The plan description. Maximum length is 256 characters.",
+                    "type": "string"
+                }
+            }
+        },
+        "PlanDefinition": {
+            "description": "The plan public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/plan-definition) for more details on the structure of the plan definition.",
+            "type": "object",
+            "properties": {
+                "format": {
+                    "description": "The format of the plan definition. Additional formats may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "PlanV1"
+                    ],
+                    "x-ms-enum": {
+                        "name": "PlanDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "PlanV1",
+                                "description": "The format for plan definitions, designed to support CI/CD scenarios in Fabric. See [Plan - PlanV1 specification](/rest/api/fabric/articles/item-management/definitions/plan-definition) for more details."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PlanDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            },
+            "required": [
+                "parts"
+            ]
+        },
+        "PlanDefinitionPart": {
+            "description": "A plan definition part.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The plan definition part path.",
+                    "type": "string"
+                },
+                "payload": {
+                    "description": "The plan definition part payload.",
+                    "type": "string"
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType"
+                }
+            },
+            "required": [
+                "path",
+                "payload",
+                "payloadType"
+            ]
+        },
+        "PlanDefinitionResponse": {
+            "description": "The response containing a plan definition.",
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "description": "The plan public definition.",
+                    "$ref": "#/definitions/PlanDefinition"
+                }
+            }
+        },
+        "UpdatePlanDefinitionRequest": {
+            "description": "The request payload for updating a plan definition.",
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "description": "The plan public definition.",
+                    "$ref": "#/definitions/PlanDefinition"
+                }
+            },
+            "required": [
+                "definition"
+            ]
+        }
+    }
+}

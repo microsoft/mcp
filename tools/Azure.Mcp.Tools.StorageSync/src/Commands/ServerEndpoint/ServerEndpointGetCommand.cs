@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.StorageSync.Commands.ServerEndpoint;
     Name = "get",
     Title = "Get Server Endpoint",
     Description = "List all server endpoints in a sync group or retrieve details about a specific server endpoint. Returns server endpoint properties including local path, cloud tiering status, sync health, and provisioning state. Use --server-endpoint-name for a specific endpoint.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     options.SyncGroupName,
                     options.ServerEndpointName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 if (endpoint == null)
@@ -71,7 +71,6 @@ public sealed class ServerEndpointGetCommand(ILogger<ServerEndpointGetCommand> l
                     options.Name,
                     options.SyncGroupName,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(endpoints ?? []), StorageSyncJsonContext.Default.ServerEndpointGetCommandResult);

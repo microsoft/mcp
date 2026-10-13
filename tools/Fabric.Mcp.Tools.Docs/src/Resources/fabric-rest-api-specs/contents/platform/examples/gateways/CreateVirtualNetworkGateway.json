@@ -11,11 +11,12 @@
                 "subnetName": "ContosoSubnet"
             },
             "inactivityMinutesBeforeSleep": 120,
-            "numberOfMemberGateways": 3
+            "maxMemberGatewayCount": 3,
+            "minMemberGatewayCount": 1
         }
     },
     "responses": {
-        "200": {
+        "201": {
             "body": {
                 "id": "271c5c9a-0860-4927-b1da-ce49008d6565",
                 "type": "VirtualNetwork",
@@ -28,7 +29,9 @@
                     "subnetName": "ContosoSubnet"
                 },
                 "inactivityMinutesBeforeSleep": 120,
-                "numberOfMemberGateways": 3
+                "numberOfMemberGateways": 3,
+                "maxMemberGatewayCount": 3,
+                "minMemberGatewayCount": 1
             }
         }
     }

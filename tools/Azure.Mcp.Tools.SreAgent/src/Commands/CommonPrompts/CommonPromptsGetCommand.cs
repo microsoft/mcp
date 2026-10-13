@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.CommonPrompts;
     Name = "get",
     Title = "Get Common Prompt",
     Description = "Show the content of a specific named common prompt on an SRE Agent. Returns the full prompt text for a single prompt identified by name.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -126,6 +126,14 @@
                 "runtimeVersion": {
                     "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
                     "type": "string"
+                },
+                "customLivePoolSupport": {
+                    "description": "Controls whether the live pool is enabled. When `Enabled`, clusters are pre-hydrated according to the hydration settings so that workloads start without cold-start latency.",
+                    "$ref": "#/definitions/CustomLivePoolSupport"
+                },
+                "customLivePoolSettings": {
+                    "description": "Live pool hydration settings. Controls how clusters are pre-hydrated when live pool support is enabled.",
+                    "$ref": "#/definitions/CustomLivePoolSettings"
                 }
             }
         },
@@ -171,6 +179,14 @@
                 "runtimeVersion": {
                     "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
                     "type": "string"
+                },
+                "customLivePoolSupport": {
+                    "description": "Controls whether the live pool is active. Setting `Disabled` turns it off but retains the hydration settings. Omit to leave the existing value unchanged.",
+                    "$ref": "#/definitions/CustomLivePoolSupport"
+                },
+                "customLivePoolSettings": {
+                    "description": "Live pool hydration settings. Pass `null` to remove the hydration settings entirely. Omit to leave the existing value unchanged.",
+                    "$ref": "#/definitions/CustomLivePoolSettings"
                 }
             }
         },
@@ -648,6 +664,47 @@
                     "type": "string",
                     "description": "The version of external library."
                 }
+            }
+        },
+        "CustomLivePoolSettings": {
+            "description": "Live pool hydration settings on the environment's spark compute.",
+            "type": "object",
+            "properties": {
+                "maxClustersToHydrate": {
+                    "description": "Maximum number of clusters to pre-hydrate during each activation cycle. Minimum: 1. The maximum allowed value is determined by the capacity size and is exposed on the instance pool settings as `InstancePool.maxClustersToHydrateLimit`.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "clusterIdleTimeout": {
+                    "description": "Idle-time threshold after which a hydrated cluster is released, using the ISO 8601 duration format. Minimum: PT20M. Maximum: PT24H.",
+                    "format": "duration",
+                    "type": "string"
+                },
+                "customLivePoolLifespan": {
+                    "description": "Maximum lifetime of a live pool activation, using the ISO 8601 duration format. The live pool job runs for this duration and then terminates. Minimum: PT30M. Maximum: PT24H.",
+                    "format": "duration",
+                    "type": "string"
+                }
+            }
+        },
+        "CustomLivePoolSupport": {
+            "type": "string",
+            "description": "Flag controlling whether live pool support is active. Additional `CustomLivePoolSupport` values may be added over time.",
+            "enum": ["Enabled", "Disabled"],
+            "x-ms-enum": {
+                "name": "CustomLivePoolSupport",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Live pool support is active."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Live pool support is inactive. Configuration is retained."
+                    }
+                ]
             }
         },
         "LibrariesPreview": {

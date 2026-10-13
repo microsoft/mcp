@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Search.Commands.Service;
     Name = "list",
     Title = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services",
     Description = "List/show Azure AI Search services in a subscription, returning details about each service.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -36,7 +37,6 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger, ISear
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(services ?? []), SearchJsonContext.Default.ServiceListCommandResult);

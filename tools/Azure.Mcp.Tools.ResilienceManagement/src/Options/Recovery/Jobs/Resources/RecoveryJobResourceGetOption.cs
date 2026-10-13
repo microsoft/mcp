@@ -11,10 +11,10 @@ public sealed class RecoveryJobResourceGetOptions
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
+    [Option(Name = "recoveryplan", Description = ResilienceManagementOptionDescriptions.RecoveryPlan)]
     public required string RecoveryPlan { get; set; }
 
-    [Option(Description = "The name of the recovery job.")]
+    [Option(Name = "recoveryjob", Description = "The name of the recoveryjob.")]
     public required string RecoveryJob { get; set; }
 
     [Option(Description = "The name of the recovery job resource (target). Provide this argument to get the details of a particular recovery job resource; omit it to list all resources (targets) of the recovery job (id and name only).")]
@@ -23,6 +23,4 @@ public sealed class RecoveryJobResourceGetOptions
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
-    [OptionContainer(Prefix = "retry")]
-    public RetryPolicyOptions? RetryPolicy { get; set; }
 }

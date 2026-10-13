@@ -13,7 +13,7 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
-        Assert.Equal("list_items_dfs", Command.Name);
+        Assert.Equal("list-items-dfs", Command.Name);
         Assert.Equal("List OneLake Items (Data API)", Command.Title);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.False(Command.Metadata.Destructive);
@@ -25,7 +25,7 @@ public class OneLakeItemDataListCommandTests : CommandUnitTestsBase<OneLakeItemD
     [Fact]
     public void GetCommand_ReturnsValidCommand()
     {
-        Assert.Equal("list_items_dfs", CommandDefinition.Name);
+        Assert.Equal("list-items-dfs", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Options);

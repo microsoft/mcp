@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Compute.Commands.Disk;
     Name = "get",
     Title = "Get Disk Details",
     Description = "Lists available Azure managed disks or retrieves detailed information about a specific disk. Shows all disks in a subscription or resource group, including disk size, SKU, provisioning state, and OS type. Supports wildcard patterns in disk names (e.g., 'win_OsDisk*'). When disk name is provided without resource group, searches across the entire subscription. When resource group is specified, scopes the search to that resource group. Both parameters are optional.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -50,7 +51,6 @@ public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeServi
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new([disk]), ComputeJsonContext.Default.DiskGetCommandResult);
@@ -65,7 +65,6 @@ public sealed class DiskGetCommand(ILogger<DiskGetCommand> logger, IComputeServi
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
 
                 // Apply wildcard filtering if disk name pattern is provided

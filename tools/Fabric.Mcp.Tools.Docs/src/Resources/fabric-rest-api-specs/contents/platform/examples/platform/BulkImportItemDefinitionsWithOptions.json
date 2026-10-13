@@ -1,0 +1,40 @@
+{
+    "parameters": {
+        "workspaceId": "24d305d1-9db8-4785-b038-714e07e7394f",
+        "beta": true,
+        "bulkImportItemDefinitionsRequest": {
+            "definitionParts": [
+                {
+                    "path": "/Folder1/MyReport.Report/.platform",
+                    "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIlJlcG9ydCIsCiAgICAiZGlzcGxheU5hbWUiOiAiTXlSZXBvcnQiCiAgfSwKICAiY29uZmlnIjogewogICAgInZlcnNpb24iOiAiMi4wIiwKICAgICJsb2dpY2FsSWQiOiAiODg0MzZlNjUtNmVkMS04MTg1LTQ5ZmYtZjYxMDc3ZmM3M2Q0IgogIH0KfQ==",
+                    "payloadType": "InlineBase64"
+                },
+                {
+                    "path": "/Folder1/MyReport.Report/definition.pbir",
+                    "payload": "QmFzZTY0U3RyaW5n",
+                    "payloadType": "InlineBase64"
+                }
+            ],
+            "options": {
+                "allowPairingByName": true,
+                "itemOptionsByLogicalId": [
+                    {
+                        "logicalId": "88436e65-6ed1-8185-49ff-f61077fc73d4",
+                        "options": {
+                            "validateOnly": true
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

@@ -26,11 +26,9 @@ public class InsightsSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var insights = new CommandGroup(Name,
-            """
-            Insights operations - Commands for deriving insights from existing Azure infrastructure.
-            Aggregates Azure Resource Graph data and uses MCP sampling to surface dominant patterns
-            (region, sku, security posture, tagging conventions, resource pairing).
-            """,
+            "Insights operations - Commands for deriving insights from existing Azure infrastructure. Aggregates " +
+            "Azure Resource Graph data and uses MCP sampling to surface dominant patterns (region, sku, security " +
+            "posture, tagging conventions, resource pairing).",
             Title);
 
         var getCommand = serviceProvider.GetRequiredService<InsightsGetCommand>();

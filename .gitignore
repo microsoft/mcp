@@ -9,6 +9,7 @@ tests/test-cmds.txt
 bin/
 obj/
 .vs/
+.vscode/
 .idea/
 TestResults/
 *.binlog
@@ -28,6 +29,9 @@ generated/
 .vscode/settings.json
 
 eng/tools/ToolDescriptionEvaluator/prompts.json
+.perf-results/
+BenchmarkDotNet.Artifacts/
+build_output.txt
 eng/tools/ToolDescriptionEvaluator/results.md
 eng/tools/ToolDescriptionEvaluator/tools.json
 deploy-log.txt
@@ -36,3 +40,7 @@ eng/tools/CopilotCliTester/src/results/
 
 # VM-specific documentation (internal/personal notes)
 docs/vm-docs/
+
+vally-results/
+
+.github/aw/logs

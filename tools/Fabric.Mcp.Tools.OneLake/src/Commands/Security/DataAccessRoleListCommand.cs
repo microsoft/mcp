@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
@@ -12,7 +13,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
 
 [CommandMetadata(
     Id = "a1b2c3d4-1001-4000-8000-000000000001",
-    Name = "list_data_access_roles",
+    Name = "list-data-access-roles",
     Title = "List OneLake Data Access Roles",
     Description = """
         List all data access roles defined on a single item (Lakehouse / Warehouse) —
@@ -25,6 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
         a 'sourcePath' field formatted as '<workspaceId>/<itemId>' — this is NOT a
         OneLake file path; it identifies the workspace/item granting inherited access.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -32,7 +34,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Security;
     ReadOnly = true,
     Secret = false)]
 public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<DataAccessRoleListOptions, DataAccessRoleListResponse>()
+    : AuthenticatedCommand<DataAccessRoleListOptions, DataAccessRoleListCommand.DataAccessRoleListCommandResult>()
 {
     private readonly ILogger<DataAccessRoleListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -59,7 +61,12 @@ public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand>
         try
         {
             var result = await _oneLakeService.ListDataAccessRolesAsync(workspaceId!, options.ItemId, options.ContinuationToken, cancellationToken);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.DataAccessRoleListResponse);
+            context.Response.Results = ResponseResult.Create(
+                new DataAccessRoleListCommandResult(
+                    result.Value ?? [],
+                    result.ContinuationToken,
+                    result.ContinuationUri),
+                OneLakeJsonContext.Default.DataAccessRoleListCommandResult);
         }
         catch (Exception ex)
         {
@@ -69,4 +76,9 @@ public sealed class DataAccessRoleListCommand(ILogger<DataAccessRoleListCommand>
 
         return context.Response;
     }
+
+    public sealed record DataAccessRoleListCommandResult(
+        List<DataAccessRole> Roles,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationToken,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? ContinuationUri);
 }

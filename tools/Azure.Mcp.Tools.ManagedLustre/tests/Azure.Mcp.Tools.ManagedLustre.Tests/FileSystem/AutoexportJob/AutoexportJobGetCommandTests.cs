@@ -5,7 +5,6 @@ using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
-using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -43,7 +42,6 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
         Service.GetAutoexportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedJob);
 
@@ -64,7 +62,6 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_fileSystemName),
             Arg.Is(_jobName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -97,7 +94,6 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(404, "Autoexport job not found"));
 
@@ -123,7 +119,6 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
@@ -152,7 +147,6 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
         Service.ListAutoexportJobsAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedJobs);
 
@@ -171,12 +165,11 @@ public class AutoexportJobGetCommandTests : SubscriptionCommandUnitTestsBase<Aut
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
 
         // Should NOT have called GetAutoexportJobAsync
         await Service.DidNotReceive().GetAutoexportJobAsync(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

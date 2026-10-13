@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests.Blob.Container;
 
-public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<ContainerCreateCommand, IStorageService>
+public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateCommand, IStorageService>
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -22,17 +21,14 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Assert.Equal("create", CommandDefinition.Name);
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
+        Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 
     [Theory]
-    [InlineData("--account testaccount --subscription sub123 --container container123", true)]
-    [InlineData("--account testaccount --tenant tenant123 --subscription sub123 --container container123 ", true)]
-    [InlineData("--account testaccount", false)] // Missing subscription and container name
-    [InlineData("--container container123", false)] // Missing subscription and account name
-    [InlineData("--subscription sub123", false)] // Missing account name and container name
-    [InlineData("--account testaccount --subscription sub123", false)] // Missing container name
-    [InlineData("--container container123 --subscription sub123", false)] // Missing account name
-    [InlineData("--account testaccount --container container123", false)] // Missing subscription
+    [InlineData("--account testaccount --container container123", true)]
+    [InlineData("--account testaccount --tenant tenant123 --container container123 ", true)]
+    [InlineData("--account testaccount", false)] // Missing container name
+    [InlineData("--container container123", false)] // Missing account name
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -45,9 +41,7 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
             Service.CreateContainer(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expected);
         }
@@ -77,16 +71,13 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Container already exists"));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--account", "testaccount",
-            "--subscription", "sub123",
              "--container", "existingcontainer");
 
         // Assert
@@ -101,16 +92,13 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--account", "testaccount",
-            "--subscription", "sub123",
             "--container", "invalidaccess");
 
         // Assert
@@ -125,16 +113,13 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--account", "nonexistentaccount",
-            "--subscription", "sub123",
             "--container", "container123");
 
         // Assert
@@ -149,16 +134,13 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Service.CreateContainer(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
         var response = await ExecuteCommandAsync(
             "--account", "testaccount",
-            "--subscription", "sub123",
             "--container", "container123");
 
         // Assert
@@ -171,7 +153,6 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        var subscription = "sub123";
         var account = "testaccount";
         var container = "container123";
 
@@ -181,16 +162,13 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         Service.CreateContainer(
             account,
             container,
-            subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>())
             .Returns(expected);
 
         // Act
         var response = await ExecuteCommandAsync(
             "--account", account,
-            "--subscription", subscription,
             "--container", container);
 
         // Assert
@@ -198,9 +176,7 @@ public class ContainerCreateCommandTests : SubscriptionCommandUnitTestsBase<Cont
         await Service.Received(1).CreateContainer(
             account,
             container,
-            subscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
             Arg.Any<CancellationToken>());
     }
 }

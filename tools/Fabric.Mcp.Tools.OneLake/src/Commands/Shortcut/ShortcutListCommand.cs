@@ -12,12 +12,13 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
 
 [CommandMetadata(
     Id = "a1b2c3d4-2001-4000-8000-000000000001",
-    Name = "list_shortcuts",
+    Name = "list-shortcuts",
     Title = "List OneLake Shortcuts",
     Description = """
         List shortcuts defined within an item, recursing through subfolders.
         Returns each shortcut's path and target. Requires OneLake.Read.All.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     LocalRequired = false,
@@ -25,7 +26,7 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Shortcut;
     ReadOnly = true,
     Secret = false)]
 public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOneLakeService oneLakeService)
-    : AuthenticatedCommand<ShortcutListOptions, ShortcutListResponse>()
+    : AuthenticatedCommand<ShortcutListOptions, ShortcutListCommand.ShortcutListCommandResult>()
 {
     private readonly ILogger<ShortcutListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -44,7 +45,12 @@ public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOn
                     .ToList();
             }
 
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.ShortcutListResponse);
+            context.Response.Results = ResponseResult.Create(
+                new ShortcutListCommandResult(
+                    result.Value ?? [],
+                    result.ContinuationToken,
+                    result.ContinuationUri),
+                OneLakeJsonContext.Default.ShortcutListCommandResult);
         }
         catch (Exception ex)
         {
@@ -70,5 +76,9 @@ public sealed class ShortcutListCommand(ILogger<ShortcutListCommand> logger, IOn
 
         return shortcut.Path.StartsWith("Tables/", StringComparison.OrdinalIgnoreCase);
     }
-}
 
+    public sealed record ShortcutListCommandResult(
+        List<OneLakeShortcut> Shortcuts,
+        string? ContinuationToken,
+        string? ContinuationUri);
+}

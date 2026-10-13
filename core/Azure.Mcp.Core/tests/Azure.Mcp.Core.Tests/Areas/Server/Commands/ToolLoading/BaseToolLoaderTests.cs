@@ -1,14 +1,15 @@
-#pragma warning disable MCP9003 // Obsolete RequestContext constructor - migrating during Phase 1
 #pragma warning disable MCP9005 // Deprecated Sampling/Logging APIs - backward compat during Phase 1
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
-using ModelContextProtocol.Client;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -18,16 +19,165 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class BaseToolLoaderTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" \t ")]
+    [InlineData("Unknown")]
+    [InlineData("storage_missing")]
+    [InlineData(" storage_alpha ")]
+    public void ResolveSampledCommandName_RejectsInvalidOrUnavailableNames(string? commandName)
+    {
+        Tool[] availableTools = [new() { Name = "storage_alpha" }, new() { Name = "Unknown" }];
+
+        Assert.Null(BaseToolLoader.ResolveSampledCommandName(commandName, availableTools));
+    }
+
+    [Theory]
+    [InlineData("storage_alpha")]
+    [InlineData("STORAGE_ALPHA")]
+    public void ResolveSampledCommandName_ReturnsCanonicalName(string commandName)
+    {
+        Tool[] availableTools = [new() { Name = "storage_beta" }, new() { Name = "storage_alpha" }];
+
+        Assert.Equal("storage_alpha", BaseToolLoader.ResolveSampledCommandName(commandName, availableTools));
+    }
+
+    [Fact]
+    public void ResolveSampledCommandName_WithEmptyCatalog_ReturnsNull()
+    {
+        Assert.Null(BaseToolLoader.ResolveSampledCommandName("storage_alpha", []));
+    }
+
+    [Fact]
+    public void CreateUnknownCommandResult_ReturnsSortedDistinctNamesOnly()
+    {
+        var result = BaseToolLoader.CreateUnknownCommandResult(
+            "storage", "invalid_command", ["storage_zeta", "storage_alpha", "storage_zeta", "storage_middle"]);
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command",
+            "storage_alpha", "storage_middle", "storage_zeta");
+    }
+
+    [Fact]
+    public void CreateUnknownCommandResult_WithEmptyCatalog_ExplainsNoCommandsAreAvailable()
+    {
+        var result = BaseToolLoader.CreateUnknownCommandResult("storage", "invalid_command", []);
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command");
+    }
+
+    [Fact]
+    public void CreateUnknownCommandResult_IncludesAllNamesWithoutTruncation()
+    {
+        var names = Enumerable.Range(0, 150).Select(index => $"storage_command_{index:D3}").ToArray();
+
+        var result = BaseToolLoader.CreateUnknownCommandResult("storage", "invalid_command", names.Reverse());
+
+        AssertUnknownCommandResult(result, "storage", "invalid_command", names);
+    }
+
+    internal static string AssertUnknownCommandResult(
+        CallToolResult result, string toolName, string commandName, params string[] availableNames)
+    {
+        Assert.True(result.IsError);
+        Assert.False(result.StructuredContent.HasValue);
+        Assert.Null(result.Meta);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains($"'{commandName}'", text, StringComparison.Ordinal);
+        Assert.Contains($"'{toolName}'", text, StringComparison.Ordinal);
+        Assert.Contains("not available", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("""Use "learn=true" with an empty "intent" to get command descriptions and parameter schemas without executing a command.""",
+            text, StringComparison.Ordinal);
+        if (availableNames.Length == 0)
+        {
+            Assert.Contains("No commands are available for this tool in the current server configuration.", text);
+            Assert.DoesNotContain("Available commands:", text);
+            Assert.DoesNotContain("Select the command", text);
+        }
+        else
+        {
+            var namesLine = Assert.Single(text.Split('\n'), line => line.StartsWith("Available commands:", StringComparison.Ordinal));
+            Assert.Equal($"Available commands: {string.Join(", ", availableNames)}", namesLine.TrimEnd('\r'));
+            Assert.Contains("Select the command that best matches the current intent.", text, StringComparison.Ordinal);
+        }
+
+        Assert.DoesNotContain("\"description\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"inputSchema\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"outputSchema\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"annotations\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"_meta\"", text, StringComparison.Ordinal);
+        return text;
+    }
+
+    internal static McpServer CreateSamplingServer(bool supportsSampling, string? samplingText = null, bool failSampling = false)
+    {
+        var server = Substitute.For<McpServer>();
+        server.ClientCapabilities.Returns(new ClientCapabilities
+        {
+            Sampling = supportsSampling ? new SamplingCapability() : null
+        });
+        var response = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new CreateMessageResult
+            {
+                Role = Role.Assistant,
+                Content = samplingText == null ? [] : [new TextContentBlock { Text = samplingText }],
+                Model = "test-model"
+            })
+        };
+        // Bound a buggy correction loop so it fails the call-count assertion instead of hanging the test.
+        var samplingRequests = 0;
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(_ => failSampling || ++samplingRequests > 1
+                ? throw new InvalidOperationException("Sampling failed.")
+                : response);
+        return server;
+    }
+
+    internal static RequestContext<CallToolRequestParams> CreateCommandRequest(
+        McpServer server,
+        string? command = "invalid_command",
+        string? intent = "list resources",
+        bool learn = false,
+        string parametersJson = "{}",
+        string toolName = "storage")
+    {
+        using var parameters = JsonDocument.Parse(parametersJson);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["parameters"] = parameters.RootElement.Clone()
+        };
+        if (command != null)
+        {
+            arguments["command"] = JsonSerializer.SerializeToElement(command, ServerJsonContext.Default.String);
+        }
+        if (intent != null)
+        {
+            arguments["intent"] = JsonSerializer.SerializeToElement(intent, ServerJsonContext.Default.String);
+        }
+        if (learn)
+        {
+            arguments["learn"] = JsonSerializer.SerializeToElement(true, ServerJsonContext.Default.Boolean);
+        }
+
+        return McpTestUtilities.CreateToolCallRequest(new CallToolRequestParams
+        {
+            Name = toolName,
+            Arguments = arguments
+        }, server);
+    }
+
     [Fact]
     public void CreateClientOptions_WithNoCapabilities_ReturnsOptionsWithNoCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -40,12 +190,11 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithEmptyCapabilities_ReturnsOptionsWithNoCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -58,7 +207,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithSamplingCapability_ReturnsOptionsWithSamplingOnly()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -67,7 +215,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -80,7 +228,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationOnly()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -89,7 +236,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -102,7 +249,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithBothCapabilities_ReturnsOptionsWithBothCapabilities()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -112,7 +258,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -125,7 +271,6 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithServerClientInfo_CopiesClientInfoToOptions()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var clientInfo = new Implementation
         {
@@ -136,7 +281,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -147,13 +292,12 @@ public class BaseToolLoaderTests
     public void CreateClientOptions_WithNullServerClientInfo_HandlesGracefully()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientInfo.Returns((Implementation?)null);
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
 
         // Assert
         Assert.NotNull(options);
@@ -164,7 +308,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_SamplingHandler_ValidatesRequestAndThrowsOnNull()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -173,7 +316,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.SamplingHandler);
 
         // Assert - verify handler validates null request
@@ -185,7 +328,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_SamplingHandler_DelegatesToServerSendRequestAsync()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -218,10 +360,10 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.SamplingHandler);
 
         await options.Handlers.SamplingHandler(samplingRequest, default!, TestContext.Current.CancellationToken);
@@ -236,7 +378,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_ElicitationHandler_DelegatesToServerSendRequestAsync()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -271,10 +412,10 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
         await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
@@ -289,7 +430,6 @@ public class BaseToolLoaderTests
     public async Task CreateClientOptions_ElicitationHandler_ValidatesRequestAndThrowsOnNull()
     {
         // Arrange
-        var loader = new TestableBaseToolLoader(NullLogger.Instance);
         var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
@@ -298,7 +438,7 @@ public class BaseToolLoaderTests
         mockServer.ClientCapabilities.Returns(capabilities);
 
         // Act
-        var options = loader.CreateClientOptionsPublic(mockServer);
+        var options = BaseToolLoader.CreateClientOptions(mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
         // Assert - verify handler validates null request
@@ -310,18 +450,14 @@ public class BaseToolLoaderTests
     public async Task HandleSecretElicitation_WhenElicitationDisabled_ProceedsWithoutConsent()
     {
         // Arrange
-        var mockServer = Substitute.For<McpServer>();
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool");
         var logger = Substitute.For<ILogger>();
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
 
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: true, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, true, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -339,17 +475,14 @@ public class BaseToolLoaderTests
         // Arrange
         var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null); // No elicitation support
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
 
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -366,22 +499,27 @@ public class BaseToolLoaderTests
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
-            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = "accept",
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("accept")
+                }
+            })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Null(result); // Should proceed
@@ -390,8 +528,10 @@ public class BaseToolLoaderTests
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task HandleSecretElicitation_WhenUserDeclines_RejectsOperation()
+    [Theory]
+    [InlineData("decline")]
+    [InlineData("cancel")]
+    public async Task HandleSecretElicitation_WhenEnvelopeNotAcceptedWithAcceptDecision_RejectsOperation(string action)
     {
         // Arrange
         var mockServer = Substitute.For<McpServer>();
@@ -399,24 +539,99 @@ public class BaseToolLoaderTests
         var mockResponse = new JsonRpcResponse
         {
             Id = new RequestId(1),
-            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "decline" })
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = action,
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("accept")
+                }
+            })
         };
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(Task.FromResult(mockResponse));
+            .Returns(mockResponse);
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenUserSubmitsRejectDecision_RejectsOperation()
+    {
+        // Arrange - client submits the form (envelope action "accept") but the user selected
+        // "Reject", so the selection is carried in Content["decision"]. The operation must NOT
+        // execute in this scenario.
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult
+            {
+                Action = "accept",
+                Content = new Dictionary<string, JsonElement>
+                {
+                    ["decision"] = JsonSerializer.SerializeToElement("reject")
+                }
+            })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(mockResponse);
+
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
+        var logger = Substitute.For<ILogger>();
+
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
+        // Act
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
+
+        // Assert - a rejected decision must block the operation
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
+    }
+
+    [Fact]
+    public async Task HandleSecretElicitation_WhenAcceptEnvelopeButNoDecision_RejectsOperation()
+    {
+        // Arrange - envelope action is "accept" but no decision value is present. The handler
+        // must treat this as not approved rather than assume approval.
+        var mockServer = Substitute.For<McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities { Elicitation = new ElicitationCapability() { Form = new() } });
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(mockResponse);
+
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
+        var logger = Substitute.For<ILogger>();
+
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
+        // Act
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
+
+        // Assert - a missing decision must block the operation
         Assert.NotNull(result);
         Assert.True(result.IsError);
         Assert.Contains("cancelled by user", ((TextContentBlock)result.Content[0]).Text);
@@ -437,23 +652,21 @@ public class BaseToolLoaderTests
         };
 
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
-                  .Returns(callInfo =>
-                  {
-                      capturedRequest = callInfo.Arg<JsonRpcRequest>();
-                      return Task.FromResult(mockResponse);
-                  });
+            .Returns(callInfo =>
+            {
+                capturedRequest = callInfo.Arg<JsonRpcRequest>();
+                return mockResponse;
+            });
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert - verify the schema has a decision single-select enum property with approve/reject
         Assert.NotNull(capturedRequest);
@@ -487,17 +700,15 @@ public class BaseToolLoaderTests
         mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
                   .Returns<JsonRpcResponse>(_ => throw new InvalidOperationException("Elicitation failed"));
 
-        var jsonRpcRequest = new JsonRpcRequest
-        {
-            Method = "tools/call",
-            Params = JsonSerializer.SerializeToNode(new CallToolRequestParams { Name = "test-tool" })
-        };
-        var request = new RequestContext<CallToolRequestParams>(mockServer, jsonRpcRequest);
+        var request = McpTestUtilities.CreateToolCallRequest("test-tool", mockServer);
         var logger = Substitute.For<ILogger>();
 
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
         // Act
-        var result = await TestableBaseToolLoader.HandleElicitationAsyncPublic(
-            request, "test-tool", new ToolMetadata { Secret = true }, dangerouslyDisableElicitation: false, logger, CancellationToken.None);
+        var result = await BaseToolLoader.HandleElicitationAsync(
+            request, "test-tool", baseCommand, false, logger, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -505,48 +716,89 @@ public class BaseToolLoaderTests
         Assert.Contains("Elicitation failed", ((TextContentBlock)result.Content[0]).Text);
     }
 
-    internal sealed class TestableBaseToolLoader : BaseToolLoader
+    [Theory]
+    [InlineData(false, false, "stdio", false)] // Configuration isn't read-only, tool isn't read-only.
+    [InlineData(true, true, "stdio", false)] // Configuration is read-only, tool is read-only.
+    [InlineData(false, false, "stdio", true)] // Configuration is local mode, tool requires local access.
+    [InlineData(true, true, "http", false)] // Configuration is remote mode, tool doesn't require local access.
+    public void ShouldKeepBaseCommand_BaseCommandIsKeptAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
     {
-        public TestableBaseToolLoader(ILogger logger)
-            : base(logger)
-        {
-        }
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { ReadOnly = toolReadonly, LocalRequired = toolLocalRequired });
 
-        public McpClientOptions CreateClientOptionsPublic(McpServer server)
+        var configuration = new ServerRuntimeConfiguration
         {
-            return CreateClientOptions(server);
-        }
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
 
-        public static Task<CallToolResult?> HandleElicitationAsyncPublic(
-            RequestContext<CallToolRequestParams> request,
-            string toolName,
-            ToolMetadata metadata,
-            bool dangerouslyDisableElicitation,
-            ILogger logger,
-            CancellationToken cancellationToken)
-        {
-            var baseCommand = Substitute.For<IBaseCommand>();
-            baseCommand.Metadata.Returns(metadata);
-            return HandleElicitationAsync(request, toolName, baseCommand, dangerouslyDisableElicitation, logger, cancellationToken);
-        }
+        Assert.True(BaseToolLoader.ShouldKeepBaseCommand(baseCommand, configuration));
+    }
 
-        public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
+    [Theory]
+    [InlineData(true, false, "stdio", false)] // Configuration is read-only, tool isn't read-only.
+    [InlineData(true, true, "http", true)] // Configuration is remote mode, tool requires local access.
+    public void ShouldKeepBaseCommand_BaseCommandIsFilteredAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var baseCommand = Substitute.For<IBaseCommand>();
+        baseCommand.Metadata.Returns(new ToolMetadata { ReadOnly = toolReadonly, LocalRequired = toolLocalRequired });
+
+        var configuration = new ServerRuntimeConfiguration
         {
-            var result = new ListToolsResult
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.False(BaseToolLoader.ShouldKeepBaseCommand(baseCommand, configuration));
+    }
+
+    [Theory]
+    [InlineData(false, false, "stdio", false)] // Configuration isn't read-only, tool isn't read-only.
+    [InlineData(true, true, "stdio", false)] // Configuration is read-only, tool is read-only.
+    [InlineData(false, false, "stdio", true)] // Configuration is local mode, tool requires local access.
+    [InlineData(true, true, "http", false)] // Configuration is remote mode, tool doesn't require local access.
+    public void ShouldKeepTool_BaseCommandIsKeptAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var tool = new Tool()
+        {
+            Name = "tool",
+            Annotations = new ToolAnnotations()
             {
-                Tools = []
-            };
-            return ValueTask.FromResult(result);
-        }
+                ReadOnlyHint = toolReadonly
+            },
+            Meta = new JsonObject([new(McpHelper.LocalRequiredHintMetaKey, toolLocalRequired)])
+        };
 
-        public override ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+        var configuration = new ServerRuntimeConfiguration
         {
-            var result = new CallToolResult
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.True(BaseToolLoader.ShouldKeepTool(tool, configuration));
+    }
+
+    [Theory]
+    [InlineData(true, false, "stdio", false)] // Configuration is read-only, tool isn't read-only.
+    [InlineData(true, true, "http", true)] // Configuration is remote mode, tool requires local access.
+    public void ShouldKeepTool_BaseCommandIsFilteredAsExpected(bool configReadonly, bool toolReadonly, string transportType, bool toolLocalRequired)
+    {
+        var tool = new Tool()
+        {
+            Name = "tool",
+            Annotations = new ToolAnnotations()
             {
-                Content = [],
-                IsError = false
-            };
-            return ValueTask.FromResult(result);
-        }
+                ReadOnlyHint = toolReadonly
+            },
+            Meta = new JsonObject([new(McpHelper.LocalRequiredHintMetaKey, toolLocalRequired)])
+        };
+
+        var configuration = new ServerRuntimeConfiguration
+        {
+            ReadOnly = configReadonly,
+            Transport = transportType
+        };
+
+        Assert.False(BaseToolLoader.ShouldKeepTool(tool, configuration));
     }
 }

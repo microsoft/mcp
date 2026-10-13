@@ -7,4 +7,5 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 
 public record RecommendationGroup(
     [property: JsonPropertyName("key")] string Key,
+    [property: JsonPropertyName("label")] string Label,
     [property: JsonPropertyName("count")] int Count);

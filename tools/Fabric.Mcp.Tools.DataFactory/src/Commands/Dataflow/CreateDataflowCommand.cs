@@ -15,10 +15,13 @@ namespace Fabric.Mcp.Tools.DataFactory.Commands.Dataflow;
     Name = "create-dataflow",
     Title = "Create Dataflow",
     Description = "Creates a new dataflow in a specified Microsoft Fabric workspace.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     ReadOnly = false,
-    OpenWorld = false)]
+    OpenWorld = false,
+    Secret = false,
+    LocalRequired = false)]
 public sealed class CreateDataflowCommand(ILogger<CreateDataflowCommand> logger, DataflowHandler handler)
     : AuthenticatedCommand<CreateDataflowOptions, CreateDataflowCommandResult>
 {

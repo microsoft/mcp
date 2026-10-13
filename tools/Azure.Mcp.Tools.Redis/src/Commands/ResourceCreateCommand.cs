@@ -21,6 +21,7 @@ namespace Azure.Mcp.Tools.Redis.Commands;
     Name = "create",
     Title = "Create Redis Resource",
     Description = "Create/provision a new Azure Managed Redis resource in your Azure subscription. Provisioning is asynchronous and typically takes several minutes; the command returns immediately with status \"Creating\" while the resource is still being created.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
@@ -47,7 +48,6 @@ public sealed class ResourceCreateCommand(IRedisService redisService, ILogger<Re
                 options.PublicNetworkAccess ?? false,
                 options.Modules,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
