@@ -49,16 +49,25 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 Write-Host "##[section]Starting tool metadata export for '$ServerName' ($RuntimeIdentifier)"
 Write-Host "Loading build information from '$BuildInfoPath'."
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-$server = $buildInfo.servers |
-    Where-Object { $_.name -eq $ServerName } |
-    Select-Object -First 1
-if (-not $server) {
+$servers = $buildInfo.servers |
+    Where-Object { $_.name -eq $ServerName }
+
+if ($servers.Count -eq 0) {
     throw "Server '$ServerName' was not found in '$BuildInfoPath'."
+} elseif ($servers.Count -gt 1) {
+    throw "Multiple servers with name '$ServerName' were found in '$BuildInfoPath'."
 }
 
-$platformInformation = $server.platforms |
-    Where-Object { $_.name -eq $RuntimeIdentifier } |
-    Select-Object -First 1
+$server = $servers[0]
+$platforms = $server.platforms |
+    Where-Object { $_.name -eq $RuntimeIdentifier }
+if ($platforms.Count -eq 0) {
+    throw "Platform '$RuntimeIdentifier' was not found for server '$ServerName' in '$BuildInfoPath'."
+} elseif ($platforms.Count -gt 1) {
+    throw "Multiple platforms with runtime identifier '$RuntimeIdentifier' were found for server '$ServerName' in '$BuildInfoPath'."
+}
+
+$platformInformation = $platforms[0]
 if (-not $platformInformation) {
     throw "Platform information for runtime identifier '$RuntimeIdentifier' was not found in build info for server '$ServerName'."
 }
