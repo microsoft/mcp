@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.NetAppFiles.Models;
@@ -47,20 +48,9 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
 
         var existingAccounts = resourceGroupResource.GetNetAppAccounts();
         var hasAccount = await existingAccounts.ExistsAsync(account, cancellationToken).ConfigureAwait(false);
-
-        try
+        if (hasAccount)
         {
-            // var existingAccounts = resourceGroupResource.GetNetAppAccounts();
-            // var hasAccount = await existingAccounts.ExistsAsync(account, cancellationToken).ConfigureAwait(false);
-            var existingAccount = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
-            if (existingAccount.HasValue)
-            {
-                throw new InvalidOperationException($"NetApp account '{account}' already exists in resource group '{resourceGroup}'.");
-            }
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-            // Account does not exist, continue with creation
+            throw new RequestFailedException((int)HttpStatusCode.Conflict, $"Conflict: NetApp account '{account}' already exists in resource group '{resourceGroup}'.");
         }
 
         var accountData = new NetAppAccountData(new AzureLocation(location));

@@ -117,7 +117,7 @@ public class NetAppFilesCommandTests(
             });
 
         var message = result.AssertProperty("message");
-        Assert.Equal($"NetApp account '{accountName}' already exists in resource group '{resourceGroupName}'.", message.GetString());
+        Assert.Equal($"Conflict: NetApp account '{accountName}' already exists in resource group '{resourceGroupName}'.", message.GetString());
     }
 
     [Fact]
