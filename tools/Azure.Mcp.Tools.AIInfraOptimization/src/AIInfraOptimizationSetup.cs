@@ -31,8 +31,7 @@ public class AIInfraOptimizationSetup : IAreaSetup
         services.AddSingleton<IValidateOptions<AIInfraOptimizationOptions>, AIInfraOptimizationOptionsValidator>();
 
         services.AddHttpClient(AIInfraOptimizationArmClient.HttpClientName)
-            .ConfigureHttpClient(client => client.Timeout = AIInfraOptimizationArmClient.ClientTimeout)
-            .ConfigurePrimaryHttpMessageHandler(CreateNoRedirectHandler);
+            .ConfigureHttpClient(client => client.Timeout = AIInfraOptimizationArmClient.ClientTimeout);
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<AIInfraOptimizationIngressFallbackCache>();
@@ -57,7 +56,4 @@ public class AIInfraOptimizationSetup : IAreaSetup
 
         return aiInfraOptimization;
     }
-
-    // Redirects are never followed so a bearer token is not replayed to a response-provided location.
-    internal static HttpMessageHandler CreateNoRedirectHandler() => new HttpClientHandler { AllowAutoRedirect = false };
 }

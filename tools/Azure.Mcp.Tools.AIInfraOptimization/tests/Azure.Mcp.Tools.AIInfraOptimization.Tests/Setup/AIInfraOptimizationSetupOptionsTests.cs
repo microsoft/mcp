@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AIInfraOptimization.Commands.VmSku;
 using Azure.Mcp.Tools.AIInfraOptimization.Configuration;
 using Azure.Mcp.Tools.AIInfraOptimization.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 using Xunit;
 
@@ -137,66 +137,15 @@ public class AIInfraOptimizationSetupOptionsTests
     }
 
     [Fact]
-    public void CreateNoRedirectHandler_DisablesAutomaticRedirects()
+    public void NamedHttpClient_DoesNotReplaceCorePrimaryHandler()
     {
-        using var handler = Assert.IsType<HttpClientHandler>(AIInfraOptimizationSetup.CreateNoRedirectHandler());
+        // Core's default handler chain supplies AntiSSRF, the recording proxy, and disabled redirects;
+        // a tool-level primary handler would silently replace that chain.
+        using var provider = BuildProvider(null);
 
-        Assert.False(handler.AllowAutoRedirect);
-    }
+        var options = provider.GetRequiredService<IOptionsMonitor<HttpClientFactoryOptions>>()
+            .Get(AIInfraOptimizationArmClient.HttpClientName);
 
-    [Fact]
-    public async Task NoRedirectHandler_DoesNotFollowRedirectsOrForwardAuthorization()
-    {
-        using var listener = new HttpListener();
-        var port = GetFreePort();
-        listener.Prefixes.Add($"http://127.0.0.1:{port}/");
-        listener.Start();
-
-        var observed = new List<(string Path, string? Authorization)>();
-        var serverTask = Task.Run(async () =>
-        {
-            while (listener.IsListening)
-            {
-                HttpListenerContext context;
-                try
-                {
-                    context = await listener.GetContextAsync();
-                }
-                catch (Exception ex) when (ex is HttpListenerException or ObjectDisposedException)
-                {
-                    return;
-                }
-
-                lock (observed)
-                {
-                    observed.Add((context.Request.Url!.AbsolutePath, context.Request.Headers["Authorization"]));
-                }
-
-                context.Response.StatusCode = 302;
-                context.Response.RedirectLocation = $"http://127.0.0.1:{port}/redirected";
-                context.Response.Close();
-            }
-        }, TestContext.Current.CancellationToken);
-
-        using var client = new HttpClient(AIInfraOptimizationSetup.CreateNoRedirectHandler());
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/start");
-        request.Headers.Authorization = new("Bearer", "secret-token");
-
-        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
-        listener.Stop();
-        await serverTask;
-
-        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-        var single = Assert.Single(observed);
-        Assert.Equal("/start", single.Path);
-    }
-
-    private static int GetFreePort()
-    {
-        var tcpListener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
-        tcpListener.Start();
-        var port = ((IPEndPoint)tcpListener.LocalEndpoint).Port;
-        tcpListener.Stop();
-        return port;
+        Assert.Empty(options.HttpMessageHandlerBuilderActions);
     }
 }
