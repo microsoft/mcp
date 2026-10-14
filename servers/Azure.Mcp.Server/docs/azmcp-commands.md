@@ -3260,7 +3260,9 @@ Diagnostics distinguishes values returned, no values returned, failed queries, a
 through per-metric availability metadata. Missing metric values do not mean zero traffic. Target
 metrics describe the parent resource and can include other clients; they do not prove endpoint
 delivery. Current target existence is separate from historical metrics, with any existence-check
-error under `target.error`. These routing tools do not determine overall hub health or device ingress
+error under `target.error`. Targets are resolved from each endpoint's `endpointUri`; key-based Event
+Hubs, Service Bus, and Storage endpoints have no endpoint URI, so they report `target.resolutionStatus`
+as `unresolved` with no target evidence. These routing tools do not determine overall hub health or device ingress
 health. Each routing operation has a
 100-second timeout covering all requests and retries. Expiration returns HTTP 408 rather than
 presenting incomplete work as a successful result; caller cancellation is preserved.
