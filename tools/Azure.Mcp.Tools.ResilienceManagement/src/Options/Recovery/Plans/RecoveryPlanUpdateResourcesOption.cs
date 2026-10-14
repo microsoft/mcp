@@ -19,6 +19,7 @@ public sealed class RecoveryPlanUpdateResourcesOptions : ResilienceManagementOpe
         "Each item must contain properties.recoveryResourceUniqueId. " +
         "First inclusion and re-inclusion require matching selectedProtectionSolutionType and selectedProtectionSolutionSetting. " +
         "CustomRunbook requires failoverAction.resourceId and reprotectAction.resourceId values that identify Microsoft.Automation/automationAccounts/runbooks resources. " +
+        "AzureStorageAccount requires a Microsoft.Storage/storageAccounts resource and an AzureStorageAccount protection setting. " +
         "AzureSiteRecovery requires a Microsoft.Compute/virtualMachines resource with healthy Azure Site Recovery protection and Microsoft.Compute/disks and Microsoft.Storage/storageAccounts IDs in diskReprotectInputDetails; " +
         "AzureSiteRecovery also requires testFailoverParams.networkResourceId identifying a Microsoft.Network/virtualNetworks resource. " +
         "The service preserves existing settings on sparse updates and permits only inclusionState changes while the resource is excluded. " +
