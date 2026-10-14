@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "After a summary, use this tool to retrieve individual recommendations or affected resources for a selected group by passing its key as --recommendation-type-id and preserving the applicable filters. " +
         "For a selected recommendation type, this tool can also order the matching individual recommendations. " +
         "Choose either subscription scope, optionally narrowed by resource group, or Service Group scope; the configured default subscription is used when neither is supplied. " +
-        "Returns at most 100 recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
+        "Returns recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
