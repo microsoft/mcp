@@ -489,8 +489,10 @@ azmcp adme storage record version list --endpoint <endpoint> \
 # affected resource, resource type, free text, tracking ID, retirement date, and scope.
 # For status-filtered requests, use list to retrieve individual recommendations; use summary only
 # for status counts or grouped analysis.
-# Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization
-# language must use summary --group-by recommendation-type. For other requests for individual
+# Broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization
+# intent that does not identify a specific recommendation type must use summary --group-by
+# recommendation-type first. Requests that identify a specific recommendation type can use list
+# directly with --recommendation-type-id and --prioritized true. For other requests for individual
 # recommendations, use list directly with any supported filters; no prior summary call is required.
 # Use summary for counts, totals, rankings, distributions, or grouped analysis, not aggregates of
 # limited list results. After a summary, use list with --recommendation-type-id to retrieve individual
@@ -527,7 +529,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 | Setting | Behavior |
 | --- | --- |
 | `--prioritized false` or omitted | No explicit ordering is applied. |
-| `--prioritized true` | Requires `--recommendation-type-id` and is intended only for a drill-down after cross-type prioritization with recommendation summary. The selected type's metadata category determines the instance metric. Non-Cost types order by `criticalityScore` descending, treating missing scores as zero. |
+| `--prioritized true` | Requires `--recommendation-type-id`. Use it directly when the request identifies a specific recommendation type, or for a selected type after cross-type prioritization with recommendation summary. The selected type's metadata category determines the instance metric. Non-Cost types order by `criticalityScore` descending, treating missing scores as zero. |
 | Prioritized Cost drill-down | When the selected recommendation type's metadata category is Cost, converts `savings.retail.dailyPotentialSavings` to an annual value by multiplying it by 12 and 30.4, with `extendedProperties.annualSavingsAmount` as fallback. The selected annual savings score is rounded to two decimal places before ordering descending. Missing, invalid, or non-finite savings sort last; zero remains valid. |
 | Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending, then recommendation ID ascending. |
 | `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes `properties.signalBreakdown` when available as a map of every signal name to its `weightedScore`; unavailable signals are omitted. Including signals does not change filtering or ordering. |
@@ -540,7 +542,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 - Tracking IDs and retirement-date filters can be combined. They imply `ServiceUpgradeAndRetirement`; an explicitly supplied subcategory must match it.
 - Retirement-date filtering uses the metadata date, not the effective date used for ordering.
 - Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
-- `--prioritized` orders matching list records only for a subsequent specific recommendation-type drill-down. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must route only to summary first.
+- `--prioritized` orders matching list records for an explicitly identified recommendation type, whether supplied directly by the user or selected from a prior summary. Broad or unscoped prioritization intent that does not identify a specific recommendation type must route to summary first.
 
 ```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.

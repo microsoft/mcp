@@ -29,8 +29,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("List, show, or search individual Azure Advisor recommendations")]
     [InlineData("recommendation status such as New, Postponed, Dismissed, or Completed")]
+    [InlineData("broad or unscoped top, critical, important, prioritized, priority")]
+    [InlineData("If the request identifies a specific recommendation type, use this tool directly")]
     [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
-    [InlineData("For a selected recommendation type, this tool can also order the matching individual recommendations")]
     public void Description_ExplainsIndividualRecommendationListing(string guidance)
     {
         Assert.Contains(guidance, Command.GetCommand().Description);
@@ -39,6 +40,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("criticalityScore descending, treating missing scores as zero")]
     [InlineData("setting it to true requires --recommendation-type-id")]
+    [InlineData("A request that identifies a specific recommendation type can use this option directly")]
     [InlineData("selected type's recommendation metadata category determines the instance metric")]
     [InlineData("savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4")]
     [InlineData("extendedProperties.annualSavingsAmount as fallback")]
@@ -100,7 +102,6 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Contains("ARM resource shape and a truncation indicator", description);
         Assert.Contains("Each recommendation's name is its recommendation ID", description);
-        Assert.DoesNotContain("--prioritized", description);
         Assert.DoesNotContain("dailyPotentialSavings", description);
         Assert.DoesNotContain("criticalityScore", description);
         Assert.DoesNotContain("--subscription", description);

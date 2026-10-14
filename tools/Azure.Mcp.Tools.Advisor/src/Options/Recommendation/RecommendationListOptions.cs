@@ -54,7 +54,8 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public string? RetirementDate { get; set; }
 
     [Option(Description = "Maximum number of individual recommendation records to return, not distinct affected resources or recommendation groups. " +
-        "Do not use this option for any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language; summary --group-by recommendation-type must be the only initial tool call, with the requested count passed to summary --top. " +
+        "For broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent that does not identify a specific recommendation type, use summary --group-by recommendation-type first and pass the requested count to summary --top. " +
+        "For a request that identifies a specific recommendation type, this option limits the individual records returned after --prioritized true orders them. " +
         "Defaults to 50 and is clamped to the server-side range of 1 through 100. This is a result limit, not aggregate prioritization.")]
     public int? Top { get; set; }
 
@@ -66,8 +67,8 @@ public class RecommendationListOptions : IRecommendationScopeOptions
         "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
     public string? ServiceGroup { get; set; }
 
-    [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must use summary --group-by recommendation-type as the only initial tool call. " +
-        "Use this option only for a subsequent specific recommendation-type drill-down; setting it to true requires --recommendation-type-id. " +
+    [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent that does not identify a specific recommendation type must use summary --group-by recommendation-type first. " +
+        "A request that identifies a specific recommendation type can use this option directly; setting it to true requires --recommendation-type-id. " +
         "The selected type's recommendation metadata category determines the instance metric. " +
         "For Cost types, sort by savings; for all other types, sort by criticalityScore descending, treating missing scores as zero. " +
         "savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4, " +
