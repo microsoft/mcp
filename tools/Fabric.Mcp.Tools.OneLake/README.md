@@ -25,6 +25,18 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 
 > **Note:** Item creation has moved to the [Fabric.Mcp.Tools.Core](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) toolset as `core_create_item`. See [Core tools](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Core) for item creation operations.
 
+## Data Access Role Defaults
+
+`onelake create-or-update-data-access-role` requires an explicit path scope by default. Use `--permitted-paths 'Files/images/*,Tables/sales'` with flat options, or include a `Path` restriction in every `Permit` rule supplied through `--role-definition`.
+
+To intentionally grant whole-item read access without a path restriction, explicitly pass `--allow-full-item-access true`. This applies to both flat options and raw JSON. The upsert replaces the selected role, so include every intended restriction when updating it. A path such as `*` is itself an explicit whole-item scope.
+
+Example prompts for validating this behavior:
+
+- Create role <role-name> for principal <principal-id> on item <item-id> in workspace <workspace-id>, restricted to `Files/images/*`.
+- Create role <role-name> for principal <principal-id> on item <item-id> in workspace <workspace-id>, explicitly granting read access to the entire item.
+- Attempt to create the same role without paths or whole-item consent; reject it before calling the service.
+
 ## Prerequisites
 
 - Microsoft Fabric workspace with OneLake enabled
