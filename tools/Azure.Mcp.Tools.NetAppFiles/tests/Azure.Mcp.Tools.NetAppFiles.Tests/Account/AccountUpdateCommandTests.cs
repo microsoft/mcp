@@ -30,34 +30,6 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
         Assert.False(string.IsNullOrWhiteSpace(command.Description));
     }
 
-    // [Fact]
-    // public async Task ExecuteAsync_UpdatesTagsAndNfsV4IdDomain()
-    // {
-    //     Service.UpdateAccountAsync(
-    //         "account1",
-    //         "rg",
-    //         "sub",
-    //         Arg.Is<IReadOnlyDictionary<string, string>>(tags =>
-    //             tags.Count == 2 && tags["environment"] == "test" && tags["owner"] == "storage"),
-    //         "contoso.com",
-    //         "tenant",
-    //         Arg.Any<CancellationToken>())
-    //         .Returns(UpdatedAccount);
-
-    //     var response = await ExecuteCommandAsync(
-    //         "--account", "account1",
-    //         "--resource-group", "rg",
-    //         "--subscription", "sub",
-    //         "--tenant", "tenant",
-    //         "--tags", "{\"environment\":\"test\",\"owner\":\"storage\"}",
-    //         "--nfs-v4-id-domain", "contoso.com");
-
-    //     var result = ValidateAndDeserializeResponse(
-    //         response,
-    //         NetAppFilesJsonContext.Default.AccountUpdateResult);
-    //     Assert.Equal(UpdatedAccount, result.Account);
-    // }
-
     [Fact]
     public async Task ExecuteAsync_EmptyTags_ClearsTags()
     {
@@ -106,7 +78,7 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "--subscription", "sub");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("At least one update property", response.Message);
+        Assert.Contains("The --tags property must be provided.", response.Message);
         Assert.Empty(Service.ReceivedCalls());
     }
 
