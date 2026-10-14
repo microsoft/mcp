@@ -487,8 +487,6 @@ azmcp adme storage record version list --endpoint <endpoint> \
 # Supports filters for category, subcategory, impact, recommendation status such as New, Postponed,
 # Dismissed, or Completed, recommendation type ID,
 # affected resource, resource type, free text, tracking ID, retirement date, and scope.
-# --tracking-ids and --retirement-date can be used independently or together.
-# --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement.
 # For status-filtered requests, use list to retrieve individual recommendations; use summary only
 # for status counts or grouped analysis.
 # Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization
