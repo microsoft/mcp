@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Remediation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -49,6 +50,8 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RemediationGetOptions options, CancellationToken cancellationToken)
     {
+        AdvisorTelemetryTags.AddRecommendationTags(context.Activity, recommendationTypeId: options.RecommendationTypeId);
+
         try
         {
             var remediation = await _remediationService.GetRemediationAsync(

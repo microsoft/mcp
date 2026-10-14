@@ -3,6 +3,7 @@
 
 using System.Linq;
 using System.Net;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Metadata;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,8 @@ public sealed class MetadataGetCommand(ILogger<MetadataGetCommand> logger, IAdvi
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, MetadataGetOptions options, CancellationToken cancellationToken)
     {
+        AdvisorTelemetryTags.AddRecommendationTags(context.Activity, recommendationTypeId: options.RecommendationTypeId);
+
         try
         {
             if (!TryNormalizeLanguage(options.Language, out var language))

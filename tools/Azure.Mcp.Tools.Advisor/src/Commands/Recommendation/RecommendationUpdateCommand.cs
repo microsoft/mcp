@@ -65,6 +65,8 @@ public sealed class RecommendationUpdateCommand(
         RecommendationUpdateOptions options,
         CancellationToken cancellationToken)
     {
+        AdvisorTelemetryTags.AddScopeTags(context.Activity, options);
+
         try
         {
             _ = RecommendationStateUpdateValidator.TryParsePostponedUntilDateTime(
