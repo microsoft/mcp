@@ -18,13 +18,16 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Title = "List Advisor Recommendations",
     Description = "List, show, or search individual Azure Advisor recommendations and their affected-resource details in a subscription or Azure Service Group. " +
         "Supports filters for category, subcategory, impact, recommendation status such as New, Postponed, Dismissed, or Completed, recommendation type ID, affected resource, resource type, free text, tracking ID, retirement date, and scope. " +
+        "This returns recommendation instances, not the global metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID; use advisor metadata list for those catalog lookups. " +
+        "Tracking ID and retirement date filters can be used independently or together; when subcategory is also specified, it must be ServiceUpgradeAndRetirement. " +
         "For status-filtered requests, use this tool to retrieve individual recommendations; use summary only for status counts or grouped analysis. " +
         "If the request contains top, critical, important, prioritized, priority, or equivalent prioritization intent, do not use this tool; route to recommendation summary with --group-by recommendation-type. " +
         "For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters; a prior summary call is not required. " +
         "Use summary for counts, totals, rankings, distributions, or grouped analysis rather than aggregating this tool's limited results. " +
         "After a summary, use this tool to retrieve individual recommendations or affected resources for a selected group by passing its key as --recommendation-type-id and preserving the applicable filters. " +
         "For a selected recommendation type, this tool can also order the matching individual recommendations. " +
-        "Returns recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
+        "Choose either subscription scope, optionally narrowed by resource group, or Service Group scope; the configured default subscription is used when neither is supplied. " +
+        "Returns at most 100 recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
