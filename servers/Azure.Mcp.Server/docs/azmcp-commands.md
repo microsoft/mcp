@@ -541,8 +541,15 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # --prioritized true (top recommendations, top actions, most critical, or what-should-I-fix-first requests) ranks
-# active recommendation types by priority, defaults --top to 10, and returns each type's distinct affected-resource
-# count with a prioritizationSignals object that explains its rank. See the --prioritized option for details.
+# active New recommendation types and defaults --top to 10. Order: metadata priority score, annual savings (daily
+# potential savings x 12 x 30.4, else the legacy annual amount; USD, rounded to cents), summed criticality score,
+# earliest retirement date, and affected-resource count (fewest first for Cost, most first otherwise), then label.
+# Missing values sort last and are never treated as zero. Reserved instances keep only the three-year, seven-day
+# lookback scenario. Each group returns its distinct affected-resource count, totalRecommendations is the sum of those
+# counts (affected resources per type, not records), and each group carries a prioritizationSignals object
+# (category, impact, subCategory, retirementDate, retirementWindow, annualSavings, resourceTypeCriticality,
+# criticalService, effort, actionability, costImplication) used to explain the rank in plain business language.
+# Drill into a type with advisor recommendation list --recommendation-type-id <group-key> --prioritized true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary [--subscription <subscription>] \
                                      [--service-group <service-group>] \

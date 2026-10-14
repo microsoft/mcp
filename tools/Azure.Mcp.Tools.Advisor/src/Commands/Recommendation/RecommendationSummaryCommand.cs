@@ -19,7 +19,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Description = "Summarize the key themes from Azure Advisor recommendation instances in a subscription or Azure service group using server-side counts, totals, rankings, and distributions. " +
         "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
         "Use it for an executive summary or main themes, counts by category or business impact, the most common recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
-        "This is the starting tool for top recommendations, top actions to take, most critical, most important, prioritized, highest-priority, or what-should-I-fix-first requests: set --prioritized true to rank active recommendation types by priority and explain each rank, instead of starting with recommendation list. The --prioritized option describes the response, explanations, and drill-down. " +
+        "This is the starting tool for top recommendations, top actions to take, most critical, most important, prioritized, highest-priority, or what-should-I-fix-first requests: set --prioritized true to rank active recommendation types by priority and explain each rank, instead of starting with recommendation list. " +
+        "Explain a ranking in plain business language from the group's prioritizationSignals, without exposing field names, raw values, or scores. " +
+        "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-id set to its key and --prioritized true, adding --category Cost for a Cost type. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
@@ -30,7 +32,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Use either --subscription or --service-group, not both. A configured default subscription is used when neither is supplied. --resource-group applies only with subscription scope. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
-        "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets.",
+        "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets; with --prioritized true it is the sum of affected resources per type, so a resource is counted once for each recommendation type that affects it.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
