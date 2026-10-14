@@ -67,17 +67,18 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must use summary --group-by recommendation-type as the only initial tool call. " +
-        "Use this option only for a subsequent specific recommendation-type drill-down. " +
-        "Sort individual records by criticalityScore descending, treating missing scores as zero. " +
-        "Only an explicit --category Cost selects savings ordering: savings.retail.dailyPotentialSavings is annualized by multiplying by 12 and 30.4, " +
+        "Use this option only for a subsequent specific recommendation-type drill-down; setting it to true requires --recommendation-type-id. " +
+        "The selected type's recommendation metadata category determines the instance metric. " +
+        "For Cost types, sort by savings; for all other types, sort by criticalityScore descending, treating missing scores as zero. " +
+        "savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4, " +
         "with extendedProperties.annualSavingsAmount as fallback; the selected annual savings score is rounded to two decimal places before ordering descending. " +
         "Missing, invalid, or non-finite savings sort last; zero is valid. " +
         "Ties sort by effective retirement date ascending (instance date with metadata fallback, missing dates last), " +
-        "then resource name A-Z (case-insensitive). " +
+        "then resource name A-Z (case-insensitive), then recommendation ID A-Z. " +
         "Defaults to false; when false, no explicit ordering is applied. Applies to both subscription and Service Group scopes.")]
     public bool? Prioritized { get; set; }
 
-    [Option(Description = "Include properties.signalBreakdown from Azure Resource Graph when present, preserving the original signal names and values. " +
+    [Option(Description = "Include properties.signalBreakdown from Azure Resource Graph when present as a map of every signal name to its weightedScore. " +
         "Defaults to false. Setting this option to true requires --prioritized true; otherwise validation fails. " +
         "Including signals does not change filtering or ordering. Applies to both subscription and Service Group scopes. " +
         "The field is omitted when signals are unavailable.")]

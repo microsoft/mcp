@@ -65,6 +65,7 @@ public sealed class AdvisorServiceListTransportTests
         var service = new AdvisorService(azureService);
         var filters = new RecommendationFilters(
             ServiceGroup: serviceGroupScope ? "commerce" : null,
+            RecommendationTypeId: "type-a",
             Prioritized: prioritized,
             Category: "HighAvailability",
             Status: RecommendationStatus.Dismissed,
@@ -111,6 +112,7 @@ public sealed class AdvisorServiceListTransportTests
         var service = new AdvisorService(azureService);
         var filters = new RecommendationFilters(
             ServiceGroup: serviceGroupScope ? "commerce" : null,
+            RecommendationTypeId: "type-a",
             Prioritized: prioritized,
             ShowPrioritizationSignals: true);
 
@@ -357,7 +359,10 @@ public sealed class AdvisorServiceListTransportTests
             new AdvisorService(azureService).ListRecommendationsAsync(
                 subscriptionId,
                 resourceGroup: "missing-group",
-                filters: new RecommendationFilters(Category: "Cost", Prioritized: prioritized),
+                filters: new RecommendationFilters(
+                    Category: "Cost",
+                    RecommendationTypeId: "type-a",
+                    Prioritized: prioritized),
                 cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Resource group 'missing-group' does not exist", exception.Message);
@@ -427,7 +432,11 @@ public sealed class AdvisorServiceListTransportTests
         var result = await service.ListRecommendationsAsync(
             subscription: null,
             resourceGroup: null,
-            filters: new RecommendationFilters(ServiceGroup: "commerce", Prioritized: true, Status: status),
+            filters: new RecommendationFilters(
+                ServiceGroup: "commerce",
+                RecommendationTypeId: "type-a",
+                Prioritized: true,
+                Status: status),
             top: 1,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -503,7 +512,10 @@ public sealed class AdvisorServiceListTransportTests
             subscription: null,
             resourceGroup: null,
             filters: new RecommendationFilters(
-                ServiceGroup: "commerce", Prioritized: true, Category: metadataFilters ? "Cost" : null,
+                ServiceGroup: "commerce",
+                RecommendationTypeId: "type-a",
+                Prioritized: true,
+                Category: metadataFilters ? "Cost" : null,
                 ShowPrioritizationSignals: showSignals),
             top: 1,
             cancellationToken: TestContext.Current.CancellationToken);
@@ -511,7 +523,8 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Equal("first-from-arg", Assert.Single(result.Results).Name);
         if (showSignals)
         {
-            Assert.True(JsonElement.DeepEquals(signals.RootElement, result.Results[0].Properties.SignalBreakdown!.Value));
+            var signalBreakdown = result.Results[0].Properties.SignalBreakdown;
+            Assert.Equal(0.025, Assert.Single(signalBreakdown!).Value.WeightedScore);
         }
         else
         {
@@ -540,12 +553,38 @@ public sealed class AdvisorServiceListTransportTests
         var result = await new AdvisorService(azureService).ListRecommendationsAsync(
             subscription: null,
             resourceGroup: null,
-            filters: new RecommendationFilters(ServiceGroup: "commerce", Prioritized: true),
+            filters: new RecommendationFilters(
+                ServiceGroup: "commerce",
+                RecommendationTypeId: "type-a",
+                Prioritized: true),
             top: 1,
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("first", Assert.Single(result.Results).Name);
         Assert.True(result.AreResultsTruncated);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ListRecommendationsAsync_PrioritizedWithoutRecommendationTypeThrowsBeforeAzureAccess(
+        bool serviceGroupScope)
+    {
+        var azureService = Substitute.For<IAzureService>();
+        var service = new AdvisorService(azureService);
+        var filters = new RecommendationFilters(
+            ServiceGroup: serviceGroupScope ? "commerce" : null,
+            Prioritized: true);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.ListRecommendationsAsync(
+            serviceGroupScope ? null : "sub123",
+            null,
+            filters,
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal("filters", exception.ParamName);
+        Assert.Contains("--prioritized true requires --recommendation-type-id", exception.Message);
+        Assert.Empty(azureService.ReceivedCalls());
     }
 
     private static string GetResourceGraphQuery(string? requestBody)
@@ -562,24 +601,24 @@ public sealed class AdvisorServiceListTransportTests
         string category = "HighAvailability",
         bool tracked = false,
         JsonElement? signalBreakdown = null) => new
-    {
-        id = $"/providers/Microsoft.Advisor/recommendations/{name}",
-        name,
-        type = "Microsoft.Advisor/recommendations",
-        properties = new
         {
-            category,
-            tracked,
-            signalBreakdown,
-            savings = new { retail = new { dailyPotentialSavings = savings } },
-            impact = "High",
-            recommendationTypeId = typeId,
-            criticality = "Critical",
-            criticalityScore = score,
-            resourceMetadata = new { resourceId = $"/resources/{name}" },
-            impactedValue = name,
-        },
-    };
+            id = $"/providers/Microsoft.Advisor/recommendations/{name}",
+            name,
+            type = "Microsoft.Advisor/recommendations",
+            properties = new
+            {
+                category,
+                tracked,
+                signalBreakdown,
+                savings = new { retail = new { dailyPotentialSavings = savings } },
+                impact = "High",
+                recommendationTypeId = typeId,
+                criticality = "Critical",
+                criticalityScore = score,
+                resourceMetadata = new { resourceId = $"/resources/{name}" },
+                impactedValue = name,
+            },
+        };
 
     private static HttpResponseMessage CreateTenantListResponse(Guid tenantId) =>
         CreateJsonResponse(new

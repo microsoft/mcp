@@ -85,5 +85,5 @@ internal sealed class RecommendationProperties
     /// <summary> The savings enrichment payload. Omitted when no savings enrichment is available. </summary>
     public JsonElement? Savings { get; set; }
 
-    public JsonElement? SignalBreakdown { get; set; }
+    public Dictionary<string, global::Azure.Mcp.Tools.Advisor.Models.RecommendationSignalScore>? SignalBreakdown { get; set; }
 }

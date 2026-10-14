@@ -20,7 +20,7 @@ public class AdvisorServiceConversionTests
                 "healthAlertCoverage": { "weightedScore": 0.025 },
                 "serviceHealthEvents": { "weightedScore": 0 },
                 "sgHaGoal": { "weightedScore": 0 },
-                "customSignal": { "weightedScore": -0.1, "details": ["extra", null], "enabled": true }
+                "customSignal": { "weightedScore": -0.1 }
             }
             """;
         Models.Recommendation result;
@@ -48,6 +48,8 @@ public class AdvisorServiceConversionTests
             using var expected = JsonDocument.Parse(signals);
             Assert.True(JsonElement.DeepEquals(expected.RootElement, actual));
             Assert.Equal(0, actual.GetProperty("sgHaGoal").GetProperty("weightedScore").GetInt32());
+            Assert.Equal(4, result.Properties.SignalBreakdown?.Count);
+            Assert.Equal(-0.1, result.Properties.SignalBreakdown?["customSignal"].WeightedScore);
         }
         else
         {

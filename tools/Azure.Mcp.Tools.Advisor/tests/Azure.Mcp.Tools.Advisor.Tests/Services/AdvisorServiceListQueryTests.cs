@@ -231,11 +231,13 @@ public class AdvisorServiceListQueryTests
         Assert.DoesNotContain("isnotempty(tostring(properties.criticality))", query);
         Assert.DoesNotContain("isnotnull(properties.criticalityScore)", query);
         Assert.Contains("strlen(name) == 64", query);
-        Assert.Contains("instanceScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
+        Assert.Contains("criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
+        Assert.Contains(
+            "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavingsScore, 2), criticalityScore)",
+            query);
         Assert.Contains("retirementDate = coalesce(todatetime(properties.extendedProperties.retirementDate), metadataRetirementDate)", query);
         Assert.Contains("resourceNameSort = tolower(tostring(properties.impactedValue))", query);
-        Assert.Contains("| order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc | take", query);
-        Assert.DoesNotContain(", id asc", query);
+        Assert.Contains("| order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc, id asc | take", query);
         Assert.DoesNotContain("summarize", query);
         Assert.True(query.IndexOf("bag_merge(metadataOverrides, properties)", StringComparison.Ordinal) <
             query.IndexOf("| order by", StringComparison.Ordinal));
@@ -256,7 +258,6 @@ public class AdvisorServiceListQueryTests
         Assert.DoesNotContain("isnotempty(tostring(properties.criticality))", query);
         Assert.DoesNotContain("isnotnull(properties.criticalityScore)", query);
         Assert.DoesNotContain("!~ 'Security'", query);
-        Assert.DoesNotContain("Savings", query);
         Assert.Contains($"tostring(properties.category) =~ '{category}'", query);
     }
 
@@ -273,30 +274,25 @@ public class AdvisorServiceListQueryTests
     }
 
     [Theory]
-    [InlineData(null, false)]
-    [InlineData("HighAvailability", false)]
-    [InlineData("Security", false)]
-    [InlineData("Cost", true)]
-    [InlineData(" cost ", true)]
-    [InlineData("COST", true)]
-    public void BuildPrioritizedRecommendationListQuery_OnlyExplicitCostSelectsFiniteSavings(string? category, bool useSavings)
+    [InlineData(null)]
+    [InlineData("Cost")]
+    [InlineData("HighAvailability")]
+    [InlineData("Security")]
+    public void BuildPrioritizedRecommendationListQuery_UsesMetadataCategoryToSelectInstanceMetric(string? category)
     {
         foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
         {
             var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
                 scope, null, 101, new RecommendationFilters(Category: category, RecommendationTypeId: "cost-type"));
 
-            Assert.Equal(useSavings, query.Contains("dailySavings =", StringComparison.Ordinal));
-            Assert.Equal(!useSavings, query.Contains("coalesce(todouble(properties.criticalityScore), 0.0)", StringComparison.Ordinal));
-            if (useSavings)
-            {
-                Assert.Contains("dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))", query);
-                Assert.Contains("annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))", query);
-                Assert.Contains("annualizedDailySavings = dailySavings * 12.0 * 30.4", query);
-                Assert.Contains("annualSavingsScore = coalesce(iff(isfinite(annualizedDailySavings), annualizedDailySavings, real(null)), iff(isfinite(annualSavings), annualSavings, real(null)))", query);
-                Assert.Contains("instanceScore = round(annualSavingsScore, 2)", query);
-                Assert.DoesNotContain("dailySavings > 0", query);
-            }
+            AssertFiniteSavingsRanking(query);
+            Assert.Contains("criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
+            Assert.Contains(
+                "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavingsScore, 2), criticalityScore)",
+                query);
+            Assert.True(
+                query.IndexOf("metadataCategory = tostring(properties.recommendationCategory)", StringComparison.Ordinal) <
+                query.IndexOf("instanceScore = iff(metadataCategory", StringComparison.Ordinal));
             Assert.EndsWith("| take 101 | project id, name, type, properties", query);
         }
     }
@@ -307,12 +303,28 @@ public class AdvisorServiceListQueryTests
     [InlineData(101)]
     public void BuildPrioritizedRecommendationListQuery_OutputOptionsDoNotChangeQuery(int limit)
     {
-        var filters = new RecommendationFilters(Prioritized: true, ShowPrioritizationSignals: false);
+        var filters = new RecommendationFilters(
+            RecommendationTypeId: "cost-type",
+            Prioritized: true,
+            ShowPrioritizationSignals: false);
         var query = AdvisorService.BuildPrioritizedRecommendationListQuery(SubscriptionScope(), null, limit, filters);
 
         Assert.Equal(query, AdvisorService.BuildPrioritizedRecommendationListQuery(
             SubscriptionScope(), null, limit, filters with { ShowPrioritizationSignals = true }));
         Assert.EndsWith($"| take {limit} | project id, name, type, properties", query);
+    }
+
+    private static void AssertFiniteSavingsRanking(string query)
+    {
+        Assert.Contains("dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))", query);
+        Assert.Contains("annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))", query);
+        Assert.Contains(
+            "annualizedDailySavings = iff(isfinite(dailySavings), dailySavings * 12.0 * 30.4, real(null))",
+            query);
+        Assert.Contains(
+            "annualSavingsScore = coalesce(annualizedDailySavings, iff(isfinite(annualSavings), annualSavings, real(null)))",
+            query);
+        Assert.DoesNotContain("dailySavings > 0", query);
     }
 
     [Fact]

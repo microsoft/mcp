@@ -11,6 +11,8 @@ internal static class RecommendationFilterValidator
 {
     internal const string PrioritizationSignalsRequiresPrioritized =
         "--show-prioritization-signals true requires --prioritized true.";
+    internal const string PrioritizedRequiresRecommendationType =
+        "--prioritized true requires --recommendation-type-id. Use recommendation summary grouped by recommendation-type for initial cross-type prioritization, then list the selected type.";
 
     internal static readonly string[] AllowedCategories =
     [
@@ -36,6 +38,11 @@ internal static class RecommendationFilterValidator
         if (options.ShowPrioritizationSignals == true && options.Prioritized != true)
         {
             validationResult.Errors.Add(PrioritizationSignalsRequiresPrioritized);
+        }
+
+        if (options.Prioritized == true && string.IsNullOrWhiteSpace(options.RecommendationTypeId))
+        {
+            validationResult.Errors.Add(PrioritizedRequiresRecommendationType);
         }
 
         ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);

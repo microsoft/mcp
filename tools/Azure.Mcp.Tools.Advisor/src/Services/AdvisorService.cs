@@ -58,6 +58,10 @@ public class AdvisorService(IAzureService azureService)
         {
             throw new ArgumentException(RecommendationFilterValidator.PrioritizationSignalsRequiresPrioritized, nameof(filters));
         }
+        if (prioritized && string.IsNullOrWhiteSpace(filters?.RecommendationTypeId))
+        {
+            throw new ArgumentException(RecommendationFilterValidator.PrioritizedRequiresRecommendationType, nameof(filters));
+        }
 
         var serviceGroup = string.IsNullOrWhiteSpace(filters?.ServiceGroup) ? null : filters!.ServiceGroup!.Trim();
         var isServiceGroupScope = serviceGroup is not null;
@@ -141,14 +145,15 @@ public class AdvisorService(IAzureService azureService)
         int limit,
         RecommendationFilters? filters = null)
     {
-        var ranking = string.Equals(filters?.Category?.Trim(), "Cost", StringComparison.OrdinalIgnoreCase)
-            ? " | extend dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))," +
-                " annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))" +
-                " | extend annualizedDailySavings = dailySavings * 12.0 * 30.4" +
-                " | extend annualSavingsScore = coalesce(iff(isfinite(annualizedDailySavings), annualizedDailySavings, real(null))," +
-                " iff(isfinite(annualSavings), annualSavings, real(null)))" +
-                " | extend instanceScore = round(annualSavingsScore, 2)"
-            : " | extend instanceScore = coalesce(todouble(properties.criticalityScore), 0.0)";
+        const string ranking =
+            " | extend dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))," +
+            " annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))," +
+            " criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)" +
+            " | extend annualizedDailySavings = iff(isfinite(dailySavings), dailySavings * 12.0 * 30.4, real(null))" +
+            " | extend annualSavingsScore = coalesce(annualizedDailySavings," +
+            " iff(isfinite(annualSavings), annualSavings, real(null)))" +
+            " | extend instanceScore = iff(metadataCategory =~ 'Cost'," +
+            " round(annualSavingsScore, 2), criticalityScore)";
 
         return BuildRecommendationScopeQuery(scope, predicates) +
             " | extend joinTypeId = tolower(tostring(properties.recommendationTypeId))" +
@@ -157,7 +162,7 @@ public class AdvisorService(IAzureService azureService)
             ranking +
             " | extend retirementDate = coalesce(todatetime(properties.extendedProperties.retirementDate), metadataRetirementDate)," +
             " resourceNameSort = tolower(tostring(properties.impactedValue))" +
-            " | order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc" +
+            " | order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc, id asc" +
             $" | take {limit}" +
             " | project id, name, type, properties";
     }

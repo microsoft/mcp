@@ -29,7 +29,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("List, show, or search individual Azure Advisor recommendations")]
     [InlineData("recommendation status such as New, Postponed, Dismissed, or Completed")]
-    [InlineData("Use this tool directly to retrieve individual recommendations with any supported filters")]
+    [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
     [InlineData("For a selected recommendation type, this tool can also order the matching individual recommendations")]
     public void Description_ExplainsIndividualRecommendationListing(string guidance)
     {
@@ -38,13 +38,14 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
     [Theory]
     [InlineData("criticalityScore descending, treating missing scores as zero")]
-    [InlineData("Only an explicit --category Cost selects savings ordering")]
-    [InlineData("savings.retail.dailyPotentialSavings is annualized by multiplying by 12 and 30.4")]
+    [InlineData("setting it to true requires --recommendation-type-id")]
+    [InlineData("selected type's recommendation metadata category determines the instance metric")]
+    [InlineData("savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4")]
     [InlineData("extendedProperties.annualSavingsAmount as fallback")]
     [InlineData("annual savings score is rounded to two decimal places")]
     [InlineData("Missing, invalid, or non-finite savings sort last; zero is valid")]
     [InlineData("effective retirement date ascending")]
-    [InlineData("then resource name A-Z (case-insensitive)")]
+    [InlineData("then resource name A-Z (case-insensitive), then recommendation ID A-Z")]
     public void PrioritizedDescription_ExplainsIndividualRecordOrdering(string guidance)
     {
         var command = Command.GetCommand();
@@ -156,6 +157,10 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         if (prioritized is { } prioritizedValue)
         {
             args.AddRange(["--prioritized", prioritizedValue ? "true" : "false"]);
+            if (prioritizedValue)
+            {
+                args.AddRange(["--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d"]);
+            }
         }
         if (showSignals is not null)
         {
@@ -956,7 +961,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         var response = await ExecuteCommandAsync(
             "--subscription", "sub123",
-            "--prioritized", prioritized);
+            "--prioritized", prioritized,
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
@@ -997,7 +1003,10 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub123", "--prioritized", "true", "--status", status);
+            "--subscription", "sub123",
+            "--prioritized", "true",
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+            "--status", status);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ListRecommendationsAsync(
@@ -1023,6 +1032,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
             "--prioritized", "true",
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d",
             "--category", "Cost");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -1030,5 +1040,23 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("sg1", captured!.ServiceGroup);
         Assert.True(captured.Prioritized);
         Assert.Equal("Cost", captured.Category);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrioritizedWithoutRecommendationType_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--prioritized", "true");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--prioritized true requires --recommendation-type-id", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 }

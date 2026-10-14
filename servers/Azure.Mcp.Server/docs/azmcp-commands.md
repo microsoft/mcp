@@ -527,10 +527,10 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 | Setting | Behavior |
 | --- | --- |
 | `--prioritized false` or omitted | No explicit ordering is applied. |
-| `--prioritized true` | Orders by `criticalityScore` descending, treating missing scores as zero. |
-| Prioritized with explicit `--category Cost` | Annualizes `savings.retail.dailyPotentialSavings` by multiplying it by 12 and 30.4, with `extendedProperties.annualSavingsAmount` as fallback. The selected annual savings score is rounded to two decimal places before ordering descending. Missing, invalid, or non-finite savings sort last; zero remains valid. A recommendation type ID alone does not select savings ordering. |
-| Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending. Exact ties have no guaranteed relative order. |
-| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes the original `properties.signalBreakdown` when available; unavailable signals are omitted. Including signals does not change filtering or ordering. |
+| `--prioritized true` | Requires `--recommendation-type-id` and is intended only for a drill-down after cross-type prioritization with recommendation summary. The selected type's metadata category determines the instance metric. Non-Cost types order by `criticalityScore` descending, treating missing scores as zero. |
+| Prioritized Cost drill-down | When the selected recommendation type's metadata category is Cost, converts `savings.retail.dailyPotentialSavings` to an annual value by multiplying it by 12 and 30.4, with `extendedProperties.annualSavingsAmount` as fallback. The selected annual savings score is rounded to two decimal places before ordering descending. Missing, invalid, or non-finite savings sort last; zero remains valid. |
+| Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending, then recommendation ID ascending. |
+| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes `properties.signalBreakdown` when available as a map of every signal name to its `weightedScore`; unavailable signals are omitted. Including signals does not change filtering or ordering. |
 | Result limit | ARG selects up to `top + 1` records after filtering and optional ordering. The extra record is removed and used to detect truncation. ARG truncation signals also set `areResultsTruncated`. No additional pages are fetched. |
 
 - Specify either `--subscription` or `--service-group`, not both. Supply the Service Group name segment from its ARM resource ID.
