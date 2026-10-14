@@ -48,9 +48,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
             validationResult.Errors.Add("Each source location must be an Azure region such as 'eastus2' or a physical Azure zone such as 'eastus2-az1'.");
         }
 
-        if (options.SelectedResourceIds?.Any(resourceId => !IsRecoveryResourceIdForServiceGroup(resourceId, options.ServiceGroup)) == true)
+        if (options.SelectedResourceIds?.Any(resourceId =>
+                !IsDrillResourceId(
+                    resourceId,
+                    options.ServiceGroup,
+                    options.Drill)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group with a GUID resource name.");
+            validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested service group and drill with a GUID resource name.");
         }
     }
 
@@ -145,17 +149,21 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         return true;
     }
 
-    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
+    private static bool IsDrillResourceId(
+        string resourceId,
+        string serviceGroup,
+        string drill)
     {
         try
         {
             var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? recoveryPlanId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+            ResourceIdentifier? drillId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = drillId?.Parent;
+            return parsed.ResourceType == DrillTargetResource.ResourceType &&
+                drillId?.ResourceType == ResilienceManagementDrillResource.ResourceType &&
                 serviceGroupId?.ResourceType == ServiceGroupResourceType &&
                 string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(drillId.Name, drill, StringComparison.OrdinalIgnoreCase) &&
                 Guid.TryParse(parsed.Name, out _);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
