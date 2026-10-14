@@ -73,22 +73,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
 | advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
-| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
-| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
-| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
-| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
-| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
-| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
-| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
-| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
@@ -129,6 +113,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026 | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
