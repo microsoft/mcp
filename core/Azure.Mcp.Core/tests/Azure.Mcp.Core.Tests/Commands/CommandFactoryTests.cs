@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Models.Command;
@@ -141,6 +142,50 @@ public class CommandFactoryTests
         Assert.Equal((int)HttpStatusCode.OK, exitCode);
         _telemetryService.Received(1).StartActivity(ActivityName.ToolExecuted, null, null);
         Assert.Equal("cli", activity.GetTagItem(TagName.ServerMode));
+    }
+
+    [Fact]
+    public async Task RootCommand_ServerStartFailure_WritesResponseToStandardError()
+    {
+        // A file where the support log directory is expected makes the host fail to start.
+        var supportLogsPath = Path.GetTempFileName();
+        try
+        {
+            var area = Substitute.For<IAreaSetup>();
+            area.Name.Returns("server");
+            area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
+            {
+                var group = new CommandGroup("server", "Server commands");
+                group.Commands.Add("start", new ServerStartCommand());
+                return group;
+            });
+
+            var factory = new CommandFactory(
+                _serviceProvider,
+                [area],
+                _telemetryService,
+                _configurationOptions,
+                _logger);
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            var error = new StringWriter();
+
+            var exitCode = await factory.RootCommand
+                .Parse(["server", "start", "--dangerously-write-support-logs-to-dir", supportLogsPath])
+                .InvokeAsync(new InvocationConfiguration { Error = error }, timeout.Token);
+
+            Assert.NotEqual((int)HttpStatusCode.OK, exitCode);
+            var errorOutput = error.ToString();
+            Assert.NotEmpty(errorOutput);
+            using var response = JsonDocument.Parse(errorOutput);
+            Assert.Equal(exitCode, response.RootElement.GetProperty("status").GetInt32());
+            Assert.False(string.IsNullOrWhiteSpace(response.RootElement.GetProperty("message").GetString()));
+        }
+        finally
+        {
+            File.Delete(supportLogsPath);
+        }
     }
 
     [Theory]
