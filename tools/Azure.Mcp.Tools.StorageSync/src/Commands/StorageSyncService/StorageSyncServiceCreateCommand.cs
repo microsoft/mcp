@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.StorageSync.Models;
 using Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 using Azure.Mcp.Tools.StorageSync.Services;
+using Azure.ResourceManager.StorageSync.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -30,6 +31,25 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
     private readonly IStorageSyncService _service = service;
     private readonly ILogger<StorageSyncServiceCreateCommand> _logger = logger;
 
+    public override void ValidateOptions(StorageSyncServiceCreateOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrEmpty(options.IncomingTrafficPolicy))
+        {
+            // Validate the incoming traffic policy value.
+            // First convert the non-null, non-empty value to an IncomingTrafficPolicy to leverage its 'Equals'
+            // operator which validates on case-insensitive equality of the backing string value.
+            // Then validate that it's one of the known values.
+            var possible = new IncomingTrafficPolicy(options.IncomingTrafficPolicy);
+            if (!IncomingTrafficPolicy.AllowAllTraffic.Equals(possible) &&
+                !IncomingTrafficPolicy.AllowVirtualNetworksOnly.Equals(possible))
+            {
+                validationResult.Errors.Add("Invalid incoming-traffic-policy value, must be one of: " +
+                    $"{IncomingTrafficPolicy.AllowAllTraffic}, {IncomingTrafficPolicy.AllowVirtualNetworksOnly}.");
+            }
+        }
+    }
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, StorageSyncServiceCreateOptions options, CancellationToken cancellationToken)
     {
         try
@@ -44,6 +64,7 @@ public sealed class StorageSyncServiceCreateCommand(ILogger<StorageSyncServiceCr
                 options.Location,
                 options.Tags?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(tag => tag.Split('=', 2)).ToDictionary(kv => kv[0], kv => kv[1]),
                 options.Tenant,
+                options.IncomingTrafficPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(service), StorageSyncJsonContext.Default.StorageSyncServiceCreateCommandResult);
