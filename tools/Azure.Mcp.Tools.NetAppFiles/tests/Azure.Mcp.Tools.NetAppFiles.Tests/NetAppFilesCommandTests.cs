@@ -79,7 +79,7 @@ public class NetAppFilesCommandTests(
     public async Task AccountGet_ReturnsAccount()
     {
         var accountName = $"{Settings.ResourceBaseName}-account";
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
             "netappfiles_account_get",
@@ -124,7 +124,7 @@ public class NetAppFilesCommandTests(
     public async Task AccountCreate_ReturnsCreatedAccount()
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
             "netappfiles_account_create",
@@ -149,7 +149,7 @@ public class NetAppFilesCommandTests(
     public async Task AccountUpdate_ReturnsUpdatedAccount()
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
-        var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var resourceGroupName = Settings.ResourceGroupName;
 
         await CallToolAsync(
             "netappfiles_account_create",
