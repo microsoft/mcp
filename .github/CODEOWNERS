@@ -125,10 +125,10 @@
 # ServiceOwners:                       @feiskyer @gossion
 
 # PRLabel: %tools-AppConfig
-/tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AppConfig/      @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AppConfig
-# ServiceOwners:                       @avanigupta @conniey @JonathanCrd @shenmuxiaosen
+# ServiceOwners:                       @avanigupta @conniey @shenmuxiaosen
 
 # PRLabel: %tools-AppLens
 /tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
@@ -314,10 +314,10 @@
 # ServiceOwners:                       @sarsoma @byronjinmsft @microsoft/azure-mcp
 
 # PRLabel: %tools-KeyVault
-/tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.KeyVault/       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-KeyVault
-# ServiceOwners:                       @JonathanCrd @vcolin7
+# ServiceOwners:                       @vcolin7
 
 # PRLabel: %tools-Kusto
 /tools/Azure.Mcp.Tools.Kusto/          @danield137 @prvavill @microsoft/azure-mcp
@@ -432,10 +432,10 @@
 # ServiceOwners:                       @HaofanLiao @JialinXin @chenkennt
 
 # PRLabel: %tools-Speech
-/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Speech
-# ServiceOwners:                       @dilin-MS2 @JonathanCrd
+# ServiceOwners:                       @dilin-MS2
 
 # PRLabel: %tools-SQL
 /tools/Azure.Mcp.Tools.Sql/          @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp

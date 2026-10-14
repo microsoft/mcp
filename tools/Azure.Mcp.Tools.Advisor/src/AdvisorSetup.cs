@@ -24,7 +24,6 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
-        services.AddSingleton<RecommendationApplyCommand>();
         services.AddSingleton<RecommendationMetadataListCommand>();
         services.AddSingleton<MetadataGetCommand>();
         services.AddSingleton<RemediationGetCommand>();
@@ -34,10 +33,9 @@ public class AdvisorSetup : IAreaSetup
     {
         // Create Advisor command group
         var advisor = new CommandGroup(Name,
-            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions, update recommendation " +
-            "state in a subscription or service group, or apply Azure Advisor recommendations to your IaaC files " +
-            "(ARM, Terraform). Use when you need visibility into Advisor recommendations, want to manage their " +
-            "customer-provided state, or want to apply Advisor recommendations to your IaaC files. Requires Azure " +
+            "Azure Advisor operations - Query Azure Advisor recommendations in subscriptions or service groups and update " +
+            "recommendation state in either scope. Use when you need visibility into Advisor recommendations or want to " +
+            "manage their customer-provided state. Requires Azure " +
             "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
             "use service-group context.",
             Title);
@@ -45,7 +43,7 @@ public class AdvisorSetup : IAreaSetup
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; update subscription- or service-group-scoped customer-provided state; or apply recommendation guidance to infrastructure-as-code files.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; or update subscription- or service-group-scoped customer-provided state.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
@@ -62,7 +60,6 @@ public class AdvisorSetup : IAreaSetup
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
-        recommendation.AddCommand<RecommendationApplyCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
         remediation.AddCommand<RemediationGetCommand>(serviceProvider);

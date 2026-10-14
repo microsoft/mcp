@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Schema;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
@@ -12,6 +13,7 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// Retrieves schema definitions and descriptors from ADME.
 /// </summary>
 public sealed class SchemaService(
+    IEndpointValidator endpointValidator,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory) : ISchemaService
 {
@@ -28,10 +30,11 @@ public sealed class SchemaService(
         string dataPartition,
         string kind,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
-        return AdmeServiceHelper.SendAsync(
+        return AdmeServiceHelper.SendAsync(endpointValidator,
             _credentialProvider,
             _httpClientFactory,
             endpoint,
@@ -39,7 +42,8 @@ public sealed class SchemaService(
             tenant,
             $"{BasePath}/{Uri.EscapeDataString(kind)}",
             AdmeJsonContext.Default.JsonElement,
-            cancellationToken);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -60,7 +64,8 @@ public sealed class SchemaService(
         bool latestVersion,
         int? offset,
         int? limit,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         var query = new List<KeyValuePair<string, string>>();
         AdmeServiceHelper.Add(query, "authority", authority);
@@ -78,7 +83,7 @@ public sealed class SchemaService(
         AdmeServiceHelper.Add(query, "offset", AdmeServiceHelper.Format(offset));
         AdmeServiceHelper.Add(query, "limit", AdmeServiceHelper.Format(limit));
 
-        return AdmeServiceHelper.SendAsync(
+        return AdmeServiceHelper.SendAsync(endpointValidator,
             _credentialProvider,
             _httpClientFactory,
             endpoint,
@@ -86,6 +91,7 @@ public sealed class SchemaService(
             tenant,
             AdmeServiceHelper.AppendQuery(BasePath, query),
             AdmeJsonContext.Default.SchemaListResponse,
-            cancellationToken);
+            authAppId,
+            cancellationToken: cancellationToken);
     }
 }

@@ -32,6 +32,8 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
+        Uri serviceEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureService,
+            endpoint);
 
         if (string.IsNullOrEmpty(language) || !LocaleSupport.IsSupportedInRealtimeTranscription(language))
         {
@@ -63,7 +65,7 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
                 // Configure Speech SDK with endpoint
-                var config = SpeechConfig.FromEndpoint(new(endpoint));
+                SpeechConfig config = SpeechConfig.FromEndpoint(serviceEndpoint);
 
                 // Set the authorization token
                 config.AuthorizationToken = accessToken.Token;

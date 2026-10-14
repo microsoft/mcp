@@ -4,9 +4,12 @@
 using System.Data.Common;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
+using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -25,7 +28,8 @@ public class PostgresServiceConnectionStringInjectionTests
 
     public PostgresServiceConnectionStringInjectionTests()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
+        azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         var entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
@@ -166,4 +170,3 @@ public class PostgresServiceConnectionStringInjectionTests
         Assert.Equal(SslMode.Require, parsed.SslMode);
     }
 }
-

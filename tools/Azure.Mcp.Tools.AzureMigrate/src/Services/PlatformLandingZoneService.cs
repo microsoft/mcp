@@ -126,7 +126,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
         var response = await httpHelper.PostAsync(url, cancellationToken);
         ThrowIfFailed(response);
 
-        var downloadUrl = TryGetValidatedDownloadUrl(response, logger);
+        var downloadUrl = TryGetValidatedDownloadUrl(AzureService, response);
         if (string.IsNullOrEmpty(downloadUrl))
             throw new InvalidOperationException("Download URL not yet available. The landing zone may still be generating. Please try again in 1-2 minutes.");
 
@@ -171,8 +171,8 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     /// non-reserved target before returning. Parsing and validation are intentionally joined so that no
     /// caller can obtain an unvalidated download URL.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="response">The raw landing-zone generation response body to parse the download URL from.</param>
-    /// <param name="logger">An optional logger used by the target-URL validation for diagnostics.</param>
     /// <returns>
     /// The validated download URL, or <see langword="null"/> when the response does not yet contain one.
     /// </returns>
@@ -180,7 +180,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     /// This method is <see langword="internal"/> <see langword="static"/> only to enable unit testing. Use
     /// within the class is expected; do not call it from anything else.
     /// </remarks>
-    internal static string? TryGetValidatedDownloadUrl(string response, ILogger? logger)
+    internal static string? TryGetValidatedDownloadUrl(IAzureService azureService, string response)
     {
         var downloadUrl = TryParseDownloadUrl(response);
         if (string.IsNullOrEmpty(downloadUrl))
@@ -188,7 +188,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
             return null;
         }
 
-        EndpointValidator.ValidatePublicTargetUrl(downloadUrl, logger, "azuremigrate");
+        azureService.ValidatePublicTargetUrl(downloadUrl);
         return downloadUrl;
     }
 

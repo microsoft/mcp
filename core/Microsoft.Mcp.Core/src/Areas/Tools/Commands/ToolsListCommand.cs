@@ -109,7 +109,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
 
             // Get all tools with full details
             var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
-                .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
+                .Select(kvp => CreateCommand(kvp.Key, kvp.Value.Command));
 
             // Apply namespace filtering if specified
             var filteredToolNames = ApplyNamespaceFilterToNames(allTools.Select(t => t.Command), options.Namespace, ' ');
@@ -218,7 +218,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
-            var command = kvp.Value.GetCommand();
+            var command = kvp.Value.Command.GetCommand();
             return new CommandInfo
             {
                 Name = $"{commandPrefix.Replace(' ', CommandFactory.Separator)}{searchedGroup.Name}{CommandFactory.Separator}{command.Name}",
