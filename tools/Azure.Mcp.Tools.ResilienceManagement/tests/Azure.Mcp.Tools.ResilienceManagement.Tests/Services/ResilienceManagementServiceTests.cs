@@ -44,7 +44,7 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Theory]
-    [InlineData("abcdefabcdefabcdefabcdefabcdefab")]
+    [InlineData("12345678123412341234123456789012")]
     [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
     [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
     [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]
