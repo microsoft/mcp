@@ -121,7 +121,8 @@ public class AdvisorServiceConversionTests
                     "review": { "name": "Review test", "id": "review1" },
                     "resourceWorkload": { "name": "Test workload", "id": "workload1" },
                     "sourceSystem": "Review",
-                    "notes": "Review the diagnostic settings"
+                    "notes": "Review the diagnostic settings",
+                    "serviceGroupId": "/providers/Microsoft.Management/serviceGroups/service-group-test"
                 }
             }
             """;
@@ -189,6 +190,9 @@ public class AdvisorServiceConversionTests
         Assert.Equal("Test workload", result.Properties.ResourceWorkload.Value.GetProperty("name").GetString());
         Assert.Equal("Review", result.Properties.SourceSystem);
         Assert.Equal("Review the diagnostic settings", result.Properties.Notes);
+        Assert.Equal(
+            "/providers/Microsoft.Management/serviceGroups/service-group-test",
+            result.Properties.ServiceGroupId);
 
         var serialized = JsonSerializer.Serialize(
             result,
@@ -196,7 +200,86 @@ public class AdvisorServiceConversionTests
         Assert.Contains("\"completionType\":\"Succeeded\"", serialized);
         Assert.Contains("\"recommendationDismissReason\":\"Other\"", serialized);
         Assert.Contains("\"postponedUntilDateTime\":\"2027-07-01T00:00:00+00:00\"", serialized);
+        Assert.Contains(
+            "\"serviceGroupId\":\"/providers/Microsoft.Management/serviceGroups/service-group-test\"",
+            serialized);
         Assert.DoesNotContain("suppressionId", serialized);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_PopulatesContextualAndServiceGroupFields()
+    {
+        const string json = """
+            {
+                "id": "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.Advisor/recommendations/rec-sg",
+                "type": "Microsoft.Advisor/recommendations",
+                "name": "rec-sg",
+                "properties": {
+                    "category": "Cost",
+                    "serviceGroupId": "/providers/Microsoft.Management/serviceGroups/sg1",
+                    "criticality": "Critical",
+                    "criticalityScore": 0.936,
+                    "scoreChangedAt": "2026-08-09T22:14:07Z",
+                    "savings": {
+                        "providerCurrency": "USD",
+                        "billingCurrency": "EUR",
+                        "isDirectChannel": true,
+                        "retail": { "estimatedRollupSavings": 40 },
+                        "contracted": { "realizedRollupSavings": 50 }
+                    }
+                }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Equal("/providers/Microsoft.Management/serviceGroups/sg1", result.Properties.ServiceGroupId);
+        Assert.Equal("Critical", result.Properties.Criticality);
+        Assert.Equal(0.936, result.Properties.CriticalityScore);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-08-09T22:14:07Z", CultureInfo.InvariantCulture),
+            result.Properties.ScoreChangedAt);
+        Assert.NotNull(result.Properties.Savings);
+        Assert.Equal("USD", result.Properties.Savings!.Value.GetProperty("providerCurrency").GetString());
+        Assert.Equal(40, result.Properties.Savings.Value.GetProperty("retail").GetProperty("estimatedRollupSavings").GetInt32());
+
+        var serialized = JsonSerializer.Serialize(
+            result,
+            Azure.Mcp.Tools.Advisor.Commands.AdvisorJsonContext.Default.Recommendation);
+        Assert.Contains("\"criticality\":\"Critical\"", serialized);
+        Assert.Contains("\"criticalityScore\":0.936", serialized);
+        Assert.Contains("\"serviceGroupId\":\"/providers/Microsoft.Management/serviceGroups/sg1\"", serialized);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_UnscoredRecommendation_OmitsContextualFields()
+    {
+        // criticality/criticalityScore/savings are absent for unscored recommendations; they must not be emitted.
+        const string json = """
+            {
+                "id": "/subscriptions/abc/providers/Microsoft.Advisor/recommendations/rec-unscored",
+                "type": "Microsoft.Advisor/recommendations",
+                "name": "rec-unscored",
+                "properties": { "category": "Cost" }
+            }
+            """;
+
+        using var doc = JsonDocument.Parse(json);
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(doc.RootElement);
+
+        Assert.Null(result.Properties.ServiceGroupId);
+        Assert.Null(result.Properties.Criticality);
+        Assert.Null(result.Properties.CriticalityScore);
+        Assert.Null(result.Properties.ScoreChangedAt);
+        Assert.Null(result.Properties.Savings);
+
+        var serialized = JsonSerializer.Serialize(
+            result,
+            Azure.Mcp.Tools.Advisor.Commands.AdvisorJsonContext.Default.Recommendation);
+        Assert.DoesNotContain("criticality", serialized);
+        Assert.DoesNotContain("serviceGroupId", serialized);
+        Assert.DoesNotContain("savings", serialized);
     }
 
     [Fact]

@@ -33,15 +33,17 @@ public class AdvisorSetup : IAreaSetup
     {
         // Create Advisor command group
         var advisor = new CommandGroup(Name,
-            "Azure Advisor operations - Query Azure Advisor recommendations across subscriptions. Use when you " +
-            "need subscription-scoped visibility into Advisor recommendations. " +
-            "Requires Azure subscription context for querying Advisor recommendations.",
+            "Azure Advisor operations - Query Azure Advisor recommendations in subscriptions or service groups and update " +
+            "recommendation state in either scope. Use when you need visibility into Advisor recommendations or want to " +
+            "manage their customer-provided state. Requires Azure " +
+            "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
+            "use service-group context.",
             Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; or update customer-provided state.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates; or update subscription- or service-group-scoped customer-provided state.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
@@ -55,9 +57,9 @@ public class AdvisorSetup : IAreaSetup
         advisor.AddSubGroup(remediation);
 
         // Register Advisor commands
+        recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
-        recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
         remediation.AddCommand<RemediationGetCommand>(serviceProvider);
