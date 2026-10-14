@@ -14,6 +14,9 @@ public class DiskDiagnoseOptions
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+
     [Option(Description = "The resource group containing the virtual machine. Required with --vm when --resource-id is omitted.")]
     public string? ResourceGroup { get; set; }
 

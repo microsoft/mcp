@@ -5225,10 +5225,20 @@ Disk diagnostics use an Azure public cloud Storage Intelligence endpoint and app
 default.
 Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
 `AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. Each value defaults independently; operators should set the
-endpoint and application scope supplied for their Storage Intelligence deployment. No sovereign-cloud
-endpoint mappings are built in. For local single-tenant credentials, optionally configure
-`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID`. Leave the tenant unset for remote HTTP on-behalf-of
-authentication so the authenticated caller tenant is used.
+endpoint and application scope supplied for their Storage Intelligence deployment. Endpoint overrides
+must use HTTPS and the production host `https://storageintelligenceweb.production.portalrp.azure.com`.
+Non-production hosts are not allowlisted.
+
+No sovereign-cloud endpoint mappings are built in. Other hosts require the explicit server-start option
+`--dangerously-disable-ssrf-protections-by-namespace storage`. This disables SSRF protection for the
+entire Storage namespace; use it only for trusted operator-managed endpoints. HTTPS remains required
+for disk diagnostics even with this bypass.
+
+The optional `--tenant` accepts a Microsoft Entra tenant GUID or display name. It takes precedence over
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID` and applies consistently to attached-disk ARM lookups
+and Storage Intelligence authentication. If neither is configured, the existing credential or
+authenticated remote-caller context is used. In remote HTTP on-behalf-of mode, an explicitly selected
+tenant must match the authenticated caller's tenant; it cannot switch caller identity.
 
 Direct VM scale set selection requires the canonical nested instance resource ID:
 `/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
@@ -5246,6 +5256,7 @@ Host-side latency metrics depend on Storage Intelligence telemetry support. The 
 # Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--tenant <tenant>] \
                             [--disk <attached-disk-name>...] \
                             [--start-time <iso-8601-timestamp>] \
                             [--end-time <iso-8601-timestamp>]
@@ -5255,6 +5266,7 @@ azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
 azmcp storage disk diagnose --subscription <subscription> \
                             --resource-group <resource-group> \
                             --vm <virtual-machine-name> \
+                            [--tenant <tenant>] \
                             [--disk <attached-disk-name>...] \
                             [--start-time <iso-8601-timestamp>] \
                             [--end-time <iso-8601-timestamp>]

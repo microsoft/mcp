@@ -10,10 +10,12 @@ public interface IAttachedDiskService
         string resourceGroup,
         string vm,
         string[]? diskNames,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<string[]> ResolveDiskNamesAsync(
         string vmResourceId,
         string[] diskNames,
+        string? tenant,
         CancellationToken cancellationToken);
 }

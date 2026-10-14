@@ -24,17 +24,20 @@ public class AttachedDiskServiceTests
     private const string OsDiskResourceId = $"/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroup}/providers/Microsoft.Compute/disks/os-disk";
     private const string DataDiskResourceId = $"/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroup}/providers/Microsoft.Compute/disks/data-disk";
 
-    [Fact]
-    public async Task ResolveDiskNamesAsync_StandaloneVm_UsesVirtualMachineCollection()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00000000-0000-0000-0000-000000000002")]
+    public async Task ResolveDiskNamesAsync_StandaloneVm_UsesVirtualMachineCollection(string? tenant)
     {
         var handler = new RecordingHttpMessageHandler(
             CreateJsonResponse(ResourceGroupResponse),
             CreateJsonResponse(VirtualMachineResponse));
-        var service = CreateService(handler);
+        (AttachedDiskService service, IAzureService azureService) = CreateService(handler, tenant);
 
-        var result = await service.ResolveDiskNamesAsync(
+        string[] result = await service.ResolveDiskNamesAsync(
             VmResourceId,
             ["data-disk", "os-disk"],
+            tenant,
             TestContext.Current.CancellationToken);
 
         Assert.Equal([DataDiskResourceId, OsDiskResourceId], result);
@@ -45,20 +48,25 @@ public class AttachedDiskServiceTests
             ignoreCase: true);
         Assert.Contains("/virtualMachines/test-vm", handler.Requests[1].AbsolutePath);
         Assert.DoesNotContain("/virtualMachineScaleSets/", handler.Requests[1].AbsolutePath);
+        await azureService.Received(1).GetSubscription(
+            SubscriptionId, tenant, Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ResolveDiskNamesAsync_VmssInstance_UsesParentScaleSetAndInstanceCollection()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00000000-0000-0000-0000-000000000002")]
+    public async Task ResolveDiskNamesAsync_VmssInstance_UsesParentScaleSetAndInstanceCollection(string? tenant)
     {
         var handler = new RecordingHttpMessageHandler(
             CreateJsonResponse(ResourceGroupResponse),
             CreateJsonResponse(VirtualMachineScaleSetResponse),
             CreateJsonResponse(VirtualMachineScaleSetVmResponse));
-        var service = CreateService(handler);
+        (AttachedDiskService service, IAzureService azureService) = CreateService(handler, tenant);
 
-        var result = await service.ResolveDiskNamesAsync(
+        string[] result = await service.ResolveDiskNamesAsync(
             VmssVmResourceId,
             ["os-disk", "data-disk"],
+            tenant,
             TestContext.Current.CancellationToken);
 
         Assert.Equal([OsDiskResourceId, DataDiskResourceId], result);
@@ -68,9 +76,38 @@ public class AttachedDiskServiceTests
         Assert.Contains(
             "/virtualMachineScaleSets/test-vmss/virtualMachines/instance-a",
             handler.Requests[2].AbsolutePath);
+        await azureService.Received(1).GetSubscription(
+            SubscriptionId, tenant, Arg.Any<CancellationToken>());
     }
 
-    private static AttachedDiskService CreateService(HttpMessageHandler handler)
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00000000-0000-0000-0000-000000000002")]
+    public async Task ResolveFriendlySelectorAsync_UsesTenantForSubscription(string? tenant)
+    {
+        var handler = new RecordingHttpMessageHandler(
+            CreateJsonResponse(ResourceGroupResponse),
+            CreateJsonResponse(VirtualMachineResponse));
+        (AttachedDiskService service, IAzureService azureService) = CreateService(handler, tenant);
+
+        (string vmResourceId, string[]? diskResourceIds) = await service.ResolveFriendlySelectorAsync(
+            SubscriptionId,
+            ResourceGroup,
+            "test-vm",
+            ["os-disk"],
+            tenant,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(VmResourceId, vmResourceId, ignoreCase: true);
+        Assert.NotNull(diskResourceIds);
+        Assert.Equal([OsDiskResourceId], diskResourceIds);
+        await azureService.Received(1).GetSubscription(
+            SubscriptionId, tenant, Arg.Any<CancellationToken>());
+    }
+
+    private static (AttachedDiskService Service, IAzureService AzureService) CreateService(
+        HttpMessageHandler handler,
+        string? tenant)
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
@@ -83,9 +120,9 @@ public class AttachedDiskServiceTests
         var subscriptionResource = armClient.GetSubscriptionResource(
             SubscriptionResource.CreateResourceIdentifier(SubscriptionId));
         var azureService = Substitute.For<IAzureService>();
-        azureService.GetSubscription(SubscriptionId, null, Arg.Any<CancellationToken>())
+        azureService.GetSubscription(SubscriptionId, tenant, Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
-        return new AttachedDiskService(azureService);
+        return (new AttachedDiskService(azureService), azureService);
     }
 
     private static HttpResponseMessage CreateJsonResponse(string content) =>

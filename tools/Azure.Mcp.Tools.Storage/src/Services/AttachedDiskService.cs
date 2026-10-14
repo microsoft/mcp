@@ -20,11 +20,12 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
         string resourceGroup,
         string vm,
         string[]? diskNames,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         var subscriptionResource = await _azureService.GetSubscription(
             subscription,
-            tenant: null,
+            tenant,
             cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         var vmResource = await resourceGroupResource.Value
@@ -39,6 +40,7 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
     public async Task<string[]> ResolveDiskNamesAsync(
         string vmResourceId,
         string[] diskNames,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         var resourceId = new ResourceIdentifier(vmResourceId);
@@ -48,7 +50,7 @@ public sealed class AttachedDiskService(IAzureService azureService) : IAttachedD
             ?? throw new InvalidOperationException("The virtual machine resource ID does not contain a resource group name.");
         var subscriptionResource = await _azureService.GetSubscription(
             subscriptionId,
-            tenant: null,
+            tenant,
             cancellationToken);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroupName, cancellationToken);
         VirtualMachineStorageProfile? storageProfile;

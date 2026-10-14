@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore storageintelligenceweb portalrp
 
 using System.Collections.Frozen;
 using Azure.ResourceManager;
@@ -247,6 +248,14 @@ public sealed partial class EndpointValidator
             // cloud configuration, so leave it empty to fail closed rather than trust a dead domain.
             Germany: [],
             UseLegacyCheck: false),
+        ["storage-intelligence"] = new AllowedSuffixManager(
+            // StorageIntelligenceService.DefaultEndpoint and its endpoint tests must stay synchronized
+            // with this approved production host. No sovereign Storage Intelligence deployments are configured.
+            Public: ["storageintelligenceweb.production.portalrp.azure.com"],
+            China: [],
+            UsGov: [],
+            Germany: [],
+            UseLegacyCheck: true), // Exact host only; accepting its subdomains would disclose bearer tokens.
         ["storage-table"] = new AllowedSuffixManager(
             Public: [".table.core.windows.net"],
             China: [".table.core.chinacloudapi.cn"],

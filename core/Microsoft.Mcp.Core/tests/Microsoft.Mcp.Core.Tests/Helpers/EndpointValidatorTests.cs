@@ -127,6 +127,50 @@ public class EndpointValidatorTests
 
     #region ValidateAzureServiceEndpoint Tests
 
+    [Fact]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_ApprovesProductionHost()
+    {
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze",
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: null);
+    }
+
+    [Theory]
+    [InlineData("https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze")]
+    [InlineData("https://storageintelligenceweb.sg.dogfood.portalrp.azure-test.net/api/Disk/analyze")]
+    [InlineData("https://portalrp.azure.com")]
+    [InlineData("https://evil.portalrp.azure.com")]
+    [InlineData("https://evil.storageintelligenceweb.production.portalrp.azure.com")]
+    [InlineData("https://storageintelligenceweb.production.portalrp.azure.com.evil.example")]
+    [InlineData("https://unapproved.example.com")]
+    [InlineData("https://localhost")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("https://10.0.0.1")]
+    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com")]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsOtherHostsAndSchemes(string endpoint)
+    {
+        Assert.Throws<SecurityException>(() => EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud,
+            executingToolNamespaceName: null));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsUnsupportedClouds(bool isChina)
+    {
+        ArmEnvironment environment = isChina ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
+        Assert.Throws<SecurityException>(() => EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com",
+            serviceType: "storage-intelligence",
+            armEnvironment: environment,
+            executingToolNamespaceName: null));
+    }
+
     [Theory]
     [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://my-instance.energy.azure.com", "adme")]

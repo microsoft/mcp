@@ -6,8 +6,10 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
+using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -16,11 +18,13 @@ namespace Azure.Mcp.Tools.Storage.Services;
 public sealed class StorageIntelligenceService(
     IAttachedDiskService attachedDiskService,
     IAzureTokenCredentialProvider tokenCredentialProvider,
-    IHttpClientFactory httpClientFactory) : IStorageIntelligenceService
+    IHttpClientFactory httpClientFactory,
+    IAzureService azureService) : IStorageIntelligenceService
 {
     internal const int ProvisionalMaxResponseSizeBytes = 10 * 1024 * 1024;
     private const int ResponseReadBufferSizeBytes = 80 * 1024;
     private const int InitialResponseCapacityBytes = 16 * 1024;
+    // Keep this host synchronized with the storage-intelligence policy in EndpointValidator.AllowLists.cs.
     private const string DefaultEndpoint = "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze";
     private const string DefaultScope = "a5965d26-227b-4df0-a516-d86aba489cb6/.default";
     private const string EndpointEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT";
@@ -29,6 +33,7 @@ public sealed class StorageIntelligenceService(
     private readonly IAttachedDiskService _attachedDiskService = attachedDiskService;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly IAzureService _azureService = azureService;
 
     public async Task<JsonElement> DiagnoseDiskAsync(
         string? resourceId,
@@ -38,17 +43,29 @@ public sealed class StorageIntelligenceService(
         string[]? diskNames = null,
         string? startTime = null,
         string? endTime = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var endpoint = GetEnvironmentVariableOrDefault(EndpointEnvironmentVariable, DefaultEndpoint);
-        var scope = GetEnvironmentVariableOrDefault(ScopeEnvironmentVariable, DefaultScope);
-        var tenant = Environment.GetEnvironmentVariable(TenantEnvironmentVariable);
-        ValidateEndpoint(endpoint);
+        string endpoint = GetEnvironmentVariableOrDefault(EndpointEnvironmentVariable, DefaultEndpoint);
+        string scope = GetEnvironmentVariableOrDefault(ScopeEnvironmentVariable, DefaultScope);
+        string? effectiveTenant = !string.IsNullOrWhiteSpace(tenant)
+            ? tenant
+            : Environment.GetEnvironmentVariable(TenantEnvironmentVariable);
+        if (string.IsNullOrWhiteSpace(effectiveTenant))
+        {
+            effectiveTenant = null;
+        }
+        ValidateEndpoint(endpoint, _azureService.CloudConfiguration.ArmEnvironment);
         if (!IsValidApplicationScope(scope))
         {
             throw new InvalidOperationException(
                 $"{ScopeEnvironmentVariable} must be an absolute scope URI or use the format <application-id>/.default.");
         }
+
+        string? effectiveTenantId = effectiveTenant is null
+            ? null
+            : await _azureService.ResolveTenantIdAsync(effectiveTenant, cancellationToken)
+                ?? throw new InvalidOperationException("The selected tenant could not be resolved.");
 
         var effectiveResourceId = resourceId;
         string[]? selectedDiskResourceIds = null;
@@ -63,6 +80,7 @@ public sealed class StorageIntelligenceService(
                 resourceGroup,
                 vm,
                 diskNames,
+                effectiveTenantId,
                 cancellationToken);
             effectiveResourceId = selection.VmResourceId;
             selectedDiskResourceIds = selection.DiskResourceIds;
@@ -72,10 +90,11 @@ public sealed class StorageIntelligenceService(
             selectedDiskResourceIds = await _attachedDiskService.ResolveDiskNamesAsync(
                 effectiveResourceId,
                 diskNames,
+                effectiveTenantId,
                 cancellationToken);
         }
 
-        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
+        TokenCredential credential = await _tokenCredentialProvider.GetTokenCredentialAsync(effectiveTenantId, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
             new TokenRequestContext([scope]),
             cancellationToken);
@@ -215,12 +234,19 @@ public sealed class StorageIntelligenceService(
             ? value
             : defaultValue;
 
-    private static void ValidateEndpoint(string endpoint)
+    private static void ValidateEndpoint(string endpoint, ArmEnvironment armEnvironment)
     {
+        // Bearer tokens require HTTPS even when an operator explicitly bypasses host restrictions.
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
         {
             throw new InvalidOperationException($"{EndpointEnvironmentVariable} must be an absolute HTTPS URL.");
         }
+
+        EndpointValidator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "storage-intelligence",
+            armEnvironment: armEnvironment,
+            executingToolNamespaceName: "storage");
     }
 
     private static bool IsValidApplicationScope(string scope)

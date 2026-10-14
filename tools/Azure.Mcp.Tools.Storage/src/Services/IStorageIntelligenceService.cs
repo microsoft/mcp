@@ -15,5 +15,6 @@ public interface IStorageIntelligenceService
         string[]? diskNames = null,
         string? startTime = null,
         string? endTime = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 }

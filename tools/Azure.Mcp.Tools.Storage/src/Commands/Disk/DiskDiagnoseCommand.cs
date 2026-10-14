@@ -145,6 +145,7 @@ public sealed class DiskDiagnoseCommand(
                 options.Disk,
                 options.StartTime,
                 options.EndTime,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
