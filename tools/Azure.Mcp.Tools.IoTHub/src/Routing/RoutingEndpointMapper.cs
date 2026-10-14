@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Core;
 using Azure.Mcp.Tools.IoTHub.Models;
 
 namespace Azure.Mcp.Tools.IoTHub.Routing;
@@ -36,16 +35,7 @@ internal static class RoutingEndpointMapper
             results.Add(new RoutingEndpointDetails(
                 Name: endpoint.Name ?? string.Empty,
                 EndpointType: endpointType,
-                EndpointResourceName: isContainer
-                    ? GetEndpointResourceName(
-                        endpoint.Id,
-                        endpoint.EndpointUri,
-                        endpoint.ContainerName,
-                        preferEndpointUri: true)
-                    : GetEndpointResourceName(
-                        endpoint.Id,
-                        endpoint.EndpointUri,
-                        endpoint.EntityPath),
+                EndpointResourceName: GetEndpointResourceName(endpoint.EndpointUri),
                 SubscriptionId: endpoint.SubscriptionId,
                 ResourceGroup: endpoint.ResourceGroup,
                 EndpointUri: endpoint.EndpointUri,
@@ -58,38 +48,16 @@ internal static class RoutingEndpointMapper
         }
     }
 
-    private static string? GetEndpointResourceName(
-        string? id,
-        string? endpointUri,
-        string? fallback,
-        bool preferEndpointUri = false)
+    // IoT Hub endpoint ids are opaque and key-based endpoints have no endpointUri, so only the endpoint URI host
+    // names the target namespace or account. Without it the target stays unresolved instead of being guessed.
+    private static string? GetEndpointResourceName(string? endpointUri)
     {
-        if (preferEndpointUri && TryGetEndpointHostName(endpointUri, out var preferredName))
-        {
-            return preferredName;
-        }
-        if (!string.IsNullOrWhiteSpace(id))
-        {
-            try
-            {
-                return new ResourceIdentifier(id).Name;
-            }
-            catch (Exception ex) when (ex is ArgumentException or FormatException)
-            {
-            }
-        }
-        return TryGetEndpointHostName(endpointUri, out var endpointName) ? endpointName : fallback;
-    }
-
-    private static bool TryGetEndpointHostName(string? endpointUri, out string? endpointName)
-    {
-        endpointName = null;
         if (!Uri.TryCreate(endpointUri, UriKind.Absolute, out var uri) ||
             string.IsNullOrWhiteSpace(uri.Host))
         {
-            return false;
+            return null;
         }
-        endpointName = uri.Host.Split('.')[0];
-        return !string.IsNullOrWhiteSpace(endpointName);
+        var endpointName = uri.Host.Split('.')[0];
+        return string.IsNullOrWhiteSpace(endpointName) ? null : endpointName;
     }
 }

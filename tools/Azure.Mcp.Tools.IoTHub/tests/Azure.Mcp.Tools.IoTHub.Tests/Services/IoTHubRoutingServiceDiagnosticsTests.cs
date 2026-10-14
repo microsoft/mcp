@@ -478,6 +478,33 @@ public class IoTHubRoutingServiceDiagnosticsTests()
         Assert.Equal("queried", endpoint.TargetEmitted.QueryStatus);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Diagnostics_LeavesKeyBasedTargetUnresolvedWithoutEndpointUri(bool eventHub)
+    {
+        using var handler = CreateHandler(
+            (request, _) => Metrics(Metric(GetQuery(request, "metricnames"))),
+            eventHub,
+            existenceResponse: (_, _) => JsonResponse(
+                """{"error":{"code":"ResourceNotFound"}}""", HttpStatusCode.NotFound),
+            keyBased: true);
+
+        var endpoint = Assert.Single((await DiagnoseAsync(
+            CreateService(handler), TestContext.Current.CancellationToken)).Endpoints);
+
+        Assert.Null(endpoint.EndpointResourceName);
+        Assert.Equal("unresolved", endpoint.Target.ResolutionStatus);
+        Assert.Equal("notChecked", endpoint.Target.ExistenceStatus);
+        Assert.Null(endpoint.Target.ResourceId);
+        Assert.Equal("unresolved", endpoint.TargetEmitted.QueryStatus);
+        Assert.Empty(endpoint.HubEmitted.Errors);
+        Assert.Contains(handler.RequestUris, uri => uri.AbsolutePath.Contains("/IotHubs/", StringComparison.Ordinal)
+            && uri.AbsolutePath.EndsWith("/metrics", StringComparison.Ordinal));
+        Assert.All(handler.RequestUris, uri => Assert.Contains(
+            "/providers/Microsoft.Devices", uri.AbsolutePath, StringComparison.OrdinalIgnoreCase));
+    }
+
     [Fact]
     public async Task Diagnostics_FallsBackAfterBatchRequestFailureAndKeepsEmptySuccess()
     {
@@ -597,7 +624,8 @@ public class IoTHubRoutingServiceDiagnosticsTests()
         Func<HttpRequestMessage, CancellationToken, HttpResponseMessage> metricResponse,
         bool eventHub = false,
         int endpointCount = 1,
-        Func<HttpRequestMessage, CancellationToken, HttpResponseMessage>? existenceResponse = null) =>
+        Func<HttpRequestMessage, CancellationToken, HttpResponseMessage>? existenceResponse = null,
+        bool keyBased = false) =>
         new((request, token) =>
         {
             var path = request.RequestUri!.AbsolutePath;
@@ -611,8 +639,12 @@ public class IoTHubRoutingServiceDiagnosticsTests()
             }
             if (path.EndsWith("/hub1", StringComparison.Ordinal))
             {
+                // Key-based endpoints have an opaque id and no endpointUri; the target is only in the unread connection string.
+                var targetProperties = keyBased
+                    ? "\"id\":\"dbc3cb4d-0119-4d46-9824-e8e3e83fb04a\",\"authenticationType\":\"keyBased\""
+                    : $"\"endpointUri\":\"{(eventHub ? "sb://shared.servicebus.windows.net/" : "https://shared.blob.core.windows.net/")}\"";
                 var endpoints = string.Join(",", Enumerable.Range(1, endpointCount).Select(index =>
-                    $$"""{"name":"endpoint{{index}}","subscriptionId":"{{Subscription}}","resourceGroup":"rg1","endpointUri":"{{(eventHub ? "sb://shared.servicebus.windows.net/" : "https://shared.blob.core.windows.net/")}}","entityPath":"eventhub{{index}}","containerName":"container{{index}}"}"""));
+                    $$"""{"name":"endpoint{{index}}","subscriptionId":"{{Subscription}}","resourceGroup":"rg1",{{targetProperties}},"entityPath":"eventhub{{index}}","containerName":"container{{index}}"}"""));
                 return JsonResponse($$"""{"id":"{{HubId}}","name":"hub1","type":"Microsoft.Devices/IotHubs","location":"westus","properties":{"routing":{"endpoints":{"{{(eventHub ? "eventHubs" : "storageContainers")}}":[{{endpoints}}]} } } }""");
             }
             return existenceResponse?.Invoke(request, token) ?? JsonResponse("{}");
