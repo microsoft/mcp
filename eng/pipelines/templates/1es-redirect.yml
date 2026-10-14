@@ -15,6 +15,9 @@ parameters:
   - name: AutoBaseline
     type: boolean
     default: false
+  - name: NetworkIsolationPolicy
+    type: string
+    default: Permissive
 
 extends:
   ${{ if and(parameters.Use1ESOfficial, eq(variables['System.TeamProject'], 'internal')) }}:
@@ -24,7 +27,7 @@ extends:
   parameters:
     settings:
       skipBuildTagsForGitHubPullRequests: true
-      networkIsolationPolicy: Permissive
+      networkIsolationPolicy: ${{ parameters.NetworkIsolationPolicy }}
       # only enable autoBaseline for the internal build of rust-core on main branch
       ${{ if parameters.AutoBaseline }}:
         featureFlags:
