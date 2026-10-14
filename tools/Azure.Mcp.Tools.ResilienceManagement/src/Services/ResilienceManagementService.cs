@@ -1376,6 +1376,27 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             return;
         }
 
+        if (string.Equals(
+            effectiveSolutionType.Value.ToString(),
+            "AzureStorageAccount",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(
+                GetProtectionSolutionType(effectiveSolutionSetting),
+                "AzureStorageAccount",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' requires an AzureStorageAccount selectedProtectionSolutionSetting that matches selectedProtectionSolutionType.");
+            }
+
+            if (!string.Equals(existing.ResourceId?.ResourceType.ToString(), "Microsoft.Storage/storageAccounts", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' can use AzureStorageAccount only for a Microsoft.Storage/storageAccounts resource.");
+            }
+
+            return;
+        }
+
         if (effectiveSolutionType != ResourceProtectionSolutionType.AzureSiteRecovery || effectiveSolutionSetting is not ResourceSiteRecoveryProtectionSetting siteRecoverySetting)
         {
             throw new ArgumentException($"Recovery resource '{resourceId}' has inconsistent selectedProtectionSolutionType and selectedProtectionSolutionSetting values.");
@@ -1411,6 +1432,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureSiteRecovery because healthy Azure Site Recovery protection was not detected. Enable Azure Site Recovery protection, wait until its status is Protected, and refresh the recoveryplan.");
         }
+    }
+
+    private static string? GetProtectionSolutionType(
+        ResourceBaseProtectionSolutionSetting setting)
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            ModelReaderWriter.Write(
+                setting,
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default).ToMemory());
+        return document.RootElement.TryGetProperty(
+            "protectionSolutionType",
+            out JsonElement solutionType)
+            ? solutionType.GetString()
+            : null;
     }
 
     private static bool IsNullOrNone(ResourceProtectionSolutionType? solutionType)

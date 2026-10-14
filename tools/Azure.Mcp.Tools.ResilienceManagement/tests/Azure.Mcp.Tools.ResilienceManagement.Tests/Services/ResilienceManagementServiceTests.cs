@@ -1154,6 +1154,44 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void ValidateRecoveryResourceUpdate_AllowsValidAzureStorageAccountConfiguration()
+    {
+        RecoveryMembersData requested = CreateStorageRecoveryResource();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureStorageAccountRequiresMatchingSetting()
+    {
+        RecoveryMembersData requested = CreateStorageRecoveryResource();
+        requested.Properties!.SelectedProtectionSolutionSetting =
+            new ResourceCustomProtectionSetting();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("AzureStorageAccount selectedProtectionSolutionSetting", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureStorageAccountRequiresStorageAccountResource()
+    {
+        RecoveryMembersData requested = CreateStorageRecoveryResource();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("Microsoft.Storage/storageAccounts", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryForNonVirtualMachine()
     {
         RecoveryMembersData requested = CreateRecoveryResource(
@@ -1381,6 +1419,21 @@ public sealed class ResilienceManagementServiceTests
                         protectionStatus = "Protected",
                         resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm"
                     }
+                }
+            }
+        }))!;
+
+    private static RecoveryMembersData CreateStorageRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                inclusionState = "Included",
+                selectedProtectionSolutionType = "AzureStorageAccount",
+                selectedProtectionSolutionSetting = new
+                {
+                    protectionSolutionType = "AzureStorageAccount"
                 }
             }
         }))!;
