@@ -29,12 +29,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
+| advisor_recommendation_list | List active Advisor recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
-| advisor_recommendation_list | List all Advisor recommendations in the subscription \<subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records affecting resource named my-web-app in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group \<resource-group> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | Show me low-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List completed Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendations with postponed status in subscription \<subscription> | none |
+| advisor_recommendation_list | List Performance Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | Show High Availability Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List Operational Excellence Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
@@ -50,33 +57,66 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is on or before March 31, 2027 | none |
 | advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is after March 31, 2027 | none |
 | advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is on or after March 31, 2027 | none |
-| advisor_recommendation_list | Find Advisor recommendations for resource \<resource-id> without metadata filters | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is before March 31, 2027 | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is March 31, 2027 | none |
+| advisor_recommendation_list | Find Advisor recommendations for resource \<resource-id> in subscription \<subscription> without metadata filters | none |
 | advisor_recommendation_list | Search individual active Azure Advisor recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Show individual active Azure Advisor high-impact Security recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | List the top 5 individual active Azure Advisor Cost recommendation records affecting storage accounts whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
-| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show the prioritized Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | List prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
+| advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
+| advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until December 31, 2026 in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
+| advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group \<service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by impact | none |
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types in service group \<service-group> | none |
 | advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to rank impacted Azure resource types by the count of High-impact recommendations; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count recommendations grouped by lifecycle status; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by lifecycle status | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations grouped by metadata subcategory; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active zone resiliency recommendations grouped by impacted resource type; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Count zone resiliency Advisor recommendations in service group \<service-group> by impacted resource type | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations grouped by retirement date; do not list individual records | none |
+| advisor_recommendation_summary | Group active service-retirement Advisor recommendations in service group \<service-group> by retirement date | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations for services retiring on December 31, 2026 | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or before December 31, 2026 | none |
@@ -539,6 +579,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
 | optimization_recommendation_list | What are my cost optimization recommendations? | none |
+| optimization_recommendation_list | Show cost optimization recommendations across all my accessible subscriptions | none |
 | optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
 | optimization_recommendation_alternatives | What other SKUs could I resize <resource_id> to, excluding AMD processors? | none |
 | optimization_recommendation_explain | Explain the recommendation <recommendation_type_id> for resource <resource_id> and show its utilization | none |
