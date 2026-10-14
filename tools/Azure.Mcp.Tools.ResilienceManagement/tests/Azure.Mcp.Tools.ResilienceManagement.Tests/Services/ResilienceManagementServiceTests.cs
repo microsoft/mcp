@@ -91,6 +91,80 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal(result, handler.QueryOperationId);
     }
 
+    [Fact]
+    public async Task StartDrillAsync_RoutesToConfiguredPrivateStamp()
+    {
+        const string endpoint = "https://centraluseuap.management.azure.com";
+        const string routingLocation = "privatestamp4";
+        string? originalEndpoint = Environment.GetEnvironmentVariable(ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable);
+        string? originalRoutingLocation = Environment.GetEnvironmentVariable(ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable, endpoint);
+            Environment.SetEnvironmentVariable(ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable, routingLocation);
+            var handler = new OperationIdRecordingHandler();
+            var service = CreateService(handler);
+
+            await service.StartDrillAsync(
+                "sg1",
+                "drill1",
+                "Failover",
+                operationId: "abcdefab-cdef-abcd-efab-cdefabcdefab",
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.Equal("centraluseuap.management.azure.com", handler.RequestHost);
+            Assert.Equal(routingLocation, handler.RoutingLocation);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable, originalEndpoint);
+            Environment.SetEnvironmentVariable(ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable, originalRoutingLocation);
+        }
+    }
+
+    [Fact]
+    public async Task ListRecoveryPlansAsync_RoutesToSameConfiguredPrivateStamp()
+    {
+        const string endpoint = "https://centraluseuap.management.azure.com";
+        const string routingLocation = "privatestamp4";
+        string? originalEndpoint = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable);
+        string? originalRoutingLocation = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                endpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                routingLocation);
+            var handler = new OperationIdRecordingHandler(
+                HttpStatusCode.OK,
+                """{"value":[]}""");
+            var service = CreateService(handler);
+
+            IEnumerable<ResourceSummary> plans = await service.ListRecoveryPlansAsync(
+                "sg1",
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.Empty(plans);
+            Assert.Equal("centraluseuap.management.azure.com", handler.RequestHost);
+            Assert.Equal(routingLocation, handler.RoutingLocation);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                originalEndpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                originalRoutingLocation);
+        }
+    }
+
     [Theory]
     [InlineData("Recovery job retry")]
     [InlineData("Recovery job resume")]
@@ -1348,27 +1422,47 @@ public sealed class ResilienceManagementServiceTests
 
     private sealed class OperationIdRecordingHandler : HttpMessageHandler
     {
+        private readonly HttpStatusCode _statusCode;
+        private readonly string _content;
+
+        public OperationIdRecordingHandler(
+            HttpStatusCode statusCode = HttpStatusCode.Accepted,
+            string content = "{}")
+        {
+            _statusCode = statusCode;
+            _content = content;
+        }
+
         public string? OperationId { get; private set; }
         public string? QueryOperationId { get; private set; }
+        public string? RequestHost { get; private set; }
+        public string? RoutingLocation { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            RequestHost = request.RequestUri?.Host;
             OperationId = request.Headers.TryGetValues("operation-id", out IEnumerable<string>? values)
                 ? Assert.Single(values)
+                : null;
+            RoutingLocation = request.Headers.TryGetValues("x-ms-rhub-routing-location", out IEnumerable<string>? routingValues)
+                ? Assert.Single(routingValues)
                 : null;
             QueryOperationId = System.Web.HttpUtility
                 .ParseQueryString(request.RequestUri!.Query)
                 .Get("operationId");
 
-            var response = new HttpResponseMessage(HttpStatusCode.Accepted)
+            var response = new HttpResponseMessage(_statusCode)
             {
-                Content = new StringContent("{}", Encoding.UTF8, "application/json")
+                Content = new StringContent(_content, Encoding.UTF8, "application/json")
             };
-            response.Headers.TryAddWithoutValidation(
-                "Azure-AsyncOperation",
-                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
+            if (_statusCode == HttpStatusCode.Accepted)
+            {
+                response.Headers.TryAddWithoutValidation(
+                    "Azure-AsyncOperation",
+                    "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
+            }
             return Task.FromResult(response);
         }
     }

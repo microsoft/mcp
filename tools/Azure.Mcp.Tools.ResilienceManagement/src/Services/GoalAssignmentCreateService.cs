@@ -23,7 +23,10 @@ public sealed class GoalAssignmentCreateService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(
+            tenantIdOrName: tenant,
+            armClientOptions: ResilienceManagementRoutingPolicy.CreateArmClientOptions(),
+            cancellationToken: cancellationToken);
         ResourceIdentifier serviceGroupId = new($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
         ResourceIdentifier goalTemplateId = GoalTemplateResource.CreateResourceIdentifier(serviceGroup, goalTemplate);
