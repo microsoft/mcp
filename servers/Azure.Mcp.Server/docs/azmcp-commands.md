@@ -540,17 +540,9 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # excluded from every summary.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
-# --prioritized true (for top recommendations, top actions to take, most critical, most important, or
-# what-should-I-fix-first requests) groups by recommendation type, includes only active New recommendations, and
-# defaults --top to 10. Types are ordered by metadata priority score, then annual savings (daily potential
-# savings x 12 x 30.4, else the legacy annual savings amount), summed contextual criticality score, earliest
-# service-retirement date, and affected-resource count (fewest first for Cost, most first otherwise), then label.
-# Missing scores, savings, and dates sort last and are never treated as zero. Each group's count is its number of
-# distinct affected resources, and each group carries a prioritizationSignals object (category, impact,
-# subCategory, retirementDate, retirementWindow, annualSavings with annualSavingsCurrency, and published signals
-# such as resourceTypeCriticality, criticalService, effort, actionability, and costImplication); absent fields are
-# omitted. Reserved-instance recommendations keep only the three-year term with a seven-day lookback. Drill into
-# a prioritized type with advisor recommendation list --recommendation-type-id <group-key> --prioritized true.
+# --prioritized true (top recommendations, top actions, most critical, or what-should-I-fix-first requests) ranks
+# active recommendation types by priority, defaults --top to 10, and returns each type's distinct affected-resource
+# count with a prioritizationSignals object that explains its rank. See the --prioritized option for details.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation summary [--subscription <subscription>] \
                                      [--service-group <service-group>] \

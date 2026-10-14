@@ -19,20 +19,15 @@ public sealed class RecommendationSummaryOptions : IRecommendationScopeOptions
         "With --prioritized true, omit this option; prioritized summaries are always grouped by recommendation type.")]
     public string? GroupBy { get; set; }
 
-    [Option(Description = "Rank active recommendation types by priority instead of counting them. " +
-        "Set to true for top recommendations, top actions to take, most critical, most important, highest priority, prioritized, or what-should-I-fix-first requests, in all categories or a filtered category such as Cost; pass a user-specified result count as --top. " +
-        "Do not set it for frequency questions such as how many, most common, or which type occurs most. " +
-        "Types are ranked by metadata priority score, then annual savings, summed contextual criticality score, earliest service-retirement date, and affected-resource count. " +
-        "Groups by recommendation-type, includes only New recommendations, and defaults --top to 10. Defaults to false. " +
-        "Each group's count is its number of distinct affected resources. Each group's prioritizationSignals object can contain category, impact, subCategory, retirementDate, retirementWindow, annualSavings with annualSavingsCurrency, " +
-        "and published signals such as resourceTypeCriticality, criticalService, effort, actionability, and costImplication; an absent field means not available, never zero. " +
-        "To explain why a type is prioritized, answer from its prioritizationSignals without another call in two or three plain business sentences that lead with the most important present attribute, in the order " +
-        "impact, retirementWindow or subCategory, resourceTypeCriticality, criticalService, effort, actionability, and costImplication. " +
-        "Translate values into plain language, for example retirementPastDue means the retirement date has passed and qcs means a critical service; match values case-insensitively; " +
-        "never mention field names, raw values, scores, or rank comparisons; never guess or describe absent attributes. " +
-        "When the user then asks for details, instances, or affected resources of a listed type, identified by key, name, or description, call recommendation list with --recommendation-type-id set to that group's key " +
-        "and --prioritized true, preserving the scope and filters, and add --category Cost for a Cost type. " +
-        "Use metadata get to explain what a recommendation type means and remediation get to explain how to fix it.")]
+    [Option(Description = "Rank active (New) recommendation types by priority instead of counting them. Defaults to false. " +
+        "Set to true for top recommendations, top actions to take, most critical, most important, highest-priority, or what-should-I-fix-first requests, overall or within filters such as category Cost; " +
+        "pass a requested count as --top (default 10). Do not set it for frequency questions such as how many or most common. Groups by recommendation-type. " +
+        "Ranking: metadata priority score, then annual savings, summed criticality score, earliest retirement date, and affected-resource count. " +
+        "Each group's count is its distinct affected resources, and its prioritizationSignals object can hold category, impact, subCategory, retirementDate, retirementWindow, annualSavings (USD), " +
+        "resourceTypeCriticality, criticalService, effort, actionability, and costImplication; absent fields are unknown, never zero. " +
+        "To explain a ranking, answer from prioritizationSignals in two or three plain business sentences, leading with impact, then retirementWindow or subCategory, then the other signals; " +
+        "translate values (retirementPastDue: retirement date has passed; qcs: critical service) and never mention field names, raw values, or scores, or guess absent attributes. " +
+        "For details or affected resources of a listed type, call recommendation list with --recommendation-type-id set to its key and --prioritized true, keeping the scope and filters, plus --category Cost for a Cost type.")]
     public bool? Prioritized { get; set; }
 
     [Option(Description = "Filter recommendations by category. Allowed values are Cost, HighAvailability, Security, Performance, and OperationalExcellence. Matched case-insensitively against recommendation-type metadata.")]

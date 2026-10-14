@@ -49,6 +49,9 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// </summary>
     internal const string SavingsCurrency = "USD";
 
+    /// <summary>Returned annual savings are rounded to cents.</summary>
+    internal const int SavingsDecimals = 2;
+
     /// <summary>Reserved-instance purchase scenario kept in prioritized mode: a three-year term...</summary>
     internal const string ReservedInstanceTerm = "P3Y";
 
@@ -305,6 +308,10 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// Stage 9: result columns. Priority score, summed criticality, and sort keys are deliberately not returned; the
     /// order of the rows carries the ranking.
     /// </summary>
+    /// <remarks>
+    /// Annual savings are rounded to cents here, after ordering, so the ranking uses the full-precision value while the
+    /// response does not show floating-point artifacts such as 1598.5535999999997.
+    /// </remarks>
     private static string ProjectResultRows() =>
         " | project key = recommendationTypeId," +
         " label," +
@@ -313,6 +320,6 @@ internal static class PrioritizedRecommendationSummaryQuery
         " impact," +
         " subCategory," +
         " retirementDate," +
-        " annualSavings," +
+        $" annualSavings = round(annualSavings, {SavingsDecimals})," +
         " signalValues = metadataSignalValues";
 }

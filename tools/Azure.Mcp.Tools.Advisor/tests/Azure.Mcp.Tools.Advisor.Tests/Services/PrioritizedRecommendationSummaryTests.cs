@@ -109,6 +109,17 @@ public class PrioritizedRecommendationSummaryTests
     }
 
     [Fact]
+    public void Build_RoundsReturnedSavingsOnlyAfterOrdering()
+    {
+        var query = BuildSubscriptionQuery();
+
+        var order = query.IndexOf("| order by ", StringComparison.Ordinal);
+        var rounding = query.IndexOf("round(annualSavings, 2)", StringComparison.Ordinal);
+        Assert.True(order > 0 && rounding > order);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(query, @"round\("));
+    }
+
+    [Fact]
     public void Build_CollapsesPerResourceWithMaxValues()
     {
         var query = BuildSubscriptionQuery();
@@ -157,7 +168,7 @@ public class PrioritizedRecommendationSummaryTests
 
         Assert.Equal(
             "| project key = recommendationTypeId, label, count_ = resourceCount, " +
-            "category, impact, subCategory, retirementDate, annualSavings, signalValues = metadataSignalValues",
+            "category, impact, subCategory, retirementDate, annualSavings = round(annualSavings, 2), signalValues = metadataSignalValues",
             projection);
     }
 
