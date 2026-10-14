@@ -684,7 +684,7 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., `https://your-service.cognitiveservices.azure.com/`) |
 | `--text` | Yes | The text to convert to speech |
 | `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
 | `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
