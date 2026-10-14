@@ -19,7 +19,8 @@ public sealed class StorageIntelligenceService(
     IAttachedDiskService attachedDiskService,
     IAzureTokenCredentialProvider tokenCredentialProvider,
     IHttpClientFactory httpClientFactory,
-    IAzureService azureService) : IStorageIntelligenceService
+    IAzureService azureService,
+    IEndpointValidator endpointValidator) : IStorageIntelligenceService
 {
     internal const int ProvisionalMaxResponseSizeBytes = 10 * 1024 * 1024;
     private const int ResponseReadBufferSizeBytes = 80 * 1024;
@@ -34,6 +35,7 @@ public sealed class StorageIntelligenceService(
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAzureService _azureService = azureService;
+    private readonly IEndpointValidator _endpointValidator = endpointValidator;
 
     public async Task<JsonElement> DiagnoseDiskAsync(
         string? resourceId,
@@ -234,19 +236,18 @@ public sealed class StorageIntelligenceService(
             ? value
             : defaultValue;
 
-    private static void ValidateEndpoint(string endpoint, ArmEnvironment armEnvironment)
+    private void ValidateEndpoint(string endpoint, ArmEnvironment armEnvironment)
     {
         // Bearer tokens require HTTPS even when an operator explicitly bypasses host restrictions.
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri) || uri.Scheme != Uri.UriSchemeHttps)
         {
             throw new InvalidOperationException($"{EndpointEnvironmentVariable} must be an absolute HTTPS URL.");
         }
 
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        _endpointValidator.ValidateAzureServiceEndpoint(
             endpoint: endpoint,
             serviceType: "storage-intelligence",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "storage");
+            armEnvironment: armEnvironment);
     }
 
     private static bool IsValidApplicationScope(string scope)

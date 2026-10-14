@@ -11,6 +11,10 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.ResourceManager;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -484,20 +488,119 @@ public class StorageServiceDiskDiagnoseTests
     }
 
     [Theory]
-    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze")]
-    [InlineData("http://localhost/api/Disk/analyze")]
-    public async Task DiagnoseDiskAsync_NonHttpsEndpoint_RejectsBeforeCredentials(string endpoint)
+    [InlineData("storage", "https://unapproved.example.com/api/Disk/analyze")]
+    [InlineData("STORAGE", "https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze")]
+    [InlineData("storage", "https://storageintelligenceweb.sg.dogfood.portalrp.azure-test.net/api/Disk/analyze")]
+    [InlineData("storage", "https://127.0.0.1/api/Disk/analyze")]
+    public async Task DiagnoseDiskAsync_StorageBypass_OnlyAppliesInsideStorageContext(
+        string toolNamespace,
+        string endpoint)
     {
+        var accessor = new CommandContextAccessor();
+        var validator = new EndpointValidator(
+            new SsrfProtectionPolicy(["storage"]), NullLogger<EndpointValidator>.Instance, accessor);
+        var handler = new RecordingHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"status":"Healthy"}""")
+        });
+        (StorageIntelligenceService service, _, IAzureTokenCredentialProvider tokenCredentialProvider, _) =
+            CreateService(handler, endpointValidator: validator);
+        Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, endpoint);
+
+        using (accessor.BeginScope(new CommandContext { ToolNamespaceName = toolNamespace }))
+        {
+            await service.DiagnoseDiskAsync(
+                ResourceId,
+                cancellationToken: TestContext.Current.CancellationToken);
+        }
+
+        Assert.Equal(endpoint, handler.Request?.RequestUri?.AbsoluteUri);
+        tokenCredentialProvider.ClearReceivedCalls();
+
+        // Reuse the service outside the scope to catch a captured invocation or namespace.
+        await Assert.ThrowsAsync<SecurityException>(() => service.DiagnoseDiskAsync(
+            ResourceId,
+            cancellationToken: TestContext.Current.CancellationToken));
+        await tokenCredentialProvider.DidNotReceiveWithAnyArgs().GetTokenCredentialAsync(
+            default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("compute")]
+    public async Task DiagnoseDiskAsync_StorageBypass_OtherOrMissingNamespaceRejectsBeforeAzureOrHttpAccess(
+        string? toolNamespace)
+    {
+        var accessor = new CommandContextAccessor();
+        var validator = new EndpointValidator(
+            new SsrfProtectionPolicy(["storage"]), NullLogger<EndpointValidator>.Instance, accessor);
         var handler = new RecordingHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
-        (StorageIntelligenceService service, _, IAzureTokenCredentialProvider tokenCredentialProvider, _) = CreateService(handler);
+        IAzureService azureService = Substitute.For<IAzureService>();
+        (StorageIntelligenceService service, IAttachedDiskService attachedDiskService,
+            IAzureTokenCredentialProvider tokenCredentialProvider, TokenCredential credential) =
+            CreateService(handler, azureService: azureService, endpointValidator: validator);
+        Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, "https://127.0.0.1/api/Disk/analyze");
+
+        using (accessor.BeginScope(new CommandContext { ToolNamespaceName = toolNamespace }))
+        {
+            await Assert.ThrowsAsync<SecurityException>(() => service.DiagnoseDiskAsync(
+                resourceId: null,
+                subscription: "test-subscription",
+                resourceGroup: "test-rg",
+                vm: "test-vm",
+                cancellationToken: TestContext.Current.CancellationToken));
+        }
+
+        Assert.Null(handler.Request);
+        await azureService.DidNotReceiveWithAnyArgs().ResolveTenantIdAsync(
+            default, TestContext.Current.CancellationToken);
+        await tokenCredentialProvider.DidNotReceiveWithAnyArgs().GetTokenCredentialAsync(
+            default, TestContext.Current.CancellationToken);
+        await credential.DidNotReceiveWithAnyArgs().GetTokenAsync(
+            default!, TestContext.Current.CancellationToken);
+        await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveFriendlySelectorAsync(
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
+        await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveDiskNamesAsync(
+            default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze", false)]
+    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze", true)]
+    [InlineData("http://localhost/api/Disk/analyze", false)]
+    [InlineData("http://localhost/api/Disk/analyze", true)]
+    public async Task DiagnoseDiskAsync_NonHttpsEndpoint_RejectsBeforeCredentials(
+        string endpoint,
+        bool bypassStorage)
+    {
+        var accessor = new CommandContextAccessor();
+        var validator = new EndpointValidator(
+            new SsrfProtectionPolicy(bypassStorage ? ["storage"] : null), NullLogger<EndpointValidator>.Instance, accessor);
+        using IDisposable scope = accessor.BeginScope(new CommandContext { ToolNamespaceName = "storage" });
+        var handler = new RecordingHttpMessageHandler(new HttpResponseMessage(HttpStatusCode.OK));
+        IAzureService azureService = Substitute.For<IAzureService>();
+        (StorageIntelligenceService service, IAttachedDiskService attachedDiskService,
+            IAzureTokenCredentialProvider tokenCredentialProvider, TokenCredential credential) =
+            CreateService(handler, azureService: azureService, endpointValidator: validator);
         Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, endpoint);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.DiagnoseDiskAsync(
-            ResourceId,
+            resourceId: null,
+            subscription: "test-subscription",
+            resourceGroup: "test-rg",
+            vm: "test-vm",
             cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.Request);
+        await azureService.DidNotReceiveWithAnyArgs().ResolveTenantIdAsync(
+            default, TestContext.Current.CancellationToken);
         await tokenCredentialProvider.DidNotReceiveWithAnyArgs().GetTokenCredentialAsync(default, TestContext.Current.CancellationToken);
+        await credential.DidNotReceiveWithAnyArgs().GetTokenAsync(default!, TestContext.Current.CancellationToken);
+        await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveFriendlySelectorAsync(
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
+        await attachedDiskService.DidNotReceiveWithAnyArgs().ResolveDiskNamesAsync(
+            default!, default!, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -668,7 +771,8 @@ public class StorageServiceDiskDiagnoseTests
         HttpMessageHandler handler,
         string? tenant = StorageIntelligenceTenantId,
         ArmEnvironment? armEnvironment = null,
-        IAzureService? azureService = null)
+        IAzureService? azureService = null,
+        IEndpointValidator? endpointValidator = null)
     {
         Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, StorageIntelligenceEndpoint);
         Environment.SetEnvironmentVariable(ScopeEnvironmentVariable, StorageIntelligenceScope);
@@ -689,7 +793,9 @@ public class StorageServiceDiskDiagnoseTests
         azureService.CloudConfiguration.Returns(cloudConfiguration);
         azureService.ResolveTenantIdAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(call => call.Arg<string?>());
-        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService), attachedDiskService, tokenCredentialProvider, credential);
+        endpointValidator ??= new EndpointValidator(
+            new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor());
+        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService, endpointValidator), attachedDiskService, tokenCredentialProvider, credential);
     }
 
     private sealed class RecordingHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler

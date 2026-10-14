@@ -130,11 +130,10 @@ public class EndpointValidatorTests
     [Fact]
     public void ValidateAzureServiceEndpoint_StorageIntelligence_ApprovesProductionHost()
     {
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        s_validator.ValidateAzureServiceEndpoint(
             endpoint: "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze",
             serviceType: "storage-intelligence",
-            armEnvironment: ArmEnvironment.AzurePublicCloud,
-            executingToolNamespaceName: null);
+            armEnvironment: ArmEnvironment.AzurePublicCloud);
     }
 
     [Theory]
@@ -151,11 +150,10 @@ public class EndpointValidatorTests
     [InlineData("http://storageintelligenceweb.production.portalrp.azure.com")]
     public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsOtherHostsAndSchemes(string endpoint)
     {
-        Assert.Throws<SecurityException>(() => EndpointValidator.ValidateAzureServiceEndpoint(
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
             endpoint: endpoint,
             serviceType: "storage-intelligence",
-            armEnvironment: ArmEnvironment.AzurePublicCloud,
-            executingToolNamespaceName: null));
+            armEnvironment: ArmEnvironment.AzurePublicCloud));
     }
 
     [Theory]
@@ -164,11 +162,10 @@ public class EndpointValidatorTests
     public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsUnsupportedClouds(bool isChina)
     {
         ArmEnvironment environment = isChina ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
-        Assert.Throws<SecurityException>(() => EndpointValidator.ValidateAzureServiceEndpoint(
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
             endpoint: "https://storageintelligenceweb.production.portalrp.azure.com",
             serviceType: "storage-intelligence",
-            armEnvironment: environment,
-            executingToolNamespaceName: null));
+            armEnvironment: environment));
     }
 
     [Theory]
