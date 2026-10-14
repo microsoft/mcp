@@ -3785,6 +3785,7 @@ Resuming does not change the query or its submitted time range and row limit.
 Queries poll for up to 180 seconds and return the results collected so far.
 If the status is `Running`, use `query resume` with the returned operation ID.
 Requested row limits are approximate; responses preserve truncation and partial-result indicators.
+Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
 
 ```bash
 # List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription

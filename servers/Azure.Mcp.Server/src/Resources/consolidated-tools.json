@@ -986,13 +986,45 @@
         "monitor_table_type_list",
         "monitor_traces_account_list",
         "monitor_traces_field_list",
-        "monitor_traces_query_resume",
         "monitor_traces_query_run",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
         "monitor_workspace_log_search",
         "resourcehealth_availability-status_get",
         "resourcehealth_health-events_list"
+      ]
+    },
+    {
+      "name": "resume_azure_monitor_trace_query",
+      "description": "Resume an existing distributed-trace query in an Azure Monitor Workspace without submitting a new query. Collect further results within time and row budgets. Repeated calls advance the result stream rather than replaying the same rows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation consumes further results from the existing query."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool operates on a specified trace query."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool reads query results without modifying Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not return credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "monitor_traces_query_resume"
       ]
     },
     {

@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added private-preview `monitor traces` commands to query distributed traces from Azure Monitor Workspaces enabled for Trace Store: `account list`, `field list`, `query run`, `query resume`, and `query cancel`. Query calls collect results pages within bounded time and row budgets, preserving received data when resumption is needed."
+    description: "Added private-preview `monitor traces` commands to query distributed traces from Azure Monitor Workspaces enabled for Trace Store: `account list`, `field list`, `query run`, `query resume`, and `query cancel`. Query calls collect results pages within bounded time and row budgets, preserving received data when resumption is needed. Consolidated mode exposes query resumption separately with non-idempotent metadata."
