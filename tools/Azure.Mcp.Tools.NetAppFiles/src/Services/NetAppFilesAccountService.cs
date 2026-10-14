@@ -35,6 +35,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string location,
         string resourceGroup,
         string subscription,
+        IReadOnlyDictionary<string, string>? tags = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -44,8 +45,13 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
             tenant,
             cancellationToken: cancellationToken);
 
+        var existingAccounts = resourceGroupResource.GetNetAppAccounts();
+        var hasAccount = await existingAccounts.ExistsAsync(account, cancellationToken).ConfigureAwait(false);
+
         try
         {
+            // var existingAccounts = resourceGroupResource.GetNetAppAccounts();
+            // var hasAccount = await existingAccounts.ExistsAsync(account, cancellationToken).ConfigureAwait(false);
             var existingAccount = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
             if (existingAccount.HasValue)
             {
@@ -58,6 +64,13 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         }
 
         var accountData = new NetAppAccountData(new AzureLocation(location));
+        if (tags is not null)
+        {
+            foreach (var tag in tags)
+            {
+                accountData.Tags[tag.Key] = tag.Value;
+            }
+        }
         var operation = await resourceGroupResource
             .GetNetAppAccounts()
             .CreateOrUpdateAsync(WaitUntil.Started, account, accountData, cancellationToken);
@@ -72,7 +85,6 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string resourceGroup,
         string subscription,
         IReadOnlyDictionary<string, string>? tags = null,
-        string? nfsV4IdDomain = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -83,11 +95,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
             cancellationToken: cancellationToken);
 
         var accountResource = (await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken)).Value;
-        var patch = new NetAppAccountPatch(accountResource.Data.Location)
-        {
-            NfsV4IdDomain = nfsV4IdDomain
-        };
-
+        var patch = new NetAppAccountPatch(accountResource.Data.Location);
         if (tags is not null)
         {
             patch.Tags.Clear();

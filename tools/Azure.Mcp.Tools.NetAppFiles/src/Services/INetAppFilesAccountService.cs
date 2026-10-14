@@ -19,7 +19,6 @@ public interface INetAppFilesAccountService
         string resourceGroup,
         string subscription,
         IReadOnlyDictionary<string, string>? tags = null,
-        string? nfsV4IdDomain = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -28,6 +27,7 @@ public interface INetAppFilesAccountService
         string location,
         string resourceGroup,
         string subscription,
+        IReadOnlyDictionary<string, string>? tags = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

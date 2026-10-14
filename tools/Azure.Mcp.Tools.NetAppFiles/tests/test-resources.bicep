@@ -8,6 +8,13 @@ param baseName string = resourceGroup().name
 @description('The client object ID to grant access to the test resource group.')
 param testApplicationOid string
 
+param location string = resourceGroup().location
+
+resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
+  name: '${baseName}-account'
+  location: location
+}
+
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'

@@ -38,6 +38,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "eastus",
             "rg",
             "sub",
+            null,
             "tenant",
             Arg.Any<CancellationToken>())
             .Returns(CreatedAccount);
@@ -107,6 +108,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(

@@ -2700,8 +2700,41 @@
       ]
     },
     {
-      "name": "create_or_update_azure_netapp_files_accounts",
-      "description": "Create Azure NetApp Files accounts, or update their tags or NFSv4 user ID mapping domain.",
+      "name": "create_azure_netapp_files_accounts",
+      "description": "Create Azure NetApp Files accounts.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by updating data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "netappfiles_account_create"
+      ]
+    },
+    {
+      "name": "update_azure_netapp_files_accounts",
+      "description": "Update Azure Netapp Files accounts tags or NFSv4 user ID mapping domain.",
       "toolMetadata": {
         "destructive": {
           "value": true,

@@ -14,9 +14,6 @@ public sealed class AccountUpdateOptions : ISubscriptionOption
     [Option(Description = "Resource tags as a JSON key-value object. Providing an empty object removes all tags.")]
     public string? Tags { get; set; }
 
-    [Option(Description = "The domain for NFSv4 user ID mapping. This setting applies to all Azure NetApp Files accounts in the subscription and region and affects non-LDAP NFSv4 volumes.")]
-    public string? NfsV4IdDomain { get; set; }
-
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 

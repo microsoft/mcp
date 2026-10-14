@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -66,24 +67,19 @@ public class NetAppFilesCommandTests(
             GroupForReplace = "resourceGroup",
             Value = "Sanitized"
         }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.error.message")
+        {
+            Regex = "resource group '(?<resourceGroup>[^']+)'",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        }),
     };
 
     [Fact]
     public async Task AccountGet_ReturnsAccount()
     {
-        var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
+        var accountName = $"{Settings.ResourceBaseName}-account";
         var resourceGroupName = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
-
-        await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
-                { "account", accountName },
-                { "location", "eastus" },
-                { "resource-group", resourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
 
         var result = await CallToolAsync(
             "netappfiles_account_get",
@@ -99,8 +95,29 @@ public class NetAppFilesCommandTests(
         Assert.Equal(JsonValueKind.Object, account.ValueKind);
         account.AssertProperty("name");
         account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
+        Assert.Equal("westus", account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
+    public async Task AccountCreate_FailsOnExistingAccount()
+    {
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        var resourceGroupName = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "netappfiles_account_create",
+            new()
+            {
+                { "account", accountName },
+                { "location", "eastus" },
+                { "resource-group", resourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var message = result.AssertProperty("message");
+        Assert.Equal($"NetApp account '{accountName}' already exists in resource group '{resourceGroupName}'.", message.GetString());
     }
 
     [Fact]

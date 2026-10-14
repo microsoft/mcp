@@ -2698,7 +2698,7 @@ azmcp netappfiles account get --account <account> \
 
 # Creates an Azure NetApp Files account in a specified resource group and region.
 # Returns the account name, resource ID, location, and provisioning state.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp netappfiles account create --account <account> \
                                  --location <location> \
                                  --resource-group <resource-group> \
