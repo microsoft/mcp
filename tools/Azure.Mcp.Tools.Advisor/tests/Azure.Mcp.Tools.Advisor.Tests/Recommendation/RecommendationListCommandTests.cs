@@ -29,19 +29,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("List, show, or search individual Azure Advisor recommendations")]
     [InlineData("recommendation status such as New, Postponed, Dismissed, or Completed")]
-    [InlineData("For status-filtered requests, use this tool to retrieve individual recommendations")]
-    [InlineData("use summary only for status counts or grouped analysis")]
-    [InlineData("If the request contains top, critical, important, prioritized, priority, or equivalent prioritization intent")]
-    [InlineData("do not use this tool; route to recommendation summary with --group-by recommendation-type")]
-    [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
-    [InlineData("a prior summary call is not required")]
-    [InlineData("passing its key as --recommendation-type-id")]
-    [InlineData("preserving the applicable filters")]
-    [InlineData("After a summary, use this tool to retrieve individual recommendations or affected resources")]
+    [InlineData("Use this tool directly to retrieve individual recommendations with any supported filters")]
     [InlineData("For a selected recommendation type, this tool can also order the matching individual recommendations")]
-    [InlineData("counts, totals, rankings, distributions, or grouped analysis")]
-    [InlineData("rather than aggregating this tool's limited results")]
-    public void Description_RoutesOverviewAndResourceDrillDownRequests(string guidance)
+    public void Description_ExplainsIndividualRecommendationListing(string guidance)
     {
         Assert.Contains(guidance, Command.GetCommand().Description);
     }
@@ -118,20 +108,13 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     }
 
     [Theory]
-    [InlineData("--recommendation-type-id", "without a prior summary call")]
-    [InlineData("--recommendation-type-id", "use the selected group key")]
-    [InlineData("--prioritized", "Any intent containing top, critical, important, prioritized, priority")]
-    [InlineData("--prioritized", "only initial tool call")]
-    [InlineData("--prioritized", "only for a subsequent specific recommendation-type drill-down")]
     [InlineData("--top", "not distinct affected resources or recommendation groups")]
-    [InlineData("--top", "any intent containing top, critical, important, prioritized, priority")]
-    [InlineData("--top", "only initial tool call")]
     [InlineData("--top", "Defaults to 50")]
     [InlineData("--top", "1 through 100")]
     [InlineData("--service-group", "Specify either --service-group or --subscription, not both")]
     [InlineData("--service-group", "If both are omitted, the configured default subscription is used")]
     [InlineData("--service-group", "--resource-group applies only to subscription scope")]
-    public void OptionDescriptions_DistinguishListingFromAggregateRouting(string optionName, string guidance)
+    public void OptionDescriptions_ExplainListingBehavior(string optionName, string guidance)
     {
         var option = Assert.Single(Command.GetCommand().Options, option => option.Name == optionName);
         Assert.Contains(guidance, option.Description);

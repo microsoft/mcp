@@ -561,12 +561,6 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--tenant <tenant>]
 
 # Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group.
-# Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization
-# language must start here with --group-by recommendation-type as the only initial tool call.
-# For non-prioritized requests to retrieve individual recommendations, use list directly with all applicable filters
-# and without a prior summary call.
-# Follow up with advisor recommendation list --recommendation-type-id <summary-group-key> to show affected resources
-# or records for a selected group, preserving the scope, category, and other filters.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
 # or omit both to use the configured default subscription. Do not specify both.
 # --resource-group can only be used with subscription scope.
@@ -575,8 +569,6 @@ azmcp advisor recommendation update [--subscription <subscription>] \
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
 # retirement data prefer metadata values with recommendation-instance fallback.
-# Counts represent recommendation records, not distinct affected resources. Recommendation-type groups
-# are ordered by record count descending, then key; this is not two-layer criticality or savings ranking.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -20,8 +20,7 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public RecommendationStatus? Status { get; set; }
 
     [Option(Description = "Filter recommendations by the recommendation type ID GUID. " +
-        "Uses a case-insensitive exact match and can be combined with other filters without a prior summary call. " +
-        "For a summary drill-down, use the selected group key and preserve the scope, category, and other filters.")]
+        "Uses a case-insensitive exact match and can be combined with other filters.")]
     public string? RecommendationTypeId { get; set; }
 
     [Option(Description = "Filter recommendations by impacted Azure resource type (e.g., 'Microsoft.Storage/storageAccounts'). " +

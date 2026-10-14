@@ -14,10 +14,7 @@ public sealed class RecommendationSummaryOptions : IRecommendationScopeOptions
 
     [Option(Description = "Optional field to group the summary by. One of: 'recommendation-type', 'category', 'impact', 'resource-type', 'status', 'sub-category', or 'retirement-date'. " +
         "Defaults to 'category' when omitted, which surfaces the high-level themes (Cost, Security, Reliability, etc.) " +
-        "so prompts like 'summarize the key themes from my Advisor recommendations' work without naming a field. " +
-        "Any intent containing top, critical, important, prioritized, priority, or equivalent prioritization language must select 'recommendation-type' and route only to this summary tool initially; pass a user-specified result count through this tool's --top option. " +
-        "Recommendation-type groups return recommendation type ID GUID keys and English labels, with recommendation-record counts rather than distinct-resource counts; use a group key " +
-        "with recommendation list --recommendation-type-id to see its individual records.")]
+        "so prompts like 'summarize the key themes from my Advisor recommendations' work without naming a field.")]
     public string? GroupBy { get; set; }
 
     [Option(Description = "Filter recommendations by category. Allowed values are Cost, HighAvailability, Security, Performance, and OperationalExcellence. Matched case-insensitively against metadata with recommendation-instance fallback.")]

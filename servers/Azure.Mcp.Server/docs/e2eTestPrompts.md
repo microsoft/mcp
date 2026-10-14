@@ -114,24 +114,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
 | advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
-| advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | Show prioritized Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_summary | Which Advisor recommendations have the highest priority in subscription \<subscription>? | none |
-| advisor_recommendation_summary | Show the top recommendation actions from Azure Advisor for subscription \<subscription> | none |
-| advisor_recommendation_summary | What are the top recommendation actions I should address first for service group \<service-group>? | none |
-| advisor_recommendation_summary | What should I fix first in subscription \<subscription>? Show my Advisor recommendations | none |
-| advisor_recommendation_summary | Which Advisor recommendations are most important for service group \<service-group>? | none |
-| advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_summary | Show the most important reliability recommendations in subscription \<subscription> | none |
-| advisor_recommendation_summary | Show prioritized service-retirement Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | Show the top cost optimization actions from Advisor in subscription \<subscription> | none |
-| advisor_recommendation_summary | What are the highest-impact Advisor recommendations for service group \<service-group>? | none |
-| advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
-| advisor_recommendation_summary | Which Security Advisor recommendations should I address first in service group \<service-group>? | none |
 | advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
