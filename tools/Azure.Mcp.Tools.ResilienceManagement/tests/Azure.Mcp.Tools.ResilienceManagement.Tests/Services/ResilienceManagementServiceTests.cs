@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager;
@@ -1343,6 +1344,10 @@ public sealed class ResilienceManagementServiceTests
         azureService.GetClient(Arg.Any<string?>()).Returns(new HttpClient(handler));
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new FakeTokenCredential());
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService,
+            new HttpClient(handler),
+            ArmEnvironment.AzurePublicCloud);
         return new ResilienceManagementService(azureService);
     }
 
