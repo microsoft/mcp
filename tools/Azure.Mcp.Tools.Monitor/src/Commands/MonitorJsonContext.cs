@@ -15,6 +15,7 @@ using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Models.HealthModels;
+using Azure.Mcp.Tools.Monitor.Models.Ingestion;
 using Azure.Mcp.Tools.Monitor.Models.Log;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
@@ -30,6 +31,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(HealthModelIdentity))]
 [JsonSerializable(typeof(HealthModelListCommand.HealthModelListCommandResult))]
 [JsonSerializable(typeof(HealthModelSummary))]
+[JsonSerializable(typeof(IngestionUploadResult))]
+[JsonSerializable(typeof(IngestionValidationIssue))]
+[JsonSerializable(typeof(IngestionValidationResult))]
 [JsonSerializable(typeof(LogSearchApiColumn))]
 [JsonSerializable(typeof(LogSearchApiError))]
 [JsonSerializable(typeof(LogSearchApiErrorDetail))]
