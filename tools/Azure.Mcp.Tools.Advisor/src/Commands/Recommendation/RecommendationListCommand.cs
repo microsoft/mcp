@@ -16,10 +16,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e3f09221-523a-4107-a715-823cebd97902",
     Name = "list",
     Title = "List Advisor Recommendations",
-    Description =     "List, show, or search individual Azure Advisor recommendations and their affected-resource details in a subscription or Azure Service Group. " +
-    "Supports filters for category, subcategory, impact, recommendation status such as New, Postponed, Dismissed, or Completed, recommendation type ID, affected resource, resource type, free text, tracking ID, retirement date, and scope. " +
-    "This returns recommendation instances, not the global metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID; use advisor metadata list for those catalog lookups. " +
-    "For status-filtered requests, use this tool to retrieve individual recommendations; use summary only for status counts or grouped analysis. " +
+    Description = "List, show, or search individual Azure Advisor recommendations and their affected-resource details in a subscription or Azure Service Group. " +
+        "Supports filters for category, subcategory, impact, recommendation status such as New, Postponed, Dismissed, or Completed, recommendation type ID, affected resource, resource type, free text, tracking ID, retirement date, and scope. " +
+        "This returns recommendation instances, not the global metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID; use advisor metadata list for those catalog lookups. " +
+        "For status-filtered requests, use this tool to retrieve individual recommendations; use summary only for status counts or grouped analysis. " +
         "If the request contains top, critical, important, prioritized, priority, or equivalent prioritization intent, do not use this tool; route to recommendation summary with --group-by recommendation-type. " +
         "For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters; a prior summary call is not required. " +
         "Use summary for counts, totals, rankings, distributions, or grouped analysis rather than aggregating this tool's limited results. " +
