@@ -510,13 +510,69 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The RecoveryServicesBackup SDK can throw UriFormatException/FormatException while
+        // deserializing individual Azure Files (FileShareRecoveryPoint) recovery points whose
+        // payload contains a malformed URI or duration field. Enumerate defensively so a single
+        // malformed recovery point does not fail the entire list.
+        return await EnumerateTolerantAsync(
+            collection.GetAllAsync(cancellationToken: cancellationToken),
+            static rp => MapToRecoveryPointInfo(rp.Data),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Enumerates an async pageable, projecting each element with <paramref name="selector"/> while
+    /// tolerating Azure SDK deserialization failures. The RecoveryServicesBackup SDK can throw
+    /// <see cref="FormatException"/> (including its <see cref="UriFormatException"/> subtype) when a
+    /// single item's payload contains a malformed duration or URI - for example an Azure Files
+    /// <c>FileShareRecoveryPoint</c>. Offending items are skipped so the remaining valid items are
+    /// still returned. If the enumerator becomes unusable (a page-level failure where
+    /// <see cref="IAsyncEnumerator{T}.MoveNextAsync"/> keeps throwing), enumeration stops after
+    /// <paramref name="maxConsecutiveFailures"/> consecutive errors to avoid an infinite loop.
+    /// </summary>
+    internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
+        IAsyncEnumerable<TSource> source,
+        Func<TSource, TResult> selector,
+        CancellationToken cancellationToken,
+        int maxConsecutiveFailures = 3)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
+
+        var results = new List<TResult>();
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    results.Add(selector(enumerator.Current));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    // UriFormatException derives from FormatException; both indicate a single item
+                    // (or page) the SDK cannot deserialize. Skip and continue.
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
-        return points;
+        return results;
     }
 
     /// <summary>
@@ -792,11 +848,37 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
         }
 
-        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        // The RecoveryServicesBackup SDK can throw a NullReferenceException from the
+        // BackupProtectionPolicyResource constructor while materializing the CreateOrUpdate response
+        // for certain IaaS VM policy shapes (the returned policy data omits the resource id). The PUT
+        // itself is accepted by the service, so translate the opaque failure into an actionable error
+        // that points the caller at a verification step instead of surfacing a bare 500.
+        try
+        {
+            var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (NullReferenceException)
+        {
+            throw CreatePolicyMaterializationError(policyName!, vaultName);
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
+
+    /// <summary>
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy from the
+    /// service response (a known <see cref="NullReferenceException"/> in
+    /// <c>BackupProtectionPolicyResource</c>'s constructor for some IaaS VM policy shapes). The update
+    /// request is accepted server-side, so the message is explicit that the change may have applied
+    /// and directs the caller to verify the current policy state.
+    /// </summary>
+    internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
+        new(
+            (int)HttpStatusCode.InternalServerError,
+            $"The update for policy '{policyName}' in vault '{vaultName}' was submitted, but the Azure SDK could not " +
+            "deserialize the updated policy from the service response (a known SDK limitation for some IaaS VM policy shapes). " +
+            "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
 
     /// <summary>
     /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
