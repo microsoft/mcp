@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp advisor servicegroupintelligence get` command to get the Azure Advisor status (On Track, Attention Needed, At Risk, Critical, Unavailable) and criticality of one Service Group or all Service Groups. Supports `--service-group`, `--criticality`, `--status`, `--top`, and `--tenant`."

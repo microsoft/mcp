@@ -138,6 +138,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
+| advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
+| advisor_servicegroupintelligence_get | Which mission critical service groups need attention? | none |
+| advisor_servicegroupintelligence_get | Which service groups are at risk? | none |
+| advisor_servicegroupintelligence_get | Show me the tier 0 service groups that are in critical status | none |
+| advisor_servicegroupintelligence_get | Use Advisor servicegroupintelligence get to show the status and criticality of service group commerce | none |
 
 ## Azure AI Search
 

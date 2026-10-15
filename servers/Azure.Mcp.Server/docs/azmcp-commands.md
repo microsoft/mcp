@@ -586,6 +586,22 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 # confidence, effort, and output type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
+
+# Get the current Azure Advisor status (On Track = no significant risks, Attention Needed = limited and manageable
+# issues, At Risk = material risks, Critical = immediate action required, Unavailable = no active recommendations) and
+# criticality tier (MissionCritical = Tier 0, BusinessCritical = Tier 1, BusinessOperational = Tier 2,
+# Administrative = Tier 3, NotApplicable; Tier0-Tier3 and 0-3 are accepted aliases) of one Service Group
+# (--service-group, the name such as 'commerce') or of ALL Service Groups when none is given. Filter by --criticality
+# and --status, for example --criticality MissionCritical --status "Attention Needed" for mission-critical Service
+# Groups that need attention; results are capped by --top. Each result returns the Service Group name and ID,
+# criticality, status, status description, a description of where to focus, the goal when set, and last updated time.
+# If several tenants are accessible, --tenant must be specified.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor servicegroupintelligence get [--service-group <service-group>] \
+                                           [--criticality <MissionCritical|BusinessCritical|BusinessOperational|Administrative|NotApplicable>] \
+                                           [--status <"On Track"|"Attention Needed"|"At Risk"|Critical|Unavailable>] \
+                                           [--top <1-500>] \
+                                           [--tenant <tenant>]
 ```
 
 ### Azure AI Search Operations

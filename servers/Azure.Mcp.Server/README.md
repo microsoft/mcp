@@ -971,6 +971,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "What is the status of service group 'my-service-group'?"
+* "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
