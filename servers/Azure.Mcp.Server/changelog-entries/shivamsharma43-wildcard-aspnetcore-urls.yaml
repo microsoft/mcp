@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `server start --transport http --dangerously-disable-http-incoming-auth` rejecting the standard ASP.NET Core wildcard URLs `http://+:<port>` and `http://*:<port>` in `ASPNETCORE_URLS` as invalid, even when `ALLOW_INSECURE_EXTERNAL_BINDING=true` is set."
