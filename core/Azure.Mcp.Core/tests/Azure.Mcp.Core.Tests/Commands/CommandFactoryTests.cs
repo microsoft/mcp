@@ -156,7 +156,7 @@ public class CommandFactoryTests
             area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(_ =>
             {
                 var group = new CommandGroup("server", "Server commands");
-                group.AddCommand(new ServerStartCommand());
+                group.AddCommand("start", new ServerStartCommand());
                 return group;
             });
 
