@@ -41,6 +41,8 @@ jobs:
       - template: /eng/pipelines/templates/variables/globals.yml
       - name: BinDirectory
         value: $(Pipeline.Workspace)/bin
+      - name: ApiReviewSourceCommit
+        value: ''
       - name: ArtifactOutputDirectory
         value: $(Build.ArtifactStagingDirectory)/${{ parameters.kind }}
     steps:
@@ -62,6 +64,11 @@ jobs:
             exit 1
           fi
 
+          if [[ -z "$SOURCE_DIRECTORY" || "$SOURCE_DIRECTORY" == "/" ]]; then
+            echo "SOURCE_DIRECTORY must be a non-root path." >&2
+            exit 1
+          fi
+          rm -rf -- "$SOURCE_DIRECTORY"
           mkdir -p "$SOURCE_DIRECTORY"
           git -C "$SOURCE_DIRECTORY" init
           git -C "$SOURCE_DIRECTORY" remote add origin "https://github.com/$REPOSITORY_FULL_NAME.git"

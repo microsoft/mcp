@@ -78,3 +78,15 @@ jobs:
       - publish: $(BinOutputDirectory)
         artifact: bin
         displayName: Publish built tools
+
+      - template: /eng/common/pipelines/templates/steps/apireview-hub-failure-callback.yml
+        parameters:
+          kind: target
+          ref: $(ApiReviewTargetRef)
+          condition: failed()
+
+      - template: /eng/common/pipelines/templates/steps/apireview-hub-failure-callback.yml
+        parameters:
+          kind: base
+          ref: $(ApiReviewBaseRef)
+          condition: and(failed(), ne(variables['ApiReviewBaseRef'], ''))
