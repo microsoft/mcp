@@ -562,6 +562,20 @@ azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
                                     [--tenant <tenant>]
 
+# List Azure Advisor insights (aggregated KPIs such as idle resources and potential savings, zonal resiliency coverage,
+# and service retirement impact) for a Service Group (--service-group, the name such as 'commerce'), a subscription
+# (--subscription), or ALL accessible Service Groups and subscriptions when neither is given (no default subscription is applied). The two scopes are
+# mutually exclusive. Service retirement
+# insights exist for both scopes; other insights are Service Group only. Filter by --insight-name; results are capped by --top.
+# Each insight returns name, domain, scope type and ID, last updated time, and KPIs with typed values (USD amounts carry a unit).
+# If several tenants are accessible and no subscription is given, --tenant must be specified.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor insight list [--service-group <service-group>] \
+                           [--subscription <subscription>] \
+                           [--insight-name <insight-name>] \
+                           [--top <1-500>] \
+                           [--tenant <tenant>]
+
 # Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group,
 # or rank recommendation types by priority with --prioritized true.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,

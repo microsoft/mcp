@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Commands.Insight;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
@@ -21,6 +22,8 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<IAdvisorService, AdvisorService>();
         services.AddSingleton<IRemediationService, RemediationService>();
         services.AddSingleton<IRecommendationSummaryService, RecommendationSummaryService>();
+        services.AddSingleton<IAdvisorInsightService, AdvisorInsightService>();
+        services.AddSingleton<InsightListCommand>();
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
@@ -58,8 +61,14 @@ public class AdvisorSetup : IAreaSetup
             "Get the Azure Advisor remediation package that explains how to fix or resolve a recommendation type id. Returns step-by-step remediation guidance (manual, human-readable steps to fix the issue) and/or ready-to-run executable artifacts and scripts to remediate it: Azure CLI, PowerShell, Bicep, ARM template and terraform. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs to know how to fix a recommendation, or wants the ARM, Bicep, CLI, PowerShell or terraform artifacts to remediate it.");
         advisor.AddSubGroup(remediation);
 
+        var insight = new CommandGroup(
+            "insight",
+            "Advisor insights - List aggregated Advisor KPIs for a Service Group or subscription, such as idle resources and potential savings, zonal resiliency coverage, and service retirement impact.");
+        advisor.AddSubGroup(insight);
+
         // Register Advisor commands
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
+        insight.AddCommand<InsightListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);

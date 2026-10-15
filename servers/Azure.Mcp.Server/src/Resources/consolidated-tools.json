@@ -1598,6 +1598,39 @@
       ]
     },
     {
+      "name": "list_azure_advisor_insights",
+      "description": "List Azure Advisor insights, which are aggregated KPIs rather than individual recommendations: idle resources and potential savings, zonal resiliency coverage, and service retirement impact. Scope to one Service Group with the service group name, or one subscription (only service retirement insights apply to subscriptions); when neither is given, insights across all accessible Service Groups and subscriptions are returned. Optionally filter by insight name (IdleResources, ZonalResiliency, ServiceRetirement) and cap results with top. Returns each insight with its name, domain, scope type and ID, last updated time, and typed KPIs. For individual recommendation records use the recommendations tool instead.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_insight_list"
+      ]
+    },
+    {
       "name": "get_azure_advisor_remediation",
       "description": "Fix, resolve, or remediate a specific Azure Advisor recommendation type id. Use this whenever you are asked how to fix or how to resolve an Advisor recommendation. Returns its remediation package: step-by-step remediation steps plus ready-to-run artifacts, scripts, and deployment templates in ARM template, Bicep, Azure CLI, PowerShell, and terraform formats to remediate the issue. Also indicates remediation characteristics such as whether it is destructive, reversible, or grounded, along with its confidence, effort, and output type. Use whenever you need to fix, resolve, remediate, or verify a recommendation, or want the ARM, Bicep, CLI, PowerShell, or terraform artifacts and scripts to remediate it.",
       "toolMetadata": {
