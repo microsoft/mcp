@@ -104,9 +104,10 @@ internal static class RecommendationFilterValidator
         if (recommendationTypeId is not null &&
             !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
-                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
+                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.",
+                "Invalid Advisor recommendation type ID.");
         }
     }
 
@@ -125,8 +126,9 @@ internal static class RecommendationFilterValidator
         if (normalized.Length == 0 ||
             !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");
+            validationResult.AddError(
+                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.",
+                "Invalid Advisor filter value.");
         }
     }
 

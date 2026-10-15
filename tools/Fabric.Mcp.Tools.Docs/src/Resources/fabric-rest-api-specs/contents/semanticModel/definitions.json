@@ -88,6 +88,11 @@
           "properties": {
               "definition": {
                   "$ref": "#/definitions/SemanticModelDefinition"
+              },
+              "options": {
+                  "description": "Options for the semantic model whose definition is being updated.",
+                  "$ref": "#/definitions/SemanticModelDefinitionOptions",
+                  "readOnly": false
               }
           }
       },
@@ -138,6 +143,17 @@
               "payloadType":{
                   "description": "The payload type.",
                   "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "SemanticModelDefinitionOptions": {
+          "description": "Options that apply when creating a semantic model with a definition or updating a semantic model's definition.",
+          "type": "object",
+          "properties": {
+              "allowPurgeData": {
+                  "description": "Whether to allow purging the semantic model's existing data when applying the updated definition. Some definition changes require existing data to be cleared; set this to true to allow those changes to proceed, in which case any data that can't be retained under the new definition is purged. After the operation completes, refresh the semantic model to reload the data. Default value is false.",
+                  "type": "boolean",
                   "readOnly": false
               }
           }

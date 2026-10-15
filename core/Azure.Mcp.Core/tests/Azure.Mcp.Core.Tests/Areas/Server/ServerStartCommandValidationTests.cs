@@ -75,6 +75,19 @@ public sealed class ServerStartCommandValidationTests
     }
 
     [Fact]
+    public void ValidateOptions_InvalidMode_PreservesUserMessageAndTracksSafeTelemetry()
+    {
+        var result = Validate(new ServerStartOptions
+        {
+            Mode = "private input",
+            Transport = TransportTypes.StdIo
+        });
+
+        Assert.Contains(result.Errors, error => error.Contains("Invalid mode 'private input'"));
+        Assert.Equal("Invalid server mode.", result.TelemetrySafeMessage);
+    }
+
+    [Fact]
     public void ValidateOptions_HostingEnvironmentIdentity_WithStdio_IsValid()
     {
         // Hosting-environment identity is valid for every transport, including stdio.

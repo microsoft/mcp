@@ -102,15 +102,19 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string vaultType,
         string location, string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         // Perform validations that don't require a network call first so invalid input
         // fails fast without going through ResolveSubscriptionIdAsync (which may call ARM).
         VaultTypeResolver.ValidateVaultType(vaultType);
+        if (enablePublicNetworkAccess && !VaultTypeResolver.IsRsv(vaultType))
+        {
+            throw new ArgumentException("Public network access configuration is only supported for Recovery Services vaults.", nameof(enablePublicNetworkAccess));
+        }
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(vaultType)
-            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken)
+            ? await rsvOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, enablePublicNetworkAccess, cancellationToken)
             : await dppOps.CreateVaultAsync(vaultName, resourceGroup, subscription, location, sku, storageType, tenant, cancellationToken);
     }
 

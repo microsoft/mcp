@@ -31,11 +31,11 @@ public sealed class ConsolidatedToolMetadataTests()
                     continue;
                 }
 
-                if (!MetadataMatches(command.Metadata, consolidatedTool.ToolMetadata))
+                if (!MetadataMatches(command.Command.Metadata, consolidatedTool.ToolMetadata))
                 {
                     mismatches.Add(
                         $"Command '{commandName}' mapped to consolidated tool '{consolidatedTool.Name}' has metadata " +
-                        $"{FormatMetadata(command.Metadata)}; expected {FormatMetadata(consolidatedTool.ToolMetadata)}.");
+                        $"{FormatMetadata(command.Command.Metadata)}; expected {FormatMetadata(consolidatedTool.ToolMetadata)}.");
                 }
             }
         }

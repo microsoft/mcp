@@ -16,6 +16,7 @@
                         "type": "Lakehouse",
                         "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
                         "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+                        "logicalId": "1423f3b4-dba5-44c1-a94f-6ae4d776369a",
                         "defaultIdentity": {
                             "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
                             "displayName": "Caleb Foster",
@@ -32,6 +33,7 @@
                         "type": "Notebook",
                         "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
                         "folderId": "cccccccc-8888-9999-0000-dddddddddddd",
+                        "logicalId": null,
                         "defaultIdentity": {
                             "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
                             "displayName": "Caleb Foster",

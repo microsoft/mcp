@@ -20,6 +20,24 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
         {
             Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id")
+        {
+            Regex = @"(?<=/tenants/)[0-9a-fA-F-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        ..base.HeaderRegexSanitizers,
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Value = "Sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-owner")
+        {
+            Value = "00000000-0000-0000-0000-000000000000"
         })
     ];
 
@@ -416,6 +434,30 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
 
         var skuName = account.GetProperty("skuName").GetString();
         Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : "Standard_LRS", skuName);
+    }
+
+    [Fact]
+    public async Task Should_CreateStorageAccount_WithSharedKeyAccess()
+    {
+        var accountName = RegisterOrRetrieveVariable(
+            "createdAccountWithSharedKeyAccess",
+            $"testacct{Guid.NewGuid():N}"[..24]);
+
+        var result = await CallToolAsync(
+            "storage_account_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", accountName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "location", "eastus" },
+                { "allow-shared-key-access", true }
+            });
+
+        var account = result.AssertProperty("account");
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : accountName, account.GetProperty("name").GetString());
+        var properties = account.GetProperty("properties");
+        Assert.True(properties.GetProperty("allowSharedKeyAccess").GetBoolean());
     }
 
     [Fact]

@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -15,7 +17,7 @@ public class PostgresServiceRowLimitTests
 {
     private const int MaxRowCount = PostgresService.MaxRowCount;
 
-    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
+    private readonly IAzureService _azureService = AzureServiceTestHelpers.CreateAzureService();
     private readonly IEntraTokenProvider _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
     private readonly IDbProvider _dbProvider = Substitute.For<IDbProvider>();
     private readonly PostgresService _postgresService;
@@ -30,6 +32,8 @@ public class PostgresServiceRowLimitTests
 
     public PostgresServiceRowLimitTests()
     {
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
+
         _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>(), Arg.Any<CancellationToken>())
             .Returns(new Azure.Core.AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
 

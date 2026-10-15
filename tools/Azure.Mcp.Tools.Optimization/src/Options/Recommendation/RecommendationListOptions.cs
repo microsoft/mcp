@@ -13,7 +13,7 @@ public class RecommendationListOptions : ISubscriptionOption
         "Results are ranked by impact then currency-normalized annual savings.")]
     public int? Top { get; set; }
 
-    [Option(Description = OptimizationStrings.SubscriptionOptionDescription)]
+    [Option(Description = OptimizationStrings.ListSubscriptionOptionDescription)]
     public string? Subscription { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

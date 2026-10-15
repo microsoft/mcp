@@ -1,0 +1,3 @@
+changes:
+  - section: Breaking Changes
+    description: Removed the `advisor recommendation apply` tool (`advisor_recommendation_apply`), which returned infrastructure-as-code rules for applying Advisor recommendations. Use the `advisor recommendation` and `advisor remediation` tools for recommendation guidance and remediation artifacts.

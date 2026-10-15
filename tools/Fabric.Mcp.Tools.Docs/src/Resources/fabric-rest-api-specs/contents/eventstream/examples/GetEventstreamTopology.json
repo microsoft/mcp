@@ -103,6 +103,20 @@
                         "status": "Running"
                     },
                     {
+                        "id": "b7e2c4a1-3f9d-4e6b-8a1c-2d5f7b0e9c63",
+                        "name": "CriblSource",
+                        "type": "Cribl",
+                        "properties": {},
+                        "status": "Running"
+                    },
+                    {
+                        "id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+                        "name": "SAPDatasphereSource",
+                        "type": "SAPDatasphere",
+                        "properties": {},
+                        "status": "Running"
+                    },
+                    {
                         "id": "8b6b1b8e-9b7f-4a7d-8f6b-6f2a8b7c4b15",
                         "name": "AzureBlobStorageEventsSource",
                         "type": "AzureBlobStorageEvents",
@@ -118,6 +132,30 @@
                                 }
                             ],
                             "streamEvents": true
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "a4b5c6d7-e8f9-4a0b-c1d2-e3f4a5b6c7d8",
+                        "name": "FabricCapacityOperationEventsSource",
+                        "type": "FabricCapacityOperationEvents",
+                        "properties": {
+                            "eventScope": "Capacity",
+                            "capacityId": "0b6d8e27-0b7b-4e18-9e5b-2e6b9d9d7e3a",
+                            "includedEventTypes": [
+                                "Microsoft.Fabric.Capacity.OperationStarted",
+                                "Microsoft.Fabric.Capacity.OperationCompleted"
+                            ],
+                            "filters": [
+                                {
+                                    "operatorType": "StringIn",
+                                    "key": "data.operationType",
+                                    "values": [
+                                        "ScaleUp",
+                                        "ScaleDown"
+                                    ]
+                                }
+                            ]
                         },
                         "status": "Running"
                     },
@@ -296,7 +334,7 @@
                             "securityProtocol": "SASL_SSL",
                             "tlsSettings": {
                                 "trustCACertificate": {
-                                    "certificate": {
+                                    "certificateResource": {
                                         "type": "KeyVault",
                                         "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
                                         "certificateName": "my-ca-cert"
@@ -304,7 +342,7 @@
                                     "verifyHostname": true
                                 },
                                 "clientCertificate": {
-                                    "certificate": {
+                                    "certificateResource": {
                                         "type": "KeyVault",
                                         "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
                                         "certificateName": "my-client-cert"
@@ -355,7 +393,10 @@
                                     "tableName": "dbo.Orders",
                                     "selectStatement": "SELECT * FROM dbo.Orders WHERE active = 1"
                                 }
-                            ]
+                            ],
+                            "heartbeatIntervalMs": 30000,
+                            "heartbeatActionQuery": "UPDATE dbo.cdc_heartbeat SET last_seen = CURRENT_TIMESTAMP",
+                            "storeOnlyCapturedTablesDdl": true
                         },
                         "status": "Running"
                     },
@@ -396,7 +437,8 @@
                             "port": 3306,
                             "decimalHandlingMode": "Precise",
                             "snapshotMode": "Initial",
-                            "snapshotLockingMode": "Minimal"
+                            "snapshotLockingMode": "Minimal",
+                            "storeOnlyCapturedTablesDdl": true
                         },
                         "status": "Running"
                     },
@@ -413,6 +455,7 @@
                             "snapshotMode": "InitialOnly",
                             "publicationName": "my_publication",
                             "publicationAutoCreateMode": "AllTables",
+                            "heartbeatIntervalMs": 30000,
                             "heartbeatActionQuery": "INSERT INTO heartbeat (ts) VALUES (NOW())",
                             "snapshotSelectStatementOverrides": [
                                 {
@@ -487,7 +530,7 @@
                             "topic": "mqttTopicName",
                             "tlsSettings": {
                                 "trustCACertificate": {
-                                    "certificate": {
+                                    "certificateResource": {
                                         "type": "KeyVault",
                                         "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.KeyVault/vaults/myVault",
                                         "certificateName": "my-mqtt-ca-cert"
@@ -510,7 +553,8 @@
                             ],
                             "decimalHandlingMode": "Precise",
                             "snapshotMode": "Initial",
-                            "snapshotLockingMode": "Shared"
+                            "snapshotLockingMode": "Shared",
+                            "storeOnlyCapturedTablesDdl": true
                         },
                         "status": "Running"
                     },
@@ -537,7 +581,39 @@
                                 "topicName2"
                             ],
                             "mapUserProperties": false,
-                            "mapSolaceProperties": false
+                            "mapSolaceProperties": false,
+                            "tlsSettings": {
+                                "trustCACertificate": {
+                                    "certificateResource": {
+                                        "type": "KeyVault",
+                                        "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/security/providers/Microsoft.KeyVault/vaults/eventstream-vault",
+                                        "certificateName": "solace-ca"
+                                    },
+                                    "verifyHostname": true,
+                                    "cipherSuites": "TLS_AES_256_GCM_SHA384"
+                                },
+                                "clientCertificate": {
+                                    "certificateResource": {
+                                        "type": "KeyVault",
+                                        "azureKeyVaultResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/security/providers/Microsoft.KeyVault/vaults/eventstream-vault",
+                                        "certificateName": "solace-client"
+                                    },
+                                    "revocationMode": "CRLAndOCSP"
+                                }
+                            }
+                        },
+                        "status": "Running"
+                    },
+                    {
+                        "id": "f8366ed8-ad3e-41e6-ab60-b072867a89ea",
+                        "name": "LakehouseChangeFeedSource",
+                        "type": "LakehouseChangeFeed",
+                        "properties": {
+                            "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                            "itemId": "11111111-2222-3333-4444-555555555555",
+                            "tableNames": [
+                                "*"
+                            ]
                         },
                         "status": "Running"
                     },
@@ -556,6 +632,28 @@
                     }
                 ],
                 "destinations": [
+                    {
+                        "id": "0407c7ba-43ab-413d-a224-1ef0cf1445d0",
+                        "name": "BusinessEventsDestination",
+                        "type": "BusinessEvents",
+                        "properties": {
+                            "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                            "itemId": "99999999-8888-7777-6666-555555555555",
+                            "businessEventTypeId": "OrderShipped",
+                            "inputSerialization": {
+                                "type": "Json",
+                                "properties": {
+                                    "encoding": "UTF8"
+                                }
+                            }
+                        },
+                        "inputNodes": [
+                            {
+                                "name": "ProcessedOrders"
+                            }
+                        ],
+                        "status": "Running"
+                    },
                     {
                         "id": "4642073b-c216-4675-a17c-ed2e75756330",
                         "name": "CustomEndpointDestination",

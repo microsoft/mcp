@@ -1,0 +1,73 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "policySetId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "00013c9d-062a-4f92-8eda-cef8503426bc",
+                        "displayName": "Policy Name 1",
+                        "description": "A Policy description.",
+                        "policy": "ItemCreation",
+                        "createdDateTime": "2025-09-07T17:30:29Z",
+                        "lastModifiedDateTime": "2025-09-07T17:30:29Z",
+                        "modifiedByUser": {
+                            "id": "13a5df42-7a1d-49e5-8e06-9af9f5b76c55",
+                            "type": "User"
+                        },
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "targetProperty": "workspace.id",
+                                "predicate": {
+                                    "operator": "AnyOf",
+                                    "values": [
+                                        "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                    ]
+                                }
+                            }
+                        ],
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "000126a9-31fd-470e-bff3-66f044cd280b",
+                        "displayName": "Policy Name 2",
+                        "description": "A Policy description.",
+                        "policy": "ItemCreation",
+                        "createdDateTime": "2025-09-07T17:30:29Z",
+                        "lastModifiedDateTime": "2025-09-07T17:30:29Z",
+                        "modifiedByUser": {
+                            "id": "13a5df42-7a1d-49e5-8e06-9af9f5b76c55",
+                            "type": "User"
+                        },
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "targetProperty": "item.type",
+                                "predicate": {
+                                    "operator": "AnyOf",
+                                    "values": [
+                                        "Lakehouse"
+                                    ]
+                                }
+                            }
+                        ],
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

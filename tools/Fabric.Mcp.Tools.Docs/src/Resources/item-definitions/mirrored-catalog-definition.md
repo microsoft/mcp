@@ -77,6 +77,7 @@ Describes the source catalog connection and scope configuration.
 | `AzureMonitorMirroredCatalog` | Represents an Azure Monitor (Log Analytics) Iceberg Catalog source. |
 | `AWSIcebergCatalog` | Represents an AWS Glue (Iceberg REST) catalog source. |
 | `MirroredGoogleLakehouseRuntimeCatalog` | Represents a Google BigLake (Iceberg REST) catalog source. |
+| `AvevaConnectCatalog` | Represents a CONNECT by AVEVA (Iceberg REST) catalog source. |
 
 ### SourceTypeProperties
 

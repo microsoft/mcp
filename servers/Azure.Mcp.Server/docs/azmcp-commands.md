@@ -309,6 +309,9 @@ The `azmcp server start` command supports the following options:
 > This option disables endpoint SSRF validation used by tools in the selected namespaces, including protocol, hostname allow-list, and private-network checks. When used:
 > - Untrusted tool input may cause requests to attacker-controlled or internal endpoints
 > - The values identify tool namespaces such as `acr` or `loadtesting`, not endpoint service types
+> - Shared ARM SDK clients use the executing command's original setup namespace in every server mode, including consolidated and single-tool mode. Their ARM policy validates every send, including direct CLI and background sends through the shared pipeline. Missing contexts and unresolved namespaces cannot enable a bypass, including `ALL`.
+> - Default and named factory HTTP clients use `AntiSSRFPolicy` with `ExternalOnlyLatest` to require HTTPS and block private/reserved DNS-to-IP destinations. Namespace overrides are checked on every send, including cached clients; missing or unresolved execution contexts remain protected even for `ALL`.
+> - Factory-created HTTP clients do not automatically follow HTTP redirects, including during namespace overrides. The shared ARM domain policy does not cover raw ARM HTTP requests or SDK clients created outside the shared ARM helper, although factory-created transports still receive DNS/IP protection.
 > - Repeat the option for multiple namespaces, or provide multiple space-delimited values (e.g. `--dangerously-disable-ssrf-protections-by-namespace acr loadtesting`)
 > - The special value `ALL` disables these protections for every namespace
 > - Only use this option temporarily in a fully trusted environment
@@ -319,6 +322,24 @@ The `azmcp server start` command supports the following options:
 >     --dangerously-disable-ssrf-protections-by-namespace acr \
 >     --dangerously-disable-ssrf-protections-by-namespace loadtesting
 > ```
+
+> **Security warning for outgoing proxy configuration:**
+>
+> The server selects one explicit proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY`
+> order and applies it to both HTTP and HTTPS requests. Requests actually routed through
+> that proxy omit transport-level DNS/IP checks; requests excluded by `NO_PROXY` use the
+> protected direct route and retain those checks. When none of those settings selects a proxy, `.NET`'s
+> `HttpClient.DefaultProxy` supplies environment, operating-system, PAC, and bypass rules
+> per destination. Requests routed through a system proxy or PAC rule omit transport DNS/IP
+> checks, while destinations for which those rules select no proxy retain them. PAC files
+> call this a `DIRECT` result. Debug recording proxies remain a handler-wide exception.
+> System and PAC rules are evaluated once to select a transport and again by the selected
+> proxy transport while connecting. If a dynamic configuration changes from proxy to direct
+> between those evaluations, the direct connection remains on the proxy-designated transport
+> and does not receive direct-route DNS/IP filtering. Use only trusted, stable proxy
+> configurations with appropriate network restrictions whose routing decision does not change
+> during a request. Endpoint validation remains active unless separately bypassed, including
+> public-target checks of the original destination's IPs.
 
 > **⚠️ Security Warning for `--dangerously-write-support-logs-to-dir`:**
 >
@@ -460,13 +481,23 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List Advisor recommendations in a subscription, with optional filters
+# List actual Advisor recommendation records in a subscription, with optional filters.
+# For global recommendation metadata/catalog lookups, including service-retirement metadata by tracking ID,
+# use advisor metadata list instead; that command does not require a subscription.
 # Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
 # --tracking-ids and --retirement-date can be used independently or together
 # --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
+# Scope is either a subscription (--subscription, optionally narrowed by --resource-group) or an Azure Service Group
+# (--service-group, provided as the name segment of its ARM resource ID); specify either --subscription or --service-group,
+# not both, and the configured default subscription is used when neither is supplied. --resource-group applies only to subscription scope
+# --prioritized true returns only recommendations with contextual criticality scoring for both scopes and ranks them by
+# metadata priority score, then contextual criticality score, then recommendation display name; defaults to false
 # Each result uses the standard ARM resource shape; name contains the stable recommendation ID
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription> \
+azmcp advisor recommendation list [--subscription <subscription>] \
+                                  [--resource-group <resource-group>] \
+                                  [--service-group <service-group>] \
+                                  [--prioritized <true|false>] \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \
@@ -479,31 +510,51 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
 
-# Update the customer-provided state of an Advisor recommendation. Subscription context can come from --subscription,
-# which accepts an Azure subscription ID or name, or from the configured default subscription. --recommendation-id
+# Update the customer-provided state of an Advisor recommendation in a subscription or service group.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both. --recommendation-id
 # is the stable ID, also called recommendation ID. Set the state to New, Postponed,
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
 # an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
-# a postponed or dismissed recommendation. Security and platform-resolved recommendations cannot
+# a postponed, dismissed, or completed recommendation. Security and platform-resolved recommendations cannot
 # be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation update --subscription <subscription> \
+azmcp advisor recommendation update [--subscription <subscription>] \
+                                    [--service-group <service-group>] \
                                     --recommendation-id <recommendation-id> \
                                     --recommendation-status <New|Postponed|Dismissed|Completed> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
-                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
+                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
+                                    [--tenant <tenant>]
 
-# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group,
+# or rank recommendation types by priority with --prioritized true.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both.
+# --resource-group can only be used with subscription scope.
 # Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
-# retirement data prefer metadata values with recommendation-instance fallback.
+# retirement date come from recommendation-type metadata only; recommendations whose type has no English metadata are
+# excluded from every summary.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
+# --prioritized true (top recommendations, top actions, most critical, or what-should-I-fix-first requests) ranks
+# active New recommendation types and defaults --top to 10. Order: metadata priority score, annual savings (daily
+# potential savings x 12 x 30.4, else the legacy annual amount; USD, rounded to cents), summed criticality score,
+# earliest retirement date, and affected-resource count (fewest first for Cost, most first otherwise), then label.
+# Missing values sort last and are never treated as zero. Reserved instances keep only the three-year, seven-day
+# lookback scenario. Each group returns its distinct affected-resource count, totalRecommendations is the sum of those
+# counts (affected resources per type, not records), and each group carries a prioritizationSignals object
+# (category, impact, subCategory, retirementDate, retirementWindow, annualSavings, resourceTypeCriticality,
+# criticalService, effort, actionability, costImplication) used to explain the rank in plain business language.
+# Drill into a type with advisor recommendation list --recommendation-type-id <group-key> --prioritized true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation summary --subscription <subscription> \
+azmcp advisor recommendation summary [--subscription <subscription>] \
+                                     [--service-group <service-group>] \
                                      [--group-by <group-by>] \
+                                     [--prioritized <true|false>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                                      [--impact <High|Medium|Low>] \
                                      [--recommendation-type-id <recommendation-type-id>] \
@@ -516,22 +567,11 @@ azmcp advisor recommendation summary --subscription <subscription> \
                                      [--resource-group <resource-group>] \
                                      [--tenant <tenant>]
 
-# Apply Advisor recommendation to create or modify IaaC files (like ARM, Terraform) for Azure resources
-# Supported --resource values:
-#   aad_domainservices, apimanagement_service, cognitiveservices_accounts,
-#   compute_virtualmachines, compute_virtualmachinescalesets,
-#   containerregistry_registries, containerservice_managedclusters,
-#   dbforpostgresql_flexibleservers, documentdb_databaseaccounts,
-#   keyvault_vaults, kubernetes_connectedclusters, kubernetesconfiguration_extensions,
-#   netapp_volumes, network_applicationgatewaywebapplicationfirewallpolicies,
-#   network_expressrouteports, network_frontdoorwebapplicationfirewallpolicies,
-#   sql_managedinstances, storage_storageaccounts, web_serverfarms, web_staticsites
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation apply --resource <resource>
-
-# List the global Azure Advisor recommendation metadata catalog (also called recommendation types) from Azure Resource
-# Graph. Use it in greenfield environments with no generated recommendations, or filter by supported resource type
-# during brownfield onboarding. Supports service-retirement filtering by Service Health tracking ID and retirement
+# List the global, subscription-independent Azure Advisor recommendation metadata catalog (also called recommendation types)
+# from Azure Resource Graph. Use it for metadata/catalog lookups, including service-retirement metadata by Service Health
+# tracking ID, even when no subscription or active recommendation instance is specified. Use recommendation list for actual
+# subscription-scoped recommendation records. Use metadata in greenfield environments with no generated recommendations,
+# or filter by supported resource type during brownfield onboarding. Supports service-retirement filtering by tracking ID and retirement
 # date expression. Service-retirement filters apply to the ServiceUpgradeAndRetirement subcategory; conflicting
 # subcategory filters are rejected. Results are ordered High, Medium, Low.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -657,7 +697,7 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., `https://your-service.cognitiveservices.azure.com/`) |
 | `--text` | Yes | The text to convert to speech |
 | `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
 | `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
@@ -1100,6 +1140,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --location <location> \
                                --vault-type <vault-type> \
                                [--sku <sku>] \
+                               [--enable-public-network-access <true|false>] \
                                [--storage-type <storage-type>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
@@ -1583,7 +1624,7 @@ azmcp extension cli install --cli-type <cli-type>
 
 ```bash
 # Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint <endpoint> \
                                --from <sender-email> \
                                --to <recipient-email> \
@@ -1596,7 +1637,7 @@ azmcp communication email send --endpoint <endpoint> \
 
 # Examples:
 # Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1604,7 +1645,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -1614,7 +1655,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --is-html
 
 # Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "notifications@verified-domain.com" \
                                --to "recipient1@example.com,recipient2@example.com" \
@@ -1639,7 +1680,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 ```bash
 # SMS message using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint <endpoint> \
                              --from <sender-phone-number> \
                              --to <recipient-phone-number> \
@@ -1649,14 +1690,14 @@ azmcp communication sms send --endpoint <endpoint> \
 
 # Examples:
 # Send SMS to single recipient
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
                              --from "+1234567890" \
                              --to "+1234567891" \
                              --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
                              --from "+1234567890" \
                              --to "+1234567891,+1234567892" \
@@ -2641,9 +2682,9 @@ azmcp cosmos database container item vector-search --subscription <subscription>
 #### Optimization Recommendations
 
 ```bash
-# List top Azure Advisor cost-saving recommendations for a subscription
+# List top cost-saving recommendations for a subscription, or across all accessible subscriptions in the signed-in tenant (or --tenant) when --subscription is omitted
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp optimization recommendation list --subscription <subscription> \
+azmcp optimization recommendation list [--subscription <subscription>] \
                                        [--top <top>] \
                                        [--tenant <tenant>]
 
@@ -2972,6 +3013,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--maximum-throughput-units <units>] \
                                  [--kafka-enabled <true/false>] \
                                  [--zone-redundant <true/false>] \
+                                 [--disable-local-auth <true|false>] \
                                  [--tags <json-tags>]
 ```
 
@@ -4142,13 +4184,13 @@ azmcp datadog monitoredresources list --subscription <subscription> \
 
 ### Azure Quick Review CLI Operations
 
+These local-only commands are available when Azure Quick Review CLI (`azqr`) version 3.0.0 or later is installed and available on `PATH`.
+
 ```bash
 # Scan a subscription for recommendations
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription>
 
 # Scan a subscription and scope to a specific resource group
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription> \
                      --resource-group <resource-group-name>
 ```
@@ -5124,6 +5166,7 @@ azmcp storage account create --subscription <subscription> \
                              [--sku <sku>] \
                              [--access-tier <access-tier>] \
                              [--enable-hierarchical-namespace <true|false>] \
+                             [--allow-shared-key-access <true|false>] \
                              [--tenant <tenant>]
 ```
 
@@ -5138,6 +5181,7 @@ azmcp storage account create --subscription <subscription> \
 | `--sku` | No | Storage account SKU for StorageV2 accounts. Valid values: `Standard_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_LRS`, `Premium_ZRS`, `Standard_GZRS`, `Standard_RAGZRS`. Defaults to `Standard_LRS`. |
 | `--access-tier` | No | Default access tier for blob storage. Valid values: `Hot`, `Cool`, `Cold`, `Premium`. Defaults to `Hot`. |
 | `--enable-hierarchical-namespace` | No | Whether to enable the Azure Data Lake Storage Gen2 hierarchical namespace. Defaults to `false`. |
+| `--allow-shared-key-access` | No | Allow Shared Key authentication. Defaults to `false`; use Microsoft Entra ID unless explicitly opting in. |
 | `--tenant` | No | Azure tenant ID or name. |
 
 ```bash
@@ -5389,7 +5433,8 @@ azmcp azureterraformbestpractices get
 #### AzureRM Provider Documentation
 
 ```bash
-# Retrieve comprehensive AzureRM Terraform provider documentation for a specified resource type
+# Retrieve AzureRM Terraform provider documentation for a Terraform resource or data source named with the azurerm_ prefix
+# Reads reference documentation only; does not query or modify live Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform azurerm get --resource-type <resource-type> \
                                  [--doc-type <doc-type>] \
@@ -5400,7 +5445,8 @@ azmcp azureterraform azurerm get --resource-type <resource-type> \
 #### AzAPI Provider Documentation
 
 ```bash
-# Retrieve AzAPI Terraform provider documentation and schema for a specified Azure resource type
+# Retrieve AzAPI Terraform provider documentation and schema for an Azure resource type in ARM namespace format
+# Reads reference documentation only; does not query or modify live Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraform azapi get --resource-type <resource-type> \
                                [--api-version <api-version>]
@@ -5427,7 +5473,10 @@ azmcp azureterraform avm get --module-name <module-name> \
 #### Azure Export for Terraform (aztfexport)
 
 ```bash
-# Generate an aztfexport command to export a single Azure resource to Terraform configuration
+# Generate an aztfexport command to export a single existing Azure resource to Terraform configuration
+# Use when the resource is identified by its full Azure resource ID; exports only that resource, not its resource group
+# Use --provider azapi for AzAPI instead of the default AzureRM provider
+# Returns a command for local execution or installation instructions; does not execute the export or modify Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform aztfexport resource --resource-id <resource-id> \
                                          [--output-folder <output-folder>] \
@@ -5437,7 +5486,10 @@ azmcp azureterraform aztfexport resource --resource-id <resource-id> \
                                          [--parallelism <parallelism>] \
                                          [--continue-on-error]
 
-# Generate an aztfexport command to export an Azure resource group to Terraform configuration
+# Generate an aztfexport command to export an existing Azure resource group and all its resources to Terraform configuration
+# Use when the request names a resource group rather than a single Azure resource ID
+# Use --provider azapi for AzAPI instead of the default AzureRM provider
+# Returns a command for local execution or installation instructions; does not execute the export or modify Azure resources
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform aztfexport resourcegroup --resource-group <resource-group> \
                                               [--output-folder <output-folder>] \
@@ -5461,14 +5513,16 @@ azmcp azureterraform aztfexport query --query <query> \
 #### Conftest Policy Validation
 
 ```bash
-# Generate a conftest command to validate Terraform .tf files in a workspace against Azure policies
+# Generate a conftest command to validate the Terraform .tf source files in a workspace folder against Azure policies
+# Use for a folder of Terraform configuration; to validate a tfplan.json plan file, use conftest plan
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform conftest workspace --workspace-folder <workspace-folder> \
                                         [--policy-set <policy-set>] \
                                         [--severity-filter <severity-filter>] \
                                         [--custom-policies <custom-policies>]
 
-# Generate a conftest command to validate a Terraform plan JSON file against Azure policies
+# Generate a conftest command to validate an already generated Terraform plan JSON file (tfplan.json) against Azure policies
+# Use for a plan file; to validate Terraform .tf source files, use conftest workspace
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp azureterraform conftest plan --plan-folder <plan-folder> \
                                    [--policy-set <policy-set>] \
