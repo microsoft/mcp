@@ -54,10 +54,11 @@ public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricin
         // Require --sku when --service is provided (broad service queries return too many results)
         if (!string.IsNullOrEmpty(options.Service) && string.IsNullOrEmpty(options.Sku))
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"When querying by service '{options.Service}', you must also specify --sku to narrow results. " +
                 "Ask the user which specific SKU they want pricing for. " +
-                "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).");
+                "Examples: --sku Standard_D4s_v5 (for VMs), --sku Standard_LRS (for Storage), --sku GP_Gen5_2 (for SQL).",
+                "Pricing service requires a SKU.");
         }
     }
 

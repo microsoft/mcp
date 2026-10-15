@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Adme.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
@@ -10,6 +11,7 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// Calls the storage info endpoint for an ADME instance.
 /// </summary>
 public sealed class HealthService(
+    IEndpointValidator endpointValidator,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory) : IHealthService
 {
@@ -26,7 +28,7 @@ public sealed class HealthService(
         string? authAppId = null,
         CancellationToken cancellationToken = default)
     {
-        return await AdmeServiceHelper.SendAsync(
+        return await AdmeServiceHelper.SendAsync(endpointValidator,
             _credentialProvider,
             _httpClientFactory,
             endpoint,

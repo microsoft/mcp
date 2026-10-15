@@ -54,7 +54,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
         }
         catch (ArgumentException ex)
         {
-            validationResult.Errors.Add(ex.Message);
+            validationResult.AddError(ex.Message, "Invalid recovery resource update.");
         }
     }
 

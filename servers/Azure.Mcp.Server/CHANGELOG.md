@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 3.0.0-beta.49 (Unreleased)
+## 4.0.0-beta.1 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,154 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 3.0.0 (2026-10-12)
+
+**🚀 New Major Release — Azure MCP Server 3.0**
+
+We're excited to announce the third major release of the Azure MCP Server! Version 3.0 builds on the 2.0 release with a broader and more consistent tool surface, secure-by-default resource creation, stricter input and endpoint validation, richer Azure Backup, Advisor, and resiliency capabilities, and a new MCP protocol and tool design foundation. This release spans 50 beta iterations and hundreds of contributions.
+
+### Key Features & Improvements
+
+- **More Tools and Services**: Introduced new namespaces since 2.0 and expanded existing toolsets, including:
+  - Azure Backup – `azurebackup`: vaults, policies, protection, protectable items and containers, recovery points, jobs, governance (soft delete, immutability, Multi-User Authorization, Resource Guards), customer-managed key encryption, private endpoints, and cross-region restore
+  - Azure Resilience Management – `resiliency`: goals, usage plans and enrollments, recovery plans, recovery jobs, readiness and failover validation, and resilience drills
+  - Azure SRE Agent – `sreagent`: 55 commands to manage agents, skills, connectors, hooks, threads, scheduled tasks, incidents, and workflows
+  - Azure Terraform – `azureterraform`: AzureRM/AzAPI provider documentation, Azure Verified Modules, `aztfexport` export, and `conftest` policy validation
+  - Azure Optimization – `optimization`: cost-saving recommendations, alternative VM/VMSS SKU options, and utilization explanations
+  - Azure IoT Hub – `iothub` and Azure IoT Operations – `iotoperations`
+  - Azure Insights – `insights`: infrastructure insights from Azure Resource Graph aggregation and MCP sampling
+  - Azure Advisor – `advisor`: recommendation list, summary, update, apply-to-IaC, metadata, and remediation tools
+  - Azure Cosmos DB – `cosmos`, Azure Compute – `compute` (VM power state and creation validation), Azure App Service – `appservice` (web app change-state), Azure Monitor – `monitor` (batch metrics and Log Analytics table search), and Azure Managed Lustre – `managedlustre` (filesystem expansion) received new tools
+- **Secure by Default**: New resources are created with safer defaults, including Storage accounts with Shared Key authentication disabled, Event Hubs namespaces with local authentication disabled, NFS file shares with `RootSquash` and encrypted transit, and Recovery Services vaults with public network access disabled
+- **Security Hardening**: Cloud-specific endpoint validation based on `Microsoft.Security.AntiSSRF` across data-plane and management-plane tools, namespace-scoped validation overrides, and telemetry that no longer records option values
+- **Cleaner, More Accurate Tool Contracts**: Unused parameters, custom retry policy options, and confirmation-only options were removed from tools across all namespaces, unknown parameters are rejected, result payloads were normalized, and input schemas are generated with richer, spec-accurate `System.Text.Json` schemas
+- **Structured Output**: Tools can advertise an `outputSchema` and return `structuredContent` in all server modes with `--structured-output-mode`
+- **Latest MCP Protocol**: Migrated to the MCP 2026-07-28 stateless protocol with automatic backward compatibility for clients using the 2025-11-25 protocol
+- **More Flexible Server Options**: Added `--disable-proxy-tools`, learn-mode discovery for `azmcp` commands, an `operationPlane` field in `tools list` output, and Azure Pipelines workload identity federation authentication
+- **Improved Reliability and Diagnostics**: More accurate HTTP status codes and actionable error messages, clearer credential errors, additional telemetry, and startup, concurrency, and resource usage benchmarks
+
+### Getting Started
+
+Install the Azure MCP Server from your preferred platform:
+
+- **VS Code**: Install the [Azure MCP Server extension in VS Code](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
+- **VS Code Insiders**: Install the [Azure MCP Server extension in VS Code Insiders](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server)
+- **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
+- **Visual Studio 2026**: Install the [Azure and AI Development workload](https://learn.microsoft.com/azure/developer/github-copilot-azure/get-started?pivots=visual-studio-2026#install-github-copilot-for-azure)
+- **Claude and GitHub Copilot CLI**: Install the [Azure Skills Plugin](https://github.com/microsoft/azure-skills?tab=readme-ov-file#install-in-60-seconds)
+- **IntelliJ IDEA**: Install the [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
+- **Eclipse IDE**: Install the [Azure Toolkit for Eclipse](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+- **NuGet**: Run `dotnet tool install -g Azure.Mcp --version 3.0.0`
+- **npm**: Run `npx @azure/mcp@3.0.0`
+- **Docker**: Run `docker pull mcr.microsoft.com/azure-mcp:3.0.0`
+- **PyPI**: Run `pip install msmcp-azure==3.0.0`
+- **MCP Bundles**: Download the `.mcpb` file for your platform/architecture and open it with your client, like Claude Desktop:
+  - Linux: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-linux-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-linux-arm64.mcpb)
+  - macOS: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-osx-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-osx-arm64.mcpb)
+  - Windows: [x64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-win-x64.mcpb) | [ARM64](https://github.com/microsoft/mcp/releases/download/Azure.Mcp.Server-3.0.0/Azure.Mcp.Server-win-arm64.mcpb)
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication](https://github.com/microsoft/mcp/blob/release/azure/3.x/docs/Authentication.md)
+- [Remote Server Deployment](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#remote-mcp-server-preview)
+- [Connecting to Sovereign Clouds](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/3.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 3.0!
+
+For a complete history of changes included in this release, see entries for versions [3.0.0-beta.1](#300-beta1-2026-04-01) through [3.0.0-beta.50](#300-beta50-2026-10-06).
+
+---
+
+### Other Changes since 2.0.0
+
+#### Breaking Changes
+
+**Tool Contract Cleanup**:
+
+- Removed unused parameters (such as `subscription`, `resource-group`, `tenant`, `auth-method`, `user`, and `sender-name`) from tools across nearly all namespaces, including Advisor, AKS, App Configuration, App Lens, Application Insights, Azure Migrate, Communication, Compute, Confidential Ledger, Container Apps, Deploy, Event Grid, Event Hubs, Foundry Extensions, Key Vault, Load Testing, Managed Lustre, MySQL, PostgreSQL, Quota, Redis, Resource Health, Search, Service Bus, SQL, Storage, and others. Update any scripts or saved prompts that pass these options
+- Removed custom retry policy options from all tools and shared Azure service APIs; the Azure SDK retry defaults are used instead
+- Removed the confirmation-only `--force` parameter from `sql server delete`
+- Tool calls with unknown parameters are now explicitly rejected
+- Normalized result payloads for several tools in best practices, Functions, Monitor, Search, SQL, and Well-Architected Framework to consistent, named result objects (for example `{ bestPractices }`, `{ results }`, `{ servers }`, and `{ guidance }`)
+
+**Namespace, Tool, and Option Renames**:
+
+- Replaced `monitor healthmodels entity get` with `monitor healthmodels list` and `monitor healthmodels get`
+- Moved shared server code from `Azure.Mcp.Core.*` to `Microsoft.Mcp.Core.*` namespaces (for example `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands`). Because logger categories are derived from type namespaces, any logging configuration that targets the old categories (for example `Logging:LogLevel:Azure.Mcp.Core` entries in `appsettings.json` or log filters in environment variables) must be updated to the new `Microsoft.Mcp.Core` categories to keep applying
+
+**Secure-by-Default Behavior**:
+
+- New Storage accounts disable Shared Key authentication by default, while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access
+- New Event Hubs namespaces disable local authentication by default
+- New NFS file shares default to `RootSquash` with encrypted transit
+- `compute vm create` and `compute vmss create` now require `--image`, and the `Win2019Datacenter` and `Ubuntu2004` image aliases were removed
+- The MySQL and PostgreSQL `database query` tools are now marked destructive and non-read-only, and no longer filter statements by SQL verb. The signed-in user's database permissions determine what a statement may do. In consolidated mode they moved to a new `execute_azure_database_query` tool
+
+#### Bugs Fixed
+
+- Fixed not-found conditions returning HTTP 500/400 instead of 404 and command validation failures returning HTTP 500 instead of 400
+- Fixed numerous Azure Backup, Cosmos DB, Event Hubs, Key Vault, MySQL, PostgreSQL, Redis, SQL, and Storage tool issues found through telemetry and live testing
+- Fixed CLI log messages and exceptions being written to stdout instead of stderr, which could corrupt JSON and JSON-RPC output
+- Fixed trimmed and packaged distributions failing to bind options for some tools
+- Fixed the npm wrapper modifying the calling project's `package.json` and lockfile when auto-installing a platform package
+
+#### Other Changes
+
+- Migrated tools to the new tool design and updated to the latest `ModelContextProtocol` packages
+- Improved CLI startup time for targeted command invocations by ~39%
+- Added telemetry for tool source, learn usage, tool parameters, and annotations, with improved privacy protections for validation failures
+- Extensive tool description improvements across namespaces for better LLM selection accuracy
+
+## 3.0.0-beta.50 (2026-10-06)
+
+### Breaking Changes
+
+- Recovery Services vault creation now disables public network access by default. Use `--enable-public-network-access true` to explicitly enable public access. This option is not supported for Data Protection vaults. [[#3755](https://github.com/microsoft/mcp/pull/3755)]
+- New NFS shares default to `RootSquash` with encrypted transit. Explicit options remain available, while omitted security settings preserve existing shares during updates. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+
+### Bugs Fixed
+
+- Fixed `azurebackup protecteditem get` silently returning an incomplete or empty list for Data Protection Backup vaults; when a backup instance repeatedly fails to deserialize (commonly an empty or malformed resourceGroupId) the truncated listing now surfaces as an error instead of being reported as a successful result. [[#3840](https://github.com/microsoft/mcp/pull/3840)]
+- Improved Azure Advisor tool selection by distinguishing global recommendation metadata lookups from subscription-scoped recommendation records. [[#3817](https://github.com/microsoft/mcp/pull/3817)]
+- The `extension_azqr` tool is now advertised only for local execution when Azure Quick Review CLI version `3.0.0` or later is installed. [[#3503](https://github.com/microsoft/mcp/pull/3503)]
+- Fixed `--tool` filtering to match exposed tool names exactly, ignoring case, so selecting a tool no longer exposes or allows calls to other tools whose names are substrings of it. [[#3837](https://github.com/microsoft/mcp/pull/3837)]
+- Updating an existing file share now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Prevented option values from appearing in validation failure telemetry while preserving client-facing error messages. [[#3792](https://github.com/microsoft/mcp/pull/3792)]
+- Added namespace-aware endpoint validation for Azure SRE Agent data-plane and Azure Storage blob and table endpoints. [[#3820](https://github.com/microsoft/mcp/pull/3820)]
+- Validated PostgreSQL server inputs against the configured Azure cloud before acquiring credentials or opening database connections. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate Azure Retail Prices requests against cloud-specific endpoints before sending initial or paginated requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate raw Azure Resource Manager requests from Quota and Resource Health against cloud-specific management endpoints, and safely escape generated Resource Health OData filter values. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Fixed Azure SRE Agent tool selection so that `investigate this issue` prompts route to the investigate tool instead of the read-only get-thread tool. [[#3826](https://github.com/microsoft/mcp/pull/3826)]
+- Rejected Speech endpoints now fail without falling back to another transcription method. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+
+### Other Changes
+
+- Added cloud-specific endpoint validation for Azure AI Search and Azure AI Speech data-plane requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Hardened Service Bus namespace validation to require bare DNS hostnames and added cloud-specific endpoint validation for Service Fabric ARM requests and pagination. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+
+## 3.0.0-beta.49 (2026-10-01)
+
+### Breaking Changes
+
+- Removed the ADME tools temporarily for GA release. [[#3805](https://github.com/microsoft/mcp/pull/3805)]
+- Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault. [[#3800](https://github.com/microsoft/mcp/pull/3800)]
+- Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+- New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication. [[#3761](https://github.com/microsoft/mcp/pull/3761)]
+
+### Bugs Fixed
+
+- Fixed resilience drill create failing with a generic service error when no recovery plan was specified. The tool now sends SystemAssigned identity for RecoveryPlanProperties and the legacy MonitoringProperties required by the 2026-04-01-preview API flow. [[#3801](https://github.com/microsoft/mcp/pull/3801)]
+- Added namespace-aware endpoint validation for Event Grid, Foundry Extensions, IoT Hub, Key Vault, Load Testing, Managed HSM, Managed Lustre, Monitor metrics and web tests, and MySQL endpoints. [[#3694](https://github.com/microsoft/mcp/pull/3694)]
+- Corrected the read-only annotation on the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now correctly marked as write operations so they are excluded when the server runs with `--read-only`. [[#3818](https://github.com/microsoft/mcp/pull/3818)]
+- Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance. [[#3816](https://github.com/microsoft/mcp/pull/3816)]
+- Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback. [[#3793](https://github.com/microsoft/mcp/pull/3793)]
+- Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
 
 ## 3.0.0-beta.48 (2026-09-29)
 

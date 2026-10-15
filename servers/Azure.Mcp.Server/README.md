@@ -102,7 +102,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
-<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false,}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // ⚠️ DANGEROUS: Disable SSRF protections for specific namespaces.}} -->
+<!-- insert-section: vsix {{       // Only use this if you understand the security implications.}} -->
+<!-- insert-section: vsix {{       // Forwards to --dangerously-disable-ssrf-protections-by-namespace.}} -->
+<!-- insert-section: vsix {{       "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": ["storage"]}} -->
 <!-- insert-section: vsix {{       ```}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
@@ -951,14 +956,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "List Advisor recommendations for service group 'my-service-group'"
+* "Show the prioritized Advisor recommendations for service group 'my-service-group'"
+* "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
+* "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
+* "Mark an Advisor recommendation as completed in service group 'my-service-group'"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
-* "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
@@ -1457,7 +1468,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management

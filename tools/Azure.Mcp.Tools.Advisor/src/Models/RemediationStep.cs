@@ -22,9 +22,6 @@ public sealed record RemediationStep
     [JsonPropertyName("command")]
     public string? Command { get; init; }
 
-    [JsonPropertyName("source")]
-    public string? Source { get; init; }
-
     [JsonPropertyName("sourceUrl")]
     public string? SourceUrl { get; init; }
 }

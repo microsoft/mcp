@@ -14,7 +14,7 @@ The definition consists of one required part and two optional parts as shown in 
 |---|---|---|---|
 | `map.json` | [MapDetails](#mapdetails) (JSON) | true | Contains the core map details that define the Map item. |
 | `queries` | [Directory](#queries-directory-layersourcekql-file) | false | Contains a list of Kusto query files that are part of map layer sources. Each Kusto query file (.kql) belongs to an individual layer in the map item and must be named using the convention `layerSource-<layerSourceId>.kql`, where `<layerSourceId>` matches the corresponding layer source identifier in `map.json`. |
-| `.platform`| [PlatformDetails](#platformdetails) (JSON) | false | Contains platform/environment metadata that describes the common details of the Map item. |
+| `.platform`| [PlatformDetails](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/map-definition#platformdetails) (JSON) | false | Contains platform/environment metadata that describes the common details of the Map item. |
 
 The service resolves layer queries by looking for files under the `queries` directory whose names follow this pattern. For example, a layer source with ID `00000000-0000-0000-0000-000000000000` in `map.json` is associated with the file `queries/layerSource-00000000-0000-0000-0000-000000000000.kql`.
 
@@ -573,3 +573,4 @@ The LayerSourceKql file name is `layerSource-<layerSourceId>.kql`, where `<layer
 tab1
 | where Column9 > 0 and Column9 < 200
 ```
+

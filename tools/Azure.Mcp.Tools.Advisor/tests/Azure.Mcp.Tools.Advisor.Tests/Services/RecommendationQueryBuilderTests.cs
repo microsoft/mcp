@@ -39,6 +39,43 @@ public class RecommendationQueryBuilderTests
     }
 
     [Fact]
+    public void BuildServiceGroupClause_NullScope_ExcludesServiceGroupProjections()
+    {
+        Assert.Equal(
+            RecommendationQueryBuilder.ServiceGroupExclusionClause,
+            RecommendationQueryBuilder.BuildServiceGroupClause(null));
+    }
+
+    [Fact]
+    public void BuildServiceGroupClause_SubscriptionScope_ExcludesServiceGroupProjections()
+    {
+        var scope = RecommendationQueryScope.ForSubscription("sub1", null);
+
+        Assert.Equal(
+            RecommendationQueryBuilder.ServiceGroupExclusionClause,
+            RecommendationQueryBuilder.BuildServiceGroupClause(scope));
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ServiceGroupScope_MatchesCanonicalServiceGroupId()
+    {
+        var scope = RecommendationQueryScope.ForServiceGroup("sg1");
+
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null,
+            includeStatus: true,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false,
+            scope: scope);
+
+        Assert.Contains(
+            $"tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}sg1'",
+            result);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
+    }
+
+    [Fact]
     public void BuildInstancePredicates_SummaryIgnoresRequestedStatus()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
@@ -84,6 +121,27 @@ public class RecommendationQueryBuilderTests
             $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
             $"{RecommendationQueryBuilder.ServiceGroupExclusionClause} and ",
             result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ServiceGroup_UsesExactCanonicalScope()
+    {
+        var scope = RecommendationQueryScope.ForServiceGroup("service-group-test");
+
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null,
+            includeStatus: true,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false,
+            scope: scope);
+
+        Assert.StartsWith(
+            $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
+            "tostring(properties.serviceGroupId) =~ " +
+            $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test' and ",
+            result);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
     }
 
     [Theory]

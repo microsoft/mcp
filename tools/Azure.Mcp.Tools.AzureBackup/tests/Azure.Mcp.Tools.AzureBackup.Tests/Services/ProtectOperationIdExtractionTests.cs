@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.DataProtectionBackup.Models;
@@ -85,10 +86,10 @@ public class ProtectOperationIdExtractionTests
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1)));
-        var service = Substitute.For<IAzureService>();
+        var service = AzureServiceTestHelpers.CreateAzureService();
+        AzureServiceTestHelpers.ConfigureArmClientOptions(service, client, ArmEnvironment.AzurePublicCloud);
         service.GetClient().Returns(client);
         service.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        service.CloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
         return service;
     }
 

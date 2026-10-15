@@ -13,7 +13,7 @@
     "/workspaces": {
       "post": {
         "summary": "Creates a new workspace.",
-        "description": "## Permissions\n\n- The caller must have permission to create workspaces granted by Fabric administrator. For more information see: [create workspaces](/fabric/admin/portal-workspace#create-workspaces-new-workspace-experience).\n- The caller must have *contributor* permissions or be an Admin on the capacity. For more information, see: [capacity user permissions](/power-bi/enterprise/service-admin-premium-manage#manage-user-permissions).\n- Service Principals must have permission granted by Fabric administrator. For more information see: [Service principals can create workspaces, connections, and deployment pipelines](/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines). \n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n- The caller must have permission to create workspaces granted by Fabric administrator. For more information see: [create workspaces](/fabric/admin/portal-workspace#create-workspaces-new-workspace-experience).\n- The caller must have *contributor* permissions or be an Admin on the capacity. For more information, see: [capacity user permissions](/power-bi/enterprise/service-admin-premium-manage#manage-user-permissions).\n- Service Principals must have permission granted by Fabric administrator. For more information see: [Service principals can create workspaces, connections, and deployment pipelines](/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines). \n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -76,7 +76,7 @@
       },
       "get": {
         "summary": "Returns a list of workspaces the principal can access. Use the roles query parameter to filter results by the principal workspace role.",
-        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -156,7 +156,7 @@
     "/workspaces/{workspaceId}": {
       "get": {
         "summary": "Returns specified workspace information.",
-        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -219,7 +219,7 @@
       },
       "patch": {
         "summary": "Updates the specified workspace properties.",
-        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -284,7 +284,7 @@
       },
       "delete": {
         "summary": "Deletes the specified workspace and the items under it.",
-        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -666,7 +666,7 @@
     "/workspaces/{workspaceId}/items": {
       "get": {
         "summary": "Returns a list of items from the specified workspace.",
-        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -793,7 +793,7 @@
       },
       "post": {
         "summary": "Creates an item in the specified workspace.",
-        "description": "This API is supported for a number of item types, find the supported item types in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). You can use [Get item definition API](/rest/api/fabric/core/items/get-item-definition) to get an item definition. \n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n ## Permissions \n The caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes). \n\n## Limitations \n- To create a non-PowerBI Fabric item the workspace must be on a supported Fabric capacity. For more information see [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types). \n- To create a PowerBI item, the user must have the appropriate license. For more information see [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types). \n- When creating an item, use either `creationPayload` or `definition`, but do not use both at the same time. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). You can use [Get item definition API](/rest/api/fabric/core/items/get-item-definition) to get an item definition. \n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n ## Permissions \n The caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes). \n\n## Limitations \n- To create a non-PowerBI Fabric item the workspace must be on a supported Fabric capacity. For more information see [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types). \n- To create a PowerBI item, the user must have the appropriate license. For more information see [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types). \n- When creating an item, use either `creationPayload` or `definition`, but do not use both at the same time. \n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -885,7 +885,7 @@
     "/workspaces/{workspaceId}/items/{itemId}": {
       "get": {
         "summary": "Returns properties of the specified item.",
-        "description": "This API is supported for a number of item types, find the supported item types in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). \n\nFor retrieving additional type specific properties, refer to the get API reference page of the specific item type.\n\n## Permissions\n\n The caller must have *read* permissions for the item. \n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.Read.All or Item.ReadWrite.All \n- Specific scope: *itemType*.Read.All or *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). \n\nFor retrieving additional type specific properties, refer to the get API reference page of the specific item type.\n\n## Permissions\n\n The caller must have *read* permissions for the item. \n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.Read.All or Item.ReadWrite.All \n- Specific scope: *itemType*.Read.All or *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -973,7 +973,7 @@
       },
       "patch": {
         "summary": "Updates the properties of the specified item.",
-        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview).\n\n## Permissions\n\n The caller must have *read and write* permissions for the item.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview).\n\n## Permissions\n\n The caller must have *read and write* permissions for the item.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1046,7 +1046,7 @@
       },
       "delete": {
         "summary": "Deletes the specified item.",
-        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). The default behavior is to soft delete the item for supported item types.\n\n> [!NOTE]\n> The soft-deleted items will be counted toward the maximum number of items allowed in each workspace.\n\n## Permissions\n\nThe caller must have *write* permissions for the item for soft deletion.\nThe caller must have workspace *Admin* role assigned for hard/permanent deletion.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item management overview](/rest/api/fabric/articles/item-management/item-management-overview). The default behavior is to soft delete the item for supported item types.\n\n> [!NOTE]\n> The soft-deleted items will be counted toward the maximum number of items allowed in each workspace.\n\n## Permissions\n\nThe caller must have *write* permissions for the item for soft deletion.\nThe caller must have workspace *Admin* role assigned for hard/permanent deletion.\n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [scopes article](/rest/api/fabric/articles/scopes).\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified Quota for Platform APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 200 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1109,6 +1109,81 @@
           },
           "Hard delete an item example": {
             "$ref": "./examples/platform/HardDeleteItem.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/logicalId": {
+      "patch": {
+        "summary": "Updates the logical ID for the specified item.",
+        "description": "Corresponding item instances share the same logical ID. Use this operation to resolve logical ID conflicts. Before changing the logical ID, review any automations that rely on its current value and update them as needed. Otherwise, those automations might fail to locate the item or fail because of a duplicate display name. For more information, see [Resolve logical ID conflicts in Microsoft Fabric](/fabric/cicd/git-integration/logical-id-conflict-resolution).\n\n## Permissions\n\nThe caller must have *read and write* permissions for the item.\n\n## Required Delegated Scopes\n\nFor item APIs, use one of the following scope types:\n\n- Generic scope: Item.ReadWrite.All.\n- Specific scope: *itemType*.ReadWrite.All (for example, Notebook.ReadWrite.All).\n\nFor more information about scopes, see [Scopes](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\n- The logical ID can't be an empty GUID (`00000000-0000-0000-0000-000000000000`).\n- The logical ID must be unique within the workspace.\n- The operation isn't supported while a CI/CD operation is active in the workspace.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateLogicalId",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateLogicalIdRequest",
+            "description": "Update logical ID request payload.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/UpdateLogicalIdRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/LogicalIdResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* ActiveCiCdOperationInProgress - A CI/CD operation is active in the workspace.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update logical ID example": {
+            "$ref": "./examples/platform/UpdateLogicalId.json"
           }
         }
       }
@@ -1297,14 +1372,14 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/items/bulkExportDefinitions?beta=true": {
+    "/workspaces/{workspaceId}/items/bulkExportDefinitions": {
       "post": {
         "summary": "Bulk export item definitions from the workspace.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nExports item definitions from multiple items in a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). You can export all supported item definitions or selectively export specific items from the specified workspace. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nWhen exporting all items in a workspace: Only the Items that the caller has both *read* and *write* permissions for are exported.\n\nWhen exporting specific items: The caller must have *read* and *write* permissions for **all** specified items.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "Exports item definitions from multiple items in a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). You can export all supported item definitions or selectively export specific items from the specified workspace. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nWhen exporting all items in a workspace: Only the Items that the caller has both *read* and *write* permissions for are exported.\n\nWhen exporting specific items: The caller must have *read* and *write* permissions for **all** specified items.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Limitations\n\n The following limitations apply: \n- The maximum supported request payload size is 128 MB. \n- If the request includes one or more Fabric item types, the workspace must be assigned to a Fabric capacity (F SKU, including Fabric Trial). Power BI Premium capacities are supported only for Power BI items and aren't sufficient for Fabric items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "Items"
         ],
-        "operationId": "Items_Bulk_Export_Item_Definitions_(beta)",
+        "operationId": "Items_BulkExportItemDefinitions",
         "consumes": [
           "application/json"
         ],
@@ -1322,19 +1397,13 @@
             "required": true
           },
           {
-            "in": "query",
-            "name": "beta",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
-            "type": "boolean",
-            "required": true
-          },
-          {
             "in": "body",
             "name": "bulkExportItemDefinitionsRequest",
             "description": "The requested items to export their item definition.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/BulkExportItemDefinitionsRequest"
-            }
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -1392,14 +1461,14 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/items/bulkImportDefinitions?beta=true": {
+    "/workspaces/{workspaceId}/items/bulkImportDefinitions": {
       "post": {
         "summary": "Bulk import item definitions into the workspace.",
-        "description": "> [!NOTE]\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `beta`.**\n\nImports item definitions for multiple items into a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). Each item definition in the request will be processed, creating new items or updating existing ones as determined by the system based on whether the item already exists. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nThe caller must have *read and write* permissions for each item being updated.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "Imports item definitions for multiple items into a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). Each item definition in the request will be processed, creating new items or updating existing ones as determined by the system based on whether the item already exists. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nThe caller must have *read and write* permissions for each item being updated.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Limitations\n\n The following limitations apply: \n- The maximum supported request payload size is 128 MB. \n- If the request includes one or more Fabric item types, the workspace must be assigned to a Fabric capacity (F SKU, including Fabric Trial). Power BI Premium capacities are supported only for Power BI items and aren't sufficient for Fabric items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "Items"
         ],
-        "operationId": "Items_Bulk_Import_Item_Definitions_(beta)",
+        "operationId": "Items_BulkImportItemDefinitions",
         "consumes": [
           "application/json"
         ],
@@ -1417,19 +1486,13 @@
             "required": true
           },
           {
-            "in": "query",
-            "name": "beta",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
-            "type": "boolean",
-            "required": true
-          },
-          {
             "in": "body",
             "name": "bulkImportItemDefinitionsRequest",
             "description": "Import item definitions request payload.",
             "schema": {
               "$ref": "./definitions/platform.json#/definitions/BulkImportItemDefinitionsRequest"
-            }
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -1480,6 +1543,9 @@
         "x-ms-examples": {
           "Bulk import item definitions example": {
             "$ref": "./examples/platform/BulkImportItemDefinitions.json"
+          },
+          "Bulk import item definitions with options example": {
+            "$ref": "./examples/platform/BulkImportItemDefinitionsWithOptions.json"
           }
         }
       }
@@ -2564,6 +2630,9 @@
           },
           "Connect a workspace to GitHub example - GitHub Enterprise With Data Residency (ghe.com)": {
             "$ref": "./examples/gitIntegration/ConnectToGitHubEnterpriseWithDataResidency.json"
+          },
+          "Connect a workspace to Azure DevOps with connection settings example": {
+            "$ref": "./examples/gitIntegration/ConnectToAzureDevOpsWithConnectionSettings.json"
           }
         }
       }
@@ -2787,6 +2856,9 @@
         "x-ms-examples": {
           "Update a workspace using data from a Git example": {
             "$ref": "./examples/gitIntegration/UpdateFromGit.json"
+          },
+          "Update a workspace from Git with options example": {
+            "$ref": "./examples/gitIntegration/UpdateFromGitWithOptions.json"
           }
         }
       }
@@ -2811,6 +2883,14 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "includeFilesDetails",
+            "description": "When true, each item change in the response includes a fileChanges array with per-file change details.",
+            "type": "boolean",
+            "default": false,
+            "required": false
           }
         ],
         "responses": {
@@ -2867,6 +2947,9 @@
           },
           "Get status with conflict example": {
             "$ref": "./examples/gitIntegration/GetStatus_Conflict.json"
+          },
+          "Get status with file details example": {
+            "$ref": "./examples/gitIntegration/GetStatus_WithFileDetails.json"
           }
         }
       }
@@ -2874,7 +2957,7 @@
     "/workspaces/{workspaceId}/git/commitToGit": {
       "post": {
         "summary": "Commits the changes made in the workspace to the connected remote branch.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nYou can choose to commit all changes or only specific changed items. To sync the workspace for the first time, use this API after the [Connect](/rest/api/fabric/core/git/connect) and [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) APIs.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitCommit.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nYou can choose to commit all changes, specific items, or specific files within items using the FileLevelSelective mode. To sync the workspace for the first time, use this API after the [Connect](/rest/api/fabric/core/git/connect) and [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) APIs.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitCommit.All.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -2953,6 +3036,9 @@
           },
           "Commit selective items to Git example": {
             "$ref": "./examples/gitIntegration/CommitToGit_Selective.json"
+          },
+          "Commit file-level selective to Git example": {
+            "$ref": "./examples/gitIntegration/CommitToGit_FileLevelSelective.json"
           }
         }
       }
@@ -3279,6 +3365,126 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/git/connectionSettings": {
+      "get": {
+        "summary": "Gets the connection settings for a Git-connected workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. [Learn more](/fabric/fundamentals/preview).\n\nReturns the connection settings for a Git-connected workspace.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Git"
+        ],
+        "operationId": "Git_GetConnectionSettings",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/gitIntegration.json#/definitions/GitConnectionSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* InsufficientPrivileges - The caller does not have sufficient workspace permissions.\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get connection settings example": {
+            "$ref": "./examples/gitIntegration/GetConnectionSettings.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the connection settings for a Git-connected workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. [Learn more](/fabric/fundamentals/preview).\n\nUpdates the connection settings for a Git-connected workspace. Only properties included in the request body are updated; omitted properties remain unchanged.\n\n## Permissions\n\nThe caller must have an *admin* role for the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Git"
+        ],
+        "operationId": "Git_UpdateConnectionSettings",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateGitConnectionSettingsRequest",
+            "description": "The update connection settings request payload.",
+            "schema": {
+              "$ref": "./definitions/gitIntegration.json#/definitions/UpdateGitConnectionSettingsRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/gitIntegration.json#/definitions/GitConnectionSettings"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* InsufficientPrivileges - The caller does not have an admin role for the workspace.\n\n* WorkspaceNotConnectedToGit - Workspace is not connected to git.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update connection settings example": {
+            "$ref": "./examples/gitIntegration/UpdateConnectionSettings.json"
+          }
+        }
+      }
+    },
     "/capacities": {
       "get": {
         "summary": "Returns a list of capacities the principal can access (either administrator or a contributor).",
@@ -3394,13 +3600,262 @@
         }
       }
     },
+    "/capacities/{capacityId}/surgeProtection": {
+      "get": {
+        "summary": "Returns the surge protection configuration for the specified capacity.",
+        "description": "Surge protection lets a capacity administrator set utilization thresholds that proactively reject background operations to prevent the capacity from entering deep throttling states. A capacity with no configured surge protection returns `state` set to `Disabled` with the threshold properties omitted.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_GetCapacitySurgeProtection",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/surgeProtection.json#/definitions/CapacitySurgeProtection"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* InsufficientPrivileges - The caller does not have sufficient capacity permissions.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get the surge protection configuration of a capacity that has it enabled example": {
+            "$ref": "./examples/surgeProtection/GetCapacitySurgeProtection_Enabled.json"
+          },
+          "Get the surge protection configuration of a capacity that has no configuration example": {
+            "$ref": "./examples/surgeProtection/GetCapacitySurgeProtection_Disabled.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the surge protection configuration for the specified capacity.",
+        "description": "Updates the surge protection configuration for the specified capacity.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_UpdateCapacitySurgeProtection",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateCapacitySurgeProtectionRequest",
+            "description": "The update capacity surge protection request payload.",
+            "schema": {
+              "$ref": "./definitions/surgeProtection.json#/definitions/UpdateCapacitySurgeProtectionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/surgeProtection.json#/definitions/CapacitySurgeProtection"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.\n\n* InvalidParameter - A request parameter is invalid (for example, a threshold is outside the allowed range or thresholds are missing when enabling surge protection on an unconfigured capacity).\n\n* InsufficientPrivileges - The caller does not have sufficient capacity permissions.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Enable surge protection on a capacity example": {
+            "$ref": "./examples/surgeProtection/UpdateCapacitySurgeProtection_Enable.json"
+          },
+          "Adjust thresholds on a capacity that already has surge protection enabled example": {
+            "$ref": "./examples/surgeProtection/UpdateCapacitySurgeProtection_AdjustThresholds.json"
+          },
+          "Disable surge protection on a capacity example": {
+            "$ref": "./examples/surgeProtection/UpdateCapacitySurgeProtection_Disable.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/overageConfiguration": {
+      "get": {
+        "summary": "Gets the overage configuration for the specified capacity.",
+        "description": "> [!NOTE]\n> Capacity overage configuration is currently in Preview.\n\n## Permissions\n\nThe caller must have *admin* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Limitations\n\nNone.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Capacities"
+        ],
+        "operationId": "Capacities_GetOverageConfiguration",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/CapacityOverageConfiguration"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* CapacityNotFound - The specified capacity was not found.\n\n* Unauthorized - The caller doesn't have permission to call the API.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get overage configuration example": {
+            "$ref": "./examples/platform/GetOverageConfiguration.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the overage configuration for the specified capacity.",
+        "description": "> [!NOTE]\n> Capacity overage configuration is currently in Preview.\n\n## Permissions\n\nThe caller must have *admin* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Limitations\n\nNone.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Capacities"
+        ],
+        "operationId": "Capacities_UpdateOverageConfiguration",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateOverageConfigurationRequest",
+            "description": "The update overage configuration request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/UpdateCapacityOverageConfigurationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/CapacityOverageConfiguration"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* CapacityNotFound - The specified capacity was not found.\n\n* Unauthorized - The caller doesn't have permission to call the API.\n\n* InvalidRequest - The request payload is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update overage configuration example": {
+            "$ref": "./examples/platform/UpdateOverageConfiguration.json"
+          }
+        }
+      }
+    },
     "/operations/{operationId}": {
       "get": {
         "tags": [
           "LongRunningOperations"
         ],
         "summary": "Returns the current state of the long running operation.",
-        "description": "You get the operationId from x-ms-operation-id header return by the API that initiated the operation. \n Once the operation status is 'Succeeded' use the [Get Operation Result API](/rest/api/fabric/core/long-running-operations/get-operation-result) to retrieve the result.\n\n## Permissions \n\nSame as the permissions required for the API that initiated the operation. \n\n## Required Delegated Scope \n\nSame as the scopes required for the API that initiated the operation.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "You get the operationId from x-ms-operation-id header return by the API that initiated the operation. \n Once the operation status is 'Succeeded' use the [Get Operation Result API](/rest/api/fabric/core/long-running-operations/get-operation-result) to retrieve the result.\n\n## Permissions \n\nSame as the permissions required for the API that initiated the operation. \n\n## Required Delegated Scope \n\nSame as the scopes required for the API that initiated the operation.\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified quota for Long-Running operations APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "LongRunningOperations_GetOperationState",
         "consumes": [],
         "produces": [
@@ -3474,7 +3929,7 @@
           "LongRunningOperations"
         ],
         "summary": "Returns the result of the long running operation.",
-        "description": "You get the operationId from x-ms-operation-id header return by the API that initiated the operation.\n\n## Permissions \n\nSame as the permissions required for the API that initiated the operation. \n\n## Required Delegated Scope \n\nSame as the scopes required for the API that initiated the operation.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "You get the operationId from x-ms-operation-id header return by the API that initiated the operation.\n\n## Permissions \n\nSame as the permissions required for the API that initiated the operation. \n\n## Required Delegated Scope \n\nSame as the scopes required for the API that initiated the operation.\n\n## Throttling limits\n\n| Limit Type | Value |\n|-|-|\n| [Unified quota for Long-Running operations APIs](https://learn.microsoft.com/en-us/rest/api/fabric/articles/throttling#how-the-quota-model-works) | 500 calls/min |\n| API limit | 500 calls/min |\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "operationId": "LongRunningOperations_GetOperationResult",
         "consumes": [],
         "produces": [
@@ -4620,6 +5075,74 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/onelake/settings/modifyAccessTimeTracking": {
+      "post": {
+        "summary": "Enables or disables OneLake access time tracking for a workspace.",
+        "description": "Enables or disables Azure Storage `LastAccessTime` tracking for OneLake files in the workspace. When enabled, file reads and writes update the file's last access timestamp; metadata-only operations, such as checking properties, metadata, or tags, do not. Changes take effect immediately.\n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nOneLake.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeSettings"
+        ],
+        "operationId": "OneLakeSettings_ModifyAccessTimeTracking",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "modifyAccessTimeTrackingRequest",
+            "description": "The modify access time tracking request object.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/ModifyAccessTimeTrackingRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkspaceNotFound - Workspace not found.\n\n* UserNotAuthorized - User is not authorized. The caller must have an *admin* workspace role.\n\n* OneLakeNotProvisioned - The workspace has no items, so OneLake storage is not provisioned.\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Enable access time tracking example": {
+            "$ref": "./examples/platform/ModifyOneLakeAccessTimeTrackingEnable.json"
+          },
+          "Disable access time tracking example": {
+            "$ref": "./examples/platform/ModifyOneLakeAccessTimeTrackingDisable.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/onelake/lifecycle/exportPolicy": {
       "post": {
         "summary": "Exports the OneLake lifecycle management policy for a workspace.",
@@ -5755,6 +6278,9 @@
           },
           "Example of deploying all Fabric items (such as reports or dashboards) from a deployment pipeline stage": {
             "$ref": "./examples/deploymentPipelines/DeployAll.json"
+          },
+          "Example of deploying with options": {
+            "$ref": "./examples/deploymentPipelines/DeployWithOptions.json"
           }
         }
       }
@@ -7773,8 +8299,8 @@
     },
     "/workspaces/{workspaceId}/items/bulkMove": {
       "post": {
-        "summary": "Move multiple items to a folder. Children items are moved with their parent items. You can't move children items without their parent items.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations\n\n A single request can't contain more than 50 items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Moves multiple items to a folder.",
+        "description": "Moves multiple items to a folder. Child items are moved with their parent items. You can't move a child item without its parent item.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations\n\n A single request can't contain more than 50 items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -7843,8 +8369,8 @@
     },
     "/workspaces/{workspaceId}/items/{itemId}/move": {
       "post": {
-        "summary": "Move the specified item to a folder within the same workspace. Child items are moved with their parent item. You can't move a child item without its parent item.",
-        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Moves the specified item to a folder.",
+        "description": "Moves the specified item to a folder within the same workspace. Child items are moved with their parent item. You can't move a child item without its parent item.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -10860,7 +11386,7 @@
     "/catalog/search": {
       "post": {
         "summary": "The Catalog Search API enables programmatic discovery of OneLake catalog entries across workspaces. It supports cross-workspace search over catalog metadata and returns results filtered to entries the calling principal is authorized to access. Search results include stable identifiers that are intended to be used with complementary Fabric APIs to retrieve additional details or perform supported actions.",
-        "description": "> [!NOTE]\n> Catalog search is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nA CatalogEntry is a discoverable metadata representation of a Microsoft Fabric entity, currently scoped to workspace items. Catalog entries are intended for metadata discovery only and do not grant access to underlying data or item content.\n\n## Required Delegated Scopes \n\n Catalog.Read.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Limitations \n- The search functionality is currently scoped to specific Fabric item types. The following item types are not supported:\nDashboard, Dataflow (Gen1), Dataflow (Gen2).\n\n## Interface",
+        "description": "> [!NOTE]\n> Catalog search is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nA CatalogEntry is a discoverable metadata representation of a Microsoft Fabric entity, currently scoped to workspace items. Catalog entries are intended for metadata discovery only and do not grant access to underlying data or item content.\n\n## Permissions\n\nThe caller can only discover catalog entries for workspaces and items that the caller is authorized to access.\n\n## Required Delegated Scopes\n\nCatalog.Read.All\n\n## Limitations\n\n* `continuationToken` must not be combined with `search` or `filter`. The token already carries those values from the originating request.\n\n* `pageSize` must be between 1 and 1000.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Catalog"
         ],
@@ -10903,7 +11429,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* Unauthorized - Missing or invalid authentication\n\n* Internal Server Error - Unexpected service failure.",
+            "description": "Common error codes:\n\n* InvalidRequest - The request body was not provided, or is otherwise invalid.\n\n* InvalidSearch - The `search` value could not be parsed.\n\n* InvalidFilter - The `filter` could not be parsed, or a filter value is malformed or exceeds its maximum length.\n\n* InvalidFilterProperty - The `filter` references a property that is not supported.\n\n* FilterTooManyValues - The `filter` specifies more values for a property than that property allows.\n\n* FilterNotSupported - Filtering is not supported.\n\n* ConflictingFilterParameters - `continuationToken` was combined with `search` or `filter`.\n\n* InvalidPageSize - `pageSize` is outside the range 1 to 1000.\n\n* InvalidContinuationToken - The `continuationToken` is not valid.\n\n* ContinuationTokenTooLong - The `continuationToken` exceeds the maximum length.\n\n* TypeNotFound - The `filter` references an item type that does not exist.\n\n* Unauthorized - Missing or invalid authentication\n\n* Internal Server Error - Unexpected service failure.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -10912,6 +11438,9 @@
         "x-ms-examples": {
           "Search example": {
             "$ref": "./examples/platform/CatalogSearch.json"
+          },
+          "Search within a workspace example": {
+            "$ref": "./examples/platform/CatalogSearchByWorkspace.json"
           }
         }
       }

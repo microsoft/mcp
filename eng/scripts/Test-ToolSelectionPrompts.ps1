@@ -5,6 +5,8 @@ Validates that tool names used in prompt documentation exist in built MCP server
 .DESCRIPTION
 Builds one or more servers, reads end-to-end prompt markdown, and compares documented
 tool names against the server's runtime tool list from `tools list --name-only`.
+Only stdout is parsed as JSON; stderr diagnostics remain visible. Non-JSON text
+in stdout is not filtered and causes validation to fail.
 
 For each server, this script:
 - Locates the prompts file (default: servers/<ServerName>/docs/e2eTestPrompts.md)
@@ -60,6 +62,12 @@ $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/helpers/BuildHelpers.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+# Tools that are only registered when an external CLI dependency is present on PATH
+# (for example, extension_azqr requires the Azure Quick Review CLI). In environments
+# without that dependency the tool is intentionally absent from 'tools list', so prompts
+# referencing it are reported as skipped rather than as missing-tool violations.
+$conditionallyRegisteredTools = @('extension_azqr')
 
 class Prompt {
     [string] $ToolArea
@@ -254,7 +262,7 @@ foreach ($serverInfo in $serversToTest) {
     #     ]
     #   }
     # }
-    $toolsJson = & $executablePath tools list --name-only 2>&1 | Out-String
+    $toolsJson = & $executablePath tools list --name-only | Out-String
 
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
@@ -296,6 +304,11 @@ foreach ($serverInfo in $serversToTest) {
 
     foreach ($prompt in $allPrompts) {
         if ($tools.names -notcontains $prompt.ToolName) {
+            if ($conditionallyRegisteredTools -contains $prompt.ToolName) {
+                Write-Host "Skipping '$($prompt.ToolName)': conditionally registered only when its external CLI dependency is installed (absent in this environment)." -ForegroundColor Yellow
+                continue
+            }
+
             $violations.Add($prompt)
         }
     }

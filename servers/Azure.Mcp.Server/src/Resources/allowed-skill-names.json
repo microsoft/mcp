@@ -1,5 +1,12 @@
 {
   "skills": {
+    "aks-skills": [
+      "aks-gpu-inference",
+      "aks-known-issues",
+      "aks-network-capture",
+      "aks-troubleshooting",
+      "azure-search-nav"
+    ],
     "azure-cost": [
       "cost-analysis",
       "cost-estimation",

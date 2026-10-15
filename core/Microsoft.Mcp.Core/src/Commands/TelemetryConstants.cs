@@ -146,6 +146,18 @@ public class TagName
     public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
 
     /// <summary>
+    /// The configured namespace override scope at startup: none, selected, or all.
+    /// An all override still requires a resolved executing namespace at request time.
+    /// </summary>
+    public const string SsrfNamespaceOverrideScope = "SsrfNamespaceOverrideScope";
+
+    /// <summary>
+    /// The number of distinct, non-blank configured override entries, compared case-insensitively.
+    /// Includes the ALL marker if configured; does not count affected tools or export entry values.
+    /// </summary>
+    public const string SsrfNamespaceOverrideCount = "SsrfNamespaceOverrideCount";
+
+    /// <summary>
     /// A list of the tools that the MCP server is configured to allow.
     /// </summary>
     public const string Tool = "Tool";
