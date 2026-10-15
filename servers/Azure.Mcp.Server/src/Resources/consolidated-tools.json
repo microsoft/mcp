@@ -5536,6 +5536,77 @@
       "mappedToolList": [
         "insights_get"
       ]
+    },
+    {
+      "name": "prepare_azure_resiliency_file",
+      "description": "Prepare one user-approved local architecture or infrastructure-as-code file for a later Azure Resiliency Agent scenario call. Returns an opaque attachment ID without returning file content.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call creates a new short-lived attachment ID."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool only reads the exact local file approved by the user."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates a short-lived process-local attachment snapshot and opaque ID."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it asks the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_file_attach"
+      ]
+    },
+    {
+      "name": "use_azure_resiliency_agent",
+      "description": "Use the Azure Resiliency Agent for general Azure resiliency guidance, application architecture assessment, new resilient Bicep, ARM JSON, or Terraform generation, and review of existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may materialize generated or corrected artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_guidance_get",
+        "resiliencyagent_architecture_assess",
+        "resiliencyagent_iac_generate",
+        "resiliencyagent_bicep_review",
+        "resiliencyagent_arm_review",
+        "resiliencyagent_terraform_review"
+      ]
     }
   ]
 }

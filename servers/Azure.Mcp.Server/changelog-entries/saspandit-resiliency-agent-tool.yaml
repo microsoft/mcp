@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `resiliencyagent` tool area with commands for general Azure resiliency guidance, application architecture assessment, resilient Bicep, ARM JSON, or Terraform generation, review of existing infrastructure-as-code, and consent-based local file attachment. The agent's clarifying questions use MCP elicitation, and generated templates and reports are returned as native MCP file resources."
