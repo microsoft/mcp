@@ -1,12 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 
 internal static class DrillActionValidation
 {
+    private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
+
+    public static void ValidateSelectedResourceIds(IReadOnlyList<string>? resourceIds, string serviceGroup, ValidationResult validationResult)
+    {
+        if (resourceIds is not null && (resourceIds.Count == 0 ||
+            resourceIds.Any(id => string.IsNullOrWhiteSpace(id) || !IsRecoveryResourceIdForServiceGroup(id, serviceGroup))))
+        {
+            validationResult.Errors.Add("Selected resource IDs must contain at least one full recovery-resource ID under the requested service group with a GUID resource name.");
+        }
+    }
+
+    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
+    {
+        try
+        {
+            var parsed = new ResourceIdentifier(resourceId);
+            ResourceIdentifier? recoveryPlanId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
+            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
+                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+                serviceGroupId?.ResourceType == ServiceGroupResourceType &&
+                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
+                Guid.TryParse(parsed.Name, out _);
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            return false;
+        }
+    }
+
     private static readonly HashSet<string> s_modes = new(StringComparer.OrdinalIgnoreCase)
     {
         "Failover",

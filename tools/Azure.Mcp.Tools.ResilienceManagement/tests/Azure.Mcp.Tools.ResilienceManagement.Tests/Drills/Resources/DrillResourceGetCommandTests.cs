@@ -85,4 +85,33 @@ public class DrillResourceGetCommandTests : CommandUnitTestsBase<DrillResourceGe
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_PreservesGaResponseValidationError(bool getSingle)
+    {
+        var error = new RequestFailedException(
+            412, "Missing required property: drillType.", "HttpResponsePayloadAPISpecValidationFailed", null);
+        if (getSingle)
+        {
+            Service.GetDrillResourceAsync(ServiceGroup, Drill, "target1", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .ThrowsAsync(error);
+        }
+        else
+        {
+            Service.ListDrillResourcesAsync(ServiceGroup, Drill, Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .ThrowsAsync(error);
+        }
+
+        var args = new List<string> { "--service-group", ServiceGroup, "--drill", Drill };
+        if (getSingle)
+        {
+            args.AddRange(["--name", "target1"]);
+        }
+        var response = await ExecuteCommandAsync([.. args]);
+
+        Assert.Equal(HttpStatusCode.PreconditionFailed, response.Status);
+        Assert.Contains("Missing required property: drillType.", response.Message);
+    }
 }

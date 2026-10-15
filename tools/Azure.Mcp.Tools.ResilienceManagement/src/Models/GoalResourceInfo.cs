@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -12,15 +13,16 @@ public sealed record GoalResourceInfo(
     [property: JsonPropertyName("systemData")] GoalResourceInfoSystemData? SystemData = null);
 
 public sealed record GoalResourceInfoProperties(
-    [property: JsonPropertyName("disasterRecoveryAttestationStatus")] string DisasterRecoveryAttestationStatus,
-    [property: JsonPropertyName("disasterRecoveryGoalParticipation")] string DisasterRecoveryGoalParticipation,
-    [property: JsonPropertyName("exclusionReasonForDisasterRecoveryGoals")] string ExclusionReasonForDisasterRecoveryGoals,
-    [property: JsonPropertyName("exclusionReasonForHighAvailabilityGoals")] string ExclusionReasonForHighAvailabilityGoals,
-    [property: JsonPropertyName("highAvailabilityAttestationStatus")] string HighAvailabilityAttestationStatus,
-    [property: JsonPropertyName("highAvailabilityGoalParticipation")] string HighAvailabilityGoalParticipation,
+    [property: JsonPropertyName("disasterRecoveryAttestationStatus")] string? DisasterRecoveryAttestationStatus,
+    [property: JsonPropertyName("disasterRecoveryGoalParticipation")] string? DisasterRecoveryGoalParticipation,
+    [property: JsonPropertyName("exclusionReasonForDisasterRecoveryGoals")] string? ExclusionReasonForDisasterRecoveryGoals,
+    [property: JsonPropertyName("exclusionReasonForHighAvailabilityGoals")] string? ExclusionReasonForHighAvailabilityGoals,
+    [property: JsonPropertyName("highAvailabilityAttestationStatus")] string? HighAvailabilityAttestationStatus,
+    [property: JsonPropertyName("highAvailabilityGoalParticipation")] string? HighAvailabilityGoalParticipation,
     [property: JsonPropertyName("provisioningState")] string ProvisioningState,
     [property: JsonPropertyName("resourceArmId")] string ResourceArmId,
-    [property: JsonPropertyName("serviceGroupMemberships")] IReadOnlyList<GoalResourceServiceGroupMembership>? ServiceGroupMemberships = null);
+    [property: JsonPropertyName("serviceGroupMemberships")] IReadOnlyList<GoalResourceServiceGroupMembership>? ServiceGroupMemberships = null,
+    [property: JsonPropertyName("zonalResiliency")] JsonElement? ZonalResiliency = null);
 
 public sealed record GoalResourceServiceGroupMembership(
     [property: JsonPropertyName("membershipType")] string MembershipType,

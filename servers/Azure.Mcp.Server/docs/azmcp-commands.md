@@ -4219,6 +4219,26 @@ azmcp redis list --subscription <subscription>
 
 ### Azure Resilience Management Operations
 
+These commands use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and the GA
+`2026-10-01` API. Existing Drills command names are preserved. Create/update support
+goal-assignment identity, Health Model monitoring, and SLI monitoring as JSON
+properties. Update preserves omitted fields; pass the string `"null"` as a Health
+Model or SLI JSON payload to clear that configuration. A supplied SLI selection
+replaces the old selection. See the [payload reference](../../../.github/skills/resilience-management-operations/references/payloads.md#drill-ga-configuration).
+
+Validation accepts an optional operation; source locations are required unless
+the selected operation is `Reprotect`, including when the operation is omitted. Failover
+accepts no request body when all failover inputs are omitted; providing selected
+resources or an explicit automatic-failover choice requires source locations.
+Reprotect accepts optional selected recovery-resource IDs. Drill details preserve
+GA fields and drill-run reports; lists continue to return IDs and names. Separate
+report-generation and download tools are not part of these existing commands.
+
+Goal assignment details now include `requireZonalResiliency`, and goal resource
+details include `zonalResiliency`. Legacy preview-only goal fields are nullable
+when absent from the service response; HA/DR values are not inferred from zonal
+resiliency.
+
 ```bash
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4414,7 +4434,10 @@ azmcp resiliency drill create --service-group <service-group> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
                               [--resource-group <resource-group>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--recoveryplan <recoveryplan>] \
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json>] \
+                              [--sli-monitoring-properties <json>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4440,7 +4463,10 @@ azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--recoveryplan <recoveryplan>] \
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json-or-null>] \
+                              [--sli-monitoring-properties <json-or-null>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4452,11 +4478,12 @@ azmcp resiliency drill delete --service-group <service-group> \
 azmcp resiliency drill check-resync-readiness --service-group <service-group> \
                                               --drill <drill>
 
-# Validate whether a resilience drill is eligible for execution from the specified source locations
+# Validate a resilience drill; sources may be omitted only for explicit Reprotect
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill validate-for-execution --service-group <service-group> \
                                               --drill <drill> \
-                                              --source-locations <source-locations>
+                                              [--source-locations <source-locations>] \
+                                              [--operation-name <Failover|Reprotect|FailoverReverse|ReprotectReverse>]
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4465,6 +4492,7 @@ azmcp resiliency drill resource get --service-group <service-group> \
                                     [--name <name>]
 
 # Add, update, or exclude the resources (targets) of a drill
+# Use drill-resource IDs under .../drills/{drill}/drillResources/{name}, not underlying VM IDs.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill resource add-or-update --service-group <service-group> \
                                               --drill <drill> \
@@ -4488,11 +4516,12 @@ azmcp resiliency drill run add-notes --service-group <service-group> \
                                      --notes <notes>
 
 # Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# Omit all three failover inputs to use service defaults. Explicit auto-failover or selected IDs require source locations.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill <drill> \
                                     --drill-run <drill-run> \
-                                    --source-locations <source-location> \
+                                    [--source-locations <source-location>] \
                                     [--selected-resource-ids <selected-resource-id>] \
                                     [--auto-failover <true|false>]
 
@@ -4513,7 +4542,8 @@ azmcp resiliency drill run mark-complete --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill <drill> \
-                                     --drill-run <drill-run>
+                                     --drill-run <drill-run> \
+                                     [--selected-resource-ids <selected-resource-id>]
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

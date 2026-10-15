@@ -1,8 +1,53 @@
 # Resilience Payload Reference
 
-<!-- cspell:words reprotect reprotection runbook -->
+<!-- cspell:words reprotect reprotection runbook slis -->
 
 Use JSON strings only for parameters whose tool schema requires JSON. Do not serialize ordinary scalar or array parameters manually.
+
+## Drill GA Configuration
+
+`drill create` and `drill update` accept these optional JSON-string inputs:
+
+| Option | Writable fields |
+|---|---|
+| `goal-assignment-properties` | `identity`. `goalAssignmentId` is read-only and is rejected. |
+| `health-model-monitoring-properties` | `identity`, `healthModelId` (a full `Microsoft.CloudHealth/healthmodels` ARM ID). |
+| `sli-monitoring-properties` | `identity`, `slis` (one or two selections with unique `sliId` and `type`). |
+
+Example goal identity:
+
+```json
+{"identity":{"type":"SystemAssigned"}}
+```
+
+Example Health Model selection:
+
+```json
+{
+  "identity": {"type":"SystemAssigned"},
+  "healthModelId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.CloudHealth/healthmodels/{healthModel}"
+}
+```
+
+Example SLI selection:
+
+```json
+{
+  "identity": {"type":"SystemAssigned"},
+  "slis": [
+    {
+      "sliId": "/providers/Microsoft.Management/serviceGroups/{serviceGroup}/providers/Microsoft.Monitor/slis/{sli}",
+      "type": "Availability"
+    }
+  ]
+}
+```
+
+On create, identity is required in each supplied configuration; Health Model and SLI configurations also require their selection. Identity includes `type` and optionally `userAssignedIdentity`; a user-assigned identity on create requires its full `Microsoft.ManagedIdentity/userAssignedIdentities` ARM ID. Supported identity types follow the ARM contract: `None`, `SystemAssigned`, `UserAssigned`, and `SystemAssigned, UserAssigned`.
+
+On update, omitted configurations and nested fields are preserved. Supplying `slis` replaces the entire selection; allow at most one `Availability` and one `Latency` entry, with no duplicate IDs. An empty array does not clear monitoring. To clear Health Model or SLI monitoring, use the string `"null"` as that tool option's payload (CLI: `--sli-monitoring-properties null`); the resulting ARM PATCH contains JSON null. A missing/null tool parameter is omission, not a clear operation. Goal configuration cannot be cleared using null.
+
+Each JSON option is limited to 1 MB. Unknown, duplicate, and read-only properties are rejected rather than silently discarded.
 
 ## Recovery Plan Actions
 
@@ -139,6 +184,20 @@ The VM must already have a discovered `AzureSiteRecovery` solution in `Protected
 | `CustomRunbook` | Runbooks implement resource-level failover and reprotect | Only a group-level pre/post action is needed |
 | `AzureSiteRecovery` | The resource is a VM with healthy ASR protection and complete reprotect/test-failover inputs | The resource is not a VM or ASR is not `Protected` |
 | `AzureNative` | Never for an included resource in the current tool | Adding or re-including any resource |
+
+## Drill Resource Inclusion and Updates
+
+`include-resources` and `update-resources` contain objects whose `id` is the full **drill-resource ID**, not the underlying VM's ARM ID:
+
+```json
+[
+  {
+    "id": "/providers/Microsoft.Management/serviceGroups/{group}/providers/Microsoft.AzureResilienceManagement/drills/{drill}/drillResources/{resource-name}"
+  }
+]
+```
+
+Use the drill-resource response's top-level `id`, not `properties.resourceId`. The resource must belong to the requested service group and drill. Optional `faultProperties` configures the fault. `exclude-resources` is an array of ID strings, not objects. After an asynchronous update, refresh readiness before relying on the drill-level inclusion summary.
 
 ## Live-Test Scenario Checklist
 

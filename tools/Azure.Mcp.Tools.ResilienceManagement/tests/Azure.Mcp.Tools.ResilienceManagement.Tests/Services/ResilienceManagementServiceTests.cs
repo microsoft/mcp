@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -16,6 +17,71 @@ public sealed class ResilienceManagementServiceTests
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void MapGoalAssignment_PreservesGaResiliencyRequirementWithoutInventingLegacyFields(bool requireZonalResiliency)
+    {
+        BinaryData response = BinaryData.FromObjectAsJson(new
+        {
+            name = "goal",
+            properties = new { requireZonalResiliency, provisioningState = "Succeeded" }
+        });
+        GoalAssignmentData data = ModelReaderWriter.Read<GoalAssignmentData>(response)!;
+
+        GoalAssignmentInfo result = ResilienceManagementService.MapGoalAssignment(data, response);
+
+        Assert.NotNull(result.Properties);
+        Assert.Equal(requireZonalResiliency, result.Properties.RequireZonalResiliency);
+        Assert.Null(result.Properties.GoalAssignmentType);
+        Assert.Null(result.Properties.GoalTemplateId);
+        Assert.Equal("Succeeded", result.Properties.ProvisioningState);
+    }
+
+    [Fact]
+    public void MapGoalAssignment_PreservesLegacyFieldsWhenReturned()
+    {
+        BinaryData response = BinaryData.FromObjectAsJson(new
+        {
+            name = "goal",
+            properties = new { goalAssignmentType = "System", goalTemplateId = "/providers/Microsoft.AzureResilienceManagement/goalTemplates/default" }
+        });
+        GoalAssignmentData data = ModelReaderWriter.Read<GoalAssignmentData>(response)!;
+
+        GoalAssignmentInfo result = ResilienceManagementService.MapGoalAssignment(data, response);
+
+        Assert.NotNull(result.Properties);
+        Assert.Equal("System", result.Properties.GoalAssignmentType);
+        Assert.Equal("/providers/Microsoft.AzureResilienceManagement/goalTemplates/default", result.Properties.GoalTemplateId);
+        Assert.Null(result.Properties.RequireZonalResiliency);
+    }
+
+    [Fact]
+    public void MapGoalResource_PreservesGaZonalResiliencyAfterResponseIsDisposed()
+    {
+        BinaryData response = BinaryData.FromObjectAsJson(new
+        {
+            name = "resource",
+            properties = new
+            {
+                resourceArmId = UserAssignedIdentityResourceId,
+                provisioningState = "NeedsAttention",
+                zonalResiliency = new { status = "NotResilient", additionalDetail = "preserved" }
+            }
+        });
+        GoalMembersData data = ModelReaderWriter.Read<GoalMembersData>(response)!;
+
+        GoalResourceInfo result = ResilienceManagementService.MapGoalResource(data, response);
+
+        Assert.NotNull(result.Properties);
+        Assert.Equal("NeedsAttention", result.Properties.ProvisioningState);
+        Assert.Null(result.Properties.DisasterRecoveryAttestationStatus);
+        Assert.Null(result.Properties.HighAvailabilityAttestationStatus);
+        Assert.Null(result.Properties.ServiceGroupMemberships);
+        Assert.NotNull(result.Properties.ZonalResiliency);
+        Assert.Equal("preserved", result.Properties.ZonalResiliency.Value.GetProperty("additionalDetail").GetString());
+    }
 
     [Theory]
     [InlineData("Recovery job retry")]
@@ -143,7 +209,7 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_UsesEmptyRecommendationsWhenProviderOmitsThem()
     {
-        JobErrorInfo error = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo error = ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "Resource requires attention."
@@ -492,7 +558,7 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
     {
-        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo providerError = ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "The recoveryplan is not ready."
@@ -514,7 +580,7 @@ public sealed class ResilienceManagementServiceTests
             [resourceId],
             "Allowed");
 
-        Assert.Equal(FailoverDirectionTypes.FromSpecificLocations, result.FailoverDirection);
+        Assert.Equal(ResilienceManagementFailoverDirection.FromSpecificLocations, result.FailoverDirection);
         Assert.NotNull(result.FailoverRequestProperties);
         Assert.Equal(["eastus", "westus2-az3"], result.FailoverRequestProperties.SourceLocations);
         Assert.Equal(resourceId, Assert.Single(result.FailoverRequestProperties.SelectedResourceIds).ToString());

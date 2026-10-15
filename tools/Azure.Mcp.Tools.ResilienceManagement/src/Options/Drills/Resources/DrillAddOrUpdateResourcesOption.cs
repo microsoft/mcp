@@ -19,16 +19,16 @@ public sealed class DrillAddOrUpdateResourcesOptions
     public required int FaultDurationMinutes { get; set; }
 
     [Option(Description =
-        "A JSON array of resources to include in the drill. Each item is an object with an \"id\" (the ARM resource ID) " +
-        "and optional \"faultProperties\". Example: [{\"id\":\"/subscriptions/.../providers/Microsoft.Compute/virtualMachines/vm1\"}].")]
+        "A JSON array of resources to include in the drill. Each item has an \"id\" identifying a drill resource, NOT the underlying VM, " +
+        "and optional \"faultProperties\". Example: [{\"id\":\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1\"}].")]
     public string? IncludeResources { get; set; }
 
     [Option(Description =
-        "A JSON array of already-included drill resources to update. Each item is an object with an \"id\" (the ARM resource ID) " +
+        "A JSON array of already-included drill resources to update. Each item has an \"id\" identifying a drill resource, NOT the underlying VM, " +
         "and optional \"faultProperties\".")]
     public string? UpdateResources { get; set; }
 
-    [Option(Description = "A JSON array of ARM resource ID strings to exclude from the drill.")]
+    [Option(Description = "A JSON array of drill-resource ARM ID strings to exclude from the drill.")]
     public string? ExcludeResources { get; set; }
 
     [Option(Description = "Whether to force inclusion and update of the resources. Allowed values: Enable, Disable.")]

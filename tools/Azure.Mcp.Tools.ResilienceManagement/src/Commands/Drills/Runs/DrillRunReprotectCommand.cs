@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "a331e69f-4669-40de-97ad-10a1cebe4b54",
     Name = "reprotect",
     Title = "Reprotect a Resilience Drill Run",
-    Description = "Initiates reprotection for failed-over resources in a resilience drill run.",
+    Description = "Initiates reprotection for failed-over resources in a resilience drill run. Optionally select recovery-resource ARM IDs in the same service group; omit the selection to reprotect all qualified resources without a request body.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -34,6 +34,7 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
         ValidatePathSegment(options.ServiceGroup, "service group", validationResult);
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
+        DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillRunReprotectOptions options, CancellationToken cancellationToken)
@@ -44,6 +45,7 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
+                options.SelectedResourceIds,
                 options.Tenant,
                 cancellationToken);
 
