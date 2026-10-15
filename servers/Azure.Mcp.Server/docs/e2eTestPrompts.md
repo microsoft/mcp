@@ -613,7 +613,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
-| netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in location \<location> in resource group \<resource_group> | none |
 | netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
 | netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
 | netappfiles_account_get | Get the Azure NetApp Files accounts in resource group \<resource_group> | none |
