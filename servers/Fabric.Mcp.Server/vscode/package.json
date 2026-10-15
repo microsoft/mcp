@@ -52,12 +52,16 @@
                     "items": {
                         "type": "string",
                         "enum": [
-                            "publicapis",
-                            "onelake"
+                            "core",
+                            "docs",
+                            "onelake",
+                            "datafactory"
                         ],
                         "markdownEnumDescriptions": [
-                            "Fabric public APIs — Fabric public APIs specifications and examples.",
-                            "OneLake — Manage and interact with OneLake data lake storage."
+                            "Core — Manage Fabric workspaces, items, capacities, and long-running operations.",
+                            "Documentation — Browse Fabric API specifications, item definitions, and best practices.",
+                            "OneLake — Manage and interact with OneLake data lake storage.",
+                            "Data Factory — Manage pipelines and Dataflow Gen2 operations."
                         ]
                     },
                     "uniqueItems": true,

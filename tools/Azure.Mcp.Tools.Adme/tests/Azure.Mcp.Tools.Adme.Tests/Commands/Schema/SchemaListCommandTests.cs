@@ -49,6 +49,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             true,
             2,
             25,
+            null,
             Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<SchemaListResponse>(expected, "test-correlation-id"));
 
@@ -90,6 +91,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             true,
             2,
             25,
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -109,6 +111,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             null,
             null,
             false,
+            null,
             null,
             null,
             Arg.Any<CancellationToken>())
@@ -134,6 +137,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
             null,
             null,
             false,
+            null,
             null,
             null,
             Arg.Any<CancellationToken>());
@@ -163,6 +167,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
                 Arg.Any<bool>(),
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(exception);
 
@@ -188,7 +193,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
             default!, default!, default, default, default, default, default, default,
-            default, default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -207,7 +212,7 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
             default!, default!, default, default, default, default, default, default,
-            default, default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -231,6 +236,6 @@ public sealed class SchemaListCommandTests : CommandUnitTestsBase<SchemaListComm
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().ListSchemasAsync(
             default!, default!, default, default, default, default, default, default,
-            default, default, default, default, default, default, TestContext.Current.CancellationToken);
+            default, default, default, default, default, default, default, TestContext.Current.CancellationToken);
     }
 }

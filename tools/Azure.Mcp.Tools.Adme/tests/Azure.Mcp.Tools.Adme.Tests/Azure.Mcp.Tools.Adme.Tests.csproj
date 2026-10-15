@@ -3,7 +3,7 @@
     <IsTestProject>true</IsTestProject>
     <OutputType>Exe</OutputType>
     <HasLiveTests>false</HasLiveTests>
-    <HasUnitTests>true</HasUnitTests>
+    <HasUnitTests>false</HasUnitTests> <!-- Temporary change while ADME is disabled for GA -->
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />

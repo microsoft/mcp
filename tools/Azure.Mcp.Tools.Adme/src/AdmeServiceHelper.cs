@@ -12,6 +12,7 @@ using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme;
@@ -27,6 +28,40 @@ internal static class AdmeServiceHelper
     public const string HttpClientName = "adme";
     public const string NonRetryingHttpClientName = "adme-no-retry";
     public const string AuthScope = "https://energy.azure.com/.default";
+
+    public static string GetAuthScope(string? authAppId)
+    {
+        if (string.IsNullOrWhiteSpace(authAppId))
+        {
+            return AuthScope;
+        }
+
+        var value = authAppId.Trim();
+        var resource = value.EndsWith("/.default", StringComparison.OrdinalIgnoreCase)
+            ? value[..^"/.default".Length]
+            : value;
+        if (Guid.TryParse(resource, out var applicationId))
+        {
+            return $"{applicationId:D}/.default";
+        }
+
+        var isValidAppIdUri = Uri.TryCreate(resource, UriKind.Absolute, out var uri) &&
+            (uri.Scheme.Equals("api", StringComparison.OrdinalIgnoreCase) ||
+             uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)) &&
+            !string.IsNullOrWhiteSpace(uri.Host) &&
+            string.IsNullOrEmpty(uri.Query) &&
+            string.IsNullOrEmpty(uri.Fragment) &&
+            string.IsNullOrEmpty(uri.UserInfo);
+
+        if (!isValidAppIdUri)
+        {
+            throw new ArgumentException(
+                "The ADME authentication application ID must be a GUID or an absolute api:// or https:// App ID URI.",
+                nameof(authAppId));
+        }
+
+        return $"{resource.TrimEnd('/')}/.default";
+    }
 
     public static string? Normalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value;
@@ -45,6 +80,7 @@ internal static class AdmeServiceHelper
             : JsonSerializer.Deserialize(value, AdmeJsonContext.Default.JsonElement);
 
     public static Task<AdmeResponse<T>> SendAsync<T>(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -52,14 +88,17 @@ internal static class AdmeServiceHelper
         string? tenant,
         string path,
         JsonTypeInfo<T> typeInfo,
-        CancellationToken cancellationToken,
-        bool sendJsonContentTypeHint = false) =>
+        string? authAppId = null,
+        bool sendJsonContentTypeHint = false,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
+            endpointValidator,
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Get,
             path,
             sendJsonContentTypeHint ? new StringContent(string.Empty, Encoding.UTF8, "application/json") : null,
@@ -69,6 +108,7 @@ internal static class AdmeServiceHelper
             cancellationToken);
 
     public static Task<AdmeResponse<T>> SendAsync<T>(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -76,13 +116,16 @@ internal static class AdmeServiceHelper
         string? tenant,
         string path,
         Func<HttpStatusCode, T> statusCodeResultFactory,
+        string? authAppId,
         CancellationToken cancellationToken) =>
         SendAsync(
+            endpointValidator,
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Get,
             path,
             content: null,
@@ -92,6 +135,7 @@ internal static class AdmeServiceHelper
             cancellationToken);
 
     public static Task<AdmeResponse<TResponse>> PostAsync<TRequest, TResponse>(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -102,14 +146,17 @@ internal static class AdmeServiceHelper
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
         IReadOnlyCollection<KeyValuePair<string, string>>? extraHeaders,
-        CancellationToken cancellationToken,
-        bool disableRetries = false) =>
+        string? authAppId = null,
+        bool disableRetries = false,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
+            endpointValidator,
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Post,
             path,
             JsonContent.Create(body, requestTypeInfo),
@@ -120,6 +167,7 @@ internal static class AdmeServiceHelper
             disableRetries);
 
     public static Task<AdmeResponse<TResponse>> PutAsync<TRequest, TResponse>(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
@@ -129,13 +177,16 @@ internal static class AdmeServiceHelper
         TRequest body,
         JsonTypeInfo<TRequest> requestTypeInfo,
         JsonTypeInfo<TResponse> responseTypeInfo,
-        CancellationToken cancellationToken) =>
+        string? authAppId = null,
+        CancellationToken cancellationToken = default) =>
         SendAsync(
+            endpointValidator,
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Put,
             path,
             JsonContent.Create(body, requestTypeInfo),
@@ -145,20 +196,24 @@ internal static class AdmeServiceHelper
             cancellationToken);
 
     public static async Task DeleteAsync(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
         string? tenant,
         string path,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         await SendAsync<object?>(
+            endpointValidator,
             credentialProvider,
             httpClientFactory,
             endpoint,
             dataPartition,
             tenant,
+            authAppId,
             HttpMethod.Delete,
             path,
             content: null,
@@ -169,11 +224,13 @@ internal static class AdmeServiceHelper
     }
 
     private static async Task<AdmeResponse<T>> SendAsync<T>(
+        IEndpointValidator endpointValidator,
         IAzureTokenCredentialProvider credentialProvider,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
         string? tenant,
+        string? authAppId,
         HttpMethod method,
         string path,
         HttpContent? content,
@@ -184,10 +241,10 @@ internal static class AdmeServiceHelper
         bool disableRetries = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
-        var endpointUri = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
+        var endpointUri = AdmeServiceValidator.ValidateEndpoint(endpointValidator, new Uri(endpoint));
         var credential = await credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
-            new TokenRequestContext([AuthScope]), cancellationToken);
+            new TokenRequestContext([GetAuthScope(authAppId)]), cancellationToken);
 
         using var client = httpClientFactory.CreateClient(
             disableRetries ? NonRetryingHttpClientName : HttpClientName);

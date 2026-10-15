@@ -4,7 +4,7 @@
 namespace Azure.Mcp.Tools.Optimization.Models;
 
 /// <summary>
-/// Alternative resize/SKU option carried on an Azure Advisor right-size recommendation in
+/// Alternative resize/SKU option carried on an right-size recommendation in
 /// <c>properties.extendedProperties.alternatives</c>.
 /// </summary>
 public sealed class AlternativeRecommendation

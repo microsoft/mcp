@@ -12,7 +12,15 @@ public class CommandGroup(string name, string description, string? title = null)
     public string Description { get; } = description;
     public string? Title { get; } = title;
     public List<CommandGroup> SubGroup { get; } = [];
-    public Dictionary<string, IBaseCommand> Commands { get; } = [];
+    /// <summary>
+    /// Gets command registrations keyed by their paths within this group.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="AddCommand(IBaseCommand)"/> for new setup commands and
+    /// <see cref="AddCommand(string, CommandRegistration)"/> to regroup existing registrations.
+    /// The command factory supplies the setup namespace before publishing pending registrations.
+    /// </remarks>
+    public Dictionary<string, CommandRegistration> Commands { get; } = [];
     public Command Command { get; } = new Command(name, description);
     public ToolMetadata? ToolMetadata { get; set; }
 
@@ -49,6 +57,19 @@ public class CommandGroup(string name, string description, string? title = null)
     /// <param name="command">The command to add to this group.</param>
     /// <exception cref="InvalidOperationException">If any subgroups specified by the path don't exist.</exception>
     public void AddCommand(string path, IBaseCommand command)
+        => AddCommand(path, CommandRegistration.CreateUnregistered(command));
+
+    /// <summary>
+    /// Adds an existing registration at a group-relative path without changing its original namespace.
+    /// </summary>
+    /// <param name="path">The command path, using dots to address existing subgroups.</param>
+    /// <param name="registration">The original registration to preserve during regrouping.</param>
+    /// <remarks>
+    /// Used by consolidated loading to change presentation and routing without assigning a
+    /// synthetic namespace to the command. An unresolved original namespace remains unresolved.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">A subgroup named in <paramref name="path"/> does not exist.</exception>
+    public void AddCommand(string path, CommandRegistration registration)
     {
         // Split on first dot to get group and remaining path
         var parts = path.Split(['.'], 2);
@@ -56,7 +77,7 @@ public class CommandGroup(string name, string description, string? title = null)
         if (parts.Length == 1)
         {
             // This is a direct command for this group
-            Commands[path] = command;
+            Commands[path] = registration;
         }
         else
         {
@@ -65,7 +86,7 @@ public class CommandGroup(string name, string description, string? title = null)
                 throw new InvalidOperationException($"Subgroup {parts[0]} not found. Group must be registered before commands.");
 
             // Recursively add command to subgroup
-            subGroup.AddCommand(parts[1], command);
+            subGroup.AddCommand(parts[1], registration);
         }
     }
 
@@ -83,7 +104,7 @@ public class CommandGroup(string name, string description, string? title = null)
         if (parts.Length == 1)
         {
             // This is a direct command for this group
-            return Commands[parts[0]];
+            return Commands[parts[0]].Command;
         }
         else
         {
@@ -104,7 +125,7 @@ public class CommandGroup(string name, string description, string? title = null)
     {
         foreach (var command in Commands)
         {
-            if (!predicate(command.Value.Metadata))
+            if (!predicate(command.Value.Command.Metadata))
             {
                 return false;
             }

@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
@@ -20,10 +19,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Models;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 
-[JsonSerializable(typeof(GoalTemplateGetCommand.GoalTemplateGetCommandResult))]
-[JsonSerializable(typeof(GoalTemplateInfo))]
-[JsonSerializable(typeof(GoalTemplateInfoProperties))]
-[JsonSerializable(typeof(GoalTemplateInfoSystemData))]
 [JsonSerializable(typeof(GoalAssignmentGetCommand.GoalAssignmentGetCommandResult))]
 [JsonSerializable(typeof(GoalAssignmentInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfoProperties))]

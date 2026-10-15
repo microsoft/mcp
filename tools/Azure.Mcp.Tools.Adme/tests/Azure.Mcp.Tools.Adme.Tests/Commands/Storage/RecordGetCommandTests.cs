@@ -24,6 +24,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
         Service.GetRecordAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null,
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), TestConstants.Tenant,
+            null,
                 Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<StorageRecord>(
                 new StorageRecord { Id = RecordId, Kind = TestConstants.WellKind },
@@ -47,7 +48,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
         Service.GetRecordAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, RecordId, version,
                 Arg.Is<IReadOnlyList<string>>(attributes => attributes.SequenceEqual(new[] { "data.Name" })),
-                null, Arg.Any<CancellationToken>())
+            null, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<StorageRecord>(new StorageRecord { Id = RecordId, Version = version }, null));
 
         var response = await ExecuteCommandAsync(
@@ -84,7 +85,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetRecordAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -97,7 +98,7 @@ public sealed class RecordGetCommandTests : CommandUnitTestsBase<RecordGetComman
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().GetRecordAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 

@@ -22,7 +22,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -35,13 +35,21 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetRecoveryServicesVaults();
 
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+        }
+
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
         var vaultData = new RecoveryServicesVaultData(new AzureLocation(location))
         {
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = VaultPublicNetworkAccess.Enabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled
             }
         };
 
@@ -53,7 +61,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState);
+            result.Value.Data.Properties?.ProvisioningState,
+            result.Value.Data.Properties?.PublicNetworkAccess?.ToString());
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
@@ -501,13 +510,57 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
+        return await EnumerateTolerantAsync(
+            collection.GetAllAsync(cancellationToken: cancellationToken),
+            static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Enumerates an async sequence while tolerating a bounded number of consecutive SDK format failures.
+    /// </summary>
+    internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
+        IAsyncEnumerable<TSource> source,
+        Func<TSource, TResult> selector,
+        CancellationToken cancellationToken,
+        int maxConsecutiveFailures = 3)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
+
+        var results = new List<TResult>();
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    results.Add(selector(enumerator.Current));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
-        return points;
+        return results;
     }
 
     /// <summary>
@@ -770,11 +823,29 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
         }
 
-        // Reuse the fetched resource and properties, including Resource Guard and unknown SDK fields.
-        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        try
+        {
+            // Reuse the fetched resource and properties, including Resource Guard and unknown SDK fields.
+            var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (NullReferenceException)
+        {
+            throw CreatePolicyMaterializationError(policyName!, vaultName);
+        }
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
+
+    /// <summary>
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy response.
+    /// The update may have applied, so callers are directed to verify the current policy state.
+    /// </summary>
+    internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
+        new(
+            (int)HttpStatusCode.InternalServerError,
+            $"The update for policy '{policyName}' in vault '{vaultName}' was submitted, but the Azure SDK could not " +
+            "deserialize the updated policy from the service response (a known SDK limitation for some IaaS VM policy shapes). " +
+            "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
 
     /// <summary>
     /// Applies all VM updates through the subtype-preserving updater, including legacy flags.

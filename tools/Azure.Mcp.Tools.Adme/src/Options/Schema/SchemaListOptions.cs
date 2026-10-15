@@ -53,4 +53,7 @@ public sealed class SchemaListOptions
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
+
+    [Option(Description = "The ADME resource application ID or App ID URI used as the token audience. Omit to use the standard Azure Energy resource.")]
+    public string? AuthAppId { get; set; }
 }

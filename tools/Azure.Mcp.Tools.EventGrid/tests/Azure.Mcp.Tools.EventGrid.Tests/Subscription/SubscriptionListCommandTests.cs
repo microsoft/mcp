@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -24,7 +25,7 @@ public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<Sub
 
     public SubscriptionListCommandTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
 
         Services.AddSingleton(_azureService);
     }

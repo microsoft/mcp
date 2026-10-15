@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Extended the Azure Advisor recommendation list tool to support the Azure Service Group scope (--service-group) as an alternative to the subscription scope, and added a --prioritized option that surfaces and ranks recommendations by contextual criticality score. Recommendation results now include contextual fields (criticality, criticalityScore, scoreChangedAt, savings) and the serviceGroupId identifier when present.
