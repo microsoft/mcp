@@ -1,0 +1,13 @@
+changes:
+  - section: Bugs Fixed
+    description: >-
+      Made Azure Backup recovery point listing resilient to malformed Azure Files recovery points. The
+      RecoveryServicesBackup SDK could throw a UriFormatException while deserializing a single file-share
+      recovery point, failing the entire 'azurebackup recoverypoint get' call; the service now skips the
+      offending item and returns the remaining valid recovery points.
+  - section: Bugs Fixed
+    description: >-
+      Replaced the opaque NullReferenceException surfaced by 'azurebackup policy update' with an actionable
+      error. The SDK can fail to materialize the updated policy from the service response for some IaaS VM
+      policy shapes even though the change was submitted; the tool now returns a clear message directing the
+      user to verify the policy with 'azurebackup policy get'.

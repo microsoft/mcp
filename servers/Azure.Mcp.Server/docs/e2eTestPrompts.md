@@ -35,7 +35,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group \<resource-group> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me low-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List completed Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List Azure Advisor recommendations with postponed status in subscription \<subscription> | none |
@@ -45,7 +44,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription \<subscription> | none |
@@ -71,30 +69,37 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show the top 5 Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show the prioritized Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
 | advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
-| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
-| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
-| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
-| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
-| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
-| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
-| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
-| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
-| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, with the signals behind their scores | none |
+| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, and include the signals behind their scores | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, with available prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, without prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, with prioritization and signal output disabled | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by savings, with available prioritization signals | none |
+| advisor_recommendation_list | List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show the resources affected by that cost recommendation in service group \<service-group>, largest savings first | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, filtered to retirement dates before March 31, 2027 | none |
+| advisor_recommendation_list | List postponed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List dismissed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
+| advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Which service-retirement Advisor recommendations should I prioritize in service group \<service-group>? | none |
+| advisor_recommendation_summary | Show me the top actions I can take for my Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | What are the top Advisor actions I can take for service group \<service-group>? | none |
 | advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
@@ -123,6 +128,22 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026 | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |

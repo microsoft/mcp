@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Backup protect, update-protection, and undelete tools returning an async operation id in the `jobId` field. The operation id is not a backup job id, so `azurebackup job get` returned 404 and the tool wasted its full job-polling budget on a non-existent job. The operation id is now surfaced in a dedicated `operationId` field, `jobId` is populated only when a real ConfigureBackup job is found, and guidance points to `azurebackup protecteditem get` for verification."

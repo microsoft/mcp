@@ -41,6 +41,7 @@
       "azure-search-nav\\references\\README.md",
       "azure-search-nav\\references\\resource-types.json"
     ],
+    "azure-advisor": [],
     "azure-cost": [
       "cost-analysis\\references\\ai-cost-analysis.md",
       "cost-analysis\\references\\aks-anomaly.md",

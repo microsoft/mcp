@@ -576,13 +576,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         }
 
         var undeleteOperation = await matchedInstance.UndeleteAsync(WaitUntil.Started, cancellationToken);
-        var jobId = ExtractJobIdFromOperation(undeleteOperation.GetRawResponse());
-        var monitorMessage = string.IsNullOrWhiteSpace(jobId)
-            ? $"Restore operation started, but no backup job ID was returned. Operation ID: '{undeleteOperation.Id}'."
-            : $"Use 'azurebackup job get --job {jobId}' to monitor progress.";
+        var operationId = ExtractOperationIdFromResponse(undeleteOperation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. {monitorMessage}");
+        return new OperationResult("Accepted", JobId: null,
+            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. " +
+            (string.IsNullOrWhiteSpace(operationId)
+                ? "Use 'azurebackup protecteditem get' to verify."
+                : $"Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify."),
+            OperationId: operationId);
     }
 
     public async Task<BackupJobInfo> GetJobAsync(
@@ -1552,7 +1553,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             rpType);
     }
 
-    private static string? ExtractJobIdFromOperation(Response response)
+    private static string? ExtractOperationIdFromResponse(Response response)
     {
         if (response.Headers.TryGetValue("Azure-AsyncOperation", out var asyncOpUrl) && !string.IsNullOrEmpty(asyncOpUrl))
         {

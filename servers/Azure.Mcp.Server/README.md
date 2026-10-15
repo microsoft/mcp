@@ -102,7 +102,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
-<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false,}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // ⚠️ DANGEROUS: Disable SSRF protections for specific namespaces.}} -->
+<!-- insert-section: vsix {{       // Only use this if you understand the security implications.}} -->
+<!-- insert-section: vsix {{       // Forwards to --dangerously-disable-ssrf-protections-by-namespace.}} -->
+<!-- insert-section: vsix {{       "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": ["storage"]}} -->
 <!-- insert-section: vsix {{       ```}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
@@ -953,6 +958,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "List my Advisor recommendations"
 * "List Advisor recommendations for service group 'my-service-group'"
 * "Show the prioritized Advisor recommendations for service group 'my-service-group'"
+* "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
 * "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
