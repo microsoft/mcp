@@ -110,7 +110,6 @@ public class NetAppFilesCommandTests(
     [Fact]
     public async Task AccountGet_NoAccountsFilterReturnsAllAccounts()
     {
-        // var resourceBaseName = RegisterOrRetrieveVariable("resourceBaseName", Settings.ResourceBaseName);
         string[] accountNames = [$"{Settings.ResourceBaseName}-account", $"{Settings.ResourceBaseName}-account2"];
         var resourceGroupName = Settings.ResourceGroupName;
 
@@ -187,6 +186,7 @@ public class NetAppFilesCommandTests(
     {
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = Settings.ResourceGroupName;
+        var updatedTagsString = "{\"recorded-test\":\"account-update\"}";
 
         await CallToolAsync(
             "netappfiles_account_create",
@@ -207,7 +207,7 @@ public class NetAppFilesCommandTests(
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId },
-                { "tags", "{\"recorded-test\":\"account-update\"}" }
+                { "tags", updatedTagsString }
             });
 
         var account = result.AssertProperty("account");
@@ -216,5 +216,6 @@ public class NetAppFilesCommandTests(
         account.AssertProperty("id");
         Assert.Equal("eastus", account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+        Assert.Equal("account-update", account.AssertProperty("tags").AssertProperty("recorded-test").GetString());
     }
 }

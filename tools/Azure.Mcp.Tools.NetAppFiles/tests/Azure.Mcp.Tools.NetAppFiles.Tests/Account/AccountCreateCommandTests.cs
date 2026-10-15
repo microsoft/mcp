@@ -19,6 +19,7 @@ public class AccountCreateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
         "account1",
         "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.NetApp/netAppAccounts/account1",
         "eastus",
+        null,
         "Succeeded");
 
     [Fact]

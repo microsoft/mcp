@@ -11,7 +11,7 @@ public sealed class AccountUpdateOptions : ISubscriptionOption
     [Option(Description = "The name of the Azure NetApp Files account to update. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
     public required string Account { get; set; }
 
-    [Option(Description = "Resource tags as a JSON key-value object. Providing an empty object removes all tags.")]
+    [Option(Description = "Resource tags as a JSON key-value object. Replaces all existing tags and does not merge tags. Providing an empty object removes all tags.")]
     public string? Tags { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]

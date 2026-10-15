@@ -110,6 +110,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         account.Data.Name,
         account.Data.Id.ToString(),
         account.Data.Location.ToString(),
+        account.Data.Tags?.ToDictionary(t => t.Key, t => t.Value),
         account.Data.ProvisioningState?.ToString());
 
     private async Task<ResourceGroupResource> GetResourceGroupOrThrowAsync(
