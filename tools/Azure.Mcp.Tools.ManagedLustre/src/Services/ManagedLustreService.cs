@@ -1299,7 +1299,11 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
                 _logger.LogDebug(
                     "Filesystem '{FileSystemName}' is still finalizing capacity reservations; retrying expansion job creation.",
                     filesystemName);
-                await Task.Delay(s_expansionJobRetryInterval, cancellationToken).ConfigureAwait(false);
+
+                if (!EnvironmentHelpers.IsPlaybackTesting())
+                {
+                    await Task.Delay(s_expansionJobRetryInterval, cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
