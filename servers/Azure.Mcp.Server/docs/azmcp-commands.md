@@ -491,7 +491,7 @@ azmcp adme storage record version list --endpoint <endpoint> \
 # for status counts or grouped analysis.
 # Broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization
 # intent that does not identify a specific recommendation type must use summary --group-by
-# recommendation-type first. Requests that identify a specific recommendation type can use list
+# recommendation-type --prioritized true first. Requests that identify a specific recommendation type can use list
 # directly with --recommendation-type-id and --prioritized true. For other requests for individual
 # recommendations, use list directly with any supported filters; no prior summary call is required.
 # Use summary for counts, totals, rankings, distributions, or grouped analysis, not aggregates of
@@ -532,7 +532,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 | `--prioritized true` | Requires `--recommendation-type-id`. Use it directly when the request identifies a specific recommendation type, or for a selected type after cross-type prioritization with recommendation summary. The selected type's metadata category determines the instance metric. Non-Cost types order by `criticalityScore` descending, treating missing scores as zero. |
 | Prioritized Cost drill-down | When the selected recommendation type's metadata category is Cost, converts `savings.retail.dailyPotentialSavings` to an annual value by multiplying it by 12 and 30.4, with `extendedProperties.annualSavingsAmount` as fallback. The selected annual savings score is rounded to two decimal places before ordering descending. Missing, invalid, or non-finite savings sort last; zero remains valid. |
 | Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending, then recommendation ID ascending. |
-| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes `properties.signalBreakdown` when available as a map of every signal name to its `weightedScore`; unavailable signals are omitted. Including signals does not change filtering or ordering. |
+| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes the original `properties.signalBreakdown` payload when available, preserving its backend-provided JSON shape; unavailable signals are omitted. Including signals does not change filtering or ordering. |
 | Result limit | ARG selects up to `top + 1` records after filtering and optional ordering. The extra record is removed and used to detect truncation. ARG truncation signals also set `areResultsTruncated`. No additional pages are fetched. |
 
 - Specify either `--subscription` or `--service-group`, not both. Supply the Service Group name segment from its ARM resource ID.
@@ -542,7 +542,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 - Tracking IDs and retirement-date filters can be combined. They imply `ServiceUpgradeAndRetirement`; an explicitly supplied subcategory must match it.
 - Retirement-date filtering uses the metadata date, not the effective date used for ordering.
 - Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
-- `--prioritized` orders matching list records for an explicitly identified recommendation type, whether supplied directly by the user or selected from a prior summary. Broad or unscoped prioritization intent that does not identify a specific recommendation type must route to summary first.
+- `--prioritized` orders matching list records for an explicitly identified recommendation type, whether supplied directly by the user or selected from a prior summary. Broad or unscoped prioritization intent that does not identify a specific recommendation type must route to summary with `--group-by recommendation-type --prioritized true` first.
 
 ```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.

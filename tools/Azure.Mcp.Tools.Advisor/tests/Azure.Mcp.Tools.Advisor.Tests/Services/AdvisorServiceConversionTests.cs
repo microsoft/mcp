@@ -20,7 +20,8 @@ public class AdvisorServiceConversionTests
                 "healthAlertCoverage": { "weightedScore": 0.025 },
                 "serviceHealthEvents": { "weightedScore": 0 },
                 "sgHaGoal": { "weightedScore": 0 },
-                "customSignal": { "weightedScore": -0.1 }
+                "customSignal": { "weightedScore": -0.1, "details": ["extra", null], "enabled": true },
+                "unpublishedScalarSignal": "unknown-shape"
             }
             """;
         Models.Recommendation result;
@@ -48,13 +49,31 @@ public class AdvisorServiceConversionTests
             using var expected = JsonDocument.Parse(signals);
             Assert.True(JsonElement.DeepEquals(expected.RootElement, actual));
             Assert.Equal(0, actual.GetProperty("sgHaGoal").GetProperty("weightedScore").GetInt32());
-            Assert.Equal(4, result.Properties.SignalBreakdown?.Count);
-            Assert.Equal(-0.1, result.Properties.SignalBreakdown?["customSignal"].WeightedScore);
+            Assert.True(JsonElement.DeepEquals(expected.RootElement, result.Properties.SignalBreakdown!.Value));
         }
         else
         {
             Assert.Null(result.Properties.SignalBreakdown);
         }
+    }
+
+    [Theory]
+    [InlineData("42")]
+    [InlineData("\"unknown-shape\"")]
+    [InlineData("[1,null,{\"weightedScore\":\"unknown\"}]")]
+    public void ConvertToAdvisorRecommendationModel_PreservesUnpublishedSignalShapesWhenRequested(string signalBreakdown)
+    {
+        using var document = JsonDocument.Parse(
+            """{"properties":{"signalBreakdown":""" + signalBreakdown + "}}");
+
+        var included = AdvisorService.ConvertToAdvisorRecommendationModel(
+            document.RootElement,
+            showPrioritizationSignals: true);
+        var excluded = AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement);
+
+        using var expected = JsonDocument.Parse(signalBreakdown);
+        Assert.True(JsonElement.DeepEquals(expected.RootElement, included.Properties.SignalBreakdown!.Value));
+        Assert.Null(excluded.Properties.SignalBreakdown);
     }
 
     [Theory]

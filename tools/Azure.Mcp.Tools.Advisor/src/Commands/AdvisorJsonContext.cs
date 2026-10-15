@@ -28,8 +28,6 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(Models.Recommendation))]
 [JsonSerializable(typeof(global::Azure.Mcp.Tools.Advisor.Models.RecommendationProperties), TypeInfoPropertyName = "RecommendationResponseProperties")]
 [JsonSerializable(typeof(global::Azure.Mcp.Tools.Advisor.Models.RecommendationResourceMetadata), TypeInfoPropertyName = "RecommendationResponseResourceMetadata")]
-[JsonSerializable(typeof(Models.RecommendationSignalScore))]
-[JsonSerializable(typeof(Dictionary<string, Models.RecommendationSignalScore>))]
 [JsonSerializable(typeof(Models.RecommendationShortDescription))]
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]

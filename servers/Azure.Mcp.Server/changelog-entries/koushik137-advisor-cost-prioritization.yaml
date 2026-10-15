@@ -1,6 +1,6 @@
 changes:
   - section: "Features Added"
-    description: "Added --show-prioritization-signals to Advisor recommendation listing to optionally return the complete signalBreakdown map of signal names to weightedScore values when available. Defaults to false; enabling signals requires --prioritized true in subscription and Service Group scopes. Requests with signals enabled and prioritized false or omitted are rejected before querying Azure."
+    description: "Added --show-prioritization-signals to Advisor recommendation listing to optionally return the original signalBreakdown payload when available, preserving its backend-provided JSON shape. Defaults to false; enabling signals requires --prioritized true in subscription and Service Group scopes. Requests with signals enabled and prioritized false or omitted are rejected before querying Azure."
   - section: "Bugs Fixed"
     description: "Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId."
   - section: "Bugs Fixed"

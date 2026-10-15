@@ -524,7 +524,9 @@ public sealed class AdvisorServiceListTransportTests
         if (showSignals)
         {
             var signalBreakdown = result.Results[0].Properties.SignalBreakdown;
-            Assert.Equal(0.025, Assert.Single(signalBreakdown!).Value.WeightedScore);
+            Assert.Equal(
+                0.025,
+                signalBreakdown!.Value.GetProperty("healthAlertCoverage").GetProperty("weightedScore").GetDouble());
         }
         else
         {

@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Supports filters for category, subcategory, impact, recommendation status such as New, Postponed, Dismissed, or Completed, recommendation type ID, affected resource, resource type, free text, tracking ID, retirement date, and scope. " +
         "This returns recommendation instances, not the global metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID; use advisor metadata list for those catalog lookups. " +
         "For status-filtered requests, use this tool to retrieve individual recommendations; use summary only for status counts or grouped analysis. " +
-        "If a request has broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent and does not identify a specific recommendation type, do not use this tool; route to recommendation summary with --group-by recommendation-type. " +
+        "If a request has broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent and does not identify a specific recommendation type, do not use this tool; route to recommendation summary with --group-by recommendation-type and --prioritized true. " +
         "If the request identifies a specific recommendation type, use this tool directly with --recommendation-type-id and --prioritized true to order its individual recommendations. " +
         "For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters; a prior summary call is not required. " +
         "Use summary for counts, totals, rankings, distributions, or grouped analysis rather than aggregating this tool's limited results. " +

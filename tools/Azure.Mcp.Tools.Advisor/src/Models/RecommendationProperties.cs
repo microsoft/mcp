@@ -42,4 +42,4 @@ public sealed record RecommendationProperties(
     [property: JsonPropertyName("criticalityScore")] double? CriticalityScore = null,
     [property: JsonPropertyName("scoreChangedAt")] DateTimeOffset? ScoreChangedAt = null,
     [property: JsonPropertyName("savings")] JsonElement? Savings = null,
-    [property: JsonPropertyName("signalBreakdown")] IReadOnlyDictionary<string, RecommendationSignalScore>? SignalBreakdown = null);
+    [property: JsonPropertyName("signalBreakdown")] JsonElement? SignalBreakdown = null);

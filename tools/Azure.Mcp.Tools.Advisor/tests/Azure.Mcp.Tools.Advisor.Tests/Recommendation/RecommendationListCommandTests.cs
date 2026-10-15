@@ -30,6 +30,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("List, show, or search individual Azure Advisor recommendations")]
     [InlineData("recommendation status such as New, Postponed, Dismissed, or Completed")]
     [InlineData("broad or unscoped top, critical, important, prioritized, priority")]
+    [InlineData("--group-by recommendation-type and --prioritized true")]
     [InlineData("If the request identifies a specific recommendation type, use this tool directly")]
     [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
     public void Description_ExplainsIndividualRecommendationListing(string guidance)
@@ -40,6 +41,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("criticalityScore descending, treating missing scores as zero")]
     [InlineData("setting it to true requires --recommendation-type-id")]
+    [InlineData("summary --group-by recommendation-type --prioritized true first")]
     [InlineData("A request that identifies a specific recommendation type can use this option directly")]
     [InlineData("selected type's recommendation metadata category determines the instance metric")]
     [InlineData("savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4")]
