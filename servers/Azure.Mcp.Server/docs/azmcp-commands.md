@@ -3782,6 +3782,7 @@ azmcp monitor webtests get --subscription <subscription> \
 > Monitor Workspace that has been onboarded to Trace Store — `monitor traces account list` lists
 > only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
 > endpoint. Reach out to the Azure Monitor team for the onboarding guide.
+> These commands support Azure public cloud only; Azure China and Azure US Government are not supported.
 
 Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
 truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
@@ -3797,7 +3798,7 @@ and environment fallback behavior.
 and only polls the existing operation. Both require `--resource-group` and `--workspace`.
 Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
 Resuming does not change the query or its submitted time range and row limit.
-Queries poll for up to 180 seconds and return the results collected so far.
+Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
 If the status is `Running`, use `query resume` with the returned operation ID.
 Requested row limits are approximate; responses preserve truncation and partial-result indicators.
 Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.

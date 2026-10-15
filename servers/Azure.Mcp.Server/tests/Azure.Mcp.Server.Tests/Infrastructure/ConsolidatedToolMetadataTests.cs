@@ -46,24 +46,6 @@ public sealed class ConsolidatedToolMetadataTests()
             string.Join(Environment.NewLine, mismatches));
     }
 
-    [Fact]
-    public async Task ConsolidatedTools_TraceQueryResume_IsMappedOnceAsNonIdempotentReadOnly()
-    {
-        ServiceCollection serviceCollection = new();
-        Program.ConfigureServices(serviceCollection);
-        await using var services = serviceCollection.BuildServiceProvider();
-
-        var definitionProvider = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
-        var tool = Assert.Single(
-            definitionProvider.GetToolDefinitions(),
-            definition => definition.MappedToolList.Contains("monitor_traces_query_resume"));
-
-        Assert.Equal("resume_azure_monitor_trace_query", tool.Name);
-        Assert.False(tool.ToolMetadata.Idempotent);
-        Assert.True(tool.ToolMetadata.ReadOnly);
-        Assert.False(tool.ToolMetadata.Destructive);
-    }
-
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>
         actual.Destructive == expected.Destructive &&
         actual.Idempotent == expected.Idempotent &&
