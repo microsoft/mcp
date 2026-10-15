@@ -69,10 +69,25 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
 | advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
+| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, with the signals behind their scores | none |
+| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, and include the signals behind their scores | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, with available prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, without prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, with prioritization and signal output disabled | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by savings, with available prioritization signals | none |
+| advisor_recommendation_list | List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show the resources affected by that cost recommendation in service group \<service-group>, largest savings first | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, filtered to retirement dates before March 31, 2027 | none |
+| advisor_recommendation_list | List postponed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List dismissed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
+| advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
