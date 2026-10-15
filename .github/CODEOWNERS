@@ -359,10 +359,10 @@
 # ServiceOwners:                       @mattkohnms @ramnov
 
 # PRLabel: %tools-NetAppFiles
-/tools/Azure.Mcp.Tools.NetAppFiles/    @stumpc @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.NetAppFiles/    @stumpc @vkondapa03 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-NetAppFiles
-# ServiceOwners:                       @stumpc @microsoft/azure-mcp
+# ServiceOwners:                       @stumpc @vkondapa03 @microsoft/azure-mcp
 
 # PRLabel: %tools-Optimization
 /tools/Azure.Mcp.Tools.Optimization/   @sanjaytholanim @liangchenmicrosoft
