@@ -1252,6 +1252,13 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### 💾 Azure NetApp Files
+
+* "List my Azure NetApp Files accounts"
+* "Get details about my NetApp account 'mynetappaccount'"
+* "Create a new NetApp account in East US"
+* "Update tags on my NetApp account 'mynetappaccount'"
+
 ### 📊 Azure Quota
 
 * "Check resource usage and quota for 'Microsoft.App/containerApps' in region 'eastus'"
@@ -1439,7 +1446,6 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
-- **Azure NetApp Files** - Enterprise file storage account management
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
@@ -1456,6 +1462,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 💾 **Azure NetApp Files** - Enterprise file storage account management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
