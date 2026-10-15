@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added a machine-scoped VS Code setting to disable endpoint SSRF validation for explicitly selected Azure MCP tool namespaces. The namespace picker includes service descriptions and a warning for the ALL option. Only user or remote user settings can configure the bypass; workspace and folder settings cannot override it."

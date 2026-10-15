@@ -22,7 +22,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -49,7 +49,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = VaultPublicNetworkAccess.Enabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled
             }
         };
 
@@ -61,7 +61,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState);
+            result.Value.Data.Properties?.ProvisioningState,
+            result.Value.Data.Properties?.PublicNetworkAccess?.ToString());
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
@@ -193,10 +194,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var result = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
 
             var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse());
+            var operationId = ExtractOperationIdFromResponse(result.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId,
+                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId, operationId,
                 "Workload protection", cancellationToken);
         }
 
@@ -240,10 +241,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var fsResult = await fsProtectedItemResource.UpdateAsync(WaitUntil.Started, fsProtectedItemData, cancellationToken);
 
             var fsJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            fsJobId ??= ExtractOperationIdFromResponse(fsResult.GetRawResponse());
+            var fsOperationId = ExtractOperationIdFromResponse(fsResult.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId,
+                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId, fsOperationId,
                 "File share protection", cancellationToken);
         }
 
@@ -274,10 +275,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-        vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
+        var vmOperationId = ExtractOperationIdFromResponse(vmResult.GetRawResponse());
 
         return await BuildRsvProtectResultAsync(
-            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId,
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId, vmOperationId,
             "VM protection", cancellationToken);
     }
 
@@ -509,13 +510,69 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The RecoveryServicesBackup SDK can throw UriFormatException/FormatException while
+        // deserializing individual Azure Files (FileShareRecoveryPoint) recovery points whose
+        // payload contains a malformed URI or duration field. Enumerate defensively so a single
+        // malformed recovery point does not fail the entire list.
+        return await EnumerateTolerantAsync(
+            collection.GetAllAsync(cancellationToken: cancellationToken),
+            static rp => MapToRecoveryPointInfo(rp.Data),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Enumerates an async pageable, projecting each element with <paramref name="selector"/> while
+    /// tolerating Azure SDK deserialization failures. The RecoveryServicesBackup SDK can throw
+    /// <see cref="FormatException"/> (including its <see cref="UriFormatException"/> subtype) when a
+    /// single item's payload contains a malformed duration or URI - for example an Azure Files
+    /// <c>FileShareRecoveryPoint</c>. Offending items are skipped so the remaining valid items are
+    /// still returned. If the enumerator becomes unusable (a page-level failure where
+    /// <see cref="IAsyncEnumerator{T}.MoveNextAsync"/> keeps throwing), enumeration stops after
+    /// <paramref name="maxConsecutiveFailures"/> consecutive errors to avoid an infinite loop.
+    /// </summary>
+    internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
+        IAsyncEnumerable<TSource> source,
+        Func<TSource, TResult> selector,
+        CancellationToken cancellationToken,
+        int maxConsecutiveFailures = 3)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
+
+        var results = new List<TResult>();
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    results.Add(selector(enumerator.Current));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    // UriFormatException derives from FormatException; both indicate a single item
+                    // (or page) the SDK cannot deserialize. Skip and continue.
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
-        return points;
+        return results;
     }
 
     /// <summary>
@@ -791,11 +848,37 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
         }
 
-        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+        // The RecoveryServicesBackup SDK can throw a NullReferenceException from the
+        // BackupProtectionPolicyResource constructor while materializing the CreateOrUpdate response
+        // for certain IaaS VM policy shapes (the returned policy data omits the resource id). The PUT
+        // itself is accepted by the service, so translate the opaque failure into an actionable error
+        // that points the caller at a verification step instead of surfacing a bare 500.
+        try
+        {
+            var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (NullReferenceException)
+        {
+            throw CreatePolicyMaterializationError(policyName!, vaultName);
+        }
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
+
+    /// <summary>
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy from the
+    /// service response (a known <see cref="NullReferenceException"/> in
+    /// <c>BackupProtectionPolicyResource</c>'s constructor for some IaaS VM policy shapes). The update
+    /// request is accepted server-side, so the message is explicit that the change may have applied
+    /// and directs the caller to verify the current policy state.
+    /// </summary>
+    internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
+        new(
+            (int)HttpStatusCode.InternalServerError,
+            $"The update for policy '{policyName}' in vault '{vaultName}' was submitted, but the Azure SDK could not " +
+            "deserialize the updated policy from the service response (a known SDK limitation for some IaaS VM policy shapes). " +
+            "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
 
     /// <summary>
     /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
@@ -2237,12 +2320,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         var protectedItemResource = armClient.GetBackupProtectedItemResource(protectedItemId);
         var operation = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
-        var jobId = ExtractOperationIdFromResponse(operation.GetRawResponse());
+        var operationId = ExtractOperationIdFromResponse(operation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            jobId != null
-                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup job get --job {jobId}' to monitor progress."
-                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'.");
+        return new OperationResult("Accepted", JobId: null,
+            string.IsNullOrEmpty(operationId)
+                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup protecteditem get' to verify."
+                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify.",
+            OperationId: operationId);
     }
 
     /// <summary>
@@ -2278,16 +2362,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// </summary>
     private static async Task<ProtectResult> BuildRsvProtectResultAsync(
         ArmClient armClient, string subscription, string resourceGroup, string vaultName,
-        string protectedItemName, string? jobId, string operationDescription,
+        string protectedItemName, string? jobId, string? operationId, string operationDescription,
         CancellationToken cancellationToken)
     {
+        // Only a genuine ConfigureBackup job id (found via FindLatestJobIdAsync) can be polled
+        // or queried with 'azurebackup job get'. The async operation id from the PUT response is
+        // NOT a job id, so when no job is available we surface it separately as OperationId and
+        // avoid polling a non-existent job (which previously wasted the full 12-minute budget and
+        // returned a "jobId" that 'azurebackup job get' could not resolve).
         if (string.IsNullOrEmpty(jobId))
         {
+            var acceptedMessage = string.IsNullOrEmpty(operationId)
+                ? $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify."
+                : $"{operationDescription} initiated. Operation id '{operationId}' tracks the request " +
+                  "(it is not a backup job id); use 'azurebackup protecteditem get' to verify.";
+
             return new ProtectResult(
                 "Accepted",
                 protectedItemName,
-                null,
-                $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify.");
+                JobId: null,
+                acceptedMessage,
+                OperationId: operationId);
         }
 
         var finalJob = await WaitForJobAsync(
@@ -2300,7 +2395,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 protectedItemName,
                 jobId,
                 $"{operationDescription} is still running after the polling budget elapsed. " +
-                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.");
+                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.",
+                OperationId: operationId);
         }
 
         var status = finalJob.Status ?? "Unknown";
@@ -2318,7 +2414,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             jobId,
             message,
             ProtectionStatus: null,
-            ErrorMessage: isFailure ? errorMessage ?? status : null);
+            ErrorMessage: isFailure ? errorMessage ?? status : null,
+            OperationId: operationId);
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using System.Net;
 using System.Security;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Mcp.Tools.ServiceBus.Tests.TestSupport;
 using Azure.Messaging.ServiceBus;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Tools.ServiceBus.Tests.Services;
 
 public class ServiceBusServiceNamespaceValidationTests
 {
-    private readonly IAzureService _azureService = Substitute.For<IAzureService>();
+    private readonly IAzureService _azureService = AzureServiceTestHelpers.CreateAzureService();
     private readonly ServiceBusService _service;
 
     public ServiceBusServiceNamespaceValidationTests()

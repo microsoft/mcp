@@ -1,3 +1,0 @@
-changes:
-  - section: Other Changes
-    description: Hardened Service Bus namespace validation to require bare DNS hostnames and added cloud-specific endpoint validation for Service Fabric ARM requests and pagination.

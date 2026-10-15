@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Security;
-using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Azure.ResourceManager;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.Tests.Services;
@@ -21,9 +19,8 @@ public class LoadTestingServiceEndpointValidationTests
         string dataPlaneUri,
         string expectedEndpoint)
     {
-        var endpoint = LoadTestingService.CreateValidatedDataPlaneUri(
-            dataPlaneUri,
-            ArmEnvironment.AzurePublicCloud);
+        Uri endpoint = LoadTestingService.CreateValidatedDataPlaneUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+            dataPlaneUri);
 
         Assert.Equal(expectedEndpoint, endpoint.AbsoluteUri);
     }
@@ -36,9 +33,8 @@ public class LoadTestingServiceEndpointValidationTests
         string dataPlaneUri,
         string expectedEndpoint)
     {
-        var endpoint = LoadTestingService.CreateValidatedDataPlaneUri(
-            dataPlaneUri,
-            ArmEnvironment.AzureGovernment);
+        Uri endpoint = LoadTestingService.CreateValidatedDataPlaneUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureGovernment),
+            dataPlaneUri);
 
         Assert.Equal(expectedEndpoint, endpoint.AbsoluteUri);
     }
@@ -51,9 +47,8 @@ public class LoadTestingServiceEndpointValidationTests
     public void CreateValidatedDataPlaneUri_InvalidPublicCloudHost_ThrowsSecurityException(string dataPlaneUri)
     {
         Assert.Throws<SecurityException>(() =>
-            LoadTestingService.CreateValidatedDataPlaneUri(
-                dataPlaneUri,
-                ArmEnvironment.AzurePublicCloud));
+            LoadTestingService.CreateValidatedDataPlaneUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                dataPlaneUri));
     }
 
     [Theory]
@@ -63,9 +58,7 @@ public class LoadTestingServiceEndpointValidationTests
     [InlineData("not-a-valid-uri")]
     public async Task CreateTestAsync_UnsafeTarget_ThrowsBeforeAzureAccess(string endpointUrl)
     {
-        var service = new LoadTestingService(
-            Substitute.For<IAzureService>(),
-            Substitute.For<ILogger<LoadTestingService>>());
+        var service = new LoadTestingService(AzureServiceTestHelpers.CreateAzureService());
 
         await Assert.ThrowsAsync<SecurityException>(() =>
             service.CreateTestAsync(

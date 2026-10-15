@@ -6,14 +6,29 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Security.AntiSSRF;
 
 namespace Microsoft.Mcp.Core.Services.Http;
 
 public static class HttpClientFactoryConfigurator
 {
+    /// <summary>
+    /// The <see cref="IHttpClientFactory"/> client name reserved for shared ARM SDK transports.
+    /// </summary>
+    /// <remarks>
+    /// Separates the shared ARM transport from generic and data-plane HTTP clients while
+    /// retaining the factory's common timeout, user-agent, proxy, redirect, and SSRF behavior.
+    /// </remarks>
+    public const string ArmClientName = "AzureMcpArm";
+
     private static readonly string s_version;
     private static readonly string s_framework;
     private static readonly string s_platform;
@@ -28,14 +43,71 @@ public static class HttpClientFactoryConfigurator
         s_platform = RuntimeInformation.OSDescription;
     }
 
+    /// <summary>
+    /// Applies shared HTTP defaults and external-only AntiSSRF protection to factory clients.
+    /// </summary>
+    /// <param name="services">The host's service registrations.</param>
+    /// <param name="recordingProxyResolver">An optional debug-only test-proxy resolver.</param>
+    /// <returns>
+    /// The <paramref name="services"/> collection for chaining.
+    /// </returns>
+    /// <remarks>
+    /// Protection uses <see cref="PolicyConfigOptions.ExternalOnlyLatest"/> and evaluates namespace overrides on every send.
+    /// Configured proxies are selected in <c>ALL_PROXY</c>, <c>HTTPS_PROXY</c>, then
+    /// <c>HTTP_PROXY</c> precedence and apply to both HTTP and HTTPS. Explicit, system, and PAC
+    /// proxies are evaluated per request: proxied requests omit transport DNS/IP validation,
+    /// while <c>NO_PROXY</c>, operating-system bypass, and PAC direct routes retain it.
+    /// When no configured proxy is selected, <see cref="HttpClient.DefaultProxy"/> supplies
+    /// the runtime proxy and bypass rules. Debug recording proxies remain a handler-wide
+    /// exception to transport protection.
+    /// Callers' endpoint validation remains independent of every transport proxy exception.
+    /// Repeated calls are ignored so client and handler configuration delegates are registered
+    /// exactly once. The first <paramref name="recordingProxyResolver"/> is retained.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> is <see langword="null"/>.</exception>
     public static IServiceCollection ConfigureDefaultHttpClient(
         this IServiceCollection services,
         Func<Uri?>? recordingProxyResolver = null)
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        if (services.Any(static descriptor =>
+            descriptor.ServiceType == typeof(DefaultHttpClientConfigurationMarker)))
+        {
+            return services;
+        }
+
+        // The changes happening in ConfigureHttpClientBuilder are not idempotent. We use
+        // this DI marker pattern to prevent duplicate execution. This makes ConfigureDefaultHttpClient
+        // idempotent on the whole when its individual steps are not.
+        services.AddSingleton<DefaultHttpClientConfigurationMarker>();
+        services.TryAddSingleton(_ => new SystemProxyProvider(HttpClient.DefaultProxy));
         services.ConfigureHttpClientDefaults(builder => ConfigureHttpClientBuilder(builder, recordingProxyResolver));
 
+        services.AddCommandContextAccessor();
+        services.AddEndpointValidation();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the shared ARM transport name with <see cref="IHttpClientFactory"/>.
+    /// </summary>
+    /// <param name="services">The server host's service collection.</param>
+    /// <returns>
+    /// The same <paramref name="services"/> collection for chaining registrations.
+    /// </returns>
+    /// <remarks>
+    /// Common HTTP defaults, including disabled automatic redirects, are applied by
+    /// <see cref="ConfigureDefaultHttpClient"/>.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="services"/> is <see langword="null"/>.
+    /// </exception>
+    public static IServiceCollection ConfigureArmHttpClient(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddHttpClient(ArmClientName);
         return services;
     }
 
@@ -56,47 +128,137 @@ public static class HttpClientFactoryConfigurator
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 
-        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider => CreateHttpMessageHandler(serviceProvider, recordingProxyResolver));
+        // Register a construction step, not a shared handler instance. ConfigureAll adds this
+        // action to every client name's options; IHttpClientFactory runs it independently when
+        // creating or rotating that name's cached handler graph.
+        builder.Services.ConfigureAll<HttpClientFactoryOptions>(options =>
+            options.HttpMessageHandlerBuilderActions.Add(handlerBuilder =>
+                handlerBuilder.PrimaryHandler = CreateHttpMessageHandler(
+                    handlerBuilder.Services, recordingProxyResolver, handlerBuilder.Name)));
     }
 
-    private static HttpMessageHandler CreateHttpMessageHandler(IServiceProvider serviceProvider, Func<Uri?>? recordingProxyResolver)
+    private static HttpMessageHandler CreateHttpMessageHandler(
+        IServiceProvider serviceProvider,
+        Func<Uri?>? recordingProxyResolver,
+        string? clientName)
     {
-        var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-        var handler = new HttpClientHandler();
+        // Each invocation builds a new graph for one client-name generation. The terminal
+        // handlers allocated below, and their connection pools, are not reused by other names
+        // or by later generations of the same name.
+        HttpMessageHandler handler = CreateHandlerChain();
+        DisableAutomaticRedirects(handler);
+        return handler;
 
-        var proxy = CreateProxy(options);
-        if (proxy != null)
+        HttpMessageHandler CreateHandlerChain()
         {
-            handler.Proxy = proxy;
-            handler.UseProxy = true;
-        }
+            HttpClientOptions options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
+            var handler = new SocketsHttpHandler();
+
+            WebProxy? proxy = CreateProxy(options);
+            if (proxy != null)
+            {
+                // A configured proxy replaces the runtime default for the whole handler.
+                handler.Proxy = proxy;
+                handler.UseProxy = true;
+            }
 
 #if DEBUG
-        var proxyUri = ResolveRecordingProxy(recordingProxyResolver);
-        if (proxyUri != null)
-        {
-            return new RecordingRedirectHandler(proxyUri)
+            Uri? recordingProxy = ResolveRecordingProxy(options.RecordingProxy, recordingProxyResolver);
+            if (recordingProxy != null)
             {
-                InnerHandler = handler
-            };
-        }
+                // The inner handler retains either the configured proxy above or, when Proxy is
+                // null, SocketsHttpHandler's automatic use of HttpClient.DefaultProxy.
+                LogProxyProtection(serviceProvider, clientName);
+                return new RecordingRedirectHandler(recordingProxy)
+                {
+                    InnerHandler = handler
+                };
+            }
 #endif
 
-        return handler;
+            if (proxy != null)
+            {
+                LogProxyProtection(serviceProvider, clientName);
+            }
+            else
+            {
+                // Resolve the same runtime proxy object for both route selection and network transport.
+                // PAC and bypass rules are destination-specific, so they cannot be decided at construction.
+                IWebProxy systemProxy = serviceProvider.GetRequiredService<SystemProxyProvider>().Proxy;
+                handler.Proxy = systemProxy;
+                handler.UseProxy = true;
+            }
+
+            // Use independent terminal transports, and therefore independent connection pools,
+            // for proxied, protected-direct, and namespace-override traffic. A connection admitted
+            // through a proxy or override must never be reused by the protected direct path.
+            var policy = new AntiSSRFPolicy(PolicyConfigOptions.ExternalOnlyLatest);
+            var namespaceHandler = new NamespaceAwareHttpHandler(
+                policy.GetHandler(),
+                new SocketsHttpHandler { UseProxy = false },
+                serviceProvider.GetRequiredService<ICommandContextAccessor>(),
+                serviceProvider.GetRequiredService<SsrfProtectionPolicy>());
+            return new ProxyRoutingHandler(handler, namespaceHandler);
+        }
+
+        static void DisableAutomaticRedirects(HttpMessageHandler handler)
+        {
+            // Walk configured wrappers without replacing the proxy or recording chain.
+            while (handler is DelegatingHandler delegatingHandler)
+            {
+                handler = delegatingHandler.InnerHandler
+                    ?? throw new InvalidOperationException("The HTTP client handler chain has no terminal handler.");
+            }
+
+            switch (handler)
+            {
+                case HttpClientHandler httpClientHandler:
+                    httpClientHandler.AllowAutoRedirect = false;
+                    break;
+                case SocketsHttpHandler socketsHttpHandler:
+                    socketsHttpHandler.AllowAutoRedirect = false;
+                    break;
+                case NamespaceAwareHttpHandler namespaceHandler:
+                    namespaceHandler.DisableAutomaticRedirects();
+                    break;
+                case ProxyRoutingHandler proxyRoutingHandler:
+                    proxyRoutingHandler.DisableAutomaticRedirects();
+                    break;
+                case AntiSSRFHandler antiSsrfHandler:
+                    antiSsrfHandler.AllowAutoRedirect = false;
+                    break;
+                default:
+                    throw new InvalidOperationException("The HTTP client transport must support disabling automatic redirects.");
+            }
+        }
+    }
+
+    private static void LogProxyProtection(IServiceProvider serviceProvider, string? clientName)
+    {
+        // Handler pools can be recreated for the same client, so this debug event may be logged repeatedly.
+        serviceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(HttpClientFactoryConfigurator).FullName!)
+            .LogDebug("Requests from HTTP client {ClientName} that are routed through the configured proxy omit transport-level AntiSSRF protections. Direct requests selected by proxy bypass rules retain those protections. Endpoint validation remains enabled unless separately bypassed.", clientName);
     }
 
 #if DEBUG
     /// <summary>
-    /// This function will only ever run in debug mode. It resolves the recording proxy URI either from from either a provided resolver function
-    /// or the TEST_PROXY_URL environment variable. This is necessary for livetest scenarios that directly invoke a service rather than going through CallToolAsync(),
-    /// as scenarios like this require that the proxy be set up at the ClientFactory level, where globally set environment variables would break other tests running in parallel.
+    /// Resolves the debug recording proxy from a deferred fixture callback or the host's captured fallback.
+    /// Handler construction never reads or mutates the process environment, so independent providers
+    /// can use different recording routes concurrently.
     ///
     /// See <see cref="RecordingRedirectHandler"/> for more details on how the recording proxy function is provided.
     /// </summary>
-    /// <param name="recordingProxyResolver">Optional function that will resolve a proxy uri.</param>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    private static Uri? ResolveRecordingProxy(Func<Uri?>? recordingProxyResolver)
+    /// <param name="recordingProxy">The fallback captured from <c>TEST_PROXY_URL</c> during host configuration.</param>
+    /// <param name="recordingProxyResolver">The optional function resolving a recording-proxy <see cref="Uri"/>.</param>
+    /// <returns>
+    /// The resolved recording <see cref="Uri"/>, or <see langword="null"/> when neither
+    /// <paramref name="recordingProxyResolver"/> nor <paramref name="recordingProxy"/> provides a route.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="recordingProxyResolver"/> returns a relative <see cref="Uri"/>.
+    /// </exception>
+    private static Uri? ResolveRecordingProxy(string? recordingProxy, Func<Uri?>? recordingProxyResolver)
     {
         Uri? proxyUri = null;
 
@@ -111,8 +273,7 @@ public static class HttpClientFactoryConfigurator
 
         if (proxyUri == null)
         {
-            var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-            if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var envProxy))
+            if (!string.IsNullOrWhiteSpace(recordingProxy) && Uri.TryCreate(recordingProxy, UriKind.Absolute, out Uri? envProxy))
             {
                 proxyUri = envProxy;
             }
@@ -131,9 +292,14 @@ public static class HttpClientFactoryConfigurator
             return null;
         }
 
+        if (!proxyAddress.Contains("://", StringComparison.Ordinal))
+        {
+            proxyAddress = $"http://{proxyAddress}";
+        }
+
         if (!Uri.TryCreate(proxyAddress, UriKind.Absolute, out var proxyUri))
         {
-            return null;
+            throw new ArgumentException("The configured HTTP proxy must be an absolute URI.", nameof(options));
         }
 
         var proxy = new WebProxy(proxyUri);
@@ -283,5 +449,12 @@ public static class HttpClientFactoryConfigurator
     {
         s_userAgent ??= $"azmcp/{s_version} azmcp-{transport}/{s_version} ({s_framework}; {s_platform})";
         return s_userAgent;
+    }
+
+    /// <summary>
+    /// Marks a service collection whose shared HTTP client defaults have already been registered.
+    /// </summary>
+    private sealed class DefaultHttpClientConfigurationMarker()
+    {
     }
 }

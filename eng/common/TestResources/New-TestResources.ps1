@@ -311,7 +311,7 @@ try {
     }
 
     # This needs to happen after we set the TenantId but before we use the ResourceGroupName
-    if ($wellKnownTMETenants.Contains($TenantId)) {
+    if ($wellKnownTMETenants.Contains($TenantId) -and !$ResourceGroupName.StartsWith("SSS3PT_", [System.StringComparison]::OrdinalIgnoreCase)) {
         # Add a prefix to the resource group name to avoid flagging the usages of local auth
         # See details at https://eng.ms/docs/products/onecert-certificates-key-vault-and-dsms/key-vault-dsms/certandsecretmngmt/credfreefaqs#how-can-i-disable-s360-reporting-when-testing-customer-facing-3p-features-that-depend-on-use-of-unsafe-local-auth
         $ResourceGroupName = "SSS3PT_" + $ResourceGroupName
@@ -601,6 +601,10 @@ try {
 
     # Deploy the templates
     foreach ($templateFile in $templateFiles) {
+        # Reset so a stale value from a previous iteration can't leak through if the try block
+        # below throws without reassigning it.
+        $deployment = $null
+
         # Deployment fails if we pass in more parameters than are defined.
         Write-Verbose "Removing unnecessary parameters from template '$($templateFile.jsonFilePath)'"
         $templateJson = Get-Content -LiteralPath $templateFile.jsonFilePath | ConvertFrom-Json
@@ -652,15 +656,13 @@ try {
         }
 
         if (!$deployment -or $deployment.ProvisioningState -ne 'Succeeded') {
-            Write-Warning "Initial deployment attempt failed, retrying..."
-            $deployment = Retry -Attempts 4 -Action {
-                New-AzResourceGroupDeployment `
-                    -Name $BaseName `
-                    -ResourceGroupName $resourceGroup.ResourceGroupName `
-                    -TemplateFile $templateFile.jsonFilePath `
-                    -TemplateParameterObject $templateFileParameters `
-                    -Force:$Force
-            }
+            Write-Warning "Initial deployment attempt failed or did not report success; checking whether it's still active server-side..."
+            $deployment = Resolve-DeploymentAfterFailure `
+                -DeploymentName $BaseName `
+                -ResourceGroupName $resourceGroup.ResourceGroupName `
+                -TemplateFile $templateFile.jsonFilePath `
+                -TemplateFileParameters $templateFileParameters `
+                -Force:$Force
         }
 
         if ($deployment.ProvisioningState -ne 'Succeeded') {

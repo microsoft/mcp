@@ -824,6 +824,9 @@
         "x-ms-examples": {
           "Get an eventstream source example": {
             "$ref": "./examples/GetEventstreamSource.json"
+          },
+          "Get a Reference Lakehouse eventstream source example": {
+            "$ref": "./examples/GetEventstreamReferenceLakehouseSource.json"
           }
         }
       }
@@ -902,7 +905,7 @@
     "/workspaces/{workspaceId}/eventstreams/{eventstreamId}/sources/{sourceId}/connection": {
       "get": {
         "summary": "Returns the connection information of specified source of the eventstream.",
-        "description": "## Permissions\n\n The caller must have *read and write* permissions for the eventstream. \n\n## Required Delegated Scopes \n\n Eventstream.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n\n Only custom endpoints sources are supported.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the eventstream. \n\n## Required Delegated Scopes \n\n Eventstream.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n\n Only custom endpoint, Cribl, and SAP Datasphere sources are supported.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Topology"
         ],
@@ -940,7 +943,7 @@
           "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref": "./definitions/source.json#/definitions/SourceConnectionResponse"
+              "$ref": "./definitions/common.json#/definitions/EndpointConnection"
             }
           },
           "429": {
@@ -966,6 +969,12 @@
         "x-ms-examples": {
           "Get an eventstream source connection example": {
             "$ref": "./examples/GetEventstreamSourceConnection.json"
+          },
+          "Get an eventstream Cribl source connection example": {
+            "$ref": "./examples/GetEventstreamSourceConnectionCribl.json"
+          },
+          "Get an eventstream SAP Datasphere source connection example": {
+            "$ref": "./examples/GetEventstreamSourceConnectionSAPDatasphere.json"
           }
         }
       }
@@ -1011,7 +1020,7 @@
           "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref": "./definitions/destination.json#/definitions/DestinationConnectionResponse"
+              "$ref": "./definitions/common.json#/definitions/EndpointConnection"
             }
           },
           "429": {

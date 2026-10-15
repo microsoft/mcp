@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -21,6 +22,28 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         ExcludedHeaders = "Authorization,Content-Type,x-ms-client-request-id",
         CompareBodies = false
     };
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers =>
+    [
+        .. base.UriRegexSanitizers,
+        new(new()
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
+        })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        new(new("Azure-AsyncOperation")
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
+        })
+    ];
 
     // Disable default BodyKeySanitizers that replace the ENTIRE value of JSON fields used in
     // subsequent API URL construction. AZSDK3430 ($..id) is already disabled by the base class.
@@ -68,18 +91,18 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         // tenant id of the recording subscription. Replace with the well-known zero GUID.
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
-            Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
+            Regex = "(72f988bf-86f1-41af-91ab-2d7cd011db47|70a036f6-8e4d-4615-bad6-149c02e7720d)",
             Value = "00000000-0000-0000-0000-000000000000",
         }),
         // ARM operation headers include the tenant and caller object identifiers.
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
-            Regex = "(?i)(?<=tenantId=)[0-9a-f-]{36}",
+            Regex = @"(?i)(?<=tenantId=)[0-9a-f-]{36}",
             Value = "00000000-0000-0000-0000-000000000000",
         }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
-            Regex = "(?i)(?<=objectId=)[0-9a-f-]{36}",
+            Regex = @"(?i)(?<=objectId=)[0-9a-f-]{36}",
             Value = "00000000-0000-0000-0000-000000000000",
         }),
         // Container discovery can return storage accounts registered from other resource groups.
@@ -100,6 +123,16 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             Value = "Sanitized",
         })
     ];
+
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+        GeneralRegexSanitizers.Add(new(new()
+        {
+            Regex = $"(?i){Regex.Escape(Settings.ResourceGroupName)}",
+            Value = "Sanitized"
+        }));
+    }
 
     #region Vault Tests (RSV)
 
@@ -197,6 +230,29 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var vault = result.AssertProperty("vault");
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Disabled", vault.AssertProperty("publicNetworkAccess").GetString());
+    }
+
+    [Fact]
+    public async Task VaultCreate_CreatesPublicRsvVault_WhenExplicitlyEnabled()
+    {
+        var vaultName = RegisterOrRetrieveVariable("createdPublicVaultName", $"test-rsv-{Random.Shared.NextInt64()}");
+
+        var result = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "location", "eastus" },
+                { "enable-public-network-access", "true" }
+            });
+
+        var vault = result.AssertProperty("vault");
+        Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Enabled", vault.AssertProperty("publicNetworkAccess").GetString());
     }
 
     [Fact]

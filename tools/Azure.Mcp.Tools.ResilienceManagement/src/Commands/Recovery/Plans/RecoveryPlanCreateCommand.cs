@@ -78,7 +78,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         }
         catch (ArgumentException ex)
         {
-            validationResult.Errors.Add(ex.Message);
+            validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
         }
 
         if (options.IdentityType != Models.RecoveryPlanIdentityKind.SystemAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
@@ -97,7 +97,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add(ex.Message);
+                validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
             }
         }
     }

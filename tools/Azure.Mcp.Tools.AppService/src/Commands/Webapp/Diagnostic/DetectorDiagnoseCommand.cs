@@ -44,7 +44,8 @@ public sealed class DetectorDiagnoseCommand(ILogger<DetectorDiagnoseCommand> log
 
         if (options.StartTime != null && options.EndTime != null && options.StartTime > options.EndTime)
         {
-            validationResult.Errors.Add($"Start time '{options.StartTime}' must be earlier than end time '{options.EndTime}'.");
+            validationResult.AddError($"Start time '{options.StartTime}' must be earlier than end time '{options.EndTime}'.",
+                "Invalid App Service diagnostic time range.");
         }
     }
 

@@ -63,8 +63,8 @@ public sealed class ResiliencyAgentSetupTests
             area.SubGroup.SelectMany(group => group.Commands.Values),
             command =>
             {
-                Assert.True(command.Metadata.LocalRequired);
-                Assert.False(command.Metadata.ReadOnly);
+                Assert.True(command.Command.Metadata.LocalRequired);
+                Assert.False(command.Command.Metadata.ReadOnly);
             });
     }
 
@@ -77,6 +77,6 @@ public sealed class ResiliencyAgentSetupTests
         var group = Assert.Single(area.SubGroup, candidate => candidate.Name == groupName);
         var command = Assert.Single(group.Commands);
         Assert.Equal(commandName, command.Key);
-        Assert.Contains(descriptionText, command.Value.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(descriptionText, command.Value.Command.Description, StringComparison.OrdinalIgnoreCase);
     }
 }

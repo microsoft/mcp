@@ -9,6 +9,11 @@ namespace Azure.Mcp.Tools.Advisor.Validation;
 
 internal static class RecommendationFilterValidator
 {
+    internal const string PrioritizationSignalsRequiresPrioritized =
+        "--show-prioritization-signals true requires --prioritized true.";
+    internal const string PrioritizedRequiresRecommendationType =
+        "--prioritized true requires --recommendation-type-id. Use recommendation summary grouped by recommendation-type for initial cross-type prioritization, then list the selected type.";
+
     internal static readonly string[] AllowedCategories =
     [
         "Cost",
@@ -30,6 +35,16 @@ internal static class RecommendationFilterValidator
 
     internal static void Validate(RecommendationListOptions options, ValidationResult validationResult)
     {
+        if (options.ShowPrioritizationSignals == true && options.Prioritized != true)
+        {
+            validationResult.Errors.Add(PrioritizationSignalsRequiresPrioritized);
+        }
+
+        if (options.Prioritized == true && string.IsNullOrWhiteSpace(options.RecommendationTypeId))
+        {
+            validationResult.Errors.Add(PrioritizedRequiresRecommendationType);
+        }
+
         ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
         ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
@@ -104,9 +119,10 @@ internal static class RecommendationFilterValidator
         if (recommendationTypeId is not null &&
             !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
         {
-            validationResult.Errors.Add(
+            validationResult.AddError(
                 $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
-                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.");
+                "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.",
+                "Invalid Advisor recommendation type ID.");
         }
     }
 
@@ -125,8 +141,9 @@ internal static class RecommendationFilterValidator
         if (normalized.Length == 0 ||
             !allowedValues.Contains(normalized, StringComparer.OrdinalIgnoreCase))
         {
-            validationResult.Errors.Add(
-                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.");
+            validationResult.AddError(
+                $"Invalid {optionName} value '{value}'. Allowed values: {string.Join(", ", allowedValues)}.",
+                "Invalid Advisor filter value.");
         }
     }
 

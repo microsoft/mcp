@@ -1558,7 +1558,7 @@ public class ComputeService(
         // Default to the resource group's location if not specified
         var resolvedLocation = location ?? rgResource.Value.Data.Location.Name;
 
-        var creationData = CreateDiskCreationData(source, AzureService.CloudConfiguration.ArmEnvironment, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
+        DiskCreationData creationData = CreateDiskCreationData(AzureService, source, galleryImageReference, galleryImageReferenceLun, uploadType, uploadSizeBytes);
 
         var diskData = new ManagedDiskData(new(resolvedLocation))
         {
@@ -1755,7 +1755,7 @@ public class ComputeService(
         return ConvertToDiskModel(updateOperation.Value, resourceGroup);
     }
 
-    private static DiskCreationData CreateDiskCreationData(string? source, ArmEnvironment armEnvironment, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
+    private static DiskCreationData CreateDiskCreationData(IAzureService azureService, string? source, string? galleryImageReference = null, int? galleryImageReferenceLun = null, string? uploadType = null, long? uploadSizeBytes = null)
     {
         if (!string.IsNullOrEmpty(uploadType))
         {
@@ -1796,11 +1796,9 @@ public class ComputeService(
         if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
             source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
         {
-            EndpointValidator.ValidateAzureServiceEndpoint(
+            azureService.ValidateAzureServiceEndpoint(
                 endpoint: source,
-                serviceType: "storage-blob",
-                armEnvironment: armEnvironment,
-                executingToolNamespaceName: "compute");
+                serviceType: "storage-blob");
             return new(DiskCreateOption.Import)
             {
                 SourceUri = new(source)
