@@ -7,6 +7,10 @@
       "aks-troubleshooting",
       "azure-search-nav"
     ],
+    "azure-advisor": [
+      "azure-advisor",
+      "azure-advisor-actionability"
+    ],
     "azure-cost": [
       "cost-analysis",
       "cost-estimation",
