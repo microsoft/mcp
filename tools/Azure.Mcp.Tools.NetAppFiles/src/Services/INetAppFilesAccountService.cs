@@ -7,10 +7,10 @@ namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public interface INetAppFilesAccountService
 {
-    Task<NetAppFilesAccount> GetAccountAsync(
-        string account,
+    Task<IReadOnlyList<NetAppFilesAccount>> GetAccountAsync(
         string resourceGroup,
         string subscription,
+        string? account = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

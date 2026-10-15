@@ -15,6 +15,11 @@ resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
   location: location
 }
 
+resource netAppAccount2 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
+  name: '${baseName}-account2'
+  location: location
+}
+
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'

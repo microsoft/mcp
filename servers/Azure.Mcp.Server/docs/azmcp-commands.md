@@ -2688,12 +2688,12 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 ### Azure NetApp Files Operations
 
 ```bash
-# Gets an Azure NetApp Files account by name from a specified resource group.
-# Returns the account name, resource ID, location, and provisioning state.
+# Gets Azure NetApp Files accounts from a specified resource group. Optionally filters by account name
+# Returns a list of accounts with the account name, resource ID, location, and provisioning state.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp netappfiles account get --account <account> \
-                              --resource-group <resource-group> \
+azmcp netappfiles account get --resource-group <resource-group> \
                               --subscription <subscription> \
+                              [--account <account>] \
                               [--tenant <tenant>]
 
 # Creates an Azure NetApp Files account in a specified resource group and region.
@@ -2705,7 +2705,7 @@ azmcp netappfiles account create --account <account> \
                                  --subscription <subscription> \
                                  [--tenant <tenant>]
 
-# Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account.
+# Updates the tags of an Azure NetApp Files account.
 # Providing an empty JSON object for --tags removes all tags.
 # Returns the updated account name, resource ID, location, and provisioning state.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

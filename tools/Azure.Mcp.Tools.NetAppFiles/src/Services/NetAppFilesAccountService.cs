@@ -13,10 +13,10 @@ namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureService(azureService), INetAppFilesAccountService
 {
-    public async Task<NetAppFilesAccount> GetAccountAsync(
-        string account,
+    public async Task<IReadOnlyList<NetAppFilesAccount>> GetAccountAsync(
         string resourceGroup,
         string subscription,
+        string? account = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -26,9 +26,14 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
             tenant,
             cancellationToken: cancellationToken);
 
-        var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
+        if (account is not null)
+        {
+            var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
+            return [Map(accountResource.Value)];
+        }
 
-        return Map(accountResource.Value);
+        var accountResources = await resourceGroupResource.GetNetAppAccounts().GetAllAsync(cancellationToken).ToListAsync(cancellationToken);
+        return accountResources.Select(Map).ToList();
     }
 
     public async Task<NetAppFilesAccount> CreateAccountAsync(

@@ -616,6 +616,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | netappfiles_account_create | Create a NetApp Files account called \<account> in resource group \<resource_group> | none |
 | netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
 | netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files accounts in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files accounts in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
 | netappfiles_account_update | Update the NFSv4 ID mapping domain for NetApp Files account \<account> in resource group \<resource_group> to example.com | none |
 

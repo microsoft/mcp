@@ -53,15 +53,21 @@ public class NetAppFilesCommandTests(
 
     public override List<BodyKeySanitizer> BodyKeySanitizers => new()
     {
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.tags.Owner")
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..tags.Owner")
         {
             Value = "Sanitized"
         }),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.tags.Owners")
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..tags.Owners")
         {
             Value = "Sanitized"
         }),
-        new BodyKeySanitizer(new BodyKeySanitizerBody("$.id")
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceName")
+        {
+            Regex = "/resourceGroups/(?<resourceGroup>[^/]+)",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id")
         {
             Regex = "/resourceGroups/(?<resourceGroup>[^/]+)",
             GroupForReplace = "resourceGroup",
@@ -91,12 +97,43 @@ public class NetAppFilesCommandTests(
                 { "tenant", Settings.TenantId }
             });
 
-        var account = result.AssertProperty("account");
+        var accounts = result.AssertProperty("accounts");
+        Assert.Equal(JsonValueKind.Array, accounts.ValueKind);
+        var account = accounts[0];
         Assert.Equal(JsonValueKind.Object, account.ValueKind);
         account.AssertProperty("name");
         account.AssertProperty("id");
         Assert.Equal("westus", account.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
+    public async Task AccountGet_NoAccountsFilterReturnsAllAccounts()
+    {
+        // var resourceBaseName = RegisterOrRetrieveVariable("resourceBaseName", Settings.ResourceBaseName);
+        string[] accountNames = [$"{Settings.ResourceBaseName}-account", $"{Settings.ResourceBaseName}-account2"];
+        var resourceGroupName = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "netappfiles_account_get",
+            new()
+            {
+                { "resource-group", resourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var accounts = result.AssertProperty("accounts").EnumerateArray().ToArray();
+        foreach (var accountName in accountNames)
+        {
+            var foundAccount = accounts.FirstOrDefault(account => account.AssertProperty("id").GetString()?.EndsWith($"netAppAccounts/{accountName}") ?? false);
+            Assert.Equal(JsonValueKind.Object, foundAccount.ValueKind);
+            foundAccount.AssertProperty("id");
+            Assert.Equal("westus", foundAccount.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", foundAccount.AssertProperty("provisioningState").GetString());
+        }
+
+        Assert.True(accounts.Length >= accountNames.Length);
     }
 
     [Fact]

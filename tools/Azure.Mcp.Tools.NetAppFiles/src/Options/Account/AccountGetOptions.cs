@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 public sealed class AccountGetOptions : ISubscriptionOption
 {
     [Option(Description = "The name of the Azure NetApp Files account to retrieve. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
-    public required string Account { get; set; }
+    public string? Account { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
