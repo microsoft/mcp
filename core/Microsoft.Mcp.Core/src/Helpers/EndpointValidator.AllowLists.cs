@@ -98,8 +98,8 @@ public sealed partial class EndpointValidator
             Public: [".azconfig.io"],
             China: [".azconfig.azure.cn"],
             UsGov: [".azconfig.azure.us"],
-            Germany: [".azconfig.azure.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            Germany: [],
+            UseLegacyCheck: false),
         ["arm"] = new AllowedSuffixManager(
             // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
             Public: [
@@ -116,6 +116,8 @@ public sealed partial class EndpointValidator
             Germany: [],
             UseLegacyCheck: true),
         ["azure-openai"] = new AllowedSuffixManager(
+            // FoundryExtensionsService.ValidateAzureOpenAiEndpoint has a structural-validation copy of these
+            // suffixes. Keep both copies and their tests synchronized when Azure cloud endpoint domains change.
             Public: [
                 ".openai.azure.com",
                 ".cognitiveservices.azure.com"
@@ -128,17 +130,14 @@ public sealed partial class EndpointValidator
                 ".openai.azure.us",
                 ".cognitiveservices.azure.us"
             ],
-            Germany: [
-                ".openai.azure.de",
-                ".cognitiveservices.azure.de"
-            ],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            Germany: [],
+            UseLegacyCheck: false),
         ["communication"] = new AllowedSuffixManager(
             Public: [".communication.azure.com"],
-            China: [".communication.azure.cn"],
+            China: [],
             UsGov: [".communication.azure.us"],
-            Germany: [".communication.azure.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            Germany: [],
+            UseLegacyCheck: false),
         ["confidential-ledger"] = new AllowedSuffixManager(
             Public: [".confidential-ledger.azure.com"],
             China: [".confidential-ledger.azure.cn"],
@@ -228,8 +227,8 @@ public sealed partial class EndpointValidator
             Public: [".cognitiveservices.azure.com"],
             China: [".cognitiveservices.azure.cn"],
             UsGov: [".cognitiveservices.azure.us"],
-            Germany: [".servicebus.cloudapi.de"],
-            UseLegacyCheck: true), // INITIAL SEEDED UseLegacyCheck. NEEDS VERIFICATION.
+            Germany: [],
+            UseLegacyCheck: false),
         ["sreagent"] = new AllowedSuffixManager(
             // SRE Agent is currently offered only in the public cloud and its data-plane endpoints use
             // the global '.azuresre.ai' domain. Leave the sovereign clouds empty so validation fails
