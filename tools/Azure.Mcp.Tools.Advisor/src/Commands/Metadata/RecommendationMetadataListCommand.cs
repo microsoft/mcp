@@ -102,7 +102,8 @@ public sealed class RecommendationMetadataListCommand(
         AdvisorTelemetryTags.AddRecommendationTags(
             context.Activity,
             category: options.Category,
-            subCategory: options.SubCategory);
+            subCategory: options.SubCategory,
+            impact: options.Impact);
 
         try
         {

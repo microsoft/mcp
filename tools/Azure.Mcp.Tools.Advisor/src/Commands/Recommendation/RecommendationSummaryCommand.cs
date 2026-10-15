@@ -123,7 +123,9 @@ public sealed class RecommendationSummaryCommand(
             context.Activity,
             options.RecommendationTypeId,
             options.Category,
-            options.SubCategory);
+            options.SubCategory,
+            options.Impact);
+        Models.AdvisorTelemetryTags.AddQueryTags(context.Activity, options.Prioritized, options.GroupBy);
 
         try
         {

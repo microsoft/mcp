@@ -80,7 +80,9 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
             context.Activity,
             options.RecommendationTypeId,
             options.Category,
-            options.SubCategory);
+            options.SubCategory,
+            options.Impact);
+        Models.AdvisorTelemetryTags.AddQueryTags(context.Activity, options.Prioritized);
 
         try
         {

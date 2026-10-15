@@ -38,6 +38,9 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
         Assert.Equal("advisor/RecommendationTypeId", AdvisorTelemetryTags.RecommendationTypeId);
         Assert.Equal("advisor/Category", AdvisorTelemetryTags.Category);
         Assert.Equal("advisor/SubCategory", AdvisorTelemetryTags.SubCategory);
+        Assert.Equal("advisor/Impact", AdvisorTelemetryTags.Impact);
+        Assert.Equal("advisor/GroupBy", AdvisorTelemetryTags.GroupBy);
+        Assert.Equal("advisor/Prioritized", AdvisorTelemetryTags.Prioritized);
     }
 
     [Fact]
@@ -96,11 +99,13 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
             activity,
             "262c35d4-83fe-457f-afa7-cac774c371d8",
             "HighAvailability",
-            "ServiceUpgradeAndRetirement");
+            "ServiceUpgradeAndRetirement",
+            "High");
 
         Assert.Equal("262c35d4-83fe-457f-afa7-cac774c371d8", activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeId));
         Assert.Equal("HighAvailability", activity.GetTagItem(AdvisorTelemetryTags.Category));
         Assert.Equal("ServiceUpgradeAndRetirement", activity.GetTagItem(AdvisorTelemetryTags.SubCategory));
+        Assert.Equal("High", activity.GetTagItem(AdvisorTelemetryTags.Impact));
     }
 
     [Fact]
@@ -123,7 +128,50 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     {
         using var activity = StartActivity();
 
-        AdvisorTelemetryTags.AddRecommendationTags(activity, value, value, value);
+        AdvisorTelemetryTags.AddRecommendationTags(activity, value, value, value, value);
+
+        Assert.Empty(activity.TagObjects);
+    }
+
+    [Fact]
+    public void AddQueryTags_NullActivity_DoesNotThrow()
+    {
+        AdvisorTelemetryTags.AddQueryTags(null, true, "category");
+    }
+
+    [Theory]
+    [InlineData(true, "True")]
+    [InlineData(false, "False")]
+    public void AddQueryTags_WithPrioritized_SetsPrioritizedTag(bool prioritized, string expected)
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddQueryTags(activity, prioritized);
+
+        Assert.Equal(expected, activity.GetTagItem(AdvisorTelemetryTags.Prioritized));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.GroupBy));
+    }
+
+    [Fact]
+    public void AddQueryTags_WithGroupBy_SetsGroupByTag()
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddQueryTags(activity, null, "impact");
+
+        Assert.Equal("impact", activity.GetTagItem(AdvisorTelemetryTags.GroupBy));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.Prioritized));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void AddQueryTags_NullPrioritizedAndBlankGroupBy_SkipsTags(string? groupBy)
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddQueryTags(activity, null, groupBy);
 
         Assert.Empty(activity.TagObjects);
     }
