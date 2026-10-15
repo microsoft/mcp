@@ -20,9 +20,14 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
         IaC format is ambiguous, let the backend ask whether to generate Bicep, ARM JSON, or Terraform.
         Use resiliencyagent_architecture_assess for assessment without generation, and use the
         format-specific review commands when existing source must be corrected.
-        Backend-generated files are authoritative. Do not independently rewrite their
-        resilience-specific content. Show backend clarification questions verbatim, pass the returned
-        conversationId on related follow-ups, and offer suggestedNextSteps when present.
+        Backend-generated files are authoritative and a completed result has already passed the
+        backend's format-appropriate live validation. Do not run independent Bicep builds, ARM
+        validate/what-if calls, Terraform validate/plan operations, or other semantic validation
+        against returned files, and do not rewrite them based on local diagnostics. Apply and present
+        them exactly as returned. If the backend explicitly reports that validation did not complete,
+        continue the same backend conversation rather than substituting local validation. Show backend
+        clarification questions verbatim, pass the returned conversationId on related follow-ups, and
+        offer suggestedNextSteps when present.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -35,9 +40,19 @@ public sealed class IacGenerateCommand(
     ILogger<IacGenerateCommand> logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null)
     : ResiliencyAgentCommand<ResiliencyAgentRequestOptions>(
         logger,
         service,
         artifactWriter,
-        attachmentCache);
+        attachmentCache,
+        timeProvider,
+        artifactInstructions: """
+            The returned infrastructure-as-code files are authoritative backend output and have already
+            completed the Azure Resiliency Agent's format-appropriate live validation. Do not run Bicep
+            build, ARM validate/what-if, Terraform validate/plan, or another independent semantic
+            validation against them. Do not patch or regenerate them from local diagnostics. Apply and
+            present the files exactly as returned. If the backend reply explicitly says validation was
+            not completed, continue this conversation with the backend instead of validating locally.
+            """);

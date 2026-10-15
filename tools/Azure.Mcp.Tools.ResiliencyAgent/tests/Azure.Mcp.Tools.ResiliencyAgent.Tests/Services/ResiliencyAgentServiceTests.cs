@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -50,6 +51,7 @@ public sealed class ResiliencyAgentServiceTests
         using var service = new ResiliencyAgentService(
             client,
             boundaryResolver,
+            Cloud(AzureCloudConfiguration.AzureCloud.AzurePublicCloud),
             NullLogger<ResiliencyAgentService>.Instance,
             "https://example.test/a2a",
             sendDataBoundary: true);
@@ -83,6 +85,44 @@ public sealed class ResiliencyAgentServiceTests
         Assert.Equal("architecture.png", file.GetProperty("name").GetString());
         Assert.Equal("image/png", file.GetProperty("mimeType").GetString());
         Assert.Equal(Convert.ToBase64String(content), file.GetProperty("bytes").GetString());
+    }
+
+    [Theory]
+    [InlineData(AzureCloudConfiguration.AzureCloud.AzureChinaCloud)]
+    [InlineData(AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud)]
+    public async Task SendAsync_RejectsSovereignCloudBeforeNetworkCall(
+        AzureCloudConfiguration.AzureCloud cloud)
+    {
+        int requestCount = 0;
+        var handler = new RecordingHandler(_ =>
+        {
+            requestCount++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+        using var client = new HttpClient(handler);
+        IDataBoundaryResolver boundaryResolver = Substitute.For<IDataBoundaryResolver>();
+        using var service = new ResiliencyAgentService(
+            client,
+            boundaryResolver,
+            Cloud(cloud),
+            NullLogger<ResiliencyAgentService>.Instance,
+            "https://example.test/a2a",
+            sendDataBoundary: true);
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.SendAsync("conv-1", null, "Assess", [], CancellationToken.None));
+
+        Assert.Contains("supported only in Azure public cloud", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(cloud.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Equal(0, requestCount);
+        await boundaryResolver.DidNotReceive().ResolveAsync(Arg.Any<CancellationToken>());
+    }
+
+    private static IAzureCloudConfiguration Cloud(AzureCloudConfiguration.AzureCloud cloud)
+    {
+        IAzureCloudConfiguration configuration = Substitute.For<IAzureCloudConfiguration>();
+        configuration.CloudType.Returns(cloud);
+        return configuration;
     }
 
     [Fact]

@@ -58,7 +58,11 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             local files through the file attachment command and pass their opaque attachment IDs.
             Templates pasted directly in the user's current prompt are also supported without
             attachment. Treat backend findings and generated resilience content as authoritative
-            while preserving the host's native repository and file-edit workflows.
+            while preserving the host's native repository and file-edit workflows. Completed
+            generation and review results already use backend-owned validation; do not independently
+            rerun Bicep build, ARM validate/what-if, Terraform validate/plan, or patch returned files
+            from local diagnostics. Continue the backend conversation when it explicitly reports
+            incomplete validation.
             """,
             Title);
 

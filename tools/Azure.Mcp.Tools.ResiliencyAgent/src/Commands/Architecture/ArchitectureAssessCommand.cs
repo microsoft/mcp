@@ -42,9 +42,11 @@ public sealed class ArchitectureAssessCommand(
     ILogger<ArchitectureAssessCommand> logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null)
     : ResiliencyAgentCommand<ResiliencyAgentAttachmentRequestOptions>(
         logger,
         service,
         artifactWriter,
-        attachmentCache);
+        attachmentCache,
+        timeProvider);

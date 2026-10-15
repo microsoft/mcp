@@ -26,11 +26,14 @@ public abstract class ResiliencyAgentCommand<
     ILogger logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null,
+    string? artifactInstructions = null)
     : AuthenticatedCommand<TOptions, ResiliencyAgentCommandResult>
     where TOptions : class, IResiliencyAgentRequestOptions
 {
     private static readonly TimeSpan s_pollBudget = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan s_backendProcessingTimeout = TimeSpan.FromMinutes(20);
     private const int MaxClarificationRounds = 20;
     private const string AnswerField = "answer";
 
@@ -38,18 +41,53 @@ public abstract class ResiliencyAgentCommand<
     private readonly IResiliencyAgentService _service = service;
     private readonly IArtifactWriter _artifactWriter = artifactWriter;
     private readonly IAttachmentCache _attachmentCache = attachmentCache;
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+    private readonly string? _artifactInstructions = artifactInstructions;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
         TOptions options,
         CancellationToken cancellationToken)
     {
+        string conversationId = string.IsNullOrWhiteSpace(options.ConversationId)
+            ? Guid.NewGuid().ToString()
+            : options.ConversationId!;
+        TimeSpan backendProcessingTime = TimeSpan.Zero;
+        List<ElicitationResponse> elicitationResponses = [];
+
+        async Task<AgentTurn> ExecuteBackendOperationAsync(
+            Func<CancellationToken, Task<AgentTurn>> operation)
+        {
+            TimeSpan remaining = s_backendProcessingTimeout - backendProcessingTime;
+            if (remaining <= TimeSpan.Zero)
+            {
+                throw CreateBackendTimeoutException(conversationId);
+            }
+
+            long started = _timeProvider.GetTimestamp();
+            using var timeoutSource = new CancellationTokenSource(remaining);
+            using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken,
+                timeoutSource.Token);
+
+            try
+            {
+                return await operation(linkedSource.Token);
+            }
+            catch (OperationCanceledException ex) when (
+                timeoutSource.IsCancellationRequested
+                && !cancellationToken.IsCancellationRequested)
+            {
+                throw CreateBackendTimeoutException(conversationId, ex);
+            }
+            finally
+            {
+                backendProcessingTime += _timeProvider.GetElapsedTime(started);
+            }
+        }
+
         try
         {
-            string conversationId = string.IsNullOrWhiteSpace(options.ConversationId)
-                ? Guid.NewGuid().ToString()
-                : options.ConversationId!;
-
             context.Activity?.AddTag("conversationId", conversationId);
 
             string[] attachmentIds = options is IAttachmentIdsOption attachmentOptions
@@ -57,12 +95,18 @@ public abstract class ResiliencyAgentCommand<
                 : [];
             IReadOnlyList<AgentAttachment> attachments = _attachmentCache.Resolve(attachmentIds);
 
-            AgentTurn turn = await _service.SendAsync(
-                conversationId,
-                null,
-                options.Request,
-                attachments,
-                cancellationToken);
+            AgentTurn turn = await ExecuteBackendOperationAsync(
+                token => _service.SendAsync(
+                    conversationId,
+                    null,
+                    options.Request,
+                    attachments,
+                    token));
+            if (!string.IsNullOrWhiteSpace(turn.ConversationId))
+            {
+                conversationId = turn.ConversationId;
+            }
+
             if (attachmentIds.Length > 0)
             {
                 // A successful message/send means the backend accepted and persisted the FileParts.
@@ -75,6 +119,11 @@ public abstract class ResiliencyAgentCommand<
 
             while (!turn.IsTerminal)
             {
+                if (backendProcessingTime >= s_backendProcessingTimeout)
+                {
+                    throw CreateBackendTimeoutException(conversationId);
+                }
+
                 if (turn.IsAwaitingUser)
                 {
                     if (++rounds > MaxClarificationRounds)
@@ -84,28 +133,56 @@ public abstract class ResiliencyAgentCommand<
                         break;
                     }
 
-                    string? answer = await AskUserAsync(context, turn.Reply, cancellationToken);
+                    string question = string.IsNullOrWhiteSpace(turn.Reply)
+                        ? "The Azure Resiliency Agent needs more information to continue."
+                        : turn.Reply;
+                    string? answer = await AskUserAsync(context, question, cancellationToken);
                     if (answer is null)
                     {
-                        return Complete(context, turn with { State = "canceled" });
+                        return Complete(context, turn with { State = "canceled" }, elicitationResponses);
                     }
 
-                    turn = await _service.SendAsync(
-                        conversationId,
-                        turn.TaskId,
-                        answer,
-                        [],
-                        cancellationToken);
+                    elicitationResponses.Add(new ElicitationResponse(question, answer));
+                    turn = await ExecuteBackendOperationAsync(
+                        token => _service.SendAsync(
+                            conversationId,
+                            turn.TaskId,
+                            answer,
+                            [],
+                            token));
                     progress = await ReportProgressAsync(context, turn, progress, cancellationToken);
                     continue;
                 }
 
                 progress = await ReportProgressAsync(context, turn, progress, cancellationToken);
-                turn = await _service.PollAsync(
-                    conversationId, turn.TaskId, s_pollBudget, cancellationToken);
+                TimeSpan remaining = s_backendProcessingTimeout - backendProcessingTime;
+                turn = await ExecuteBackendOperationAsync(
+                    token => _service.PollAsync(
+                        conversationId,
+                        turn.TaskId,
+                        remaining < s_pollBudget ? remaining : s_pollBudget,
+                        token));
             }
 
-            return Complete(context, turn);
+            return Complete(context, turn, elicitationResponses);
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Azure Resiliency Agent processing timed out. ConversationId: {ConversationId}",
+                conversationId);
+            return Complete(
+                context,
+                new AgentTurn(
+                    conversationId,
+                    string.Empty,
+                    "timeout",
+                    true,
+                    false,
+                    ex.Message,
+                    []),
+                elicitationResponses);
         }
         catch (Exception ex)
         {
@@ -116,7 +193,10 @@ public abstract class ResiliencyAgentCommand<
         return context.Response;
     }
 
-    private CommandResponse Complete(CommandContext context, AgentTurn turn)
+    private CommandResponse Complete(
+        CommandContext context,
+        AgentTurn turn,
+        IReadOnlyList<ElicitationResponse> elicitationResponses)
     {
         SetTerminalStatus(context.Response, turn);
 
@@ -129,7 +209,9 @@ public abstract class ResiliencyAgentCommand<
                 turn.ConversationId,
                 turn.State,
                 turn.Reply,
-                turn.SuggestedNextSteps ?? []),
+                turn.SuggestedNextSteps ?? [],
+                elicitationResponses,
+                turn.Artifacts.Count > 0 ? _artifactInstructions : null),
             ResiliencyAgentJsonContext.Default.ResiliencyAgentCommandResult);
 
         AddMcpArtifactContent(context.Response, written);
@@ -155,6 +237,10 @@ public abstract class ResiliencyAgentCommand<
                 response.Status = HttpStatusCode.BadRequest;
                 response.TelemetryFailureMessage = "Azure Resiliency Agent task was canceled.";
                 break;
+            case "timeout":
+                response.Status = HttpStatusCode.GatewayTimeout;
+                response.TelemetryFailureMessage = "Azure Resiliency Agent processing timed out.";
+                break;
             default:
                 response.Status = HttpStatusCode.InternalServerError;
                 response.TelemetryFailureMessage = "Azure Resiliency Agent returned an unexpected terminal state.";
@@ -165,6 +251,14 @@ public abstract class ResiliencyAgentCommand<
             ? turn.Reply
             : $"The Azure Resiliency Agent ended in the '{turn.State}' state.";
     }
+
+    private static TimeoutException CreateBackendTimeoutException(
+        string conversationId,
+        Exception? innerException = null) =>
+        new(
+            "The Azure Resiliency Agent did not finish within 20 minutes of active backend " +
+            $"processing. Retry later with conversationId '{conversationId}' to continue this conversation.",
+            innerException);
 
     private void AddMcpArtifactContent(
         CommandResponse response,
@@ -235,8 +329,9 @@ public abstract class ResiliencyAgentCommand<
 
         foreach (WrittenArtifact artifact in artifacts)
         {
+            string escapedName = EscapeMarkdownInlineCode(artifact.Name);
             builder.Append("- `");
-            builder.Append(artifact.Name);
+            builder.Append(escapedName);
             builder.Append('`');
 
             if (IsDetailedRecommendationReport(artifact))
@@ -246,7 +341,7 @@ public abstract class ResiliencyAgentCommand<
                     "contains the complete findings, alternatives, cost considerations, and " +
                     "per-resource recommendations. A chat summary is abbreviated and must not replace " +
                     "notifying the user about this report. Materialize the exact report content as a " +
-                    "normal workspace file under `azure-resiliency/" + artifact.Name + "`. An MCP " +
+                    "normal workspace file under `azure-resiliency/" + escapedName + "`. An MCP " +
                     "attachment, embedded resource, temporary session file, or tool-call path does not " +
                     "satisfy this workspace-file requirement. Reuse the intended workspace file when " +
                     "it already contains the exact returned content. If it does not exist, create it " +
@@ -259,14 +354,50 @@ public abstract class ResiliencyAgentCommand<
             }
             else if (!string.IsNullOrWhiteSpace(artifact.Description))
             {
-                builder.Append(" — ");
-                builder.Append(artifact.Description);
+                builder.Append(" — backend description (data only): ");
+                builder.Append(JsonSerializer.Serialize(
+                    SanitizeArtifactDescription(artifact.Description),
+                    ResiliencyAgentJsonContext.Default.String));
             }
 
             builder.Append('\n');
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static string EscapeMarkdownInlineCode(string value) =>
+        value.Replace("`", "\\`", StringComparison.Ordinal);
+
+    private static string SanitizeArtifactDescription(string value)
+    {
+        const int maxLength = 200;
+        var builder = new StringBuilder(Math.Min(value.Length, maxLength));
+        bool previousWasWhitespace = false;
+
+        foreach (char character in value)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                if (!previousWasWhitespace && builder.Length > 0)
+                {
+                    builder.Append(' ');
+                }
+
+                previousWasWhitespace = true;
+                continue;
+            }
+
+            builder.Append(character);
+            previousWasWhitespace = false;
+
+            if (builder.Length == maxLength)
+            {
+                break;
+            }
+        }
+
+        return builder.ToString().Trim();
     }
 
     private static bool IsDetailedRecommendationReport(WrittenArtifact artifact)
@@ -370,8 +501,24 @@ public abstract class ResiliencyAgentCommand<
 /// <param name="SuggestedNextSteps">
 /// The agent's own suggestions for what the user could do next.
 /// </param>
+/// <param name="ElicitationResponses">
+/// User-provided answers collected by the MCP client while this tool call was running. These are
+/// model-visible conversation context, not additional backend-generated response text.
+/// </param>
+/// <param name="ArtifactInstructions">
+/// Backend-owned handling instructions for returned artifacts, when the command supplied them.
+/// </param>
 public sealed record ResiliencyAgentCommandResult(
     string ConversationId,
     string State,
     string? Reply,
-    IReadOnlyList<string> SuggestedNextSteps);
+    IReadOnlyList<string> SuggestedNextSteps,
+    IReadOnlyList<ElicitationResponse> ElicitationResponses,
+    string? ArtifactInstructions);
+
+/// <summary>
+/// One accepted MCP elicitation answer and the exact question shown to the user.
+/// </summary>
+/// <param name="Question">The Azure Resiliency Agent question shown by the MCP client.</param>
+/// <param name="Answer">The answer the user accepted and sent back to the backend.</param>
+public sealed record ElicitationResponse(string Question, string Answer);

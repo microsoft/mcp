@@ -25,9 +25,11 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
         requirements.
         Use resiliencyagent_architecture_assess for an application design and
         resiliencyagent_iac_generate when no existing source needs review.
-        Corrected artifacts are authoritative. Do not independently rewrite their
-        resilience-specific content. Show backend clarification questions verbatim, pass the returned
-        conversationId on related follow-ups, and offer suggestedNextSteps when present.
+        Corrected artifacts are authoritative. Do not independently run Terraform validate/plan or
+        another semantic validation against them, and do not rewrite them from local diagnostics.
+        If the backend reports incomplete validation, continue the same backend conversation instead
+        of substituting local validation. Show backend clarification questions verbatim, pass the
+        returned conversationId on related follow-ups, and offer suggestedNextSteps when present.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -40,9 +42,17 @@ public sealed class TerraformReviewCommand(
     ILogger<TerraformReviewCommand> logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null)
     : ResiliencyAgentCommand<ResiliencyAgentAttachmentRequestOptions>(
         logger,
         service,
         artifactWriter,
-        attachmentCache);
+        attachmentCache,
+        timeProvider,
+        artifactInstructions: """
+            Corrected Terraform files are authoritative backend output. Do not independently run
+            Terraform validate/plan or another semantic validation against them. Do not patch them
+            from local diagnostics. Apply and present them exactly as returned; if the backend
+            reports incomplete validation, continue this backend conversation instead.
+            """);

@@ -24,6 +24,9 @@ public sealed class ResiliencyAgentSetupTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
+        IAzureCloudConfiguration cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
+        services.AddSingleton(cloudConfiguration);
         setup.ConfigureServices(services);
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
 

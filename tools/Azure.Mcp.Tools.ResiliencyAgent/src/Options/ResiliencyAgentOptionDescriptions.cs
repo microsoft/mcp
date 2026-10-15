@@ -13,9 +13,11 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Options;
 public static class ResiliencyAgentOptionDescriptions
 {
     public const string Request =
-        "The user's request about Azure resilience, in their own words. Include any Azure resource ids, " +
-        "resource types, regions, SKUs or architecture details already visible in the conversation or in " +
-        "open files - the agent identifies resources from this text.";
+        "The user's request about Azure resilience, in their own words. Include Azure resource IDs, " +
+        "resource types, regions, SKUs, and architecture facts explicitly stated in the conversation. " +
+        "Do not copy content from attached, referenced, or workspace files into this field. When the " +
+        "selected command supports file inputs, prepare those files with resiliencyagent_file_attach and " +
+        "pass the returned attachment IDs.";
 
     public const string ConversationId =
         "The conversationId returned by a previous call, to continue that conversation. Omit it to start " +

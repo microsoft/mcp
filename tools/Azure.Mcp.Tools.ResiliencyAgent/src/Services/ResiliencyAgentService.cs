@@ -38,6 +38,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     private readonly ILogger<ResiliencyAgentService> _logger;
     private readonly HttpClient _httpClient;
     private readonly IDataBoundaryResolver _dataBoundaryResolver;
+    private readonly IAzureCloudConfiguration _cloudConfiguration;
     private readonly bool _sendDataBoundary;
     private readonly string _endpoint;
 
@@ -45,10 +46,12 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     public ResiliencyAgentService(
         IAzureTokenCredentialProvider tokenCredentialProvider,
         IDataBoundaryResolver dataBoundaryResolver,
+        IAzureCloudConfiguration cloudConfiguration,
         ILogger<ResiliencyAgentService> logger)
     {
         _logger = logger;
         _dataBoundaryResolver = dataBoundaryResolver;
+        _cloudConfiguration = cloudConfiguration;
         _endpoint = Endpoint;
         _sendDataBoundary = true;
         _logger.LogDebug(
@@ -67,12 +70,14 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     public ResiliencyAgentService(
         HttpClient httpClient,
         IDataBoundaryResolver dataBoundaryResolver,
+        IAzureCloudConfiguration cloudConfiguration,
         ILogger<ResiliencyAgentService> logger,
         string endpoint,
         bool sendDataBoundary)
     {
         _httpClient = httpClient;
         _dataBoundaryResolver = dataBoundaryResolver;
+        _cloudConfiguration = cloudConfiguration;
         _logger = logger;
         _endpoint = endpoint;
         _sendDataBoundary = sendDataBoundary;
@@ -85,6 +90,8 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         IReadOnlyList<AgentAttachment> attachments,
         CancellationToken cancellationToken)
     {
+        ResiliencyAgentCloudSupport.EnsureSupported(_cloudConfiguration);
+
         var parts = new JsonArray(
             new JsonObject
             {

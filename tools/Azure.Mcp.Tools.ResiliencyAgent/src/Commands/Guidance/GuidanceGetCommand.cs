@@ -39,9 +39,11 @@ public sealed class GuidanceGetCommand(
     ILogger<GuidanceGetCommand> logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null)
     : ResiliencyAgentCommand<ResiliencyAgentRequestOptions>(
         logger,
         service,
         artifactWriter,
-        attachmentCache);
+        attachmentCache,
+        timeProvider);

@@ -28,8 +28,10 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
         user's behalf. Pass the returned conversationId on related follow-up calls.
         Corrected Bicep artifacts are final and authoritative. Present returned MCP file resources
         and use the host's native file-edit workflow when applying them to corresponding existing
-        files. Do not independently rewrite their resilience-specific content. Request a backend
-        change only when the user explicitly asks for it. Offer suggestedNextSteps when present.
+        files. Do not independently run Bicep build, ARM validate/what-if, or another semantic
+        validation against them, and do not rewrite them from local diagnostics. Request a backend
+        change only when the user explicitly asks for it or the backend reports incomplete
+        validation. Offer suggestedNextSteps when present.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -42,9 +44,17 @@ public sealed class BicepReviewCommand(
     ILogger<BicepReviewCommand> logger,
     IResiliencyAgentService service,
     IArtifactWriter artifactWriter,
-    IAttachmentCache attachmentCache)
+    IAttachmentCache attachmentCache,
+    TimeProvider? timeProvider = null)
     : ResiliencyAgentCommand<ResiliencyAgentAttachmentRequestOptions>(
         logger,
         service,
         artifactWriter,
-        attachmentCache);
+        attachmentCache,
+        timeProvider,
+        artifactInstructions: """
+            Corrected Bicep files are authoritative backend output. Do not independently run Bicep
+            build, ARM validate/what-if, or another semantic validation against them. Do not patch
+            them from local diagnostics. Apply and present them exactly as returned; if the backend
+            reports incomplete validation, continue this backend conversation instead.
+            """);

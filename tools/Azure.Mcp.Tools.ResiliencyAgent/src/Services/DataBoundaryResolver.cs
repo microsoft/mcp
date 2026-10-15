@@ -26,14 +26,17 @@ public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
 
     private readonly ILogger<DataBoundaryResolver> _logger;
     private readonly HttpClient _httpClient;
+    private readonly IAzureCloudConfiguration _cloudConfiguration;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private string? _cachedBoundary;
 
     public DataBoundaryResolver(
         IAzureTokenCredentialProvider tokenCredentialProvider,
+        IAzureCloudConfiguration cloudConfiguration,
         ILogger<DataBoundaryResolver> logger)
     {
         _logger = logger;
+        _cloudConfiguration = cloudConfiguration;
         _httpClient = new HttpClient(
             new AccessTokenHandler(tokenCredentialProvider, [ArmScope])
             {
@@ -44,9 +47,13 @@ public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
         };
     }
 
-    internal DataBoundaryResolver(HttpClient httpClient, ILogger<DataBoundaryResolver> logger)
+    internal DataBoundaryResolver(
+        HttpClient httpClient,
+        IAzureCloudConfiguration cloudConfiguration,
+        ILogger<DataBoundaryResolver> logger)
     {
         _httpClient = httpClient;
+        _cloudConfiguration = cloudConfiguration;
         _logger = logger;
     }
 
@@ -55,6 +62,8 @@ public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
     /// </summary>
     public async Task<string> ResolveAsync(CancellationToken cancellationToken)
     {
+        ResiliencyAgentCloudSupport.EnsureSupported(_cloudConfiguration);
+
         if (_cachedBoundary is not null)
         {
             return _cachedBoundary;
