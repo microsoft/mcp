@@ -63,7 +63,11 @@ public class StorageSetup : IAreaSetup
         blobs.AddCommand<BlobGetCommand>(serviceProvider);
         blobs.AddCommand<BlobUploadCommand>(serviceProvider);
 
+#if STORAGE_GENERATED_MCP
+        GeneratedMcp.ContainerCreateCatalog.Register(blobContainer, serviceProvider);
+#else
         blobContainer.AddCommand<ContainerCreateCommand>(serviceProvider);
+#endif
         blobContainer.AddCommand<ContainerGetCommand>(serviceProvider);
 
         // Create Table subgroup under storage

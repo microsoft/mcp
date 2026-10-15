@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Generator\StorageMcp.Generator.csproj" />
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\storage.tools.json" Link="storage.tools.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

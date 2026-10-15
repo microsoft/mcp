@@ -1,0 +1,15 @@
+{
+  "name": "storage-mcp-generation-prototype",
+  "private": true,
+  "version": "0.0.0",
+  "description": "TypeSpec and C# generator prototype for curated Storage MCP tools.",
+  "scripts": {
+    "generate": "pwsh -NoProfile -File .\\Generate.ps1"
+  },
+  "devDependencies": {
+    "@azure-tools/typespec-client-generator-core": "0.73.0",
+    "@typespec/compiler": "1.17.0",
+    "@typespec/http": "1.17.0",
+    "@typespec/http-client-csharp": "1.0.0-alpha.20261014.5"
+  }
+}

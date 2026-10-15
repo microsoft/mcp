@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
+    <UseGeneratedStorageTools Condition="'$(UseGeneratedStorageTools)' == ''">false</UseGeneratedStorageTools>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UseGeneratedStorageTools)' == 'true'">
+    <DefineConstants>$(DefineConstants);STORAGE_GENERATED_MCP</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />

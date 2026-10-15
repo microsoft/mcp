@@ -304,9 +304,13 @@ public sealed class StorageService(IAzureService azureService)
             (nameof(container), container));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
+#if STORAGE_GENERATED_MCP
+        var containerClient = await GeneratedMcp.ContainerCreateBinding.CreateAsync(blobServiceClient, container, cancellationToken);
+#else
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         await containerClient.CreateAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+#endif
         var response = await containerClient.GetPropertiesAsync(cancellationToken: cancellationToken);
         var properties = response.Value;
         return new(

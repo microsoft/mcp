@@ -9,14 +9,40 @@ using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+#if STORAGE_GENERATED_MCP
+using Azure.Mcp.Tools.Storage.GeneratedMcp;
+using ContainerCreateOptions = Azure.Mcp.Tools.Storage.GeneratedMcp.GeneratedContainerCreateOptions;
+#endif
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
 [CommandMetadata(
+#if STORAGE_GENERATED_MCP
+    Id = ContainerCreateCatalog.Id,
+    Name = ContainerCreateCatalog.Name,
+    Title = ContainerCreateCatalog.Title,
+    Description = ContainerCreateCatalog.Description,
+    Destructive = ContainerCreateCatalog.Destructive,
+    Idempotent = ContainerCreateCatalog.Idempotent,
+    OpenWorld = ContainerCreateCatalog.OpenWorld,
+    ReadOnly = ContainerCreateCatalog.ReadOnly,
+#else
     Id = "f5088334-e630-4df0-a5be-ac87787acad0",
     Name = "create",
     Title = "Create Storage Blob Container",
-    Description = """
+    Description = ContainerCreateCommand.CustomizedDescription,
+    Destructive = true,
+    Idempotent = false,
+    OpenWorld = false,
+    ReadOnly = false,
+#endif
+    OperationPlane = ToolOperationPlane.Data,
+    Secret = false,
+    LocalRequired = false)]
+public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>
+{
+    internal const string CustomizedDescription = """
         Create/provision a new Azure Storage blob container in a storage account.
 
         Required: --account, --container
@@ -24,17 +50,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 
         Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold.
         Creates a logical container for organizing blobs within a storage account.
-        """,
-    OperationPlane = ToolOperationPlane.Data,
-    Destructive = true,
-    Idempotent = false,
-    OpenWorld = false,
-    ReadOnly = false,
-    Secret = false,
-    LocalRequired = false)]
-public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService)
-    : AuthenticatedCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>
-{
+        """;
+
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
@@ -48,7 +65,12 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Tenant,
                 cancellationToken);
 
+#if STORAGE_GENERATED_MCP
+            context.Response.Results = ResponseResult.Create(new GeneratedContainerCreateResult { Container = containerInfo },
+                GeneratedStorageJsonContext.Default.GeneratedContainerCreateResult);
+#else
             context.Response.Results = ResponseResult.Create(new ContainerCreateCommandResult(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
+#endif
         }
         catch (Exception ex)
         {
@@ -70,7 +92,11 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
             $"Container already exists. This tool only creates a container when one does not already exist with that name; use 'storage blob container get' first if you only need to ensure the container exists. Details: {reqEx.Message}",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             $"Storage account not found. Verify the account name. Details: {reqEx.Message}",
+#if STORAGE_GENERATED_MCP
+        RequestFailedException reqEx => ContainerCreateCatalog.GetDefaultError(reqEx.Status, reqEx.Message),
+#else
         RequestFailedException reqEx => reqEx.Message,
+#endif
         _ => base.GetErrorMessage(ex)
     };
 

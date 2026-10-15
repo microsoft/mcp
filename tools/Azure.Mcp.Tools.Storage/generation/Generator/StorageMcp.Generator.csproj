@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GeneratorDirectory>$(MSBuildThisFileDirectory)..\node_modules\@typespec\http-client-csharp\dist\generator</GeneratorDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.TypeSpec.Generator" HintPath="$(GeneratorDirectory)\Microsoft.TypeSpec.Generator.dll" />
+    <Reference Include="Microsoft.TypeSpec.Generator.Input" HintPath="$(GeneratorDirectory)\Microsoft.TypeSpec.Generator.Input.dll" />
+    <Reference Include="System.ComponentModel.Composition" HintPath="$(GeneratorDirectory)\System.ComponentModel.Composition.dll" />
+    <Reference Include="Microsoft.CodeAnalysis" HintPath="$(GeneratorDirectory)\Microsoft.CodeAnalysis.dll" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(GeneratorDirectory)\Microsoft.CodeAnalysis.CSharp.dll" />
+    <Reference Include="System.Memory.Data" HintPath="$(GeneratorDirectory)\System.Memory.Data.dll" />
+  </ItemGroup>
+</Project>

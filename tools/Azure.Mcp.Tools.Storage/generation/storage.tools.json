@@ -1,0 +1,34 @@
+{
+  "operations": [
+    {
+      "operationId": "StoragePilot.Containers.create",
+      "id": "f5088334-e630-4df0-a5be-ac87787acad0",
+      "group": ["storage", "blob", "container"],
+      "name": "create",
+      "title": "Create Storage Blob Container",
+      "binding": "blob-container-create-private",
+      "ambientParameters": ["account", "tenant"],
+      "useDescriptionOverride": true,
+      "safety": {
+        "destructive": true,
+        "idempotent": false,
+        "readOnly": false,
+        "openWorld": false
+      }
+    }
+  ],
+  "composites": [
+    {
+      "path": "storage account get",
+      "reason": "Human-authored Resource Graph query and output shaping."
+    },
+    {
+      "path": "storage blob container get",
+      "reason": "Human-authored get/list/prefix composition."
+    },
+    {
+      "path": "storage blob get",
+      "reason": "Human-authored get/list composition."
+    }
+  ]
+}

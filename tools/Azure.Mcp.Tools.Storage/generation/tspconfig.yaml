@@ -1,0 +1,18 @@
+emit:
+  - "@typespec/http-client-csharp"
+options:
+  "@typespec/http-client-csharp":
+    emitter-output-dir: "{project-root}/.."
+    package-name: Azure.Mcp.Tools.Storage
+    new-project: false
+    save-inputs: true
+    unreferenced-types-handling: keepAll
+    generator-name: StorageMcpGenerator
+    plugins:
+      - 'generation\Generator\bin\Release\net10.0'
+    license:
+      name: MIT
+      company: Microsoft Corporation
+      header: |
+        Copyright (c) Microsoft Corporation.
+        Licensed under the MIT License.

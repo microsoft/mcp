@@ -179,4 +179,61 @@ public class ContainerCreateCommandTests : CommandUnitTestsBase<ContainerCreateC
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsTenantAndCancellationToken()
+    {
+        var token = TestContext.Current.CancellationToken;
+        var expected = new ContainerInfo("container123", DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string>(),
+            "unlocked", "available", null, "private", false, false, null, null, false);
+        Service.CreateContainer("testaccount", "container123", "specific-tenant", token).Returns(expected);
+
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount", "--container", "container123", "--tenant", "specific-tenant");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateContainer("testaccount", "container123", "specific-tenant", token);
+    }
+
+    [Theory]
+    [InlineData("AuthorizationPermissionMismatch", "Storage Blob Data Contributor")]
+    [InlineData("InsufficientAccountPermissions", "Storage Blob Data Contributor")]
+    [InlineData("UnknownForbidden", "network/firewall")]
+    public async Task ExecuteAsync_KeepsHumanRbacOverrides(string errorCode, string expectedMessage)
+    {
+        Service.CreateContainer(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "denied", errorCode, null));
+
+        var response = await ExecuteCommandAsync("--account", "testaccount", "--container", "container123");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains(expectedMessage, response.Message);
+        Assert.DoesNotContain("Storage request failed (HTTP", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_KeepsHumanAlreadyExistsOverride()
+    {
+        Service.CreateContainer(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(409, "already exists", "ContainerAlreadyExists", null));
+        var response = await ExecuteCommandAsync("--account", "testaccount", "--container", "container123");
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
+        Assert.Contains("use 'storage blob container get' first", response.Message);
+        Assert.DoesNotContain("Storage request failed (HTTP", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UsesSelectedGenericErrorDefault()
+    {
+        Service.CreateContainer(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(429, "retry later"));
+        var response = await ExecuteCommandAsync("--account", "testaccount", "--container", "container123");
+        Assert.Equal(HttpStatusCode.TooManyRequests, response.Status);
+        Assert.Contains("retry later", response.Message);
+#if STORAGE_GENERATED_MCP
+        Assert.Contains("HTTP 429", response.Message);
+#else
+        Assert.DoesNotContain("Storage request failed (HTTP", response.Message);
+#endif
+    }
 }

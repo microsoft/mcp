@@ -5,6 +5,9 @@
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(UseGeneratedStorageTools)' == 'true'">
+    <DefineConstants>$(DefineConstants);STORAGE_GENERATED_MCP</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />

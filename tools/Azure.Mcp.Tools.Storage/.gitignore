@@ -1,0 +1,4 @@
+/Configuration.json
+/tspCodeModel.json
+!/src/Generated/
+!/src/Generated/*.cs
