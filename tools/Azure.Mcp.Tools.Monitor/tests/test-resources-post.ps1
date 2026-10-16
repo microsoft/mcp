@@ -119,11 +119,23 @@ $fixtureStartTime = $fixtureTimestamp.ToString('o')
 $fixtureEndTime = $fixtureTimestamp.AddMinutes(30).ToString('o')
 $basicFixtureId = 'mcp-log-search-basic-1'
 $auxiliaryFixtureId = 'mcp-log-search-auxiliary-1'
-$basicTableName = $DeploymentOutputs['logSearchBasicTableName']
-$auxiliaryTableName = $DeploymentOutputs['logSearchAuxiliaryTableName']
-$ingestionEndpoint = $DeploymentOutputs['logSearchIngestionEndpoint']
-$dcrImmutableId = $DeploymentOutputs['logSearchDcrImmutableId']
-$workspaceCustomerId = $DeploymentOutputs['logSearchWorkspaceCustomerId']
+# Deployment output keys are normalized to uppercase and the self-contained
+# post-script deserializes them into a case-sensitive OrderedHashtable.
+$basicTableName = $DeploymentOutputs['LOGSEARCHBASICTABLENAME']
+$auxiliaryTableName = $DeploymentOutputs['LOGSEARCHAUXILIARYTABLENAME']
+$ingestionEndpoint = $DeploymentOutputs['LOGSEARCHINGESTIONENDPOINT']
+$dcrImmutableId = $DeploymentOutputs['LOGSEARCHDCRIMMUTABLEID']
+$workspaceCustomerId = $DeploymentOutputs['LOGSEARCHWORKSPACECUSTOMERID']
+
+# The test settings file written by New-TestSettings is consumed by
+# RecordedCommandTestsBase.RegisterOrRetrieveDeploymentOutputVariable, which does a
+# case-sensitive lookup using the original (mixed-case) bicep output names. Re-add
+# those alongside the uppercase keys so both the post-script (above) and the test
+# project (below) can find them.
+$DeploymentOutputs['logSearchBasicTableName'] = $basicTableName
+$DeploymentOutputs['logSearchAuxiliaryTableName'] = $auxiliaryTableName
+$DeploymentOutputs['logSearchAnalyticsTableName'] = $DeploymentOutputs['LOGSEARCHANALYTICSTABLENAME']
+$DeploymentOutputs['logSearchAuxiliaryLastPlanModifiedDate'] = $DeploymentOutputs['LOGSEARCHAUXILIARYLASTPLANMODIFIEDDATE']
 
 $ingestionToken = Get-PlainTextAccessToken -ResourceUrl 'https://monitor.azure.com'
 $basicRecords = @(
