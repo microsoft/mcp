@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.Mcp.Tools.Advisor.Validation;
@@ -25,7 +27,7 @@ public static class AdvisorTelemetryTags
     public static void AddScopeTags(Activity? activity, IRecommendationScopeOptions options)
     {
         AddTagIfPresent(activity, Subscription, NormalizeSubscriptionId(options.Subscription));
-        AddTagIfPresent(activity, ServiceGroup, options.ServiceGroup);
+        AddTagIfPresent(activity, ServiceGroup, HashServiceGroup(options.ServiceGroup));
     }
 
     public static void AddRecommendationTags(
@@ -49,6 +51,11 @@ public static class AdvisorTelemetryTags
 
     private static string? NormalizeSubscriptionId(string? subscription) =>
         Guid.TryParse(subscription?.Trim(), out var subscriptionId) ? subscriptionId.ToString("D") : null;
+
+    private static string? HashServiceGroup(string? serviceGroup) =>
+        string.IsNullOrWhiteSpace(serviceGroup)
+            ? null
+            : Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(serviceGroup.Trim().ToLowerInvariant())));
 
     private static void AddTagIfPresent(Activity? activity, string key, string? value)
     {

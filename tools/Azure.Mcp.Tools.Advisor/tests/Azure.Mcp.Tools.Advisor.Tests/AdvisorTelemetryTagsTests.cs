@@ -61,14 +61,26 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     }
 
     [Fact]
-    public void AddScopeTags_WithServiceGroup_SetsServiceGroupTagOnly()
+    public void AddScopeTags_WithServiceGroup_SetsHashedServiceGroupTagOnly()
     {
         using var activity = StartActivity();
 
         AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationSummaryOptions { ServiceGroup = "sg-contoso" });
 
-        Assert.Equal("sg-contoso", activity.GetTagItem(AdvisorTelemetryTags.ServiceGroup));
+        Assert.Equal("5a7a68c9af0ce9a75ecdb8d57aad16240959e6fdda9a3c096425a5096cb5d9e7", activity.GetTagItem(AdvisorTelemetryTags.ServiceGroup));
         Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+    }
+
+    [Theory]
+    [InlineData("SG-Contoso")]
+    [InlineData("  sg-contoso  ")]
+    public void AddScopeTags_ServiceGroupCasingAndWhitespace_ProducesSameHash(string serviceGroup)
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationSummaryOptions { ServiceGroup = serviceGroup });
+
+        Assert.Equal("5a7a68c9af0ce9a75ecdb8d57aad16240959e6fdda9a3c096425a5096cb5d9e7", activity.GetTagItem(AdvisorTelemetryTags.ServiceGroup));
     }
 
     [Theory]
