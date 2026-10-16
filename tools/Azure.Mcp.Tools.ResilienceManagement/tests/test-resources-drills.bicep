@@ -9,8 +9,11 @@ param adminUsername string = 'mcpfixture'
 param location string = resourceGroup().location
 param healthModelLocation string = 'centralus'
 param deploySliWorkspace bool = true
+param vmSize string = 'Standard_B1s'
+param drillName string = ''
 
 var suffix = uniqueString(resourceGroup().id, baseName)
+var effectiveDrillName = empty(drillName) ? 'dr-${suffix}' : drillName
 var fixtureTags = {
   purpose: 'mcp-drills-ga-live-tests'
 }
@@ -66,7 +69,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   tags: fixtureTags
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_B1s'
+      vmSize: vmSize
     }
     storageProfile: {
       imageReference: {
@@ -186,7 +189,7 @@ output serviceGroupName string = 'sgd-${suffix}'
 output lifecycleServiceGroupName string = 'sgl-${suffix}'
 output creationServiceGroupName string = 'sgc-${suffix}'
 output recoveryPlanName string = 'rp-${suffix}'
-output drillName string = 'dr-${suffix}'
+output drillName string = effectiveDrillName
 output deleteDrillName string = 'dd-${suffix}'
 output vmId string = vm.id
 output automationAccountId string = automation.id

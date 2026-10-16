@@ -15,7 +15,7 @@ public class UsagePlanCreateOptions : ISubscriptionOption
     [Option(Description = "The name of the usage plan.")]
     public required string UsagePlan { get; set; }
 
-    [Option(Description = "The plan type of the usage plan. Supported values: Basic, Standard.")]
+    [Option(Description = "The plan type of the usage plan. Supported value: Standard.")]
     public required UsagePlanKind PlanType { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]

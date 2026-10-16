@@ -2173,12 +2173,9 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         {
             Properties = new UsagePlanProperties
             {
-                PlanType = planType switch
-                {
-                    UsagePlanKind.Standard => UsagePlanType.Standard,
-                    UsagePlanKind.Basic => new UsagePlanType("Basic"),
-                    _ => throw new ArgumentOutOfRangeException(nameof(planType), planType, "Unsupported plan type.")
-                }
+                PlanType = planType == UsagePlanKind.Standard
+                    ? UsagePlanType.Standard
+                    : throw new ArgumentOutOfRangeException(nameof(planType), planType, "Unsupported plan type.")
             }
         };
 

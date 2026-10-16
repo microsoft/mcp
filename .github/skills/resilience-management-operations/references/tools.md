@@ -9,7 +9,7 @@ This reference lists all 41 tools registered under the `resiliency` namespace. P
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_usageplan_get` | List or get Azure Resilience Management usage plans; not quota, API Management, or load-testing plans | `subscription?`, `resource-group?`, `name?`, `tenant?`. A specific `name` requires `resource-group`. Omit both to list across the subscription. |
-| `mcp_azure_mcp_ser_resiliency_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Basic` or `Standard`), `subscription?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Standard`), `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_usageplan_delete` | Delete the entire usage plan after all child enrollments are removed; returns whether the plan existed | **`resource-group`**, **`usage-plan`**, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_usageplan_enrollment_get` | List or get resilience usage-plan enrollments that associate service groups; not API Management subscriptions | **`resource-group`**, **`usage-plan`**, `name?`, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_usageplan_enrollment_create` | Create/update enrollment associating a service group | **`resource-group`**, **`usage-plan`**, **`enrollment`**, **`service-group`**, `subscription?`, `tenant?` |

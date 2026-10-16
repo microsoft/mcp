@@ -1175,9 +1175,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_resource_update | Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources | none |
 | resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_resource_get | Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
+| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Standard plan type | none |
 | resiliency_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
 | resiliency_usageplan_delete | Use Azure Resiliency Management usage-plan delete to permanently remove the entire usage plan <usage_plan_name> from resource group <resource_group_name>, not an enrollment | none |
 | resiliency_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |

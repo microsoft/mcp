@@ -230,7 +230,7 @@ public class ResilienceManagementCommandTests(
         var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DELETEASSETRESOURCEGROUPNAME");
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
-        const string drillName = "mcp-drill-no-plan";
+        var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-drill-{Guid.NewGuid().ToString("N")[..8]}");
 
         var result = await CallToolAsync(
             "resiliency_drill_create",
@@ -292,7 +292,7 @@ public class ResilienceManagementCommandTests(
     public async Task Should_delete_drill()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DELETEDRILLNAME");
+        var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-delete-{Guid.NewGuid().ToString("N")[..8]}");
         var assetGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteAssetGroup", "DELETEASSETRESOURCEGROUPNAME");
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
         var created = await CallToolAsync("resiliency_drill_create", new()
@@ -480,7 +480,7 @@ public class ResilienceManagementCommandTests(
             Assert.Equal("Accepted", start.AssertProperty("status").GetString());
             await WaitForDrillExecutionStateAsync(serviceGroup, drill, "Running");
             string? run = null;
-            for (int attempt = 0; attempt < 60 && run is null; attempt++)
+            for (int attempt = 0; attempt < 120 && run is null; attempt++)
             {
                 var created = (await GetDrillRunNamesAsync(serviceGroup, drill)).Except(existing).ToArray();
                 Assert.True(created.Length <= 1, "Another execution is modifying the isolated drill fixture.");
@@ -1610,8 +1610,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_validate_recoveryplan_for_operation()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("workflowServiceGroupName", "WORKFLOWSERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("workflowRecoveryPlanName", "WORKFLOWRECOVERYPLANNAME");
 
         var result = await CallToolAsync(
             "resiliency_recoveryplan_validateforoperation",
@@ -2024,7 +2024,7 @@ public class ResilienceManagementCommandTests(
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },
-                { "plan-type", "Basic" }
+                { "plan-type", "Standard" }
             });
 
         var usagePlan = result.AssertProperty("usagePlan");
@@ -2045,7 +2045,7 @@ public class ResilienceManagementCommandTests(
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", resourceGroupName },
                 { "usage-plan", usagePlanName },
-                { "plan-type", "Basic" }
+                { "plan-type", "Standard" }
             });
 
         var result = await CallToolAsync(
@@ -2102,9 +2102,9 @@ public class ResilienceManagementCommandTests(
     public async Task Should_delete_usage_plan_enrollment()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("deleteEnrollmentResourceGroupName", Settings.ResourceGroupName);
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentServiceGroupName", "SERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentServiceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var usagePlanName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentUsagePlanName", "USAGEPLANNAME");
-        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentName", "ENROLLMENTNAME");
+        var enrollmentName = RegisterOrRetrieveDeploymentOutputVariable("deleteEnrollmentName", "LIFECYCLEENROLLMENTNAME");
 
         try
         {

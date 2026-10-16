@@ -64,13 +64,29 @@ public abstract class ResilienceManagementRecordedTestsBase(
             Regex = @"(?i)/resourcegroups/(?<name>[^/""\\?]+)",
             GroupForReplace = "name",
             Value = "Sanitized"
+        }),
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            Regex = @"(?i)resource group '(?<name>[^']+)'",
+            GroupForReplace = "name",
+            Value = "Sanitized"
         })
     ];
 
     public override string RegisterOrRetrieveDeploymentOutputVariable(string name, string deploymentOutputName)
     {
         var value = base.RegisterOrRetrieveDeploymentOutputVariable(name, deploymentOutputName);
-        if (TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Record && value.StartsWith('/'))
+        if (TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Record)
+        {
+            return value;
+        }
+
+        if (IsResourceGroupVariable(name) ||
+            value.Equals(Settings.ResourceGroupName, StringComparison.OrdinalIgnoreCase))
+        {
+            TestVariables[name] = "Sanitized";
+        }
+        else if (value.StartsWith('/'))
         {
             // The proxy does not apply HTTP sanitizers to saved playback variables.
             var segments = value.Split('/');
@@ -89,6 +105,22 @@ public abstract class ResilienceManagementRecordedTestsBase(
         }
         return value;
     }
+
+    public override string RegisterOrRetrieveVariable(string name, string value)
+    {
+        var registeredValue = base.RegisterOrRetrieveVariable(name, value);
+        if (TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Record &&
+            (IsResourceGroupVariable(name) ||
+             value.Equals(Settings.ResourceGroupName, StringComparison.OrdinalIgnoreCase)))
+        {
+            TestVariables[name] = "Sanitized";
+        }
+        return registeredValue;
+    }
+
+    private static bool IsResourceGroupVariable(string name)
+        => name.Contains("resourceGroup", StringComparison.OrdinalIgnoreCase) ||
+           name.Contains("assetGroup", StringComparison.OrdinalIgnoreCase);
 
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [

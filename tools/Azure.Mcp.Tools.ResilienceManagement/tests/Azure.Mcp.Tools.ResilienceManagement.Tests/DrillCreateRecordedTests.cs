@@ -22,7 +22,7 @@ public class DrillCreateRecordedTests(
         var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "CREATEASSETRESOURCEGROUPNAME");
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "CREATESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "CREATERECOVERYPLANNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "CREATEDRILLNAME");
+        var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-create-{Guid.NewGuid().ToString("N")[..8]}");
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "CREATELOCATION");
         var healthModelId = RegisterOrRetrieveDeploymentOutputVariable("healthModelId", "HEALTHMODELID");
         var getParameters = new Dictionary<string, object?>

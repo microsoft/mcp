@@ -416,6 +416,14 @@ if ($drill.properties.executionState -ne 'NotRunning') {
     throw 'An existing drill is running. Resolve its lifecycle before reconfiguring this fixture.'
 }
 Add-FixtureRole -Scope $serviceGroupId -PrincipalId $drill.identity.principalId -RoleId '517781b0-5ad4-4418-94d5-f2421834b586'
+Add-FixtureRole -Scope "/subscriptions/$subscriptionId" -PrincipalId $drill.identity.principalId -RoleId '344b740c-5e7c-4d32-89b2-ee3b51cb89bc'
+Start-Sleep -Seconds 60
+$response = Invoke-FixtureArm -Method PUT -Path "$drillId`?api-version=$apiVersion" -Body @{
+    identity = @{ type = 'SystemAssigned' }
+    properties = $drillProperties
+}
+Wait-FixtureOperation -Response $response -Path $drillId
+$drill = Wait-FixtureResource -Path "$drillId`?api-version=$apiVersion"
 if ($ActionsOnly) {
     $zones = @($target.properties.resourcePhysicalZones)
     if ($zones.Count -ne 1) { throw 'Expected exactly one physical source zone for the dedicated VM.' }
@@ -462,7 +470,6 @@ $settingsOutputs['DRILLRESOURCEID'] = $drillTarget.id
 $settingsOutputs['DRILLRUNSOURCELOCATION'] = $sourceLocation[0]
 $settingsOutputs['RECOVERYRESOURCEID'] = $target.id
 $settingsOutputs['GOALASSIGNMENTNAME'] = 'ga-fixture'
-New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
 
 Write-Host 'Primary drill resources configured. No drill has been started and no fault injected.'
 Write-Host "Target VM: $vmId"
@@ -471,8 +478,40 @@ $creationId = "/providers/Microsoft.Management/serviceGroups/$creationServiceGro
 New-FixtureResource -WaitForLinkedAuthorization -Path "$($outputs.usagePlanId.Value)/enrollments/$creationServiceGroupName`?api-version=$apiVersion" -Body @{
     properties = @{ serviceGroupId = $creationId }
 } | Out-Null
+Invoke-FixtureArm -Method PUT -WaitForLinkedAuthorization -Path "$deleteGroupId/providers/Microsoft.Relationships/serviceGroupMember/create-fixture?api-version=2023-09-01-preview" -Body @{
+    properties = @{ targetId = $creationId }
+} | Out-Null
+
+$creationRecoveryPlanName = "create-$($outputs.recoveryPlanName.Value)"
+$creationRecoveryPlanId = "$creationId/providers/Microsoft.AzureResilienceManagement/recoveryPlans/$creationRecoveryPlanName"
+New-FixtureResource -Path "$creationRecoveryPlanId`?api-version=$apiVersion" -Body @{
+    identity = @{ type = 'SystemAssigned' }
+    properties = @{
+        planType = 'Zonal'
+        planDescription = 'Isolated Drill creation fixture'
+        recoveryGroupsSetting = @{
+            defaultGroup = @{
+                properties = @{
+                    description = 'Creation fixture default group'
+                    groupUniqueId = [Guid]::NewGuid().ToString()
+                    orderId = 0
+                    preActions = @()
+                    postActions = @()
+                }
+            }
+            additionalGroups = @()
+        }
+    }
+} | Out-Null
+
+$settingsOutputs['CREATEASSETRESOURCEGROUPNAME'] = $DeleteAssetResourceGroupName
+$settingsOutputs['CREATESERVICEGROUPNAME'] = $creationServiceGroupName
+$settingsOutputs['CREATERECOVERYPLANNAME'] = $creationRecoveryPlanName
+$settingsOutputs['CREATEDRILLNAME'] = "create-$($outputs.drillName.Value)"
+$settingsOutputs['CREATELOCATION'] = $outputs.location.Value
 
 New-FixtureResource -Path "$goalId`?api-version=$apiVersion" -Body @{
     properties = @{ requireZonalResiliency = $true }
 } | Out-Null
+New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
 Write-Host 'GA goal assignment fixture is ready.'
