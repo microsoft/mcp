@@ -26,8 +26,8 @@ public sealed class OperationGetOptions : ISubscriptionOption
     [Option(Description = "The resource group containing the Recovery Services vault.")]
     public required string ResourceGroup { get; set; }
 
-    [Option(Description = "The Azure subscription ID or display name. Required.")]
-    public required string? Subscription { get; set; }
+    [Option(Description = "The Azure subscription ID or display name.")]
+    public string? Subscription { get; set; }
 
     [Option(Description = "The Microsoft Entra tenant ID or display name.")]
     public string? Tenant { get; set; }

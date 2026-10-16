@@ -33,7 +33,6 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<IRsvBackupOperations, RsvBackupOperations>();
         services.AddSingleton<IDppBackupOperations, DppBackupOperations>();
         services.AddSingleton<IAzureBackupService, AzureBackupService>();
-        services.AddSingleton<IRsvBackupOperationService, RsvBackupOperationService>();
         services.AddSingleton<OperationGetCommand>();
 
         services.AddSingleton<VaultGetCommand>();

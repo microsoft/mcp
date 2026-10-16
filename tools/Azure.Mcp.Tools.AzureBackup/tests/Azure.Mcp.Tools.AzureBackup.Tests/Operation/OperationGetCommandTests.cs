@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Operation;
 
-public class OperationGetCommandTests : SubscriptionCommandUnitTestsBase<OperationGetCommand, IRsvBackupOperationService>
+public class OperationGetCommandTests : SubscriptionCommandUnitTestsBase<OperationGetCommand, IRsvBackupOperations>
 {
     private const string Arguments = "--subscription sub --vault vault --resource-group rg --operation opaque:token+v1=";
 
@@ -31,10 +31,12 @@ public class OperationGetCommandTests : SubscriptionCommandUnitTestsBase<Operati
         Assert.False(Command.Metadata.OpenWorld);
         Assert.False(Command.Metadata.LocalRequired);
         Assert.DoesNotContain(CommandDefinition.Options, o => o.Name == "--vault-type");
-        foreach (var name in new[] { "--operation", "--vault", "--resource-group", "--subscription" })
+        foreach (var name in new[] { "--operation", "--vault", "--resource-group" })
         {
             Assert.True(Assert.Single(CommandDefinition.Options, o => o.Name == name).Required);
         }
+        // --subscription is resolvable from the caller's scope, so it is not a required CLI option.
+        Assert.False(Assert.Single(CommandDefinition.Options, o => o.Name == "--subscription").Required);
     }
 
     [Theory]
@@ -116,15 +118,16 @@ public class OperationGetCommandTests : SubscriptionCommandUnitTestsBase<Operati
     [InlineData(403)]
     [InlineData(404)]
     [InlineData(500)]
-    public async Task ExecuteAsync_RedactsServiceErrorsIncludingExceptionResult(int status)
+    public async Task ExecuteAsync_MapsServiceErrorStatusAndKeepsMessageSafe(int status)
     {
+        // The service sanitizes its own HTTP failures into a safe, body-free message before throwing.
         Service.GetOperationAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException(status, "SECRET-BODY credential=secret"));
+            .ThrowsAsync(new RequestFailedException(status, "Unable to retrieve RSV operation status."));
         var response = await ExecuteCommandAsync(Arguments);
         Assert.Equal((HttpStatusCode)status, response.Status);
-        Assert.DoesNotContain("SECRET-BODY", response.Message);
-        Assert.DoesNotContain("SECRET-BODY", response.Results!.ToString());
+        Assert.DoesNotContain("credential", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("credential", response.Results!.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

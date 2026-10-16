@@ -206,7 +206,7 @@ public class AzureBackupSetupTests
         var root = setup.RegisterCommands(services);
         var operation = root.SubGroup.Single(g => g.Name == "operation");
         Assert.Equal("get", Assert.Single(operation.Commands).Key);
-        Assert.NotNull(services.GetRequiredService<AzureBackup.Services.IRsvBackupOperationService>());
+        Assert.NotNull(services.GetRequiredService<AzureBackup.Services.IRsvBackupOperations>());
     }
 
     private static IServiceProvider CreateServiceProvider(AzureBackupSetup setup)

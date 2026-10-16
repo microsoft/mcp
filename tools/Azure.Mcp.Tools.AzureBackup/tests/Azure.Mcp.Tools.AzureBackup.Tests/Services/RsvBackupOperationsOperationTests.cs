@@ -8,13 +8,14 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.ResourceManager;
+using Azure.ResourceManager.Resources;
 using NSubstitute;
 using NSubstitute.Extensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests.Services;
 
-public class RsvBackupOperationServiceTests
+public class RsvBackupOperationsOperationTests
 {
     private const string Subscription = "22222222-2222-2222-2222-222222222222";
     private const string Tenant = "33333333-3333-3333-3333-333333333333";
@@ -47,7 +48,7 @@ public class RsvBackupOperationServiceTests
         });
         using var client = new HttpClient(handler);
         var azureService = CreateAzureService(client, environment);
-        var result = await new RsvBackupOperationService(azureService).GetOperationAsync("token:v1+=", "vault", "rg", Subscription,
+        var result = await new RsvBackupOperations(azureService).GetOperationAsync("token:v1+=", "vault", "rg", Subscription,
             itemScope ? "IaasVMContainer;v2;rg;vm" : null, itemScope ? "VM;v2;rg;vm" : null, null, Tenant, TestContext.Current.CancellationToken);
         Assert.Equal(itemScope ? "protectedItem" : "vault", result.Scope);
         Assert.Equal("token:v1+=", result.OperationId);
@@ -67,7 +68,7 @@ public class RsvBackupOperationServiceTests
     {
         using var handler = CreateHandler(_ => JsonResponse(200, body));
         using var client = new HttpClient(handler);
-        var result = await new RsvBackupOperationService(CreateAzureService(client)).GetOperationAsync(
+        var result = await new RsvBackupOperations(CreateAzureService(client)).GetOperationAsync(
             "op", "vault", "rg", Subscription, null, null, null, Tenant, TestContext.Current.CancellationToken);
         Assert.Null(result.JobId);
         Assert.Empty(result.JobIds);
@@ -83,7 +84,7 @@ public class RsvBackupOperationServiceTests
              "properties":{"jobIds":["j1","j2"],"failedJobsError":{"j2":"BackupFailed"}}}
             """));
         using var client = new HttpClient(handler);
-        var result = await new RsvBackupOperationService(CreateAzureService(client)).GetOperationAsync(
+        var result = await new RsvBackupOperations(CreateAzureService(client)).GetOperationAsync(
             "op", "vault", "rg", Subscription, null, null, null, Tenant, TestContext.Current.CancellationToken);
         Assert.Equal("Failed", result.Status);
         Assert.Equal("UserError", result.Error!.Code);
@@ -103,7 +104,7 @@ public class RsvBackupOperationServiceTests
     {
         using var handler = CreateHandler(_ => JsonResponse(status, """{"error":{"message":"SECRET"}}"""));
         using var client = new HttpClient(handler);
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => new RsvBackupOperationService(CreateAzureService(client)).GetOperationAsync(
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => new RsvBackupOperations(CreateAzureService(client)).GetOperationAsync(
             "op", "vault", "rg", Subscription, null, null, null, Tenant, TestContext.Current.CancellationToken));
         Assert.Equal(status, exception.Status);
         Assert.DoesNotContain("SECRET", exception.ToString());
@@ -117,7 +118,7 @@ public class RsvBackupOperationServiceTests
     public async Task GetOperationAsync_DirectServiceCallRejectsInjectionBeforeAuthentication(string operation)
     {
         var azureService = Substitute.For<IAzureService>();
-        await Assert.ThrowsAsync<ArgumentException>(() => new RsvBackupOperationService(azureService).GetOperationAsync(
+        await Assert.ThrowsAsync<ArgumentException>(() => new RsvBackupOperations(azureService).GetOperationAsync(
             operation, "vault", "rg", Subscription, null, null, null, Tenant, TestContext.Current.CancellationToken));
         Assert.Empty(azureService.ReceivedCalls());
     }
@@ -125,13 +126,18 @@ public class RsvBackupOperationServiceTests
     [Fact]
     public async Task GetOperationAsync_ResolvesSubscriptionDisplayNameWithTenant()
     {
-        using var handler = CreateHandler(_ => JsonResponse(200, """{"status":"Succeeded"}"""));
+        using var handler = CreateHandler(request =>
+        {
+            Assert.StartsWith($"/subscriptions/{Subscription}/", request.RequestUri!.AbsolutePath);
+            return JsonResponse(200, """{"status":"Succeeded"}""");
+        });
         using var client = new HttpClient(handler);
         var azureService = CreateAzureService(client);
-        azureService.GetSubscriptionIdByName("My subscription", Tenant, Arg.Any<CancellationToken>()).Returns(Subscription);
-        await new RsvBackupOperationService(azureService).GetOperationAsync(
+        azureService.GetSubscription("My subscription", Tenant, Arg.Any<CancellationToken>())
+            .Returns(MakeSubscription(Subscription));
+        await new RsvBackupOperations(azureService).GetOperationAsync(
             "op", "vault", "rg", "My subscription", null, null, null, Tenant, TestContext.Current.CancellationToken);
-        await azureService.Received(1).GetSubscriptionIdByName("My subscription", Tenant, Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetSubscription("My subscription", Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -141,7 +147,7 @@ public class RsvBackupOperationServiceTests
         using var client = new HttpClient(handler);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new RsvBackupOperationService(CreateAzureService(client)).GetOperationAsync(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new RsvBackupOperations(CreateAzureService(client)).GetOperationAsync(
             "op", "vault", "rg", Subscription, null, null, null, Tenant, cts.Token));
     }
 
@@ -152,7 +158,7 @@ public class RsvBackupOperationServiceTests
     {
         using var handler = CreateHandler(_ => JsonResponse(200, body));
         using var client = new HttpClient(handler);
-        await Assert.ThrowsAsync<InvalidDataException>(() => new RsvBackupOperationService(CreateAzureService(client)).GetOperationAsync(
+        await Assert.ThrowsAsync<InvalidDataException>(() => new RsvBackupOperations(CreateAzureService(client)).GetOperationAsync(
             "op", "vault", "rg", Subscription, null, null, null, Tenant, TestContext.Current.CancellationToken));
     }
 
@@ -166,7 +172,15 @@ public class RsvBackupOperationServiceTests
         service.ResolveTenantIdAsync(Tenant, Arg.Any<CancellationToken>()).Returns(Tenant);
         service.GetTokenCredentialAsync(Tenant, Arg.Any<CancellationToken>()).Returns(credential);
         service.CloudConfiguration.ArmEnvironment.Returns(environment ?? ArmEnvironment.AzurePublicCloud);
+        service.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(call => MakeSubscription(call.ArgAt<string>(0)));
         return service;
+    }
+
+    private static SubscriptionResource MakeSubscription(string subscriptionId)
+    {
+        var armClient = new ArmClient(Substitute.For<TokenCredential>());
+        return armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
     }
 
     private static HttpMessageHandler CreateHandler(Func<HttpRequestMessage, HttpResponseMessage> respond)

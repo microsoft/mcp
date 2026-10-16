@@ -31,15 +31,15 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Operation;
     ReadOnly = true, Secret = false, LocalRequired = false)]
 public sealed class OperationGetCommand(
     ILogger<OperationGetCommand> logger,
-    IRsvBackupOperationService service,
+    IRsvBackupOperations service,
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<OperationGetOptions, OperationGetCommand.OperationGetCommandResult>(subscriptionResolver)
 {
     public override void ValidateOptions(OperationGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        validationResult.Errors.AddRange(RsvOperationInputValidator.Validate(
-            options.Operation, options.Vault, options.ResourceGroup, options.Container, options.ProtectedItem, options.Fabric));
+        RsvOperationInputValidator.Validate(
+            options.Operation, options.Vault, options.ResourceGroup, options.Container, options.ProtectedItem, options.Fabric, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, OperationGetOptions options, CancellationToken cancellationToken)
@@ -67,33 +67,16 @@ public sealed class OperationGetCommand(
         RequestFailedException { Status: 404 } => "RSV operation not found. Verify the operation ID, vault and scope; operation records can expire.",
         RequestFailedException { Status: 401 or 403 } => "Access denied. Verify tenant, subscription and permission to read RSV operation status.",
         ArgumentException => "Invalid RSV operation parameters. Check the operation ID and paired container/protected-item scope.",
-        OperationCanceledException => "RSV operation status request was canceled.",
-        _ => "Unable to retrieve RSV operation status. Check Azure Backup diagnostics."
+        _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         // Map every cancellation (including TaskCanceledException) to 504 so the status matches
-        // the canceled message from GetErrorMessage; the base mapping would otherwise return 500.
+        // a canceled read; the base mapping would otherwise return 500.
         OperationCanceledException => HttpStatusCode.GatewayTimeout,
         _ => base.GetStatusCode(ex)
     };
-
-    protected override void HandleException(CommandContext context, Exception ex)
-    {
-        // Framework validation exceptions already carry a safe message and the correct status
-        // (for example 400 for missing required options); let the base handler process them.
-        if (ex is CommandValidationException)
-        {
-            base.HandleException(context, ex);
-            return;
-        }
-
-        // The base handler also serializes ex.Message into ExceptionResult, independently
-        // of GetErrorMessage. Replace the exception before handing it to the framework.
-        var status = GetStatusCode(ex);
-        base.HandleException(context, new RequestFailedException((int)status, GetErrorMessage(ex)));
-    }
 
     public sealed record OperationGetCommandResult(BackupOperationInfo Operation);
 }

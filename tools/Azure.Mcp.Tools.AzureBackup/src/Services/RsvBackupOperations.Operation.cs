@@ -4,39 +4,33 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServices;
 using Azure.ResourceManager.RecoveryServicesBackup;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class RsvBackupOperationService(IAzureService azureService)
-    : BaseAzureService(azureService), IRsvBackupOperationService
+// RSV asynchronous operation status (backupOperations / operationsStatus).
+public sealed partial class RsvBackupOperations
 {
-    private const string ApiVersion = "2025-02-01";
+    private const string OperationApiVersion = "2025-02-01";
 
     public async Task<BackupOperationInfo> GetOperationAsync(
         string operation, string vault, string resourceGroup, string? subscription,
         string? container, string? protectedItem, string? fabric, string? tenant,
         CancellationToken cancellationToken)
     {
-        var errors = RsvOperationInputValidator.Validate(operation, vault, resourceGroup, container, protectedItem, fabric).ToArray();
-        if (errors.Length != 0)
+        var validationResult = new ValidationResult();
+        RsvOperationInputValidator.Validate(operation, vault, resourceGroup, container, protectedItem, fabric, validationResult);
+        if (!validationResult.IsValid)
         {
-            throw new ArgumentException(string.Join(" ", errors));
+            throw new ArgumentException(string.Join(" ", validationResult.Errors));
         }
-        // Resolve display names through the tenant-aware Azure service, never into a path.
+
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        if (!Guid.TryParseExact(subscription, "D", out _))
-        {
-            subscription = await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken);
-        }
-        if (!Guid.TryParseExact(subscription, "D", out _))
-        {
-            throw new ArgumentException("A resolved subscription ID is required.", nameof(subscription));
-        }
+        subscription = (await AzureService.GetSubscription(subscription, tenant, cancellationToken)).Id.SubscriptionId;
 
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vault);
         var itemScope = container is not null;
@@ -64,7 +58,7 @@ public sealed class RsvBackupOperationService(IAzureService azureService)
         }
         request.Uri.AppendPath(itemScope ? "/operationsStatus/" : "/backupOperations/", escape: false);
         request.Uri.AppendPath(operation, escape: true);
-        request.Uri.AppendQuery("api-version", ApiVersion, true);
+        request.Uri.AppendQuery("api-version", OperationApiVersion, true);
         request.Headers.Add("Authorization", $"Bearer {token.Token}");
         request.Headers.Add("Accept", "application/json");
         var resourceId = request.Uri.ToUri().AbsolutePath;
@@ -87,7 +81,7 @@ public sealed class RsvBackupOperationService(IAzureService azureService)
         BackupOperationError? error = null;
         if (root.TryGetProperty("error", out var errorElement) && errorElement.ValueKind == JsonValueKind.Object)
         {
-            error = new(SafeErrorCode(ReadString(errorElement, "code")),
+            error = new(ReadString(errorElement, "code"),
                 "Azure reported an operation error. Consult Azure Backup diagnostics for details; backend messages are omitted.");
         }
         string? jobId = null;
@@ -114,7 +108,7 @@ public sealed class RsvBackupOperationService(IAzureService azureService)
             {
                 foreach (var job in failedJobs.EnumerateObject())
                 {
-                    failedJobsError[job.Name] = SafeErrorCode(job.Value.ValueKind == JsonValueKind.String ? job.Value.GetString() : null) ?? "Unknown";
+                    failedJobsError[job.Name] = (job.Value.ValueKind == JsonValueKind.String ? job.Value.GetString() : null) ?? "Unknown";
                 }
             }
         }
@@ -131,7 +125,4 @@ public sealed class RsvBackupOperationService(IAzureService azureService)
     private static DateTimeOffset? ReadTime(JsonElement element, string name) =>
         element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String && value.TryGetDateTimeOffset(out var time)
             ? time : null;
-
-    private static string? SafeErrorCode(string? code) =>
-        code is { Length: > 0 and <= 128 } && code.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' or '.') ? code : null;
 }
