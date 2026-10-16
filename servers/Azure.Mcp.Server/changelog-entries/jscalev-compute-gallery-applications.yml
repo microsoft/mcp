@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added Azure Compute Gallery application and application version create, get, update, and delete tools.

@@ -23,7 +23,7 @@ param vmSize string = 'Standard_B2s'
 var location string = 'eastus2'
 
 // Virtual Network
-resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   name: '${baseName}-vnet'
   location: location
   properties: {
@@ -37,6 +37,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'default'
         properties: {
           addressPrefix: '10.0.0.0/24'
+          defaultOutboundAccess: false
         }
       }
     ]
@@ -44,7 +45,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
 }
 
 // Network Interface for VM
-resource nic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource nic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
   name: '${baseName}-nic'
   location: location
   properties: {
