@@ -1,5 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added --prioritized to advisor recommendation summary to rank active recommendation types by priority in subscription and service-group scopes. Each prioritized group returns its distinct affected-resource count and a prioritizationSignals object explaining its rank; --top defaults to 10."
-  - section: "Other Changes"
-    description: "Advisor recommendation summary now takes category, impact, subcategory, and retirement date only from recommendation-type metadata, without recommendation-instance fallback, and excludes recommendations whose type has no English metadata from every grouping."

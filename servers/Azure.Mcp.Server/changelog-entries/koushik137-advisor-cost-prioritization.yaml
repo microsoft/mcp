@@ -1,9 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added --show-prioritization-signals to Advisor recommendation listing to optionally return the original signalBreakdown payload when available, preserving its backend-provided JSON shape. Defaults to false; enabling signals requires --prioritized true in subscription and Service Group scopes. Requests with signals enabled and prioritized false or omitted are rejected before querying Azure."
-  - section: "Bugs Fixed"
-    description: "Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId."
-  - section: "Bugs Fixed"
-    description: "Prioritized Advisor listing requires a recommendation type ID and uses that type's metadata category to select one instance metric in ARG. Cost types convert daily potential savings to an annual value using 12 times 30.4, fall back to annual savings, and round the selected annual score to two decimal places before sorting; missing or invalid savings sort last and zero remains valid. Other types sort by criticalityScore descending, treating missing scores as zero. Ties use effective retirement date ascending with unknown dates last, then case-insensitive resource name and recommendation ID. Both listing modes retain the same matching records, including Security and tracked recommendations. Non-prioritized ordering is unchanged."
-  - section: "Other Changes"
-    description: "Combined Advisor recommendation metadata filtering and enrichment into one server-side ARG join using English metadata for both listing modes and scopes. Prioritized listing sorts and selects top + 1 records in ARG to detect truncation without fetching every page. Removed the client-side ranking models and pagination helpers."
