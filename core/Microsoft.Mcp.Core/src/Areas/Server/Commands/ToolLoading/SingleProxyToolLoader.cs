@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -61,6 +62,7 @@ public sealed class SingleProxyToolLoader(
     private readonly ConcurrentDictionary<string, (List<ToolCommandInfo> Commands, string Json)> _cachedToolCommands = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedCommandFactoryTools = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, bool> _tenantScopedServers = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -312,7 +314,10 @@ public sealed class SingleProxyToolLoader(
         }
 
         var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
-        var commands = listTools.Select(t => new ToolCommandInfo(t, true)).ToList();
+        var tenantScoped = await IsTenantScopedAsync(tool, cancellationToken);
+        var commands = listTools
+            .Select(t => new ToolCommandInfo(tenantScoped ? RegistryTenantScope.WithTenantProperty(t) : t, true))
+            .ToList();
         var json = JsonSerializer.Serialize(commands, ServerJsonContext.Default.IEnumerableToolCommandInfo);
         _cachedToolCommands[tool] = (commands, json);
 
@@ -376,6 +381,31 @@ public sealed class SingleProxyToolLoader(
         Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
             .SetTag(TagName.ToolName, TagConstants.Unknown);
         throw new KeyNotFoundException("No tool found with the specified name.");
+    }
+
+    /// <summary>
+    /// Whether the proxied server authenticates with Azure tokens and so accepts a per-call tenant.
+    /// Namespaces served by the local command factory never are.
+    /// </summary>
+    private async Task<bool> IsTenantScopedAsync(string serverName, CancellationToken cancellationToken)
+    {
+        if (_discoveryStrategy == null || _cachedCommandFactoryTools.ContainsKey(serverName))
+        {
+            return false;
+        }
+
+        if (_tenantScopedServers.TryGetValue(serverName, out var cached))
+        {
+            return cached;
+        }
+
+        var servers = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
+        var scoped = servers
+            .Select(p => p.CreateMetadata())
+            .Any(m => string.Equals(m.Name, serverName, StringComparison.OrdinalIgnoreCase) && m.SupportsTenantScope);
+
+        _tenantScopedServers[serverName] = scoped;
+        return scoped;
     }
 
     private async Task<CallToolResult> RootLearnModeAsync(
@@ -780,10 +810,24 @@ public sealed class SingleProxyToolLoader(
 
         try
         {
+            // 'tenant' is ours, not the upstream server's: it selects the identity the outbound
+            // token is minted for. Consume it so it never reaches a server that does not declare it.
+            string? tenantId = null;
+            if (await IsTenantScopedAsync(tool, cancellationToken)
+                && !RegistryTenantScope.TryConsumeTenantArgument(parameters, out tenantId, out var tenantError))
+            {
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = tenantError! }],
+                    IsError = true,
+                };
+            }
+
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
 
             // Return without injecting tool metadata since this is a proxy and the actual tool execution happens in another server.
             // Leave the other server responsible for injecting the correct tool metadata for observability and telemetry purposes.
+            using var tenantScope = RegistryTenantScope.Enter(tenantId);
             var result = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
 
             if (StructuredOutputEnabled && result.IsError != true)

@@ -300,14 +300,14 @@ internal class CustomChainedCredential : TokenCredential
 
                 case "prod":
                     // Prod chain: Environment -> AzurePipelines (when configured) -> WorkloadIdentity -> ManagedIdentity
-                    AddEnvironmentCredential(credentials);
+                    AddEnvironmentCredential(credentials, tenantId);
                     AddAzurePipelinesCredential(credentials, required: false);
                     AddWorkloadIdentityCredential(credentials, tenantId);
                     AddManagedIdentityCredential(credentials);
                     break;
 
                 case "environmentcredential":
-                    AddEnvironmentCredential(credentials);
+                    AddEnvironmentCredential(credentials, tenantId);
                     break;
 
                 case "azurepipelinescredential":
@@ -367,7 +367,7 @@ internal class CustomChainedCredential : TokenCredential
     private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId)
     {
         // Default chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
-        AddEnvironmentCredential(credentials);
+        AddEnvironmentCredential(credentials, tenantId);
         AddVisualStudioCredential(credentials, tenantId);
         AddVisualStudioCodeCredential(credentials, tenantId);
         AddAzureCliCredential(credentials, tenantId);
@@ -375,9 +375,30 @@ internal class CustomChainedCredential : TokenCredential
         AddAzureDeveloperCliCredential(credentials, tenantId);
     }
 
-    private static void AddEnvironmentCredential(List<TokenCredential> credentials)
+    private static void AddEnvironmentCredential(List<TokenCredential> credentials, string? tenantId)
     {
-        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential", normalizeScopes: true));
+        // A service principal from a multi-tenant app registration can request tokens for any
+        // tenant that has consented to it. Allow that, and pin the requested tenant on every token
+        // request so the per-call --tenant option is honored like it is for the other credentials.
+        var envOptions = new EnvironmentCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            // Only widen the credential when a tenant was actually asked for. Adding this
+            // unconditionally would let every caller pivot the host identity into any consented tenant.
+            envOptions.AdditionallyAllowedTenants.Add("*");
+        }
+        if (CloudConfiguration != null)
+        {
+            envOptions.AuthorityHost = CloudConfiguration.AuthorityHost;
+        }
+
+        TokenCredential environmentCredential = new EnvironmentCredential(envOptions);
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            environmentCredential = new TenantPinnedTokenCredential(environmentCredential, tenantId);
+        }
+
+        credentials.Add(new SafeTokenCredential(environmentCredential, "EnvironmentCredential", normalizeScopes: true));
     }
 
     private static void AddAzurePipelinesCredential(List<TokenCredential> credentials, bool required)
@@ -549,7 +570,7 @@ internal class CustomChainedCredential : TokenCredential
 
         // VS Code first, then the rest of the default chain (excluding VS Code to avoid duplication)
         AddVisualStudioCodeCredential(credentials, tenantId);
-        AddEnvironmentCredential(credentials);
+        AddEnvironmentCredential(credentials, tenantId);
         AddVisualStudioCredential(credentials, tenantId);
         // Skip VS Code credential here since it's already first
         AddAzureCliCredential(credentials, tenantId);
@@ -655,4 +676,23 @@ internal class SafeTokenCredential(
         _includeExceptionMessage
             ? new CredentialUnavailableException($"{_credentialName} is not available: {exception.Message}", exception)
             : new CredentialUnavailableException($"{_credentialName} is not available.");
+}
+
+/// <summary>
+/// Forces every token request through the inner credential to target a specific tenant.
+/// Used for <see cref="EnvironmentCredential"/>, whose options expose no TenantId override.
+/// </summary>
+internal sealed class TenantPinnedTokenCredential(TokenCredential innerCredential, string tenantId) : TokenCredential
+{
+    private readonly TokenCredential _innerCredential = innerCredential;
+    private readonly string _tenantId = tenantId;
+
+    private TokenRequestContext Pin(TokenRequestContext ctx) =>
+        new(ctx.Scopes, ctx.ParentRequestId, ctx.Claims, _tenantId, ctx.IsCaeEnabled);
+
+    public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+        _innerCredential.GetToken(Pin(requestContext), cancellationToken);
+
+    public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+        _innerCredential.GetTokenAsync(Pin(requestContext), cancellationToken);
 }

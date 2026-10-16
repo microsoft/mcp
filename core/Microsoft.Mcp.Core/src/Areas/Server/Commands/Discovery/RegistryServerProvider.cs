@@ -50,7 +50,11 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         Name = _id,
         Title = _serverInfo.Title,
         Description = _serverInfo.Description ?? string.Empty,
-        ToolPrefix = _serverInfo.ToolPrefix
+        ToolPrefix = _serverInfo.ToolPrefix,
+        // Must match AddRegistryRoot, which only installs the token handler for an HTTP server
+        // with scopes; advertising `tenant` anywhere else would silently swallow the argument.
+        SupportsTenantScope = _serverInfo.OAuthScopes is { Length: > 0 }
+            && !string.IsNullOrWhiteSpace(_serverInfo.Url)
     };
 
     /// <summary>

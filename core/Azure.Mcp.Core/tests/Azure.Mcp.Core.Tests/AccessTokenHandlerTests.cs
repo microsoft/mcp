@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers.Text;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using Azure.Core;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
@@ -251,6 +253,54 @@ public class AccessTokenHandlerTests
         await _mockTokenCredentialProvider.Received(1).GetTokenCredentialAsync(
             Arg.Is<string?>(tenantId => tenantId == null),
             Arg.Any<CancellationToken>());
+    }
+
+    // --- Per-call tenant (RegistryTenantContext) ---
+
+    private async Task<HttpResponseMessage> SendWithAmbientTenantAsync(string tenantId, string returnedToken)
+    {
+        _mockTokenCredential
+            .GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken(returnedToken, DateTimeOffset.UtcNow.AddHours(1))));
+
+        var handler = new AccessTokenHandler(_mockTokenCredentialProvider, _oauthScopes) { InnerHandler = new MockHttpMessageHandler() };
+        using var client = new HttpClient(handler);
+
+        RegistryTenantContext.CurrentTenantId = tenantId;
+        try
+        {
+            return await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://example.com/api/test"), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            RegistryTenantContext.CurrentTenantId = null;
+        }
+    }
+
+    /// <summary>Builds a JWT-shaped token carrying the given tid claim; only the payload matters.</summary>
+    private static string JwtWithTenant(string tenantId) =>
+        $"header.{Base64Url.EncodeToString(Encoding.UTF8.GetBytes($$"""{"tid":"{{tenantId}}"}"""))}.signature";
+
+    [Fact]
+    public async Task SendAsync_WithAmbientTenant_RequestsCredentialForThatTenant()
+    {
+        const string tenantId = "11111111-1111-1111-1111-111111111111";
+
+        var response = await SendWithAmbientTenantAsync(tenantId, JwtWithTenant(tenantId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await _mockTokenCredentialProvider.Received(1).GetTokenCredentialAsync(tenantId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendAsync_WhenTokenTenantContradictsRequestedTenant_Throws()
+    {
+        // Sending this token would return the home tenant's data under a request for another one.
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            SendWithAmbientTenantAsync("11111111-1111-1111-1111-111111111111", JwtWithTenant("22222222-2222-2222-2222-222222222222")));
+
+        Assert.Contains("22222222-2222-2222-2222-222222222222", exception.Message);
+        Assert.Contains("11111111-1111-1111-1111-111111111111", exception.Message);
     }
 
     private sealed class MockHttpMessageHandler : HttpMessageHandler
