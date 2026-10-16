@@ -104,6 +104,8 @@ function createFixture(t) {
     fs.rmSync(root, { recursive: true, force: true })
   })
   fs.copyFileSync(wrapperSource, path.join(wrapperDir, 'index.js'))
+  fs.copyFileSync(path.join(path.dirname(wrapperSource), 'installLock.js'), path.join(wrapperDir, 'installLock.js'))
+  fs.copyFileSync(path.join(path.dirname(wrapperSource), 'platformCache.js'), path.join(wrapperDir, 'platformCache.js'))
   fs.writeFileSync(path.join(wrapperDir, 'package.json'), JSON.stringify({
     name: packageName,
     version: packageVersion,
@@ -186,6 +188,14 @@ function npmCalls(fixture) {
 }
 
 // The directory npm was told to install into, resolved against the cwd it ran in.
+function publishedGeneration(installDir) {
+  const pointer = JSON.parse(fs.readFileSync(path.join(installDir, '.installed-platform.json'), 'utf8'))
+  assert.strictEqual(pointer.packageName, platformPackageName)
+  assert.strictEqual(pointer.version, packageVersion)
+  assert.match(pointer.directory, /^\.install-[a-zA-Z0-9]+$/)
+  return path.join(installDir, pointer.directory)
+}
+
 function installPrefix(call) {
   return path.resolve(call.cwd, call.args[call.args.indexOf('--prefix') + 1])
 }
@@ -250,10 +260,10 @@ test('installs a missing platform package privately, not into the caller\'s proj
   for (const flag of ['--no-save', '--no-audit', '--no-fund']) {
     assert.ok(args.includes(flag), `expected ${flag} in ${JSON.stringify(args)}`)
   }
-  assert.strictEqual(installPrefix(calls[0]), fixture.privateDir)
-  assert.strictEqual(cwd, fixture.privateDir)
+  assert.strictEqual(installPrefix(calls[0]), publishedGeneration(fixture.privateDir))
+  assert.strictEqual(cwd, publishedGeneration(fixture.privateDir))
 
-  assert.ok(fs.existsSync(path.join(fixture.privateDir, 'node_modules', ...platformPackageName.split('/'), 'index.js')))
+  assert.ok(fs.existsSync(path.join(publishedGeneration(fixture.privateDir), 'node_modules', ...platformPackageName.split('/'), 'index.js')))
   assert.ok(!fs.existsSync(path.join(fixture.privateDir, '.install.lock')), 'should release the install lock')
   assert.strictEqual(fs.readFileSync(path.join(fixture.project, 'package.json'), 'utf8'), fixture.projectManifest)
   assert.ok(!fs.existsSync(path.join(fixture.project, 'package-lock.json')), 'should not write a lockfile into the project')
@@ -269,7 +279,7 @@ test('installs into the wrapper directory without a home directory', (t) => {
   assert.strictEqual(result.stdout, expectedStdout)
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 1)
-  assert.strictEqual(installPrefix(calls[0]), fixture.privateDir)
+  assert.strictEqual(installPrefix(calls[0]), publishedGeneration(fixture.privateDir))
 })
 
 test('reuses an earlier private install instead of running npm again', (t) => {
@@ -336,7 +346,7 @@ test('falls back to a per-user cache when the private install path cannot be cre
   assert.strictEqual(result.stdout, expectedStdout)
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 1)
-  assert.strictEqual(installPrefix(calls[0]), fixture.cacheDir)
+  assert.strictEqual(installPrefix(calls[0]), publishedGeneration(fixture.cacheDir))
 })
 
 test('ignores a relative LOCALAPPDATA path', { skip: windowsOnlySkip }, (t) => {
@@ -358,7 +368,7 @@ test('ignores a relative LOCALAPPDATA path', { skip: windowsOnlySkip }, (t) => {
   assert.strictEqual(result.stdout, expectedStdout)
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 1)
-  assert.strictEqual(installPrefix(calls[0]), expectedCacheDir)
+  assert.strictEqual(installPrefix(calls[0]), publishedGeneration(expectedCacheDir))
   assert.ok(!fs.existsSync(path.join(fixture.project, 'relative-cache')))
 })
 
@@ -373,7 +383,7 @@ test('falls back to a per-user cache when the wrapper directory is not writable'
   assert.strictEqual(first.stdout, expectedStdout)
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 1)
-  assert.strictEqual(installPrefix(calls[0]), fixture.cacheDir)
+  assert.strictEqual(installPrefix(calls[0]), publishedGeneration(fixture.cacheDir))
   assert.ok(!fs.existsSync(fixture.privateDir), 'should not have created the private install dir')
 
   const second = runWrapper(fixture)
@@ -406,7 +416,7 @@ test('recovers when the first npm attempt fails', (t) => {
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 2)
   assert.ok(calls[1].args.includes('--prefer-online'))
-  assert.strictEqual(installPrefix(calls[1]), fixture.privateDir)
+  assert.strictEqual(installPrefix(calls[1]), publishedGeneration(fixture.privateDir))
 })
 
 test('reports troubleshooting steps and exits non-zero when npm fails', (t) => {
@@ -423,4 +433,20 @@ test('reports troubleshooting steps and exits non-zero when npm fails', (t) => {
   const calls = npmCalls(fixture)
   assert.strictEqual(calls.length, 2, 'should retry once')
   assert.ok(calls[1].args.includes('--prefer-online'))
+})
+
+
+test('uses the per-user cache when the private install directory is unreadable', { skip: permissionsSkip }, (t) => {
+  const fixture = createFixture(t)
+  fs.mkdirSync(fixture.privateDir)
+  writePlatformPackage(path.join(fixture.cacheDir, 'node_modules', ...platformPackageName.split('/')))
+  fs.chmodSync(fixture.privateDir, 0o000)
+  try {
+    const result = runWrapper(fixture)
+    assert.strictEqual(result.status, 0, result.stderr)
+    assert.strictEqual(result.stdout, expectedStdout)
+    assert.deepStrictEqual(npmCalls(fixture), [])
+  } finally {
+    fs.chmodSync(fixture.privateDir, 0o755)
+  }
 })

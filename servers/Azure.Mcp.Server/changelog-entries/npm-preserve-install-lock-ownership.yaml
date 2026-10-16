@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed stale npm fallback lock cleanup removing a newer owner. Isolated fallback installation attempts so a surviving installer cannot overwrite a newly published platform cache."
