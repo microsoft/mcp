@@ -972,6 +972,10 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "Show Advisor insights for service group 'my-service-group'"
+* "Show Advisor insights for my subscription"
+* "Give me Advisor insights across all my service groups and subscriptions"
+* "How much retirement exposure has my subscription reduced or increased since its Day 1 count?"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 

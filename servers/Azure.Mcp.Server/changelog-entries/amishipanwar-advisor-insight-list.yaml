@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp advisor insight list` command to list Azure Advisor insights (idle resources, zonal resiliency, service retirement) with typed KPIs for a Service Group, a subscription, or all accessible Service Groups and subscriptions when no scope is given. Supports `--service-group` or `--subscription` (mutually exclusive), `--insight-name`, `--top`, and `--tenant`."
