@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
+using Azure.Mcp.Tools.AzureBackup.Commands.Operation;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
@@ -32,6 +33,8 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<IRsvBackupOperations, RsvBackupOperations>();
         services.AddSingleton<IDppBackupOperations, DppBackupOperations>();
         services.AddSingleton<IAzureBackupService, AzureBackupService>();
+        services.AddSingleton<IRsvBackupOperationService, RsvBackupOperationService>();
+        services.AddSingleton<OperationGetCommand>();
 
         services.AddSingleton<VaultGetCommand>();
         services.AddSingleton<VaultCreateCommand>();
@@ -137,6 +140,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         var job = new CommandGroup("job", "Backup job operations - Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);
         job.AddCommand<JobGetCommand>(serviceProvider);
+
+        var operation = new CommandGroup("operation", "Read asynchronous operation status for Recovery Services vaults (RSV only), independently of backup job status.");
+        azureBackup.AddSubGroup(operation);
+        operation.AddCommand<OperationGetCommand>(serviceProvider);
 
         var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations - Get recovery point details or list all for a protected item.");
         azureBackup.AddSubGroup(recoveryPoint);
