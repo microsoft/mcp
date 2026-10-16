@@ -18,6 +18,7 @@ $tenantId = $testSettings.TenantId
 $serviceGroupApiVersion = '2024-02-01-preview'
 $membershipApiVersion = '2023-09-01-preview'
 $resilienceApiVersion = '2026-04-01-preview'
+$goalsApiVersion = '2026-10-01'
 
 $accessToken = az account get-access-token --tenant $tenantId --resource 'https://management.azure.com/' --query accessToken --output tsv
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($accessToken)) {
@@ -115,7 +116,6 @@ $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
 $planLifecycleEnrollmentName = Get-OutputValue -Name 'planLifecycleEnrollmentName'
 $workflowEnrollmentName = Get-OutputValue -Name 'workflowEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
-$goalTemplateName = Get-OutputValue -Name 'goalTemplateName'
 $drillName = Get-OutputValue -Name 'drillName'
 
 $requiredOutputs = @{
@@ -125,7 +125,6 @@ $requiredOutputs = @{
     enrollmentName            = $enrollmentName
     lifecycleEnrollmentName   = $lifecycleEnrollmentName
     goalAssignmentName        = $goalAssignmentName
-    goalTemplateName          = $goalTemplateName
     drillName                 = $drillName
 }
 
@@ -151,8 +150,7 @@ if (![string]::IsNullOrWhiteSpace($planLifecycleServiceGroupName)) {
 if (![string]::IsNullOrWhiteSpace($workflowServiceGroupName)) {
     Remove-RecoveryPlans -ServiceGroupId $workflowServiceGroupId
 }
-Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
-Remove-Resource -ResourceId "$resilienceBase/goalTemplates/$goalTemplateName" -ApiVersion $resilienceApiVersion
+Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $goalsApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
 if (![string]::IsNullOrWhiteSpace($planLifecycleEnrollmentName)) {

@@ -20,6 +20,16 @@ using Azure.Mcp.Tools.ResilienceManagement.Models;
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 
 [JsonSerializable(typeof(GoalAssignmentGetCommand.GoalAssignmentGetCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentCreateCommand.GoalAssignmentCreateCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentUpdateCommand.GoalAssignmentUpdateCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentDeleteCommand.GoalAssignmentDeleteCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentRecommendCapacityCommand.GoalAssignmentRecommendCapacityCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentRefreshResourcesCommand.GoalAssignmentRefreshResourcesCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentUpdateResourcesCommand.GoalAssignmentUpdateResourcesCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentOperationResult))]
+[JsonSerializable(typeof(GoalResourceResiliencyInfo))]
+[JsonSerializable(typeof(GoalResourceConfirmationInfo))]
+[JsonSerializable(typeof(GoalServiceLevelTargetInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfoProperties))]
 [JsonSerializable(typeof(GoalAssignmentInfoSystemData))]
