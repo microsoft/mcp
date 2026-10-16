@@ -29,16 +29,21 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
+| advisor_recommendation_list | List active Advisor recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
-| advisor_recommendation_list | List all Advisor recommendations in the subscription \<subscription> | none |
+| advisor_recommendation_list | List individual active Azure Advisor recommendation records affecting resource named my-web-app in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records in resource group \<resource-group> in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me high-impact Security recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show me dismissed Advisor recommendations in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | Show me low-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List completed Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List Azure Advisor recommendations with postponed status in subscription \<subscription> | none |
+| advisor_recommendation_list | List Performance Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | Show High Availability Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_list | List Operational Excellence Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
-| advisor_recommendation_list | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription \<subscription> | none |
@@ -50,39 +55,95 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is on or before March 31, 2027 | none |
 | advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is after March 31, 2027 | none |
 | advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is on or after March 31, 2027 | none |
-| advisor_recommendation_list | Find Advisor recommendations for resource \<resource-id> without metadata filters | none |
+| advisor_recommendation_list | Show active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is before March 31, 2027 | none |
+| advisor_recommendation_list | List active Azure Advisor service-retirement recommendations in subscription \<subscription> whose retirement date is March 31, 2027 | none |
+| advisor_recommendation_list | Find Advisor recommendations for resource \<resource-id> in subscription \<subscription> without metadata filters | none |
 | advisor_recommendation_list | Search individual active Azure Advisor recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Show individual active Azure Advisor high-impact Security recommendation records affecting storage accounts in subscription \<subscription> | none |
 | advisor_recommendation_list | List the top 5 individual active Azure Advisor Cost recommendation records affecting storage accounts whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
-| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 | none |
+| advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
-| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
-| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
-| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until December 31, 2026 in subscription \<subscription> | none |
-| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
+| advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
+| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, with the signals behind their scores | none |
+| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, and include the signals behind their scores | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, with available prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, without prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, with prioritization and signal output disabled | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by savings, with available prioritization signals | none |
+| advisor_recommendation_list | List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show the resources affected by that cost recommendation in service group \<service-group>, largest savings first | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, filtered to retirement dates before March 31, 2027 | none |
+| advisor_recommendation_list | List postponed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List dismissed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
+| advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
+| advisor_recommendation_summary | Which service-retirement Advisor recommendations should I prioritize in service group \<service-group>? | none |
+| advisor_recommendation_summary | Show me the top actions I can take for my Advisor recommendations in subscription \<subscription> | none |
+| advisor_recommendation_summary | What are the top Advisor actions I can take for service group \<service-group>? | none |
+| advisor_recommendation_summary | Summarize the key themes from Advisor recommendations in service group \<service-group> | none |
 | advisor_recommendation_summary | Give me an executive summary of my Azure Advisor recommendations | none |
+| advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group \<service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by impact | none |
 | advisor_recommendation_summary | Show the distribution of my Advisor recommendations by business impact | none |
 | advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types | none |
+| advisor_recommendation_summary | Show the top 10 most common Advisor recommendation types in service group \<service-group> | none |
 | advisor_recommendation_summary | Which Advisor recommendation type occurs most often for resources in my subscription? | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to rank impacted Azure resource types by the count of High-impact recommendations; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Rank the Azure resource types with the most critical Advisor recommendations | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count recommendations grouped by lifecycle status; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by lifecycle status | none |
 | advisor_recommendation_summary | How many Advisor recommendations are new, completed, dismissed, or postponed? | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations grouped by metadata subcategory; do not list individual recommendation records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active zone resiliency recommendations grouped by impacted resource type; do not list individual recommendation records | none |
+| advisor_recommendation_summary | Count zone resiliency Advisor recommendations in service group \<service-group> by impacted resource type | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations grouped by retirement date; do not list individual records | none |
+| advisor_recommendation_summary | Group active service-retirement Advisor recommendations in service group \<service-group> by retirement date | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations for services retiring on December 31, 2026 | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or before December 31, 2026 | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026 | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
+| advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
+| advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
+| advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
+| advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
@@ -262,9 +323,30 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Update Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> with comma-separated schedule times 02:00,14:00, reconciling all retention times and leaving schedule-specific limits to Azure | investigation-required |
 | azurebackup_policy_update | Add a weekly retention of 4 weeks on Sundays to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Add a monthly retention of 12 months on the 1st of every month to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> with a 12-hour window in RSV vault <vault_name> under resource group <resource_group>, change only the hourly interval to 6 hours, preserving the window start, duration, retention, and tags | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window start to 08:00, preserving its interval and duration | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, override its time zone with India Standard Time and set the hourly window start to 08:00 local, converted to 02:30 UTC, preserving interval and duration | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window duration to 24 hours, preserving its interval and start | investigation-required |
+| azurebackup_policy_update | Change existing Enhanced Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to Hourly every 4 hours starting 08:00 for a 12-hour window, asserting Enhanced subtype and keeping existing positive daily retention | investigation-required |
+| azurebackup_policy_update | Update existing Enhanced VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to 7 days of instant recovery retention and instant recovery resource-group prefix restorecache, preserving the existing suffix and all omitted settings | investigation-required |
+| azurebackup_policy_update | Set snapshot consistency to CrashConsistent for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, leaving schedule and retention unchanged | investigation-required |
+| azurebackup_policy_update | Restore default ApplicationConsistent snapshot behavior for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Set archive mode TierAfter with archive after 90 days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving other policy settings | investigation-required |
+| azurebackup_policy_update | Set archive mode TierRecommended without archive days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Enable recommended archive tiering using smart-tier true for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, without supplying archive mode or days | investigation-required |
+| azurebackup_policy_update | Disable archive tiering explicitly using smart-tier false for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving unrelated settings | investigation-required |
+| azurebackup_policy_update | Merge policy tags environment=test,owner=team into VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving all unmentioned tags and schedule and retention fields | investigation-required |
+| azurebackup_policy_update | Change Standard Daily VM policy <policy_name> with positive daily retention in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday at 03:00 with explicit weekly retention of 8 weeks on Sunday and instant recovery retention of 5 days, removing daily retention and preserving monthly and yearly tiers | investigation-required |
+| azurebackup_policy_update | Negative test: change Standard Daily VM policy <policy_name> with instant recovery retention of 2 days in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday with explicit weekly retention of 8 weeks on Sunday, omitting instant recovery retention; expect rejection suggesting --instant-rp-retention-days 5 without silently changing the existing value | investigation-required |
+| azurebackup_policy_update | Change Weekly VM policy <policy_name> with no daily retention in RSV vault <vault_name> under resource group <resource_group> to Daily at 03:00 and supply daily retention of 30 days, preserving existing long-term tiers | investigation-required |
+| azurebackup_policy_update | Negative test: assert Enhanced subtype on existing Standard VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>; expect rejection, not subtype migration | investigation-required |
+| azurebackup_policy_update | Negative test: request archive mode CopyOnExpiry for RSV VM policy <policy_name> in vault <vault_name> under resource group <resource_group>; expect rejection because update accepts TierAfter or TierRecommended | investigation-required |
+| azurebackup_policy_update | Negative test: switch Daily VM policy <policy_name> with positive daily retention to Weekly on Sunday in RSV vault <vault_name> under resource group <resource_group> without explicit weekly retention weeks and days; expect rejection rather than silent removal of daily retention | investigation-required |
+| azurebackup_policy_update | Negative test: switch Weekly VM policy <policy_name> with no daily retention to Daily at 03:00 in RSV vault <vault_name> under resource group <resource_group> without supplying daily retention; expect rejection | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |

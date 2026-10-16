@@ -29,6 +29,23 @@ public class PolicyUpdateValidatorTests
         Assert.True(result.IsValid);
     }
 
+    [Theory]
+    [InlineData("02:00,14:00", true)]
+    [InlineData("02:00, 14:00", true)]
+    [InlineData("02:00,", false)]
+    [InlineData(",02:00", false)]
+    [InlineData("02:00,,14:00", false)]
+    [InlineData("02:00,25:00", false)]
+    public void Validate_ScheduleTimes_ValidatesEachCsvEntry(string times, bool valid)
+    {
+        var options = BaseOptions();
+        options.ScheduleTimes = times;
+        Assert.Equal(valid, PolicyUpdateValidator.Validate(options).IsValid);
+        options.ScheduleTimes = null;
+        options.ScheduleTime = times;
+        Assert.False(PolicyUpdateValidator.Validate(options).IsValid);
+    }
+
     [Fact]
     public void Validate_EmptyOptions_Passes()
     {
@@ -62,7 +79,6 @@ public class PolicyUpdateValidatorTests
     }
 
     [Theory]
-    [InlineData("Hourly")]
     [InlineData("Monthly")]
     [InlineData("Bogus")]
     public void Validate_UnsupportedFrequency_Fails(string freq)
@@ -74,6 +90,19 @@ public class PolicyUpdateValidatorTests
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Issues, i => i.Flag == "--schedule-frequency");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("Hourly")]
+    [InlineData("hourly")]
+    public void Validate_HourlyPartialUpdate_DefersMissingFieldsToExistingPolicy(string? frequency)
+    {
+        var options = BaseOptions();
+        options.ScheduleFrequency = frequency;
+        options.HourlyIntervalHours = 6;
+
+        Assert.True(PolicyUpdateValidator.Validate(options).IsValid);
     }
 
     [Theory]

@@ -107,10 +107,10 @@
 # ServiceOwners:                       @conniey
 
 # PRLabel: %tools-Advisor
-/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @ravigupta99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Advisor
-# ServiceOwners:                       @ankiga-MSFT
+# ServiceOwners:                       @ankiga-MSFT @ravigupta99
 
 # PRLabel: %tools-ADME
 /tools/Azure.Mcp.Tools.Adme/           @aysriva @microsoft/azure-mcp

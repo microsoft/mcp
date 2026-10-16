@@ -102,7 +102,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
-<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false,}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // ⚠️ DANGEROUS: Disable SSRF protections for specific namespaces.}} -->
+<!-- insert-section: vsix {{       // Only use this if you understand the security implications.}} -->
+<!-- insert-section: vsix {{       // Forwards to --dangerously-disable-ssrf-protections-by-namespace.}} -->
+<!-- insert-section: vsix {{       "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": ["storage"]}} -->
 <!-- insert-section: vsix {{       ```}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
@@ -951,12 +956,19 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "List Advisor recommendations for service group 'my-service-group'"
+* "Show the prioritized Advisor recommendations for service group 'my-service-group'"
+* "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
+* "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
+* "Mark an Advisor recommendation as completed in service group 'my-service-group'"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
@@ -1014,6 +1026,7 @@ Vault creation checks whether the requested Recovery Services vault or Backup va
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
 * "Update backup policy schedule time to 04:00 in vault 'myvault'"
+* "Update existing Enhanced Hourly VM policy 'myEnhancedPolicy' in Recovery Services vault 'myvault', resource group 'myRG', subscription 'my-subscription': set time zone to 'India Standard Time' and hourly window start to 08:00 local (converted to 02:30 UTC), preserving the interval and duration"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"

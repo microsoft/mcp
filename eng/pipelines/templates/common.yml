@@ -6,6 +6,9 @@ parameters:
   type: string
   default: none
   values: [none, internal, public ]
+- name: NetworkIsolationPolicy
+  type: string
+  default: Permissive
 - name: RunLiveTests
   type: boolean
   default: false
@@ -52,6 +55,7 @@ resources:
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
   parameters:
+    NetworkIsolationPolicy: ${{ parameters.NetworkIsolationPolicy }}
     # We pick a single internal pipeline to use for autoBaseline. This should be a pipeline that runs often on main with normal code paths, i.e. not Template.Mcp.Server
     autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'mcp - Azure.Mcp.Server'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
     stages:

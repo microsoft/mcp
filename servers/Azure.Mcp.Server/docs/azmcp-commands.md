@@ -481,15 +481,36 @@ azmcp adme storage record version list --endpoint <endpoint> \
 ### Azure Advisor Operations
 
 ```bash
-# List actual Advisor recommendation records in a subscription, with optional filters.
+# List individual Azure Advisor recommendations and their affected-resource details.
 # For global recommendation metadata/catalog lookups, including service-retirement metadata by tracking ID,
 # use advisor metadata list instead; that command does not require a subscription.
-# Filter by status (New, Postponed, Dismissed, or Completed); status defaults to New when omitted
-# --tracking-ids and --retirement-date can be used independently or together
-# --sub-category is optional with these filters; when specified, it must be ServiceUpgradeAndRetirement
-# Each result uses the standard ARM resource shape; name contains the stable recommendation ID
+# Supports filters for category, subcategory, impact, recommendation status such as New, Postponed,
+# Dismissed, or Completed, recommendation type ID,
+# affected resource, resource type, free text, tracking ID, retirement date, and scope.
+# For status-filtered requests, use list to retrieve individual recommendations; use summary only
+# for status counts or grouped analysis.
+# Broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization
+# intent that does not identify a specific recommendation type must use summary --group-by
+# recommendation-type --prioritized true first. Requests that identify a specific recommendation type can use list
+# directly with --recommendation-type-id and --prioritized true. For other requests for individual
+# recommendations, use list directly with any supported filters; no prior summary call is required.
+# Use summary for counts, totals, rankings, distributions, or grouped analysis, not aggregates of
+# limited list results. After a summary, use list with --recommendation-type-id to retrieve individual
+# recommendations or affected resources for a selected group, preserving the applicable filters.
+# For a selected recommendation type, list can also order the matching individual recommendations.
+#
+# Choose subscription or Service Group scope. --resource-group applies only to subscriptions.
+# If neither scope is supplied, the configured default subscription is used.
+# Status defaults to New. --top defaults to 50 and is clamped to 1-100.
+# --prioritized optionally orders matching records; --show-prioritization-signals optionally
+# includes available signal details. Both default to false; signals require --prioritized true.
+# Returns recommendation records in ARM resource shape and a truncation indicator.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation list --subscription <subscription> \
+azmcp advisor recommendation list [--subscription <subscription>] \
+                                  [--resource-group <resource-group>] \
+                                  [--service-group <service-group>] \
+                                  [--prioritized <true|false>] \
+                                  [--show-prioritization-signals <true|false>] \
                                   [--top <top>] \
                                   [--category <category>] \
                                   [--impact <impact>] \
@@ -501,32 +522,74 @@ azmcp advisor recommendation list --subscription <subscription> \
                                   [--sub-category <sub-category>] \
                                   [--tracking-ids <tracking-id1> <tracking-id2> ...] \
                                   [--retirement-date <eq|lt|le|gt|ge>:<yyyy-MM-dd>]
+```
 
-# Update the customer-provided state of an Advisor recommendation. Subscription context can come from --subscription,
-# which accepts an Azure subscription ID or name, or from the configured default subscription. --recommendation-id
+#### Recommendation list behavior
+
+| Setting | Behavior |
+| --- | --- |
+| `--prioritized false` or omitted | No explicit ordering is applied. |
+| `--prioritized true` | Requires `--recommendation-type-id`. Use it directly when the request identifies a specific recommendation type, or for a selected type after cross-type prioritization with recommendation summary. The selected type's metadata category determines the instance metric. Non-Cost types order by `criticalityScore` descending, treating missing scores as zero. |
+| Prioritized Cost drill-down | When the selected recommendation type's metadata category is Cost, converts `savings.retail.dailyPotentialSavings` to an annual value by multiplying it by 12 and 30.4, with `extendedProperties.annualSavingsAmount` as fallback. The selected annual savings score is rounded to two decimal places before ordering descending. Missing, invalid, or non-finite savings sort last; zero remains valid. |
+| Ordering ties | Effective retirement date ascending (instance date with metadata fallback), unknown dates last, then case-insensitive resource name ascending, then recommendation ID ascending. |
+| `--show-prioritization-signals true` | Requires `--prioritized true`; rejected if prioritized is false or omitted. Includes the original `properties.signalBreakdown` payload when available, preserving its backend-provided JSON shape; unavailable signals are omitted. Including signals does not change filtering or ordering. |
+| Result limit | ARG selects up to `top + 1` records after filtering and optional ordering. The extra record is removed and used to detect truncation. ARG truncation signals also set `areResultsTruncated`. No additional pages are fetched. |
+
+- Specify either `--subscription` or `--service-group`, not both. Supply the Service Group name segment from its ARM resource ID.
+- Status defaults to `New`; both listing modes also support explicit `Postponed`, `Dismissed`, and `Completed`.
+- Category, impact, resource type, subcategory, tracking IDs, and retirement-date filters require matching English recommendation metadata. Without these filters, records without matching metadata remain eligible.
+- Resource type also requires a substring match in the instance resource ID. `--resource` searches that ID, while `--search` matches the original instance problem text before metadata enrichment. Prefer structured filters when they express the request.
+- Tracking IDs and retirement-date filters can be combined. They imply `ServiceUpgradeAndRetirement`; an explicitly supplied subcategory must match it.
+- Retirement-date filtering uses the metadata date, not the effective date used for ordering.
+- Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
+- `--prioritized` orders matching list records for an explicitly identified recommendation type, whether supplied directly by the user or selected from a prior summary. Broad or unscoped prioritization intent that does not identify a specific recommendation type must route to summary with `--group-by recommendation-type --prioritized true` first.
+
+```bash
+# Update the customer-provided state of an Advisor recommendation in a subscription or service group.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both. --recommendation-id
 # is the stable ID, also called recommendation ID. Set the state to New, Postponed,
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
 # an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
-# a postponed or dismissed recommendation. Security and platform-resolved recommendations cannot
+# a postponed, dismissed, or completed recommendation. Security and platform-resolved recommendations cannot
 # be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation update --subscription <subscription> \
+azmcp advisor recommendation update [--subscription <subscription>] \
+                                    [--service-group <service-group>] \
                                     --recommendation-id <recommendation-id> \
                                     --recommendation-status <New|Postponed|Dismissed|Completed> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
-                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>]
+                                    [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \
+                                    [--tenant <tenant>]
 
-# Summarize Advisor recommendation counts, totals, rankings, and distributions.
+# Summarize Advisor recommendation counts, totals, rankings, and distributions in a subscription or service group,
+# or rank recommendation types by priority with --prioritized true.
+# Use --subscription with an Azure subscription ID or name, use --service-group with a service-group ID,
+# or omit both to use the configured default subscription. Do not specify both.
+# --resource-group can only be used with subscription scope.
 # Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date.
 # --group-by defaults to category. All groupings except status include only active New recommendations.
 # Recommendation-type groups return recommendation type ID GUID keys with English metadata labels. Resource-type groups use
 # properties.impactedField with resource-ID extraction only as a fallback. Category, impact, subcategory, and
-# retirement data prefer metadata values with recommendation-instance fallback.
+# retirement date come from recommendation-type metadata only; recommendations whose type has no English metadata are
+# excluded from every summary.
 # Retirement filters are one-sided: le:<end-date> includes overdue active recommendations and is not a bounded
 # next-N window.
+# --prioritized true (top recommendations, top actions, most critical, or what-should-I-fix-first requests) ranks
+# active New recommendation types and defaults --top to 10. Order: metadata priority score, annual savings (daily
+# potential savings x 12 x 30.4, else the legacy annual amount; USD, rounded to cents), summed criticality score,
+# earliest retirement date, and affected-resource count (fewest first for Cost, most first otherwise), then label.
+# Missing values sort last and are never treated as zero. Reserved instances keep only the three-year, seven-day
+# lookback scenario. Each group returns its distinct affected-resource count, totalRecommendations is the sum of those
+# counts (affected resources per type, not records), and each group carries a prioritizationSignals object
+# (category, impact, subCategory, retirementDate, retirementWindow, annualSavings, resourceTypeCriticality,
+# criticalService, effort, actionability, costImplication) used to explain the rank in plain business language.
+# Drill into a type with advisor recommendation list --recommendation-type-id <group-key> --prioritized true.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp advisor recommendation summary --subscription <subscription> \
+azmcp advisor recommendation summary [--subscription <subscription>] \
+                                     [--service-group <service-group>] \
                                      [--group-by <group-by>] \
+                                     [--prioritized <true|false>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
                                      [--impact <High|Medium|Low>] \
                                      [--recommendation-type-id <recommendation-type-id>] \
@@ -1224,7 +1287,10 @@ azmcp azurebackup policy create --subscription <subscription> \
                                 [--pitr-retention-days <int>] \
                                 [--policy-tags <key=value[,key=value...]>]
 
-# Updates an existing RSV backup policy's schedule or retention settings. The policy must already exist in the vault.
+# Updates an existing RSV backup policy, preserving omitted settings. VM policies support Daily/Weekly
+# schedules, Hourly on existing Enhanced (V2) policies, retention, instant recovery, snapshot consistency,
+# archive tiering, and tags. Subtype assertions do not migrate policies. Other RSV workloads support only
+# --schedule-time and --daily-retention-days. DPP policy update is not supported. The policy must exist.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy update --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -1234,8 +1300,8 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--schedule-time <schedule-time>] \
                                 [--daily-retention-days <daily-retention-days>] \
                                 [--time-zone <time-zone>] \
-                                [--schedule-frequency <Daily|Weekly>] \
-                                [--schedule-times <HH:mm[,HH:mm...]>] \
+                                [--schedule-frequency <Daily|Weekly|Hourly>] \
+                                [--schedule-times <HH:mm>] \
                                 [--schedule-days-of-week <day[,day...]>] \
                                 [--weekly-retention-weeks <int>] \
                                 [--weekly-retention-days-of-week <day[,day...]>] \
@@ -1247,7 +1313,18 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--yearly-retention-months <month[,month...]>] \
                                 [--yearly-retention-week-of-month <First|Second|Third|Fourth|Last>] \
                                 [--yearly-retention-days-of-week <day[,day...]>] \
-                                [--yearly-retention-days-of-month <int[,int...]>]
+                                [--yearly-retention-days-of-month <1-28|Last[,1-28|Last...]>] \
+                                [--hourly-interval-hours <4|6|8|12>] \
+                                [--hourly-window-start-time <HH:mm>] \
+                                [--hourly-window-duration-hours <4-24>] \
+                                [--policy-sub-type <Standard|Enhanced>] \
+                                [--instant-rp-retention-days <1-30>] \
+                                [--instant-rp-resource-group <name-prefix>] \
+                                [--snapshot-consistency <ApplicationConsistent|CrashConsistent>] \
+                                [--archive-tier-after-days <int-at-least-45>] \
+                                [--archive-tier-mode <TierAfter|TierRecommended>] \
+                                [--smart-tier <true|false>] \
+                                [--policy-tags <key=value[,key=value...]>]
 
 # Retrieves backup policy information. When --policy is specified, returns detailed information about a single policy including datasource types, protected items count, schedule and retention details, tiering policies, sub-protection policies, and workload-specific properties (time zone, instant restore settings, compression). RSV policy details are returned under 'details' and Backup vault (DPP) policy details under 'dppDetails', each mirroring the current Azure Backup SDK surface. When --policy is omitted, lists all backup policies configured in the vault. The returned contract reflects the currently supported SDK properties and may be revisited when the underlying Azure.ResourceManager SDK packages are upgraded.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1257,6 +1334,22 @@ azmcp azurebackup policy get --subscription <subscription> \
                              [--vault-type <vault-type>] \
                              [--policy <policy>]
 ```
+
+**Policy update semantics (RSV Azure VM):**
+
+- The 11 added VM-only options are the three hourly window/interval options, `--policy-sub-type`, the two instant recovery options, `--snapshot-consistency`, the two archive options, `--smart-tier`, and `--policy-tags`. These update settings are not a promise of identical support in policy create or other workloads.
+- Updates merge into the fetched policy, preserving unmentioned settings modeled by the SDK, including unmodified retention tiers, subject to the schedule reconciliation rules below rather than applying create defaults. Preservation of unknown wire fields is not guaranteed. No supplied update settings means no change. Tags merge case-insensitively by key, preserve unmentioned tags, and cannot exceed 50 after merging. Instant recovery resource-group prefix updates preserve the existing suffix.
+- `--policy-sub-type` only asserts that the existing policy is `Standard` (V1) or `Enhanced` (V2). A mismatch is rejected; update does **not** migrate between subtypes. Hourly requires an existing Enhanced policy.
+- Existing Enhanced **Hourly** schedules accept partial updates: omit frequency and supply just an interval, start, or duration to retain the other hourly fields. The assembled schedule must have interval `4`, `6`, `8`, or `12`, a start time, and duration `4`–`24` hours that is at least the interval. Switching an Enhanced Daily/Weekly schedule to Hourly requires explicit Hourly frequency and all three hourly fields.
+- An explicitly supplied `--hourly-window-start-time` is local `HH:mm` converted to UTC, as required by the [Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy#tab/powershell). The effective time zone is supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. For example, `08:00` in `India Standard Time` becomes `2000-01-01T02:30:00Z`. Conversion uses local `2000-01-01` time-zone rules, not today's DST offset, and may cross a UTC date boundary. Unknown time zones and invalid or ambiguous local times on that baseline are rejected; future seasonal DST adjustments are not calculated. An omitted hourly start retains its exact timestamp even when the time zone changes; resupply it to reinterpret a local time.
+- Daily/Weekly schedules accept comma-separated `HH:mm` values with `--schedule-times`, or one time with legacy `--schedule-time`. Omission retains all existing times (including the window start when leaving Hourly); explicit schedule changes reconcile all retention times. Azure enforces schedule-specific limits. These two flags are mutually exclusive and cannot be used for Hourly; use `--hourly-window-start-time` instead. Daily/Weekly parsing retains its existing clock-value encoding without the hourly UTC conversion: the [REST example](https://learn.microsoft.com/azure/backup/backup-azure-arm-userestapi-createorupdatepolicy#tab/azure-vm) encodes Standard Weekly 10:00 Pacific as `10:00:00Z` with `timeZone: Pacific Standard Time`. This fix does not establish new Enhanced Daily/Weekly semantics. When leaving Hourly, supply an explicit local schedule time if reusing the unchanged UTC window timestamp would be inappropriate.
+- Explicit `--schedule-frequency Weekly` always requires `--schedule-days-of-week`; an existing Weekly schedule can retain its days when frequency is omitted. Schedule days are not valid for Daily/Hourly. On schedule or retention updates, Weekly requires positive weekly retention whose days are a subset of backup schedule days. Setting weekly retention requires both `--weekly-retention-weeks` and `--weekly-retention-days-of-week`.
+- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`1`–`9999`) if absent, such as when leaving Weekly.
+- Schedule, retention, or instant recovery updates resulting in a **Standard Weekly** policy require effective instant recovery retention of **5 days**. Specify `--instant-rp-retention-days 5` unless the existing value is already 5. Omission preserves the existing value; it is never automatically changed. Tags-only and time-zone-only updates are not blocked by this precondition, which does not apply to Enhanced policies.
+- Monthly retention requires a count plus either absolute day-of-month selectors (`1`–`28` or `Last`) or both relative week-of-month and day-of-week selectors. Yearly retention additionally requires months of the year. Do not mix absolute and relative selectors. Retention-only updates preserve existing retention times; explicit schedule updates reconcile retention times and remove incompatible schedule branches.
+- `--instant-rp-retention-days` accepts `1`–`30`, subject to Azure's schedule- and subtype-specific limits. `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- Archive modes are **`TierAfter` or `TierRecommended`, not `CopyOnExpiry`**. `TierAfter` requires at least 45 days, supplied via `--archive-tier-after-days` or retained from an existing `TierAfter` duration in days. Archive days alone select `TierAfter`. `TierRecommended` cannot be combined with archive days.
+- `--smart-tier true` selects `TierRecommended`; **`--smart-tier false` disables archive tiering** (`DoNotTier`). Either value is mutually exclusive with both archive flags. Omission preserves existing tiering. Azure enforces remaining service-side limits and vault security restrictions.
 
 #### Protected Item
 
