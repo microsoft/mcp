@@ -732,7 +732,7 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (for example, `https://<your-service>.cognitiveservices.azure.com/`) |
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., `https://your-service.cognitiveservices.azure.com/`) |
 | `--text` | Yes | The text to convert to speech |
 | `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
 | `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
@@ -4313,20 +4313,18 @@ azmcp redis list --subscription <subscription>
 ### Azure Resilience Management Operations
 
 These commands use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and the GA
-`2026-10-01` API. Existing Drills command names are preserved. Create/update support
+`2026-10-01` API. Drill create/update support
 goal-assignment identity, Health Model monitoring, and SLI monitoring as JSON
 properties. Update preserves omitted fields; pass the string `"null"` as a Health
 Model or SLI JSON payload to clear that configuration. A supplied SLI selection
-replaces the old selection. See the Drill GA configuration in
-`.github/skills/resilience-management-operations/references/payloads.md`.
+replaces the old selection. See [Drill GA configuration](../../../.github/skills/resilience-management-operations/references/payloads.md#drill-ga-configuration).
 
 Validation accepts an optional operation; source locations are required unless
 the selected operation is `Reprotect`, including when the operation is omitted. Failover
 accepts no request body when all failover inputs are omitted; providing selected
 resources or an explicit automatic-failover choice requires source locations.
 Reprotect accepts optional selected recovery-resource IDs. Drill details preserve
-GA fields and drill-run reports; lists continue to return IDs and names. Separate
-report-generation and download tools are not part of these existing commands.
+GA fields and drill-run reports; lists continue to return IDs and names.
 
 Goal assignment details now include `requireZonalResiliency`, and goal resource
 details include `zonalResiliency`. Legacy preview-only goal fields are nullable

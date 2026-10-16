@@ -30,7 +30,7 @@ With API `2026-10-01`, assignment details include `requireZonalResiliency` and m
 
 ## Drills
 
-All 17 existing Drills tools use SDK `Azure.ResourceManager.ResilienceManagement` 1.0.0 and API `2026-10-01`. GA configuration inputs, operation-selectable validation, optional failover requests, and selected-resource reprotection are supported. Validation requires sources except for explicit `Reprotect`. Get responses preserve returned GA fields; list responses remain ID/name summaries. Separate report-generation/download tools are not exposed.
+Drills tools use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and API `2026-10-01`. Get responses preserve returned GA fields; list responses remain ID/name summaries.
 
 | Tool | Purpose | Parameters |
 |---|---|---|
