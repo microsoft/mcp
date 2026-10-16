@@ -182,6 +182,7 @@ internal class Program
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
             // new Azure.Mcp.Tools.Adme.AdmeSetup(), - disabling for GA release
+            new Azure.Mcp.Tools.AIInfraOptimization.AIInfraOptimizationSetup(),
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),

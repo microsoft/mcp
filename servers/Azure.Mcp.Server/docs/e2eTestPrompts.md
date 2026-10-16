@@ -160,6 +160,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
 
+## Azure AI Infra Optimization
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| aiinfraoptimization_vmsku_recommend | Recommend an Azure GPU VM for meta-llama/Llama-3.1-70B-Instruct at FP16 in eastus. Rank by cost. | none |
+| aiinfraoptimization_vmsku_recommend | Recommend a VM in westeurope for a 405000000000 parameter FP16 model with 126 layers, 8 KV heads, and head dimension 128. | none |
+| aiinfraoptimization_vmsku_recommend | Recommend GPU VM options for mistralai/Mistral-7B-Instruct-v0.3 in westeurope and prioritize latency. | none |
+| aiinfraoptimization_vmsku_recommend | Compare only Standard_NC24ads_A100_v4 and Standard_ND96isr_H100_v5 for meta-llama/Llama-3.1-8B-Instruct at FP16 in eastus. | none |
+| aiinfraoptimization_vmsku_recommend | For subscription <subscription_id>, recommend VM options for meta-llama/Llama-3.1-70B-Instruct in eastus and include quota. | none |
+| aiinfraoptimization_vmsku_recommend | For subscription <subscription_id>, recommend VM options for meta-llama/Llama-3.1-70B-Instruct in eastus and include quota and placement. | none |
+| aiinfraoptimization_vmsku_recommend | For subscription <subscription_id>, recommend the cheapest VM options for microsoft/Phi-3-mini-4k-instruct in westus2 and include subscription pricing. | none |
+| aiinfraoptimization_vmsku_recommend | Recommend a GPU VM for my model in eastus. | clarification-required |
+| aiinfraoptimization_vmsku_recommend | Recommend a VM in eastus for a 70 billion parameter FP16 model. | clarification-required |
+
 ## Azure AI Search
 
 | Tool Name | Test Prompt | Interaction |
