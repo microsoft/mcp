@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added hierarchical blob browsing and bounded pagination to storage_blob_get with --delimiter, --max-results, and --continuation-token, preserving existing listing behavior when these options are omitted."

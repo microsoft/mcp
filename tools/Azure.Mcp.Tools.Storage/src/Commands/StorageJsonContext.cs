@@ -18,6 +18,7 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(StorageAccountResult))]
 [JsonSerializable(typeof(BlobGetCommand.BlobGetCommandResult))]
 [JsonSerializable(typeof(BlobInfo))]
+[JsonSerializable(typeof(BlobListResult))]
 [JsonSerializable(typeof(BlobUploadResult))]
 [JsonSerializable(typeof(ContainerCreateCommand.ContainerCreateCommandResult))]
 [JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
@@ -27,6 +28,4 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-internal sealed partial class StorageJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class StorageJsonContext : JsonSerializerContext;

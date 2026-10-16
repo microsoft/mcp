@@ -5250,7 +5250,11 @@ azmcp storage blob container get --account <account> \
 azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
-                           [--prefix <prefix>]
+                           [--prefix <prefix>] \
+                           [--delimiter <delimiter>] \
+                           [--max-results <count>] \
+                           [--continuation-token <token>] \
+                           [--tenant <tenant>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -5258,6 +5262,50 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+##### Blob Get Listing Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--account` | Yes | Azure Storage account name. |
+| `--container` | Yes | Blob container name. |
+| `--blob` | No | Exact blob path to retrieve. Cannot be combined with `--delimiter`, `--max-results`, or `--continuation-token`. |
+| `--prefix` | No | Filter blob names by prefix, for example `datasets/`. Ignored when `--blob` is specified. |
+| `--delimiter` | No | Non-empty character or string used to group virtual directories. Use `/` to browse one folder level at a time. |
+| `--max-results` | No | Maximum combined number of blobs and directory prefixes in one page, from 1 to 5000. Defaults to 100 when `--delimiter` or `--continuation-token` is supplied. |
+| `--continuation-token` | No | Opaque token returned by a previous page. Reuse the same account, container, prefix, and delimiter. |
+| `--tenant` | No | Azure tenant ID or name. |
+
+Supplying `--delimiter`, `--max-results`, or `--continuation-token` enables paged listing.
+The response contains `blobs`, `prefixes` (virtual directory paths including their delimiter),
+and an optional `continuationToken`. Each blob or directory prefix counts as one result.
+A page may contain fewer results than requested, or even be empty; continue while a token is returned.
+When the token is absent, listing is complete.
+
+Without these three options, the command preserves its existing behavior: it returns all matching
+blobs, or the specified blob, with only the `blobs` response property. Use paged listing for large containers.
+Listing requires a data-plane role such as **Storage Blob Data Reader** or **Storage Blob Data Contributor**.
+
+```bash
+# Browse top-level blobs and virtual directories without listing nested blobs
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> --delimiter /
+
+# Browse a subfolder, returning at most 50 blobs and directory prefixes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> \
+                      --prefix datasets/ --delimiter / --max-results 50
+
+# Continue browsing with the token from the previous response
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> \
+                      --prefix datasets/ --delimiter / --max-results 50 \
+                      --continuation-token "<token>"
+
+# List a bounded page of blobs recursively without directory grouping
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> --max-results 100
 ```
 
 #### Table Storage
