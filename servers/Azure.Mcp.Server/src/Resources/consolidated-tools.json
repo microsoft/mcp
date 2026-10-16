@@ -1499,6 +1499,39 @@
       ]
     },
     {
+      "name": "get_azure_advisor_service_group_status_insights",
+      "description": "Get Azure Advisor Status and Insights for Service Groups. Returns Service Group criticality, health status and description, and Insight KPIs for zonal resiliency, idle resources, and service retirement. Supports filtering by Service Group, criticality tier, status, and Insight name, with bounded paging for all visible Service Groups.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only reads Azure Advisor Service Group Status and Insights data."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to Azure Advisor Service Group Status and Insights."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_statusinsights_get"
+      ]
+    },
+    {
       "name": "update_azure_advisor_recommendation_state",
       "description": "Mark one Azure Advisor recommendation as completed, dismiss it because the risk is acceptable, postpone it until a requested future date and time, or reactivate it by setting New. When a user asks to ignore a recommendation because the risk is acceptable, dismiss it with the RiskIsAcceptable reason. Snooze an Advisor recommendation in a subscription or Azure service group until a future date and time; snooze is the same operation as postpone and sets Postponed. Update, change, or set the customer-provided recommendation status or state to New, Postponed, Dismissed, or Completed. Common user requests may say mark done, reopen, or reset to New. Requires the stable recommendation ID and either subscription or service-group context, but not both; the configured default subscription is used when neither is supplied. Postponed requires a future date and time. For Dismissed, provide a supported reason when known; if no reason is supplied or the user's intent cannot be mapped to one, Other is used. State changes are rejected for Security category and platform-resolved recommendations. Returns the updated ARM recommendation resource. Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.",
       "toolMetadata": {

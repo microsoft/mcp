@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `azmcp advisor statusinsights get` command to get Azure Advisor Service Group Status and Insights (criticality, Status, and Insight KPIs)."
