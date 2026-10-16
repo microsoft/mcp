@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -22,9 +23,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
     Title = "Add or Update Resilience Drill Resources",
     Description = """
         Adds a resource to a resilience drill, or updates or excludes existing drill resources, in an Azure service group.
-        Provide a fault duration in minutes and the Azure resource IDs to include, update, or exclude. Use this to add a
-        resource to a drill, change the fault settings on a drill resource, or remove a resource from the drill. It starts
-        the operation and returns the operation ID.
+        Provide a fault duration in minutes and the drill-resource IDs to include, update, or exclude, not underlying
+        VM IDs. Use this to add a resource to a drill, change fault settings, or remove a resource from the drill.
+        It starts the operation and returns the operation ID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -124,8 +125,8 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
             using JsonDocument include = JsonDocument.Parse(options.IncludeResources ?? "[]");
             using JsonDocument update = JsonDocument.Parse(options.UpdateResources ?? "[]");
             using JsonDocument exclude = JsonDocument.Parse(options.ExcludeResources ?? "[]");
-            ValidateIncludeOrUpdate(include.RootElement, "--include-resources");
-            ValidateIncludeOrUpdate(update.RootElement, "--update-resources");
+            ValidateIncludeOrUpdate(include.RootElement, "--include-resources", options);
+            ValidateIncludeOrUpdate(update.RootElement, "--update-resources", options);
             ValidateExclude(exclude.RootElement);
 
             using var stream = new MemoryStream();
@@ -162,7 +163,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
         }
     }
 
-    private static void ValidateIncludeOrUpdate(JsonElement resources, string optionName)
+    private static void ValidateIncludeOrUpdate(JsonElement resources, string optionName, DrillAddOrUpdateResourcesOptions options)
     {
         if (resources.ValueKind != JsonValueKind.Array)
         {
@@ -177,6 +178,23 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 string.IsNullOrWhiteSpace(idElement.GetString()))
             {
                 throw new ArgumentException($"Each resource in {optionName} must be an object with a non-empty \"id\" string.");
+            }
+
+            bool validId;
+            try
+            {
+                var id = new ResourceIdentifier(idElement.GetString()!);
+                var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(options.ServiceGroup, options.Drill);
+                validId = id.ResourceType == DrillTargetResource.ResourceType &&
+                    string.Equals(id.Parent?.ToString(), drillId.ToString(), StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is ArgumentException or FormatException)
+            {
+                throw new ArgumentException($"{optionName} requires full drill-resource IDs, not underlying Azure resource IDs.", ex);
+            }
+            if (!validId)
+            {
+                throw new ArgumentException($"{optionName} requires full drill-resource IDs under the requested service group and drill, not underlying Azure resource IDs.");
             }
         }
     }
