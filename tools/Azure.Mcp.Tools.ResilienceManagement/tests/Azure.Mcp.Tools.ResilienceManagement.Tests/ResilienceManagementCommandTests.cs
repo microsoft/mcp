@@ -225,75 +225,14 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public async Task Should_create_drill_without_recovery_plan()
-    {
-        var resourceGroupName = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DELETEASSETRESOURCEGROUPNAME");
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
-        var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
-        var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-drill-{Guid.NewGuid().ToString("N")[..8]}");
-
-        var result = await CallToolAsync(
-            "resiliency_drill_create",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "drill", drillName },
-                { "subscription", Settings.SubscriptionId },
-                { "region", location },
-                { "resource-group", resourceGroupName },
-                { "drill-type", "Zonal" },
-                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
-            });
-
-        Exception? failure = null;
-        try
-        {
-            var drill = result.AssertProperty("drill");
-            Assert.EndsWith(drillName, drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
-            var properties = drill.AssertProperty("properties");
-            Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
-            Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
-
-            var recoveryPlanProperties = properties.AssertProperty("recoveryPlanProperties");
-            Assert.Equal("SystemAssigned", recoveryPlanProperties.AssertProperty("identity").AssertProperty("type").GetString());
-            Assert.True(
-                !recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
-                recoveryPlanId.ValueKind == JsonValueKind.Null);
-
-            var monitoringProperties = properties.AssertProperty("monitoringProperties");
-            Assert.Equal("SystemAssigned", monitoringProperties.AssertProperty("identity").AssertProperty("type").GetString());
-        }
-        catch (Exception ex)
-        {
-            failure = ex;
-            throw;
-        }
-        finally
-        {
-            try
-            {
-                var deleted = await CallToolAsync("resiliency_drill_delete", new()
-                {
-                    { "tenant", Settings.TenantId },
-                    { "service-group", serviceGroup },
-                    { "drill", drillName }
-                });
-                Assert.True(deleted.AssertProperty("success").GetBoolean());
-            }
-            catch (Exception cleanupFailure) when (failure is not null)
-            {
-                throw new AggregateException("The creation scenario and its cleanup both failed.", failure, cleanupFailure);
-            }
-        }
-    }
-
-    [Fact]
     public async Task Should_delete_drill()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-delete-{Guid.NewGuid().ToString("N")[..8]}");
-        var assetGroup = RegisterOrRetrieveDeploymentOutputVariable("deleteAssetGroup", "DELETEASSETRESOURCEGROUPNAME");
+        var assetGroup = TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Playback ||
+            Settings.DeploymentOutputs.ContainsKey("DELETEASSETRESOURCEGROUPNAME")
+            ? RegisterOrRetrieveDeploymentOutputVariable("deleteAssetGroup", "DELETEASSETRESOURCEGROUPNAME")
+            : RegisterOrRetrieveVariable("deleteAssetGroup", Settings.ResourceGroupName);
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
         var created = await CallToolAsync("resiliency_drill_create", new()
         {

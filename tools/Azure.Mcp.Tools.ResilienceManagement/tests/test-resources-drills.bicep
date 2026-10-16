@@ -187,7 +187,6 @@ output usagePlanId string = usagePlan.id
 output usagePlanName string = usagePlan.name
 output serviceGroupName string = 'sgd-${suffix}'
 output lifecycleServiceGroupName string = 'sgl-${suffix}'
-output creationServiceGroupName string = 'sgc-${suffix}'
 output recoveryPlanName string = 'rp-${suffix}'
 output drillName string = effectiveDrillName
 output deleteDrillName string = 'dd-${suffix}'

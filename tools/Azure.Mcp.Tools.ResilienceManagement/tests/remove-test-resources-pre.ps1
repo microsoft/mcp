@@ -47,6 +47,13 @@ function Get-OutputValue {
     return $outputs.PSObject.Properties[$Name.ToUpperInvariant()].Value
 }
 
+function Get-OptionalOutputValue {
+    param([string] $Name)
+
+    $property = $outputs.PSObject.Properties[$Name.ToUpperInvariant()]
+    return $property ? $property.Value : $null
+}
+
 function Wait-ResourceDeleted {
     param([string] $ResourceId, [string] $ApiVersion)
 
@@ -68,14 +75,19 @@ function Wait-ResourceDeleted {
 }
 
 function Remove-Resource {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string] $ResourceId, [string] $ApiVersion)
 
     if ([string]::IsNullOrWhiteSpace($ResourceId)) {
         return
     }
 
+    if (!$PSCmdlet.ShouldProcess($ResourceId, 'Delete resource')) {
+        return
+    }
+
     $path = "${ResourceId}?api-version=$ApiVersion"
-    Write-Host "DELETE $path"
+    Write-Information "DELETE $path"
     $response = Invoke-ManagementRestMethod -Method DELETE -Path $path
     if ($response.StatusCode -notin @(200, 202, 204, 404)) {
         throw "DELETE $path failed with status $($response.StatusCode): $($response.Content)"
@@ -86,8 +98,13 @@ function Remove-Resource {
     }
 }
 
-function Remove-RecoveryPlans {
+function Remove-RecoveryPlanCollection {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string] $ServiceGroupId)
+
+    if (!$PSCmdlet.ShouldProcess($ServiceGroupId, 'Delete recovery plans')) {
+        return
+    }
 
     $collectionPath = "$ServiceGroupId/providers/Microsoft.AzureResilienceManagement/recoveryPlans?api-version=$resilienceApiVersion"
     $response = Invoke-ManagementRestMethod -Method GET -Path $collectionPath
@@ -101,8 +118,123 @@ function Remove-RecoveryPlans {
 
     $content = $response.Content | ConvertFrom-Json
     foreach ($recoveryPlan in $content.value) {
-        Remove-Resource -ResourceId $recoveryPlan.id -ApiVersion $resilienceApiVersion
+        Remove-Resource -ResourceId $recoveryPlan.id -ApiVersion $resilienceApiVersion -Confirm:$false
     }
+}
+
+function Remove-ResourceCollection {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string] $CollectionId,
+        [string] $ApiVersion
+    )
+
+    if (!$PSCmdlet.ShouldProcess($CollectionId, 'Delete resources in collection')) {
+        return
+    }
+
+    $collectionPath = "${CollectionId}?api-version=$ApiVersion"
+    $response = Invoke-ManagementRestMethod -Method GET -Path $collectionPath
+    if ($response.StatusCode -eq 404) {
+        return
+    }
+
+    if ($response.StatusCode -ne 200) {
+        throw "GET $collectionPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $content = $response.Content | ConvertFrom-Json
+    foreach ($resource in $content.value) {
+        Remove-Resource -ResourceId $resource.id -ApiVersion $ApiVersion -Confirm:$false
+    }
+}
+
+function Remove-PrincipalRoleAssignment {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [string] $Scope,
+        [string] $PrincipalId
+    )
+
+    if ([string]::IsNullOrWhiteSpace($PrincipalId)) {
+        return
+    }
+
+    if (!$PSCmdlet.ShouldProcess($Scope, "Delete role assignments for principal $PrincipalId")) {
+        return
+    }
+
+    $apiVersion = '2022-04-01'
+    $collectionPath = "$Scope/providers/Microsoft.Authorization/roleAssignments?api-version=$apiVersion&`$filter=atScope()"
+    $response = Invoke-ManagementRestMethod -Method GET -Path $collectionPath
+    if ($response.StatusCode -eq 404) {
+        return
+    }
+
+    if ($response.StatusCode -ne 200) {
+        throw "GET $collectionPath failed with status $($response.StatusCode): $($response.Content)"
+    }
+
+    $content = $response.Content | ConvertFrom-Json
+    foreach ($assignment in $content.value) {
+        if ($assignment.properties.principalId -eq $PrincipalId) {
+            Remove-Resource -ResourceId $assignment.id -ApiVersion $apiVersion -Confirm:$false
+        }
+    }
+}
+
+$isolatedDeleteAssetResourceGroupName = Get-OptionalOutputValue -Name 'deleteAssetResourceGroupName'
+$isolatedVmId = Get-OptionalOutputValue -Name 'vmId'
+if (![string]::IsNullOrWhiteSpace($isolatedDeleteAssetResourceGroupName) -and
+    ![string]::IsNullOrWhiteSpace($isolatedVmId)) {
+    $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
+    $lifecycleServiceGroupName = Get-OutputValue -Name 'lifecycleServiceGroupName'
+    $usagePlanName = Get-OutputValue -Name 'usagePlanName'
+    $drillName = Get-OutputValue -Name 'drillName'
+    $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
+    $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
+    $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
+    $lifecycleResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
+    $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
+    $deleteAssetResourceGroupId = "/subscriptions/$subscriptionId/resourceGroups/$isolatedDeleteAssetResourceGroupName"
+    $drillId = "$resilienceBase/drills/$drillName"
+
+    $requiredOutputs = @{
+        serviceGroupName             = $serviceGroupName
+        lifecycleServiceGroupName    = $lifecycleServiceGroupName
+        usagePlanName                = $usagePlanName
+        drillName                    = $drillName
+        deleteAssetResourceGroupName = $isolatedDeleteAssetResourceGroupName
+    }
+    foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
+        if ([string]::IsNullOrWhiteSpace($requiredOutput.Value)) {
+            throw "Deployment output '$($requiredOutput.Key)' is required for safe isolated Drills teardown."
+        }
+    }
+
+    $drillResponse = Invoke-ManagementRestMethod -Method GET -Path "$drillId`?api-version=$resilienceApiVersion"
+    if ($drillResponse.StatusCode -eq 200) {
+        $drillPrincipalId = ($drillResponse.Content | ConvertFrom-Json).identity.principalId
+        Remove-PrincipalRoleAssignment -Scope $serviceGroupId -PrincipalId $drillPrincipalId -Confirm:$false
+        Remove-PrincipalRoleAssignment -Scope "/subscriptions/$subscriptionId" -PrincipalId $drillPrincipalId -Confirm:$false
+    }
+    elseif ($drillResponse.StatusCode -ne 404) {
+        throw "GET $drillId failed with status $($drillResponse.StatusCode): $($drillResponse.Content)"
+    }
+
+    Remove-ResourceCollection -CollectionId "$resilienceBase/drills" -ApiVersion $resilienceApiVersion -Confirm:$false
+    Remove-ResourceCollection -CollectionId "$lifecycleResilienceBase/drills" -ApiVersion $resilienceApiVersion -Confirm:$false
+    Remove-RecoveryPlanCollection -ServiceGroupId $serviceGroupId -Confirm:$false
+    Remove-RecoveryPlanCollection -ServiceGroupId $lifecycleServiceGroupId -Confirm:$false
+    Remove-ResourceCollection -CollectionId "$resilienceBase/goalAssignments" -ApiVersion $resilienceApiVersion -Confirm:$false
+    Remove-Resource -ResourceId "$usagePlanId/enrollments/$serviceGroupName" -ApiVersion $resilienceApiVersion
+    Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleServiceGroupName" -ApiVersion $resilienceApiVersion
+    Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/drills-ga" -ApiVersion $membershipApiVersion
+    Remove-Resource -ResourceId "$deleteAssetResourceGroupId/providers/Microsoft.Relationships/serviceGroupMember/delete-fixture" -ApiVersion $membershipApiVersion
+    Remove-Resource -ResourceId $lifecycleServiceGroupId -ApiVersion $serviceGroupApiVersion
+    Remove-Resource -ResourceId $serviceGroupId -ApiVersion $serviceGroupApiVersion
+    Remove-Resource -ResourceId $deleteAssetResourceGroupId -ApiVersion '2024-03-01'
+    return
 }
 
 $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
@@ -141,13 +273,13 @@ $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
 Remove-Resource -ResourceId "$resilienceBase/drills/$drillName" -ApiVersion $resilienceApiVersion
-Remove-RecoveryPlans -ServiceGroupId $serviceGroupId
-Remove-RecoveryPlans -ServiceGroupId $lifecycleServiceGroupId
+Remove-RecoveryPlanCollection -ServiceGroupId $serviceGroupId -Confirm:$false
+Remove-RecoveryPlanCollection -ServiceGroupId $lifecycleServiceGroupId -Confirm:$false
 if (![string]::IsNullOrWhiteSpace($planLifecycleServiceGroupName)) {
-    Remove-RecoveryPlans -ServiceGroupId $planLifecycleServiceGroupId
+    Remove-RecoveryPlanCollection -ServiceGroupId $planLifecycleServiceGroupId -Confirm:$false
 }
 if (![string]::IsNullOrWhiteSpace($workflowServiceGroupName)) {
-    Remove-RecoveryPlans -ServiceGroupId $workflowServiceGroupId
+    Remove-RecoveryPlanCollection -ServiceGroupId $workflowServiceGroupId -Confirm:$false
 }
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion

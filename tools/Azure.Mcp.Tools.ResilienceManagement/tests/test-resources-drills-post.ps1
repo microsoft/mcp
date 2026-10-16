@@ -52,7 +52,7 @@ function Invoke-FixtureArm {
         throw 'Fixture requests and operation polling must use public Azure ARM.'
     }
     $safePath = ([Uri]$uri).AbsolutePath
-    if ($Method -ne 'GET') { Write-Host "$Method $safePath" }
+    if ($Method -ne 'GET') { Write-Information "$Method $safePath" }
     $headers = @{}
     if ($Action) {
         $operationId = [Guid]::NewGuid().ToString()
@@ -89,7 +89,7 @@ function Invoke-FixtureArm {
         if (!$WaitForLinkedAuthorization -or $response.StatusCode -ne 403 -or
             ($response.Content | ConvertFrom-Json).error.code -ne 'LinkedAuthorizationFailed' -or
             [DateTime]::UtcNow -ge $deadline) { break }
-        Write-Host 'Waiting for linked service-group authorization to propagate.'
+        Write-Information 'Waiting for linked service-group authorization to propagate.'
         Start-Sleep -Seconds 15
     } while ($true)
     if ($response.StatusCode -eq 404 -and $AllowNotFound) {
@@ -125,9 +125,11 @@ function Wait-FixtureResource {
 }
 
 function New-FixtureResource {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string] $Path, [hashtable] $Body, [switch] $WaitForLinkedAuthorization)
     $existing = Get-FixtureResource -Path $Path -AllowNotFound
     if (!$existing) {
+        if (!$PSCmdlet.ShouldProcess($Path, 'Create fixture resource')) { return $null }
         $response = Invoke-FixtureArm -Path $Path -Method PUT -Body $Body -WaitForLinkedAuthorization:$WaitForLinkedAuthorization
         Wait-FixtureOperation -Response $response -Path $Path
     }
@@ -194,13 +196,9 @@ function Wait-FixtureServiceGroupIndex {
 
 $serviceGroupName = $outputs.serviceGroupName.Value
 $lifecycleServiceGroupName = $outputs.lifecycleServiceGroupName.Value
-$creationServiceGroupName = $outputs.creationServiceGroupName.Value
-if (!$creationServiceGroupName) {
-    throw 'Redeploy the current fixture template to obtain the isolated creation service group name.'
-}
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
-foreach ($name in @($serviceGroupName, $lifecycleServiceGroupName, $creationServiceGroupName)) {
-    Write-Host "Preparing isolated service group $name."
+foreach ($name in @($serviceGroupName, $lifecycleServiceGroupName)) {
+    Write-Information "Preparing isolated service group $name."
     $id = "/providers/Microsoft.Management/serviceGroups/$name"
     New-FixtureResource -Path "$id`?api-version=2024-02-01-preview" -Body @{
         properties = @{ displayName = $name; parent = @{ resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId" } }
@@ -244,7 +242,7 @@ $settingsOutputs['DELETEASSETRESOURCEGROUPNAME'] = $DeleteAssetResourceGroupName
 . "$PSScriptRoot\..\..\..\eng\scripts\helpers\TestResourcesHelpers.ps1"
 if ($DeleteOnly) {
     New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-    Write-Host 'Isolated delete fixture configured. The recorded test creates and deletes its own drill.'
+    Write-Information 'Isolated delete fixture configured. The recorded test creates and deletes its own drill.'
     return
 }
 
@@ -330,7 +328,7 @@ foreach ($phase in @('Failover', 'Reprotect')) {
 }
 
 Invoke-FixtureAction -Path "$planId/checkReadiness?api-version=$apiVersion"
-Write-Host 'Waiting for the dedicated VM to appear in recovery-resource discovery.'
+Write-Information 'Waiting for the dedicated VM to appear in recovery-resource discovery.'
 $deadline = [DateTime]::UtcNow.AddMinutes(15)
 do {
     $resources = Get-FixtureResource -Path "$planId/recoveryResources?api-version=$apiVersion"
@@ -430,9 +428,9 @@ if ($ActionsOnly) {
     $settingsOutputs['DRILLRUNSOURCELOCATION'] = $zones[0]
     $settingsOutputs['RECOVERYRESOURCEID'] = $target.id
     New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-    Write-Host 'Action fixture configured without GA monitoring configuration. Record resource add/update and resync before starting a run.'
-    Write-Host 'Set DRILLRESOURCEID from the dedicated VM drill-resource discovery result before recording resource add/update; VMID is not interchangeable.'
-    Write-Host 'No drill has been started and no fault injected.'
+    Write-Information 'Action fixture configured without GA monitoring configuration. Record resource add/update and resync before starting a run.'
+    Write-Information 'Set DRILLRESOURCEID from the dedicated VM drill-resource discovery result before recording resource add/update; VMID is not interchangeable.'
+    Write-Information 'No drill has been started and no fault injected.'
     return
 }
 if ($drill.properties.goalAssignmentProperties.identity.type -ne 'SystemAssigned' -or
@@ -471,47 +469,11 @@ $settingsOutputs['DRILLRUNSOURCELOCATION'] = $sourceLocation[0]
 $settingsOutputs['RECOVERYRESOURCEID'] = $target.id
 $settingsOutputs['GOALASSIGNMENTNAME'] = 'ga-fixture'
 
-Write-Host 'Primary drill resources configured. No drill has been started and no fault injected.'
-Write-Host "Target VM: $vmId"
-
-$creationId = "/providers/Microsoft.Management/serviceGroups/$creationServiceGroupName"
-New-FixtureResource -WaitForLinkedAuthorization -Path "$($outputs.usagePlanId.Value)/enrollments/$creationServiceGroupName`?api-version=$apiVersion" -Body @{
-    properties = @{ serviceGroupId = $creationId }
-} | Out-Null
-Invoke-FixtureArm -Method PUT -WaitForLinkedAuthorization -Path "$deleteGroupId/providers/Microsoft.Relationships/serviceGroupMember/create-fixture?api-version=2023-09-01-preview" -Body @{
-    properties = @{ targetId = $creationId }
-} | Out-Null
-
-$creationRecoveryPlanName = "create-$($outputs.recoveryPlanName.Value)"
-$creationRecoveryPlanId = "$creationId/providers/Microsoft.AzureResilienceManagement/recoveryPlans/$creationRecoveryPlanName"
-New-FixtureResource -Path "$creationRecoveryPlanId`?api-version=$apiVersion" -Body @{
-    identity = @{ type = 'SystemAssigned' }
-    properties = @{
-        planType = 'Zonal'
-        planDescription = 'Isolated Drill creation fixture'
-        recoveryGroupsSetting = @{
-            defaultGroup = @{
-                properties = @{
-                    description = 'Creation fixture default group'
-                    groupUniqueId = [Guid]::NewGuid().ToString()
-                    orderId = 0
-                    preActions = @()
-                    postActions = @()
-                }
-            }
-            additionalGroups = @()
-        }
-    }
-} | Out-Null
-
-$settingsOutputs['CREATEASSETRESOURCEGROUPNAME'] = $DeleteAssetResourceGroupName
-$settingsOutputs['CREATESERVICEGROUPNAME'] = $creationServiceGroupName
-$settingsOutputs['CREATERECOVERYPLANNAME'] = $creationRecoveryPlanName
-$settingsOutputs['CREATEDRILLNAME'] = "create-$($outputs.drillName.Value)"
-$settingsOutputs['CREATELOCATION'] = $outputs.location.Value
+Write-Information 'Primary drill resources configured. No drill has been started and no fault injected.'
+Write-Information "Target VM: $vmId"
 
 New-FixtureResource -Path "$goalId`?api-version=$apiVersion" -Body @{
     properties = @{ requireZonalResiliency = $true }
 } | Out-Null
 New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-Write-Host 'GA goal assignment fixture is ready.'
+Write-Information 'GA goal assignment fixture is ready.'

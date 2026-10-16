@@ -36,7 +36,21 @@ public sealed class DrillConfigurationTests
         var properties = DrillConfiguration.Update(null, null, payload);
 
         using JsonDocument document = JsonDocument.Parse(ModelReaderWriter.Write(properties, new ModelReaderWriterOptions("W")));
+        Assert.Equal("sliMonitoringProperties", Assert.Single(document.RootElement.EnumerateObject()).Name);
         Assert.Equal(2, document.RootElement.GetProperty("sliMonitoringProperties").GetProperty("slis").GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData("null", null, "healthModelMonitoringProperties")]
+    [InlineData(null, "null", "sliMonitoringProperties")]
+    public void Update_SerializesOnlyExplicitMonitoringClear(string? healthModel, string? sli, string expectedProperty)
+    {
+        var properties = DrillConfiguration.Update(null, healthModel, sli);
+
+        using JsonDocument document = JsonDocument.Parse(ModelReaderWriter.Write(properties, new ModelReaderWriterOptions("W")));
+        JsonProperty property = Assert.Single(document.RootElement.EnumerateObject());
+        Assert.Equal(expectedProperty, property.Name);
+        Assert.Equal(JsonValueKind.Null, property.Value.ValueKind);
     }
 
     [Fact]
