@@ -39,7 +39,7 @@ public sealed class MonitorIngestionService(IAzureService azureService)
             throw new CommandValidationException(message) { TelemetrySafeMessage = "Invalid ingestion log data." };
         }
 
-        var endpoint = CreateAndValidateEndpoint(ingestionEndpoint);
+        var endpoint = CreateAndValidateEndpoint(AzureService, ingestionEndpoint);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var clientOptions = AddDefaultPolicies(new LogsIngestionClientOptions());
@@ -50,11 +50,10 @@ public sealed class MonitorIngestionService(IAzureService azureService)
         using var content = RequestContent.Create(BinaryData.FromString(logData));
         var response = await client.UploadAsync(dataCollectionRule, stream, content, context: new RequestContext { CancellationToken = cancellationToken });
 
-        return new(
-            response.IsError ? "Failed" : "Succeeded",
-            dataCollectionRule,
-            stream,
-            shape.RecordCount);
+        // The payload is sent as a single all-or-nothing request, so no records are ingested on error.
+        return response.IsError
+            ? new("Failed", dataCollectionRule, stream, 0)
+            : new("Succeeded", dataCollectionRule, stream, shape.RecordCount);
     }
 
     public async Task<IngestionValidationResult> ValidateLogDataAsync(
@@ -78,7 +77,6 @@ public sealed class MonitorIngestionService(IAzureService azureService)
         var rule = await resourceGroupResource.GetDataCollectionRuleAsync(dataCollectionRule, cancellationToken);
         var declarations = rule.Value.Data.StreamDeclarations;
 
-        var warnings = new List<IngestionValidationIssue>();
         string? selectedStream = stream;
         IReadOnlyDictionary<string, string>? schema = null;
 
@@ -99,27 +97,28 @@ public sealed class MonitorIngestionService(IAzureService azureService)
             }
         }
 
-        if (declarations.TryGetValue(selectedStream, out var declaration))
+        if (!declarations.TryGetValue(selectedStream, out var declaration))
         {
-            schema = declaration.Columns
-                .Where(c => c.Name is not null)
-                .ToDictionary(c => c.Name!, c => c.DefinitionType?.ToString() ?? string.Empty, StringComparer.Ordinal);
+            throw new CommandValidationException(
+                $"Stream '{selectedStream}' is not declared in data collection rule '{dataCollectionRule}'. Declared streams: {string.Join(", ", declarations.Keys.Order(StringComparer.Ordinal))}.")
+            {
+                TelemetrySafeMessage = "Stream is not declared in the data collection rule."
+            };
         }
-        else
-        {
-            warnings.Add(new(null, null, $"Stream '{selectedStream}' has no declared schema in the data collection rule, so only payload shape was checked."));
-        }
+
+        schema = declaration.Columns
+            .Where(c => c.Name is not null)
+            .ToDictionary(c => c.Name!, c => c.DefinitionType?.ToString() ?? string.Empty, StringComparer.Ordinal);
 
         var result = IngestionLogDataValidator.Validate(logData, schema);
         return result with
         {
             DataCollectionRule = dataCollectionRule,
-            Stream = selectedStream,
-            Warnings = [.. warnings, .. result.Warnings]
+            Stream = selectedStream
         };
     }
 
-    private Uri CreateAndValidateEndpoint(string ingestionEndpoint)
+    internal static Uri CreateAndValidateEndpoint(IAzureService azureService, string ingestionEndpoint)
     {
         if (!Uri.TryCreate(ingestionEndpoint, UriKind.Absolute, out var endpoint)
             || endpoint.Scheme != Uri.UriSchemeHttps
@@ -128,21 +127,19 @@ public sealed class MonitorIngestionService(IAzureService azureService)
             || !string.IsNullOrEmpty(endpoint.Query)
             || !string.IsNullOrEmpty(endpoint.Fragment))
         {
-            throw new CommandValidationException("--ingestion-endpoint must be an HTTPS data collection endpoint root URL without user information, path, query, or fragment.")
-            {
-                TelemetrySafeMessage = "Invalid ingestion endpoint."
-            };
-        }
+            throw new CommandValidationException("--ingestion-endpoint must be an HTTPS data collection endpoint root URL             without user information, path, query, or fragment.");
+                    }
 
-        AzureService.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, EndpointServiceType);
+                    azureService.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, EndpointServiceType);
         return endpoint;
     }
 
     private LogsIngestionAudience GetAudience() =>
         AzureService.CloudConfiguration.CloudType switch
         {
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => LogsIngestionAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => LogsIngestionAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => LogsIngestionAudience.AzureGovernment,
-            _ => LogsIngestionAudience.AzurePublicCloud
+            var cloud => throw new NotSupportedException($"Cloud type '{cloud}' is not supported for Azure Monitor log ingestion.")
         };
 }

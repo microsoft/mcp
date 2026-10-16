@@ -45,9 +45,11 @@ public sealed class IngestionUploadCommand(
         base.ValidateOptions(options, validationResult);
 
         var shape = IngestionLogDataValidator.Validate(options.LogData, schema: null);
-        foreach (var error in shape.Errors)
+        if (shape.Errors.Count > 0)
         {
-            validationResult.AddError(error.Message, "Invalid ingestion log data.");
+            validationResult.AddError(
+                string.Join(" ", shape.Errors.Select(e => e.Message)),
+                "Invalid ingestion log data.");
         }
     }
 
