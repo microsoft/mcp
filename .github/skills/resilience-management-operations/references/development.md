@@ -4,6 +4,24 @@
 
 Follow [add-azure-mcp-tools](../../add-azure-mcp-tools/SKILL.md) as the canonical command, options, service, security, registration, AOT, documentation, changelog, testing, recording, and pull-request workflow. This reference contains only Resilience Management-specific requirements and overrides.
 
+## GA SDK Compatibility
+
+The toolset uses `Azure.ResourceManager.ResilienceManagement` 1.0.0 with API `2026-10-01`. Preview recordings must be re-recorded against GA; do not rewrite API versions or weaken matching.
+
+The GA SDK reuses required-on-create nested models in PATCH and can serialize omitted identity/selection fields as null or empty. `DrillConfigurationPatch` preserves validated sparse configuration JSON through the SDK's protected serialization extension point. Validation requests use public constructors rather than model factories so omitted source locations do not become an empty array.
+
+### Isolated Drills fixtures
+
+Use `tools/Azure.Mcp.Tools.ResilienceManagement/tests/test-resources-drills.bicep` for isolated GA drill fixtures in an approved, dedicated resource group tagged `Purpose=mcp-drills-ga-live-tests`. Supply `baseName` and `sshPublicKey`, then run `test-resources-drills-post.ps1 -ResourceGroupName <fixture-group>`. Retain the generated `.testsettings.json` until `remove-test-resources-pre.ps1 -ResourceGroupName <fixture-group>` has cleaned up the tenant-scoped resources, before deleting the fixture resource group. Do not reuse shared resources for destructive drill tests.
+
+### GA Troubleshooting
+
+- **HTTP 412 mentioning missing `properties.drillType`:** Verify backend rollout and the version that provisioned the fixture. SDK/API availability does not prove backend compatibility; older child resources may need regeneration through supported APIs. Do not substitute preview reads or fabricate the discriminator.
+- **HTTP 409 or a stuck lifecycle transition:** Inspect the asynchronous operation error and drill-run state, even when the parent drill reports Ready. Allow a bounded retry only for a confirmed transient conflict. If the same VM operation conflict recurs, report a backend blocker; do not force-clear locks or repeatedly restart destructive runs.
+- **HTTP 403 during fixture setup:** Verify the managed identity's role assignments and scopes, then allow for propagation. Wait for the service group itself to appear in tenant-scoped Resource Graph before creating dependent resources. Do not hide persistent authorization failures with retries.
+- **Monitoring fields missing after update:** Verify persistence through an independent GET, not just PATCH completion. Check sparse serialization and explicit JSON `null` clearing. SLI tests require real service-group-scoped monitoring resources, metrics, and identity permissions; an empty workspace is insufficient.
+- **Provisioning or LRO routing failures:** Check mandatory-tag policies, Automation capacity, and Chaos region support. For an approved test route, verify both backend deployment and operation-status routing. Do not weaken endpoint validation or production defaults to bypass an unsupported route.
+
 ## Skill Synchronization Gate
 
 For every new or behaviorally changed Resilience Management tool, update this skill in the same change:
@@ -314,7 +332,9 @@ Commit the updated `assets.json`. Never commit `.proxy/` or `.assets/`.
 - Sanitize `operation-id` and `x-ms-operation-identifier` headers because they can contain per-run or identity data.
 - Normalize the fresh `operationId` query value with a `UriRegexSanitizer`. Header sanitization alone does not prevent a playback URI mismatch, and recordings captured before URI normalization must be re-recorded.
 - Register generated names, operation IDs, and job IDs as playback variables when later requests depend on the same value.
+- Saved playback variables are not processed by HTTP sanitizers. Sanitize ARM-valued variables and standalone resource-group names separately, preserving valid ARM ID shapes and actual live request values.
 - Preserve recording lineage when publishing a replacement asset tag. Start from the current complete asset set, add or replace the intended recordings, and run the entire Resilience Management suite in playback. Publishing a tag produced from only a focused recording run can silently omit unrelated recordings and break otherwise unchanged tests.
 - Treat a test-proxy 404 stating that no recording matched as a recording, sanitizer, matcher, or asset-lineage defect. Do not remove unrelated tests or Azure functionality to make playback green.
 - Use a custom matcher only for intentionally irrelevant request-body differences. Do not hide contract or payload regressions by disabling body comparison broadly.
 - Inspect recordings for credentials, tenant or object identifiers, signed query values, unstable timestamps, and environment-specific resource paths before publishing.
+- Authorization errors can embed caller emails and object IDs inside JSON strings. Use regex sanitizers for embedded identifiers and resource-group names in error prose; body-key sanitizers do not traverse embedded JSON. Preserve error codes and diagnostic meaning.

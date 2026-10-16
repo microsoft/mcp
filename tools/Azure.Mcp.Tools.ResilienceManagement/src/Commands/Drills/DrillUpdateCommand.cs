@@ -20,7 +20,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         drill's supporting resources by changing their subscription and region together, change its RBAC setup
         mode, or associate a recoveryplan. Supporting-resource relocation is a drill configuration update; do
         not use drill resource add-or-update, Azure Resource Mover, or generic resource commands for it. This
-        tool changes only the supplied drill properties.
+        tool also updates goal-assignment identity, Health Model monitoring, and Availability/Latency SLI
+        monitoring. JSON null clears Health Model or SLI monitoring; omitted properties remain unchanged.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -69,9 +70,18 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("Subscription and region must be specified together.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null && string.IsNullOrWhiteSpace(options.RecoveryPlan))
+        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null && string.IsNullOrWhiteSpace(options.RecoveryPlan) &&
+            options.GoalAssignmentProperties is null && options.HealthModelMonitoringProperties is null && options.SliMonitoringProperties is null)
         {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, or recoveryplan.");
+            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, recoveryplan, goal-assignment properties, Health Model monitoring, or SLI monitoring.");
+        }
+        try
+        {
+            _ = DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add(ex.Message);
         }
     }
 
@@ -86,6 +96,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
                 options.Region,
                 options.RbacSetupMode,
                 options.RecoveryPlan,
+                DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties),
                 options.Tenant,
                 cancellationToken);
 
@@ -106,6 +117,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException => ex.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The drill could not be updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
