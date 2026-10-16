@@ -241,6 +241,12 @@
 # ServiceLabel: %tools-Deploy
 # ServiceOwners:                       @qianwens @xfz11 @wchigit
 
+# PRLabel: %tools-DeviceProvisioning
+/tools/Azure.Mcp.Tools.DeviceProvisioning/ @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceProvisioning
+# ServiceOwners:                           @microsoft/azure-mcp
+
 # PRLabel: %tools-DeviceRegistry
 /tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
 
