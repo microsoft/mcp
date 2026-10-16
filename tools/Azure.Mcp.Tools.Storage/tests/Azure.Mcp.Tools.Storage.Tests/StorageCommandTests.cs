@@ -246,6 +246,122 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
+    public async Task Should_list_blob_hierarchy()
+    {
+        var result = await CallToolAsync(
+            "storage_blob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "hierarchy/" },
+                { "delimiter", "/" }
+            });
+
+        Assert.NotNull(result);
+        var blobs = result.AssertProperty("blobs");
+        Assert.Equal(["hierarchy/root.txt", "hierarchy/second.txt"],
+            blobs.EnumerateArray().Select(blob => blob.GetProperty("name").GetString()));
+        var prefixes = result.AssertProperty("prefixes");
+        Assert.Equal(["hierarchy/subfolder/"], prefixes.EnumerateArray().Select(prefix => prefix.GetString()));
+        Assert.False(result.Value.TryGetProperty("continuationToken", out _));
+    }
+
+    [Fact]
+    public async Task Should_browse_blob_subfolder()
+    {
+        var result = await CallToolAsync(
+            "storage_blob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "hierarchy/subfolder/" },
+                { "delimiter", "/" }
+            });
+
+        Assert.NotNull(result);
+        var blobs = result.AssertProperty("blobs");
+        Assert.Equal("hierarchy/subfolder/child.txt", Assert.Single(blobs.EnumerateArray()).GetProperty("name").GetString());
+        var prefixes = result.AssertProperty("prefixes");
+        Assert.Equal("hierarchy/subfolder/nested/", Assert.Single(prefixes.EnumerateArray()).GetString());
+        Assert.False(result.Value.TryGetProperty("continuationToken", out _));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("/")]
+    public async Task Should_page_blob_listing(string? delimiter)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var prefixes = new HashSet<string>(StringComparer.Ordinal);
+        var tokens = new HashSet<string>(StringComparer.Ordinal);
+        Dictionary<string, object?> arguments = new()
+        {
+            { "tenant", Settings.TenantId },
+            { "account", Settings.ResourceBaseName },
+            { "container", "bar" },
+            { "prefix", "hierarchy/" },
+            { "max-results", 1 }
+        };
+        if (delimiter is not null)
+        {
+            arguments["delimiter"] = delimiter;
+        }
+
+        string? continuationToken;
+        var pageCount = 0;
+        do
+        {
+            Assert.InRange(++pageCount, 1, 10);
+            var result = await CallToolAsync("storage_blob_get", arguments);
+            Assert.NotNull(result);
+            var blobs = result.AssertProperty("blobs");
+            var pagePrefixes = result.AssertProperty("prefixes");
+            Assert.InRange(blobs.GetArrayLength() + pagePrefixes.GetArrayLength(), 0, 1);
+            foreach (var blob in blobs.EnumerateArray())
+            {
+                var name = blob.GetProperty("name").GetString();
+                Assert.NotNull(name);
+                Assert.StartsWith("hierarchy/", name);
+                Assert.True(names.Add(name), $"Duplicate blob: {name}");
+            }
+
+            foreach (var prefix in pagePrefixes.EnumerateArray())
+            {
+                var name = prefix.GetString();
+                Assert.NotNull(name);
+                Assert.StartsWith("hierarchy/", name);
+                Assert.True(prefixes.Add(name), $"Duplicate prefix: {name}");
+            }
+
+            continuationToken = result.Value.TryGetProperty("continuationToken", out var token) ? token.GetString() : null;
+            if (continuationToken is not null)
+            {
+                Assert.True(tokens.Add(continuationToken), "The continuation token must advance on each page.");
+                arguments["continuation-token"] = continuationToken;
+            }
+        } while (continuationToken is not null);
+
+        Assert.True(pageCount > 1);
+        Assert.Contains("hierarchy/root.txt", names);
+        Assert.Contains("hierarchy/second.txt", names);
+        if (delimiter is null)
+        {
+            Assert.Contains("hierarchy/subfolder/child.txt", names);
+            Assert.Contains("hierarchy/subfolder/nested/deep.txt", names);
+            Assert.Empty(prefixes);
+        }
+        else
+        {
+            Assert.Equal(2, names.Count);
+            Assert.Equal("hierarchy/subfolder/", Assert.Single(prefixes));
+        }
+    }
+
+    [Fact]
     public async Task Should_get_blob_details()
     {
         var result = await CallToolAsync(

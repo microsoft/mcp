@@ -180,27 +180,7 @@ public sealed class StorageService(IAzureService azureService)
                 Prefix = prefix
             }, cancellationToken: cancellationToken))
             {
-                blobInfos.Add(new(
-                    blobItem.Name,
-                    blobItem.Properties.LastModified,
-                    blobItem.Properties.ETag?.ToString(),
-                    blobItem.Properties.ContentLength,
-                    blobItem.Properties.ContentType,
-                    blobItem.Properties.ContentHash,
-                    blobItem.Properties.BlobType?.ToString(),
-                    blobItem.Metadata,
-                    blobItem.Properties.LeaseStatus?.ToString(),
-                    blobItem.Properties.LeaseState?.ToString(),
-                    blobItem.Properties.LeaseDuration?.ToString(),
-                    blobItem.Properties.CopyStatus?.ToString(),
-                    blobItem.Properties.CopySource,
-                    blobItem.Properties.CopyCompletedOn,
-                    blobItem.Properties.AccessTier?.ToString(),
-                    blobItem.Properties.AccessTierChangedOn,
-                    blobItem.Properties.HasLegalHold,
-                    blobItem.Properties.CreatedOn,
-                    blobItem.Properties.ArchiveStatus?.ToString(),
-                    blobItem.VersionId));
+                blobInfos.Add(ToBlobInfo(blobItem));
             }
         }
         else
@@ -234,6 +214,93 @@ public sealed class StorageService(IAzureService azureService)
 
         return blobInfos;
     }
+
+    public async Task<BlobListResult> ListBlobs(
+        string account,
+        string container,
+        int maxResults,
+        string? prefix = null,
+        string? delimiter = null,
+        string? continuationToken = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container));
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxResults, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxResults, 5000);
+        if (delimiter is not null)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(delimiter);
+        }
+
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
+        var containerClient = blobServiceClient.GetBlobContainerClient(container);
+
+        if (delimiter is null)
+        {
+            await foreach (var page in containerClient.GetBlobsAsync(new GetBlobsOptions
+            {
+                Prefix = prefix
+            }, cancellationToken).AsPages(continuationToken, maxResults).WithCancellation(cancellationToken))
+            {
+                return new(page.Values.Select(ToBlobInfo).ToList(), [], NormalizeContinuationToken(page.ContinuationToken));
+            }
+        }
+        else
+        {
+            await foreach (var page in containerClient.GetBlobsByHierarchyAsync(new GetBlobsByHierarchyOptions
+            {
+                Prefix = prefix,
+                Delimiter = delimiter
+            }, cancellationToken).AsPages(continuationToken, maxResults).WithCancellation(cancellationToken))
+            {
+                var blobs = new List<Storage.Models.BlobInfo>();
+                var prefixes = new List<string>();
+                foreach (var item in page.Values)
+                {
+                    if (item.IsPrefix)
+                    {
+                        prefixes.Add(item.Prefix);
+                    }
+                    else
+                    {
+                        blobs.Add(ToBlobInfo(item.Blob));
+                    }
+                }
+
+                return new(blobs, prefixes, NormalizeContinuationToken(page.ContinuationToken));
+            }
+        }
+
+        return new([], [], null);
+    }
+
+    private static string? NormalizeContinuationToken(string? continuationToken) =>
+        string.IsNullOrEmpty(continuationToken) ? null : continuationToken;
+
+    private static Storage.Models.BlobInfo ToBlobInfo(BlobItem blobItem) => new(
+        blobItem.Name,
+        blobItem.Properties.LastModified,
+        blobItem.Properties.ETag?.ToString(),
+        blobItem.Properties.ContentLength,
+        blobItem.Properties.ContentType,
+        blobItem.Properties.ContentHash,
+        blobItem.Properties.BlobType?.ToString(),
+        blobItem.Metadata,
+        blobItem.Properties.LeaseStatus?.ToString(),
+        blobItem.Properties.LeaseState?.ToString(),
+        blobItem.Properties.LeaseDuration?.ToString(),
+        blobItem.Properties.CopyStatus?.ToString(),
+        blobItem.Properties.CopySource,
+        blobItem.Properties.CopyCompletedOn,
+        blobItem.Properties.AccessTier?.ToString(),
+        blobItem.Properties.AccessTierChangedOn,
+        blobItem.Properties.HasLegalHold,
+        blobItem.Properties.CreatedOn,
+        blobItem.Properties.ArchiveStatus?.ToString(),
+        blobItem.VersionId);
 
     public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
