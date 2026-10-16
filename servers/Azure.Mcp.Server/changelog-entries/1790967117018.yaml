@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "ManagedLustre: Fix issue where defaults were not applied which would return 400 during job creation."
