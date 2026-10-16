@@ -62,10 +62,6 @@ public sealed class IngestionValidateCommand(
 
             SetResult(context, result);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Log data validation failed. ResourceGroup: {ResourceGroup}, DataCollectionRule: {DataCollectionRule}",

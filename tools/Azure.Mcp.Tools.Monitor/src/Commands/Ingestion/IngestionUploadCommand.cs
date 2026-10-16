@@ -70,10 +70,6 @@ public sealed class IngestionUploadCommand(
 
             SetResult(context, result);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Log ingestion upload failed. DataCollectionRule: {DataCollectionRule}, Stream: {Stream}",
