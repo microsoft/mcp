@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+# cspell:ignore authenticationsettings DELETEASSETRESOURCEGROUPNAME discoveryrules DRILLRESOURCEID Fmanagement RECOVERYRESOURCEID relationshipresources resourcecontainers RHRO servicegroupmember VMID
 
 #Requires -Version 7
 #Requires -Modules Az.Accounts, Az.Resources

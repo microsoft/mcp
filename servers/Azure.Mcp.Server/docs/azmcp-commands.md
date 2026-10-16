@@ -669,7 +669,7 @@ azmcp speech tts synthesize --endpoint <endpoint> \
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--endpoint` | Yes | Azure AI Services endpoint URL (for example, `https://<your-service>.cognitiveservices.azure.com/`) |
 | `--text` | Yes | The text to convert to speech |
 | `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
 | `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
@@ -4224,7 +4224,8 @@ These commands use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and the GA
 goal-assignment identity, Health Model monitoring, and SLI monitoring as JSON
 properties. Update preserves omitted fields; pass the string `"null"` as a Health
 Model or SLI JSON payload to clear that configuration. A supplied SLI selection
-replaces the old selection. See the [payload reference](../../../.github/skills/resilience-management-operations/references/payloads.md#drill-ga-configuration).
+replaces the old selection. See the Drill GA configuration in
+`.github/skills/resilience-management-operations/references/payloads.md`.
 
 Validation accepts an optional operation; source locations are required unless
 the selected operation is `Reprotect`, including when the operation is omitted. Failover

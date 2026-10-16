@@ -1,6 +1,6 @@
 # Resilience Management Tool Development
 
-<!-- cspell:words reprotect reprotection resync zonal -->
+<!-- cspell:words DELETEASSETRESOURCEGROUPNAME DRILLRESOURCEID reprotect reprotection resync slis VMID zonal -->
 
 Follow [add-azure-mcp-tools](../../add-azure-mcp-tools/SKILL.md) as the canonical command, options, service, security, registration, AOT, documentation, changelog, testing, recording, and pull-request workflow. This reference contains only Resilience Management-specific requirements and overrides.
 
