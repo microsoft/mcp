@@ -86,6 +86,14 @@ if ($matching.Count -gt 1) {
 $executablePath = $matching[0].FullName
 Write-Host "Resolved server executable '$executablePath'."
 
+if ($IsLinux) {
+    Write-Host "Making server executable '$executablePath' executable on Linux."
+    & chmod 'u+x' '--' $executablePath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to make '$executablePath' executable."
+    }
+}
+
 $projectPath = Join-Path $RepoRoot 'eng/tools/ToolMetadataExporter/src/ToolMetadataExporter.csproj'
 Write-Host "##[section]Building ToolMetadataExporter"
 
