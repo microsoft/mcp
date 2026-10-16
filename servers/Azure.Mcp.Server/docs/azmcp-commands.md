@@ -3853,6 +3853,76 @@ azmcp monitor webtests get --subscription <subscription> \
 
 ```
 
+#### Traces
+
+> [!NOTE]
+> Azure Monitor Trace Store is in **private preview**. These commands only work against an Azure
+> Monitor Workspace that has been onboarded to Trace Store — `monitor traces account list` lists
+> only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
+> endpoint. Reach out to the Azure Monitor team for the onboarding guide.
+> These commands support Azure public cloud only; Azure China and Azure US Government are not supported.
+
+Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
+truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
+The field, query, and cancel commands require
+`--resource-group` and `--workspace` (the Azure Monitor Workspace resource name). Names are scoped
+to a resource group; these commands look up that workspace directly rather than searching the
+subscription or accepting a Log Analytics customer-ID GUID or full ARM resource ID.
+Like `monitor workspace list`, account listing uses an optional `--resource-group` filter.
+All commands use the shared `--subscription` ID/name resolver, including its default CLI-profile
+and environment fallback behavior.
+
+`query run` requires `--query` and submits a new query. `query resume` requires `--operation-id`
+and only polls the existing operation. Both require `--resource-group` and `--workspace`.
+Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
+Resuming does not change the query or its submitted time range and row limit.
+Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
+If the status is `Running`, use `query resume` with the returned operation ID.
+Requested row limits are approximate; responses preserve truncation and partial-result indicators.
+Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
+
+```bash
+# List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces account list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# List the trace and span schema field names for a distributed-trace account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces field list --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --workspace <workspace>
+
+# Resume polling an existing query without submitting a new one
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query resume --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id> \
+                                  [--page-size <n>] \
+                                  [--include-spans <true|false>]
+
+# Run a KQL query; polls up to 180s, then returns `status: "Running"` and an operationId
+# Use `monitor traces query resume` with that operationId to continue polling
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query run --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --workspace <workspace> \
+                               --query <kql-query> \
+                               [--start-time <iso-8601>] \
+                               [--end-time <iso-8601>] \
+                               [--max-results <n>] \
+                               [--include-spans <true|false>]
+
+# Cancel an in-flight distributed-trace query operation
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query cancel --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id>
+
+```
+
 ### Azure Monitor Instrumentation Operations
 
 ```bash
