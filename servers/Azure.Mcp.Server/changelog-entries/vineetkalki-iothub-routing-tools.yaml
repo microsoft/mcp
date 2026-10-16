@@ -1,0 +1,8 @@
+changes:
+  - section: "Features Added"
+    description: |
+      Added Azure IoT Hub message-routing troubleshooting tools:
+      - `iothub_routing_endpoint-health`: Get the current IoT Hub-reported health snapshot for one or all routing custom endpoints
+      - `iothub_routing_endpoint-diagnostics`: Get time-windowed routing evidence for one or all custom endpoints, including IoT Hub routing delivery metrics, current target existence, and target metrics for Event Hubs, Service Bus, Blob Storage, and Cosmos DB
+  - section: "Features Added"
+    description: "`iothub_hub_get` now returns the hub's configured message-routing custom endpoints in `routingEndpoints`."
