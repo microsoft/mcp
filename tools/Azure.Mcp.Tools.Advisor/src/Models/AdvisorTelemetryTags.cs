@@ -3,6 +3,8 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
+using Azure.Mcp.Tools.Advisor.Services;
+using Azure.Mcp.Tools.Advisor.Validation;
 
 namespace Azure.Mcp.Tools.Advisor.Models;
 
@@ -20,18 +22,12 @@ public static class AdvisorTelemetryTags
     public static readonly string GroupBy = AddPrefix("GroupBy");
     public static readonly string Prioritized = AddPrefix("Prioritized");
 
-    /// <summary>
-    /// Adds the subscription and service group scope tags. Null or blank values are skipped.
-    /// </summary>
     public static void AddScopeTags(Activity? activity, IRecommendationScopeOptions options)
     {
-        AddTagIfPresent(activity, Subscription, options.Subscription);
+        AddTagIfPresent(activity, Subscription, NormalizeSubscriptionId(options.Subscription));
         AddTagIfPresent(activity, ServiceGroup, options.ServiceGroup);
     }
 
-    /// <summary>
-    /// Adds recommendation filter tags. Null or blank values are skipped.
-    /// </summary>
     public static void AddRecommendationTags(
         Activity? activity,
         string? recommendationTypeId = null,
@@ -39,20 +35,20 @@ public static class AdvisorTelemetryTags
         string? subCategory = null,
         string? impact = null)
     {
-        AddTagIfPresent(activity, RecommendationTypeId, recommendationTypeId);
-        AddTagIfPresent(activity, Category, category);
-        AddTagIfPresent(activity, SubCategory, subCategory);
-        AddTagIfPresent(activity, Impact, impact);
+        AddTagIfPresent(activity, RecommendationTypeId, RecommendationFilterValidator.NormalizeRecommendationTypeId(recommendationTypeId));
+        AddTagIfPresent(activity, Category, RecommendationFilterValidator.NormalizeAllowedValue(category, RecommendationFilterValidator.AllowedCategories));
+        AddTagIfPresent(activity, SubCategory, subCategory?.Trim());
+        AddTagIfPresent(activity, Impact, RecommendationFilterValidator.NormalizeAllowedValue(impact, RecommendationFilterValidator.AllowedImpacts));
     }
 
-    /// <summary>
-    /// Adds query shape tags for prioritized mode and summary grouping. Null or blank values are skipped.
-    /// </summary>
     public static void AddQueryTags(Activity? activity, bool? prioritized, string? groupBy = null)
     {
         AddTagIfPresent(activity, Prioritized, prioritized?.ToString());
-        AddTagIfPresent(activity, GroupBy, groupBy);
+        AddTagIfPresent(activity, GroupBy, RecommendationFilterValidator.NormalizeAllowedValue(groupBy, RecommendationSummaryService.AllowedGroupBy));
     }
+
+    private static string? NormalizeSubscriptionId(string? subscription) =>
+        Guid.TryParse(subscription?.Trim(), out var subscriptionId) ? subscriptionId.ToString("D") : null;
 
     private static void AddTagIfPresent(Activity? activity, string key, string? value)
     {

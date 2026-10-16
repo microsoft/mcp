@@ -176,6 +176,82 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
         Assert.Empty(activity.TagObjects);
     }
 
+    [Theory]
+    [InlineData("53B36492-771D-40CB-8527-DC4C191366A7", "53b36492-771d-40cb-8527-dc4c191366a7")]
+    [InlineData(" 53b36492-771d-40cb-8527-dc4c191366a7 ", "53b36492-771d-40cb-8527-dc4c191366a7")]
+    public void AddScopeTags_SubscriptionGuid_SetsNormalizedGuid(string subscription, string expected)
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = subscription });
+
+        Assert.Equal(expected, activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+    }
+
+    [Fact]
+    public void AddScopeTags_SubscriptionName_SkipsSubscriptionTag()
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = "Contoso Production" });
+
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+    }
+
+    [Fact]
+    public void AddRecommendationTags_KnownValuesInAnyCase_SetsCanonicalValues()
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddRecommendationTags(
+            activity,
+            "262C35D4-83FE-457F-AFA7-CAC774C371D8",
+            " highavailability ",
+            " ServiceUpgradeAndRetirement ",
+            "HIGH");
+
+        Assert.Equal("262c35d4-83fe-457f-afa7-cac774c371d8", activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeId));
+        Assert.Equal("HighAvailability", activity.GetTagItem(AdvisorTelemetryTags.Category));
+        Assert.Equal("ServiceUpgradeAndRetirement", activity.GetTagItem(AdvisorTelemetryTags.SubCategory));
+        Assert.Equal("High", activity.GetTagItem(AdvisorTelemetryTags.Impact));
+    }
+
+    [Fact]
+    public void AddRecommendationTags_UnknownValues_SkipsTags()
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddRecommendationTags(
+            activity,
+            recommendationTypeId: "not-a-guid",
+            category: "user@contoso.com",
+            impact: "Critical");
+
+        Assert.Empty(activity.TagObjects);
+    }
+
+    [Theory]
+    [InlineData("IMPACT", "impact")]
+    [InlineData(" resource-type ", "resource-type")]
+    public void AddQueryTags_KnownGroupByInAnyCase_SetsCanonicalValue(string groupBy, string expected)
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddQueryTags(activity, null, groupBy);
+
+        Assert.Equal(expected, activity.GetTagItem(AdvisorTelemetryTags.GroupBy));
+    }
+
+    [Fact]
+    public void AddQueryTags_UnknownGroupBy_SkipsGroupByTag()
+    {
+        using var activity = StartActivity();
+
+        AdvisorTelemetryTags.AddQueryTags(activity, null, "customer-name");
+
+        Assert.Empty(activity.TagObjects);
+    }
+
     private Activity StartActivity()
     {
         var activity = _source.StartActivity("test-op");
