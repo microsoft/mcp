@@ -26,6 +26,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         from membership while retaining the plan and all other resources. Supports CustomRunbook with failover and reprotect
         runbooks. Supports AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and a test
         failover virtual network.
+        Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -44,6 +45,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     public override void ValidateOptions(RecoveryPlanUpdateResourcesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
 
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
@@ -68,6 +70,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
                 options.RecoveryPlan,
                 content,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

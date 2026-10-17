@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Initiates failover for a run of a resilience drill from specified physical Azure zones in an Azure service group.",
+    Description = "Initiates failover for a run of a resilience drill from specified physical Azure zones in an Azure service group. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -34,6 +34,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
     public override void ValidateOptions(DrillRunFailoverOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         ValidatePathSegment(options.ServiceGroup, "service group", validationResult);
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
@@ -65,6 +66,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SelectedResourceIds,
                 options.AutoFailover,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             var result = new DrillRunFailoverCommandResult(operationId, options.DrillRun, Accepted: true);

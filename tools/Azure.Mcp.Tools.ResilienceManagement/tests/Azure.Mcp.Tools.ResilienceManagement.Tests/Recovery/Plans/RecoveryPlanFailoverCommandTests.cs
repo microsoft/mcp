@@ -67,7 +67,7 @@ public sealed class RecoveryPlanFailoverCommandTests : CommandUnitTestsBase<Reco
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             "Allowed",
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
