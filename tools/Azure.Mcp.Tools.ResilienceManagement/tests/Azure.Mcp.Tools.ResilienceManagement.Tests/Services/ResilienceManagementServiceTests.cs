@@ -163,6 +163,43 @@ public sealed class ResilienceManagementServiceTests
                 ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
                 originalRoutingLocation);
         }
+
+        [Fact]
+        public void CreateRecoveryPlanSubmissionClientOptions_DisablesAutomaticRetries()
+    {
+        ArmClientOptions options =
+            ResilienceManagementService.CreateRecoveryPlanSubmissionClientOptions();
+
+        Assert.Equal(0, options.Retry.MaxRetries);
+    }
+
+    [Theory]
+    [InlineData("Creating")]
+    [InlineData("Succeeded")]
+    [InlineData("Failed")]
+    public void GetRecoveryPlanProvisioningState_ParsesArmResourceResponse(string state)
+    {
+        BinaryData response = BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                provisioningState = state
+            }
+        });
+
+        Assert.Equal(
+            state,
+            ResilienceManagementService.GetRecoveryPlanProvisioningState(response));
+    }
+
+    [Fact]
+    public void GetRecoveryPlanProvisioningState_RejectsMissingState()
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryPlanProvisioningState(
+                BinaryData.FromString("""{"properties":{}}""")));
+
+        Assert.Contains("properties.provisioningState", exception.Message, StringComparison.Ordinal);
     }
 
     [Theory]
