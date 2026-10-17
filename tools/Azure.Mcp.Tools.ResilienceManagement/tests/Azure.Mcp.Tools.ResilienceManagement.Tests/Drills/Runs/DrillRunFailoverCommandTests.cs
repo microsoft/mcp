@@ -18,7 +18,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string SourceLocation = "eastus-az1";
-    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222";
+    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
@@ -63,14 +63,15 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("eastus")]
     [InlineData("eastus-az")]
     [InlineData("eastus-az0")]
     [InlineData("east_us-az1")]
+    [InlineData("east us")]
+    [InlineData("eastus/2")]
     public async Task ExecuteAsync_RejectsInvalidSourceLocation(string sourceLocation)
     {
         var response = await ExecuteCommandAsync(
@@ -80,15 +81,17 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--source-locations", sourceLocation);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("physical Azure zone format", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure region", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData("not-an-arm-id")]
     [InlineData("/subscriptions/x")]
     [InlineData("/not/a/real/id")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222")]
     [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1")]
-    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1")]
     [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1")]
     [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/virtualMachines/vm1")]
     public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
@@ -101,7 +104,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--selected-resource-ids", selectedResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("full recovery-resource ID under the requested service group", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("full drill-resource ID under the requested service group and drill", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().FailoverDrillRunAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -110,7 +113,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -124,7 +127,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>?>(),
             true,
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(OperationId);
 
         var response = await ExecuteCommandAsync(
@@ -132,7 +135,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--drill", Drill,
             "--drill-run", DrillRun,
             "--source-locations", SourceLocation,
-            "--source-locations", "westus2-az2",
+            "--source-locations", "westus2",
             "--selected-resource-ids", SelectedResourceId,
             "--auto-failover", "true");
 
@@ -145,11 +148,11 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             ServiceGroup,
             Drill,
             DrillRun,
-            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation, "westus2-az2" })),
+            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation, "westus2" })),
             Arg.Is<IEnumerable<string>>(resourceIds => resourceIds.SequenceEqual(new[] { SelectedResourceId })),
             true,
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -168,7 +171,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(

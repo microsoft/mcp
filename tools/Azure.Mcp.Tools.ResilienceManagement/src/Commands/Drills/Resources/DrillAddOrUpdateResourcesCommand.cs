@@ -25,6 +25,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
         Provide a fault duration in minutes and the Azure resource IDs to include, update, or exclude. Use this to add a
         resource to a drill, change the fault settings on a drill resource, or remove a resource from the drill. It starts
         the operation and returns the operation ID.
+        Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -43,6 +44,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
     public override void ValidateOptions(DrillAddOrUpdateResourcesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
 
         ValidatePathSegment(options.ServiceGroup, "--service-group", validationResult);
         ValidatePathSegment(options.Drill, "--drill", validationResult);
@@ -72,6 +74,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 options.Drill,
                 content,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Drills;
 
-public sealed class DrillValidateForExecutionOptions
+public sealed class DrillValidateForExecutionOptions : ResilienceManagementOperationOptions
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
@@ -14,7 +14,7 @@ public sealed class DrillValidateForExecutionOptions
     [Option(Description = ResilienceManagementOptionDescriptions.Drill)]
     public required string Drill { get; set; }
 
-    [Option(Description = "The physical source locations from which resources will be failed over or faulted.")]
+    [Option(Description = "The Azure regions or physical zones from which resources will be failed over or faulted.")]
     public required string[] SourceLocations { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

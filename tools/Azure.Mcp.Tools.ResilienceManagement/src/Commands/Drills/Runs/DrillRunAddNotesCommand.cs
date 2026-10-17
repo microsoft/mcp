@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "c1d39a5c-7993-4c29-a81f-6a9abf5a9487",
     Name = "add-notes",
     Title = "Add Notes to a Resilience Drill Run",
-    Description = "Adds notes to a run of a resilience drill in an Azure service group.",
+    Description = "Adds notes to a run of a resilience drill in an Azure service group. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -31,6 +31,7 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
     public override void ValidateOptions(DrillRunAddNotesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         ValidatePathSegment(options.ServiceGroup, "service group", validationResult);
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
@@ -51,6 +52,7 @@ public sealed class DrillRunAddNotesCommand(ILogger<DrillRunAddNotesCommand> log
                 options.DrillRun,
                 options.Notes,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             var result = new DrillRunAddNotesCommandResult(operationId, options.DrillRun, Accepted: true);

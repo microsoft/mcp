@@ -56,7 +56,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
             Drill,
             DrillRun,
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(OperationId);
 
         var response = await ExecuteCommandAsync(
@@ -84,7 +84,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
             Drill,
             DrillRun,
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -100,7 +100,7 @@ public sealed class DrillRunResumeCommandTests : CommandUnitTestsBase<DrillRunRe
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(
