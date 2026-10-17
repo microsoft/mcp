@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -812,6 +813,36 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal("12345678-9012-3456-7890-123456789013", additionalGroup.GroupUniqueId);
         Assert.Equal(1, additionalGroup.OrderId);
         Assert.Equal("additional", additionalGroup.Description);
+    }
+
+    [Theory]
+    [InlineData(RecoveryPlanKind.Zonal, "Zonal")]
+    [InlineData(RecoveryPlanKind.Regional, "Regional")]
+    public void CreateRecoveryPlanData_SerializesPlanTypeForGeneratedClient(RecoveryPlanKind planType, string expectedPlanType)
+    {
+        var recoveryGroups = ModelReaderWriter.Read<RecoveryGroupsSetting>(BinaryData.FromObjectAsJson(new
+        {
+            defaultGroup = new
+            {
+                properties = new
+                {
+                    groupUniqueId = "12345678-9012-3456-7890-123456789012",
+                    orderId = 0,
+                    description = "default"
+                }
+            },
+            additionalGroups = Array.Empty<object>()
+        }))!;
+        var identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned);
+
+        RecoveryPlanData data = ResilienceManagementService.CreateRecoveryPlanData(
+            planType,
+            "description",
+            recoveryGroups,
+            identity);
+        using JsonDocument payload = JsonDocument.Parse(ModelReaderWriter.Write(data).ToMemory());
+
+        Assert.Equal(expectedPlanType, payload.RootElement.GetProperty("properties").GetProperty("planType").GetString());
     }
 
     [Fact]
