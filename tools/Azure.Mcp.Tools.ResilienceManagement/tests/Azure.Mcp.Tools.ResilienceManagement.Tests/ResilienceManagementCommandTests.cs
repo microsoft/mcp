@@ -529,8 +529,10 @@ public class ResilienceManagementCommandTests(
         Assert.Contains(resource.AssertProperty("properties").AssertProperty("drillType").GetString(), new[] { "Zonal", "Regional" });
     }
 
-    [Fact]
-    public async Task Should_start_and_end_drill()
+    [Theory]
+    [InlineData("TestFailover")]
+    [InlineData("Failover")]
+    public async Task Should_start_and_end_drill(string mode)
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
@@ -538,18 +540,19 @@ public class ResilienceManagementCommandTests(
         {
             Assert.True(Guid.TryParse(run, out _));
             return Task.CompletedTask;
-        });
+        }, mode);
     }
 
-    private async Task WithDrillRunAsync(string serviceGroup, string drill, Func<string, Task> scenario)
+    private async Task WithDrillRunAsync(string serviceGroup, string drill, Func<string, Task> scenario, string mode = "Failover")
     {
         var existing = await GetDrillRunNamesAsync(serviceGroup, drill);
         bool started = false;
         Exception? failure = null;
         try
         {
-            var start = await StartDrillAsync(serviceGroup, drill);
+            var start = await StartDrillAsync(serviceGroup, drill, mode);
             started = true;
+            Assert.True(Guid.TryParse(start.AssertProperty("operationId").GetString(), out _));
             Assert.Equal("Accepted", start.AssertProperty("status").GetString());
             await WaitForDrillExecutionStateAsync(serviceGroup, drill, "Running");
             string? run = null;
@@ -576,6 +579,7 @@ public class ResilienceManagementCommandTests(
             if (started)
             {
                 var end = await EndDrillAsync(serviceGroup, drill, failure is null ? "Success" : "Failed");
+                Assert.True(Guid.TryParse(end.AssertProperty("operationId").GetString(), out _));
                 Assert.Equal("Accepted", end.AssertProperty("status").GetString());
                 await WaitForDrillExecutionStateAsync(serviceGroup, drill, "NotRunning");
             }
@@ -624,7 +628,7 @@ public class ResilienceManagementCommandTests(
         Assert.Fail($"Drill execution state did not become {expected}.");
     }
 
-    private async Task<JsonElement> StartDrillAsync(string serviceGroup, string drillName)
+    private async Task<JsonElement> StartDrillAsync(string serviceGroup, string drillName, string mode)
     {
         const int maxAttempts = 36;
 
@@ -636,7 +640,7 @@ public class ResilienceManagementCommandTests(
                 {
                     { "service-group", serviceGroup },
                     { "drill", drillName },
-                    { "mode", "Failover" }
+                    { "mode", mode }
                 },
                 resultProcessor: element => element);
             Assert.True(response.HasValue);
@@ -758,7 +762,7 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
-    public Task Should_mark_and_resume_drill_run()
+    public Task Should_mark_drill_run_stage_complete()
         => RunDrillFailoverLifecycleAsync(selectResources: false, useServiceDefaults: false, completeReprotection: false);
 
     [Theory]

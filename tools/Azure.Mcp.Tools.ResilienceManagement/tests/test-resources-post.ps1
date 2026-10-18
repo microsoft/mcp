@@ -308,6 +308,7 @@ Wait-ResilienceProvisioning -Path $workflowServiceGroupPath -WaitForAuthorizatio
 Add-RecoveryContributorRole -Scope $serviceGroupId
 Add-RecoveryContributorRole -Scope $lifecycleServiceGroupId
 Add-RecoveryContributorRole -Scope $planLifecycleServiceGroupId
+Add-RecoveryContributorRole -Scope $workflowServiceGroupId
 Add-DrillsAdministratorRole -Scope "/subscriptions/$subscriptionId"
 
 # 2) Add the resource group as a member of the service group so its resources
