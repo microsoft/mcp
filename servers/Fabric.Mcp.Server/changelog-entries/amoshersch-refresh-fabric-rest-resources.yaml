@@ -1,4 +1,0 @@
-pr: 3978
-changes:
-  - section: "Other Changes"
-    description: "Updated bundled Fabric REST API specifications and examples, including CopyJob execution, Reflex activation queries, Warehouse SQL pool configuration, and item-definition links."
