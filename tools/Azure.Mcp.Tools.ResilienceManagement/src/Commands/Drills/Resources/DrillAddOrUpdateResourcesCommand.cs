@@ -21,12 +21,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
     Id = "3f0c8d4e-6b2a-4f9d-8f1c-2a7b6d1e94c5",
     Name = "add-or-update",
     Title = "Add or Update Resilience Drill Resources",
-    Description = """
-        Adds a resource to a resilience drill, or updates or excludes existing drill resources, in an Azure service group.
-        Provide a fault duration in minutes and the drill-resource IDs to include, update, or exclude, not underlying
-        VM IDs. Use this to add a resource to a drill, change fault settings, or remove a resource from the drill.
-        It starts the operation and returns the operation ID.
-        """,
+    Description = "Updates or excludes the resources of a resilience drill in a service group, or adds new drill resources. Configure fault duration and target inclusions/exclusions using drill-resource ARM IDs, not VM IDs. Starts the resource update and returns its operation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,

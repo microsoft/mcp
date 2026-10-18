@@ -15,13 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "2458b55c-e911-4d4e-91bc-9003a7cbefb0",
     Name = "create",
     Title = "Create or Update Resilience Drill",
-    Description = """
-        Creates, configures, or updates a resilience drill in an Azure service group. Use this tool when asked
-        to create or provision a resilience drill, including when required drill details must first be clarified.
-        Supports zonal and regional drills, system-assigned managed identity, RBAC setup, and an optional recovery
-        plan in the same service group. Also configures goal-assignment identity, Azure Health Model monitoring,
-        and Availability/Latency SLI monitoring using JSON properties. Returns the drill definition and provisioning state.
-        """,
+    Description = "Creates a new resilience drill for a service group. Use this tool to provision a zonal or regional drill with a managed identity, RBAC setup, and optional recovery plan. Also configures goal-assignment identity, Health Model monitoring, and Availability/Latency SLI monitoring. Clarify missing creation details first. Returns the drill definition and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,

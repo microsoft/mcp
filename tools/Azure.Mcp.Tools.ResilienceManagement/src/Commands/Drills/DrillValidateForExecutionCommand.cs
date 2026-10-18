@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "90da933a-bbf3-48ec-a03b-5db38e0c0a3b",
     Name = "validate-for-execution",
     Title = "Validate Resilience Drill For Execution",
-    Description = "Validates a named resilience drill before execution, including preflight and readiness checks. Optionally select Failover, Reprotect, FailoverReverse, or ReprotectReverse. Physical source locations are required unless the selected operation is Reprotect, including when the operation is omitted. Starts validation and returns the operation ID; does not get or list drill definitions or resources.",
+    Description = "Validates a resilience drill for execution from source locations in its service group. Preflight drill readiness without starting fault injection, or validate Reprotect without sources. Otherwise source locations are required. Optionally select Failover, Reprotect, FailoverReverse, or ReprotectReverse. Returns a validation operation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,

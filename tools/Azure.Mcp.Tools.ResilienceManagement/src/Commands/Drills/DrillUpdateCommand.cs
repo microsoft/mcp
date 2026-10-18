@@ -15,14 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "9c4ad84e-7056-46ad-a857-8a81dce0c676",
     Name = "update",
     Title = "Update Resilience Drill",
-    Description = """
-        Updates an existing Azure Resilience Management drill in a service group. Use this command to move the
-        drill's supporting resources by changing their subscription and region together, change its RBAC setup
-        mode, or associate a recoveryplan. Supporting-resource relocation is a drill configuration update; do
-        not use drill resource add-or-update, Azure Resource Mover, or generic resource commands for it. This
-        tool also updates goal-assignment identity, Health Model monitoring, and Availability/Latency SLI
-        monitoring. JSON null clears Health Model or SLI monitoring; omitted properties remain unchanged.
-        """,
+    Description = "Updates an existing resilience drill in a service group: associate a recovery plan, change RBAC setup mode, move supporting resources to a new subscription and region, or change Health Model, SLI monitoring, and goal-assignment identity. Supports clearing monitoring while preserving all other configuration; omitted properties stay unchanged.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,

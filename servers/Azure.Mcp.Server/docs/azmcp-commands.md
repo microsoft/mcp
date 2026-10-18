@@ -4312,25 +4312,6 @@ azmcp redis list --subscription <subscription>
 
 ### Azure Resilience Management Operations
 
-These commands use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and the GA
-`2026-10-01` API. Drill create/update support
-goal-assignment identity, Health Model monitoring, and SLI monitoring as JSON
-properties. Update preserves omitted fields; pass the string `"null"` as a Health
-Model or SLI JSON payload to clear that configuration. A supplied SLI selection
-replaces the old selection. See [Drill GA configuration](../../../.github/skills/resilience-management-operations/references/payloads.md#drill-ga-configuration).
-
-Validation accepts an optional operation; source locations are required unless
-the selected operation is `Reprotect`, including when the operation is omitted. Failover
-accepts no request body when all failover inputs are omitted; providing selected
-resources or an explicit automatic-failover choice requires source locations.
-Reprotect accepts optional selected recovery-resource IDs. Drill details preserve
-GA fields and drill-run reports; lists continue to return IDs and names.
-
-Goal assignment details now include `requireZonalResiliency`, and goal resource
-details include `zonalResiliency`. Legacy preview-only goal fields are nullable
-when absent from the service response; HA/DR values are not inferred from zonal
-resiliency.
-
 ```bash
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4550,6 +4531,7 @@ azmcp resiliency drill end --service-group <service-group> \
                            --attestation-notes <attestation-notes>
 
 # Update mutable properties of a resilience drill
+# Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
@@ -4630,7 +4612,7 @@ azmcp resiliency drill run mark-complete --service-group <service-group> \
                                          --drill-run <drill-run> \
                                          --stage <stage>
 
-# Reprotect failed-over resources in a drill run
+# Reprotect all qualified failed-over resources in a drill run, or only selected recovery-resource IDs
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill <drill> \

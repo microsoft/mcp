@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Initiates failover for a resilience drill run in an Azure service group. Supply physical source zones and optionally selected recovery resources and automatic failover. Omit all failover inputs to use the service's default failover behavior without a request body.",
+    Description = "Starts failover for a resilience drill run in a service group. Uses source locations and optional selected resources to inject faults, then automatically continue to failover or pause for manual input according to auto-failover. Omit all inputs for service defaults; selected resources or explicit auto-failover require physical source zones.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
