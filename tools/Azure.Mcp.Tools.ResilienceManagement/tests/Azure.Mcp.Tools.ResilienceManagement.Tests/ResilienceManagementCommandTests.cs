@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore DELETEASSETRESOURCEGROUPNAME DRILLRESOURCEID HEALTHMODELID LIFECYCLEENROLLMENTNAME LIFECYCLESERVICEGROUPNAME CREATIONSERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore DELETEASSETRESOURCEGROUPNAME DRILLRESOURCEID HEALTHMODELID LIFECYCLEENROLLMENTNAME LIFECYCLESERVICEGROUPNAME CREATIONSERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME RECOVERYRESOURCEID slis WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -128,6 +128,113 @@ public class ResilienceManagementCommandTests(
     }
 
     [Fact]
+    public async Task Should_create_drill()
+    {
+        var resourceGroup = RegisterOrRetrieveVariable("resourceGroupName", Settings.ResourceGroupName);
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "RECOVERYPLANNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
+        var current = await CallToolAsync("resiliency_drill_get", new()
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "name", drillName }
+        });
+        var baseline = current.AssertProperty("drill").AssertProperty("properties");
+        Assert.Equal("NotRunning", baseline.AssertProperty("executionState").GetString());
+
+        var parameters = new Dictionary<string, object?>
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "drill", drillName },
+            { "subscription", Settings.SubscriptionId },
+            { "region", location },
+            { "resource-group", resourceGroup },
+            { "drill-type", "Zonal" },
+            { "rbac-setup-mode", "AutomatedBuiltinRoles" },
+            { "recoveryplan", recoveryPlan }
+        };
+        foreach (var (option, property, selection) in new[]
+        {
+            ("goal-assignment-properties", "goalAssignmentProperties", (string?)null),
+            ("health-model-monitoring-properties", "healthModelMonitoringProperties", "healthModelId"),
+            ("sli-monitoring-properties", "sliMonitoringProperties", "slis")
+        })
+        {
+            if (GetWritableDrillConfiguration(baseline, property, selection) is { } configuration)
+            {
+                parameters[option] = configuration;
+            }
+        }
+        var result = await CallToolAsync("resiliency_drill_create", parameters);
+        var drill = result.AssertProperty("drill");
+        Assert.EndsWith($"/drills/{drillName}", drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        var properties = drill.AssertProperty("properties");
+        Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+        Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+        var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
+        Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Should_create_drill_without_recovery_plan()
+    {
+        var resourceGroup = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DELETEASSETRESOURCEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
+        var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-drill-{Guid.NewGuid().ToString("N")[..8]}");
+        Exception? failure = null;
+        try
+        {
+            var result = await CallToolAsync("resiliency_drill_create", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drillName },
+                { "subscription", Settings.SubscriptionId },
+                { "region", location },
+                { "resource-group", resourceGroup },
+                { "drill-type", "Zonal" },
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+            });
+            var drill = result.AssertProperty("drill");
+            Assert.EndsWith($"/drills/{drillName}", drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+            var properties = drill.AssertProperty("properties");
+            Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+            Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+            var recoveryPlanProperties = properties.AssertProperty("recoveryPlanProperties");
+            Assert.Equal("SystemAssigned", recoveryPlanProperties.AssertProperty("identity").AssertProperty("type").GetString());
+            Assert.True(!recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
+                recoveryPlanId.ValueKind == JsonValueKind.Null);
+            Assert.Equal("SystemAssigned", properties.AssertProperty("monitoringProperties").AssertProperty("identity").AssertProperty("type").GetString());
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+            throw;
+        }
+        finally
+        {
+            try
+            {
+                var deleted = await CallToolAsync("resiliency_drill_delete", new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drillName }
+                });
+                Assert.True(deleted.AssertProperty("success").GetBoolean());
+            }
+            catch (Exception cleanupFailure) when (failure is not null)
+            {
+                throw new AggregateException("The creation scenario and its cleanup both failed.", failure, cleanupFailure);
+            }
+        }
+    }
+
+    [Fact]
     public async Task Should_get_drill()
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
@@ -141,6 +248,114 @@ public class ResilienceManagementCommandTests(
         var drill = result.AssertProperty("drill");
         Assert.EndsWith($"/drills/{drillName}", drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
         Assert.Equal("Zonal", drill.AssertProperty("properties").AssertProperty("drillType").GetString());
+    }
+
+    [Fact]
+    public async Task Should_update_and_clear_drill_health_monitoring()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var healthModelId = RegisterOrRetrieveDeploymentOutputVariable("healthModelId", "HEALTHMODELID");
+        var getParameters = new Dictionary<string, object?>
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "name", drill }
+        };
+        var baseline = (await CallToolAsync("resiliency_drill_get", getParameters)).AssertProperty("drill").AssertProperty("properties");
+        Assert.Equal("Succeeded", baseline.AssertProperty("provisioningState").GetString());
+        Assert.Equal("NotRunning", baseline.AssertProperty("executionState").GetString());
+        var originalConfiguration = GetWritableDrillConfiguration(baseline, "healthModelMonitoringProperties", "healthModelId");
+        var configuration = new JsonObject
+        {
+            ["identity"] = new JsonObject { ["type"] = "SystemAssigned" },
+            ["healthModelId"] = healthModelId
+        };
+        var parameters = new Dictionary<string, object?>
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "drill", drill },
+            { "health-model-monitoring-properties", configuration.ToJsonString() }
+        };
+        Exception? failure = null;
+        try
+        {
+            var configured = await CallToolAsync("resiliency_drill_update", parameters);
+            var properties = configured.AssertProperty("drill").AssertProperty("properties");
+            Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
+            AssertHealthModelConfiguration(properties, healthModelId);
+            var readBack = await CallToolAsync("resiliency_drill_get", getParameters);
+            AssertHealthModelConfiguration(readBack.AssertProperty("drill").AssertProperty("properties"), healthModelId);
+
+            configuration.Remove("identity");
+            parameters["health-model-monitoring-properties"] = configuration.ToJsonString();
+            var patched = await CallToolAsync("resiliency_drill_update", parameters);
+            AssertHealthModelConfiguration(patched.AssertProperty("drill").AssertProperty("properties"), healthModelId);
+            readBack = await CallToolAsync("resiliency_drill_get", getParameters);
+            AssertHealthModelConfiguration(readBack.AssertProperty("drill").AssertProperty("properties"), healthModelId);
+
+            parameters["health-model-monitoring-properties"] = "null";
+            var cleared = await CallToolAsync("resiliency_drill_update", parameters);
+            properties = cleared.AssertProperty("drill").AssertProperty("properties");
+            Assert.True(!properties.TryGetProperty("healthModelMonitoringProperties", out var health) || health.ValueKind == JsonValueKind.Null);
+            readBack = await CallToolAsync("resiliency_drill_get", getParameters);
+            properties = readBack.AssertProperty("drill").AssertProperty("properties");
+            Assert.True(!properties.TryGetProperty("healthModelMonitoringProperties", out health) || health.ValueKind == JsonValueKind.Null);
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+            throw;
+        }
+        finally
+        {
+            try
+            {
+                parameters["health-model-monitoring-properties"] = originalConfiguration ?? "null";
+                var restored = await CallToolAsync("resiliency_drill_update", parameters);
+                Assert.Equal("Succeeded", restored.AssertProperty("drill").AssertProperty("properties").AssertProperty("provisioningState").GetString());
+                var readBack = await CallToolAsync("resiliency_drill_get", getParameters);
+                var properties = readBack.AssertProperty("drill").AssertProperty("properties");
+                Assert.Equal("NotRunning", properties.AssertProperty("executionState").GetString());
+                var restoredConfiguration = GetWritableDrillConfiguration(properties, "healthModelMonitoringProperties", "healthModelId");
+                Assert.True(JsonNode.DeepEquals(
+                    JsonNode.Parse(originalConfiguration ?? "null"),
+                    JsonNode.Parse(restoredConfiguration ?? "null")),
+                    "The original Health Model monitoring configuration was not restored.");
+            }
+            catch (Exception cleanupFailure) when (failure is not null)
+            {
+                throw new AggregateException("The monitoring scenario and its restoration both failed.", failure, cleanupFailure);
+            }
+        }
+    }
+
+    private static void AssertHealthModelConfiguration(JsonElement properties, string healthModelId)
+    {
+        var health = properties.AssertProperty("healthModelMonitoringProperties");
+        Assert.Equal("SystemAssigned", health.AssertProperty("identity").AssertProperty("type").GetString());
+        Assert.Equal(healthModelId, health.AssertProperty("healthModelId").GetString(), ignoreCase: true);
+    }
+
+    private static string? GetWritableDrillConfiguration(JsonElement properties, string propertyName, string? selection)
+    {
+        if (!properties.TryGetProperty(propertyName, out var configuration) || configuration.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+        var identity = configuration.AssertProperty("identity");
+        var writableIdentity = new JsonObject { ["type"] = identity.AssertProperty("type").GetString() };
+        if (identity.TryGetProperty("userAssignedIdentity", out var userIdentity) && userIdentity.ValueKind == JsonValueKind.String)
+        {
+            writableIdentity["userAssignedIdentity"] = userIdentity.GetString();
+        }
+        var writableConfiguration = new JsonObject { ["identity"] = writableIdentity };
+        if (selection is not null)
+        {
+            writableConfiguration[selection] = JsonNode.Parse(configuration.AssertProperty(selection).GetRawText());
+        }
+        return writableConfiguration.ToJsonString();
     }
 
     [Fact]
@@ -540,6 +755,230 @@ public class ResilienceManagementCommandTests(
             Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
             await WaitForDrillRunNoteAsync(serviceGroup, drill, drillRun, note);
         });
+    }
+
+    [Fact]
+    public Task Should_mark_and_resume_drill_run()
+        => RunDrillFailoverLifecycleAsync(selectResources: false, useServiceDefaults: false, completeReprotection: false);
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public Task Should_start_resume_and_reprotect_drill_run_failover(bool selectResources, bool useServiceDefaults)
+        => RunDrillFailoverLifecycleAsync(selectResources, useServiceDefaults);
+
+    private async Task RunDrillFailoverLifecycleAsync(bool selectResources, bool useServiceDefaults, bool completeReprotection = true)
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLRUNSOURCELOCATION");
+        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("recoveryResourceId", "RECOVERYRESOURCEID");
+        await WithDrillRunAsync(serviceGroup, drill, async drillRun =>
+        {
+            var failoverParameters = new Dictionary<string, object?>
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            };
+            if (!useServiceDefaults)
+            {
+                failoverParameters["source-locations"] = new[] { sourceLocation };
+                failoverParameters["auto-failover"] = false;
+                if (selectResources)
+                {
+                    failoverParameters["selected-resource-ids"] = new[] { recoveryResourceId };
+                }
+            }
+            var result = await CallToolWithConflictRetryAsync("resiliency_drill_run_failover", failoverParameters);
+            Assert.True(result.AssertProperty("accepted").GetBoolean());
+            Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+            Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+
+            // Service-default requests may progress automatically instead of pausing for manual stages.
+            var manualStage = useServiceDefaults
+                ? await WaitForDefaultFailoverProgressAsync(serviceGroup, drill, drillRun)
+                : "FaultInjection";
+            if (manualStage == "FaultInjection")
+            {
+                await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "FaultInjection", "MarkAsComplete");
+                result = await CallToolWithConflictRetryAsync("resiliency_drill_run_mark-complete", new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "drill-run", drillRun },
+                    { "stage", "FaultInjection" }
+                }, maxAttempts: 36);
+                Assert.True(Guid.TryParse(result.AssertProperty("result").AssertProperty("operationId").GetString(), out _));
+                await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "Start");
+            }
+            if (manualStage is not null)
+            {
+                result = await CallToolWithConflictRetryAsync("resiliency_drill_run_resume", new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "drill-run", drillRun }
+                }, maxAttempts: 36);
+                Assert.True(result.AssertProperty("accepted").GetBoolean());
+                Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+                Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+            }
+
+            await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Failover", "MarkAsComplete");
+            result = await CallToolWithConflictRetryAsync("resiliency_drill_run_mark-complete", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "stage", "Failover" }
+            }, maxAttempts: 36);
+            Assert.True(Guid.TryParse(result.AssertProperty("result").AssertProperty("operationId").GetString(), out _));
+            await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Reprotect", "Start", "Retry");
+            if (!completeReprotection)
+            {
+                return;
+            }
+
+            var reprotectParameters = new Dictionary<string, object?>
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            };
+            if (selectResources)
+            {
+                reprotectParameters["selected-resource-ids"] = new[] { recoveryResourceId };
+            }
+            result = await CallToolWithConflictRetryAsync("resiliency_drill_run_reprotect", reprotectParameters, maxAttempts: 36);
+            Assert.True(result.AssertProperty("accepted").GetBoolean());
+            Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
+            Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
+            await WaitForStageVerbAsync(serviceGroup, drill, drillRun, "Reprotect", "MarkAsComplete");
+
+            var resources = await CallToolAsync("resiliency_drill_run_resource_get", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun }
+            });
+            var runResources = resources.AssertProperty("drillRunResources").EnumerateArray().ToArray();
+            Assert.NotEmpty(runResources);
+            foreach (var resource in runResources)
+            {
+                var resourceName = new ResourceIdentifier(resource.AssertProperty("id").GetString()!).Name;
+                var detail = await CallToolAsync("resiliency_drill_run_resource_get", new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "drill-run", drillRun },
+                    { "name", resourceName }
+                });
+                AssertNoFailedDrillTasks(detail.AssertProperty("drillRunResource").AssertProperty("properties"));
+            }
+            result = await CallToolWithConflictRetryAsync("resiliency_drill_run_mark-complete", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "stage", "Reprotect" }
+            }, maxAttempts: 36);
+            Assert.True(Guid.TryParse(result.AssertProperty("result").AssertProperty("operationId").GetString(), out _));
+        });
+    }
+
+    private async Task<string?> WaitForDefaultFailoverProgressAsync(string serviceGroup, string drill, string drillRun)
+    {
+        for (int attempt = 0; attempt < 60; attempt++)
+        {
+            var result = await CallToolAsync("resiliency_drill_run_get", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "name", drillRun }
+            });
+            var properties = result.AssertProperty("drillRun").AssertProperty("properties");
+            AssertNoFailedDrillTasks(properties);
+            var stages = properties.AssertProperty("supportedVerbsForStage").EnumerateArray().ToArray();
+            bool HasVerb(string stageName, string verb) => stages.Any(stage =>
+                stage.AssertProperty("drillRunStage").GetString() == stageName &&
+                stage.AssertProperty("supportedVerbs").EnumerateArray().Any(value => value.GetString() == verb));
+
+            if (HasVerb("Failover", "Cancel") || HasVerb("Failover", "MarkAsComplete"))
+            {
+                return null;
+            }
+            if (HasVerb("Failover", "Start"))
+            {
+                return "Failover";
+            }
+            if (HasVerb("FaultInjection", "MarkAsComplete"))
+            {
+                return "FaultInjection";
+            }
+            await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
+        }
+        Assert.Fail("Service-default failover did not reach an actionable or running failover stage.");
+        return null;
+    }
+
+    private async Task WaitForStageVerbAsync(string serviceGroup, string drill, string drillRun, string stageName, params string[] expectedVerbs)
+    {
+        for (int attempt = 0; attempt < 60; attempt++)
+        {
+            var result = await CallToolAsync("resiliency_drill_run_get", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "name", drillRun }
+            });
+            var properties = result.AssertProperty("drillRun").AssertProperty("properties");
+            AssertNoFailedDrillTasks(properties);
+            if (properties.AssertProperty("supportedVerbsForStage").EnumerateArray().Any(stage =>
+                stage.AssertProperty("drillRunStage").GetString() == stageName &&
+                stage.AssertProperty("supportedVerbs").EnumerateArray().Any(verb => expectedVerbs.Contains(verb.GetString()))))
+            {
+                return;
+            }
+            await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
+        }
+        Assert.Fail($"Drill run stage '{stageName}' did not offer verb(s) [{string.Join(", ", expectedVerbs)}] within the timeout.");
+    }
+
+    private static void AssertNoFailedDrillTasks(JsonElement task)
+    {
+        if (task.TryGetProperty("status", out var status))
+        {
+            Assert.True(status.GetString() is not ("Failed" or "Cancelled"), $"Drill task failed: {task}");
+        }
+        if (task.TryGetProperty("jobExtendedInfo", out var extended) &&
+            extended.ValueKind == JsonValueKind.Object &&
+            extended.TryGetProperty("tasksList", out var tasks) &&
+            tasks.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var child in tasks.EnumerateArray())
+            {
+                AssertNoFailedDrillTasks(child);
+            }
+        }
+        if (task.TryGetProperty("subTasksList", out var subTasks) && subTasks.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var child in subTasks.EnumerateArray())
+            {
+                AssertNoFailedDrillTasks(child);
+            }
+        }
     }
 
     private async Task WaitForDrillRunNoteAsync(string serviceGroup, string drill, string drillRun, string expectedNote)

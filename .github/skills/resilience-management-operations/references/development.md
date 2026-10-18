@@ -247,6 +247,8 @@ Focused command unit tests should cover:
 
 Recorded coverage for a new action must exercise a successful service state, assert meaningful response fields, and prove any persisted state where applicable. Use list tests for collection shape and get tests for detailed shape. For create/update, assert hydrated server fields such as ID, provisioning state, drill type, RBAC mode, or recovery-plan association rather than echoing input values.
 
+Retain GA recorded scenarios for drill creation with and without a recovery plan, Health Model configuration and sparse update/clearing, manual mark-complete/resume, and failover/reprotect with explicit selectors and service-default requests. Run lifecycle scenarios sequentially against isolated fixtures. Preserve existing goal and monitoring configuration when testing create-or-update on a prepared drill, and restore the captured monitoring baseline after testing clearing. A backend or recording blocker must be reported explicitly, not worked around by removing the scenario.
+
 Do not weaken request-body matching to make playback pass. `[CustomMatcher(compareBody: false)]` is acceptable only when an intentionally unstable body has been investigated and response/state assertions still prove the contract.
 
 ## Tool Description Evaluation Override
