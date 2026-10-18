@@ -3,7 +3,7 @@
 //
 // Outerloop test: launches the latest stable VS Code, configures it with
 // an mcp.json that points at our stdio proxy (./mcpProxy.js). The proxy
-// spawns the real Azure MCP server (`npx @azure/mcp@latest`) and tees all
+// spawns the selected Azure MCP server executable and tees all
 // JSON-RPC traffic to a log file. After VS Code completes its initialize
 // handshake the proxy injects a tools/call for keyvault_secret_get; the
 // server responds with an elicitation/create request whose message
@@ -39,6 +39,14 @@ test.describe('VS Code MCP elicitation outerloop', () => {
     test.describe.configure({ timeout: 10 * 60 * 1000 });
 
     test('VS Code spawns Azure MCP server and elicitation/create flows back with the SECURITY WARNING', async ({}, testInfo) => {
+        const serverExecutable = process.env.MCP_SERVER_EXECUTABLE;
+        if (!serverExecutable) {
+            throw new Error('MCP_SERVER_EXECUTABLE environment variable is required. Specify the path to the built Azure MCP server executable.');
+        }
+        if (!fsSync.existsSync(serverExecutable)) {
+            throw new Error(`MCP_SERVER_EXECUTABLE was not found at: '${serverExecutable}'`);
+        }
+
         const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-vscode-outerloop-'));
 
         // Scope the @vscode/test-electron download cache to this test's temp
@@ -108,7 +116,8 @@ test.describe('VS Code MCP elicitation outerloop', () => {
                 ELECTRON_ENABLE_LOGGING: '1',
                 MCP_TEST_PROXY_SCRIPT: PROXY_SCRIPT,
                 MCP_TEST_PROXY_LOG: proxyLogPath,
-                MCP_TEST_NODE_PATH: process.execPath
+                MCP_TEST_NODE_PATH: process.execPath,
+                MCP_SERVER_EXECUTABLE: serverExecutable
             }
         });
 
@@ -283,6 +292,7 @@ async function copyDir(src, dest) {
 
 async function waitForLogContains(logPath, needle, timeoutMs) {
     const lowerNeedle = needle.toLowerCase();
+    const FAILURE_SENTINEL = 'STARTUP_FAILURE';
     const deadline = Date.now() + timeoutMs;
 
     while (Date.now() < deadline) {
@@ -291,7 +301,23 @@ async function waitForLogContains(logPath, needle, timeoutMs) {
             if (contents.toLowerCase().includes(lowerNeedle)) {
                 return;
             }
-        } catch { /* file may not exist yet */ }
+            // Fail immediately if the proxy reported a startup failure rather
+            // than waiting for the full timeout.
+            if (contents.includes(FAILURE_SENTINEL)) {
+                let tail = '';
+                try { tail = await readTail(logPath, 4000); } catch { /* ignore */ }
+                throw new Error(
+                    `MCP server startup failure detected in proxy log before "${needle}" was seen.\n` +
+                    `Log tail:\n${tail}`
+                );
+            }
+        } catch (err) {
+            // Re-throw errors we generated above; swallow OS read errors
+            // (file may not exist yet when the test first runs).
+            if (err.message && (err.message.startsWith('MCP server startup failure') || err.message.startsWith('Timed out'))) {
+                throw err;
+            }
+        }
         await sleep(1000);
     }
 
@@ -302,6 +328,7 @@ async function waitForLogContains(logPath, needle, timeoutMs) {
         `Log tail:\n${tail}`
     );
 }
+
 
 async function readTail(filePath, maxBytes) {
     const data = await fs.readFile(filePath, 'utf8');

@@ -4,7 +4,7 @@
 // MCP stdio proxy used by the outerloop test.
 //
 // VS Code is configured (via mcp.json) to launch THIS script instead of
-// `npx @azure/mcp@latest` directly. The proxy:
+// the server executable directly. The proxy:
 //
 //   1. Spawns the real Azure MCP server.
 //   2. Tees every JSON-RPC line in either direction to a log file
@@ -36,28 +36,90 @@ if (!LOG_PATH) {
     process.exit(2);
 }
 
+const SERVER_EXECUTABLE = process.env.MCP_SERVER_EXECUTABLE;
+if (!SERVER_EXECUTABLE) {
+    process.stderr.write('mcpProxy: MCP_SERVER_EXECUTABLE env var is required\n');
+    process.exit(2);
+}
+if (!fs.existsSync(SERVER_EXECUTABLE)) {
+    process.stderr.write(`mcpProxy: MCP_SERVER_EXECUTABLE not found at '${SERVER_EXECUTABLE}'\n`);
+    process.exit(2);
+}
+
 const INJECT_TOOLS_LIST_ID = 9_999_998;
 const INJECT_TOOL_CALL_ID = 9_999_999;
 const TARGET_TOOL_PATTERN = /keyvault.*secret.*get/i;
 
 const logStream = fs.createWriteStream(LOG_PATH, { flags: 'a' });
 function log(tag, line) {
-    logStream.write(`[${new Date().toISOString()}] ${tag} ${line}\n`);
+    const entry = `[${new Date().toISOString()}] ${tag} ${line}\n`;
+    try {
+        if (!logStream.writableEnded) {
+            logStream.write(entry);
+        } else {
+            fs.appendFileSync(LOG_PATH, entry);
+        }
+    } catch {
+        try { fs.appendFileSync(LOG_PATH, entry); } catch { }
+    }
+}
+
+let elicitationSeen = false;
+let startupFailureReported = false;
+
+function reportStartupFailure(details) {
+    if (elicitationSeen || startupFailureReported) return;
+    startupFailureReported = true;
+    log('PROXY', `STARTUP_FAILURE executable='${SERVER_EXECUTABLE}' ${details}. Verify the binary is built for this platform and can be started.`);
+}
+
+let exiting = false;
+function safeExit(exitCode) {
+    if (exiting) return;
+    exiting = true;
+    const fallback = setTimeout(() => process.exit(exitCode), 1000);
+    fallback.unref();
+    try {
+        logStream.end(() => {
+            clearTimeout(fallback);
+            process.exit(exitCode);
+        });
+    } catch {
+        process.exit(exitCode);
+    }
 }
 
 log('PROXY', `start pid=${process.pid} cwd=${process.cwd()}`);
+log('PROXY', `spawning ${SERVER_EXECUTABLE} server start --mode all`);
 
-const isWindows = process.platform === 'win32';
-const child = spawn('npx', ['-y', '@azure/mcp@latest', 'server', 'start', '--mode', 'all'], {
-    stdio: ['pipe', 'pipe', 'pipe'],
-    shell: isWindows
+const child = spawn(SERVER_EXECUTABLE, ['server', 'start', '--mode', 'all'], {
+    stdio: ['pipe', 'pipe', 'pipe']
 });
 
-child.on('error', err => log('PROXY', `child error: ${err.message}`));
+let exitCode = null;
+let exitSignal = null;
+
+child.on('error', err => {
+    log('PROXY', `child error: ${err.message}`);
+    reportStartupFailure(`error=${err.message}`);
+    safeExit(1);
+});
+
 child.on('exit', (code, signal) => {
+    exitCode = code;
+    exitSignal = signal;
     log('PROXY', `child exited code=${code} signal=${signal}`);
-    logStream.end();
-    process.exit(code ?? 0);
+});
+
+child.on('close', (code, signal) => {
+    log('PROXY', `child closed code=${code} signal=${signal}`);
+    const effectiveCode = (code !== null && code !== undefined) ? code : exitCode;
+    const effectiveSignal = signal ?? exitSignal;
+    if (!elicitationSeen) {
+        reportStartupFailure(`code=${effectiveCode} signal=${effectiveSignal}`);
+    }
+    const finalCode = elicitationSeen ? (effectiveCode ?? 0) : (effectiveCode !== 0 && effectiveCode !== null && effectiveCode !== undefined ? effectiveCode : 1);
+    safeExit(finalCode);
 });
 
 const childErrLines = readline.createInterface({ input: child.stderr });
@@ -67,6 +129,7 @@ let initializeNotificationSeen = false;
 let toolsListInjected = false;
 let toolCallInjected = false;
 let resolvedToolName;
+
 
 function writeToServer(obj) {
     const line = JSON.stringify(obj);
@@ -149,6 +212,7 @@ serverLines.on('line', line => {
         // elicitation was caused by our injected tools/call - if not,
         // VS Code may be confused, but in practice VS Code only issues
         // tools/call via Copilot Chat which isn't running in CI.
+        elicitationSeen = true;
         log('ELICITATION', line);
         const response = {
             jsonrpc: '2.0',

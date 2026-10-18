@@ -174,7 +174,7 @@ extends:
         displayName: 'VS Code integration test'
         dependsOn:
         - Initialize
-        # - Build # @vukelich 2026-07-17: This is not a necessary dependency. See https://github.com/microsoft/mcp/issues/3093
+        - Build
         pool:
           name: $(WINDOWSPOOL)
           image: $(WINDOWSVMIMAGE)
