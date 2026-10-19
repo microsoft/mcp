@@ -2,7 +2,8 @@
 param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-    [string] $OutputPath
+    [string] $OutputPath,
+    [switch] $ChangedServersOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,6 +41,17 @@ if ($exitCode -ne 0) {
 }
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
+$servers = @($buildInfo.servers)
+if ($ChangedServersOnly) {
+    if ($buildInfo.PSObject.Properties.Name -notcontains 'serversToBuild') {
+        LogError "Build info does not contain the required 'serversToBuild' property."
+        exit 1
+    }
+
+    $serversToBuild = @($buildInfo.serversToBuild)
+    $servers = @($servers | Where-Object { $serversToBuild -contains $_.name })
+    Write-Host "Packing changed servers only: $($servers.name -join ', ')"
+}
 
 if(Test-Path $OutputPath) {
     Write-Host "Cleaning existing output path $OutputPath"
@@ -48,7 +60,7 @@ if(Test-Path $OutputPath) {
 
 $tempPath = "$RepoRoot/.work/temp"
 
-foreach ($server in $buildInfo.servers) {
+foreach ($server in $servers) {
     $vsixDirectory = "$RepoRoot/servers/$($server.name)/vscode"
 
     if(!(Test-Path $vsixDirectory)) {
