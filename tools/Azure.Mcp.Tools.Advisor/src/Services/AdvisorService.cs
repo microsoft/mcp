@@ -233,9 +233,11 @@ public class AdvisorService(IAzureService azureService)
         " | extend _dailyPotentialSavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))" +
         " | extend _yearlyPotentialSavings = iff(isfinite(_dailyPotentialSavings), _dailyPotentialSavings * 30.4 * 12.0, real(null))" +
         " | extend properties = iff(isfinite(_yearlyPotentialSavings)," +
-        " bag_merge(properties, bag_pack('savings'," +
-        " bag_merge(properties.savings, bag_pack('retail'," +
-        " bag_merge(properties.savings.retail, bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings))))))," +
+        " bag_merge(bag_pack('savings'," +
+        " bag_merge(bag_pack('retail'," +
+        " bag_merge(bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings), properties.savings.retail))," +
+        " properties.savings))," +
+        " properties)," +
         " properties)";
 
     private static string BuildRecommendationScopeQuery(

@@ -102,6 +102,12 @@ public sealed class RecommendationSummaryCommand(
                 "--prioritized true supports only one subscription or one Service Group scope.");
         }
 
+        if (options.Prioritized == true && !string.IsNullOrWhiteSpace(options.ProductFamily))
+        {
+            validationResult.Errors.Add(
+                "--product-family cannot be combined with --prioritized true.");
+        }
+
         if (options.Top is < MinTop or > MaxTop)
         {
             validationResult.Errors.Add($"--top must be between {MinTop} and {MaxTop}.");

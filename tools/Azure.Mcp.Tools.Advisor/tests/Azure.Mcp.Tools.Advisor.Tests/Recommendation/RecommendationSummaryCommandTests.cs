@@ -46,6 +46,7 @@ public class RecommendationSummaryCommandTests
     [InlineData("--subscription sub1 --prioritized true", true)]
     [InlineData("--subscription sub1 --prioritized true --group-by recommendation-type --top 5", true)]
     [InlineData("--subscription sub1 --prioritized true --category Cost", true)]
+    [InlineData("--subscription sub1 --prioritized true --product-family Compute", false)]
     [InlineData("--service-group sg1 --prioritized true", true)]
     [InlineData("--subscriptions sub1 sub2 --prioritized true", false)]
     [InlineData("--service-groups sg1 sg2 --prioritized true", false)]

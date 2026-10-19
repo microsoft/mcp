@@ -36,7 +36,7 @@ public sealed class RecommendationServiceGroupScopeCommand(
         advisorresources
         | where type =~ "microsoft.advisor/recommendations"
         | where tolower(id) startswith "/providers/microsoft.management/servicegroups/"
-        | project serviceGroupId = tolower(extract(@"/providers/microsoft.management/servicegroups/([^/]+)", 1, tostring(id)))
+        | project serviceGroupId = extract(@"/providers/microsoft.management/servicegroups/([^/]+)", 1, tostring(tolower(id)))
         | where isnotempty(serviceGroupId)
         | distinct serviceGroupId
         | order by serviceGroupId asc

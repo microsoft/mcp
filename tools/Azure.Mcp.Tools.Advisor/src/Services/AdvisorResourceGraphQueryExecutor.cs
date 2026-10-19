@@ -224,7 +224,7 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
                 EnsureFullTenantCoverage(limitHit);
 
                 var result = response.Value;
-                isTruncated |= result.ResultTruncated == ResultTruncated.True;
+                isTruncated = result.ResultTruncated == ResultTruncated.True;
                 if (result.Count > 0 && result.Data is not null)
                 {
                     using var document = JsonDocument.Parse(result.Data);

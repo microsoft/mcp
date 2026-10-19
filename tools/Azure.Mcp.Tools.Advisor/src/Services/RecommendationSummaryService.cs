@@ -164,6 +164,7 @@ public class RecommendationSummaryService(IAzureService azureService)
                 Cost = await ReadCostSummaryAsync(
                     scope,
                     tenantResource,
+                    normalizedGroupBy,
                     filters ?? new RecommendationFilters(Category: "Cost"),
                     cancellationToken),
             };
@@ -175,6 +176,7 @@ public class RecommendationSummaryService(IAzureService azureService)
     private static async Task<RecommendationCostSummary> ReadCostSummaryAsync(
         RecommendationQueryScope scope,
         TenantResource tenantResource,
+        string groupBy,
         RecommendationFilters filters,
         CancellationToken cancellationToken)
     {
@@ -182,7 +184,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         var rows = await ExecuteBatchedRowsAsync(
             scope,
             tenantResource,
-            batchScope => BuildCostSummaryQuery(batchScope, filters),
+            batchScope => BuildCostSummaryQuery(batchScope, filters, groupBy),
             cancellationToken);
         if (rows.Count == 0)
         {
@@ -240,14 +242,16 @@ public class RecommendationSummaryService(IAzureService azureService)
 
     internal static string BuildCostSummaryQuery(
         RecommendationQueryScope scope,
-        RecommendationFilters? filters)
+        RecommendationFilters? filters,
+        string? groupBy = null)
     {
         ArgumentNullException.ThrowIfNull(scope);
 
         var query = BuildRecommendationScope(scope);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
-            includeStatus: !HasHistoricalCostWindow(filters),
+            includeStatus: !HasHistoricalCostWindow(filters) &&
+                !string.Equals(groupBy, GroupByStatus, StringComparison.OrdinalIgnoreCase),
             useRequestedStatus: false,
             includeCategoryAndImpact: false,
             resourceTypeUsesImpactedField: true,
@@ -294,7 +298,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             "recommendationCount=count(), " +
             "billReducingOpportunityCount=countif(isfinite(potential) and potential > 0), " +
             "zeroSavingsCount=countif(isfinite(potential) and potential <= 0), " +
-            " unavailablePricingCount=countif(not(isfinite(potential))) by currency, recommendationStatus, recommendationTypeId, recommendationName" +
+            " unavailablePricingCount=countif(not(isfinite(potential) or isfinite(cost) or isfinite(realized))) by currency, recommendationStatus, recommendationTypeId, recommendationName" +
             " | extend potentialSavings = iif(potentialCount == 0, double(null), potentialTotal)," +
             " accumulatedWaste = iif(costCount == 0, double(null), costTotal)," +
             " realizedSavings = iif(realizedCount == 0, double(null), realizedTotal)";
@@ -318,22 +322,22 @@ public class RecommendationSummaryService(IAzureService azureService)
             return string.Empty;
         }
 
-        var clauses = new List<string> { "_isOpen" };
+        var dateClauses = new List<string>();
         if (filters.SavingsFrom is DateTimeOffset from)
         {
-            clauses.Add($"(_deletedOn >= datetime({FormatUtcTimestamp(from)}))");
+            dateClauses.Add($"(_deletedOn >= datetime({FormatUtcTimestamp(from)}))");
         }
 
         if (filters.SavingsTo is DateTimeOffset to)
         {
-            clauses.Add($"(_deletedOn <= datetime({FormatUtcTimestamp(to)}))");
+            dateClauses.Add($"(_deletedOn <= datetime({FormatUtcTimestamp(to)}))");
         }
         else if (filters.SavingsAsOf is DateTimeOffset asOf)
         {
-            clauses.Add($"(_deletedOn <= datetime({FormatUtcTimestamp(asOf)}))");
+            dateClauses.Add($"(_deletedOn <= datetime({FormatUtcTimestamp(asOf)}))");
         }
 
-        return $" | where ({string.Join(" or ", clauses)})";
+        return $" | where (_isOpen or ({string.Join(" and ", dateClauses)}))";
     }
 
     private static string FormatUtcTimestamp(DateTimeOffset value) =>
@@ -355,7 +359,15 @@ public class RecommendationSummaryService(IAzureService azureService)
         var typeTotals = new Dictionary<string, RecommendationCostTypeSummary>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in data.EnumerateArray())
         {
-            var currency = ReadRequiredString(item, "currency");
+            var potentialSavings = ReadOptionalDecimal(item, "potentialSavings");
+            var accumulatedWaste = ReadOptionalDecimal(item, "accumulatedWaste");
+            var realizedSavings = ReadOptionalDecimal(item, "realizedSavings");
+            // Resource Graph can omit the projected currency for an aggregate row. Match the query's Retail default
+            // when the row still contains a savings measure; otherwise preserve it under the unavailable bucket.
+            var currency = ReadOptionalString(item, "currency") ??
+                (potentialSavings is not null || accumulatedWaste is not null || realizedSavings is not null
+                    ? "USD"
+                    : "Unavailable");
             var status = item.TryGetProperty("recommendationStatus", out var statusProperty)
                 ? statusProperty.GetString() ?? "Unknown"
                 : "Unknown";
@@ -367,9 +379,9 @@ public class RecommendationSummaryService(IAzureService azureService)
             statusCounts[status] = checked(statusCounts.GetValueOrDefault(status) + count);
             var currencySummary = new RecommendationCostCurrencySummary(
                 currency,
-                ReadOptionalDecimal(item, "potentialSavings"),
-                ReadOptionalDecimal(item, "accumulatedWaste"),
-                ReadOptionalDecimal(item, "realizedSavings"),
+                potentialSavings,
+                accumulatedWaste,
+                realizedSavings,
                 count,
                 ReadCount(item, "potentialCount"),
                 ReadCount(item, "costCount"),
@@ -748,7 +760,8 @@ public class RecommendationSummaryService(IAzureService azureService)
                 $"todatetime(properties.savings.resourceDeletedOn) <= datetime({FormatUtcTimestamp(asOf)})");
         }
 
-        return $" | where ({string.Join(" or ", clauses)})";
+        var completedDateClauses = clauses.Skip(1).ToArray();
+        return $" | where ({clauses[0]} or ({string.Join(" and ", completedDateClauses)}))";
     }
 
     /// <summary>
