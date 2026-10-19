@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed PyPI wheel packaging failing with an invalid System.Object[] package version."

@@ -120,7 +120,7 @@ function ConvertTo-PythonPackageVersion {
         return $null
     }
 
-    $parsedVersion.SetupPythonConventions()
+    $null = $parsedVersion.SetupPythonConventions()
     if ($parsedVersion.PrereleaseLabel -eq 'beta') {
         $parsedVersion.PrereleaseLabel = 'b'
     }
