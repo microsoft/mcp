@@ -10,7 +10,10 @@ public interface IGoalAssignmentCreateService
     Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(
         string serviceGroup,
         string goalAssignment,
-        string goalTemplate,
+        bool requireZonalResiliency,
+        bool requireRegionalResiliency,
+        string? regionalRecoveryPointObjective,
+        string? regionalRecoveryTimeObjective,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

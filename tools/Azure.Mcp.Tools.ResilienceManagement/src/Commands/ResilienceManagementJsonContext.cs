@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(GoalAssignmentDeleteCommand.GoalAssignmentDeleteCommandResult))]
 [JsonSerializable(typeof(GoalAssignmentInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfoProperties))]
+[JsonSerializable(typeof(GoalAssignmentRegionalObjectives))]
 [JsonSerializable(typeof(GoalAssignmentInfoSystemData))]
 [JsonSerializable(typeof(GoalAssignmentOperationResult))]
 [JsonSerializable(typeof(GoalResourceGetCommand.GoalResourceGetCommandResult))]

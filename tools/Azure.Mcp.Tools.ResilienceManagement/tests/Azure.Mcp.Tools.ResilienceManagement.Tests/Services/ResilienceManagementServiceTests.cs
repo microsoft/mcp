@@ -25,6 +25,48 @@ public sealed class ResilienceManagementServiceTests
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
+    public void CreateGoalAssignmentPayload_Regional_EmitsExplicitRegionalIntent()
+    {
+        BinaryData payload = GoalAssignmentCreateService.CreateGoalAssignmentPayload(
+            requireZonalResiliency: false,
+            requireRegionalResiliency: true,
+            regionalRecoveryPointObjective: "PT4H",
+            regionalRecoveryTimeObjective: "PT24H");
+
+        using JsonDocument document = JsonDocument.Parse(payload);
+        JsonElement properties = document.RootElement.GetProperty("properties");
+        Assert.False(properties.GetProperty("requireZonalResiliency").GetBoolean());
+        Assert.True(properties.GetProperty("requireRegionalResiliency").GetBoolean());
+        Assert.Equal(
+            "PT4H",
+            properties.GetProperty("regionalObjectives")
+                .GetProperty("targetRecoveryPointObjective")
+                .GetString());
+        Assert.Equal(
+            "PT24H",
+            properties.GetProperty("regionalObjectives")
+                .GetProperty("targetRecoveryTimeObjective")
+                .GetString());
+        Assert.False(properties.TryGetProperty("goalTemplateId", out _));
+    }
+
+    [Fact]
+    public void CreateGoalAssignmentPayload_Zonal_PreservesExplicitZonalIntent()
+    {
+        BinaryData payload = GoalAssignmentCreateService.CreateGoalAssignmentPayload(
+            requireZonalResiliency: true,
+            requireRegionalResiliency: false,
+            regionalRecoveryPointObjective: null,
+            regionalRecoveryTimeObjective: null);
+
+        using JsonDocument document = JsonDocument.Parse(payload);
+        JsonElement properties = document.RootElement.GetProperty("properties");
+        Assert.True(properties.GetProperty("requireZonalResiliency").GetBoolean());
+        Assert.False(properties.GetProperty("requireRegionalResiliency").GetBoolean());
+        Assert.False(properties.TryGetProperty("regionalObjectives", out _));
+    }
+
+    [Fact]
     public void ResolveOperationId_PreservesCallerOwnedGuid()
     {
         string result = ResilienceManagementService.ResolveOperationId("ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB");
@@ -163,9 +205,10 @@ public sealed class ResilienceManagementServiceTests
                 ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
                 originalRoutingLocation);
         }
+    }
 
-        [Fact]
-        public void CreateRecoveryPlanSubmissionClientOptions_DisablesAutomaticRetries()
+    [Fact]
+    public void CreateRecoveryPlanSubmissionClientOptions_DisablesAutomaticRetries()
     {
         ArmClientOptions options =
             ResilienceManagementService.CreateRecoveryPlanSubmissionClientOptions();

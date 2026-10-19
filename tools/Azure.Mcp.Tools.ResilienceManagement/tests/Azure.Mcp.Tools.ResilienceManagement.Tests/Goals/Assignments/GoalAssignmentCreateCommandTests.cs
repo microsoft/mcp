@@ -15,7 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Goals.Assignments;
 
 public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<GoalAssignmentCreateCommand, IGoalAssignmentCreateService>
 {
-    private const string ValidArgs = "--service-group sg1 --goal-assignment assignment1 --goal-template template1 --tenant tenant1";
+    private const string ValidArgs =
+        "--service-group sg1 --goal-assignment assignment1 " +
+        "--require-zonal-resiliency false --require-regional-resiliency true " +
+        "--regional-recovery-point-objective PT4H " +
+        "--regional-recovery-time-objective PT24H --tenant tenant1";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -29,8 +33,8 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
 
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--goal-assignment assignment1 --goal-template template1", false)]
-    [InlineData("--service-group sg1 --goal-template template1", false)]
+    [InlineData("--goal-assignment assignment1 --require-zonal-resiliency true", false)]
+    [InlineData("--service-group sg1 --require-zonal-resiliency true", false)]
     [InlineData("--service-group sg1 --goal-assignment assignment1", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesRequiredInput(string args, bool shouldSucceed)
@@ -40,7 +44,10 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
             Service.CreateGoalAssignmentAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
+                Arg.Any<bool>(),
+                Arg.Any<bool>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new GoalAssignmentInfo("id1", "assignment1"));
@@ -52,24 +59,58 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
     }
 
     [Theory]
-    [InlineData("../sg", "assignment1", "template1")]
-    [InlineData("sg1", "folder/assignment1", "template1")]
-    [InlineData("sg1", "assignment1", "folder\\template1")]
-    public async Task ExecuteAsync_RejectsNonPathSegmentNames(string serviceGroup, string goalAssignment, string goalTemplate)
+    [InlineData("../sg", "assignment1")]
+    [InlineData("sg1", "folder/assignment1")]
+    public async Task ExecuteAsync_RejectsNonPathSegmentNames(string serviceGroup, string goalAssignment)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", serviceGroup,
             "--goal-assignment", goalAssignment,
-            "--goal-template", goalTemplate);
+            "--require-zonal-resiliency", "true",
+            "--require-regional-resiliency", "false");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("single non-empty path segment", response.Message);
         await Service.DidNotReceiveWithAnyArgs().CreateGoalAssignmentAsync(
             default!,
             default!,
-            default!,
+            default,
+            default,
+            default,
+            default,
             default,
             TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task ExecuteAsync_RejectsAmbiguousPlanType(
+        bool requireZonalResiliency,
+        bool requireRegionalResiliency)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--goal-assignment", "assignment1",
+            "--require-zonal-resiliency", requireZonalResiliency.ToString(),
+            "--require-regional-resiliency", requireRegionalResiliency.ToString());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Exactly one", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsRegionalGoalWithoutBothObjectives()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--goal-assignment", "assignment1",
+            "--require-zonal-resiliency", "false",
+            "--require-regional-resiliency", "true",
+            "--regional-recovery-point-objective", "PT4H");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("require regional-recovery-point-objective", response.Message);
     }
 
     [Fact]
@@ -78,17 +119,41 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
         var expected = new GoalAssignmentInfo(
             "id1",
             "assignment1",
-            new GoalAssignmentInfoProperties("Resiliency", "template-id", "Succeeded"));
-        Service.CreateGoalAssignmentAsync("sg1", "assignment1", "template1", "tenant1", Arg.Any<CancellationToken>())
+            new GoalAssignmentInfoProperties(
+                ProvisioningState: "Succeeded",
+                RequireZonalResiliency: false,
+                RequireRegionalResiliency: true,
+                RegionalObjectives: new("PT4H", "PT24H")));
+        Service.CreateGoalAssignmentAsync(
+                "sg1",
+                "assignment1",
+                false,
+                true,
+                "PT4H",
+                "PT24H",
+                "tenant1",
+                Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(ValidArgs);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.GoalAssignmentCreateCommandResult);
         Assert.Equal("assignment1", result.GoalAssignment.Name);
-        Assert.Equal("template-id", result.GoalAssignment.Properties?.GoalTemplateId);
         Assert.Equal("Succeeded", result.GoalAssignment.Properties?.ProvisioningState);
-        await Service.Received(1).CreateGoalAssignmentAsync("sg1", "assignment1", "template1", "tenant1", Arg.Any<CancellationToken>());
+        Assert.False(result.GoalAssignment.Properties?.RequireZonalResiliency);
+        Assert.True(result.GoalAssignment.Properties?.RequireRegionalResiliency);
+        Assert.Equal(
+            "PT24H",
+            result.GoalAssignment.Properties?.RegionalObjectives?.TargetRecoveryTimeObjective);
+        await Service.Received(1).CreateGoalAssignmentAsync(
+            "sg1",
+            "assignment1",
+            false,
+            true,
+            "PT4H",
+            "PT24H",
+            "tenant1",
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -97,7 +162,10 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
         Service.CreateGoalAssignmentAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException());
@@ -111,7 +179,7 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
     [Theory]
     [InlineData(HttpStatusCode.Conflict, "conflicts with the current resource state")]
     [InlineData(HttpStatusCode.Forbidden, "Authorization failed")]
-    [InlineData(HttpStatusCode.NotFound, "service group or goal template was not found")]
+    [InlineData(HttpStatusCode.NotFound, "service group was not found")]
     [InlineData(HttpStatusCode.BadRequest, "request failed")]
     public async Task ExecuteAsync_SanitizesRequestFailedException(HttpStatusCode status, string expectedMessage)
     {
@@ -119,7 +187,10 @@ public sealed class GoalAssignmentCreateCommandTests : CommandUnitTestsBase<Goal
         Service.CreateGoalAssignmentAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<bool>(),
+            Arg.Any<bool>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));

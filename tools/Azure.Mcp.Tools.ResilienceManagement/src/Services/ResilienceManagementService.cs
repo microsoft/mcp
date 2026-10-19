@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
@@ -99,6 +100,15 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     private static ArmClientOptions CreateResilienceManagementArmClientOptions()
         => ResilienceManagementRoutingPolicy.CreateArmClientOptions();
 
+    private static ArmClientOptions CreateGoalAssignmentContractArmClientOptions()
+    {
+        var options = CreateResilienceManagementArmClientOptions();
+        options.AddPolicy(
+            new GoalAssignmentContractRequestPolicy(),
+            HttpPipelinePosition.PerCall);
+        return options;
+    }
+
     internal static ArmClientOptions CreateRecoveryPlanSubmissionClientOptions()
     {
         var options = CreateResilienceManagementArmClientOptions();
@@ -141,18 +151,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<GoalAssignmentInfo> GetGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateGoalAssignmentContractArmClientOptions(), cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
-        GoalAssignmentResource resource = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
+        Response<GoalAssignmentResource> response = await goalAssignments.GetAsync(goalAssignment, cancellationToken);
 
-        return MapGoalAssignment(resource.Data);
+        return JsonSerializer.Deserialize(
+            response.GetRawResponse().Content,
+            ResilienceManagementJsonContext.Default.GoalAssignmentInfo)
+            ?? throw new InvalidOperationException("The goal assignment response was empty.");
     }
 
     public async Task<bool> DeleteGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateGoalAssignmentContractArmClientOptions(), cancellationToken: cancellationToken);
 
         var serviceGroupId = new ResourceIdentifier($"/providers/Microsoft.Management/serviceGroups/{serviceGroup}");
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);

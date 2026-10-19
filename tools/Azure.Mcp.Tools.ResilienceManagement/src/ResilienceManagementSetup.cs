@@ -29,8 +29,10 @@ public class ResilienceManagementSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResilienceManagementService, ResilienceManagementService>();
+        services.AddSingleton<IGoalAssignmentCreateService, GoalAssignmentCreateService>();
 
         services.AddSingleton<GoalAssignmentGetCommand>();
+        services.AddSingleton<GoalAssignmentCreateCommand>();
         services.AddSingleton<GoalAssignmentDeleteCommand>();
         services.AddSingleton<GoalAssignmentRecommendCapacityCommand>();
         services.AddSingleton<GoalAssignmentRefreshResourcesCommand>();
@@ -98,6 +100,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         // Register commands
         assignments.AddCommand<GoalAssignmentGetCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentCreateCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentDeleteCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentRecommendCapacityCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentRefreshResourcesCommand>(serviceProvider);

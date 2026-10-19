@@ -12,9 +12,16 @@ public sealed record GoalAssignmentInfo(
     [property: JsonPropertyName("systemData")] GoalAssignmentInfoSystemData? SystemData = null);
 
 public sealed record GoalAssignmentInfoProperties(
-    [property: JsonPropertyName("goalAssignmentType")] string GoalAssignmentType,
-    [property: JsonPropertyName("goalTemplateId")] string GoalTemplateId,
-    [property: JsonPropertyName("provisioningState")] string ProvisioningState);
+    [property: JsonPropertyName("goalAssignmentType")] string? GoalAssignmentType = null,
+    [property: JsonPropertyName("goalTemplateId")] string? GoalTemplateId = null,
+    [property: JsonPropertyName("provisioningState")] string? ProvisioningState = null,
+    [property: JsonPropertyName("requireZonalResiliency")] bool? RequireZonalResiliency = null,
+    [property: JsonPropertyName("requireRegionalResiliency")] bool? RequireRegionalResiliency = null,
+    [property: JsonPropertyName("regionalObjectives")] GoalAssignmentRegionalObjectives? RegionalObjectives = null);
+
+public sealed record GoalAssignmentRegionalObjectives(
+    [property: JsonPropertyName("targetRecoveryPointObjective")] string TargetRecoveryPointObjective,
+    [property: JsonPropertyName("targetRecoveryTimeObjective")] string TargetRecoveryTimeObjective);
 
 public sealed record GoalAssignmentInfoSystemData(
     [property: JsonPropertyName("createdAt")] string CreatedAt,

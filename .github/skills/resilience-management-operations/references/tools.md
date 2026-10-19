@@ -23,8 +23,13 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_create` | Create/update an assignment with explicit plan-type intent | **`service-group`**, **`goal-assignment`**, **`require-zonal-resiliency`**, **`require-regional-resiliency`**, `regional-recovery-point-objective?`, `regional-recovery-time-objective?`, `tenant?`. Exactly one resiliency flag must be true; Regional requires both objectives. |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` | Delete an assignment and wait for completion | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_refresh-resources` | Refresh assignment members | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update-resources` | Update Goal Resource participation | **`service-group`**, **`goal-assignment`**, **`resources`**, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+Omit `name` on get to list IDs and names; provide it for full details. Current Goal Assignment
+create uses direct intent and does not accept a legacy Goal Template ID.
 
 ## Drills
 
