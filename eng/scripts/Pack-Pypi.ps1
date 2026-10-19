@@ -131,6 +131,26 @@ function ConvertTo-PythonPackageVersion {
     return $parsedVersion.ToString()
 }
 
+function Get-DevStatus {
+    param ([string] $version)
+
+    $parsedVersion = [AzureEngSemanticVersion]::ParseVersionString($version)
+    if (!$parsedVersion) {
+        return $null
+    }
+
+    if (!$parsedVersion.IsPrerelease) {
+        return 'Development Status :: 5 - Production/Stable'
+    }
+
+    switch ($parsedVersion.PrereleaseLabel) {
+        'alpha' { return 'Development Status :: 3 - Alpha' }
+        'beta'  { return 'Development Status :: 4 - Beta' }
+        'rc'    { return 'Development Status :: 4 - Beta' }
+        default { throw "Unknown prerelease label '$($parsedVersion.PrereleaseLabel)' for version '$version'." }
+    }
+}
+
 function Get-PythonCommand {
     # Try python3 first (common on Linux/macOS), but verify it works
     # On Windows, "python3" may be a Store alias that doesn't work
@@ -188,6 +208,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
     $pythonVersion = $pythonVersion.ToString()
+    $devStatus = Get-DevStatus $server.version
     
     $description = if ([string]::IsNullOrWhiteSpace($server.pypiDescription)) { $server.description } else { $server.pypiDescription }
     $cliName = $server.cliName
@@ -260,10 +281,12 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             -replace '{{OS_CLASSIFIER}}', $osClassifier `
             -replace '{{CLI_NAME}}', $cliName `
             -replace '{{MODULE_NAME}}', $moduleName `
-            -replace '{{HOMEPAGE}}', $server.readmeUrl
+            -replace '{{HOMEPAGE}}', $server.readmeUrl `
+            -replace '{{DEV_STATUS}}', $devStatus
 
         $pyprojectPath = "$tempFolder/pyproject.toml"
         Write-Host "  Writing pyproject.toml"
+        Write-Host $pyprojectContent
         $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
 
         # Update version in __init__.py
