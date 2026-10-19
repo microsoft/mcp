@@ -1,11 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cspell:words slis
+
+using System.ClientModel.Primitives;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -62,6 +67,7 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             null,
             DrillRbacSetupMode.Manual,
             null,
+            Arg.Any<DrillUpdateProperties>(),
             null,
             Arg.Any<CancellationToken>());
     }
@@ -80,6 +86,7 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<string?>(),
+            Arg.Any<DrillUpdateProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, "Sensitive provider details"));
@@ -100,8 +107,36 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<string?>(),
+            Arg.Any<DrillUpdateProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillInfo("id1", "drill1"));
+    }
+
+    [Theory]
+    [InlineData("--health-model-monitoring-properties", "healthModelMonitoringProperties")]
+    [InlineData("--sli-monitoring-properties", "sliMonitoringProperties")]
+    public async Task ExecuteAsync_ForwardsExplicitNullWithoutOtherUpdates(string option, string propertyName)
+    {
+        ConfigureUpdatedDrill();
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", option, "null");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        var properties = Assert.IsAssignableFrom<DrillUpdateProperties>(Assert.Single(Service.ReceivedCalls()).GetArguments()[6]);
+        using JsonDocument document = JsonDocument.Parse(ModelReaderWriter.Write(properties, new ModelReaderWriterOptions("W")));
+        Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty(propertyName).ValueKind);
+        Assert.Single(document.RootElement.EnumerateObject());
+    }
+
+    [Theory]
+    [InlineData("--goal-assignment-properties", "null")]
+    [InlineData("--health-model-monitoring-properties", """{"healthModelId":"invalid"}""")]
+    [InlineData("--sli-monitoring-properties", """{"slis":[]}""")]
+    public async Task ExecuteAsync_RejectsInvalidGaConfiguration(string option, string payload)
+    {
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", option, payload);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

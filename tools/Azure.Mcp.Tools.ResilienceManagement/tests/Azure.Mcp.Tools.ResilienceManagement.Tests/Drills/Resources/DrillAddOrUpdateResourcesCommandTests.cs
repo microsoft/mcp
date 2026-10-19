@@ -21,7 +21,24 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
 {
     private const string ServiceGroup = "sg1";
     private const string Drill = "drill1";
-    private const string IncludeJson = "[{\"id\":\"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1\"}]";
+    private const string IncludeJson = "[{\"id\":\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1\"}]";
+
+    [Theory]
+    [InlineData("--include-resources", "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    [InlineData("--update-resources", "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    [InlineData("--include-resources", "/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1")]
+    [InlineData("--update-resources", "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/resource1")]
+    [InlineData("--include-resources", "not-an-arm-id")]
+    public async Task ExecuteAsync_RejectsWrongResourceIdentifiers(string option, string id)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup, "--drill", Drill, "--fault-duration-minutes", "1",
+            option, $"[{{\"id\":\"{id}\"}}]");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("drill-resource IDs", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, TestContext.Current.CancellationToken);
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()

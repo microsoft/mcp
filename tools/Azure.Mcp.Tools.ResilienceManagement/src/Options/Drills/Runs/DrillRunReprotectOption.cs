@@ -17,6 +17,9 @@ public sealed class DrillRunReprotectOptions
     [Option(Description = "The name of the drill run whose failed-over resources will be reprotected.")]
     public required string DrillRun { get; set; }
 
+    [Option(Description = "Optional full recovery-resource ARM IDs in this service group to reprotect. Omit to process all qualified resources using a request without a body.")]
+    public string[]? SelectedResourceIds { get; set; }
+
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 }

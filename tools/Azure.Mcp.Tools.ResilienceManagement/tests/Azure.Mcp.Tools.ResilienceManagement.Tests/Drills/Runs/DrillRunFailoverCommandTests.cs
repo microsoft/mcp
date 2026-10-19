@@ -22,6 +22,44 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
+    public async Task ExecuteAsync_UsesServiceDefaultsWhenAllInputsAreOmitted()
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, null, null, false, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill, "--drill-run", DrillRun);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(OperationId, ValidateAndDeserializeResponse(response,
+            ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult).OperationId);
+    }
+
+    [Theory]
+    [InlineData("--auto-failover", "true")]
+    [InlineData("--auto-failover", "false")]
+    [InlineData("--selected-resource-ids", SelectedResourceId)]
+    public async Task ExecuteAsync_RequiresSourcesForExplicitFailoverInputs(string option, string value)
+    {
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesAutomaticFailoverFlag()
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, true, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation, "--auto-failover");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(OperationId, ValidateAndDeserializeResponse(response,
+            ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult).OperationId);
+    }
+
+    [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = Command.GetCommand();
@@ -34,7 +72,6 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     [InlineData()]
     [InlineData("--service-group", ServiceGroup)]
     [InlineData("--service-group", ServiceGroup, "--drill", Drill)]
-    [InlineData("--service-group", ServiceGroup, "--drill", Drill, "--drill-run", DrillRun)]
     public async Task ExecuteAsync_RejectsMissingRequiredOptions(params string[] args)
     {
         var response = await ExecuteCommandAsync(args);

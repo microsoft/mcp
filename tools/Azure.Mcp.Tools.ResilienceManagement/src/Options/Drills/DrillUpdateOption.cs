@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// cspell:words slis
+
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
@@ -26,6 +28,15 @@ public sealed class DrillUpdateOptions
 
     [Option(Name = "recoveryplan", Description = "The recoveryplan name in the same service group to associate with the drill.")]
     public string? RecoveryPlan { get; set; }
+
+    [Option(Description = "JSON goal-assignment properties to update, containing identity (type and optional userAssignedIdentity). goalAssignmentId is read-only. Omit to preserve the current configuration.")]
+    public string? GoalAssignmentProperties { get; set; }
+
+    [Option(Description = "JSON Health Model monitoring properties to update (identity and/or healthModelId). Pass the string 'null' as this JSON payload to clear monitoring; omit to preserve it.")]
+    public string? HealthModelMonitoringProperties { get; set; }
+
+    [Option(Description = "JSON SLI monitoring properties to update (identity and/or slis). A supplied slis array replaces the selection and must contain one or two unique sliId/type entries (Availability or Latency). Pass the string 'null' as this JSON payload to clear; omit to preserve.")]
+    public string? SliMonitoringProperties { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

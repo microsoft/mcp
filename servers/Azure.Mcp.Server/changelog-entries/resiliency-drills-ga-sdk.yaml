@@ -1,0 +1,12 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Corrected drill resource include/update inputs and examples to require drill-resource IDs rather than underlying VM IDs, and reject identifiers belonging to another drill."
+  - section: "Bugs Fixed"
+    description: "Forward drill action operation IDs in the query as well as the header for resync readiness, validation, resource add/update, start, and end, matching the existing run-action routing."
+  - section: "Features Added"
+    description: "Added GA goal-assignment identity, Health Model and SLI configuration to resiliency drill create/update, including sparse PATCH and explicit clearing. Drill validation accepts an optional operation selector and requires source locations except for explicit Reprotect. Failover supports omitted request bodies, and reprotect supports selected recovery resources."
+  - section: "Other Changes"
+    description: "Updated Azure.ResourceManager.ResilienceManagement to 1.0.0 and migrated existing resiliency drill operations to the GA 2026-10-01 API."
+    subsection: "Dependency Updates"
+  - section: "Breaking Changes"
+    description: "Resiliency goal get responses expose GA requireZonalResiliency and zonalResiliency fields. Legacy preview-only goal fields are nullable when absent from the service response, rather than inferred from zonal resiliency."
