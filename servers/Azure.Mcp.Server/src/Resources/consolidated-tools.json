@@ -1495,7 +1495,8 @@
       },
       "mappedToolList": [
         "advisor_recommendation_list",
-        "advisor_recommendation_summary"
+        "advisor_recommendation_summary",
+        "advisor_recommendation_service_group_scope"
       ]
     },
     {

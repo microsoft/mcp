@@ -33,7 +33,7 @@ public class RecommendationQueryBuilderTests
             scope: RecommendationQueryScope.ForServiceGroup("sg1"));
 
         Assert.Contains(
-            "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/sg1'",
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/sg1'",
             result);
         Assert.Contains("strlen(name) == 64", result);
         Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
@@ -87,6 +87,18 @@ public class RecommendationQueryBuilderTests
     }
 
     [Fact]
+    public void BuildSubscriptionClause_MultipleSubscriptionsUsesInPredicate()
+    {
+        var scope = RecommendationQueryScope.ForSubscriptions(
+            ["sub1", "sub2", "SUB1"],
+            null);
+
+        Assert.Equal(
+            "subscriptionId in~ ('sub1', 'sub2')",
+            RecommendationQueryBuilder.BuildSubscriptionClause(scope));
+    }
+
+    [Fact]
     public void BuildInstancePredicates_ServiceGroupScope_MatchesCanonicalServiceGroupId()
     {
         var scope = RecommendationQueryScope.ForServiceGroup("sg1");
@@ -100,7 +112,7 @@ public class RecommendationQueryBuilderTests
             scope: scope);
 
         Assert.Contains(
-            $"tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}sg1'",
+            $"isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}sg1'",
             result);
         Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
     }
@@ -138,6 +150,125 @@ public class RecommendationQueryBuilderTests
     }
 
     [Fact]
+    public void BuildInstancePredicates_CostOnlyFiltersRequireCostCategory()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            RecommendationQueryBuilder.BuildInstancePredicates(
+                new RecommendationFilters(
+                    MinimumSavings: 100,
+                    SavingsAsOf: DateTimeOffset.UtcNow),
+                includeStatus: true,
+                useRequestedStatus: false,
+                includeCategoryAndImpact: false,
+                resourceTypeUsesImpactedField: true));
+
+        Assert.Contains("require --category Cost", exception.Message);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_CostOnlyFiltersAllowCostCategory()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(
+                Category: "Cost",
+                MinimumSavings: 100,
+                SavingsAsOf: DateTimeOffset.UtcNow),
+            includeStatus: true,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: false,
+            resourceTypeUsesImpactedField: true);
+
+        Assert.Contains("dailyPotentialSavings", result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ListUsesMultipleRecommendationTypeIds()
+    {
+        var firstTypeId = "1d70919c-1a4a-4f79-8300-bb576c291e9d";
+        var secondTypeId = "2d70919c-1a4a-4f79-8300-bb576c291e9d";
+
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(RecommendationTypeIds: [firstTypeId, secondTypeId]),
+            includeStatus: true,
+            useRequestedStatus: true,
+            includeCategoryAndImpact: true,
+            resourceTypeUsesImpactedField: false);
+
+        Assert.Contains(
+            $"tostring(properties.recommendationTypeId) in~ ('{firstTypeId}', '{secondTypeId}')",
+            result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_UsesMultipleImpactedResourceTypes()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(
+                ResourceTypes: ["Microsoft.Storage/storageAccounts", "Microsoft.Compute/virtualMachines"]),
+            includeStatus: false,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: false,
+            resourceTypeUsesImpactedField: true);
+
+        Assert.Contains(
+            "(tostring(properties.impactedField) =~ 'Microsoft.Storage/storageAccounts' or " +
+            "tostring(properties.impactedField) =~ 'Microsoft.Compute/virtualMachines')",
+            result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_UsesMultipleResourceTypesInResourceIds()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(
+                ResourceTypes: ["Microsoft.Storage/storageAccounts", "Microsoft.Compute/virtualMachines"]),
+            includeStatus: false,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: false,
+            resourceTypeUsesImpactedField: false);
+
+        Assert.Contains(
+            "(tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Storage/storageAccounts' or " +
+            "tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Compute/virtualMachines')",
+            result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ListUsesSingleRecommendationTypeIdCollection()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(
+                RecommendationTypeIds: ["1d70919c-1a4a-4f79-8300-bb576c291e9d"]),
+            includeStatus: false,
+            useRequestedStatus: false,
+            includeCategoryAndImpact: false,
+            resourceTypeUsesImpactedField: true);
+
+        Assert.Contains(
+            "tostring(properties.recommendationTypeId) in~ ('1d70919c-1a4a-4f79-8300-bb576c291e9d')",
+            result);
+    }
+
+    [Fact]
+    public void BuildProductFamilyPredicate_ComputeUsesMetadataThenAppServiceFallback()
+    {
+        var result = ProductFamilyFilter.BuildPredicate("Compute");
+
+        Assert.Contains(
+            "tolower(tostring(metadataServiceFamily)) =~ 'compute'",
+            result);
+        Assert.Contains(
+            "tolower(tostring(properties.impactedField)) startswith 'microsoft.compute/'",
+            result);
+        Assert.Contains(
+            "tolower(tostring(properties.impactedField)) startswith 'microsoft.web/serverfarms/'",
+            result);
+        Assert.Contains(
+            "tolower(tostring(properties.resourceMetadata.resourceId)) contains '/providers/microsoft.web/serverfarms/'",
+            result);
+    }
+
+    [Fact]
     public void BuildInstancePredicates_ListExcludesLegacyAndServiceGroupRecommendations()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
@@ -168,7 +299,7 @@ public class RecommendationQueryBuilderTests
 
         Assert.StartsWith(
             $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
-            "tostring(properties.serviceGroupId) =~ " +
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ " +
             $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test' and ",
             result);
         Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+
 using Azure.Mcp.Core.Services.Azure;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
@@ -10,6 +12,14 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 
 internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureService)
 {
+    internal const int ResourceGraphPageSize = 1000;
+    internal const int ResourceGraphScopeBatchSize = 50;
+    internal const int ResourceGraphMaxPages = 100;
+    internal const int MaxConcurrentScopeBatches = 4;
+    internal static readonly TimeSpan ScopeBatchTimeout = TimeSpan.FromSeconds(45);
+
+    internal sealed record PagedQueryResult(IReadOnlyList<JsonElement> Rows, bool IsTruncated);
+
     private readonly IAzureService _azureService = azureService;
 
     internal async Task<(RecommendationQueryScope Scope, TenantResource TenantResource)> ResolveSubscriptionScopeAsync(
@@ -18,12 +28,62 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         string? tenant,
         CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-
-        var subscriptionResource = await _azureService.GetSubscription(
-            subscription,
+        var resolved = await ResolveSubscriptionsScopeAsync(
+            [subscription],
+            resourceGroup,
             tenant,
-            cancellationToken: cancellationToken);
+            cancellationToken);
+        return (resolved.Scope, resolved.TenantResource);
+    }
+
+    internal async Task<(
+        RecommendationQueryScope Scope,
+        TenantResource TenantResource,
+        SubscriptionResource SubscriptionResource)> ResolveSubscriptionsScopeAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(subscriptions);
+        var normalizedSubscriptions = subscriptions
+            .Where(static subscription => !string.IsNullOrWhiteSpace(subscription))
+            .Select(static subscription => subscription.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        ArgumentOutOfRangeException.ThrowIfZero(normalizedSubscriptions.Length);
+
+        var subscriptionResources = new List<SubscriptionResource>(normalizedSubscriptions.Length);
+        foreach (var subscription in normalizedSubscriptions)
+        {
+            subscriptionResources.Add(await _azureService.GetSubscription(
+                subscription,
+                tenant,
+                cancellationToken: cancellationToken));
+        }
+
+        var subscriptionResource = subscriptionResources[0];
+        var tenantIds = subscriptionResources
+            .Select(resource => resource.Data.TenantId)
+            .Distinct()
+            .ToArray();
+        if (tenantIds.Length != 1)
+        {
+            throw new InvalidOperationException(
+                "All selected subscriptions must belong to the same Azure tenant.");
+        }
+
+        var subscriptionIds = subscriptionResources
+            .Select(resource => resource.Data.SubscriptionId)
+            .Where(static id => !string.IsNullOrWhiteSpace(id))
+            .Select(static id => id!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (subscriptionIds.Length != normalizedSubscriptions.Length)
+        {
+            throw new InvalidOperationException("One or more resolved Azure subscriptions did not have a subscription ID.");
+        }
+
         var subscriptionId = subscriptionResource.Data.SubscriptionId
             ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
         var normalizedResourceGroup = string.IsNullOrWhiteSpace(resourceGroup)
@@ -32,13 +92,16 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
 
         if (normalizedResourceGroup is not null)
         {
-            var exists = await subscriptionResource
-                .GetResourceGroups()
-                .ExistsAsync(normalizedResourceGroup, cancellationToken);
-            if (!exists.Value)
+            foreach (var resource in subscriptionResources)
             {
-                throw new KeyNotFoundException(
-                    $"Resource group '{normalizedResourceGroup}' does not exist in subscription '{subscriptionId}'.");
+                var exists = await resource
+                    .GetResourceGroups()
+                    .ExistsAsync(normalizedResourceGroup, cancellationToken);
+                if (!exists.Value)
+                {
+                    throw new KeyNotFoundException(
+                        $"Resource group '{normalizedResourceGroup}' does not exist in subscription '{resource.Data.SubscriptionId}'.");
+                }
             }
         }
 
@@ -46,16 +109,28 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
             subscriptionResource.Data.TenantId,
             cancellationToken);
         return (
-            RecommendationQueryScope.ForSubscription(subscriptionId, normalizedResourceGroup),
-            tenantResource);
+            normalizedSubscriptions.Length == 1
+                ? RecommendationQueryScope.ForSubscription(subscriptionId, normalizedResourceGroup)
+                : RecommendationQueryScope.ForSubscriptions(subscriptionIds, normalizedResourceGroup),
+            tenantResource,
+            subscriptionResource);
     }
 
     internal async Task<(RecommendationQueryScope Scope, TenantResource TenantResource)> ResolveServiceGroupScopeAsync(
         string serviceGroup,
         string? tenant,
         CancellationToken cancellationToken)
+        => await ResolveServiceGroupScopeAsync(
+            [serviceGroup],
+            tenant,
+            cancellationToken);
+
+    internal async Task<(RecommendationQueryScope Scope, TenantResource TenantResource)> ResolveServiceGroupScopeAsync(
+        IReadOnlyCollection<string> serviceGroups,
+        string? tenant,
+        CancellationToken cancellationToken)
     {
-        var scope = RecommendationQueryScope.ForServiceGroup(serviceGroup);
+        var scope = RecommendationQueryScope.ForServiceGroups(serviceGroups);
         var tenantResource = await ResolveTenantResourceAsync(tenant, cancellationToken);
         return (scope, tenantResource);
     }
@@ -116,6 +191,105 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
             : null;
         EnsureFullTenantCoverage(limitHit);
         return response.Value;
+    }
+
+    internal static async Task<PagedQueryResult> ExecutePagedAsync(
+        TenantResource tenantResource,
+        string query,
+        CancellationToken cancellationToken)
+    {
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(ScopeBatchTimeout);
+
+        var rows = new List<JsonElement>();
+        var isTruncated = false;
+        var seenSkipTokens = new HashSet<string>(StringComparer.Ordinal);
+        string? skipToken = null;
+        for (var page = 1; ; page++)
+        {
+            var queryContent = new ResourceQueryContent(query)
+            {
+                Options = new ResourceQueryRequestOptions
+                {
+                    Top = ResourceGraphPageSize,
+                    SkipToken = skipToken,
+                },
+            };
+            try
+            {
+                var response = await tenantResource.GetResourcesAsync(queryContent, timeoutCancellation.Token);
+                var limitHit = response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
+                    ? value
+                    : null;
+                EnsureFullTenantCoverage(limitHit);
+
+                var result = response.Value;
+                isTruncated |= result.ResultTruncated == ResultTruncated.True;
+                if (result.Count > 0 && result.Data is not null)
+                {
+                    using var document = JsonDocument.Parse(result.Data);
+                    if (document.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        rows.AddRange(document.RootElement.EnumerateArray().Select(static row => row.Clone()));
+                    }
+                }
+
+                skipToken = result.SkipToken;
+                if (string.IsNullOrWhiteSpace(skipToken))
+                {
+                    return new(rows, isTruncated);
+                }
+            }
+            catch (OperationCanceledException) when (
+                timeoutCancellation.IsCancellationRequested &&
+                !cancellationToken.IsCancellationRequested)
+            {
+                throw new TimeoutException(
+                    $"Azure Resource Graph Advisor query exceeded the {ScopeBatchTimeout.TotalSeconds:0}-second batch timeout.");
+            }
+
+            if (!seenSkipTokens.Add(skipToken))
+            {
+                throw new InvalidOperationException(
+                    "Azure Resource Graph returned a repeated skip token while paging Advisor recommendations.");
+            }
+
+            if (page >= ResourceGraphMaxPages)
+            {
+                throw new InvalidOperationException(
+                    $"Azure Resource Graph pagination exceeded the {ResourceGraphMaxPages}-page limit; results are incomplete.");
+            }
+        }
+    }
+
+    internal static async Task<IReadOnlyList<PagedQueryResult>> ExecuteBatchedPagedAsync(
+        RecommendationQueryScope scope,
+        TenantResource tenantResource,
+        Func<RecommendationQueryScope, string> queryFactory,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        ArgumentNullException.ThrowIfNull(tenantResource);
+        ArgumentNullException.ThrowIfNull(queryFactory);
+
+        var batchScopes = scope.Batch(ResourceGraphScopeBatchSize).ToArray();
+        var results = new PagedQueryResult[batchScopes.Length];
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, batchScopes.Length),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = MaxConcurrentScopeBatches,
+                CancellationToken = cancellationToken,
+            },
+            async (index, batchCancellationToken) =>
+            {
+                results[index] = await ExecutePagedAsync(
+                    tenantResource,
+                    queryFactory(batchScopes[index]),
+                    batchCancellationToken);
+            });
+
+        return results;
     }
 
     /// <summary>

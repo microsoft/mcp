@@ -267,7 +267,7 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Contains("| distinct *", query);
         if (serviceGroupScope)
         {
-            Assert.Contains("tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'", query);
+            Assert.Contains("isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'", query);
             Assert.DoesNotContain("tostring(properties.serviceGroupId) in~", query);
             Assert.DoesNotContain("subscriptionId =~", query);
             await azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
@@ -456,7 +456,7 @@ public sealed class AdvisorServiceListTransportTests
         }
 
         Assert.Contains(
-            "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
             query);
         Assert.Contains(
             "extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))",
@@ -566,6 +566,53 @@ public sealed class AdvisorServiceListTransportTests
         Assert.True(result.AreResultsTruncated);
     }
 
+    [Fact]
+    public async Task ExecutePagedAsync_RepeatedSkipToken_ThrowsInsteadOfLooping()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+            request.Method == HttpMethod.Get
+                ? CreateTenantListResponse(tenantId)
+                : CreateResourceGraphResponseWithSkipToken("repeated-token", CreateRecommendation("first")));
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(
+                tenant,
+                "advisorresources",
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("repeated skip token", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecutePagedAsync_TenantSubscriptionLimitHit_ThrowsInsteadOfReturningPartialResults()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            var response = CreateResourceGraphResponse(CreateRecommendation("first"));
+            response.Headers.Add(
+                AdvisorResourceGraphQueryExecutor.TenantSubscriptionLimitHitHeader,
+                "true");
+            return response;
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(
+                tenant,
+                "advisorresources",
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("10,000 accessible subscriptions", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -653,6 +700,18 @@ public sealed class AdvisorServiceListTransportTests
             count = recommendations.Length,
             resultTruncated = resultTruncated ? "true" : "false",
             data = recommendations,
+        });
+
+    private static HttpResponseMessage CreateResourceGraphResponseWithSkipToken(
+        string skipToken,
+        params object[] recommendations) =>
+        CreateJsonResponse(new Dictionary<string, object?>
+        {
+            ["totalRecords"] = recommendations.Length,
+            ["count"] = recommendations.Length,
+            ["resultTruncated"] = "false",
+            ["$skipToken"] = skipToken,
+            ["data"] = recommendations,
         });
 
     private static HttpResponseMessage CreateJsonResponse(object payload) => new(HttpStatusCode.OK)

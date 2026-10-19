@@ -193,6 +193,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("--subscription sub1 --resource-group rg1", true)]
     [InlineData("--subscription sub1", true)]  // Missing resource-group
+    [InlineData("--subscriptions sub1 sub2 --prioritized true --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", false)]
+    [InlineData("--service-groups sg1 sg2 --prioritized true --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", false)]
     [InlineData("", false)]                    // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -221,7 +223,10 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            if (string.IsNullOrWhiteSpace(args))
+            {
+                Assert.Contains("required", response.Message.ToLower());
+            }
         }
     }
 
@@ -550,6 +555,36 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured!.RecommendationTypeId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MultipleRecommendationTypeIds_PassesAllNormalizedIds()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--recommendation-type-id",
+            "1D70919C-1A4A-4F79-8300-BB576C291E9D",
+            "2D70919C-1A4A-4F79-8300-BB576C291E9D");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.RecommendationTypeId);
+        Assert.Equal(
+            [
+                "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+                "2d70919c-1a4a-4f79-8300-bb576c291e9d",
+            ],
+            captured.RecommendationTypeIds);
     }
 
     [Theory]

@@ -51,6 +51,26 @@ public class AdvisorService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
+        var subscriptions = string.IsNullOrWhiteSpace(subscription)
+            ? []
+            : new[] { subscription };
+        return await ListRecommendationsAsync(
+            subscriptions,
+            resourceGroup,
+            filters,
+            top,
+            tenant,
+            cancellationToken);
+    }
+
+    public async Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        RecommendationFilters? filters = null,
+        int top = 50,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentOutOfRangeException.ThrowIfLessThan(top, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(top, 100);
         var prioritized = IsPrioritized(filters);
@@ -58,68 +78,106 @@ public class AdvisorService(IAzureService azureService)
         {
             throw new ArgumentException(RecommendationFilterValidator.PrioritizationSignalsRequiresPrioritized, nameof(filters));
         }
-        if (prioritized && string.IsNullOrWhiteSpace(filters?.RecommendationTypeId))
+        if (prioritized &&
+            (filters?.RecommendationTypeIds is { Count: > 1 } ||
+             (filters?.RecommendationTypeIds is not { Count: > 0 } &&
+              string.IsNullOrWhiteSpace(filters?.RecommendationTypeId))))
         {
             throw new ArgumentException(RecommendationFilterValidator.PrioritizedRequiresRecommendationType, nameof(filters));
         }
 
-        var serviceGroup = string.IsNullOrWhiteSpace(filters?.ServiceGroup) ? null : filters!.ServiceGroup!.Trim();
-        var isServiceGroupScope = serviceGroup is not null;
+        var serviceGroups = (filters?.ServiceGroups ?? [])
+            .Concat(string.IsNullOrWhiteSpace(filters?.ServiceGroup) ? [] : [filters!.ServiceGroup!])
+            .Where(static serviceGroup => !string.IsNullOrWhiteSpace(serviceGroup))
+            .Select(static serviceGroup => serviceGroup.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var isServiceGroupScope = serviceGroups.Length > 0;
 
         // Resolve the subscription up front for subscription scope so the metadata join uses the same tenant
         // and scope validation surfaces invalid subscriptions or resource groups. Service Group scope is
         // subscription-independent and runs against the tenant directly.
         SubscriptionResource? subscriptionResource = null;
+        TenantResource? subscriptionTenantResource = null;
         if (!isServiceGroupScope)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-            subscriptionResource = await AzureService.GetSubscription(
-                subscription,
+            var resolved = await _queryExecutor.ResolveSubscriptionsScopeAsync(
+                subscriptions,
+                resourceGroup,
                 tenant,
-                cancellationToken: cancellationToken);
+                cancellationToken);
+            subscriptionResource = resolved.SubscriptionResource;
+            subscriptionTenantResource = resolved.TenantResource;
+            var subscriptionScope = resolved.Scope;
+
+            var subscriptionRecommendations = await ExecuteRecommendationListQueriesAsync(
+                subscriptionScope,
+                batchScope =>
+                {
+                    var batchPredicates = RecommendationQueryBuilder.BuildInstancePredicates(
+                        filters,
+                        includeStatus: true,
+                        useRequestedStatus: true,
+                        includeCategoryAndImpact: false,
+                        resourceTypeUsesImpactedField: false,
+                        scope: batchScope);
+                    return prioritized
+                        ? BuildPrioritizedRecommendationListQuery(batchScope, batchPredicates, top + 1, filters)
+                        : BuildRecommendationListQuery(
+                            batchScope,
+                            batchPredicates,
+                            top + 1,
+                            MetadataJoinLanguage,
+                            filters);
+                },
+                top,
+                subscriptionResource,
+                subscriptionTenantResource,
+                tenant,
+                filters?.ShowPrioritizationSignals == true,
+                cancellationToken);
+
+            if (subscriptionRecommendations.Results.Count == 0 && resourceGroup is not null)
+            {
+                await EnsureResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken);
+            }
+            return subscriptionRecommendations;
         }
 
         var scope = isServiceGroupScope
-            ? RecommendationQueryScope.ForServiceGroup(serviceGroup!)
-            : RecommendationQueryScope.ForSubscription(
-                subscriptionResource!.Data.SubscriptionId
-                    ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID."),
-                resourceGroup);
-
-        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
-            filters,
-            includeStatus: true,
-            useRequestedStatus: true,
-            includeCategoryAndImpact: false,
-            resourceTypeUsesImpactedField: false,
-            scope: scope);
+            ? RecommendationQueryScope.ForServiceGroups(serviceGroups)
+            : throw new InvalidOperationException("Subscription scope was not resolved.");
 
         // A single tenant-scoped query joins recommendations with the metadata catalog and overrides the
         // type-level fields server-side, so no follow-up metadata call or client-side merge is needed.
         // One extra row is fetched because ARG's '| limit' never reports truncation; its presence means more
         // results exist beyond top, and it is trimmed before returning.
-        var query = prioritized
-            ? BuildPrioritizedRecommendationListQuery(scope, predicates, top + 1, filters)
-            : BuildRecommendationListQuery(
-                scope,
-                predicates,
-                top + 1,
-                MetadataJoinLanguage,
-                filters);
-
-        var recommendations = await ExecuteRecommendationListQueryAsync(
-            query,
+        var recommendations = await ExecuteRecommendationListQueriesAsync(
+            scope,
+            batchScope =>
+            {
+                var batchPredicates = RecommendationQueryBuilder.BuildInstancePredicates(
+                    filters,
+                    includeStatus: true,
+                    useRequestedStatus: true,
+                    includeCategoryAndImpact: false,
+                    resourceTypeUsesImpactedField: false,
+                    scope: batchScope);
+                return prioritized
+                    ? BuildPrioritizedRecommendationListQuery(batchScope, batchPredicates, top + 1, filters)
+                    : BuildRecommendationListQuery(
+                        batchScope,
+                        batchPredicates,
+                        top + 1,
+                        MetadataJoinLanguage,
+                        filters);
+            },
             top,
-            subscriptionResource,
+            null,
+            null,
             tenant,
             filters?.ShowPrioritizationSignals == true,
             cancellationToken);
-
-        if (recommendations.Results.Count == 0 && !isServiceGroupScope)
-        {
-            // Preserve the resource-group-not-found signal that the subscription-scoped query would produce.
-            await EnsureResourceGroupExistsAsync(subscriptionResource!, resourceGroup, cancellationToken);
-        }
 
         return recommendations;
     }
@@ -136,7 +194,9 @@ public class AdvisorService(IAzureService azureService)
         BuildRecommendationScopeQuery(scope, predicates) +
         " | extend joinTypeId = tolower(tostring(properties.recommendationTypeId))" +
         BuildMetadataJoinClause(language, filters) +
+        BuildProductFamilyFilterClause(filters) +
         MetadataOverrideClause +
+        BuildYearlySavingsEnrichmentClause() +
         $" | project id, name, type, properties | limit {limit}";
 
     internal static string BuildPrioritizedRecommendationListQuery(
@@ -158,7 +218,9 @@ public class AdvisorService(IAzureService azureService)
         return BuildRecommendationScopeQuery(scope, predicates) +
             " | extend joinTypeId = tolower(tostring(properties.recommendationTypeId))" +
             BuildMetadataJoinClause(MetadataJoinLanguage, filters, includeRetirementDate: true) +
+            BuildProductFamilyFilterClause(filters) +
             MetadataOverrideClause +
+            BuildYearlySavingsEnrichmentClause() +
             ranking +
             " | extend retirementDate = coalesce(todatetime(properties.extendedProperties.retirementDate), metadataRetirementDate)," +
             " resourceNameSort = tolower(tostring(properties.impactedValue))" +
@@ -167,15 +229,24 @@ public class AdvisorService(IAzureService azureService)
             " | project id, name, type, properties";
     }
 
+    private static string BuildYearlySavingsEnrichmentClause() =>
+        " | extend _dailyPotentialSavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))" +
+        " | extend _yearlyPotentialSavings = iff(isfinite(_dailyPotentialSavings), _dailyPotentialSavings * 30.4 * 12.0, real(null))" +
+        " | extend properties = iff(isfinite(_yearlyPotentialSavings)," +
+        " bag_merge(properties, bag_pack('savings'," +
+        " bag_merge(properties.savings, bag_pack('retail'," +
+        " bag_merge(properties.savings.retail, bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings))))))," +
+        " properties)";
+
     private static string BuildRecommendationScopeQuery(
         RecommendationQueryScope scope,
         string? predicates)
     {
         var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
 
-        if (scope.SubscriptionId is { } subscriptionId)
+        if (scope.Kind == RecommendationQueryScopeKind.Subscription)
         {
-            query += $" and subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId)}'";
+            query += $" and {RecommendationQueryBuilder.BuildSubscriptionClause(scope)}";
         }
 
         if (scope.ResourceGroup is { } resourceGroup)
@@ -200,6 +271,7 @@ public class AdvisorService(IAzureService azureService)
         var metadataFilters = hasMetadataFilters
             ? new RecommendationMetadataFilters(
                 ResourceType: filters!.ResourceType,
+                ResourceTypes: filters.ResourceTypes,
                 Impact: filters.Impact,
                 Category: filters.Category,
                 SubCategory: filters.SubCategory,
@@ -218,6 +290,7 @@ public class AdvisorService(IAzureService azureService)
             " metadataCategory = tostring(properties.recommendationCategory)," +
             " metadataImpact = tostring(properties.recommendationImpact)," +
             " metadataSubCategory = tostring(properties.recommendationSubCategory)," +
+            " metadataServiceFamily = tostring(properties.serviceFamily)," +
             " metadataDisplayName = tostring(properties.displayName)," +
             " metadataLabel = tostring(properties.label)," +
             " metadataDescription = tostring(properties.detailedDescription)," +
@@ -230,6 +303,11 @@ public class AdvisorService(IAzureService azureService)
             (NormalizeFilterValues(filters?.TrackingIds).Count > 0 ? " | distinct *" : string.Empty) +
             " ) on joinTypeId";
     }
+
+    private static string BuildProductFamilyFilterClause(RecommendationFilters? filters) =>
+        string.IsNullOrWhiteSpace(filters?.ProductFamily)
+            ? string.Empty
+            : $" | where {ProductFamilyFilter.BuildPredicate(filters.ProductFamily)}";
 
     // Metadata overrides type-level fields and then properties are rewritten in place (bag_merge keeps the
     // left-most value for duplicate keys). extendedProperties never gains new keys: only an existing
@@ -252,28 +330,40 @@ public class AdvisorService(IAzureService azureService)
         $" | extend keepInstanceProperties = tostring(properties.sourceSystem) =~ 'Assessment' or joinTypeId == '{PersonalizedRecommendationTypeId}'" +
         " | extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))";
 
-    private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueryAsync(
-        string query,
+    private async Task<ResourceQueryResults<Recommendation>> ExecuteRecommendationListQueriesAsync(
+        RecommendationQueryScope scope,
+        Func<RecommendationQueryScope, string> queryFactory,
         int limit,
         SubscriptionResource? subscriptionResource,
+        TenantResource? subscriptionTenantResource,
         string? tenant,
         bool showPrioritizationSignals,
         CancellationToken cancellationToken)
     {
         // The query joins tenant-level metadata, so it runs at tenant scope for both subscription and
         // Service Group scopes; the subscription filter is expressed inside the query itself.
-        var tenantResource = subscriptionResource is not null
+        var tenantResource = subscriptionTenantResource
+            ?? (subscriptionResource is not null
             ? await GetTenantResourceForSubscriptionAsync(subscriptionResource, cancellationToken)
-            : await GetTenantResourceAsync(tenant, cancellationToken);
-        var queryContent = new ResourceQueryContent(query);
-
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+            : await GetTenantResourceAsync(tenant, cancellationToken));
+        var rows = new List<JsonElement>();
+        var isTruncated = false;
+        var batchResults = await AdvisorResourceGraphQueryExecutor.ExecuteBatchedPagedAsync(
+            scope,
+            tenantResource,
+            queryFactory,
+            cancellationToken);
+        foreach (var batchResult in batchResults)
+        {
+            isTruncated |= batchResult.IsTruncated;
+            rows.AddRange(batchResult.Rows);
+        }
 
         return ParseRecommendationListResult(
-            result?.Data,
+            rows.Count == 0 ? null : BinaryData.FromString($"[{string.Join(',', rows.Select(static row => row.GetRawText()))}]"),
             limit,
-            result?.ResultTruncated == ResultTruncated.True,
-            result?.SkipToken,
+            isTruncated,
+            null,
             showPrioritizationSignals);
     }
 
@@ -492,6 +582,7 @@ public class AdvisorService(IAzureService azureService)
         HasMetadataOnlyFilters(filters) ||
             (!string.IsNullOrWhiteSpace(filters?.Category) ||
             !string.IsNullOrWhiteSpace(filters?.Impact) ||
+            filters?.ResourceTypes is { Count: > 0 } ||
             !string.IsNullOrWhiteSpace(filters?.ResourceType));
 
     private static string FormatKqlStringList(IEnumerable<string> values) =>
@@ -585,9 +676,18 @@ public class AdvisorService(IAzureService azureService)
     {
         var query = string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(filters?.ResourceType))
+        var resourceTypes = filters?.ResourceTypes is { Count: > 0 }
+            ? filters.ResourceTypes
+            : string.IsNullOrWhiteSpace(filters?.ResourceType)
+                ? []
+                : [filters.ResourceType];
+        if (resourceTypes.Count > 0)
         {
-            query += $" | where tostring(properties.supportedResourceType) =~ '{EscapeKqlString(filters.ResourceType.Trim())}'";
+            var resourceTypePredicates = resourceTypes.Select(
+                    resourceType => $"tostring(properties.supportedResourceType) =~ '{EscapeKqlString(resourceType.Trim())}'");
+            query += resourceTypes.Count == 1
+                ? $" | where {resourceTypePredicates.Single()}"
+                : $" | where ({string.Join(" or ", resourceTypePredicates)})";
         }
 
         if (!string.IsNullOrWhiteSpace(filters?.Impact))

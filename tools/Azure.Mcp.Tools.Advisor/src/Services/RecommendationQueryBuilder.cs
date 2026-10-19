@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Advisor.Models;
+using System.Globalization;
 
+using Azure.Mcp.Tools.Advisor.Models;
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 internal static class RecommendationQueryBuilder
@@ -27,6 +28,8 @@ internal static class RecommendationQueryBuilder
         IEnumerable<string>? recommendationTypeIds = null,
         RecommendationQueryScope? scope = null)
     {
+        ValidateCostOnlyFilters(filters);
+
         var clauses = new List<string>
         {
             CurrentRecommendationNameClause,
@@ -44,6 +47,14 @@ internal static class RecommendationQueryBuilder
         var metadataWasResolved = resolvedTypeIds is not null;
         if (filters is not null)
         {
+            if (filters.MinimumSavings is decimal minimumSavings)
+            {
+                var threshold = minimumSavings.ToString("G29", CultureInfo.InvariantCulture);
+                clauses.Add(
+                    $"isfinite(todouble(properties.savings.retail.dailyPotentialSavings)) and " +
+                    $"todouble(properties.savings.retail.dailyPotentialSavings) * 364.8 >= {threshold}");
+            }
+
             if (includeCategoryAndImpact &&
                 !metadataWasResolved &&
                 !string.IsNullOrWhiteSpace(filters.Category))
@@ -58,20 +69,35 @@ internal static class RecommendationQueryBuilder
                 clauses.Add($"tostring(properties.impact) =~ '{SanitizeForKql(filters.Impact)}'");
             }
 
-            if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))
+            if (filters.RecommendationTypeIds is { Count: > 0 })
+            {
+                clauses.Add(
+                    $"tostring(properties.recommendationTypeId) in~ ({FormatKqlStringList(filters.RecommendationTypeIds)})");
+            }
+            else if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))
             {
                 clauses.Add(
                     $"tostring(properties.recommendationTypeId) =~ '{SanitizeForKql(filters.RecommendationTypeId)}'");
             }
 
-            if (!string.IsNullOrWhiteSpace(filters.ResourceType))
+            var resourceTypes = filters.ResourceTypes is { Count: > 0 }
+                ? filters.ResourceTypes
+                : string.IsNullOrWhiteSpace(filters.ResourceType)
+                    ? []
+                    : [filters.ResourceType];
+            if (resourceTypes.Count > 0)
             {
                 var resourceTypeProperty = resourceTypeUsesImpactedField
                     ? "properties.impactedField"
                     : "properties.resourceMetadata.resourceId";
-                var comparison = resourceTypeUsesImpactedField ? "=~" : "contains";
-                clauses.Add(
-                    $"tostring({resourceTypeProperty}) {comparison} '{SanitizeForKql(filters.ResourceType)}'");
+                var comparisons = resourceTypes.Select(resourceType =>
+                {
+                    var comparison = resourceTypeUsesImpactedField ? "=~" : "contains";
+                    return $"tostring({resourceTypeProperty}) {comparison} '{SanitizeForKql(resourceType)}'";
+                });
+                clauses.Add(resourceTypes.Count == 1
+                    ? comparisons.Single()
+                    : $"({string.Join(" or ", comparisons)})");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.Resource))
@@ -96,10 +122,46 @@ internal static class RecommendationQueryBuilder
         return string.Join(" and ", clauses);
     }
 
-    internal static string BuildServiceGroupClause(RecommendationQueryScope? scope) =>
-        scope?.ServiceGroupResourceId is { } serviceGroupResourceId
-            ? $"tostring(properties.serviceGroupId) =~ '{SanitizeForKql(serviceGroupResourceId)}'"
-            : ServiceGroupExclusionClause;
+    internal static void ValidateCostOnlyFilters(RecommendationFilters? filters)
+    {
+        if (filters is null)
+        {
+            return;
+        }
+
+        var hasCostOnlyFilter =
+            filters.MinimumSavings is not null ||
+            filters.SavingsAsOf is not null ||
+            filters.SavingsFrom is not null ||
+            filters.SavingsTo is not null;
+        if (hasCostOnlyFilter &&
+            !string.Equals(filters.Category, "Cost", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "--minimum-savings, --as-of, --from, and --to require --category Cost.",
+                nameof(filters));
+        }
+    }
+
+    internal static string BuildServiceGroupClause(RecommendationQueryScope? scope)
+    {
+        var serviceGroupResourceIds = scope?.ScopedServiceGroupIds
+            .Select(id => ServiceGroupResourceIdPrefix + id)
+            .ToArray();
+        return serviceGroupResourceIds is not { Length: > 0 }
+            ? ServiceGroupExclusionClause
+            : serviceGroupResourceIds.Length == 1
+                ? $"isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '{SanitizeForKql(serviceGroupResourceIds[0])}'"
+                : $"isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) in~ ({FormatKqlStringList(serviceGroupResourceIds)})";
+    }
+
+    internal static string BuildSubscriptionClause(RecommendationQueryScope scope)
+    {
+        var subscriptionIds = scope.ScopedSubscriptionIds;
+        return subscriptionIds.Count == 1
+            ? $"subscriptionId =~ '{SanitizeForKql(subscriptionIds[0])}'"
+            : $"subscriptionId in~ ({FormatKqlStringList(subscriptionIds)})";
+    }
 
     internal static string EscapeKqlString(string value) =>
         value.Replace("|", string.Empty)

@@ -16,6 +16,14 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
+    Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        RecommendationFilters? filters = null,
+        int top = 50,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<Recommendation> UpdateRecommendationAsync(
         string subscription,
         string recommendationId,
