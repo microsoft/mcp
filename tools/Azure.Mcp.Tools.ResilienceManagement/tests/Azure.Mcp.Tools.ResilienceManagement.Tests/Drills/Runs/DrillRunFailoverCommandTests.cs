@@ -21,29 +21,32 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
 
-    [Fact]
-    public async Task ExecuteAsync_UsesServiceDefaultsWhenAllInputsAreOmitted()
-    {
-        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, null, null, false, null, Arg.Any<CancellationToken>())
-            .Returns(OperationId);
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill, "--drill-run", DrillRun);
-
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Equal(OperationId, ValidateAndDeserializeResponse(response,
-            ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult).OperationId);
-    }
-
     [Theory]
+    [InlineData()]
     [InlineData("--auto-failover", "true")]
     [InlineData("--auto-failover", "false")]
     [InlineData("--selected-resource-ids", SelectedResourceId)]
-    public async Task ExecuteAsync_RequiresSourcesForExplicitFailoverInputs(string option, string value)
+    public async Task ExecuteAsync_RejectsMissingSourceLocations(params string[] failoverInputs)
     {
-        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
-            "--drill-run", DrillRun, option, value);
+        var response = await ExecuteCommandAsync(["--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, .. failoverInputs]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DefaultsAutomaticFailoverToFalse()
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, false, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun,
+            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation })),
+            null, false, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]

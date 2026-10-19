@@ -60,7 +60,7 @@ These tools do not create or mutate goals.
 9. Use `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.
 10. End only a running drill with `mcp_azure_mcp_ser_resiliency_drill_end`; require outcome and notes.
 
-For drill-run failover, omit all failover inputs only when service-default behavior is intended. If selected resources or an explicit automatic-failover choice is supplied, collect source locations as well. Failover selections must be full drill-resource IDs under the requested service group and drill, obtained with drill resource get. Reprotect can restrict processing to selected recovery-resource IDs in the same service group; omission means all qualified resources. Neither request acceptance nor successful input validation proves that fault injection or reprotection has completed.
+For drill-run failover, always collect the physical source zones; the service does not process a failover without them. Automatic failover defaults to `false` (pause after fault injection). Failover selections must be full drill-resource IDs under the requested service group and drill, obtained with drill resource get. Reprotect can restrict processing to selected recovery-resource IDs in the same service group; omission means all qualified resources. Neither request acceptance nor successful input validation proves that fault injection or reprotection has completed.
 
 To update monitoring, send only the fields being changed. A supplied SLI array is a replacement, not an append. Clear Health Model or SLI monitoring only on explicit request, using the string `"null"` as the corresponding JSON option payload. Omission preserves the configuration.
 

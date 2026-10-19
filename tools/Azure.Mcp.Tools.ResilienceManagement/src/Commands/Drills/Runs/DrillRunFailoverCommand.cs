@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Starts failover for a resilience drill run in a service group. Uses source locations and optional selected resources to inject faults, then automatically continue to failover or pause for manual input according to auto-failover. Omit all inputs for service defaults; selected resources or explicit auto-failover require physical source zones.",
+    Description = "Starts failover for a resilience drill run in a service group from physical source zones. Optional selected drill resources limit fault injection and failover; auto-failover continues automatically to failover instead of pausing for manual input after fault injection.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -35,19 +35,15 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
 
-        if (options.SourceLocations is { Length: 0 })
+        if (options.SourceLocations is null or { Length: 0 })
         {
             validationResult.Errors.Add("At least one source location is required.");
         }
-        else if (options.SourceLocations?.Any(location => string.IsNullOrWhiteSpace(location) || !IsValidPhysicalZone(location)) == true)
+        else if (options.SourceLocations.Any(location => string.IsNullOrWhiteSpace(location) || !IsValidPhysicalZone(location)))
         {
             validationResult.Errors.Add("Each source location must use the physical Azure zone format '<region>-az<zone-number>', such as 'eastus-az1'.");
         }
 
-        if (options.SourceLocations is null && (options.SelectedResourceIds is not null || options.AutoFailover.HasValue))
-        {
-            validationResult.Errors.Add("Source locations are required when selected-resource-ids or auto-failover is supplied. Omit all three options to use service defaults.");
-        }
         DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult, drill: options.Drill);
     }
 
@@ -61,7 +57,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.DrillRun,
                 options.SourceLocations,
                 options.SelectedResourceIds,
-                options.AutoFailover ?? false,
+                options.AutoFailover,
                 options.Tenant,
                 cancellationToken);
 

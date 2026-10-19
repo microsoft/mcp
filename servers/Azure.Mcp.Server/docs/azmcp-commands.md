@@ -4589,13 +4589,12 @@ azmcp resiliency drill run add-notes --service-group <service-group> \
                                      --drill-run <drill-run> \
                                      --notes <notes>
 
-# Start failover for a drill run. Selected IDs must be full drill-resource IDs under this service group and drill.
-# Omit all three failover inputs to use service defaults. Explicit auto-failover or selected IDs require source locations.
+# Start failover for a drill run from physical source zones. Selected IDs must be full drill-resource IDs under this service group and drill.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill <drill> \
                                     --drill-run <drill-run> \
-                                    [--source-locations <source-location>] \
+                                    --source-locations <source-location> \
                                     [--selected-resource-ids <drill-resource-id>] \
                                     [--auto-failover <true|false>]
 

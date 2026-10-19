@@ -2025,22 +2025,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return operationId;
     }
 
-    public async Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? sourceLocations = null, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        if (sourceLocations is null && (selectedResourceIds is not null || autoFailover))
-        {
-            throw new ArgumentException("Source locations are required when selected resources or automatic failover are specified.");
-        }
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
 
-        DrillRunFailoverContent? content = null;
-        if (sourceLocations is not null)
-        {
-            var failoverProperties = CreateFailoverRequestContent(sourceLocations.ToList(), selectedResourceIds?.ToList(), null);
-            content = new DrillRunFailoverContent(
-                autoFailover ? DrillRunAutoFailover.Enable : DrillRunAutoFailover.Disable,
-                failoverProperties);
-        }
+        var failoverProperties = CreateFailoverRequestContent(sourceLocations.ToList(), selectedResourceIds?.ToList(), null);
+        var content = new DrillRunFailoverContent(
+            autoFailover ? DrillRunAutoFailover.Enable : DrillRunAutoFailover.Disable,
+            failoverProperties);
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
         string operationId = Guid.NewGuid().ToString();
@@ -2091,7 +2083,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return operationId;
     }
 
-    // The service accepts a bodyless reprotect but never processes it, so always send a JSON body.
+    // The service accepts a reprotect without a request body but never processes it, so always send a JSON body.
     internal static DrillRunReprotectContent CreateDrillRunReprotectContent(IReadOnlyList<string>? selectedResourceIds)
     {
         var content = new DrillRunReprotectContent();

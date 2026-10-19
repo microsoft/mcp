@@ -787,16 +787,21 @@ public class ResilienceManagementCommandTests(
 
     [Fact]
     public Task Should_mark_drill_run_stage_complete()
-        => RunDrillFailoverLifecycleAsync(selectResources: false, useServiceDefaults: false, completeReprotection: false);
+        => RunDrillFailoverLifecycleAsync(selectResources: false, autoFailover: false, completeReprotection: false);
 
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]
-    [InlineData(true, true)]
-    public Task Should_start_resume_and_reprotect_drill_run_failover(bool selectResources, bool useServiceDefaults)
-        => RunDrillFailoverLifecycleAsync(selectResources, useServiceDefaults);
+    public Task Should_start_resume_and_reprotect_drill_run_failover(bool selectResources, bool autoFailover)
+        => RunDrillFailoverLifecycleAsync(selectResources, autoFailover);
 
-    private async Task RunDrillFailoverLifecycleAsync(bool selectResources, bool useServiceDefaults, bool completeReprotection = true)
+    // The GA service completes fault injection but never starts the automatic failover stage, so no recording exists.
+    [Fact]
+    [LiveTestOnly]
+    public Task Should_start_resume_and_reprotect_drill_run_with_auto_failover()
+        => RunDrillFailoverLifecycleAsync(selectResources: true, autoFailover: true);
+
+    private async Task RunDrillFailoverLifecycleAsync(bool selectResources, bool autoFailover, bool completeReprotection = true)
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
         var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
@@ -810,25 +815,22 @@ public class ResilienceManagementCommandTests(
                 { "tenant", Settings.TenantId },
                 { "service-group", serviceGroup },
                 { "drill", drill },
-                { "drill-run", drillRun }
+                { "drill-run", drillRun },
+                { "source-locations", new[] { sourceLocation } },
+                { "auto-failover", autoFailover }
             };
-            if (!useServiceDefaults)
+            if (selectResources)
             {
-                failoverParameters["source-locations"] = new[] { sourceLocation };
-                failoverParameters["auto-failover"] = false;
-                if (selectResources)
-                {
-                    failoverParameters["selected-resource-ids"] = new[] { drillResourceId };
-                }
+                failoverParameters["selected-resource-ids"] = new[] { drillResourceId };
             }
             var result = await CallToolWithConflictRetryAsync("resiliency_drill_run_failover", failoverParameters);
             Assert.True(result.AssertProperty("accepted").GetBoolean());
             Assert.Equal(drillRun, result.AssertProperty("drillRun").GetString());
             Assert.True(Guid.TryParse(result.AssertProperty("operationId").GetString(), out _));
 
-            // Service-default requests may progress automatically instead of pausing for manual stages.
-            var manualStage = useServiceDefaults
-                ? await WaitForDefaultFailoverProgressAsync(serviceGroup, drill, drillRun)
+            // Automatic failover can continue past fault injection without pausing for manual stages.
+            var manualStage = autoFailover
+                ? await WaitForAutomaticFailoverProgressAsync(serviceGroup, drill, drillRun)
                 : "FaultInjection";
             if (manualStage == "FaultInjection")
             {
@@ -925,7 +927,7 @@ public class ResilienceManagementCommandTests(
         });
     }
 
-    private async Task<string?> WaitForDefaultFailoverProgressAsync(string serviceGroup, string drill, string drillRun)
+    private async Task<string?> WaitForAutomaticFailoverProgressAsync(string serviceGroup, string drill, string drillRun)
     {
         for (int attempt = 0; attempt < 60; attempt++)
         {
@@ -957,7 +959,7 @@ public class ResilienceManagementCommandTests(
             }
             await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
         }
-        Assert.Fail("Service-default failover did not reach an actionable or running failover stage.");
+        Assert.Fail("Automatic failover did not reach an actionable or running failover stage.");
         return null;
     }
 
