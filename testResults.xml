@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="23" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2026-10-19" time="16:39:39">
+  <environment user-domain="" nunit-version="2.5.8.0" machine-name="runnervm8k3b6" platform="Linux" os-version="6.17.0-1022-azure" cwd="/home/runner/work/mcp/mcp" user="runner" clr-version="10.0.12" />
+  <culture-info current-culture="" current-uiculture="" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="4.6932" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/home/runner/work/mcp/mcp/eng/scripts/Pack-Pypi.Tests.ps1" executed="True" result="Success" success="True" time="4.6932" asserts="0" description="/home/runner/work/mcp/mcp/eng/scripts/Pack-Pypi.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="PyPI package version conversion" executed="True" result="Success" success="True" time="0.3352" asserts="0" description="PyPI package version conversion">
+            <results>
+              <test-case description="returns no version for invalid input" name="PyPI package version conversion.returns no version for invalid input" time="0.0303" asserts="0" success="True" result="Success" executed="True" />
+              <test-suite type="ParameterizedTest" name="PyPI package version conversion.returns only the Python version for &lt;Version&gt;" executed="True" result="Success" success="True" time="0.2332" asserts="0" description="returns only the Python version for &lt;Version&gt;">
+                <results>
+                  <test-case description="returns only the Python version for 1.2.3" name="PyPI package version conversion.returns only the Python version for 1.2.3" time="0.1925" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="returns only the Python version for 1.2.3-beta.4" name="PyPI package version conversion.returns only the Python version for 1.2.3-beta.4" time="0.016" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="returns only the Python version for 1.2.3-alpha.4" name="PyPI package version conversion.returns only the Python version for 1.2.3-alpha.4" time="0.0112" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="returns only the Python version for 1.2.3-alpha.20261019.1" name="PyPI package version conversion.returns only the Python version for 1.2.3-alpha.20261019.1" time="0.0134" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Pack-Pypi executable configuration" executed="True" result="Success" success="True" time="4.3113" asserts="0" description="Pack-Pypi executable configuration">
+            <results>
+              <test-suite type="ParameterizedTest" name="Pack-Pypi executable configuration.launches &lt;CliName&gt; on &lt;System&gt; (native: &lt;Native&gt;)" executed="True" result="Success" success="True" time="3.7611" asserts="0" description="launches &lt;CliName&gt; on &lt;System&gt; (native: &lt;Native&gt;)">
+                <results>
+                  <test-case description="launches azmcp on Windows (native: False)" name="Pack-Pypi executable configuration.launches azmcp on Windows (native: False)" time="0.3057" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches azmcp on Windows (native: True)" name="Pack-Pypi executable configuration.launches azmcp on Windows (native: True)" time="0.1834" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches azmcp on Linux (native: False)" name="Pack-Pypi executable configuration.launches azmcp on Linux (native: False)" time="0.2081" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches azmcp on Linux (native: True)" name="Pack-Pypi executable configuration.launches azmcp on Linux (native: True)" time="0.23" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches azmcp on Darwin (native: False)" name="Pack-Pypi executable configuration.launches azmcp on Darwin (native: False)" time="0.2177" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches azmcp on Darwin (native: True)" name="Pack-Pypi executable configuration.launches azmcp on Darwin (native: True)" time="0.2045" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Windows (native: False)" name="Pack-Pypi executable configuration.launches fabmcp on Windows (native: False)" time="0.2045" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Windows (native: True)" name="Pack-Pypi executable configuration.launches fabmcp on Windows (native: True)" time="0.1907" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Linux (native: False)" name="Pack-Pypi executable configuration.launches fabmcp on Linux (native: False)" time="0.214" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Linux (native: True)" name="Pack-Pypi executable configuration.launches fabmcp on Linux (native: True)" time="0.1977" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Darwin (native: False)" name="Pack-Pypi executable configuration.launches fabmcp on Darwin (native: False)" time="0.1964" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches fabmcp on Darwin (native: True)" name="Pack-Pypi executable configuration.launches fabmcp on Darwin (native: True)" time="0.2159" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Windows (native: False)" name="Pack-Pypi executable configuration.launches mcptmp on Windows (native: False)" time="0.1926" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Windows (native: True)" name="Pack-Pypi executable configuration.launches mcptmp on Windows (native: True)" time="0.1891" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Linux (native: False)" name="Pack-Pypi executable configuration.launches mcptmp on Linux (native: False)" time="0.2039" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Linux (native: True)" name="Pack-Pypi executable configuration.launches mcptmp on Linux (native: True)" time="0.1923" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Darwin (native: False)" name="Pack-Pypi executable configuration.launches mcptmp on Darwin (native: False)" time="0.2173" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="launches mcptmp on Darwin (native: True)" name="Pack-Pypi executable configuration.launches mcptmp on Darwin (native: True)" time="0.1974" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
