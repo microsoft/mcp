@@ -2410,7 +2410,7 @@ azmcp compute disk create --subscription <subscription> \
                           --os-type <os-type> \
                           --zone <zone> \
                           --hyper-v-generation <generation> \
-                          --tags <space-separated-tags> \
+                          --tags <comma-separated-tags> \
                           --disk-encryption-set <encryption-set-resource-id> \
                           --encryption-type <encryption-type> \
                           --disk-access <disk-access-resource-id> \
@@ -2452,7 +2452,7 @@ azmcp compute disk create --subscription <subscription> \
 | `--os-type` | No | OS type for the disk (Windows or Linux) |
 | `--zone` | No | Availability zone for the disk |
 | `--hyper-v-generation` | No | Hypervisor generation (V1 or V2) |
-| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). |
 | `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
 | `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
 | `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
@@ -2518,7 +2518,7 @@ azmcp compute disk update --subscription <subscription> \
                           --max-shares <count> \
                           --network-access-policy <policy> \
                           --enable-bursting <true|false> \
-                          --tags <space-separated-tags> \
+                          --tags <comma-separated-tags> \
                           --disk-encryption-set <encryption-set-resource-id> \
                           --encryption-type <encryption-type> \
                           --disk-access <disk-access-resource-id> \
@@ -2547,7 +2547,7 @@ azmcp compute disk update --subscription <subscription> \
 | `--max-shares` | No | Maximum number of VMs that can attach the disk simultaneously |
 | `--network-access-policy` | No | Network access policy (AllowAll, AllowPrivate, DenyAll) |
 | `--enable-bursting` | No | Enable on-demand bursting (true or false) |
-| `--tags` | No | Space-separated tags in key=value format (e.g., env=prod team=infra) |
+| `--tags` | No | Comma-separated tags in `key=value` format (e.g., `env=prod,team=compute`). |
 | `--disk-encryption-set` | No | Resource ID of the disk encryption set for customer-managed key encryption |
 | `--encryption-type` | No | Encryption type (e.g., EncryptionAtRestWithCustomerKey, EncryptionAtRestWithPlatformAndCustomerKeys) |
 | `--disk-access` | No | Resource ID of the disk access resource for private endpoint connections |
