@@ -2085,18 +2085,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
         string operationId = Guid.NewGuid().ToString();
 
-        DrillRunReprotectContent? content = null;
-        if (selectedResourceIds is not null)
-        {
-            content = new DrillRunReprotectContent();
-            foreach (string resourceId in selectedResourceIds)
-            {
-                content.ReprotectRequestSelectedResourceIds.Add(new ResourceIdentifier(resourceId));
-            }
-        }
+        DrillRunReprotectContent content = CreateDrillRunReprotectContent(selectedResourceIds);
         await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, content, cancellationToken);
 
         return operationId;
+    }
+
+    // The service accepts a bodyless reprotect but never processes it, so always send a JSON body.
+    internal static DrillRunReprotectContent CreateDrillRunReprotectContent(IReadOnlyList<string>? selectedResourceIds)
+    {
+        var content = new DrillRunReprotectContent();
+        foreach (string resourceId in selectedResourceIds ?? [])
+        {
+            content.ReprotectRequestSelectedResourceIds.Add(new ResourceIdentifier(resourceId));
+        }
+        return content;
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillRunResourcesAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)

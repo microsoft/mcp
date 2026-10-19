@@ -352,6 +352,29 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void CreateDrillRunReprotectContent_WithoutSelection_SendsEmptyReprotectProperties()
+    {
+        DrillRunReprotectContent content = ResilienceManagementService.CreateDrillRunReprotectContent(null);
+
+        using JsonDocument document = JsonDocument.Parse(ModelReaderWriter.Write(content, new ModelReaderWriterOptions("W")));
+        JsonElement reprotectProperties = document.RootElement.GetProperty("reprotectProperties");
+        Assert.Equal(JsonValueKind.Object, reprotectProperties.ValueKind);
+        Assert.Empty(reprotectProperties.EnumerateObject());
+    }
+
+    [Fact]
+    public void CreateDrillRunReprotectContent_WithSelection_SendsSelectedResourceIds()
+    {
+        const string recoveryResourceId = "/providers/Microsoft.Management/serviceGroups/sg/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan/recoveryResources/11111111-1111-1111-1111-111111111111";
+
+        DrillRunReprotectContent content = ResilienceManagementService.CreateDrillRunReprotectContent([recoveryResourceId]);
+
+        Assert.Equal(recoveryResourceId, Assert.Single(content.ReprotectRequestSelectedResourceIds).ToString());
+        string json = ModelReaderWriter.Write(content, new ModelReaderWriterOptions("W")).ToString();
+        Assert.Contains(recoveryResourceId, json, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CreateRecoveryGroupsSetting_ForNewPlan_GeneratesDefaultGroupId()
     {
         RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(null, null);
