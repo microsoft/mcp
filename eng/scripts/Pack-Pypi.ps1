@@ -140,13 +140,13 @@ function Get-DevStatus {
     }
 
     if (!$parsedVersion.IsPrerelease) {
-        return 'Development Status :: 5 - Production/Stable'
+        return '5 - Production/Stable'
     }
 
     switch ($parsedVersion.PrereleaseLabel) {
-        'alpha' { return 'Development Status :: 3 - Alpha' }
-        'beta'  { return 'Development Status :: 4 - Beta' }
-        'rc'    { return 'Development Status :: 4 - Beta' }
+        'alpha' { return '3 - Alpha' }
+        'beta'  { return '4 - Beta' }
+        'rc'    { return '4 - Beta' }
         default { throw "Unknown prerelease label '$($parsedVersion.PrereleaseLabel)' for version '$version'." }
     }
 }
