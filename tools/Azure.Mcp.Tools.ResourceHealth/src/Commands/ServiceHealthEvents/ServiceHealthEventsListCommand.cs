@@ -41,13 +41,15 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         // Validate event-type enum values
         if (!string.IsNullOrEmpty(options.EventType) && !s_validEventTypes.Contains(options.EventType))
         {
-            validationResult.Errors.Add($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}");
+            validationResult.AddError($"Invalid event-type '{options.EventType}'. Valid values are: {string.Join(", ", s_validEventTypes)}",
+                "Invalid service health event type.");
         }
 
         // Validate status enum values
         if (!string.IsNullOrEmpty(options.Status) && !s_validStatuses.Contains(options.Status))
         {
-            validationResult.Errors.Add($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}");
+            validationResult.AddError($"Invalid status '{options.Status}'. Valid values are: {string.Join(", ", s_validStatuses)}",
+                "Invalid service health event status.");
         }
     }
 

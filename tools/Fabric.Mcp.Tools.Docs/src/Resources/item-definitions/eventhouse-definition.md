@@ -8,10 +8,10 @@ EventhouseDefinition items support the `JSON` format.
 
 ## Definition parts
 
-The definition of an Eventhouse item is constructed from two parts: the item part and the [platform part](#platform-part). Each part contains the following:
+The definition of an Eventhouse item is constructed from two parts: the item part and the [platform part](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/eventhouse-definition#platform-part). Each part contains the following:
 
 * **Path**: The path to the file that contains the JSON definition.
-* **Payload**: For the platform part, see [Platform part](#platform-part). For the EventhouseProperties part, see [Example of EventhouseProperties.json definition part decoded from Base64](#example-of-eventhousepropertiesjson-definition-part-decoded-from-base64).
+* **Payload**: For the platform part, see [Platform part](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/eventhouse-definition#platform-part). For the EventhouseProperties part, see [Example of EventhouseProperties.json definition part decoded from Base64](#example-of-eventhousepropertiesjson-definition-part-decoded-from-base64).
 * **PayloadType**: InlineBase64
 
 ## Example of EventhouseProperties.json definition part decoded from Base64

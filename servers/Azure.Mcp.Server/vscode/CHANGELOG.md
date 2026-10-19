@@ -1,6 +1,181 @@
 # Release History
 
 
+## 4.0.1 (2026-10-15) (pre-release)
+
+### Added
+
+- Added --prioritized to advisor recommendation summary to rank active recommendation types by priority in subscription and service-group scopes. Each prioritized group returns its distinct affected-resource count and a prioritizationSignals object explaining its rank; --top defaults to 10. [[#3945](https://github.com/microsoft/mcp/pull/3945)]
+- Added --show-prioritization-signals to Advisor recommendation listing to optionally return the original signalBreakdown payload when available, preserving its backend-provided JSON shape. Defaults to false; enabling signals requires --prioritized true in subscription and Service Group scopes. Requests with signals enabled and prioritized false or omitted are rejected before querying Azure. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
+- Updated `optimization recommendation list` to make `--subscription` optional. When it is omitted, all accessible subscriptions in the signed-in session's default tenant (or the tenant given by `--tenant`) are queried. Results now include a `diskRecommendationSummary` with the number of unattached-disk recommendations and a link to take action in the Azure portal, and use retail savings when a recommendation has no extended savings data. [[#3899](https://github.com/microsoft/mcp/pull/3899)]
+- Extended `azurebackup policy update` with 11 RSV Azure VM options for hourly schedules on existing Enhanced (V2) policies, subtype assertions, instant recovery retention and resource-group prefixes, snapshot consistency, archive tiering, and resource tags. Existing Hourly schedules support partial updates; switching an Enhanced policy to Hourly requires all hourly fields. Standard/Enhanced subtype assertions do not migrate policies. Archive modes are `TierAfter` and `TierRecommended`, not `CopyOnExpiry`; `--smart-tier false` explicitly disables archive tiering. [[#3791](https://github.com/microsoft/mcp/pull/3791)]
+- Extended the Azure Advisor recommendation list tool to support the Azure Service Group scope (--service-group) as an alternative to the subscription scope, and added a --prioritized option that surfaces and ranks recommendations by contextual criticality score. Recommendation results now include contextual fields (criticality, criticalityScore, scoreChangedAt, savings) and the serviceGroupId identifier when present. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+- Added Azure service-group scope to `advisor recommendation summary` while preserving existing subscription and configured-default subscription behavior. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+- Extended the advisor recommendation update tool to update service-group-scoped recommendations. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+
+### Changed
+
+- **Breaking:** `optimization recommendation list` no longer returns unattached-disk recommendations as individual rows in `recommendations`; they are reported only through the new `diskRecommendationSummary`, which applies the same suppression and exclusion filters as the list. [[#3899](https://github.com/microsoft/mcp/pull/3899)]
+- Advisor recommendation summary now takes category, impact, subcategory, and retirement date only from recommendation-type metadata, without recommendation-instance fallback, and excludes recommendations whose type has no English metadata from every grouping. [[#3945](https://github.com/microsoft/mcp/pull/3945)]
+- Combined Advisor recommendation metadata filtering and enrichment into one server-side ARG join using English metadata for both listing modes and scopes. Prioritized listing sorts and selects top + 1 records in ARG to detect truncation without fetching every page. Removed the client-side ranking models and pagination helpers. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
+- Updated Azure optimization tool descriptions to refer to results as cost optimization recommendations instead of Azure Advisor. [[#3899](https://github.com/microsoft/mcp/pull/3899)]
+- `optimization recommendation` tools now ignore service-group-scoped Advisor records (recommendations, suppressions, and configurations whose `properties.serviceGroupId` is set) in every Resource Graph query. [[#3899](https://github.com/microsoft/mcp/pull/3899)]
+- Added shared Advisor recommendation scope and ARG query infrastructure for reuse by update, summary, and future list service-group support, and exposed nullable `serviceGroupId` in recommendation properties. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+
+### Fixed
+
+- Fixed Azure Backup protect, update-protection, and undelete tools returning an async operation id in the `jobId` field. The operation id is not a backup job id, so `azurebackup job get` returned 404 and the tool wasted its full job-polling budget on a non-existent job. The operation id is now surfaced in a dedicated `operationId` field, `jobId` is populated only when a real ConfigureBackup job is found, and guidance points to `azurebackup protecteditem get` for verification. [[#3838](https://github.com/microsoft/mcp/pull/3838)]
+- Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
+- Prioritized Advisor listing requires a recommendation type ID and uses that type's metadata category to select one instance metric in ARG. Cost types convert daily potential savings to an annual value using 12 times 30.4, fall back to annual savings, and round the selected annual score to two decimal places before sorting; missing or invalid savings sort last and zero remains valid. Other types sort by criticalityScore descending, treating missing scores as zero. Ties use effective retirement date ascending with unknown dates last, then case-insensitive resource name and recommendation ID. Both listing modes retain the same matching records, including Security and tracked recommendations. Non-prioritized ordering is unchanged. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
+- Fixed `optimization recommendation` tools querying Azure Resource Graph with a token for the default tenant instead of the tenant passed in `--tenant` or the subscription's own tenant; tenant display names are now also accepted. [[#3899](https://github.com/microsoft/mcp/pull/3899)]
+- Fixed `server start` exiting with code 1 and no output when startup fails, for example when `ASPNETCORE_URLS` binds beyond loopback without `ALLOW_INSECURE_EXTERNAL_BINDING=true`. The error response is now written to stderr, so stdout stays reserved for the stdio transport. [[#3913](https://github.com/microsoft/mcp/pull/3913)]
+- Merge RSV VM policy updates into the existing policy, preserving unmentioned settings modeled by the SDK, including unmodified retention tiers, unmentioned tags, and instant recovery resource-group suffixes, subject to schedule reconciliation. Unknown wire field preservation is not guaranteed. Preserve retention times on unrelated updates and reconcile them on explicit schedule changes. Validate Daily/Hourly daily-retention and Weekly weekly-retention prerequisites, requiring explicit weekly retention before removing positive daily retention when switching to Weekly. Require effective instant recovery retention of 5 days for Standard Weekly schedule, retention, or instant recovery updates, preserving omission and allowing unrelated tags-only or time-zone-only updates. Convert explicitly supplied hourly window starts from the effective local time zone (request, existing policy, then UTC) to UTC using the deterministic 2000-01-01 baseline. Reject unknown zones and invalid or ambiguous baseline local times. Preserve omitted hourly timestamps and existing UTC behavior; Daily/Weekly time parsing is unchanged. Future seasonal DST adjustments are not calculated. Preserve comma-separated Daily/Weekly schedule times and reconcile every retention time on explicit schedule updates. Retain exception diagnostics in policy-update logs while preserving sanitized top-level Azure error messages. [[#3791](https://github.com/microsoft/mcp/pull/3791)]
+- Made Azure Backup recovery point listing resilient to malformed Azure Files recovery points. The RecoveryServicesBackup SDK could throw a UriFormatException while deserializing a single file-share recovery point, failing the entire 'azurebackup recoverypoint get' call; the service now skips the offending item and returns the remaining valid recovery points. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
+- Replaced the opaque NullReferenceException surfaced by 'azurebackup policy update' with an actionable error. The SDK can fail to materialize the updated policy from the service response for some IaaS VM policy shapes even though the change was submitted; the tool now returns a clear message directing the user to verify the policy with 'azurebackup policy get'. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
+
+## 3.0.51 (2026-10-12)
+
+**🚀 New Major Release — Azure MCP Server 3.0**
+
+We're excited to announce the third major release of the Azure MCP Server! Version 3.0 builds on the 2.0 release with a broader and more consistent tool surface, secure-by-default resource creation, stricter input and endpoint validation, richer Azure Backup, Advisor, and resiliency capabilities, and a new MCP protocol and tool design foundation. This release spans 50 beta iterations and hundreds of contributions.
+
+### Key Features & Improvements
+
+- **More Tools and Services**: Introduced new namespaces since 2.0 and expanded existing toolsets, including:
+    - Azure Backup – `azurebackup`: vaults, policies, protection, protectable items and containers, recovery points, jobs, governance (soft delete, immutability, Multi-User Authorization, Resource Guards), customer-managed key encryption, private endpoints, and cross-region restore
+    - Azure Resilience Management – `resiliency`: goals, usage plans and enrollments, recovery plans, recovery jobs, readiness and failover validation, and resilience drills
+    - Azure SRE Agent – `sreagent`: 55 commands to manage agents, skills, connectors, hooks, threads, scheduled tasks, incidents, and workflows
+    - Azure Terraform – `azureterraform`: AzureRM/AzAPI provider documentation, Azure Verified Modules, `aztfexport` export, and `conftest` policy validation
+    - Azure Optimization – `optimization`: cost-saving recommendations, alternative VM/VMSS SKU options, and utilization explanations
+    - Azure IoT Hub – `iothub` and Azure IoT Operations – `iotoperations`
+    - Azure Insights – `insights`: infrastructure insights from Azure Resource Graph aggregation and MCP sampling
+    - Azure Advisor – `advisor`: recommendation list, summary, update, apply-to-IaC, metadata, and remediation tools
+    - Azure Cosmos DB – `cosmos`, Azure Compute – `compute` (VM power state and creation validation), Azure App Service – `appservice` (web app change-state), Azure Monitor – `monitor` (batch metrics and Log Analytics table search), and Azure Managed Lustre – `managedlustre` (filesystem expansion) received new tools
+- **Secure by Default**: New resources are created with safer defaults, including Storage accounts with Shared Key authentication disabled, Event Hubs namespaces with local authentication disabled, NFS file shares with `RootSquash` and encrypted transit, and Recovery Services vaults with public network access disabled
+- **Security Hardening**: Cloud-specific endpoint validation based on `Microsoft.Security.AntiSSRF` across data-plane and management-plane tools, namespace-scoped validation overrides, and telemetry that no longer records option values
+- **Cleaner, More Accurate Tool Contracts**: Unused parameters, custom retry policy options, and confirmation-only options were removed from tools across all namespaces, unknown parameters are rejected, result payloads were normalized, and input schemas are generated with richer, spec-accurate `System.Text.Json` schemas
+- **Structured Output**: Tools can advertise an `outputSchema` and return `structuredContent` in all server modes with `--structured-output-mode`
+- **Latest MCP Protocol**: Migrated to the MCP 2026-07-28 stateless protocol with automatic backward compatibility for clients using the 2025-11-25 protocol
+- **More Flexible Server Options**: Added `--disable-proxy-tools`, learn-mode discovery for `azmcp` commands, an `operationPlane` field in `tools list` output, and Azure Pipelines workload identity federation authentication
+- **Improved Reliability and Diagnostics**: More accurate HTTP status codes and actionable error messages, clearer credential errors, additional telemetry, and startup, concurrency, and resource usage benchmarks
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication](https://github.com/microsoft/mcp/blob/release/azure/3.x/docs/Authentication.md)
+- [Remote Server Deployment](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#remote-mcp-server-preview)
+- [Connecting to Sovereign Clouds](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/README.md#sovereign-cloud-support)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/3.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/3.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release was made possible by the incredible efforts of our engineering team, partners, contributors, and the invaluable feedback from our users and the open-source community. We want to extend a huge thank you to everyone who contributed, tested, and provided feedback throughout the development of Azure MCP Server 3.0!
+
+For a complete history of changes included in this release, see entries for versions [3.0.1](#301-2026-04-01-pre-release) through [3.0.50](#3050-2026-10-06-pre-release).
+
+---
+
+### Other Changes since 2.0.0
+
+#### Breaking Changes
+
+**Tool Contract Cleanup**:
+
+- Removed unused parameters (such as `subscription`, `resource-group`, `tenant`, `auth-method`, `user`, and `sender-name`) from tools across nearly all namespaces, including Advisor, AKS, App Configuration, App Lens, Application Insights, Azure Migrate, Communication, Compute, Confidential Ledger, Container Apps, Deploy, Event Grid, Event Hubs, Foundry Extensions, Key Vault, Load Testing, Managed Lustre, MySQL, PostgreSQL, Quota, Redis, Resource Health, Search, Service Bus, SQL, Storage, and others. Update any scripts or saved prompts that pass these options
+- Removed custom retry policy options from all tools and shared Azure service APIs; the Azure SDK retry defaults are used instead
+- Removed the confirmation-only `--force` parameter from `sql server delete`
+- Tool calls with unknown parameters are now explicitly rejected
+- Normalized result payloads for several tools in best practices, Functions, Monitor, Search, SQL, and Well-Architected Framework to consistent, named result objects (for example `{ bestPractices }`, `{ results }`, `{ servers }`, and `{ guidance }`)
+
+**Namespace, Tool, and Option Renames**:
+
+- Replaced `monitor healthmodels entity get` with `monitor healthmodels list` and `monitor healthmodels get`
+- Moved shared server code from `Azure.Mcp.Core.*` to `Microsoft.Mcp.Core.*` namespaces (for example `Azure.Mcp.Core.Commands` → `Microsoft.Mcp.Core.Commands`). Because logger categories are derived from type namespaces, any logging configuration that targets the old categories (for example `Logging:LogLevel:Azure.Mcp.Core` entries in `appsettings.json` or log filters in environment variables) must be updated to the new `Microsoft.Mcp.Core` categories to keep applying
+
+**Secure-by-Default Behavior**:
+
+- New Storage accounts disable Shared Key authentication by default, while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access
+- New Event Hubs namespaces disable local authentication by default
+- New NFS file shares default to `RootSquash` with encrypted transit
+- `compute vm create` and `compute vmss create` now require `--image`, and the `Win2019Datacenter` and `Ubuntu2004` image aliases were removed
+- The MySQL and PostgreSQL `database query` tools are now marked destructive and non-read-only, and no longer filter statements by SQL verb. The signed-in user's database permissions determine what a statement may do. In consolidated mode they moved to a new `execute_azure_database_query` tool
+
+#### Bugs Fixed
+
+- Fixed not-found conditions returning HTTP 500/400 instead of 404 and command validation failures returning HTTP 500 instead of 400
+- Fixed numerous Azure Backup, Cosmos DB, Event Hubs, Key Vault, MySQL, PostgreSQL, Redis, SQL, and Storage tool issues found through telemetry and live testing
+- Fixed CLI log messages and exceptions being written to stdout instead of stderr, which could corrupt JSON and JSON-RPC output
+- Fixed trimmed and packaged distributions failing to bind options for some tools
+- Fixed the npm wrapper modifying the calling project's `package.json` and lockfile when auto-installing a platform package
+
+#### Other Changes
+
+- Migrated tools to the new tool design and updated to the latest `ModelContextProtocol` packages
+- Improved CLI startup time for targeted command invocations by ~39%
+- Added telemetry for tool source, learn usage, tool parameters, and annotations, with improved privacy protections for validation failures
+- Extensive tool description improvements across namespaces for better LLM selection accuracy
+
+## 3.0.50 (2026-10-06) (pre-release)
+
+### Changed
+
+- **Breaking:** Recovery Services vault creation now disables public network access by default. Use `--enable-public-network-access true` to explicitly enable public access. This option is not supported for Data Protection vaults. [[#3755](https://github.com/microsoft/mcp/pull/3755)]
+- **Breaking:** New NFS shares default to `RootSquash` with encrypted transit. Explicit options remain available, while omitted security settings preserve existing shares during updates. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Added cloud-specific endpoint validation for Azure AI Search and Azure AI Speech data-plane requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Hardened Service Bus namespace validation to require bare DNS hostnames and added cloud-specific endpoint validation for Service Fabric ARM requests and pagination. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+
+### Fixed
+
+- Fixed `azurebackup protecteditem get` silently returning an incomplete or empty list for Data Protection Backup vaults; when a backup instance repeatedly fails to deserialize (commonly an empty or malformed resourceGroupId) the truncated listing now surfaces as an error instead of being reported as a successful result. [[#3840](https://github.com/microsoft/mcp/pull/3840)]
+- Improved Azure Advisor tool selection by distinguishing global recommendation metadata lookups from subscription-scoped recommendation records. [[#3817](https://github.com/microsoft/mcp/pull/3817)]
+- The `extension_azqr` tool is now advertised only for local execution when Azure Quick Review CLI version `3.0.0` or later is installed. [[#3503](https://github.com/microsoft/mcp/pull/3503)]
+- Fixed `--tool` filtering to match exposed tool names exactly, ignoring case, so selecting a tool no longer exposes or allows calls to other tools whose names are substrings of it. [[#3837](https://github.com/microsoft/mcp/pull/3837)]
+- Updating an existing file share now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3759](https://github.com/microsoft/mcp/pull/3759)]
+- Prevented option values from appearing in validation failure telemetry while preserving client-facing error messages. [[#3792](https://github.com/microsoft/mcp/pull/3792)]
+- Added namespace-aware endpoint validation for Azure SRE Agent data-plane and Azure Storage blob and table endpoints. [[#3820](https://github.com/microsoft/mcp/pull/3820)]
+- Validated PostgreSQL server inputs against the configured Azure cloud before acquiring credentials or opening database connections. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate Azure Retail Prices requests against cloud-specific endpoints before sending initial or paginated requests. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Validate raw Azure Resource Manager requests from Quota and Resource Health against cloud-specific management endpoints, and safely escape generated Resource Health OData filter values. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+- Fixed Azure SRE Agent tool selection so that `investigate this issue` prompts route to the investigate tool instead of the read-only get-thread tool. [[#3826](https://github.com/microsoft/mcp/pull/3826)]
+- Rejected Speech endpoints now fail without falling back to another transcription method. [[#3740](https://github.com/microsoft/mcp/pull/3740)]
+
+## 3.0.49 (2026-10-01) (pre-release)
+
+### Changed
+
+- **Breaking:** Removed the ADME tools temporarily for GA release. [[#3805](https://github.com/microsoft/mcp/pull/3805)]
+- **Breaking:** Azure Backup vault creation now checks for an existing Recovery Services or Backup vault and rejects it instead of updating it. Use azurebackup_vault_update to modify existing vaults. Creation also requires permission to read the target vault. [[#3800](https://github.com/microsoft/mcp/pull/3800)]
+- **Breaking:** Creating EventHub Namespaces now disable local authentication by default. Explicit options remain available to enable it, while omitted security options preserve existing Namespaces during updates. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+- **Breaking:** New Storage accounts now disable Shared Key authentication by default while continuing to require HTTPS, TLS 1.2, and disabled anonymous blob access. An explicit option remain available to enable Shared Key authentication. [[#3761](https://github.com/microsoft/mcp/pull/3761)]
+
+### Fixed
+
+- Fixed resilience drill create failing with a generic service error when no recovery plan was specified. The tool now sends SystemAssigned identity for RecoveryPlanProperties and the legacy MonitoringProperties required by the 2026-04-01-preview API flow. [[#3801](https://github.com/microsoft/mcp/pull/3801)]
+- Added namespace-aware endpoint validation for Event Grid, Foundry Extensions, IoT Hub, Key Vault, Load Testing, Managed HSM, Managed Lustre, Monitor metrics and web tests, and MySQL endpoints. [[#3694](https://github.com/microsoft/mcp/pull/3694)]
+- Corrected the read-only annotation on the Azure Communication Services email and SMS send tools (`communication_email_send`, `communication_sms_send`). They are now correctly marked as write operations so they are excluded when the server runs with `--read-only`. [[#3818](https://github.com/microsoft/mcp/pull/3818)]
+- Clarified the RemediationNotAvailableForTenant response and directs users to the Advisor recommendation for available guidance. [[#3816](https://github.com/microsoft/mcp/pull/3816)]
+- Client telemetry now records canonical client name and version values, using `<Unknown>` when unavailable and mapping plugin client names with a client type fallback. [[#3793](https://github.com/microsoft/mcp/pull/3793)]
+- Updating an existing EventHub Namespace now replaces supplied tag values and preserves unrelated tags without duplicate-key errors. [[#3758](https://github.com/microsoft/mcp/pull/3758)]
+
+## 3.0.48 (2026-09-29) (pre-release)
+
+### Added
+
+- Added support for customer-specific resource application IDs when authenticating ADME requests. [[#3789](https://github.com/microsoft/mcp/pull/3789)]
+
+### Changed
+
+- **Breaking:** Removed the resiliency goal template get tool. [[#3790](https://github.com/microsoft/mcp/pull/3790)]
+- Added validation of the platform landing zone download URL in the Azure Migrate tools before the file is retrieved. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added validation of outbound documentation URLs in the Azure Terraform tools to confirm requests target the expected GitHub hosts. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+- Added endpoint validation for Confidential Ledger data-plane requests to confirm the ledger endpoint matches the expected service domain for the target cloud. [[#3731](https://github.com/microsoft/mcp/pull/3731)]
+
+### Fixed
+
+- Fix issue where validation for AKS resource group was removed. [[#3785](https://github.com/microsoft/mcp/pull/3785)]
+- Tool name and area telemetry now validates identities before recording them, uses `<Unknown>` for rejected identities, and normalizes command names. Single-proxy mode enforces namespace filters for learning and execution. [[#3749](https://github.com/microsoft/mcp/pull/3749)]
+- Fixed the `tools list` and `--learn` CLI metadata reporting every option's `type` as `string`. Option types now reflect the underlying value type (`string`, `integer`, `number`, `boolean`, or `array`), consistent with the MCP tool `inputSchema`. Array options additionally report an `elementType` describing the array's element type (for example, `string` for a string array). [[#3772](https://github.com/microsoft/mcp/pull/3772)]
 
 ## 3.0.47 (2026-09-24) (pre-release)
 
@@ -764,7 +939,7 @@
 - Improved deploy tool invocation by rewriting tool descriptions and defaulting previously required options, and restricted `deploy_app_logs_get` to local-only mode (`LocalRequired=true`). [[#2418](https://github.com/microsoft/mcp/pull/2418)]
 - Added custom telemetry dimensions to Azure Backup MCP commands. [[#2505](https://github.com/microsoft/mcp/pull/2505)]
 
-## 2.0.2 (2026-04-24)
+## 2.0.43 (2026-04-24)
 
 ### Changed
 

@@ -24,12 +24,24 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// Provides the same functionality as <see cref="ServerToolLoader"/> but without spawning child azmcp processes.
 /// Supports learn functionality for progressive discovery of commands within each namespace.
 /// </summary>
+/// <param name="contextAccessor">The singleton accessor shared with services executing command work.</param>
+/// <param name="commandFactory">The factory supplying ordinary or consolidated command groups.</param>
+/// <param name="configuration">The server's filtering, transport, consent, and output settings.</param>
+/// <param name="logger">The logger for discovery, sampling, and command execution.</param>
+/// <param name="applyFilter">Whether to apply ignored-group and configured namespace filters.</param>
+/// <remarks>
+/// Discovery, learn responses, sampling callbacks, and elicitation run without a new execution
+/// scope. When a request or sampling result selects a real command, the loader scopes that
+/// command's awaited execution using its original namespace, not the displayed group name.
+/// </remarks>
 public sealed class NamespaceToolLoader(
+    ICommandContextAccessor contextAccessor,
     ICommandFactory commandFactory,
     IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<NamespaceToolLoader> logger,
     bool applyFilter = true) : BaseToolLoader(logger)
 {
+    private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
@@ -298,7 +310,7 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
+        IReadOnlyDictionary<string, CommandRegistration> namespaceCommands;
         try
         {
             namespaceCommands = _commandFactory.GroupCommands([namespaceName]);
@@ -360,13 +372,14 @@ public sealed class NamespaceToolLoader(
 
             await NotifyProgressAsync(request, $"Calling {namespaceName} {command}...", cancellationToken);
 
-            if (!namespaceCommands.TryGetValue(command, out var cmd))
+            if (!namespaceCommands.TryGetValue(command, out CommandRegistration? registration))
             {
                 activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
                 _logger.LogError("Command {Command} found in tools but missing from namespace {Namespace} commands.", command, namespaceName);
                 return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
             }
 
+            IBaseCommand cmd = registration.Command;
             activity?.SetTag(TagName.ToolName, command)
                 .SetTag(TagName.ToolId, cmd.Id)
                 .SetTag(TagName.ToolSource, "internal")
@@ -423,7 +436,8 @@ public sealed class NamespaceToolLoader(
             var commandContext = new CommandContext(activity)
             {
                 McpServer = request.Server,
-                ProgressToken = request.Params?.ProgressToken
+                ProgressToken = request.Params?.ProgressToken,
+                ToolNamespaceName = registration.ToolNamespaceName
             };
             var realCommand = cmd.GetCommand();
 
@@ -462,7 +476,11 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            CommandResponse commandResponse;
+            using (_contextAccessor.BeginScope(commandContext))
+            {
+                commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            }
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
             if (commandResponse.Message.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
@@ -619,9 +637,9 @@ public sealed class NamespaceToolLoader(
         }
 
         var list = namespaceCommands
-            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
+            .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
             .ToList();
 
         // Cache for subsequent requests

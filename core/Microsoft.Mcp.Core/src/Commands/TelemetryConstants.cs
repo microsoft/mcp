@@ -19,12 +19,12 @@ public class TagName
     public const string McpServerVersion = "Version";
 
     /// <summary>
-    /// Name of the MCP client.
+    /// Name of the MCP client, or <see cref="TagConstants.Unknown"/> if the client name is unavailable.
     /// </summary>
     public const string ClientName = "ClientName";
 
     /// <summary>
-    /// Version of the MCP client.
+    /// Version of the MCP client, or <see cref="TagConstants.Unknown"/> if the client version is unavailable.
     /// </summary>
     public const string ClientVersion = "ClientVersion";
 
@@ -144,6 +144,18 @@ public class TagName
     /// Whether the MCP server is configured to disable authentication for incoming HTTP requests.
     /// </summary>
     public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
+
+    /// <summary>
+    /// The configured namespace override scope at startup: none, selected, or all.
+    /// An all override still requires a resolved executing namespace at request time.
+    /// </summary>
+    public const string SsrfNamespaceOverrideScope = "SsrfNamespaceOverrideScope";
+
+    /// <summary>
+    /// The number of distinct, non-blank configured override entries, compared case-insensitively.
+    /// Includes the ALL marker if configured; does not count affected tools or export entry values.
+    /// </summary>
+    public const string SsrfNamespaceOverrideCount = "SsrfNamespaceOverrideCount";
 
     /// <summary>
     /// A list of the tools that the MCP server is configured to allow.

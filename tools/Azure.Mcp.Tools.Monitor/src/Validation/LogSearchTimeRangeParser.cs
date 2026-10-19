@@ -24,7 +24,10 @@ internal static class LogSearchTimeRangeParser
     {
         if (string.IsNullOrWhiteSpace(timespan))
         {
-            throw new CommandValidationException("--timespan is required.");
+            throw new CommandValidationException("--timespan is required.")
+            {
+                TelemetrySafeMessage = "--timespan is required."
+            };
         }
 
         if (timespan.Contains('/'))
@@ -37,7 +40,10 @@ internal static class LogSearchTimeRangeParser
         if (dateComponent.Contains('Y') || dateComponent.Contains('M'))
         {
             throw new CommandValidationException(
-                "--timespan durations cannot use calendar year or month components.");
+                "--timespan durations cannot use calendar year or month components.")
+            {
+                TelemetrySafeMessage = "--timespan durations cannot use calendar year or month components."
+            };
         }
 
         TimeSpan duration;
@@ -48,17 +54,26 @@ internal static class LogSearchTimeRangeParser
         catch (Exception ex) when (ex is FormatException or OverflowException)
         {
             throw new CommandValidationException(
-                "--timespan must be a positive ISO 8601 duration or a closed RFC 3339 start/end interval.");
+                "--timespan must be a positive ISO 8601 duration or a closed RFC 3339 start/end interval.")
+            {
+                TelemetrySafeMessage = "--timespan must be a positive ISO 8601 duration or a closed RFC 3339 start/end interval."
+            };
         }
 
         if (duration <= TimeSpan.Zero)
         {
-            throw new CommandValidationException("--timespan duration must be positive.");
+            throw new CommandValidationException("--timespan duration must be positive.")
+            {
+                TelemetrySafeMessage = "--timespan duration must be positive."
+            };
         }
 
         if (duration > MaximumTimespan)
         {
-            throw new CommandValidationException("--timespan cannot exceed 30 days.");
+            throw new CommandValidationException("--timespan cannot exceed 30 days.")
+            {
+                TelemetrySafeMessage = "--timespan cannot exceed 30 days."
+            };
         }
 
         return new(now - duration, now);
@@ -72,22 +87,34 @@ internal static class LogSearchTimeRangeParser
             !TryParseRfc3339(parts[1], out var end))
         {
             throw new CommandValidationException(
-                "--timespan intervals must contain closed RFC 3339 start and end timestamps.");
+                "--timespan intervals must contain closed RFC 3339 start and end timestamps.")
+            {
+                TelemetrySafeMessage = "--timespan intervals must contain closed RFC 3339 start and end timestamps."
+            };
         }
 
         if (start >= end)
         {
-            throw new CommandValidationException("--timespan start must be earlier than its end.");
+            throw new CommandValidationException("--timespan start must be earlier than its end.")
+            {
+                TelemetrySafeMessage = "--timespan start must be earlier than its end."
+            };
         }
 
         if (start >= now)
         {
-            throw new CommandValidationException("--timespan cannot be entirely in the future.");
+            throw new CommandValidationException("--timespan cannot be entirely in the future.")
+            {
+                TelemetrySafeMessage = "--timespan cannot be entirely in the future."
+            };
         }
 
         if (end - start > MaximumTimespan)
         {
-            throw new CommandValidationException("--timespan cannot exceed 30 days.");
+            throw new CommandValidationException("--timespan cannot exceed 30 days.")
+            {
+                TelemetrySafeMessage = "--timespan cannot exceed 30 days."
+            };
         }
 
         return new(start, end);

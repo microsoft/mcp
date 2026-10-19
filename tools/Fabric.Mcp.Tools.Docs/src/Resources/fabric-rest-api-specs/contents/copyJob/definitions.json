@@ -168,6 +168,37 @@
           "format": "uuid"
         }
       }
+    },
+    "CopyJobExecuteJobInstance": {
+      "description": "A CopyJob execute job instance.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "../platform/definitions/platform.json#/definitions/ItemJobInstance"
+        }
+      ]
+    },
+    "CopyJobExecuteJobInstances": {
+      "description": "A list of CopyJob execute job instances.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ],
+      "properties": {
+        "value": {
+          "description": "A list of CopyJob execute job instances.",
+          "type": "array",
+          "readOnly": true,
+          "items": {
+            "$ref": "#/definitions/CopyJobExecuteJobInstance"
+          }
+        }
+      }
     }
   }
 }

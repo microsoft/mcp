@@ -145,27 +145,128 @@
                 }
             }
         },
-        "BaseCustomEndpointConnection": {
-            "type": "object",
-            "description": "Represents the connection information for a custom endpoint.",
-            "required": [
-                "fullyQualifiedNamespace",
-                "eventHubName"
+        "EndpointConnectionType": {
+            "type": "string",
+            "description": "The endpoint connection shape. Additional endpoint connection types may be added over time.",
+            "enum": [
+                "CustomEndpoint",
+                "KafkaEndpoint"
             ],
+            "x-ms-enum": {
+                "name": "EndpointConnectionType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "CustomEndpoint",
+                        "description": "The custom endpoint connection shape."
+                    },
+                    {
+                        "value": "KafkaEndpoint",
+                        "description": "The Kafka endpoint connection shape."
+                    }
+                ]
+            }
+        },
+        "EndpointConnection": {
+            "type": "object",
+            "description": "Represents the connection information for an eventstream source or destination endpoint.",
+            "discriminator": "type",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The endpoint connection shape.",
+                    "$ref": "#/definitions/EndpointConnectionType"
+                }
+            }
+        },
+        "CustomEndpointConnection": {
+            "type": "object",
+            "description": "Represents a custom endpoint connection.",
+            "x-ms-discriminator-value": "CustomEndpoint",
             "properties": {
                 "fullyQualifiedNamespace": {
                     "type": "string",
-                    "description": "The fully qualified namespace of the EventHub."
+                    "description": "The fully qualified namespace of the Event Hub."
                 },
                 "eventHubName": {
                     "type": "string",
-                    "description": "The name of the EventHub."
+                    "description": "The name of the Event Hub."
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
                 },
                 "accessKeys": {
                     "$ref": "#/definitions/AccessKeys",
                     "description": "The access keys."
                 }
-            }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EndpointConnection"
+                }
+            ]
+        },
+        "KafkaEndpointConnection": {
+            "type": "object",
+            "description": "Represents a Kafka endpoint connection.",
+            "x-ms-discriminator-value": "KafkaEndpoint",
+            "properties": {
+                "bootstrapServer": {
+                    "type": "string",
+                    "description": "The Kafka bootstrap server address, including port."
+                },
+                "topicName": {
+                    "type": "string",
+                    "description": "The Kafka topic name."
+                },
+                "securityProtocol": {
+                    "type": "string",
+                    "description": "The Kafka security protocol.",
+                    "enum": [
+                        "SASL_PLAINTEXT",
+                        "PLAINTEXT",
+                        "SASL_SSL",
+                        "SSL"
+                    ],
+                    "x-ms-enum": {
+                        "name": "SecurityProtocol",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "SASL_PLAINTEXT",
+                                "description": "The security protocol is SASL_PLAINTEXT."
+                            },
+                            {
+                                "value": "PLAINTEXT",
+                                "description": "The security protocol is PLAINTEXT."
+                            },
+                            {
+                                "value": "SASL_SSL",
+                                "description": "The security protocol is SASL_SSL."
+                            },
+                            {
+                                "value": "SSL",
+                                "description": "The security protocol is SSL."
+                            }
+                        ]
+                    }
+                },
+                "authentications": {
+                    "type": "array",
+                    "description": "The available authentication mechanisms.",
+                    "items": {
+                        "$ref": "#/definitions/EndpointAuthentication"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EndpointConnection"
+                }
+            ]
         },
         "AccessKeys": {
             "type": "object",
@@ -192,6 +293,84 @@
                 "secondaryConnectionString": {
                     "type": "string",
                     "description": "The secondary connection string."
+                }
+            }
+        },
+        "EndpointAuthentication": {
+            "type": "object",
+            "description": "The base authentication mechanism for an endpoint connection. The concrete type is indicated by the `saslMechanism` discriminator.",
+            "discriminator": "saslMechanism",
+            "required": [
+                "saslMechanism"
+            ],
+            "properties": {
+                "saslMechanism": {
+                    "type": "string",
+                    "description": "The SASL authentication mechanism. Additional authentication mechanisms may be added over time.",
+                    "enum": [
+                        "OAuthBearer",
+                        "Plain"
+                    ],
+                    "x-ms-enum": {
+                        "name": "AuthenticationMechanism",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "OAuthBearer",
+                                "description": "The OAuthBearer SASL mechanism."
+                            },
+                            {
+                                "value": "Plain",
+                                "description": "The Plain SASL mechanism."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "OAuthBearerAuthentication": {
+            "type": "object",
+            "description": "Represents the OAuthBearer SASL authentication mechanism.",
+            "x-ms-discriminator-value": "OAuthBearer",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EndpointAuthentication"
+                }
+            ],
+            "required": [
+                "scope"
+            ],
+            "properties": {
+                "scope": {
+                    "type": "string",
+                    "description": "The OAuth scope."
+                }
+            }
+        },
+        "PlainAuthentication": {
+            "type": "object",
+            "description": "Represents the Plain SASL authentication mechanism.",
+            "x-ms-discriminator-value": "Plain",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EndpointAuthentication"
+                }
+            ],
+            "required": [
+                "primaryConnectionString"
+            ],
+            "properties": {
+                "primaryConnectionString": {
+                    "type": "string",
+                    "description": "The primary connection string."
+                },
+                "secondaryConnectionString": {
+                    "type": "string",
+                    "description": "The secondary connection string for key rotation."
+                },
+                "saslJaasConfig": {
+                    "type": "string",
+                    "description": "The SASL JAAS configuration string."
                 }
             }
         },

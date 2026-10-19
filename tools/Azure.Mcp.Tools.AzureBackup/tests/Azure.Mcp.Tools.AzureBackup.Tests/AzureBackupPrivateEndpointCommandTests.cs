@@ -54,7 +54,7 @@ public class AzureBackupPrivateEndpointCommandTests(
         }),
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
         {
-            Regex = "72f988bf-86f1-41af-91ab-2d7cd011db47",
+            Regex = "(72f988bf-86f1-41af-91ab-2d7cd011db47|70a036f6-8e4d-4615-bad6-149c02e7720d)",
             Value = "00000000-0000-0000-0000-000000000000",
         })
     ];

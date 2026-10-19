@@ -3,6 +3,7 @@
 
 using System.Security;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -21,7 +22,7 @@ public class ConfidentialLedgerServiceEndpointValidationTests
         cloudConfiguration.CloudType.Returns(cloudType);
         cloudConfiguration.ArmEnvironment.Returns(armEnvironment);
 
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         azureService.CloudConfiguration.Returns(cloudConfiguration);
 
         return new ConfidentialLedgerService(azureService);

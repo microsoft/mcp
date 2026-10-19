@@ -4,9 +4,11 @@
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Npgsql;
@@ -32,7 +34,8 @@ public class PostgresServiceTests
 
     public PostgresServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>(), Arg.Any<CancellationToken>())

@@ -31,10 +31,9 @@ The mention of a service group supplies context for resolving a usage plan; it d
 
 ## Inspect Goals and Participation
 
-1. List templates with `mcp_azure_mcp_ser_resiliency_goal_template_get`.
-2. List assignments with `mcp_azure_mcp_ser_resiliency_goal_assignment_get`.
-3. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
-4. Get individual members when full HA/DR attestation, participation, or exclusion details are needed.
+1. List assignments with `mcp_azure_mcp_ser_resiliency_goal_assignment_get`.
+2. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
+3. Get individual members when full HA/DR attestation, participation, or exclusion details are needed.
 
 These tools do not create or mutate goals.
 

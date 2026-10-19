@@ -1,0 +1,13 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "policySetId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "scopeActivationRequest": {
+            "scopeType": "Capacity",
+            "capacityId": "13a5df42-7a1d-49e5-8e06-9af9f5b76c55"
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

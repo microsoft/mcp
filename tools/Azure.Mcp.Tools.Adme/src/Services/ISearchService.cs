@@ -13,7 +13,8 @@ public interface ISearchService
         string dataPartition,
         SearchQueryRequest request,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task<AdmeResponse<SearchCursorResponse>> QueryWithCursorAsync(
         string endpoint,
@@ -21,5 +22,6 @@ public interface ISearchService
         SearchCursorRequest request,
         bool searchAfter,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

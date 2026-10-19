@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
@@ -87,7 +88,7 @@ public class SpeechSetupTests
         Assert.NotNull(sttGroup);
 
         Assert.True(sttGroup.Commands.ContainsKey("recognize"));
-        var recognizeCommand = sttGroup.Commands["recognize"];
+        var recognizeCommand = sttGroup.Commands["recognize"].Command;
         Assert.NotNull(recognizeCommand);
         Assert.NotNull(recognizeCommand.Description);
         Assert.NotEmpty(recognizeCommand.Description);
@@ -131,7 +132,7 @@ public class SpeechSetupTests
         services.AddLogging();
         services.AddHttpClient();
         // Add required dependencies
-        services.AddSingleton(Substitute.For<IAzureService>());
+        services.AddSingleton(AzureServiceTestHelpers.CreateAzureService());
         setup.ConfigureServices(services);
         return services.BuildServiceProvider();
     }

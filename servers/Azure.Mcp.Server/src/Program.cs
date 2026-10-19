@@ -181,7 +181,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
-            new Azure.Mcp.Tools.Adme.AdmeSetup(),
+            // new Azure.Mcp.Tools.Adme.AdmeSetup(), - disabling for GA release
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
@@ -194,6 +194,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureTerraform.AzureTerraformSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.DeviceProvisioning.DeviceProvisioningSetup(),
             new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),

@@ -35,19 +35,28 @@ internal class PostgresResource : IPostgresResource
             if (string.IsNullOrEmpty(authType))
             {
                 throw new CommandValidationException($"Authentication failed. No authentication type was provided so '{AuthTypes.MicrosoftEntra}' was used." +
-                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized);
+                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized)
+                {
+                    TelemetrySafeMessage = $"Authentication failed. No authentication type was provided so '{AuthTypes.MicrosoftEntra}' was used."
+                };
             }
 
             if (AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new CommandValidationException($"Authentication failed using the request authentication type '{AuthTypes.MicrosoftEntra}'. " +
-                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized);
+                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized)
+                {
+                    TelemetrySafeMessage = $"Authentication failed using the request authentication type '{AuthTypes.MicrosoftEntra}'."
+                };
             }
 
             if (AuthTypes.PostgreSQL.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new CommandValidationException($"Authentication failed using the request authentication type '{AuthTypes.PostgreSQL}'. " +
-                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.MicrosoftEntra}'.", HttpStatusCode.Unauthorized);
+                    $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.MicrosoftEntra}'.", HttpStatusCode.Unauthorized)
+                {
+                    TelemetrySafeMessage = $"Authentication failed using the request authentication type '{AuthTypes.PostgreSQL}'."
+                };
             }
 
             throw;

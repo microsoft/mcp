@@ -137,6 +137,30 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     }
 
     [Fact]
+    public async Task ExecuteAsync_SurfacesTruncation_WhenListingIsIncomplete()
+    {
+        // A deserialization failure that truncates the listing must not be reported as an empty
+        // success; the command surfaces the descriptive error from the service.
+        Service.ListProtectedItemsAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(
+                "Listing protected items in vault 'v' is incomplete: 0 item(s) were returned before a backup " +
+                "instance repeatedly failed to deserialize (commonly caused by an empty or malformed resourceGroupId " +
+                "on the instance), so the remaining instances could not be enumerated."));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg");
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("incomplete", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("resourceGroupId", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange

@@ -1,7 +1,6 @@
 {
   "parameters": {
     "workspaceId": "9d19eb70-17d7-43b5-b6ce-943658e246be",
-    "beta": true,
     "bulkExportItemDefinitionsRequest": {
       "items": [
         {

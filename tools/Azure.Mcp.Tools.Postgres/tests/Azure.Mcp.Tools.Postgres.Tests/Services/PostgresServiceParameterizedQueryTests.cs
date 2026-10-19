@@ -4,9 +4,12 @@
 using System.Data.Common;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
+using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Npgsql;
 using NSubstitute;
 using Xunit;
@@ -26,7 +29,8 @@ public class PostgresServiceParameterizedQueryTests
 
     public PostgresServiceParameterizedQueryTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         _entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
@@ -241,4 +245,3 @@ public class PostgresServiceParameterizedQueryTests
         Assert.NotNull(task);
     }
 }
-

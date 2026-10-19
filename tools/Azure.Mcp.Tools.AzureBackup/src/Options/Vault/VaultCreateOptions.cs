@@ -15,4 +15,7 @@ public sealed class VaultCreateOptions : BaseAzureBackupOptions
 
     [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
     public string? StorageType { get; set; }
+
+    [Option(Description = "Enable public network access for a Recovery Services vault (insecure). Defaults to false. Only supported with --vault-type rsv; configure private endpoints for private access.")]
+    public bool EnablePublicNetworkAccess { get; set; }
 }

@@ -15,10 +15,16 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "resource",
     Title = "Export Azure Resource to Terraform",
     Description = """
-        Generates an aztfexport command to export a single Azure resource to Terraform configuration.
-        Returns the command and arguments for the agent to execute locally.
-        Specify --resource-id with the full Azure resource ID. Optionally configure the Terraform provider
-        (azurerm or azapi), custom resource name, output folder, parallelism, and whether to include role assignments.
+        Export one existing Azure resource to Terraform configuration by generating an Azure Export for Terraform
+        (aztfexport) command. Use this tool whenever the request identifies the resource by its full Azure resource ID,
+        such as /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{name}.
+        Exports only that single resource, not the resource group that contains it.
+        Supports the AzureRM (azurerm, default) and AzAPI (azapi) providers;
+        for an AzAPI export, set --provider to azapi.
+        This tool returns the command and arguments for local execution; it does not execute the export or modify Azure resources.
+        Requires --resource-id with the full Azure resource ID. Ask for the resource ID if it is not provided.
+        Optionally configure a custom Terraform resource name, output folder, parallelism, and whether to include role assignments.
+        To export every resource in a resource group by group name instead, use the aztfexport resourcegroup command.
         If aztfexport is not installed locally, returns installation instructions instead.
         """,
     OperationPlane = ToolOperationPlane.NotApplicable,
