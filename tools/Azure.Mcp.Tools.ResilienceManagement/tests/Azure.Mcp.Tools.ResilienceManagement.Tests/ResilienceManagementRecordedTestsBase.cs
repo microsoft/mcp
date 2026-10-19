@@ -156,6 +156,11 @@ public abstract class ResilienceManagementRecordedTestsBase(
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")
         {
             Value = "Sanitized"
+        }),
+        // Recovery plan creation generates a new default-group GUID on each run.
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId")
+        {
+            Value = Guid.Empty.ToString()
         })
     ];
 }
