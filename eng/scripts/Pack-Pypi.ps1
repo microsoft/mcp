@@ -3,10 +3,10 @@
 
 <#
 .SYNOPSIS
-    Packs Azure MCP Server binaries into PyPI wheels for distribution.
+    Packs MCP server binaries into PyPI wheels for distribution.
 
 .DESCRIPTION
-    This script creates platform-specific PyPI wheels for the Azure MCP Server.
+    This script creates platform-specific PyPI wheels for configured MCP servers.
     Each wheel contains the binary for a specific platform (OS + architecture).
     
     The wheels are named according to PyPI conventions:
@@ -294,10 +294,12 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Write-Host $pyprojectContent
         $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
 
-        # Update version in __init__.py
+        # Configure version and CLI name in __init__.py
         $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
         $initPyContent = Get-Content $initPyPath -Raw
-        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$pythonVersion`""
+        $initPyContent = $initPyContent `
+            -replace '{{VERSION}}', $pythonVersion `
+            -replace '{{CLI_NAME}}', $cliName
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows
