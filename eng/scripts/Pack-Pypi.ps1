@@ -143,6 +143,11 @@ function Get-DevStatus {
         return '5 - Production/Stable'
     }
 
+    # The parser treats unlabeled major-zero versions as prerelease beta versions.
+    if ($parsedVersion.Major -eq 0 -and [string]::IsNullOrEmpty($parsedVersion.PrereleaseLabel)) {
+        return '4 - Beta'
+    }
+
     switch ($parsedVersion.PrereleaseLabel) {
         'alpha' { return '3 - Alpha' }
         'beta'  { return '4 - Beta' }
