@@ -1195,7 +1195,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location> | none |
 | resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> using service defaults with no failover payload | none |
 | resiliency_drill_run_failover | Fail over drill run <drill_run_name> from physical zone <source_location> and pause for manual input instead of automatic failover | none |
-| resiliency_drill_run_failover | Fail over selected resources <resource_ids> in drill run <drill_run_name> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resiliency_drill_run_failover | Fail over selected drill-resource ARM IDs <drill_resource_ids> in drill run <drill_run_name> of drill <drill_name> in service group <service_group> from physical zones <source_locations>, and automatically continue after fault injection | none |
 | resiliency_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resiliency_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
 | resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |

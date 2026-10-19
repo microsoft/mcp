@@ -11,24 +11,28 @@ internal static class DrillActionValidation
 {
     private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
 
-    public static void ValidateSelectedResourceIds(IReadOnlyList<string>? resourceIds, string serviceGroup, ValidationResult validationResult)
+    public static void ValidateSelectedResourceIds(IReadOnlyList<string>? resourceIds, string serviceGroup, ValidationResult validationResult, string? drill = null)
     {
         if (resourceIds is not null && (resourceIds.Count == 0 ||
-            resourceIds.Any(id => string.IsNullOrWhiteSpace(id) || !IsRecoveryResourceIdForServiceGroup(id, serviceGroup))))
+            resourceIds.Any(id => string.IsNullOrWhiteSpace(id) || !IsSelectedResourceId(id, serviceGroup, drill))))
         {
-            validationResult.Errors.Add("Selected resource IDs must contain at least one full recovery-resource ID under the requested service group with a GUID resource name.");
+            var expectedResource = drill is null
+                ? "recovery-resource ID under the requested service group"
+                : "drill-resource ID under the requested service group and drill";
+            validationResult.Errors.Add($"Selected resource IDs must contain at least one full {expectedResource} with a GUID resource name.");
         }
     }
 
-    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
+    private static bool IsSelectedResourceId(string resourceId, string serviceGroup, string? drill)
     {
         try
         {
             var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? recoveryPlanId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+            ResourceIdentifier? parentId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = parentId?.Parent;
+            return parsed.ResourceType == (drill is null ? RecoveryMembersResource.ResourceType : DrillTargetResource.ResourceType) &&
+                parentId?.ResourceType == (drill is null ? RecoveryPlanResource.ResourceType : ResilienceManagementDrillResource.ResourceType) &&
+                (drill is null || string.Equals(parentId.Name, drill, StringComparison.OrdinalIgnoreCase)) &&
                 serviceGroupId?.ResourceType == ServiceGroupResourceType &&
                 string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
                 Guid.TryParse(parsed.Name, out _);

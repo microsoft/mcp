@@ -228,4 +228,4 @@ Removal is different from exclusion. Use removal only when the user wants member
 Pass source locations and selected resource IDs as tool arrays, not JSON strings:
 
 - `source-locations`: values such as `westus2` or `westus2-az3`, supplied by the user.
-- `selected-resource-ids`: full recovery-resource IDs supplied or explicitly selected by the user.
+- `selected-resource-ids`: full drill-resource IDs under the requested service group and drill for drill-run failover; full recovery-resource IDs for drill-run reprotect and recovery-plan operations. Use IDs supplied or explicitly selected by the user.

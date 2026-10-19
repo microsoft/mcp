@@ -48,7 +48,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         {
             validationResult.Errors.Add("Source locations are required when selected-resource-ids or auto-failover is supplied. Omit all three options to use service defaults.");
         }
-        DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult);
+        DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult, drill: options.Drill);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillRunFailoverOptions options, CancellationToken cancellationToken)

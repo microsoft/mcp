@@ -14,6 +14,8 @@ The GA SDK reuses required-on-create nested models in PATCH and can serialize om
 
 Use `tools/Azure.Mcp.Tools.ResilienceManagement/tests/test-resources-drills.bicep` for isolated GA drill fixtures in an approved, dedicated resource group tagged `Purpose=mcp-drills-ga-live-tests`. Supply `baseName` and `sshPublicKey`, then run `test-resources-drills-post.ps1 -ResourceGroupName <fixture-group>`. Retain the generated `.testsettings.json` until `remove-test-resources-pre.ps1 -ResourceGroupName <fixture-group>` has cleaned up the tenant-scoped resources, before deleting the fixture resource group. Do not reuse shared resources for destructive drill tests.
 
+Creation tests must create uniquely named drills and delete them in cleanup; re-creating the shared fixture can reset its resource inclusion and readiness.
+
 ### GA Troubleshooting
 
 - **HTTP 412 mentioning missing `properties.drillType`:** Verify backend rollout and the version that provisioned the fixture. SDK/API availability does not prove backend compatibility; older child resources may need regeneration through supported APIs. Do not substitute preview reads or fabricate the discriminator.
@@ -160,6 +162,7 @@ Validation must reject malformed input before constructing an SDK request. Unit 
 - Validate physical source locations as `<region>-az<positive-zone-number>`, for example `westus2-az1`. A normal Azure location such as `westus2` is not a physical zone selector.
 - Validate cross-field rules explicitly. Drill update requires at least one change, and `subscription` and `region` must be supplied together.
 - Parse ARM IDs with `ResourceIdentifier` and verify the complete expected hierarchy and resource types. For selected recovery-resource IDs, verify service group ownership, recovery-plan parentage, `recoveryResources` type, and that the leaf `parsed.Name` is a GUID. A syntactically valid ARM ID with a leaf such as `resource1` is invalid for this SDK contract.
+- Drill-run failover selections use `drillResources` IDs under the requested service group and drill, not `recoveryResources` IDs. Reprotect selections remain recovery-resource IDs.
 - Validate JSON with `JsonDocument`/`Utf8JsonWriter` and deserialize with `ModelReaderWriter`; do not assemble payloads by string concatenation. Enforce object/array shape, required fields, non-empty IDs, enum values, positive durations, and payload-size limits before service invocation.
 - For optional selector arrays, distinguish omitted from present-but-empty according to the service contract. Require at least one selector when the operation cannot safely infer a target.
 

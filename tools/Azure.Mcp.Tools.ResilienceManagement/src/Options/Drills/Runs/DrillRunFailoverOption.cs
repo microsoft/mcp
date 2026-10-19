@@ -20,7 +20,7 @@ public sealed class DrillRunFailoverOptions
     [Option(Description = "The physical Azure zones from which resources will be failed over, such as 'eastus-az1'. Omit together with selected-resource-ids and auto-failover to send no request body and use service defaults. Required when either of those options is supplied.")]
     public string[]? SourceLocations { get; set; }
 
-    [Option(Description = "The ARM IDs of recovery resources to fail over. Omit this option to process all qualified resources in the source locations.")]
+    [Option(Description = "The full drill-resource ARM IDs under the requested service group and drill to fail over. Omit this option to process all qualified resources in the source locations.")]
     public string[]? SelectedResourceIds { get; set; }
 
     [Option(Description = "Whether to proceed automatically from fault injection to failover. Requires source-locations. Defaults to false when source-locations are supplied; omit all failover inputs to use service defaults.")]
