@@ -435,7 +435,8 @@ public class StorageServiceDiskDiagnoseTests
         {
             Content = new StringContent("""{"status":"Healthy"}""")
         });
-        (StorageIntelligenceService service, _, _, _) = CreateService(handler);
+        IAzureService azureService = Substitute.For<IAzureService>();
+        (StorageIntelligenceService service, _, _, _) = CreateService(handler, azureService: azureService);
         Environment.SetEnvironmentVariable(EndpointEnvironmentVariable, DefaultStorageIntelligenceEndpoint);
 
         await service.DiagnoseDiskAsync(
@@ -443,6 +444,9 @@ public class StorageServiceDiskDiagnoseTests
             cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(DefaultStorageIntelligenceEndpoint, handler.Request?.RequestUri?.AbsoluteUri);
+        azureService.Received(1).ValidateAzureServiceEndpoint(
+            endpoint: DefaultStorageIntelligenceEndpoint,
+            serviceType: "storage-intelligence");
     }
 
     [Theory]
@@ -476,6 +480,9 @@ public class StorageServiceDiskDiagnoseTests
             cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.Request);
+        azureService.Received(1).ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "storage-intelligence");
         await azureService.DidNotReceiveWithAnyArgs().ResolveTenantIdAsync(
             default, TestContext.Current.CancellationToken);
         await tokenCredentialProvider.DidNotReceiveWithAnyArgs().GetTokenCredentialAsync(
@@ -795,7 +802,12 @@ public class StorageServiceDiskDiagnoseTests
             .Returns(call => call.Arg<string?>());
         endpointValidator ??= new EndpointValidator(
             new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor());
-        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService, endpointValidator), attachedDiskService, tokenCredentialProvider, credential);
+        azureService.When(value => value.ValidateAzureServiceEndpoint(Arg.Any<string>(), Arg.Any<string>()))
+            .Do(call => endpointValidator.ValidateAzureServiceEndpoint(
+                endpoint: call.ArgAt<string>(0),
+                serviceType: call.ArgAt<string>(1),
+                armEnvironment: azureService.CloudConfiguration.ArmEnvironment));
+        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService), attachedDiskService, tokenCredentialProvider, credential);
     }
 
     private sealed class RecordingHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler

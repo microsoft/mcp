@@ -9,8 +9,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.ResourceManager;
-using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
@@ -19,8 +17,7 @@ public sealed class StorageIntelligenceService(
     IAttachedDiskService attachedDiskService,
     IAzureTokenCredentialProvider tokenCredentialProvider,
     IHttpClientFactory httpClientFactory,
-    IAzureService azureService,
-    IEndpointValidator endpointValidator) : IStorageIntelligenceService
+    IAzureService azureService) : IStorageIntelligenceService
 {
     internal const int ProvisionalMaxResponseSizeBytes = 10 * 1024 * 1024;
     private const int ResponseReadBufferSizeBytes = 80 * 1024;
@@ -35,7 +32,6 @@ public sealed class StorageIntelligenceService(
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAzureService _azureService = azureService;
-    private readonly IEndpointValidator _endpointValidator = endpointValidator;
 
     public async Task<JsonElement> DiagnoseDiskAsync(
         string? resourceId,
@@ -57,7 +53,7 @@ public sealed class StorageIntelligenceService(
         {
             effectiveTenant = null;
         }
-        ValidateEndpoint(endpoint, _azureService.CloudConfiguration.ArmEnvironment);
+        ValidateEndpoint(endpoint);
         if (!IsValidApplicationScope(scope))
         {
             throw new InvalidOperationException(
@@ -236,7 +232,7 @@ public sealed class StorageIntelligenceService(
             ? value
             : defaultValue;
 
-    private void ValidateEndpoint(string endpoint, ArmEnvironment armEnvironment)
+    private void ValidateEndpoint(string endpoint)
     {
         // Bearer tokens require HTTPS even when an operator explicitly bypasses host restrictions.
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri) || uri.Scheme != Uri.UriSchemeHttps)
@@ -244,10 +240,9 @@ public sealed class StorageIntelligenceService(
             throw new InvalidOperationException($"{EndpointEnvironmentVariable} must be an absolute HTTPS URL.");
         }
 
-        _endpointValidator.ValidateAzureServiceEndpoint(
+        _azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint,
-            serviceType: "storage-intelligence",
-            armEnvironment: armEnvironment);
+            serviceType: "storage-intelligence");
     }
 
     private static bool IsValidApplicationScope(string scope)
