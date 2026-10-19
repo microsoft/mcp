@@ -13,6 +13,18 @@ public interface IResilienceManagementService
 
     Task<GoalAssignmentInfo> GetGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
 
+    Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(string serviceGroup, string goalAssignment, bool requireZonalResiliency, IReadOnlyList<string>? serviceLevelResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentInfo> UpdateGoalAssignmentAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string> serviceLevelResourceIds, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentOperationResult> RecommendGoalAssignmentCapacityAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string> resourceIds, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentOperationResult> RefreshGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
+
+    Task<GoalAssignmentOperationResult> UpdateGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, UpdateGoalResourceContent content, string? tenant = null, CancellationToken cancellationToken = default);
+
     Task<IEnumerable<ResourceSummary>> ListUsagePlansAsync(string resourceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<UsagePlanInfo> GetUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
@@ -47,7 +59,7 @@ public interface IResilienceManagementService
 
     Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationNames operationName, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationName operationName, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
 

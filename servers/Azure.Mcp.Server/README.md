@@ -1365,8 +1365,24 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 
 ### 🛡️ Azure Resilience Management
 
+Goals support the GA `2026-10-01` API with nested zonal resiliency settings, not
+goal templates or flat HA/DR payloads. Commands are service-group-scoped and do
+not take a subscription option. Assignment names use 3-24 ASCII letters, digits,
+or hyphens. Assignment PATCH only replaces or clears SLI
+associations; it cannot change the zonal requirement. See the
+[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract)
+for payloads and completion semantics. The tools use the released
+`Azure.ResourceManager.ResilienceManagement` SDK `1.0.0`.
+
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' in service group 'my-service-group' requiring zonal resiliency"
+* "Replace the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group' with existing Microsoft.Monitor/slis resources from that same service group, preserving its zonal requirement"
+* "Clear the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group', without deleting the indicators or changing its zonal requirement"
+* "Delete goal assignment 'my-assignment' from service group 'my-service-group' without deleting the underlying Azure resources"
+* "Recommend zonal capacity for non-resilient resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Refresh tracked resources of goal assignment 'my-assignment' in service group 'my-service-group' after membership changes"
+* "Exclude a selected resource from zonal participation in goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
 * "List all resilience recovery plans in service group 'my-service-group'"
@@ -1488,7 +1504,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignment lifecycle, zonal capacity recommendations, goal resource rediscovery, participation and attestation, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations

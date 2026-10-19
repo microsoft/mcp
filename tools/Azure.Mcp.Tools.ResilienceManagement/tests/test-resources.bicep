@@ -14,7 +14,6 @@ var planLifecycleEnrollmentName = take('ep${uniqueSuffix}', 24)
 var planLifecycleServiceGroupName = take('sgp${uniqueSuffix}', 24)
 var workflowEnrollmentName = take('ew${uniqueSuffix}', 24)
 var workflowServiceGroupName = take('sgw${uniqueSuffix}', 24)
-var goalTemplateName = take('gt${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var workflowRecoveryPlanName = take('rw${uniqueSuffix}', 24)
@@ -36,7 +35,7 @@ var reprotectRunbookName = 'Reprotect-${take(uniqueSuffix, 19)}'
 //  - Microsoft.Management/serviceGroups (the service group itself)
 //  - the resource group -> service group membership
 //  - the usage plan enrollment
-//  - goal template, goal assignment and recoveryplan (extension resources on the service group)
+//  - GA goal assignment and recoveryplan (extension resources on the service group)
 
 // Storage account (resource-group scoped) so the service group has a member resource that
 // can surface as a goal/recovery resource target during live tests.
@@ -102,7 +101,6 @@ output planLifecycleEnrollmentName string = planLifecycleEnrollmentName
 output planLifecycleServiceGroupName string = planLifecycleServiceGroupName
 output workflowEnrollmentName string = workflowEnrollmentName
 output workflowServiceGroupName string = workflowServiceGroupName
-output goalTemplateName string = goalTemplateName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output workflowRecoveryPlanName string = workflowRecoveryPlanName

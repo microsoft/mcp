@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel.Primitives;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -16,6 +17,78 @@ public sealed class ResilienceManagementServiceTests
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
+
+    [Theory]
+    [InlineData("""{"goalAssignmentType":"Resiliency","goalTemplateId":"/legacy","provisioningState":"Succeeded"}""", null)]
+    [InlineData("""{"requireZonalResiliency":false,"provisioningState":"Succeeded"}""", false)]
+    [InlineData("""{"requireZonalResiliency":true,"provisioningState":"Succeeded"}""", true)]
+    public void AssignmentMapping_PreservesPresenceAndLegacyFields(string properties, bool? expected)
+    {
+        var content = BinaryData.FromString($$"""{"properties":{{properties}}}""");
+        var reader = new Utf8JsonReader(content.ToMemory().Span);
+        var data = ((IJsonModel<GoalAssignmentData>)new GoalAssignmentData()).Create(ref reader, new ModelReaderWriterOptions("W"));
+        Assert.NotNull(data);
+        var mapped = ResilienceManagementService.MapGoalAssignment(data, content);
+
+        Assert.Equal(expected, mapped.Properties!.RequireZonalResiliency);
+        if (expected is null)
+        {
+            Assert.Equal("Resiliency", mapped.Properties.GoalAssignmentType);
+            Assert.Equal("/legacy", mapped.Properties.GoalTemplateId);
+        }
+    }
+
+    [Fact]
+    public void MemberMapping_PreservesLegacyFieldsLostBySdkWireRead()
+    {
+        var content = BinaryData.FromString("""
+            {"properties":{
+              "resourceArmId":"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group/providers/Microsoft.Storage/storageAccounts/account",
+              "highAvailabilityGoalParticipation":"Excluded",
+              "disasterRecoveryAttestationStatus":"NotAttested",
+              "serviceGroupMemberships":[{"membershipType":"Direct","serviceGroupId":"/providers/Microsoft.Management/serviceGroups/group"}]
+            }}
+            """);
+        var reader = new Utf8JsonReader(content.ToMemory().Span);
+        var data = ((IJsonModel<GoalMembersData>)new GoalMembersData()).Create(ref reader, new ModelReaderWriterOptions("W"));
+        Assert.NotNull(data);
+        var mapped = ResilienceManagementService.MapGoalResource(data, content);
+
+        Assert.Equal("Excluded", mapped.Properties!.HighAvailabilityGoalParticipation);
+        Assert.Equal("NotAttested", mapped.Properties.DisasterRecoveryAttestationStatus);
+        Assert.Single(mapped.Properties.ServiceGroupMemberships!);
+        Assert.Null(mapped.Properties.ZonalResiliency);
+    }
+
+    [Fact]
+    public void MapDrillResource_PreservesLegacyFieldsWithoutInventingSdkDiscriminator()
+    {
+        var content = BinaryData.FromString("""
+            {
+              "id":"/providers/Microsoft.Management/serviceGroups/group/providers/Microsoft.AzureResilienceManagement/drills/drill/drillResources/member",
+              "name":"member",
+              "properties":{
+                "haStatus":"NotResilient",
+                "activePhysicalZones":["zone1"],
+                "recoveryPhysicalZones":["zone2"]
+              }
+            }
+            """);
+        var data = ModelReaderWriter.Read<DrillTargetData>(content, new ModelReaderWriterOptions("W"));
+        Assert.NotNull(data);
+        using var sdkJson = JsonDocument.Parse(ModelReaderWriter.Write(data, new ModelReaderWriterOptions("J")));
+        var sdkProperties = sdkJson.RootElement.GetProperty("properties");
+        Assert.False(sdkProperties.TryGetProperty("haStatus", out _));
+        Assert.Equal("unknown", sdkProperties.GetProperty("drillType").GetString());
+
+        DrillResourceInfo mapped = ResilienceManagementService.MapDrillResource(content);
+
+        Assert.Equal("member", mapped.Name);
+        Assert.Equal("NotResilient", mapped.Properties.GetProperty("haStatus").GetString());
+        Assert.Equal("zone1", mapped.Properties.GetProperty("activePhysicalZones")[0].GetString());
+        Assert.Equal("zone2", mapped.Properties.GetProperty("recoveryPhysicalZones")[0].GetString());
+        Assert.False(mapped.Properties.TryGetProperty("drillType", out _));
+    }
 
     [Theory]
     [InlineData("Recovery job retry")]
@@ -143,7 +216,7 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_UsesEmptyRecommendationsWhenProviderOmitsThem()
     {
-        JobErrorInfo error = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo error = ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "Resource requires attention."
@@ -492,7 +565,7 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
     {
-        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo providerError = ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "The recoveryplan is not ready."
@@ -514,11 +587,22 @@ public sealed class ResilienceManagementServiceTests
             [resourceId],
             "Allowed");
 
-        Assert.Equal(FailoverDirectionTypes.FromSpecificLocations, result.FailoverDirection);
+        Assert.Equal(ResilienceManagementFailoverDirection.FromSpecificLocations, result.FailoverDirection);
         Assert.NotNull(result.FailoverRequestProperties);
         Assert.Equal(["eastus", "westus2-az3"], result.FailoverRequestProperties.SourceLocations);
         Assert.Equal(resourceId, Assert.Single(result.FailoverRequestProperties.SelectedResourceIds).ToString());
         Assert.Equal("Allowed", result.FailoverRequestProperties.ExecutionConfigurationsUserConsent?.ToString());
+    }
+
+    [Fact]
+    public void CreateDrillValidateForExecutionContent_MapsPhysicalSourceLocations()
+    {
+        ValidateForExecutionContent result = ResilienceManagementService.CreateDrillValidateForExecutionContent(
+            ["eastus-az1", "westus2-az3"]);
+
+        Assert.NotNull(result.ValidateForExecutionProperties);
+        Assert.Equal(["eastus-az1", "westus2-az3"], result.ValidateForExecutionProperties.SourceLocations);
+        Assert.Null(result.ValidateForExecutionProperties.OperationName);
     }
 
     [Fact]
