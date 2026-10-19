@@ -15,10 +15,10 @@ public sealed class GoalAssignmentCreateOptions
     public required string GoalAssignment { get; set; }
 
     [Option(Description = "Whether the goal requires zonal resiliency. Explicitly set this and --require-regional-resiliency from the plan type.")]
-    public bool RequireZonalResiliency { get; set; }
+    public required bool RequireZonalResiliency { get; set; }
 
     [Option(Description = "Whether the goal requires regional resiliency. Explicitly set this and --require-zonal-resiliency from the plan type.")]
-    public bool RequireRegionalResiliency { get; set; }
+    public required bool RequireRegionalResiliency { get; set; }
 
     [Option(Description = "ISO 8601 target recovery point objective. Required for a Regional goal.")]
     public string? RegionalRecoveryPointObjective { get; set; }
