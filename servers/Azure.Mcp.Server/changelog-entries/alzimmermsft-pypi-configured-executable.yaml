@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed PyPI packages to launch each MCP server's configured executable instead of always using azmcp."
