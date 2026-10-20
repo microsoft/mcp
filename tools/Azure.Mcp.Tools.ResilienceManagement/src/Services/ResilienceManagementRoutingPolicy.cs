@@ -36,10 +36,11 @@ internal sealed class ResilienceManagementRoutingPolicy : HttpPipelineSynchronou
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(routingLocation))
+        if (string.IsNullOrWhiteSpace(endpoint))
         {
             throw new InvalidOperationException(
-                $"{EndpointEnvironmentVariable} and {RoutingLocationEnvironmentVariable} must be configured together.");
+                $"{EndpointEnvironmentVariable} is required when " +
+                $"{RoutingLocationEnvironmentVariable} is configured.");
         }
 
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var parsedEndpoint) ||
@@ -53,12 +54,14 @@ internal sealed class ResilienceManagementRoutingPolicy : HttpPipelineSynchronou
         }
 
         _endpoint = parsedEndpoint;
-        _routingLocation = routingLocation.Trim();
+        _routingLocation = string.IsNullOrWhiteSpace(routingLocation)
+            ? null
+            : routingLocation.Trim();
     }
 
     public override void OnSendingRequest(HttpMessage message)
     {
-        if (_endpoint is null || _routingLocation is null)
+        if (_endpoint is null)
         {
             return;
         }
@@ -72,7 +75,10 @@ internal sealed class ResilienceManagementRoutingPolicy : HttpPipelineSynchronou
         };
 
         message.Request.Uri.Reset(routed.Uri);
-        message.Request.Headers.SetValue(RoutingLocationHeader, _routingLocation);
+        if (_routingLocation is not null)
+        {
+            message.Request.Headers.SetValue(RoutingLocationHeader, _routingLocation);
+        }
     }
 
     internal static ArmClientOptions CreateArmClientOptions()

@@ -208,6 +208,47 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public async Task ListRecoveryPlansAsync_RoutesToCanaryWithoutRoutingHeader()
+    {
+        const string endpoint = "https://eastus2euap.management.azure.com";
+        string? originalEndpoint = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable);
+        string? originalRoutingLocation = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                endpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                null);
+            var handler = new OperationIdRecordingHandler(
+                HttpStatusCode.OK,
+                """{"value":[]}""");
+            var service = CreateService(handler);
+
+            IEnumerable<ResourceSummary> plans = await service.ListRecoveryPlansAsync(
+                "sg1",
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.Empty(plans);
+            Assert.Equal("eastus2euap.management.azure.com", handler.RequestHost);
+            Assert.Null(handler.RoutingLocation);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                originalEndpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                originalRoutingLocation);
+        }
+    }
+
+    [Fact]
     public void CreateRecoveryPlanSubmissionClientOptions_DisablesAutomaticRetries()
     {
         ArmClientOptions options =
