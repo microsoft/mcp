@@ -54,7 +54,7 @@ param(
     [string]$EvalsDirectory,
     [string]$OutputPath,
     [string]$OutcomePath,
-    [int]$NumberOfRuns = 3,
+    [int]$NumberOfRuns = 1,
     [switch]$IsDebug
 )
 
