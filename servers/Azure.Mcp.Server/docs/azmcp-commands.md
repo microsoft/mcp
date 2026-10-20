@@ -4451,11 +4451,11 @@ azmcp resiliency usageplan enrollment delete --subscription <subscription> \
 azmcp resiliency recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
-# Create or update a Zonal resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
+# Create or update a Zonal or Regional resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select a plan type and identity type; do not assume defaults. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan create --service-group <service-group> \
                                       --recoveryplan <recoveryplan> \
-                                      --plan-type Zonal \
+                                      --plan-type <Zonal|Regional> \
                                       [--plan-description <plan-description>] \
                                       --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
@@ -4484,6 +4484,9 @@ azmcp resiliency recoveryplan create --service-group <service-group> \
 azmcp resiliency recoveryplan delete --service-group <service-group> \
                                       --recoveryplan <recoveryplan>
 
+# Lifecycle action examples below that show --operation-id accept a canonical caller-owned GUID.
+# Reuse that ID for the same logical request; omit it to generate a new GUID.
+
 # Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
 # Returns after the request is accepted with an operation ID and a recovery job ID when available.
 # Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
@@ -4492,13 +4495,15 @@ azmcp resiliency recoveryplan failover --service-group <service-group> \
                                         --recoveryplan <recoveryplan> \
                                         [--source-locations <source-location> [<source-location> ...]] \
                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                        [--user-consent <Unspecified|Allowed>]
+                                        [--user-consent <Unspecified|Allowed>] \
+                                        [--operation-id <canonical-guid>]
 
 # Complete or finalize the current recoveryplan operation by validating resource permissions and updating plan state.
 # Returns an operation ID for tracking. This does not commit a completed failover.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan finalize --service-group <service-group> \
-                                        --recoveryplan <recoveryplan>
+                                        --recoveryplan <recoveryplan> \
+                                        [--operation-id <canonical-guid>]
 
 # Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
 # Returns after the request is accepted with an operation ID and a recovery job ID when available.
@@ -4506,7 +4511,8 @@ azmcp resiliency recoveryplan finalize --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan reprotect --service-group <service-group> \
                                          --recoveryplan <recoveryplan> \
-                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                         [--operation-id <canonical-guid>]
 
 # Validate which recoveryplan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
@@ -4515,14 +4521,16 @@ azmcp resiliency recoveryplan validateforfailover --service-group <service-group
                                                    --recoveryplan <recoveryplan> \
                                                    --source-locations <source-location> [<source-location> ...] \
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                                   [--user-consent <Unspecified|Allowed>]
+                                                   [--user-consent <Unspecified|Allowed>] \
+                                                   [--operation-id <canonical-guid>]
 
 # Validate which recoveryplan resources are qualified for reprotect after failover.
 # Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan validateforreprotect --service-group <service-group> \
                                                     --recoveryplan <recoveryplan> \
-                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
+                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
+                                                    [--operation-id <canonical-guid>]
 
 # Validate whether a recoveryplan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
 # Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
@@ -4530,7 +4538,8 @@ azmcp resiliency recoveryplan validateforreprotect --service-group <service-grou
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan validateforoperation --service-group <service-group> \
                                                     --recoveryplan <recoveryplan> \
-                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
+                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup> \
+                                                    [--operation-id <canonical-guid>]
 
 # Configure recoveryplan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
@@ -4539,12 +4548,14 @@ azmcp resiliency recoveryplan validateforoperation --service-group <service-grou
 azmcp resiliency recoveryplan resource update --service-group <service-group> \
                                                 --recoveryplan <recoveryplan> \
                                                 [--resources-to-update '<json-array>'] \
-                                                [--resources-to-remove '<json-array>']
+                                                [--resources-to-remove '<json-array>'] \
+                                                [--operation-id <canonical-guid>]
 
 # Discover and assess whether a recoveryplan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan checkreadiness --service-group <service-group> \
-                                              --recoveryplan <recoveryplan>
+                                              --recoveryplan <recoveryplan> \
+                                              [--operation-id <canonical-guid>]
 
 # Get a resource (member) of a recoveryplan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4562,7 +4573,8 @@ azmcp resiliency recoveryjob get --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryjob retry --service-group <service-group> \
                                    --recoveryplan <recoveryplan> \
-                                   --recoveryjob <recoveryjob>
+                                   --recoveryjob <recoveryjob> \
+                                   [--operation-id <canonical-guid>]
 
 # Resume an existing recoveryjob in the Paused state, optionally providing input for the paused action.
 # Returns after acceptance; use recoveryjob get to monitor the job.
@@ -4570,7 +4582,8 @@ azmcp resiliency recoveryjob retry --service-group <service-group> \
 azmcp resiliency recoveryjob resume --service-group <service-group> \
                                     --recoveryplan <recoveryplan> \
                                     --recoveryjob <recoveryjob> \
-                                    [--description <description>]
+                                    [--description <description>] \
+                                    [--operation-id <canonical-guid>]
 
 # Get a resource (target) of a recoveryjob, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4599,14 +4612,16 @@ azmcp resiliency drill get --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill start --service-group <service-group> \
                              --drill <drill> \
-                             --mode <Failover|TestFailover>
+                             --mode <Failover|TestFailover> \
+                             [--operation-id <canonical-guid>]
 
 # End the running execution of a resilience drill and attest its outcome
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill end --service-group <service-group> \
                            --drill <drill> \
                            --attestation <Success|Failed> \
-                           --attestation-notes <attestation-notes>
+                           --attestation-notes <attestation-notes> \
+                           [--operation-id <canonical-guid>]
 
 # Update mutable properties of a resilience drill
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4624,13 +4639,15 @@ azmcp resiliency drill delete --service-group <service-group> \
 # Start a resync and readiness check to confirm a resilience drill is ready to run
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill check-resync-readiness --service-group <service-group> \
-                                              --drill <drill>
+                                              --drill <drill> \
+                                              [--operation-id <canonical-guid>]
 
 # Validate whether a resilience drill is eligible for execution from the specified source locations
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill validate-for-execution --service-group <service-group> \
                                               --drill <drill> \
-                                              --source-locations <source-locations>
+                                              --source-locations <source-locations> \
+                                              [--operation-id <canonical-guid>]
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4646,7 +4663,8 @@ azmcp resiliency drill resource add-or-update --service-group <service-group> \
                                               [--include-resources <include-resources>] \
                                               [--update-resources <update-resources>] \
                                               [--exclude-resources <exclude-resources>] \
-                                              [--force-inclusion-and-update <force-inclusion-and-update>]
+                                              [--force-inclusion-and-update <force-inclusion-and-update>] \
+                                              [--operation-id <canonical-guid>]
 
 # Get a run of a drill, or list all runs of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4659,7 +4677,8 @@ azmcp resiliency drill run get --service-group <service-group> \
 azmcp resiliency drill run add-notes --service-group <service-group> \
                                      --drill <drill> \
                                      --drill-run <drill-run> \
-                                     --notes <notes>
+                                     --notes <notes> \
+                                     [--operation-id <canonical-guid>]
 
 # Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4668,26 +4687,30 @@ azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill-run <drill-run> \
                                     --source-locations <source-location> \
                                     [--selected-resource-ids <selected-resource-id>] \
-                                    [--auto-failover <true|false>]
+                                    [--auto-failover <true|false>] \
+                                    [--operation-id <canonical-guid>]
 
 # Resume a failover drill run paused after fault injection
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run resume --service-group <service-group> \
                                   --drill <drill> \
-                                  --drill-run <drill-run>
+                                  --drill-run <drill-run> \
+                                  [--operation-id <canonical-guid>]
 
 # Mark a drill run stage complete, disabling further retries on that stage
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run mark-complete --service-group <service-group> \
                                          --drill <drill> \
                                          --drill-run <drill-run> \
-                                         --stage <stage>
+                                         --stage <stage> \
+                                         [--operation-id <canonical-guid>]
 
 # Reprotect failed-over resources in a drill run
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill <drill> \
-                                     --drill-run <drill-run>
+                                     --drill-run <drill-run> \
+                                     [--operation-id <canonical-guid>]
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
