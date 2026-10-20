@@ -9,6 +9,7 @@ import:
 words:
   - agentic
   - aigateway
+  - aiinfraoptimization
   - airunway
   - appconfiguration
   - applicationgatewaywebapplicationfirewallpolicies
@@ -63,6 +64,7 @@ words:
   - kubernetesconfiguration
   - managedcluster
   - managedinstances
+  - mistralai
   - mypass
   - mysvc
   - myuser
@@ -102,5 +104,6 @@ words:
   - toolsets
   - toplist
   - virtualmachinescalesets
+  - vmsku
   - webjobs
   - wellarchitectedframework

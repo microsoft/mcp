@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the `aiinfraoptimization_vmsku_recommend` tool to recommend and rank Azure GPU VM SKUs and estimated node-count topology for Linux AI inference workloads from a Hugging Face model ID or explicit model architecture. Results include resolved memory sizing, advisory readiness, topology, and hourly cost, with optional subscription quota, placement, and pricing evidence. The tool is advisory and does not deploy resources or reserve capacity."
