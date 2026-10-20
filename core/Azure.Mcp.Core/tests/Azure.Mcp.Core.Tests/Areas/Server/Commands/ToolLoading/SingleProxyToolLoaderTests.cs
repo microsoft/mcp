@@ -792,8 +792,9 @@ public class SingleProxyToolLoaderTests
             .Build();
         var commandFactory = Substitute.For<ICommandFactory>();
         commandFactory.RootGroup.Returns(new CommandGroup("azmcp", "Azure MCP"));
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration>());
         var toolLoader = new SingleProxyToolLoader(
+            new CommandContextAccessor(),
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
             Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
