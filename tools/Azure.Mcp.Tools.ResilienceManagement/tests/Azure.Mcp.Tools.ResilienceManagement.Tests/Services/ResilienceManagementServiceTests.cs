@@ -25,7 +25,7 @@ public sealed class ResilienceManagementServiceTests
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
     [Fact]
-    public void CreateGoalAssignmentPayload_Regional_EmitsExplicitRegionalIntent()
+    public void CreateGoalAssignmentPayload_Regional_PreservesExplicitRegionalIntent()
     {
         BinaryData payload = GoalAssignmentCreateService.CreateGoalAssignmentPayload(
             requireZonalResiliency: false,
@@ -48,6 +48,55 @@ public sealed class ResilienceManagementServiceTests
                 .GetProperty("targetRecoveryTimeObjective")
                 .GetString());
         Assert.False(properties.TryGetProperty("goalTemplateId", out _));
+    }
+
+    [Fact]
+    public async Task RefreshGoalAssignmentResourcesAsync_Regional_UsesGoalCreationApiVersion()
+    {
+        const string endpoint = "https://eastus2euap.management.azure.com";
+        string? originalEndpoint = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable);
+        string? originalRoutingLocation = Environment.GetEnvironmentVariable(
+            ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable);
+
+        try
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                endpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                null);
+            var handler = new OperationIdRecordingHandler();
+            var service = CreateService(handler);
+
+            await service.RefreshGoalAssignmentResourcesAsync(
+                "sg1",
+                "regional-goal",
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.Equal("2026-10-31-preview", GoalAssignmentContractRequestPolicy.ApiVersion);
+            Assert.Equal(
+                GoalAssignmentContractRequestPolicy.ApiVersion,
+                handler.ApiVersion);
+            Assert.Equal("eastus2euap.management.azure.com", handler.RequestHost);
+            Assert.Null(handler.RoutingLocation);
+            Assert.Equal(RequestMethod.Post.Method, handler.RequestMethod);
+            Assert.False(handler.HasContent);
+            Assert.Contains(
+                "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/goalAssignments/regional-goal/refreshGoalResources",
+                handler.RequestPath,
+                StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.EndpointEnvironmentVariable,
+                originalEndpoint);
+            Environment.SetEnvironmentVariable(
+                ResilienceManagementRoutingPolicy.RoutingLocationEnvironmentVariable,
+                originalRoutingLocation);
+        }
     }
 
     [Fact]
@@ -2031,6 +2080,10 @@ public sealed class ResilienceManagementServiceTests
         public string? RequestUri { get; private set; }
         public string? RequestBody { get; private set; }
         public string? ContentType { get; private set; }
+        public string? RequestMethod { get; private set; }
+        public string? RequestPath { get; private set; }
+        public string? ApiVersion { get; private set; }
+        public bool HasContent { get; private set; }
         public string? RoutingLocation { get; private set; }
         public int RequestCount { get; private set; }
         public List<string> RequestUris { get; } = [];
@@ -2041,6 +2094,9 @@ public sealed class ResilienceManagementServiceTests
         {
             RequestCount++;
             RequestHost = request.RequestUri?.Host;
+            RequestMethod = request.Method.Method;
+            RequestPath = request.RequestUri?.AbsolutePath;
+            HasContent = request.Content is not null;
             RequestUris.Add(request.RequestUri!.AbsoluteUri);
             if (request.Content is not null)
             {
@@ -2057,6 +2113,9 @@ public sealed class ResilienceManagementServiceTests
             QueryOperationId = System.Web.HttpUtility
                 .ParseQueryString(request.RequestUri!.Query)
                 .Get("operationId");
+            ApiVersion = System.Web.HttpUtility
+                .ParseQueryString(request.RequestUri.Query)
+                .Get("api-version");
 
             bool isDrillRunGet =
                 request.Method == HttpMethod.Get &&

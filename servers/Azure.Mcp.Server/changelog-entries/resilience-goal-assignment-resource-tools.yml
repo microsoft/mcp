@@ -1,3 +1,5 @@
 changes:
   - section: Features Added
     description: "Added resiliency goal assignment recommend-capacity, refresh-resources (rediscovery), and update-resources tools with validated goal participation payloads and asynchronous operation results."
+  - section: Bugs Fixed
+    description: "Use the Regional-capable 2026-10-31-preview contract for goal assignment resource refreshes, matching goal assignment creation."

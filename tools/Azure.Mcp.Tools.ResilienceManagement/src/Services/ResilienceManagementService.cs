@@ -34,7 +34,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
     }
     public async Task<GoalAssignmentOperationResult> RefreshGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var client = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
+        var client = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateGoalAssignmentContractArmClientOptions(), cancellationToken: cancellationToken);
         var resource = client.GetGoalAssignmentResource(GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment));
         var operation = await resource.RefreshGoalResourcesAsync(WaitUntil.Started, cancellationToken);
         return MapGoalAssignmentOperation(operation.GetRawResponse(), operation.HasCompleted);
