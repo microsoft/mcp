@@ -2341,8 +2341,21 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new DrillRunMarkCompleteResult(operationId, operation.HasCompleted);
     }
 
-    public async Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default)
+    public async Task<DrillRunReprotectResult> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default)
     {
+        JsonElement drillRunState = await GetDrillRunAsync(
+            serviceGroup,
+            drill,
+            drillRun,
+            tenant,
+            cancellationToken);
+        if (!SupportsDrillRunStageVerb(drillRunState, "Reprotect", "Start", "Retry"))
+        {
+            throw new RequestFailedException(
+                409,
+                "The Reprotect stage does not currently expose Start or Retry. Wait for the preceding stage completion to converge before submitting reprotection.");
+        }
+
         BinaryData content = CreateDrillRunReprotectContent(selectedResourceIds);
         ArmClient armClient = await CreateArmClientAsync(
             tenantIdOrName: tenant,
@@ -2353,10 +2366,64 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
         operationId = ResolveOperationId(operationId);
 
-        await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, cancellationToken);
+        ArmOperation operation = await drillRunResource.ReprotectAsync(
+            WaitUntil.Started,
+            operationId,
+            cancellationToken);
+        Response response = operation.GetRawResponse();
+        string? locationUri = ResponseHeader(response, "Location");
+        string? azureAsyncOperationUri = ResponseHeader(response, "Azure-AsyncOperation");
 
-        return operationId;
+        return new DrillRunReprotectResult(
+            operationId,
+            operation.HasCompleted ? "Completed" : "Accepted",
+            operation.HasCompleted,
+            response.Status,
+            locationUri,
+            azureAsyncOperationUri);
     }
+
+    internal static bool SupportsDrillRunStageVerb(
+        JsonElement drillRun,
+        string stage,
+        params string[] expectedVerbs)
+    {
+        if (!drillRun.TryGetProperty("properties", out JsonElement properties) ||
+            !properties.TryGetProperty("supportedVerbsForStage", out JsonElement stageVerbs) ||
+            stageVerbs.ValueKind != JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (JsonElement candidate in stageVerbs.EnumerateArray())
+        {
+            if (candidate.ValueKind != JsonValueKind.Object ||
+                !candidate.TryGetProperty("drillRunStage", out JsonElement drillRunStage) ||
+                !string.Equals(
+                    drillRunStage.GetString(),
+                    stage,
+                    StringComparison.OrdinalIgnoreCase) ||
+                !candidate.TryGetProperty("supportedVerbs", out JsonElement verbs) ||
+                verbs.ValueKind != JsonValueKind.Array)
+            {
+                continue;
+            }
+
+            return verbs.EnumerateArray().Any(verb =>
+                verb.ValueKind == JsonValueKind.String &&
+                expectedVerbs.Contains(
+                    verb.GetString(),
+                    StringComparer.OrdinalIgnoreCase));
+        }
+
+        return false;
+    }
+
+    private static string? ResponseHeader(Response response, string name) =>
+        response.Headers.TryGetValue(name, out string? value) &&
+        !string.IsNullOrWhiteSpace(value)
+            ? value
+            : null;
 
     internal static BinaryData CreateDrillRunReprotectContent(IEnumerable<string>? selectedResourceIds)
     {

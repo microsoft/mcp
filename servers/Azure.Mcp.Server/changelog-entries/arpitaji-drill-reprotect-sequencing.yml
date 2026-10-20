@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: "Blocked Drill Reprotect until its stage is actionable and returned exact provider long-running-operation headers instead of requiring callers to infer a polling URL."

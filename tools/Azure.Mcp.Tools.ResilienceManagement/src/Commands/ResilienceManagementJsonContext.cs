@@ -63,6 +63,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(DrillRunMarkCompleteCommand.DrillRunMarkCompleteCommandResult))]
 [JsonSerializable(typeof(DrillRunMarkCompleteResult))]
 [JsonSerializable(typeof(DrillRunReprotectCommand.DrillRunReprotectCommandResult))]
+[JsonSerializable(typeof(DrillRunReprotectResult))]
 [JsonSerializable(typeof(DrillRunResourceGetCommand.DrillRunResourceGetCommandResult))]
 [JsonSerializable(typeof(DrillCheckResyncReadinessCommand.DrillCheckResyncReadinessCommandResult))]
 [JsonSerializable(typeof(DrillResyncReadinessResult))]

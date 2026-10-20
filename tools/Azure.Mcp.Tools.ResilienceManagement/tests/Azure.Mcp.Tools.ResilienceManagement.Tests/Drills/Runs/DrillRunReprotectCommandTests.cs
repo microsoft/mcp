@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -92,7 +93,13 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<IEnumerable<string>?>(),
             null,
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(OperationId);
+            .Returns(new DrillRunReprotectResult(
+                OperationId,
+                "Accepted",
+                false,
+                202,
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operationStatuses/provider-operation",
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/provider-operation"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
@@ -104,6 +111,11 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
         Assert.True(result.Accepted);
         Assert.Equal(DrillRun, result.DrillRun);
         Assert.Equal(OperationId, result.OperationId);
+        Assert.Equal("Accepted", result.Status);
+        Assert.False(result.HasCompleted);
+        Assert.Equal(202, result.HttpStatus);
+        Assert.Contains("operationStatuses/provider-operation", result.LocationUri);
+        Assert.Contains("operations/provider-operation", result.AzureAsyncOperationUri);
         await Service.Received(1).ReprotectDrillRunAsync(
             ServiceGroup,
             Drill,

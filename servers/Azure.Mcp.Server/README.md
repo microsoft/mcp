@@ -94,7 +94,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{       ```json}} -->
+<!-- insert-section: vsix {{       ```
+
+Reprotect is rejected until the authoritative DrillRun exposes `Start` or `Retry` for the
+Reprotect stage. The result includes the initial HTTP/completion status and the exact `Location`
+and `Azure-AsyncOperation` response URIs. Poll only a returned URI; `operation-id` is the
+caller-owned idempotency identity and must not be used to construct an operation-status URL.json}} -->
 <!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
 <!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
 <!-- insert-section: vsix {{    }} -->

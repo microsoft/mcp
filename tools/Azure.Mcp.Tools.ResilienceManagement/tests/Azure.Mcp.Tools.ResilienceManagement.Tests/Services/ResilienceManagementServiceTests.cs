@@ -137,10 +137,14 @@ public sealed class ResilienceManagementServiceTests
     public async Task ReprotectDrillRunAsync_UsesPreviewApiAndSerializesReprotectProperties()
     {
         const string selectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
-        var handler = new OperationIdRecordingHandler();
+        const string locationUri = "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operationStatuses/provider-operation?api-version=2026-10-31-preview";
+        const string azureAsyncOperationUri = "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/provider-operation?api-version=2026-10-31-preview";
+        var handler = new OperationIdRecordingHandler(
+            locationUri: locationUri,
+            azureAsyncOperationUri: azureAsyncOperationUri);
         var service = CreateService(handler);
 
-        await service.ReprotectDrillRunAsync(
+        DrillRunReprotectResult result = await service.ReprotectDrillRunAsync(
             "sg1",
             "drill1",
             "run1",
@@ -160,6 +164,31 @@ public sealed class ResilienceManagementServiceTests
                     .GetProperty("selectedResourceIds")
                     .EnumerateArray())
                 .GetString());
+        Assert.Equal("Accepted", result.Status);
+        Assert.False(result.HasCompleted);
+        Assert.Equal(202, result.HttpStatus);
+        Assert.Equal(locationUri, result.LocationUri);
+        Assert.Equal(azureAsyncOperationUri, result.AzureAsyncOperationUri);
+    }
+
+    [Fact]
+    public async Task ReprotectDrillRunAsync_RejectsWhenReprotectStageIsNotAvailable()
+    {
+        var handler = new OperationIdRecordingHandler(
+            drillRunContent: DrillRunContent("Reprotect", "MarkAsComplete"));
+        var service = CreateService(handler);
+
+        RequestFailedException exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            service.ReprotectDrillRunAsync(
+                "sg1",
+                "drill1",
+                "run1",
+                operationId: "abcdefab-cdef-abcd-efab-cdefabcdefab",
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(409, exception.Status);
+        Assert.Equal(1, handler.RequestCount);
+        Assert.DoesNotContain("/reprotect", handler.RequestUris);
     }
 
     [Fact]
@@ -172,6 +201,25 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal(JsonValueKind.Object, reprotectProperties.ValueKind);
         Assert.Empty(reprotectProperties.EnumerateObject());
     }
+
+    private static string DrillRunContent(string stage, params string[] verbs) =>
+        JsonSerializer.Serialize(new
+        {
+            id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillRuns/run1",
+            name = "run1",
+            type = "Microsoft.AzureResilienceManagement/drills/drillRuns",
+            properties = new
+            {
+                supportedVerbsForStage = new[]
+                {
+                    new
+                    {
+                        drillRunStage = stage,
+                        supportedVerbs = verbs,
+                    },
+                },
+            },
+        });
 
     [Fact]
     public async Task StartDrillAsync_RoutesToConfiguredPrivateStamp()
@@ -1638,13 +1686,22 @@ public sealed class ResilienceManagementServiceTests
     {
         private readonly HttpStatusCode _statusCode;
         private readonly string _content;
+        private readonly string _drillRunContent;
+        private readonly string? _locationUri;
+        private readonly string? _azureAsyncOperationUri;
 
         public OperationIdRecordingHandler(
             HttpStatusCode statusCode = HttpStatusCode.Accepted,
-            string content = "{}")
+            string content = "{}",
+            string? drillRunContent = null,
+            string? locationUri = null,
+            string? azureAsyncOperationUri = null)
         {
             _statusCode = statusCode;
             _content = content;
+            _drillRunContent = drillRunContent ?? DrillRunContent("Reprotect", "Start");
+            _locationUri = locationUri;
+            _azureAsyncOperationUri = azureAsyncOperationUri;
         }
 
         public string? OperationId { get; private set; }
@@ -1654,12 +1711,16 @@ public sealed class ResilienceManagementServiceTests
         public string? RequestBody { get; private set; }
         public string? ContentType { get; private set; }
         public string? RoutingLocation { get; private set; }
+        public int RequestCount { get; private set; }
+        public List<string> RequestUris { get; } = [];
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            RequestCount++;
             RequestHost = request.RequestUri?.Host;
+            RequestUris.Add(request.RequestUri!.AbsoluteUri);
             if (request.Content is not null)
             {
                 RequestUri = request.RequestUri?.AbsoluteUri;
@@ -1676,14 +1737,24 @@ public sealed class ResilienceManagementServiceTests
                 .ParseQueryString(request.RequestUri!.Query)
                 .Get("operationId");
 
-            var response = new HttpResponseMessage(_statusCode)
+            bool isDrillRunGet =
+                request.Method == HttpMethod.Get &&
+                request.RequestUri.AbsolutePath.Contains("/drillRuns/", StringComparison.OrdinalIgnoreCase);
+            var response = new HttpResponseMessage(
+                isDrillRunGet ? HttpStatusCode.OK : _statusCode)
             {
-                Content = new StringContent(_content, Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    isDrillRunGet ? _drillRunContent : _content,
+                    Encoding.UTF8,
+                    "application/json")
             };
-            if (_statusCode == HttpStatusCode.Accepted)
+            if (!isDrillRunGet && _statusCode == HttpStatusCode.Accepted)
             {
-                response.Headers.TryAddWithoutValidation(
-                    "Azure-AsyncOperation",
+                response.Headers.TryAddWithoutValidation("Location",
+                    _locationUri ??
+                    "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operationStatuses/test?api-version=2025-08-01");
+                response.Headers.TryAddWithoutValidation("Azure-AsyncOperation",
+                    _azureAsyncOperationUri ??
                     "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
             }
             return response;

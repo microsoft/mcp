@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Core;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement;
@@ -49,7 +50,7 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
     {
         try
         {
-            string operationId = await _resilienceManagementService.ReprotectDrillRunAsync(
+            DrillRunReprotectResult reprotect = await _resilienceManagementService.ReprotectDrillRunAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.DrillRun,
@@ -58,7 +59,15 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
                 ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
-            var result = new DrillRunReprotectCommandResult(operationId, options.DrillRun, Accepted: true);
+            var result = new DrillRunReprotectCommandResult(
+                reprotect.OperationId,
+                options.DrillRun,
+                Accepted: !reprotect.HasCompleted,
+                reprotect.Status,
+                reprotect.HasCompleted,
+                reprotect.HttpStatus,
+                reprotect.LocationUri,
+                reprotect.AzureAsyncOperationUri);
             context.Response.Results = ResponseResult.Create(
                 result,
                 ResilienceManagementJsonContext.Default.DrillRunReprotectCommandResult);
@@ -115,5 +124,13 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
         }
     }
 
-    public sealed record DrillRunReprotectCommandResult(string OperationId, string DrillRun, bool Accepted);
+    public sealed record DrillRunReprotectCommandResult(
+        string OperationId,
+        string DrillRun,
+        bool Accepted,
+        string Status,
+        bool HasCompleted,
+        int HttpStatus,
+        string? LocationUri,
+        string? AzureAsyncOperationUri);
 }
