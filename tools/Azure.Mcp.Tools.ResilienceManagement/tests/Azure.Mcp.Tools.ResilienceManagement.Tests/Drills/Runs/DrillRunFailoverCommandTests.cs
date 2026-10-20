@@ -18,8 +18,49 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string SourceLocation = "eastus-az1";
-    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222";
+    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
+
+    [Theory]
+    [InlineData()]
+    [InlineData("--auto-failover", "true")]
+    [InlineData("--auto-failover", "false")]
+    [InlineData("--selected-resource-ids", SelectedResourceId)]
+    public async Task ExecuteAsync_RejectsMissingSourceLocations(params string[] failoverInputs)
+    {
+        var response = await ExecuteCommandAsync(["--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, .. failoverInputs]);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DefaultsAutomaticFailoverToFalse()
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, false, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun,
+            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation })),
+            null, false, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesAutomaticFailoverFlag()
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, true, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation, "--auto-failover");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(OperationId, ValidateAndDeserializeResponse(response,
+            ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult).OperationId);
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -34,7 +75,6 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     [InlineData()]
     [InlineData("--service-group", ServiceGroup)]
     [InlineData("--service-group", ServiceGroup, "--drill", Drill)]
-    [InlineData("--service-group", ServiceGroup, "--drill", Drill, "--drill-run", DrillRun)]
     public async Task ExecuteAsync_RejectsMissingRequiredOptions(params string[] args)
     {
         var response = await ExecuteCommandAsync(args);
@@ -91,6 +131,12 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/resource1")]
     [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/resource1")]
     [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/virtualMachines/vm1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
     public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
     {
         var response = await ExecuteCommandAsync(
@@ -101,7 +147,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--selected-resource-ids", selectedResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("full recovery-resource ID under the requested service group", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("full drill-resource ID under the requested service group and drill", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().FailoverDrillRunAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -113,8 +159,10 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ExecuteAsync_StartsFailoverAndReturnsAcceptedResult()
+    [Theory]
+    [InlineData(SelectedResourceId)]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/SG1/providers/Microsoft.AzureResilienceManagement/drills/DRILL1/drillResources/22222222-2222-2222-2222-222222222222")]
+    public async Task ExecuteAsync_StartsFailoverAndReturnsAcceptedResult(string selectedResourceId)
     {
         Service.FailoverDrillRunAsync(
             ServiceGroup,
@@ -133,7 +181,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             "--drill-run", DrillRun,
             "--source-locations", SourceLocation,
             "--source-locations", "westus2-az2",
-            "--selected-resource-ids", SelectedResourceId,
+            "--selected-resource-ids", selectedResourceId,
             "--auto-failover", "true");
 
         Assert.True(response.Status == HttpStatusCode.OK, response.Message);
@@ -146,7 +194,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Drill,
             DrillRun,
             Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation, "westus2-az2" })),
-            Arg.Is<IEnumerable<string>>(resourceIds => resourceIds.SequenceEqual(new[] { SelectedResourceId })),
+            Arg.Is<IEnumerable<string>>(resourceIds => resourceIds.SequenceEqual(new[] { selectedResourceId })),
             true,
             null,
             Arg.Any<CancellationToken>());

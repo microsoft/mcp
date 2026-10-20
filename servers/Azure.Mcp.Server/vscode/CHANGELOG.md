@@ -1,7 +1,8 @@
 # Release History
 
 
-## 4.0.1 (2026-10-15) (pre-release)
+
+## 4.0.1 (2026-10-19) (pre-release)
 
 ### Added
 
@@ -12,6 +13,8 @@
 - Extended the Azure Advisor recommendation list tool to support the Azure Service Group scope (--service-group) as an alternative to the subscription scope, and added a --prioritized option that surfaces and ranks recommendations by contextual criticality score. Recommendation results now include contextual fields (criticality, criticalityScore, scoreChangedAt, savings) and the serviceGroupId identifier when present. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
 - Added Azure service-group scope to `advisor recommendation summary` while preserving existing subscription and configured-default subscription behavior. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
 - Extended the advisor recommendation update tool to update service-group-scoped recommendations. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+- Added private-preview `monitor traces` commands to query distributed traces from Azure Monitor Workspaces enabled for Trace Store: `account list`, `field list`, `query run`, `query resume`, and `query cancel`. Query calls collect results pages within bounded time and row budgets, preserving received data when resumption is needed. Consolidated mode exposes query resumption separately with non-idempotent metadata. [[#3922](https://github.com/microsoft/mcp/pull/3922)]
+- Added a read-only Azure Device Provisioning Service tool for retrieving service configuration and linked IoT Hub metadata without exposing connection strings or keys. [[#3898](https://github.com/microsoft/mcp/pull/3898)]
 
 ### Changed
 
@@ -24,6 +27,7 @@
 
 ### Fixed
 
+- Fixed PyPI wheel packaging failing with an invalid `System.Object[]` version after a shared engineering-script update. [[#3985](https://github.com/microsoft/mcp/pull/3985)]
 - Fixed Azure Backup protect, update-protection, and undelete tools returning an async operation id in the `jobId` field. The operation id is not a backup job id, so `azurebackup job get` returned 404 and the tool wasted its full job-polling budget on a non-existent job. The operation id is now surfaced in a dedicated `operationId` field, `jobId` is populated only when a real ConfigureBackup job is found, and guidance points to `azurebackup protecteditem get` for verification. [[#3838](https://github.com/microsoft/mcp/pull/3838)]
 - Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
 - Prioritized Advisor listing requires a recommendation type ID and uses that type's metadata category to select one instance metric in ARG. Cost types convert daily potential savings to an annual value using 12 times 30.4, fall back to annual savings, and round the selected annual score to two decimal places before sorting; missing or invalid savings sort last and zero remains valid. Other types sort by criticalityScore descending, treating missing scores as zero. Ties use effective retirement date ascending with unknown dates last, then case-insensitive resource name and recommendation ID. Both listing modes retain the same matching records, including Security and tracked recommendations. Non-prioritized ordering is unchanged. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
@@ -32,6 +36,8 @@
 - Merge RSV VM policy updates into the existing policy, preserving unmentioned settings modeled by the SDK, including unmodified retention tiers, unmentioned tags, and instant recovery resource-group suffixes, subject to schedule reconciliation. Unknown wire field preservation is not guaranteed. Preserve retention times on unrelated updates and reconcile them on explicit schedule changes. Validate Daily/Hourly daily-retention and Weekly weekly-retention prerequisites, requiring explicit weekly retention before removing positive daily retention when switching to Weekly. Require effective instant recovery retention of 5 days for Standard Weekly schedule, retention, or instant recovery updates, preserving omission and allowing unrelated tags-only or time-zone-only updates. Convert explicitly supplied hourly window starts from the effective local time zone (request, existing policy, then UTC) to UTC using the deterministic 2000-01-01 baseline. Reject unknown zones and invalid or ambiguous baseline local times. Preserve omitted hourly timestamps and existing UTC behavior; Daily/Weekly time parsing is unchanged. Future seasonal DST adjustments are not calculated. Preserve comma-separated Daily/Weekly schedule times and reconcile every retention time on explicit schedule updates. Retain exception diagnostics in policy-update logs while preserving sanitized top-level Azure error messages. [[#3791](https://github.com/microsoft/mcp/pull/3791)]
 - Made Azure Backup recovery point listing resilient to malformed Azure Files recovery points. The RecoveryServicesBackup SDK could throw a UriFormatException while deserializing a single file-share recovery point, failing the entire 'azurebackup recoverypoint get' call; the service now skips the offending item and returns the remaining valid recovery points. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
 - Replaced the opaque NullReferenceException surfaced by 'azurebackup policy update' with an actionable error. The SDK can fail to materialize the updated policy from the service response for some IaaS VM policy shapes even though the change was submitted; the tool now returns a clear message directing the user to verify the policy with 'azurebackup policy get'. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
+- ManagedLustre: Fix issue where defaults were not applied which would return 400 during job creation. [[#3833](https://github.com/microsoft/mcp/pull/3833)]
+- Fixed PyPI packages to launch each MCP server's configured executable instead of always using azmcp. [[#3984](https://github.com/microsoft/mcp/pull/3984)]
 
 ## 3.0.51 (2026-10-12)
 

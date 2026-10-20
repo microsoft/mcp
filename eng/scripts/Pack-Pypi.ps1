@@ -120,7 +120,9 @@ function ConvertTo-PythonPackageVersion {
         return $null
     }
 
-    $parsedVersion.SetupPythonConventions()
+    # Discard the returned regex: PowerShell otherwise emits it alongside the version,
+    # making this function return an array whose ToString() produces "System.Object[]".
+    $null = $parsedVersion.SetupPythonConventions()
     if ($parsedVersion.PrereleaseLabel -eq 'beta') {
         $parsedVersion.PrereleaseLabel = 'b'
     }

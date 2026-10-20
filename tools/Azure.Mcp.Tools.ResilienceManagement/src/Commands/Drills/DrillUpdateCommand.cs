@@ -15,13 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "9c4ad84e-7056-46ad-a857-8a81dce0c676",
     Name = "update",
     Title = "Update Resilience Drill",
-    Description = """
-        Updates an existing Azure Resilience Management drill in a service group. Use this command to move the
-        drill's supporting resources by changing their subscription and region together, change its RBAC setup
-        mode, or associate a recoveryplan. Supporting-resource relocation is a drill configuration update; do
-        not use drill resource add-or-update, Azure Resource Mover, or generic resource commands for it. This
-        tool changes only the supplied drill properties.
-        """,
+    Description = "Updates an existing resilience drill in a service group: change RBAC setup mode, move supporting resources to a new subscription and region, or change Health Model, SLI monitoring, and goal-assignment identity. Supports clearing monitoring while preserving all other configuration; omitted properties stay unchanged.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -49,11 +43,6 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("The service group name must be a non-empty single path segment.");
         }
 
-        if (options.RecoveryPlan is { } recoveryPlan && (string.IsNullOrWhiteSpace(recoveryPlan) || recoveryPlan.Contains('/')))
-        {
-            validationResult.Errors.Add("The recoveryplan name must be a non-empty single path segment.");
-        }
-
         if (options.Subscription is not null && string.IsNullOrWhiteSpace(options.Subscription))
         {
             validationResult.Errors.Add("The subscription must not be empty.");
@@ -69,9 +58,18 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("Subscription and region must be specified together.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null && string.IsNullOrWhiteSpace(options.RecoveryPlan))
+        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null &&
+            options.GoalAssignmentProperties is null && options.HealthModelMonitoringProperties is null && options.SliMonitoringProperties is null)
         {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, or recoveryplan.");
+            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, goal-assignment properties, Health Model monitoring, or SLI monitoring.");
+        }
+        try
+        {
+            _ = DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add(ex.Message);
         }
     }
 
@@ -85,7 +83,7 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
                 options.Subscription,
                 options.Region,
                 options.RbacSetupMode,
-                options.RecoveryPlan,
+                DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties),
                 options.Tenant,
                 cancellationToken);
 
@@ -106,12 +104,13 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException => ex.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The drill could not be updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed updating the drill. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "The drill, service group, subscription, or recoveryplan was not found.",
+            "The drill, service group, or subscription was not found.",
         RequestFailedException =>
             "The drill update request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
