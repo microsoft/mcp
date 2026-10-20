@@ -18,6 +18,7 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
+    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -55,8 +56,30 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSelectedResourceOutsideRequestedDrill()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup,
+            "--drill", Drill,
+            "--drill-run", DrillRun,
+            "--selected-resource-ids",
+            "/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().ReprotectDrillRunAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -66,6 +89,7 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             ServiceGroup,
             Drill,
             DrillRun,
+            Arg.Any<IEnumerable<string>?>(),
             null,
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(OperationId);
@@ -73,7 +97,8 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
-            "--drill-run", DrillRun);
+            "--drill-run", DrillRun,
+            "--selected-resource-ids", SelectedResourceId);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillRunReprotectCommandResult);
         Assert.True(result.Accepted);
@@ -83,6 +108,7 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             ServiceGroup,
             Drill,
             DrillRun,
+            Arg.Is<IEnumerable<string>?>(ids => ids != null && ids.SequenceEqual(new[] { SelectedResourceId })),
             null,
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
@@ -99,6 +125,7 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));

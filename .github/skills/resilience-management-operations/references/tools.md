@@ -46,6 +46,9 @@ create uses direct intent and does not accept a legacy Goal Template ID.
 | `mcp_azure_mcp_ser_resiliency_drill_resource_get` | List drill targets or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one include, update, or exclude payload. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_failover` | Start drill-run failover | **`service-group`**, **`drill`**, **`drill-run`**, **`source-locations`**, `selected-resource-ids?`, `auto-failover?`, `operation-id?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_resume` | Resume a paused drill run | **`service-group`**, **`drill`**, **`drill-run`**, `operation-id?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Reprotect failed-over drill resources using the `2026-10-31-preview` request-body contract | **`service-group`**, **`drill`**, **`drill-run`**, `selected-resource-ids?`, `operation-id?`, `tenant?`. The command always sends `reprotectProperties`; omit selected IDs only when intentionally reprotecting every eligible resource. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 

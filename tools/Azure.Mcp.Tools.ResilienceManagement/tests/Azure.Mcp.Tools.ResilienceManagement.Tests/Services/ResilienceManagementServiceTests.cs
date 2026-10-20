@@ -134,6 +134,46 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public async Task ReprotectDrillRunAsync_UsesPreviewApiAndSerializesReprotectProperties()
+    {
+        const string selectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
+        var handler = new OperationIdRecordingHandler();
+        var service = CreateService(handler);
+
+        await service.ReprotectDrillRunAsync(
+            "sg1",
+            "drill1",
+            "run1",
+            [selectedResourceId],
+            operationId: "abcdefab-cdef-abcd-efab-cdefabcdefab",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Contains("api-version=2026-10-31-preview", handler.RequestUri, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("application/json", handler.ContentType);
+        using JsonDocument document = JsonDocument.Parse(handler.RequestBody!);
+        JsonElement reprotectProperties = document.RootElement.GetProperty("reprotectProperties");
+        Assert.Equal(
+            selectedResourceId,
+            Assert.Single(
+                reprotectProperties
+                    .GetProperty("reprotectRequestProperties")
+                    .GetProperty("selectedResourceIds")
+                    .EnumerateArray())
+                .GetString());
+    }
+
+    [Fact]
+    public void CreateDrillRunReprotectContent_WithoutSelection_StillEmitsRequiredProperties()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            ResilienceManagementService.CreateDrillRunReprotectContent(null));
+
+        JsonElement reprotectProperties = document.RootElement.GetProperty("reprotectProperties");
+        Assert.Equal(JsonValueKind.Object, reprotectProperties.ValueKind);
+        Assert.Empty(reprotectProperties.EnumerateObject());
+    }
+
+    [Fact]
     public async Task StartDrillAsync_RoutesToConfiguredPrivateStamp()
     {
         const string endpoint = "https://centraluseuap.management.azure.com";
@@ -1610,13 +1650,22 @@ public sealed class ResilienceManagementServiceTests
         public string? OperationId { get; private set; }
         public string? QueryOperationId { get; private set; }
         public string? RequestHost { get; private set; }
+        public string? RequestUri { get; private set; }
+        public string? RequestBody { get; private set; }
+        public string? ContentType { get; private set; }
         public string? RoutingLocation { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             RequestHost = request.RequestUri?.Host;
+            if (request.Content is not null)
+            {
+                RequestUri = request.RequestUri?.AbsoluteUri;
+                RequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
+                ContentType = request.Content.Headers.ContentType?.MediaType;
+            }
             OperationId = request.Headers.TryGetValues("operation-id", out IEnumerable<string>? values)
                 ? Assert.Single(values)
                 : null;
@@ -1637,7 +1686,7 @@ public sealed class ResilienceManagementServiceTests
                     "Azure-AsyncOperation",
                     "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
             }
-            return Task.FromResult(response);
+            return response;
         }
     }
 

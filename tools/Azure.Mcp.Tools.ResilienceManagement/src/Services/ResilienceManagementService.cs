@@ -97,6 +97,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return options;
     }
 
+    private static ArmClientOptions CreateDrillRunReprotectClientOptions(BinaryData content)
+    {
+        var options = CreateArmClientOptionsWithOperationIdPolicy();
+        options.AddPolicy(new DrillRunReprotectContractRequestPolicy(content), HttpPipelinePosition.PerCall);
+        return options;
+    }
+
     private static ArmClientOptions CreateResilienceManagementArmClientOptions()
         => ResilienceManagementRoutingPolicy.CreateArmClientOptions();
 
@@ -2334,9 +2341,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return new DrillRunMarkCompleteResult(operationId, operation.HasCompleted);
     }
 
-    public async Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default)
+    public async Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+        BinaryData content = CreateDrillRunReprotectContent(selectedResourceIds);
+        ArmClient armClient = await CreateArmClientAsync(
+            tenantIdOrName: tenant,
+            armClientOptions: CreateDrillRunReprotectClientOptions(content),
+            cancellationToken: cancellationToken);
 
         var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
         DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
@@ -2345,6 +2356,37 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await drillRunResource.ReprotectAsync(WaitUntil.Started, operationId, cancellationToken);
 
         return operationId;
+    }
+
+    internal static BinaryData CreateDrillRunReprotectContent(IEnumerable<string>? selectedResourceIds)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream))
+        {
+            writer.WriteStartObject();
+            writer.WritePropertyName("reprotectProperties");
+            writer.WriteStartObject();
+
+            string[] resourceIds = selectedResourceIds?.ToArray() ?? [];
+            if (resourceIds.Length > 0)
+            {
+                writer.WritePropertyName("reprotectRequestProperties");
+                writer.WriteStartObject();
+                writer.WritePropertyName("selectedResourceIds");
+                writer.WriteStartArray();
+                foreach (string resourceId in resourceIds)
+                {
+                    writer.WriteStringValue(resourceId);
+                }
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndObject();
+            writer.WriteEndObject();
+        }
+
+        return BinaryData.FromBytes(stream.ToArray());
     }
 
     public async Task<IEnumerable<ResourceSummary>> ListDrillRunResourcesAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)

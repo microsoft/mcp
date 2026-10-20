@@ -95,7 +95,7 @@ public interface IResilienceManagementService
 
     Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
+    Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
     Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 

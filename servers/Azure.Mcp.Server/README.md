@@ -1378,7 +1378,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
-* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group', selecting drill resource IDs from the approved failover request"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
