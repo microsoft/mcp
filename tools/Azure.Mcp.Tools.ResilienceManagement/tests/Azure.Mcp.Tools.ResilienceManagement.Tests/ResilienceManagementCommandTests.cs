@@ -159,14 +159,14 @@ public class ResilienceManagementCommandTests(
                 { "region", location },
                 { "resource-group", resourceGroup },
                 { "drill-type", "Zonal" },
-                { "rbac-setup-mode", "AutomatedBuiltinRoles" },
-                { "recoveryplan", recoveryPlan }
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
             });
             var drill = result.AssertProperty("drill");
             Assert.EndsWith($"/drills/{drillName}", drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
             var properties = drill.AssertProperty("properties");
             Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
             Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+            // recoveryPlanId is read-only: the service links the service group's Zonal recovery plan.
             var recoveryPlanId = properties.AssertProperty("recoveryPlanProperties").AssertProperty("recoveryPlanId").GetString();
             Assert.EndsWith($"/recoveryPlans/{recoveryPlan}", recoveryPlanId, StringComparison.OrdinalIgnoreCase);
         }

@@ -15,4 +15,8 @@ changes:
   - section: "Breaking Changes"
     description: "Resiliency usage-plan create now accepts only the GA Standard plan type; the preview-only Basic plan type has been removed."
   - section: "Breaking Changes"
+    description: "Removed the `--recoveryplan` option from resiliency drill create and update. The GA API treats `recoveryPlanId` as read-only, so the value was never sent; the service links the service group's recovery plan automatically."
+  - section: "Bugs Fixed"
+    description: "Resiliency drill get, create, and update responses now include the drill's managed identity, and drill resync, validation, resource add-or-update, and run mark-complete responses always include `hasCompleted`."
+  - section: "Breaking Changes"
     description: "Resiliency goal assignment get responses now return the GA requireZonalResiliency, serviceLevelResources, and errorDetails fields, and goal resource get responses return resourceArmId and zonalResiliency. The preview-only goalAssignmentType, goalTemplateId, high-availability and disaster-recovery participation/attestation/exclusion fields, and serviceGroupMemberships have been removed."

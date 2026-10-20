@@ -32,9 +32,6 @@ public sealed class DrillCreateOptions
     [Option(Description = "The RBAC setup mode. Supported values: AutomatedCustomRole, AutomatedBuiltinRoles, Manual.")]
     public required DrillRbacSetupMode RbacSetupMode { get; set; }
 
-    [Option(Name = "recoveryplan", Description = "The optional recoveryplan name in the same service group to associate with the drill.")]
-    public string? RecoveryPlan { get; set; }
-
     [Option(Description = "JSON goal-assignment properties containing identity (type and optional userAssignedIdentity). goalAssignmentId is read-only and must not be supplied.")]
     public string? GoalAssignmentProperties { get; set; }
 

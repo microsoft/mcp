@@ -244,6 +244,32 @@ function Wait-DrillRunVerb {
     throw "Drill run stage $Stage did not offer $($Verbs -join ' or ') within the timeout."
 }
 
+# Recovery Orchestration rejects failover unless the plan is Ready, and discovering new service-group
+# members (for example, resources created by the fixture or the drill) moves it to Warning. Explicitly
+# exclude every member except the target VM, then finalize and re-run readiness until the plan is Ready.
+function Wait-FixturePlanReady {
+    for ($attempt = 1; ; $attempt++) {
+        $members = @((Get-FixtureResource -Path "$planId/recoveryResources?api-version=$apiVersion").value |
+            Where-Object { $_.properties.resourceId -ne $vmId -and $_.properties.inclusionState -ne 'Included' })
+        if ($members.Count -gt 0) {
+            Invoke-FixtureAction -Path "$planId/updateResources?api-version=$apiVersion" -Body @{
+                resourcesToUpdate = @($members | ForEach-Object {
+                    @{ id = $_.id; properties = @{ recoveryResourceUniqueId = $_.name; inclusionState = 'Excluded' } }
+                })
+                resourcesToRemove = @()
+            }
+            Wait-FixtureResource -Path "$planId`?api-version=$apiVersion" | Out-Null
+            Invoke-FixtureAction -Path "$planId/finalize?api-version=$apiVersion" -RetryOnErrorCodes @('RHUBUserErrorAzureResourceAddedToServiceGroup') -MaxAttempts 3
+        }
+        Invoke-FixtureAction -Path "$planId/checkReadiness?api-version=$apiVersion" -RetryOnErrorCodes @('RHUBUserErrorAzureResourceAddedToServiceGroup') -MaxAttempts 3
+        $planState = (Get-FixtureResource -Path "$planId`?api-version=$apiVersion").properties.planState
+        if ($planState -eq 'Ready') { return }
+        if ($attempt -ge 4) { throw "Recovery plan $recoveryPlanName did not return to Ready (state: $planState)." }
+        Write-Warning "Recovery plan state is $planState; excluding newly discovered members and retrying."
+        Start-Sleep -Seconds 60
+    }
+}
+
 function Wait-FixtureServiceGroupIndex {
     param([string] $Id)
     $deadline = [DateTime]::UtcNow.AddMinutes(15)
@@ -515,6 +541,7 @@ if ($sourceLocation.Count -ne 1) { throw 'Expected exactly one physical source z
 # 5) A completed drill run for the read-only drill-run tests. Drill-run resources exist only after
 #    failover, so the run completes a full manual failover and reprotect cycle on the dedicated VM
 #    and leaves the drill NotRunning for the destructive lifecycle tests.
+Wait-FixturePlanReady
 $runsPath = "$drillId/drillRuns?api-version=$apiVersion"
 $existingRunIds = @((Get-FixtureResource -Path $runsPath).value | ForEach-Object { $_.id })
 Invoke-FixtureAction -Path "$drillId/start?api-version=$apiVersion" -Body @{ mode = 'Failover' }
@@ -567,6 +594,8 @@ do {
     Start-Sleep -Seconds 15
 } while ([DateTime]::UtcNow -lt $deadline)
 if ($drill.properties.executionState -ne 'NotRunning') { throw "Drill $drillName did not return to NotRunning after the fixture run." }
+# The lifecycle tests run further forward failover drills, which require a Ready plan.
+Wait-FixturePlanReady
 
 $DeploymentOutputs['DRILLSDRILLRESOURCEID'] = $drillTarget.id
 $DeploymentOutputs['DRILLSSOURCELOCATION'] = $sourceLocation[0]

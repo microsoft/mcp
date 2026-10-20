@@ -26,9 +26,6 @@ public sealed class DrillUpdateOptions
     [Option(Description = "The RBAC setup mode. Supported values: AutomatedCustomRole, AutomatedBuiltinRoles, Manual.")]
     public DrillRbacSetupMode? RbacSetupMode { get; set; }
 
-    [Option(Name = "recoveryplan", Description = "The recoveryplan name in the same service group to associate with the drill.")]
-    public string? RecoveryPlan { get; set; }
-
     [Option(Description = "JSON goal-assignment properties to update, containing identity (type and optional userAssignedIdentity). goalAssignmentId is read-only. Omit to preserve the current configuration.")]
     public string? GoalAssignmentProperties { get; set; }
 

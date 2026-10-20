@@ -1157,7 +1157,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, and automated built-in roles | none |
 | resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
 | resiliency_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resiliency_drill_create | Create a zonal resilience drill in service group <service_group> with Health Model monitoring for <health_model_id> using a system-assigned identity | clarification-required |
@@ -1169,7 +1169,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_get | List all resilience drills in service group <service_group> | none |
 | resiliency_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
-| resiliency_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_update | Switch resilience drill <drill_name> in service group <service_group> to the AutomatedCustomRole RBAC setup mode | none |
 | resiliency_drill_update | Change the Health Model monitored by resilience drill <drill_name> in service group <service_group> to <health_model_id> without changing its identity | none |
 | resiliency_drill_update | Clear SLI monitoring on resilience drill <drill_name> in service group <service_group> while preserving its other configuration | none |
 | resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription \<subscription> and region \<region> | none |

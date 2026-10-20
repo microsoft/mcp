@@ -88,7 +88,6 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             resourceGroup,
             DrillKind.Zonal,
             DrillRbacSetupMode.Manual,
-            null,
             Arg.Any<DrillProperties>(),
             null,
             Arg.Any<CancellationToken>());
@@ -127,7 +126,6 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             "rg",
             DrillKind.Zonal,
             DrillRbacSetupMode.AutomatedBuiltinRoles,
-            null,
             Arg.Any<DrillProperties>(),
             null,
             Arg.Any<CancellationToken>());
@@ -148,7 +146,6 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             Arg.Any<string?>(),
             Arg.Any<DrillKind>(),
             Arg.Any<DrillRbacSetupMode>(),
-            Arg.Any<string?>(),
             Arg.Any<DrillProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -171,7 +168,6 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             Arg.Any<string?>(),
             Arg.Any<DrillKind>(),
             Arg.Any<DrillRbacSetupMode>(),
-            Arg.Any<string?>(),
             Arg.Any<DrillProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -190,7 +186,7 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             "--sli-monitoring-properties", $$"""{"identity":{"type":"SystemAssigned"},"slis":[{"sliId":"{{sliId}}","type":"Availability"}]}"""]);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        var properties = Assert.IsAssignableFrom<DrillProperties>(Assert.Single(Service.ReceivedCalls()).GetArguments()[8]);
+        var properties = Assert.IsAssignableFrom<DrillProperties>(Assert.Single(Service.ReceivedCalls()).GetArguments()[7]);
         Assert.Equal("SystemAssigned", properties.GoalAssignmentProperties.Identity.Type.ToString());
         Assert.Equal(healthId, properties.HealthModelMonitoringProperties.HealthModelId.ToString());
         Assert.Equal(sliId, Assert.Single(properties.SliMonitoringProperties.Slis).SliId.ToString());

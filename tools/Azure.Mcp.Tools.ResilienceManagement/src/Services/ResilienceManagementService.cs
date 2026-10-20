@@ -1691,9 +1691,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Location: root.TryGetProperty("location", out JsonElement locationElement) ? locationElement.GetString() : null,
             Tags: GetTagsOrNull(root),
             Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
-            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
+            SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default,
+            Identity: root.TryGetProperty("identity", out JsonElement identityElement) ? identityElement.Clone() : default);
 
-    public async Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, string? recoveryPlan = null, DrillProperties? properties = null, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, DrillProperties? properties = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
@@ -1724,13 +1725,8 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             _ => throw new ArgumentOutOfRangeException(nameof(rbacSetupMode), rbacSetupMode, "Unsupported RBAC setup mode.")
         };
 
-        // Preserve both associated identities when the supporting resources do not exist yet.
-        properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
-            associatedIdentity,
-            string.IsNullOrWhiteSpace(recoveryPlan)
-                ? null
-                : RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
-            recoveryPlanResourceExcludedCount: null);
+        // recoveryPlanId is read-only; the service links the service group's recovery plan for the drill type.
+        properties.RecoveryPlanProperties = new RecoveryPlanPropertiesOfDrill(associatedIdentity);
         properties.MonitoringProperties = ArmResilienceManagementModelFactory.MonitoringPropertiesOfDrill(
             associatedIdentity,
             logAnalyticsWorkspaceId: null,
@@ -1751,7 +1747,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return MapDrill(completedDrill.Value.Data);
     }
 
-    public async Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, string? recoveryPlan = null, DrillUpdateProperties? properties = null, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, DrillUpdateProperties? properties = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         var subscriptionId = subscription is null || AzureService.IsSubscriptionId(subscription)
             ? subscription
@@ -1762,7 +1758,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
         ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
         properties ??= new DrillUpdateProperties();
-        var associatedIdentity = new ResilienceManagementAssociatedIdentity(ManagedServiceIdentityType.SystemAssigned);
 
         if (subscriptionId is not null && region is not null)
         {
@@ -1772,14 +1767,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         if (rbacSetupMode is not null)
         {
             properties.RbacSetupMode = new ResilienceManagementRbacSetupMode(rbacSetupMode.Value.ToString());
-        }
-
-        if (recoveryPlan is not null)
-        {
-            properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
-                associatedIdentity,
-                RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
-                recoveryPlanResourceExcludedCount: null);
         }
 
         var patch = new ResilienceManagementDrillPatch

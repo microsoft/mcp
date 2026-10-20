@@ -66,7 +66,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             null,
             null,
             DrillRbacSetupMode.Manual,
-            null,
             Arg.Any<DrillUpdateProperties>(),
             null,
             Arg.Any<CancellationToken>());
@@ -85,7 +84,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
-            Arg.Any<string?>(),
             Arg.Any<DrillUpdateProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -106,7 +104,6 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
-            Arg.Any<string?>(),
             Arg.Any<DrillUpdateProperties?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -122,7 +119,7 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", option, "null");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        var properties = Assert.IsAssignableFrom<DrillUpdateProperties>(Assert.Single(Service.ReceivedCalls()).GetArguments()[6]);
+        var properties = Assert.IsAssignableFrom<DrillUpdateProperties>(Assert.Single(Service.ReceivedCalls()).GetArguments()[5]);
         using JsonDocument document = JsonDocument.Parse(ModelReaderWriter.Write(properties, new ModelReaderWriterOptions("W")));
         Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty(propertyName).ValueKind);
         Assert.Single(document.RootElement.EnumerateObject());

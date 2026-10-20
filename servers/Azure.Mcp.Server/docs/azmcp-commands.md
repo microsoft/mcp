@@ -4499,6 +4499,7 @@ azmcp resiliency recoveryjob resource get --service-group <service-group> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
+# The service links the service group's recovery plan for the drill type automatically.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill create --service-group <service-group> \
                               --drill <drill> \
@@ -4507,7 +4508,6 @@ azmcp resiliency drill create --service-group <service-group> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
                               [--resource-group <resource-group>] \
-                              [--recoveryplan <recoveryplan>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json>] \
                               [--sli-monitoring-properties <json>]
@@ -4537,7 +4537,6 @@ azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recoveryplan <recoveryplan>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json-or-null>] \
                               [--sli-monitoring-properties <json-or-null>]
