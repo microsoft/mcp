@@ -23,7 +23,7 @@ public sealed class RecoveryPlanReprotectCommandTests : CommandUnitTestsBase<Rec
             "22222222-2222-2222-2222-222222222222",
             "Accepted",
             "Reprotect was accepted.");
-        Service.ReprotectRecoveryPlanAsync("sg1", "plan1", null, null, Arg.Any<CancellationToken>()).Returns(expected);
+        Service.ReprotectRecoveryPlanAsync("sg1", "plan1", null, null, Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1");
 
@@ -44,7 +44,7 @@ public sealed class RecoveryPlanReprotectCommandTests : CommandUnitTestsBase<Rec
             "plan1",
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(

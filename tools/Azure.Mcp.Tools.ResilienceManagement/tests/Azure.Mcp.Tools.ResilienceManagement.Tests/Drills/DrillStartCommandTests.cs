@@ -26,6 +26,8 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
         Assert.Equal("start", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        var operationIdOption = Assert.Single(command.Options, option => option.Name == "--operation-id");
+        Assert.Contains("canonical GUID", operationIdOption.Description, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -42,7 +44,7 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns("operation-id");
         }
 
@@ -76,7 +78,7 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
     [Fact]
     public async Task ExecuteAsync_StartsDrillAndReturnsOperation()
     {
-        Service.StartDrillAsync("sg1", "drill1", "TestFailover", null, Arg.Any<CancellationToken>())
+        Service.StartDrillAsync("sg1", "drill1", "TestFailover", null, null, Arg.Any<CancellationToken>())
             .Returns("operation-id");
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", "--mode", "testfailover");
@@ -85,6 +87,47 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
         Assert.Equal("operation-id", result.OperationId);
         Assert.Equal("drill1", result.Drill);
         Assert.Equal("Accepted", result.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesAndForwardsCallerOperationId()
+    {
+        const string callerOperationId = "ABCDEFAB-CDEF-ABCD-EFAB-CDEFABCDEFAB";
+        Service.StartDrillAsync("sg1", "drill1", "Failover", null, callerOperationId, Arg.Any<CancellationToken>())
+            .Returns(callerOperationId);
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--drill", "drill1",
+            "--mode", "Failover",
+            "--operation-id", callerOperationId);
+
+        var result = ValidateAndDeserializeResponse(
+            response,
+            ResilienceManagementJsonContext.Default.DrillStartCommandResult);
+        Assert.Equal(callerOperationId, result.OperationId);
+    }
+
+    [Theory]
+    [InlineData("12345678123412341234123456789012")]
+    [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
+    [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
+    [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]
+    [InlineData("not-a-guid")]
+    [InlineData("")]
+    public async Task ExecuteAsync_RejectsNonCanonicalOperationId(string operationId)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--drill", "drill1",
+            "--mode", "Failover",
+            "--operation-id", operationId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("canonical D format", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(
+            Service.ReceivedCalls(),
+            call => call.GetMethodInfo().Name == nameof(IResilienceManagementService.StartDrillAsync));
     }
 
     [Theory]
@@ -100,7 +143,7 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(ValidArgs);

@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Initiates failover for a run of a resilience drill from specified physical Azure zones in an Azure service group.",
+    Description = "Initiates failover for a run of a resilience drill from specified Azure regions or physical Azure zones in an Azure service group. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -34,6 +34,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
     public override void ValidateOptions(DrillRunFailoverOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         ValidatePathSegment(options.ServiceGroup, "service group", validationResult);
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
@@ -42,14 +43,18 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         {
             validationResult.Errors.Add("At least one source location is required.");
         }
-        else if (options.SourceLocations.Any(location => !IsValidPhysicalZone(location)))
+        else if (options.SourceLocations.Any(location => !IsValidSourceLocation(location)))
         {
-            validationResult.Errors.Add("Each source location must use the physical Azure zone format '<region>-az<zone-number>', such as 'eastus-az1'.");
+            validationResult.Errors.Add("Each source location must be an Azure region such as 'eastus2' or a physical Azure zone such as 'eastus2-az1'.");
         }
 
-        if (options.SelectedResourceIds?.Any(resourceId => !IsRecoveryResourceIdForServiceGroup(resourceId, options.ServiceGroup)) == true)
+        if (options.SelectedResourceIds?.Any(resourceId =>
+                !IsDrillResourceId(
+                    resourceId,
+                    options.ServiceGroup,
+                    options.Drill)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group with a GUID resource name.");
+            validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested service group and drill with a GUID resource name.");
         }
     }
 
@@ -65,6 +70,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SelectedResourceIds,
                 options.AutoFailover,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             var result = new DrillRunFailoverCommandResult(operationId, options.DrillRun, Accepted: true);
@@ -104,8 +110,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
     }
 
-    private static bool IsValidPhysicalZone(string location)
+    private static bool IsValidSourceLocation(string location)
     {
+        if (IsAsciiAlphanumeric(location))
+        {
+            return true;
+        }
+
         const string separator = "-az";
         int separatorIndex = location.LastIndexOf(separator, StringComparison.OrdinalIgnoreCase);
         if (separatorIndex <= 0 || separatorIndex + separator.Length >= location.Length)
@@ -122,6 +133,11 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
 
     private static bool IsAsciiAlphanumeric(ReadOnlySpan<char> value)
     {
+        if (value.IsEmpty)
+        {
+            return false;
+        }
+
         foreach (char character in value)
         {
             if (!char.IsAsciiLetterOrDigit(character))
@@ -133,17 +149,21 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         return true;
     }
 
-    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
+    private static bool IsDrillResourceId(
+        string resourceId,
+        string serviceGroup,
+        string drill)
     {
         try
         {
             var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? recoveryPlanId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+            ResourceIdentifier? drillId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = drillId?.Parent;
+            return parsed.ResourceType == DrillTargetResource.ResourceType &&
+                drillId?.ResourceType == ResilienceManagementDrillResource.ResourceType &&
                 serviceGroupId?.ResourceType == ServiceGroupResourceType &&
                 string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(drillId.Name, drill, StringComparison.OrdinalIgnoreCase) &&
                 Guid.TryParse(parsed.Name, out _);
         }
         catch (Exception ex) when (ex is ArgumentException or FormatException)
