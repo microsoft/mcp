@@ -82,10 +82,27 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     // .testsettings.json-derived settings (including the principal name/type) are
     // identical for every test in a run, so it's safe - and much more reliable - to
     // load them once per test process and share the result.
-    private static readonly Lazy<Task<LiveTestSettings?>> s_liveSettingsTask =
+    private static Lazy<Task<LiveTestSettings?>> s_liveSettingsTask =
+        CreateLiveSettingsTask();
+
+    private static Lazy<Task<LiveTestSettings?>> CreateLiveSettingsTask() =>
         new(LoadLiveSettingsCoreAsync, LazyThreadSafetyMode.ExecutionAndPublication);
 
-    private static Task<LiveTestSettings?> TryLoadLiveSettingsAsync() => s_liveSettingsTask.Value;
+    private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    {
+        var cached = Volatile.Read(ref s_liveSettingsTask);
+
+        try
+        {
+            return await cached.Value.ConfigureAwait(false);
+        }
+        catch
+        {
+            // Only replace the failed attempt, not a newer attempt started by another caller.
+            Interlocked.CompareExchange(ref s_liveSettingsTask, CreateLiveSettingsTask(), cached);
+            throw;
+        }
+    }
 
     private static async Task<LiveTestSettings?> LoadLiveSettingsCoreAsync()
     {
