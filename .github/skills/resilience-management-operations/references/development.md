@@ -10,9 +10,11 @@ The toolset uses `Azure.ResourceManager.ResilienceManagement` 1.0.0 with API `20
 
 The GA SDK reuses required-on-create nested models in PATCH and can serialize omitted identity/selection fields as null or empty. `DrillConfigurationPatch` preserves validated sparse configuration JSON through the SDK's protected serialization extension point. Validation requests use public constructors rather than model factories so omitted source locations do not become an empty array.
 
-### Isolated Drills fixtures
+### Drills fixtures
 
-Use `tools/Azure.Mcp.Tools.ResilienceManagement/tests/test-resources-drills.bicep` for isolated GA drill fixtures in an approved, dedicated resource group tagged `Purpose=mcp-drills-ga-live-tests`. Supply `baseName` and `sshPublicKey`, then run `test-resources-drills-post.ps1 -ResourceGroupName <fixture-group>`. Retain the generated `.testsettings.json` until `remove-test-resources-pre.ps1 -ResourceGroupName <fixture-group>` has cleaned up the tenant-scoped resources, before deleting the fixture resource group. Do not reuse shared resources for destructive drill tests.
+`eng/scripts/Deploy-TestResources.ps1 -Paths ResilienceManagement` provisions everything the live tests need in one run. `test-resources-pre.ps1` creates dedicated `<group>-drills` and `<group>-drills-delete` resource groups tagged `Purpose=mcp-drills-ga-live-tests`. `test-resources.bicep` deploys the fault-injection VM fixture (`test-resources-drills.bicep`) into the drills group, and `test-resources-post.ps1` configures it through `test-resources-drills-post.ps1`. The VM stays out of the general service group so its recovery plan never discovers the fault-injection target. Drill-run resources exist only after failover, so the post script runs one complete manual failover and reprotect cycle on the dedicated VM to produce the drill-run outputs, then leaves the drill `NotRunning`. The deployment needs a region with availability zones, Chaos, and Automation capacity.
+
+Destructive drill tests read `DRILLS*` deployment outputs; other tests keep the general outputs. Do not point a drill lifecycle test at the general service group. `remove-test-resources-pre.ps1` removes both fixtures and deletes the drills resource groups.
 
 Creation tests must create uniquely named drills and delete them in cleanup; re-creating the shared fixture can reset its resource inclusion and readiness.
 

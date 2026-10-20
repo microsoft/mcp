@@ -1,6 +1,8 @@
 targetScope = 'resourceGroup'
 
 param baseName string = resourceGroup().name
+// Created by test-resources-pre.ps1 before this deployment.
+param drillsResourceGroupName string = '${resourceGroup().name}-drills'
 
 // Deterministic, schema-valid names.
 // Usage plan and enrollment names must match ^[a-zA-Z0-9-]{3,24}$.
@@ -17,8 +19,6 @@ var workflowServiceGroupName = take('sgw${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var workflowRecoveryPlanName = take('rw${uniqueSuffix}', 24)
-var drillName = take('dr${uniqueSuffix}', 24)
-var deleteDrillName = take('dd${uniqueSuffix}', 24)
 var storageAccountName = toLower(take('st${uniqueSuffix}', 24))
 var managedDiskName = take('md${uniqueSuffix}', 80)
 var automationAccountName = take('aa${uniqueSuffix}', 50)
@@ -104,8 +104,6 @@ output workflowServiceGroupName string = workflowServiceGroupName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output workflowRecoveryPlanName string = workflowRecoveryPlanName
-output drillName string = drillName
-output deleteDrillName string = deleteDrillName
 output storageAccountName string = storageAccountName
 output storageAccountId string = storageAccount.id
 output automationAccountName string = automationAccountName
@@ -113,3 +111,25 @@ output automationAccountId string = automationAccount.id
 output failoverRunbookName string = failoverRunbookName
 output reprotectRunbookName string = reprotectRunbookName
 output location string = resourceGroup().location
+
+// Destructive drill lifecycle tests use a VM-backed fixture in a dedicated resource group so the
+// general service group above never discovers the fault-injection target.
+module drills 'test-resources-drills.bicep' = {
+  name: 'drills-fixture'
+  scope: resourceGroup(drillsResourceGroupName)
+  params: {
+    baseName: baseName
+    location: resourceGroup().location
+  }
+}
+
+output drillsResourceGroupName string = drillsResourceGroupName
+output drillsDeleteAssetResourceGroupName string = '${drillsResourceGroupName}-delete'
+output drillsUsagePlanId string = drills.outputs.usagePlanId
+output drillsServiceGroupName string = drills.outputs.serviceGroupName
+output drillsLifecycleServiceGroupName string = drills.outputs.lifecycleServiceGroupName
+output drillsRecoveryPlanName string = drills.outputs.recoveryPlanName
+output drillsDrillName string = drills.outputs.drillName
+output drillsVmId string = drills.outputs.vmId
+output drillsAutomationAccountId string = drills.outputs.automationAccountId
+output drillsHealthModelId string = drills.outputs.healthModelId

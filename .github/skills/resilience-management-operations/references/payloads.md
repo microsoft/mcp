@@ -197,7 +197,7 @@ The VM must already have a discovered `AzureSiteRecovery` solution in `Protected
 ]
 ```
 
-Use the drill-resource response's top-level `id`, not `properties.resourceId`. The resource must belong to the requested service group and drill. Optional `faultProperties` configures the fault. `exclude-resources` is an array of ID strings, not objects. After an asynchronous update, refresh readiness before relying on the drill-level inclusion summary.
+Use the drill-resource response's top-level `id`, not `properties.resourceId`. The resource must belong to the requested service group and drill. Optional `faultProperties` configures the fault. `exclude-resources` is an array of drill-resource ID strings, not objects, and each must also belong to the requested service group and drill. After an asynchronous update, refresh readiness before relying on the drill-level inclusion summary.
 
 ## Live-Test Scenario Checklist
 

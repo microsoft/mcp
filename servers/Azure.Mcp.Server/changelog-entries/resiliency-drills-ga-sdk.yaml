@@ -1,6 +1,6 @@
 changes:
   - section: "Bugs Fixed"
-    description: "Corrected drill resource include/update inputs and examples to require drill-resource IDs rather than underlying VM IDs, and reject identifiers belonging to another drill."
+    description: "Corrected drill resource include, update, and exclude inputs and examples to require drill-resource IDs rather than underlying VM IDs, and reject identifiers belonging to another drill."
   - section: "Bugs Fixed"
     description: "Corrected drill-run failover selections to accept full drill-resource IDs under the requested service group and drill rather than recovery-resource IDs."
   - section: "Bugs Fixed"
@@ -15,4 +15,4 @@ changes:
   - section: "Breaking Changes"
     description: "Resiliency usage-plan create now accepts only the GA Standard plan type; the preview-only Basic plan type has been removed."
   - section: "Breaking Changes"
-    description: "Resiliency goal get responses expose GA requireZonalResiliency and zonalResiliency fields. Legacy preview-only goal fields are nullable when absent from the service response, rather than inferred from zonal resiliency."
+    description: "Resiliency goal assignment get responses now return the GA requireZonalResiliency, serviceLevelResources, and errorDetails fields, and goal resource get responses return resourceArmId and zonalResiliency. The preview-only goalAssignmentType, goalTemplateId, high-availability and disaster-recovery participation/attestation/exclusion fields, and serviceGroupMemberships have been removed."

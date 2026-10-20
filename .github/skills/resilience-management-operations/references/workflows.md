@@ -33,7 +33,7 @@ The mention of a service group supplies context for resolving a usage plan; it d
 
 1. List assignments with `mcp_azure_mcp_ser_resiliency_goal_assignment_get`.
 2. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
-3. Get individual members for the GA `zonalResiliency` details. Preview-only HA/DR fields can be absent; do not substitute zonal resiliency values for them.
+3. Get individual members for the GA `zonalResiliency` details. Preview-only HA/DR fields are not returned; do not substitute zonal resiliency values for them.
 
 These tools do not create or mutate goals.
 

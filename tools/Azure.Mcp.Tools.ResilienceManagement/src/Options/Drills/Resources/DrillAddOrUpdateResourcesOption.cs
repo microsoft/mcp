@@ -20,7 +20,7 @@ public sealed class DrillAddOrUpdateResourcesOptions
 
     [Option(Description =
         "A JSON array of resources to include in the drill. Each item has an \"id\" identifying a drill resource, NOT the underlying VM, " +
-        "and optional \"faultProperties\". Example: [{\"id\":\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1\"}].")]
+        "and optional \"faultProperties\". Example: [{\"id\":\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/00000000-0000-0000-0000-000000000001\"}].")]
     public string? IncludeResources { get; set; }
 
     [Option(Description =
@@ -28,7 +28,7 @@ public sealed class DrillAddOrUpdateResourcesOptions
         "and optional \"faultProperties\".")]
     public string? UpdateResources { get; set; }
 
-    [Option(Description = "A JSON array of drill-resource ARM ID strings to exclude from the drill.")]
+    [Option(Description = "A JSON array of drill-resource ARM ID strings under the requested service group and drill to exclude from the drill, NOT underlying VM IDs.")]
     public string? ExcludeResources { get; set; }
 
     [Option(Description = "Whether to force inclusion and update of the resources. Allowed values: Enable, Disable.")]

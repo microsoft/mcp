@@ -1,41 +1,45 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-# cspell:ignore authenticationsettings DELETEASSETRESOURCEGROUPNAME discoveryrules DRILLRESOURCEID Fmanagement RECOVERYRESOURCEID relationshipresources resourcecontainers RHRO servicegroupmember VMID
+# cspell:ignore authenticationsettings discoveryrules relationshipresources resourcecontainers servicegroupmember Fmanagement RHDS RHRO RHUB DRILLSAUTOMATIONACCOUNTID DRILLSDELETEASSETRESOURCEGROUPNAME DRILLSDRILLNAME DRILLSDRILLRESOURCEID DRILLSDRILLRUNNAME DRILLSDRILLRUNRESOURCENAME DRILLSHEALTHMODELID DRILLSLIFECYCLESERVICEGROUPNAME DRILLSRECOVERYPLANNAME DRILLSRECOVERYRESOURCEID DRILLSRESOURCEGROUPNAME DRILLSSERVICEGROUPNAME DRILLSSOURCELOCATION DRILLSUSAGEPLANID DRILLSVMID
 
-#Requires -Version 7
-#Requires -Modules Az.Accounts, Az.Resources
-
-[CmdletBinding()]
+# Invoked by test-resources-post.ps1. Configures the VM-backed drills fixture that test-resources.bicep
+# deploys into its dedicated resource group, then adds DRILLS* entries to $DeploymentOutputs so the
+# single New-TestSettings call in test-resources-post.ps1 writes them with the general outputs.
 param(
     [Parameter(Mandatory)]
-    [string] $ResourceGroupName,
-    [string] $DeploymentName = 'drills-ga-fixtures',
-    [string] $DeleteAssetResourceGroupName = "$ResourceGroupName-delete",
-    [switch] $DeleteOnly,
-    [switch] $ActionsOnly
+    [hashtable] $DeploymentOutputs,
+    [Parameter(Mandatory)]
+    [string] $SubscriptionId,
+    [Parameter(Mandatory)]
+    [string] $TenantId
 )
 
 $ErrorActionPreference = 'Stop'
-if ($DeleteOnly -and $ActionsOnly) { throw 'Choose either DeleteOnly or ActionsOnly, not both.' }
-$context = Get-AzContext
-$subscriptionId = $context.Subscription.Id
-$tenantId = $context.Tenant.Id
 $apiVersion = '2026-10-01'
-$resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
-if ($resourceGroup.Tags['Purpose'] -ne 'mcp-drills-ga-live-tests') {
-    throw 'Refusing to configure a resource group that is not a dedicated Drills GA fixture.'
+$fixturePurpose = 'mcp-drills-ga-live-tests'
+
+$resourceGroupName = $DeploymentOutputs['DRILLSRESOURCEGROUPNAME']
+$deleteAssetResourceGroupName = $DeploymentOutputs['DRILLSDELETEASSETRESOURCEGROUPNAME']
+$usagePlanId = $DeploymentOutputs['DRILLSUSAGEPLANID']
+$serviceGroupName = $DeploymentOutputs['DRILLSSERVICEGROUPNAME']
+$lifecycleServiceGroupName = $DeploymentOutputs['DRILLSLIFECYCLESERVICEGROUPNAME']
+$recoveryPlanName = $DeploymentOutputs['DRILLSRECOVERYPLANNAME']
+$drillName = $DeploymentOutputs['DRILLSDRILLNAME']
+$vmId = $DeploymentOutputs['DRILLSVMID']
+$automationId = $DeploymentOutputs['DRILLSAUTOMATIONACCOUNTID']
+$healthModelId = $DeploymentOutputs['DRILLSHEALTHMODELID']
+$location = $DeploymentOutputs['LOCATION']
+
+foreach ($name in @($resourceGroupName, $deleteAssetResourceGroupName)) {
+    $group = Get-AzResourceGroup -Name $name
+    if ($group.Tags['Purpose'] -ne $fixturePurpose) {
+        throw "Refusing to configure '$name'; it is not a dedicated drills fixture resource group."
+    }
 }
-$deployment = Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $DeploymentName
-if ($deployment.ProvisioningState -ne 'Succeeded') {
-    throw "Fixture infrastructure is not ready: $($deployment.ProvisioningState)."
-}
-$outputs = $deployment.Outputs
-$vmId = $outputs.vmId.Value
-$automationId = $outputs.automationAccountId.Value
-$healthModelId = $outputs.healthModelId.Value
-$groupId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName"
+$groupId = "/subscriptions/$SubscriptionId/resourceGroups/$resourceGroupName"
+$deleteGroupId = "/subscriptions/$SubscriptionId/resourceGroups/$deleteAssetResourceGroupName"
 if (!$vmId.StartsWith("$groupId/providers/Microsoft.Compute/virtualMachines/", [StringComparison]::OrdinalIgnoreCase)) {
-    throw 'The target VM must belong to the dedicated fixture resource group.'
+    throw 'The target VM must belong to the dedicated drills resource group.'
 }
 
 function Invoke-FixtureArm {
@@ -53,7 +57,7 @@ function Invoke-FixtureArm {
         throw 'Fixture requests and operation polling must use public Azure ARM.'
     }
     $safePath = ([Uri]$uri).AbsolutePath
-    if ($Method -ne 'GET') { Write-Information "$Method $safePath" }
+    if ($Method -ne 'GET') { Write-Host "$Method $safePath" }
     $headers = @{}
     if ($Action) {
         $operationId = [Guid]::NewGuid().ToString()
@@ -72,7 +76,7 @@ function Invoke-FixtureArm {
     if ($null -ne $Body) {
         $parameters.Body = if ($Body -is [string]) { $Body } else { ConvertTo-Json $Body -Depth 30 -Compress }
     }
-    $deadline = [DateTime]::UtcNow.AddMinutes(5)
+    $deadline = [DateTime]::UtcNow.AddMinutes(30)
     $transientAttempts = 0
     do {
         try {
@@ -87,11 +91,16 @@ function Invoke-FixtureArm {
             Start-Sleep -Seconds (15 * $transientAttempts)
             continue
         }
-        if (!$WaitForLinkedAuthorization -or $response.StatusCode -ne 403 -or
-            ($response.Content | ConvertFrom-Json).error.code -ne 'LinkedAuthorizationFailed' -or
-            [DateTime]::UtcNow -ge $deadline) { break }
-        Write-Information 'Waiting for linked service-group authorization to propagate.'
-        Start-Sleep -Seconds 15
+        if ($response.StatusCode -ne 403 -or [DateTime]::UtcNow -ge $deadline) { break }
+        $errorCode = try { ($response.Content | ConvertFrom-Json).error.code } catch { $null }
+        # A new service group grants its creator access asynchronously, and enrollments need the
+        # service-group link to propagate. A rejected request was not executed, so it is safe to retry.
+        $isNewServiceGroupAccess = $errorCode -eq 'AuthorizationFailed' -and $safePath.StartsWith('/providers/Microsoft.Management/serviceGroups/', [StringComparison]::OrdinalIgnoreCase)
+        $isLinkedAuthorization = $WaitForLinkedAuthorization -and $errorCode -eq 'LinkedAuthorizationFailed'
+        if (!$isNewServiceGroupAccess -and !$isLinkedAuthorization) { break }
+        Write-Host "Waiting for service-group authorization to propagate for $safePath."
+        Start-Sleep -Seconds 20
+        $parameters.Token = (Get-AzAccessToken -ResourceUrl 'https://management.azure.com/').Token
     } while ($true)
     if ($response.StatusCode -eq 404 -and $AllowNotFound) {
         return $null
@@ -156,18 +165,12 @@ function Add-FixtureRole {
     }
 }
 
-function Invoke-FixtureAction {
-    param([string] $Path, [hashtable] $Body)
-    $response = Invoke-FixtureArm -Method POST -Action -Path $Path -Body $Body
-    Wait-FixtureOperation -Response $response -Path $Path
-}
-
 function Wait-FixtureOperation {
     param([object] $Response, [string] $Path)
-    $pollUri = $response.Headers['Azure-AsyncOperation'] | Select-Object -First 1
-    if (!$pollUri) { $pollUri = $response.Headers['Location'] | Select-Object -First 1 }
+    $pollUri = $Response.Headers['Azure-AsyncOperation'] | Select-Object -First 1
+    if (!$pollUri) { $pollUri = $Response.Headers['Location'] | Select-Object -First 1 }
     if (!$pollUri) {
-        if ($response.StatusCode -eq 202) { throw "Accepted operation has no polling URL: $Path." }
+        if ($Response.StatusCode -eq 202) { throw "Accepted operation has no polling URL: $Path." }
         return
     }
     $deadline = [DateTime]::UtcNow.AddMinutes(15)
@@ -180,6 +183,65 @@ function Wait-FixtureOperation {
         if ($status -eq 'Succeeded' -or ($poll.StatusCode -in @(200, 204) -and !$status)) { return }
     } while ([DateTime]::UtcNow -lt $deadline)
     throw "Timed out waiting for $Path. Last operation status: $status."
+}
+
+function Invoke-FixtureAction {
+    param([string] $Path, [hashtable] $Body, [string[]] $RetryOnErrorCodes = @(), [int] $MaxAttempts = 1)
+    for ($attempt = 1; ; $attempt++) {
+        try {
+            $response = Invoke-FixtureArm -Method POST -Action -Path $Path -Body $Body
+            Wait-FixtureOperation -Response $response -Path $Path
+            return
+        }
+        catch {
+            $message = $_.Exception.Message
+            $isRetryable = @($RetryOnErrorCodes | Where-Object { $message.Contains($_) }).Count -gt 0
+            if ($attempt -ge $MaxAttempts -or !$isRetryable) { throw }
+            Write-Warning "Retrying $Path after a transient service condition (attempt $attempt of $MaxAttempts)."
+            Start-Sleep -Seconds 120
+        }
+    }
+}
+
+# Drill-run stage operations can remain in progress for the whole stage, so callers poll the run's
+# supported verbs instead of the operation status.
+function Invoke-DrillRunVerb {
+    param([string] $Path, [hashtable] $Body)
+    for ($attempt = 1; ; $attempt++) {
+        try {
+            Invoke-FixtureArm -Method POST -Action -Path $Path -Body $Body | Out-Null
+            return
+        }
+        catch {
+            # The previous stage operation releases the run lock asynchronously.
+            if ($attempt -ge 40 -or !$_.Exception.Message.Contains('(409)')) { throw }
+            Start-Sleep -Seconds 15
+        }
+    }
+}
+
+function Assert-NoFailedDrillTask {
+    param([object] $Task)
+    if ($Task.status -in @('Failed', 'Cancelled')) {
+        throw "Drill run task '$($Task.taskName)' $($Task.status): $(ConvertTo-Json $Task.errorDetails -Depth 15 -Compress)"
+    }
+    foreach ($child in @($Task.jobExtendedInfo.tasksList) + @($Task.subTasksList)) {
+        if ($null -ne $child) { Assert-NoFailedDrillTask -Task $child }
+    }
+}
+
+function Wait-DrillRunVerb {
+    param([string] $RunId, [string] $Stage, [string[]] $Verbs)
+    Write-Host "Waiting for drill run stage $Stage to offer $($Verbs -join ' or ')."
+    $deadline = [DateTime]::UtcNow.AddMinutes(30)
+    do {
+        $run = Get-FixtureResource -Path "$RunId`?api-version=$apiVersion"
+        Assert-NoFailedDrillTask -Task $run.properties
+        $stageVerbs = @($run.properties.supportedVerbsForStage | Where-Object { $_.drillRunStage -eq $Stage } | ForEach-Object { $_.supportedVerbs })
+        if (@($stageVerbs | Where-Object { $_ -in $Verbs }).Count -gt 0) { return }
+        Start-Sleep -Seconds 15
+    } while ([DateTime]::UtcNow -lt $deadline)
+    throw "Drill run stage $Stage did not offer $($Verbs -join ' or ') within the timeout."
 }
 
 function Wait-FixtureServiceGroupIndex {
@@ -195,75 +257,50 @@ function Wait-FixtureServiceGroupIndex {
     throw "Service group $Id exists in ARM but is not indexed in tenant Resource Graph. Dependent provisioning cannot proceed."
 }
 
-$serviceGroupName = $outputs.serviceGroupName.Value
-$lifecycleServiceGroupName = $outputs.lifecycleServiceGroupName.Value
+# 1) Isolated service groups: the primary group owns the VM drill; the lifecycle group owns
+#    a disk-only member so creation tests can create and delete their own drills.
 $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
-foreach ($name in @($serviceGroupName, $lifecycleServiceGroupName)) {
-    Write-Information "Preparing isolated service group $name."
-    $id = "/providers/Microsoft.Management/serviceGroups/$name"
+$lifecycleId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
+foreach ($id in @($serviceGroupId, $lifecycleId)) {
+    Write-Host "Preparing isolated drills service group $id."
+    $name = $id.Split('/')[-1]
     New-FixtureResource -Path "$id`?api-version=2024-02-01-preview" -Body @{
-        properties = @{ displayName = $name; parent = @{ resourceId = "/providers/Microsoft.Management/serviceGroups/$tenantId" } }
+        properties = @{ displayName = $name; parent = @{ resourceId = "/providers/Microsoft.Management/serviceGroups/$TenantId" } }
     } | Out-Null
     Wait-FixtureServiceGroupIndex -Id $id
 }
-$settingsOutputs = @{}
-foreach ($key in $outputs.Keys) {
-    if ($null -ne $outputs[$key].Value) { $settingsOutputs[$key.ToUpperInvariant()] = [string]$outputs[$key].Value }
-}
-$deleteGroupId = "/subscriptions/$subscriptionId/resourceGroups/$DeleteAssetResourceGroupName"
-if ($DeleteAssetResourceGroupName -eq $ResourceGroupName) {
-    throw 'The deletion fixture must use a separate asset resource group.'
-}
-$deleteGroup = Get-FixtureResource -Path "$deleteGroupId`?api-version=2024-03-01" -AllowNotFound
-if ($deleteGroup -and $deleteGroup.tags.Purpose -ne 'mcp-drills-ga-live-tests') {
-    throw 'Refusing to reuse a deletion asset group without the dedicated fixture tag.'
-}
-if (!$deleteGroup) {
-    Invoke-FixtureArm -Method PUT -Path "$deleteGroupId`?api-version=2024-03-01" -Body @{
-        location = $outputs.location.Value
-        tags = $resourceGroup.Tags
-    } | Out-Null
-}
-$lifecycleId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
-New-FixtureResource -WaitForLinkedAuthorization -Path "$($outputs.usagePlanId.Value)/enrollments/$lifecycleServiceGroupName`?api-version=$apiVersion" -Body @{
+
+New-FixtureResource -WaitForLinkedAuthorization -Path "$usagePlanId/enrollments/$lifecycleServiceGroupName`?api-version=$apiVersion" -Body @{
     properties = @{ serviceGroupId = $lifecycleId }
 } | Out-Null
-# Drill creation requires a nonempty group; this disk cannot affect the lifecycle VM.
+# Drill creation requires a nonempty group; this disk cannot affect the fault-injection VM.
 New-FixtureResource -Path "$deleteGroupId/providers/Microsoft.Compute/disks/delete-fixture-disk?api-version=2024-03-02" -Body @{
-    location = $outputs.location.Value
+    location = $location
     zones = @('1')
-    tags = @{ purpose = 'mcp-drills-ga-live-tests' }
+    tags = @{ purpose = $fixturePurpose }
     sku = @{ name = 'Standard_LRS' }
     properties = @{ creationData = @{ createOption = 'Empty' }; diskSizeGB = 4 }
 } | Out-Null
 Invoke-FixtureArm -Method PUT -WaitForLinkedAuthorization -Path "$deleteGroupId/providers/Microsoft.Relationships/serviceGroupMember/delete-fixture?api-version=2023-09-01-preview" -Body @{
     properties = @{ targetId = $lifecycleId }
 } | Out-Null
-$settingsOutputs['DELETEASSETRESOURCEGROUPNAME'] = $DeleteAssetResourceGroupName
-. "$PSScriptRoot\..\..\..\eng\scripts\helpers\TestResourcesHelpers.ps1"
-if ($DeleteOnly) {
-    New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-    Write-Information 'Isolated delete fixture configured. The recorded test creates and deletes its own drill.'
-    return
-}
 
-New-FixtureResource -WaitForLinkedAuthorization -Path "$($outputs.usagePlanId.Value)/enrollments/$serviceGroupName`?api-version=$apiVersion" -Body @{
+New-FixtureResource -WaitForLinkedAuthorization -Path "$usagePlanId/enrollments/$serviceGroupName`?api-version=$apiVersion" -Body @{
     properties = @{ serviceGroupId = $serviceGroupId }
 } | Out-Null
-
-# Only the primary group discovers the VM's RG; deletion owns a separate disk-only RG.
 Invoke-FixtureArm -Method PUT -Path "$groupId/providers/Microsoft.Relationships/serviceGroupMember/drills-ga?api-version=2023-09-01-preview" -Body @{
     properties = @{ targetId = $serviceGroupId }
 } | Out-Null
 
 $base = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
-$drillId = "$base/drills/$($outputs.drillName.Value)"
+$drillId = "$base/drills/$drillName"
 $existingDrill = Get-FixtureResource -Path "$drillId`?api-version=$apiVersion" -AllowNotFound
 if ($existingDrill -and $existingDrill.properties.executionState -ne 'NotRunning') {
     throw 'An existing drill is running. Resolve its lifecycle before reconfiguring this fixture.'
 }
-$goalId = "$base/goalAssignments/ga-fixture"
-$planId = "$base/recoveryPlans/$($outputs.recoveryPlanName.Value)"
+
+# 2) Recovery plan that protects only the dedicated VM through custom runbooks.
+$planId = "$base/recoveryPlans/$recoveryPlanName"
 $plan = New-FixtureResource -Path "$planId`?api-version=$apiVersion" -Body @{
     identity = @{ type = 'SystemAssigned' }
     properties = @{
@@ -320,7 +357,7 @@ Write-Output "Dedicated fixture VM is running; phase=$phase."
 foreach ($phase in @('Failover', 'Reprotect')) {
     $runbookId = "$automationId/runbooks/Drills-$phase"
     Invoke-FixtureArm -Method PUT -Path "$runbookId`?api-version=2023-11-01" -Body @{
-        location = $outputs.location.Value
+        location = $location
         properties = @{ runbookType = 'PowerShell'; logProgress = $false; logVerbose = $false; description = 'Isolated Drills lifecycle fixture' }
     } | Out-Null
     $content = $runbookTemplate.Replace('__VM_ID__', $vmId).Replace('__PHASE__', $phase)
@@ -328,8 +365,9 @@ foreach ($phase in @('Failover', 'Reprotect')) {
     Invoke-FixtureArm -Method POST -Path "$runbookId/publish?api-version=2023-11-01" | Out-Null
 }
 
-Invoke-FixtureAction -Path "$planId/checkReadiness?api-version=$apiVersion"
-Write-Information 'Waiting for the dedicated VM to appear in recovery-resource discovery.'
+# Newly discovered service-group members briefly fail readiness until discovery settles.
+Invoke-FixtureAction -Path "$planId/checkReadiness?api-version=$apiVersion" -RetryOnErrorCodes @('RHUBUserErrorAzureResourceAddedToServiceGroup') -MaxAttempts 6
+Write-Host 'Waiting for the dedicated VM to appear in recovery-resource discovery.'
 $deadline = [DateTime]::UtcNow.AddMinutes(15)
 do {
     $resources = Get-FixtureResource -Path "$planId/recoveryResources?api-version=$apiVersion"
@@ -343,79 +381,89 @@ do {
 } while ([DateTime]::UtcNow -lt $deadline)
 if (@($target).Count -ne 1) { throw 'Expected exactly one recovery resource for the dedicated test VM.' }
 
-$updates = @($resources.value | ForEach-Object {
-    $properties = @{ recoveryResourceUniqueId = $_.name; inclusionState = 'Excluded' }
-    if ($_.id -eq $target.id) {
-        $properties.inclusionState = 'Included'
-        $properties.recoveryGroupId = $plan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId
-        $properties.selectedProtectionSolutionType = 'CustomRunbook'
-        $properties.selectedProtectionSolutionSetting = @{
-            protectionSolutionType = 'CustomRunbook'
-            failoverAction = @{ resourceId = "$automationId/runbooks/Drills-Failover" }
-            reprotectAction = @{ resourceId = "$automationId/runbooks/Drills-Reprotect" }
+# Drill setup creates Chaos resources in this group, so new members can appear between the
+# update and finalize calls. Re-read the members and retry until finalize sees a stable set.
+for ($attempt = 1; ; $attempt++) {
+    $resources = Get-FixtureResource -Path "$planId/recoveryResources?api-version=$apiVersion"
+    $updates = @($resources.value | ForEach-Object {
+        $properties = @{ recoveryResourceUniqueId = $_.name; inclusionState = 'Excluded' }
+        if ($_.id -eq $target.id) {
+            $properties.inclusionState = 'Included'
+            $properties.recoveryGroupId = $plan.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId
+            $properties.selectedProtectionSolutionType = 'CustomRunbook'
+            $properties.selectedProtectionSolutionSetting = @{
+                protectionSolutionType = 'CustomRunbook'
+                failoverAction = @{ resourceId = "$automationId/runbooks/Drills-Failover" }
+                reprotectAction = @{ resourceId = "$automationId/runbooks/Drills-Reprotect" }
+            }
         }
+        @{ id = $_.id; properties = $properties }
+    })
+    Invoke-FixtureAction -Path "$planId/updateResources?api-version=$apiVersion" -Body @{
+        resourcesToUpdate = $updates
+        resourcesToRemove = @()
     }
-    @{ id = $_.id; properties = $properties }
-})
-Invoke-FixtureAction -Path "$planId/updateResources?api-version=$apiVersion" -Body @{
-    resourcesToUpdate = $updates
-    resourcesToRemove = @()
-} | Out-Null
-Wait-FixtureResource -Path "$planId`?api-version=$apiVersion" | Out-Null
-Invoke-FixtureAction -Path "$planId/finalize?api-version=$apiVersion"
+    Wait-FixtureResource -Path "$planId`?api-version=$apiVersion" | Out-Null
+    try {
+        Invoke-FixtureAction -Path "$planId/finalize?api-version=$apiVersion"
+        break
+    }
+    catch {
+        if ($attempt -ge 4 -or !$_.Exception.Message.Contains('RHUBUserErrorAzureResourceAddedToServiceGroup')) { throw }
+        Write-Warning 'New service-group members were discovered before finalize; excluding them and retrying.'
+        Start-Sleep -Seconds 60
+    }
+}
 $included = @((Get-FixtureResource -Path "$planId/recoveryResources?api-version=$apiVersion").value |
     Where-Object { $_.properties.inclusionState -eq 'Included' })
 if ($included.Count -ne 1 -or $included[0].properties.resourceId -ne $vmId) {
     throw 'Only the dedicated fixture VM may be included in the recovery plan.'
 }
 
+# 3) Health Model monitoring for the GA drill configuration tests.
+$healthApi = '2026-05-01-preview'
+Invoke-FixtureArm -Method PUT -Path "$healthModelId/authenticationsettings/default-auth?api-version=$healthApi" -Body @{
+    properties = @{
+        displayName = 'Fixture managed identity'
+        authenticationKind = 'ManagedIdentity'
+        managedIdentityName = 'SystemAssigned'
+    }
+} | Out-Null
+$healthModelName = $healthModelId.Split('/')[-1]
+Invoke-FixtureArm -Method PUT -Path "$healthModelId/discoveryrules/$healthModelName`?api-version=$healthApi" -Body @{
+    properties = @{
+        displayName = 'Dedicated fixture service group'
+        authenticationSetting = 'default-auth'
+        discoverRelationships = 'Enabled'
+        addRecommendedSignals = 'Enabled'
+        addResourceHealthSignal = 'Enabled'
+        specification = @{
+            kind = 'ResourceGraphQuery'
+            resourceGraphQuery = "relationshipresources | where type =~ 'microsoft.relationships/servicegroupmember' | where tostring(properties.TargetId) =~ '$serviceGroupId' | project id=tostring(properties.SourceId)"
+        }
+    }
+} | Out-Null
+
+# 4) The drill. The second PUT runs after the drill identity holds its roles.
 $drillProperties = @{
     drillType = 'Zonal'
     rbacSetupMode = 'AutomatedBuiltinRoles'
-    drillAssetProperties = @{ subscription = $subscriptionId; region = $outputs.location.Value; resourceGroup = $ResourceGroupName }
+    drillAssetProperties = @{ subscription = $SubscriptionId; region = $location; resourceGroup = $resourceGroupName }
     recoveryPlanProperties = @{ recoveryPlanId = $planId; identity = @{ type = 'SystemAssigned' } }
     chaosResourceProperties = @{
         identity = @{ type = 'SystemAssigned' }
         chaosResourceIdentityForFaults = @{ type = 'SystemAssigned' }
     }
     monitoringProperties = @{ identity = @{ type = 'SystemAssigned' } }
+    goalAssignmentProperties = @{ identity = @{ type = 'SystemAssigned' } }
+    healthModelMonitoringProperties = @{ identity = @{ type = 'SystemAssigned' }; healthModelId = $healthModelId }
 }
-if (!$ActionsOnly) {
-    $healthApi = '2026-05-01-preview'
-    Invoke-FixtureArm -Method PUT -Path "$healthModelId/authenticationsettings/default-auth?api-version=$healthApi" -Body @{
-        properties = @{
-            displayName = 'Fixture managed identity'
-            authenticationKind = 'ManagedIdentity'
-            managedIdentityName = 'SystemAssigned'
-        }
-    } | Out-Null
-    $healthModelName = $healthModelId.Split('/')[-1]
-    Invoke-FixtureArm -Method PUT -Path "$healthModelId/discoveryrules/$healthModelName`?api-version=$healthApi" -Body @{
-        properties = @{
-            displayName = 'Dedicated fixture service group'
-            authenticationSetting = 'default-auth'
-            discoverRelationships = 'Enabled'
-            addRecommendedSignals = 'Enabled'
-            addResourceHealthSignal = 'Enabled'
-            specification = @{
-                kind = 'ResourceGraphQuery'
-                resourceGraphQuery = "relationshipresources | where type =~ 'microsoft.relationships/servicegroupmember' | where tostring(properties.TargetId) =~ '$serviceGroupId' | project id=tostring(properties.SourceId)"
-            }
-        }
-    } | Out-Null
-    $drillProperties.goalAssignmentProperties = @{ identity = @{ type = 'SystemAssigned' } }
-    $drillProperties.healthModelMonitoringProperties = @{ identity = @{ type = 'SystemAssigned' }; healthModelId = $healthModelId }
-}
-
 $drill = New-FixtureResource -Path "$drillId`?api-version=$apiVersion" -Body @{
     identity = @{ type = 'SystemAssigned' }
     properties = $drillProperties
 }
-if ($drill.properties.executionState -ne 'NotRunning') {
-    throw 'An existing drill is running. Resolve its lifecycle before reconfiguring this fixture.'
-}
 Add-FixtureRole -Scope $serviceGroupId -PrincipalId $drill.identity.principalId -RoleId '517781b0-5ad4-4418-94d5-f2421834b586'
-Add-FixtureRole -Scope "/subscriptions/$subscriptionId" -PrincipalId $drill.identity.principalId -RoleId '344b740c-5e7c-4d32-89b2-ee3b51cb89bc'
+Add-FixtureRole -Scope "/subscriptions/$SubscriptionId" -PrincipalId $drill.identity.principalId -RoleId '344b740c-5e7c-4d32-89b2-ee3b51cb89bc'
 Start-Sleep -Seconds 60
 $response = Invoke-FixtureArm -Method PUT -Path "$drillId`?api-version=$apiVersion" -Body @{
     identity = @{ type = 'SystemAssigned' }
@@ -423,17 +471,6 @@ $response = Invoke-FixtureArm -Method PUT -Path "$drillId`?api-version=$apiVersi
 }
 Wait-FixtureOperation -Response $response -Path $drillId
 $drill = Wait-FixtureResource -Path "$drillId`?api-version=$apiVersion"
-if ($ActionsOnly) {
-    $zones = @($target.properties.resourcePhysicalZones)
-    if ($zones.Count -ne 1) { throw 'Expected exactly one physical source zone for the dedicated VM.' }
-    $settingsOutputs['DRILLRUNSOURCELOCATION'] = $zones[0]
-    $settingsOutputs['RECOVERYRESOURCEID'] = $target.id
-    New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-    Write-Information 'Action fixture configured without GA monitoring configuration. Record resource add/update and resync before starting a run.'
-    Write-Information 'Set DRILLRESOURCEID from the dedicated VM drill-resource discovery result before recording resource add/update; VMID is not interchangeable.'
-    Write-Information 'No drill has been started and no fault injected.'
-    return
-}
 if ($drill.properties.goalAssignmentProperties.identity.type -ne 'SystemAssigned' -or
     $drill.properties.healthModelMonitoringProperties.healthModelId -ne $healthModelId) {
     throw 'The GA drill response did not preserve the requested goal/Health Model configuration. Resolve the service response-contract mismatch before lifecycle testing.'
@@ -448,7 +485,8 @@ do {
     Start-Sleep -Seconds 15
 } while ([DateTime]::UtcNow -lt $deadline)
 if (@($drillTarget).Count -ne 1) { throw 'Expected exactly one drill resource for the dedicated test VM.' }
-Invoke-FixtureAction -Path "$drillId/addOrUpdateResources?api-version=$apiVersion" -Body @{
+
+$addOrUpdateBody = @{
     faultDurationInMin = 1
     forceInclusionAndUpdate = 'Disable'
     resourceLists = @{
@@ -457,6 +495,16 @@ Invoke-FixtureAction -Path "$drillId/addOrUpdateResources?api-version=$apiVersio
         updateResources = @()
     }
 }
+try {
+    Invoke-FixtureAction -Path "$drillId/addOrUpdateResources?api-version=$apiVersion" -Body $addOrUpdateBody
+}
+catch {
+    if (!$_.Exception.Message.Contains('RHDSChaosResourceValidationFailed')) { throw }
+    # The service asks for its supported fixup when the first Chaos scenario configuration fails.
+    Write-Warning 'Chaos scenario configuration failed; running the supported resync fixup and retrying once.'
+    Invoke-FixtureAction -Path "$drillId/resyncReadinessCheck?api-version=$apiVersion"
+    Invoke-FixtureAction -Path "$drillId/addOrUpdateResources?api-version=$apiVersion" -Body $addOrUpdateBody
+}
 $drillTarget = Get-FixtureResource -Path "$($drillTarget.id)?api-version=$apiVersion"
 if ($drillTarget.properties.inclusionState -ne 'Included') {
     throw "The dedicated VM was not included: $(ConvertTo-Json $drillTarget.properties -Depth 15 -Compress)"
@@ -464,17 +512,65 @@ if ($drillTarget.properties.inclusionState -ne 'Included') {
 $sourceLocation = @($target.properties.resourcePhysicalZones)
 if ($sourceLocation.Count -ne 1) { throw 'Expected exactly one physical source zone for the dedicated VM.' }
 
-$settingsOutputs['DRILLRESOURCENAME'] = $drillTarget.name
-$settingsOutputs['DRILLRESOURCEID'] = $drillTarget.id
-$settingsOutputs['DRILLRUNSOURCELOCATION'] = $sourceLocation[0]
-$settingsOutputs['RECOVERYRESOURCEID'] = $target.id
-$settingsOutputs['GOALASSIGNMENTNAME'] = 'ga-fixture'
+# 5) A completed drill run for the read-only drill-run tests. Drill-run resources exist only after
+#    failover, so the run completes a full manual failover and reprotect cycle on the dedicated VM
+#    and leaves the drill NotRunning for the destructive lifecycle tests.
+$runsPath = "$drillId/drillRuns?api-version=$apiVersion"
+$existingRunIds = @((Get-FixtureResource -Path $runsPath).value | ForEach-Object { $_.id })
+Invoke-FixtureAction -Path "$drillId/start?api-version=$apiVersion" -Body @{ mode = 'Failover' }
+$deadline = [DateTime]::UtcNow.AddMinutes(15)
+do {
+    $drillRun = (Get-FixtureResource -Path $runsPath).value | Where-Object { $_.id -notin $existingRunIds } | Select-Object -First 1
+    if ($drillRun) { break }
+    Start-Sleep -Seconds 15
+} while ([DateTime]::UtcNow -lt $deadline)
+if (!$drillRun) { throw "No drill run appeared after starting drill $drillName." }
+$runId = "$drillId/drillRuns/$($drillRun.name)"
 
-Write-Information 'Primary drill resources configured. No drill has been started and no fault injected.'
-Write-Information "Target VM: $vmId"
+Invoke-DrillRunVerb -Path "$runId/failOver?api-version=$apiVersion" -Body @{
+    autoFailover = 'Disable'
+    failoverProperties = @{
+        failoverDirection = 'FromSpecificLocations'
+        failoverRequestProperties = @{ sourceLocations = @($sourceLocation[0]) }
+    }
+}
+Wait-DrillRunVerb -RunId $runId -Stage 'FaultInjection' -Verbs 'MarkAsComplete'
+Invoke-DrillRunVerb -Path "$runId/markAsComplete?api-version=$apiVersion" -Body @{ drillRunStage = 'FaultInjection' }
+Wait-DrillRunVerb -RunId $runId -Stage 'Failover' -Verbs 'Start'
+Invoke-DrillRunVerb -Path "$runId/resume?api-version=$apiVersion"
+Wait-DrillRunVerb -RunId $runId -Stage 'Failover' -Verbs 'MarkAsComplete'
+Invoke-DrillRunVerb -Path "$runId/markAsComplete?api-version=$apiVersion" -Body @{ drillRunStage = 'Failover' }
+Wait-DrillRunVerb -RunId $runId -Stage 'Reprotect' -Verbs 'Start', 'Retry'
+# The service accepts a reprotect without a body but never processes it.
+Invoke-DrillRunVerb -Path "$runId/reprotect?api-version=$apiVersion" -Body @{ reprotectProperties = @{} }
+Wait-DrillRunVerb -RunId $runId -Stage 'Reprotect' -Verbs 'MarkAsComplete'
+$drillRunTarget = (Get-FixtureResource -Path "$runId/drillRunResources?api-version=$apiVersion").value | Select-Object -First 1
+if (!$drillRunTarget) { throw "No drill run resource appeared for drill run $($drillRun.name)." }
+Invoke-DrillRunVerb -Path "$runId/markAsComplete?api-version=$apiVersion" -Body @{ drillRunStage = 'Reprotect' }
 
-New-FixtureResource -Path "$goalId`?api-version=$apiVersion" -Body @{
-    properties = @{ requireZonalResiliency = $true }
-} | Out-Null
-New-TestSettings -ResourceGroupName $ResourceGroupName -BaseName 'mcp-drills-ga' -DeploymentOutputs $settingsOutputs -OutputPath $PSScriptRoot | Out-Null
-Write-Information 'GA goal assignment fixture is ready.'
+$endBody = @{ attestation = 'Success'; attestationNotes = 'Azure MCP live-test fixture run.' }
+for ($attempt = 1; ; $attempt++) {
+    try {
+        Invoke-FixtureAction -Path "$drillId/end?api-version=$apiVersion" -Body $endBody
+        break
+    }
+    catch {
+        # End conflicts while the start operation is still settling.
+        if ($attempt -ge 20 -or !$_.Exception.Message.Contains('(409)')) { throw }
+        Start-Sleep -Seconds 15
+    }
+}
+$deadline = [DateTime]::UtcNow.AddMinutes(15)
+do {
+    $drill = Get-FixtureResource -Path "$drillId`?api-version=$apiVersion"
+    if ($drill.properties.executionState -eq 'NotRunning') { break }
+    Start-Sleep -Seconds 15
+} while ([DateTime]::UtcNow -lt $deadline)
+if ($drill.properties.executionState -ne 'NotRunning') { throw "Drill $drillName did not return to NotRunning after the fixture run." }
+
+$DeploymentOutputs['DRILLSDRILLRESOURCEID'] = $drillTarget.id
+$DeploymentOutputs['DRILLSSOURCELOCATION'] = $sourceLocation[0]
+$DeploymentOutputs['DRILLSRECOVERYRESOURCEID'] = $target.id
+$DeploymentOutputs['DRILLSDRILLRUNNAME'] = $drillRun.name
+$DeploymentOutputs['DRILLSDRILLRUNRESOURCENAME'] = $drillRunTarget.name
+Write-Host "Drills fixture ready (service group: $serviceGroupName, drill: $drillName, completed run: $($drillRun.name))."

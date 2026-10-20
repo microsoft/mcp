@@ -2,15 +2,19 @@
 // Licensed under the MIT License.
 // cspell:ignore mcpfixture
 
+// Deployed by test-resources.bicep into the dedicated drills resource group created by
+// test-resources-pre.ps1. Keeping these resources out of the main group stops the general
+// service group from discovering the fault-injection VM.
 targetScope = 'resourceGroup'
 
 param baseName string
-param sshPublicKey string
 param adminUsername string = 'mcpfixture'
+@secure()
+param adminPassword string = 'P${newGuid()}!'
 param location string = resourceGroup().location
 param healthModelLocation string = 'centralus'
-param deploySliWorkspace bool = true
-param vmSize string = 'Standard_B1s'
+param deploySliWorkspace bool = false
+param vmSize string = 'Standard_D2s_v5'
 param drillName string = ''
 
 var suffix = uniqueString(resourceGroup().id, baseName)
@@ -90,16 +94,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     osProfile: {
       computerName: 'drill-fixture'
       adminUsername: adminUsername
+      adminPassword: adminPassword
       linuxConfiguration: {
-        disablePasswordAuthentication: true
-        ssh: {
-          publicKeys: [
-            {
-              path: '/home/${adminUsername}/.ssh/authorized_keys'
-              keyData: sshPublicKey
-            }
-          ]
-        }
+        disablePasswordAuthentication: false
       }
     }
     networkProfile: {
@@ -190,7 +187,6 @@ output serviceGroupName string = 'sgd-${suffix}'
 output lifecycleServiceGroupName string = 'sgl-${suffix}'
 output recoveryPlanName string = 'rp-${suffix}'
 output drillName string = effectiveDrillName
-output deleteDrillName string = 'dd-${suffix}'
 output vmId string = vm.id
 output automationAccountId string = automation.id
 output healthModelId string = healthModel.id

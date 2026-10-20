@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore DELETEASSETRESOURCEGROUPNAME DRILLRESOURCEID HEALTHMODELID LIFECYCLEENROLLMENTNAME LIFECYCLESERVICEGROUPNAME CREATIONSERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME RECOVERYRESOURCEID slis WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID
+// cspell:ignore DELETEASSETRESOURCEGROUPNAME DRILLRESOURCEID HEALTHMODELID LIFECYCLEENROLLMENTNAME LIFECYCLESERVICEGROUPNAME CREATIONSERVICEGROUPNAME PLANLIFECYCLESERVICEGROUPNAME RECOVERYRESOURCEID slis WORKFLOWSERVICEGROUPNAME WORKFLOWRECOVERYPLANNAME WORKFLOWRECOVERYRESOURCEID DRILLSDELETEASSETRESOURCEGROUPNAME DRILLSDRILLNAME DRILLSDRILLRESOURCEID DRILLSDRILLRUNNAME DRILLSDRILLRUNRESOURCENAME DRILLSHEALTHMODELID DRILLSLIFECYCLESERVICEGROUPNAME DRILLSRECOVERYRESOURCEID DRILLSSERVICEGROUPNAME DRILLSSOURCELOCATION
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -87,8 +87,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_list_drills()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_get",
@@ -107,8 +107,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_update_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_update",
@@ -130,8 +130,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_create_drill()
     {
-        var resourceGroup = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DELETEASSETRESOURCEGROUPNAME");
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var resourceGroup = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DRILLSDELETEASSETRESOURCEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("recoveryPlanName", $"mcp-plan-{Guid.NewGuid().ToString("N")[..8]}");
         var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-drill-{Guid.NewGuid().ToString("N")[..8]}");
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
@@ -205,8 +205,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_create_drill_without_recovery_plan()
     {
-        var resourceGroup = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DELETEASSETRESOURCEGROUPNAME");
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var resourceGroup = RegisterOrRetrieveDeploymentOutputVariable("resourceGroupName", "DRILLSDELETEASSETRESOURCEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSLIFECYCLESERVICEGROUPNAME");
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
         var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-drill-{Guid.NewGuid().ToString("N")[..8]}");
         Exception? failure = null;
@@ -261,8 +261,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_get_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
         var result = await CallToolAsync("resiliency_drill_get", new()
         {
             { "tenant", Settings.TenantId },
@@ -277,9 +277,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_update_and_clear_drill_health_monitoring()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var healthModelId = RegisterOrRetrieveDeploymentOutputVariable("healthModelId", "HEALTHMODELID");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var healthModelId = RegisterOrRetrieveDeploymentOutputVariable("healthModelId", "DRILLSHEALTHMODELID");
         var getParameters = new Dictionary<string, object?>
         {
             { "tenant", Settings.TenantId },
@@ -385,11 +385,11 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_delete_drill()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "LIFECYCLESERVICEGROUPNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSLIFECYCLESERVICEGROUPNAME");
         var drillName = RegisterOrRetrieveVariable("drillName", $"mcp-delete-{Guid.NewGuid().ToString("N")[..8]}");
         var assetGroup = TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Playback ||
             Settings.DeploymentOutputs.ContainsKey("DELETEASSETRESOURCEGROUPNAME")
-            ? RegisterOrRetrieveDeploymentOutputVariable("deleteAssetGroup", "DELETEASSETRESOURCEGROUPNAME")
+            ? RegisterOrRetrieveDeploymentOutputVariable("deleteAssetGroup", "DRILLSDELETEASSETRESOURCEGROUPNAME")
             : RegisterOrRetrieveVariable("deleteAssetGroup", Settings.ResourceGroupName);
         var location = RegisterOrRetrieveDeploymentOutputVariable("location", "LOCATION");
         var created = await CallToolAsync("resiliency_drill_create", new()
@@ -427,8 +427,8 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_check_drill_resync_readiness()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
         await ResyncDrillAndWaitAsync(serviceGroup, drillName);
     }
 
@@ -486,9 +486,9 @@ public class ResilienceManagementCommandTests(
 
     private async Task ValidateDrillForExecutionAsync(string? operation, bool selectSource)
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("sourceLocation", "DRILLRUNSOURCELOCATION");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("sourceLocation", "DRILLSSOURCELOCATION");
 
         var parameters = new Dictionary<string, object?>
             {
@@ -513,9 +513,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_list_drill_resources()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLRESOURCEID");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLSDRILLRESOURCEID");
 
         var result = await CallToolAsync(
             "resiliency_drill_resource_get",
@@ -534,9 +534,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_get_drill_resource()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLRESOURCEID");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLSDRILLRESOURCEID");
         var drillResourceName = new ResourceIdentifier(drillResourceId).Name;
 
         var result = await CallToolAsync(
@@ -558,8 +558,8 @@ public class ResilienceManagementCommandTests(
     [InlineData("Failover")]
     public async Task Should_start_and_end_drill(string mode)
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
         await WithDrillRunAsync(serviceGroup, drillName, run =>
         {
             Assert.True(Guid.TryParse(run, out _));
@@ -718,9 +718,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_list_drill_runs()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLSDRILLRUNNAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_run_get",
@@ -741,9 +741,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_get_drill_run()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLSDRILLRUNNAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_run_get",
@@ -763,8 +763,8 @@ public class ResilienceManagementCommandTests(
     public async Task Should_add_notes_to_drill_run()
     {
         const string note = "Recorded MCP add-notes validation.";
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
         await WithDrillRunAsync(serviceGroup, drill, async drillRun =>
         {
             var result = await CallToolAsync(
@@ -803,11 +803,11 @@ public class ResilienceManagementCommandTests(
 
     private async Task RunDrillFailoverLifecycleAsync(bool selectResources, bool autoFailover, bool completeReprotection = true)
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLRUNSOURCELOCATION");
-        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("recoveryResourceId", "RECOVERYRESOURCEID");
-        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLRESOURCEID");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var sourceLocation = RegisterOrRetrieveDeploymentOutputVariable("drillRunSourceLocation", "DRILLSSOURCELOCATION");
+        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("recoveryResourceId", "DRILLSRECOVERYRESOURCEID");
+        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLSDRILLRESOURCEID");
         await WithDrillRunAsync(serviceGroup, drill, async drillRun =>
         {
             var failoverParameters = new Dictionary<string, object?>
@@ -1071,10 +1071,10 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_list_drill_run_resources()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
-        var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLRUNRESOURCENAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLSDRILLRUNNAME");
+        var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLSDRILLRUNRESOURCENAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_run_resource_get",
@@ -1096,10 +1096,10 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_get_drill_run_resource()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLRUNNAME");
-        var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLRUNRESOURCENAME");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drill = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillRun = RegisterOrRetrieveDeploymentOutputVariable("drillRunName", "DRILLSDRILLRUNNAME");
+        var drillRunResource = RegisterOrRetrieveDeploymentOutputVariable("drillRunResourceName", "DRILLSDRILLRUNRESOURCENAME");
 
         var result = await CallToolAsync(
             "resiliency_drill_run_resource_get",
@@ -1552,9 +1552,9 @@ public class ResilienceManagementCommandTests(
     [Fact]
     public async Task Should_add_or_update_drill_resources()
     {
-        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "SERVICEGROUPNAME");
-        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLNAME");
-        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLRESOURCEID");
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var drillName = RegisterOrRetrieveDeploymentOutputVariable("drillName", "DRILLSDRILLNAME");
+        var drillResourceId = RegisterOrRetrieveDeploymentOutputVariable("drillResourceId", "DRILLSDRILLRESOURCEID");
 
         var includePayload = new JsonArray
         {

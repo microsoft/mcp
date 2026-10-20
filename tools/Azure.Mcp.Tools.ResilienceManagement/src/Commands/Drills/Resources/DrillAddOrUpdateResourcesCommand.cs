@@ -122,7 +122,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
             using JsonDocument exclude = JsonDocument.Parse(options.ExcludeResources ?? "[]");
             ValidateIncludeOrUpdate(include.RootElement, "--include-resources", options);
             ValidateIncludeOrUpdate(update.RootElement, "--update-resources", options);
-            ValidateExclude(exclude.RootElement);
+            ValidateExclude(exclude.RootElement, options);
 
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream))
@@ -175,26 +175,14 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 throw new ArgumentException($"Each resource in {optionName} must be an object with a non-empty \"id\" string.");
             }
 
-            bool validId;
-            try
-            {
-                var id = new ResourceIdentifier(idElement.GetString()!);
-                var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(options.ServiceGroup, options.Drill);
-                validId = id.ResourceType == DrillTargetResource.ResourceType &&
-                    string.Equals(id.Parent?.ToString(), drillId.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-            catch (Exception ex) when (ex is ArgumentException or FormatException)
-            {
-                throw new ArgumentException($"{optionName} requires full drill-resource IDs, not underlying Azure resource IDs.", ex);
-            }
-            if (!validId)
+            if (!DrillActionValidation.IsDrillResourceId(idElement.GetString()!, options.ServiceGroup, options.Drill))
             {
                 throw new ArgumentException($"{optionName} requires full drill-resource IDs under the requested service group and drill, not underlying Azure resource IDs.");
             }
         }
     }
 
-    private static void ValidateExclude(JsonElement resources)
+    private static void ValidateExclude(JsonElement resources, DrillAddOrUpdateResourcesOptions options)
     {
         if (resources.ValueKind != JsonValueKind.Array)
         {
@@ -203,9 +191,10 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
 
         foreach (JsonElement resource in resources.EnumerateArray())
         {
-            if (resource.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(resource.GetString()))
+            if (resource.ValueKind != JsonValueKind.String ||
+                !DrillActionValidation.IsDrillResourceId(resource.GetString()!, options.ServiceGroup, options.Drill))
             {
-                throw new ArgumentException("Each value in --exclude-resources must be a non-empty Azure resource ID string.");
+                throw new ArgumentException("--exclude-resources requires full drill-resource ID strings under the requested service group and drill, not underlying Azure resource IDs.");
             }
         }
     }

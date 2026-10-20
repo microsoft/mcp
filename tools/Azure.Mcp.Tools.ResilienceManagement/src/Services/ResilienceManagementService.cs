@@ -69,10 +69,10 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         var mappedProperties = props is null
             ? null
             : new GoalAssignmentInfoProperties(
-                GoalAssignmentType: GetOptionalString(rawProperties, "goalAssignmentType"),
-                GoalTemplateId: GetOptionalString(rawProperties, "goalTemplateId"),
                 ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty,
-                RequireZonalResiliency: GetOptionalBoolean(rawProperties, "requireZonalResiliency"));
+                RequireZonalResiliency: GetOptionalBoolean(rawProperties, "requireZonalResiliency"),
+                ServiceLevelResources: GetOptionalRawValue(rawProperties, "serviceLevelResources", JsonValueKind.Array),
+                ErrorDetails: GetOptionalRawValue(rawProperties, "errorDetails", JsonValueKind.Object));
 
         var mappedSystemData = systemData is null
             ? null
@@ -287,29 +287,13 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         var systemData = data.SystemData;
         using JsonDocument document = JsonDocument.Parse(responseContent);
         JsonElement rawProperties = GetOptionalObject(document.RootElement, "properties");
-        JsonElement zonalResiliency = GetOptionalObject(rawProperties, "zonalResiliency");
 
         var mappedProperties = props is null
             ? null
             : new GoalResourceInfoProperties(
-                DisasterRecoveryAttestationStatus: GetOptionalString(rawProperties, "disasterRecoveryAttestationStatus"),
-                DisasterRecoveryGoalParticipation: GetOptionalString(rawProperties, "disasterRecoveryGoalParticipation"),
-                ExclusionReasonForDisasterRecoveryGoals: GetOptionalString(rawProperties, "exclusionReasonForDisasterRecoveryGoals"),
-                ExclusionReasonForHighAvailabilityGoals: GetOptionalString(rawProperties, "exclusionReasonForHighAvailabilityGoals"),
-                HighAvailabilityAttestationStatus: GetOptionalString(rawProperties, "highAvailabilityAttestationStatus"),
-                HighAvailabilityGoalParticipation: GetOptionalString(rawProperties, "highAvailabilityGoalParticipation"),
                 ProvisioningState: props.ProvisioningState?.ToString() ?? string.Empty,
                 ResourceArmId: props.ResourceArmId?.ToString() ?? string.Empty,
-                ServiceGroupMemberships: rawProperties.ValueKind == JsonValueKind.Object &&
-                    rawProperties.TryGetProperty("serviceGroupMemberships", out JsonElement memberships) &&
-                    memberships.ValueKind == JsonValueKind.Array && memberships.GetArrayLength() > 0
-                    ? memberships.EnumerateArray()
-                        .Select(m => new GoalResourceServiceGroupMembership(
-                            MembershipType: GetOptionalString(m, "membershipType") ?? string.Empty,
-                            ServiceGroupId: GetOptionalString(m, "serviceGroupId") ?? string.Empty))
-                        .ToList()
-                    : null,
-                ZonalResiliency: zonalResiliency.ValueKind == JsonValueKind.Object ? zonalResiliency.Clone() : null);
+                ZonalResiliency: GetOptionalRawValue(rawProperties, "zonalResiliency", JsonValueKind.Object));
 
         var mappedSystemData = systemData is null
             ? null
@@ -687,6 +671,14 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         property.ValueKind == JsonValueKind.Object
             ? property
             : default;
+
+    // Clones so the value outlives the parsed response document.
+    private static JsonElement? GetOptionalRawValue(JsonElement element, string propertyName, JsonValueKind kind) =>
+        element.ValueKind == JsonValueKind.Object &&
+        element.TryGetProperty(propertyName, out JsonElement property) &&
+        property.ValueKind == kind
+            ? property.Clone()
+            : null;
 
     private static string? GetOptionalString(JsonElement element, string propertyName) =>
         element.ValueKind == JsonValueKind.Object &&

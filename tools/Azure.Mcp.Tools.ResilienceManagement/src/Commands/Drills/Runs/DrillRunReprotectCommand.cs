@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "a331e69f-4669-40de-97ad-10a1cebe4b54",
     Name = "reprotect",
     Title = "Reprotect a Resilience Drill Run",
-    Description = "Initiates reprotection for failed-over resources in a resilience drill run. Optionally select recovery-resource ARM IDs in the same service group; omit the selection to reprotect all qualified resources without a request body.",
+    Description = "Initiates reprotection for failed-over resources in a resilience drill run. Optionally select recovery-resource ARM IDs in the same service group; omit the selection to reprotect all qualified resources.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,

@@ -26,7 +26,7 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 
 These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
 
-With API `2026-10-01`, assignment details include `requireZonalResiliency` and member details include `zonalResiliency`. Preview-only goal fields are nullable when the service does not return them. Do not infer legacy HA/DR participation or attestation from zonal resiliency.
+With API `2026-10-01`, assignment details include `requireZonalResiliency`, `serviceLevelResources`, and `errorDetails`, and member details include `resourceArmId` and `zonalResiliency`. Preview-only HA/DR goal fields are not returned. Do not infer HA/DR participation or attestation from zonal resiliency.
 
 ## Drills
 
@@ -43,13 +43,13 @@ Drills tools use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and API `202
 | `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` | Resync drill configuration and start a readiness check | **`service-group`**, **`drill`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` | Validate drill execution with an optional operation selector | **`service-group`**, **`drill`**, `source-locations`, `operation-name?` (`Failover`, `Reprotect`, `FailoverReverse`, `ReprotectReverse`), `tenant?`. Sources may be omitted only for explicit `Reprotect`; default validation also requires sources. |
 | `mcp_azure_mcp_ser_resiliency_drill_resource_get` | List drill targets or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one payload; include/update IDs must identify drill resources under the requested drill, not underlying VMs. |
+| `mcp_azure_mcp_ser_resiliency_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one payload; include, update, and exclude IDs must identify drill resources under the requested drill, not underlying VMs. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_add-notes` | Add notes to an existing drill run | **`service-group`**, **`drill`**, **`drill-run`**, **`notes`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_failover` | Start failover for qualified drill-run resources | **`service-group`**, **`drill`**, **`drill-run`**, **`source-locations`**, `selected-resource-ids?` (full drill-resource IDs under this service group and drill), `auto-failover?` (default `false`), `tenant?`. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resume` | Resume the drill run when its current stage permits it | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Start reprotection after failover when the run permits it | **`service-group`**, **`drill`**, **`drill-run`**, `selected-resource-ids?`, `tenant?`. Omit selected IDs to process all qualified resources without a request body. |
+| `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Start reprotection after failover when the run permits it | **`service-group`**, **`drill`**, **`drill-run`**, `selected-resource-ids?`, `tenant?`. Omit selected IDs to process all qualified resources. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
 The three configuration options accept JSON strings; see [payloads](./payloads.md#drill-ga-configuration). On create, each supplied configuration requires identity, and monitoring requires its selection. Update accepts partial objects and preserves omitted fields. Pass the string `"null"` as the Health Model or SLI option value to clear that configuration. A supplied SLI array replaces the selection; empty arrays are invalid. `goalAssignmentId` is read-only.

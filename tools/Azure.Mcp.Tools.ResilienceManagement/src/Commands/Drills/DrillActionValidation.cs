@@ -23,6 +23,9 @@ internal static class DrillActionValidation
         }
     }
 
+    public static bool IsDrillResourceId(string resourceId, string serviceGroup, string drill)
+        => !string.IsNullOrWhiteSpace(resourceId) && IsSelectedResourceId(resourceId, serviceGroup, drill);
+
     private static bool IsSelectedResourceId(string resourceId, string serviceGroup, string? drill)
     {
         try

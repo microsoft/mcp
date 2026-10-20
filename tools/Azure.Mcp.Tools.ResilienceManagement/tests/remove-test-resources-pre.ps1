@@ -183,34 +183,41 @@ function Remove-PrincipalRoleAssignment {
     }
 }
 
-$isolatedDeleteAssetResourceGroupName = Get-OptionalOutputValue -Name 'deleteAssetResourceGroupName'
-$isolatedVmId = Get-OptionalOutputValue -Name 'vmId'
-if (![string]::IsNullOrWhiteSpace($isolatedDeleteAssetResourceGroupName) -and
-    ![string]::IsNullOrWhiteSpace($isolatedVmId)) {
-    $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
-    $lifecycleServiceGroupName = Get-OutputValue -Name 'lifecycleServiceGroupName'
-    $usagePlanName = Get-OutputValue -Name 'usagePlanName'
-    $drillName = Get-OutputValue -Name 'drillName'
+function Remove-DrillsFixture {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+
+    $drillsResourceGroupName = Get-OptionalOutputValue -Name 'drillsResourceGroupName'
+    if ([string]::IsNullOrWhiteSpace($drillsResourceGroupName) -or
+        !$PSCmdlet.ShouldProcess($drillsResourceGroupName, 'Delete drills fixture resources')) {
+        return
+    }
+
+    $serviceGroupName = Get-OutputValue -Name 'drillsServiceGroupName'
+    $lifecycleServiceGroupName = Get-OutputValue -Name 'drillsLifecycleServiceGroupName'
+    $usagePlanId = Get-OutputValue -Name 'drillsUsagePlanId'
+    $drillName = Get-OutputValue -Name 'drillsDrillName'
+    $deleteAssetResourceGroupName = Get-OutputValue -Name 'drillsDeleteAssetResourceGroupName'
+    $requiredOutputs = @{
+        drillsServiceGroupName             = $serviceGroupName
+        drillsLifecycleServiceGroupName    = $lifecycleServiceGroupName
+        drillsUsagePlanId                  = $usagePlanId
+        drillsDrillName                    = $drillName
+        drillsDeleteAssetResourceGroupName = $deleteAssetResourceGroupName
+    }
+    foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
+        if ([string]::IsNullOrWhiteSpace($requiredOutput.Value)) {
+            throw "Deployment output '$($requiredOutput.Key)' is required for safe drills fixture teardown."
+        }
+    }
+
     $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupName"
     $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
     $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
     $lifecycleResilienceBase = "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement"
-    $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
-    $deleteAssetResourceGroupId = "/subscriptions/$subscriptionId/resourceGroups/$isolatedDeleteAssetResourceGroupName"
+    $drillsResourceGroupId = "/subscriptions/$subscriptionId/resourceGroups/$drillsResourceGroupName"
+    $deleteAssetResourceGroupId = "/subscriptions/$subscriptionId/resourceGroups/$deleteAssetResourceGroupName"
     $drillId = "$resilienceBase/drills/$drillName"
-
-    $requiredOutputs = @{
-        serviceGroupName             = $serviceGroupName
-        lifecycleServiceGroupName    = $lifecycleServiceGroupName
-        usagePlanName                = $usagePlanName
-        drillName                    = $drillName
-        deleteAssetResourceGroupName = $isolatedDeleteAssetResourceGroupName
-    }
-    foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
-        if ([string]::IsNullOrWhiteSpace($requiredOutput.Value)) {
-            throw "Deployment output '$($requiredOutput.Key)' is required for safe isolated Drills teardown."
-        }
-    }
 
     $drillResponse = Invoke-ManagementRestMethod -Method GET -Path "$drillId`?api-version=$resilienceApiVersion"
     if ($drillResponse.StatusCode -eq 200) {
@@ -226,15 +233,34 @@ if (![string]::IsNullOrWhiteSpace($isolatedDeleteAssetResourceGroupName) -and
     Remove-ResourceCollection -CollectionId "$lifecycleResilienceBase/drills" -ApiVersion $resilienceApiVersion -Confirm:$false
     Remove-RecoveryPlanCollection -ServiceGroupId $serviceGroupId -Confirm:$false
     Remove-RecoveryPlanCollection -ServiceGroupId $lifecycleServiceGroupId -Confirm:$false
-    Remove-ResourceCollection -CollectionId "$resilienceBase/goalAssignments" -ApiVersion $resilienceApiVersion -Confirm:$false
     Remove-Resource -ResourceId "$usagePlanId/enrollments/$serviceGroupName" -ApiVersion $resilienceApiVersion
     Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleServiceGroupName" -ApiVersion $resilienceApiVersion
-    Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/drills-ga" -ApiVersion $membershipApiVersion
+    Remove-Resource -ResourceId "$drillsResourceGroupId/providers/Microsoft.Relationships/serviceGroupMember/drills-ga" -ApiVersion $membershipApiVersion
     Remove-Resource -ResourceId "$deleteAssetResourceGroupId/providers/Microsoft.Relationships/serviceGroupMember/delete-fixture" -ApiVersion $membershipApiVersion
     Remove-Resource -ResourceId $lifecycleServiceGroupId -ApiVersion $serviceGroupApiVersion
     Remove-Resource -ResourceId $serviceGroupId -ApiVersion $serviceGroupApiVersion
-    Remove-Resource -ResourceId $deleteAssetResourceGroupId -ApiVersion '2024-03-01'
-    return
+}
+
+# Drills teardown can be blocked by service-side drill state; still remove the general fixture and
+# start deleting the dedicated drills resource groups so billable resources do not leak.
+try {
+    Remove-DrillsFixture -Confirm:$false
+}
+catch {
+    Write-Warning "Drills fixture teardown did not complete: $($_.Exception.Message)"
+}
+$drillsResourceGroupName = Get-OptionalOutputValue -Name 'drillsResourceGroupName'
+$drillsDeleteAssetResourceGroupName = Get-OptionalOutputValue -Name 'drillsDeleteAssetResourceGroupName'
+foreach ($groupName in @($drillsDeleteAssetResourceGroupName, $drillsResourceGroupName)) {
+    if ([string]::IsNullOrWhiteSpace($groupName)) {
+        continue
+    }
+    $path = "/subscriptions/$subscriptionId/resourceGroups/$groupName`?api-version=2024-03-01"
+    Write-Information "DELETE $path"
+    $response = Invoke-ManagementRestMethod -Method DELETE -Path $path
+    if ($response.StatusCode -notin @(200, 202, 204, 404)) {
+        Write-Warning "DELETE $path failed with status $($response.StatusCode): $($response.Content)"
+    }
 }
 
 $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
@@ -247,7 +273,6 @@ $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
 $planLifecycleEnrollmentName = Get-OutputValue -Name 'planLifecycleEnrollmentName'
 $workflowEnrollmentName = Get-OutputValue -Name 'workflowEnrollmentName'
 $goalAssignmentName = Get-OutputValue -Name 'goalAssignmentName'
-$drillName = Get-OutputValue -Name 'drillName'
 
 $requiredOutputs = @{
     serviceGroupName          = $serviceGroupName
@@ -256,7 +281,6 @@ $requiredOutputs = @{
     enrollmentName            = $enrollmentName
     lifecycleEnrollmentName   = $lifecycleEnrollmentName
     goalAssignmentName        = $goalAssignmentName
-    drillName                 = $drillName
 }
 
 foreach ($requiredOutput in $requiredOutputs.GetEnumerator()) {
@@ -272,7 +296,9 @@ $workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workfl
 $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
-Remove-Resource -ResourceId "$resilienceBase/drills/$drillName" -ApiVersion $resilienceApiVersion
+# Deployments created before drills moved to the dedicated fixture may still hold general drills.
+Remove-ResourceCollection -CollectionId "$resilienceBase/drills" -ApiVersion $resilienceApiVersion -Confirm:$false
+Remove-ResourceCollection -CollectionId "$lifecycleServiceGroupId/providers/Microsoft.AzureResilienceManagement/drills" -ApiVersion $resilienceApiVersion -Confirm:$false
 Remove-RecoveryPlanCollection -ServiceGroupId $serviceGroupId -Confirm:$false
 Remove-RecoveryPlanCollection -ServiceGroupId $lifecycleServiceGroupId -Confirm:$false
 if (![string]::IsNullOrWhiteSpace($planLifecycleServiceGroupName)) {
