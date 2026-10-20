@@ -3890,6 +3890,76 @@ azmcp monitor webtests get --subscription <subscription> \
 
 ```
 
+#### Traces
+
+> [!NOTE]
+> Azure Monitor Trace Store is in **private preview**. These commands only work against an Azure
+> Monitor Workspace that has been onboarded to Trace Store — `monitor traces account list` lists
+> only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
+> endpoint. Reach out to the Azure Monitor team for the onboarding guide.
+> These commands support Azure public cloud only; Azure China and Azure US Government are not supported.
+
+Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
+truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
+The field, query, and cancel commands require
+`--resource-group` and `--workspace` (the Azure Monitor Workspace resource name). Names are scoped
+to a resource group; these commands look up that workspace directly rather than searching the
+subscription or accepting a Log Analytics customer-ID GUID or full ARM resource ID.
+Like `monitor workspace list`, account listing uses an optional `--resource-group` filter.
+All commands use the shared `--subscription` ID/name resolver, including its default CLI-profile
+and environment fallback behavior.
+
+`query run` requires `--query` and submits a new query. `query resume` requires `--operation-id`
+and only polls the existing operation. Both require `--resource-group` and `--workspace`.
+Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
+Resuming does not change the query or its submitted time range and row limit.
+Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
+If the status is `Running`, use `query resume` with the returned operation ID.
+Requested row limits are approximate; responses preserve truncation and partial-result indicators.
+Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
+
+```bash
+# List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces account list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# List the trace and span schema field names for a distributed-trace account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces field list --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --workspace <workspace>
+
+# Resume polling an existing query without submitting a new one
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query resume --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id> \
+                                  [--page-size <n>] \
+                                  [--include-spans <true|false>]
+
+# Run a KQL query; polls up to 180s, then returns `status: "Running"` and an operationId
+# Use `monitor traces query resume` with that operationId to continue polling
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query run --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --workspace <workspace> \
+                               --query <kql-query> \
+                               [--start-time <iso-8601>] \
+                               [--end-time <iso-8601>] \
+                               [--max-results <n>] \
+                               [--include-spans <true|false>]
+
+# Cancel an in-flight distributed-trace query operation
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query cancel --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id>
+
+```
+
 ### Azure Monitor Instrumentation Operations
 
 ```bash
@@ -4536,6 +4606,7 @@ azmcp resiliency recoveryjob resource get --service-group <service-group> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
+# The service links the service group's recovery plan for the drill type automatically.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill create --service-group <service-group> \
                               --drill <drill> \
@@ -4544,7 +4615,9 @@ azmcp resiliency drill create --service-group <service-group> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
                               [--resource-group <resource-group>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json>] \
+                              [--sli-monitoring-properties <json>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4565,12 +4638,15 @@ azmcp resiliency drill end --service-group <service-group> \
                            --attestation-notes <attestation-notes>
 
 # Update mutable properties of a resilience drill
+# Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json-or-null>] \
+                              [--sli-monitoring-properties <json-or-null>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4582,11 +4658,12 @@ azmcp resiliency drill delete --service-group <service-group> \
 azmcp resiliency drill check-resync-readiness --service-group <service-group> \
                                               --drill <drill>
 
-# Validate whether a resilience drill is eligible for execution from the specified source locations
+# Validate a resilience drill; sources may be omitted only for explicit Reprotect
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill validate-for-execution --service-group <service-group> \
                                               --drill <drill> \
-                                              --source-locations <source-locations>
+                                              [--source-locations <source-locations>] \
+                                              [--operation-name <Failover|Reprotect|FailoverReverse|ReprotectReverse>]
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4595,6 +4672,7 @@ azmcp resiliency drill resource get --service-group <service-group> \
                                     [--name <name>]
 
 # Add, update, or exclude the resources (targets) of a drill
+# Use drill-resource IDs under .../drills/{drill}/drillResources/{name}, not underlying VM IDs.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill resource add-or-update --service-group <service-group> \
                                               --drill <drill> \
@@ -4617,13 +4695,13 @@ azmcp resiliency drill run add-notes --service-group <service-group> \
                                      --drill-run <drill-run> \
                                      --notes <notes>
 
-# Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# Start failover for a drill run from physical source zones. Selected IDs must be full drill-resource IDs under this service group and drill.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill <drill> \
                                     --drill-run <drill-run> \
                                     --source-locations <source-location> \
-                                    [--selected-resource-ids <selected-resource-id>] \
+                                    [--selected-resource-ids <drill-resource-id>] \
                                     [--auto-failover <true|false>]
 
 # Resume a failover drill run paused after fault injection
@@ -4639,11 +4717,12 @@ azmcp resiliency drill run mark-complete --service-group <service-group> \
                                          --drill-run <drill-run> \
                                          --stage <stage>
 
-# Reprotect failed-over resources in a drill run
+# Reprotect all qualified failed-over resources in a drill run, or only selected recovery-resource IDs
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill <drill> \
-                                     --drill-run <drill-run>
+                                     --drill-run <drill-run> \
+                                     [--selected-resource-ids <selected-resource-id>]
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

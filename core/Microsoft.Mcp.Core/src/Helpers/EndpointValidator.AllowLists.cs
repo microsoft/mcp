@@ -193,6 +193,12 @@ public sealed partial class EndpointValidator
             UsGov: [".metrics.monitor.azure.us"],
             Germany: [],
             UseLegacyCheck: false),
+        ["monitor-traces"] = new AllowedSuffixManager(
+            Public: [".data.monitor.azure.com"],
+            China: [],
+            UsGov: [],
+            Germany: [],
+            UseLegacyCheck: false),
         ["mysql"] = new AllowedSuffixManager(
             Public: [".mysql.database.azure.com"],
             China: [".mysql.database.chinacloudapi.cn"],
