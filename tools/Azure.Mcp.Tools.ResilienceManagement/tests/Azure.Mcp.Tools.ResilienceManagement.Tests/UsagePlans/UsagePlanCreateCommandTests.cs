@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.UsagePlans;
 
 public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBase<UsagePlanCreateCommand, IResilienceManagementService>
 {
-    private const string ValidArgs = "--resource-group rg --usage-plan up1 --plan-type Basic --subscription sub";
+    private const string ValidArgs = "--resource-group rg --usage-plan up1 --plan-type Standard --subscription sub";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -28,9 +28,9 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
 
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--usage-plan up1 --plan-type Basic --subscription sub", false)] // Missing resource group
-    [InlineData("--resource-group rg --plan-type Basic --subscription sub", false)] // Missing usage plan
-    [InlineData("--resource-group rg --usage-plan up1 --plan-type Basic", false)] // Missing subscription
+    [InlineData("--usage-plan up1 --plan-type Standard --subscription sub", false)] // Missing resource group
+    [InlineData("--resource-group rg --plan-type Standard --subscription sub", false)] // Missing usage plan
+    [InlineData("--resource-group rg --usage-plan up1 --plan-type Standard", false)] // Missing subscription
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -58,6 +58,26 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         }
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsRemovedBasicPlanType()
+    {
+        var response = await ExecuteCommandAsync(
+            "--resource-group", "rg",
+            "--usage-plan", "up1",
+            "--plan-type", "Basic",
+            "--subscription", "sub");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Standard", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().CreateUsagePlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UsagePlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("bad_name")]
     [InlineData("1234567890123456789012345")]
@@ -67,7 +87,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         var response = await ExecuteCommandAsync(
             "--resource-group", "rg",
             "--usage-plan", usagePlan,
-            "--plan-type", "Basic",
+            "--plan-type", "Standard",
             "--subscription", "sub");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -97,7 +117,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
                 "up1",
                 "Microsoft.AzureResilienceManagement/usagePlans",
                 "global",
-                Properties: new("Basic", "Succeeded")));
+                Properties: new("Standard", "Succeeded")));
 
         // Act
         var response = await ExecuteCommandAsync(ValidArgs);
