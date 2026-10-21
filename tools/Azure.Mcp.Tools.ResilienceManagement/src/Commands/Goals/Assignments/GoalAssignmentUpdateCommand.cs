@@ -15,10 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     Name = "update",
     Title = "Update Resilience Goal Assignment",
     Description = """
-        Replaces or clears an existing Azure resilience goal assignment's service-level indicator associations.
-        Uses the GA assignment update API, preserves the zonal resiliency requirement, waits for the operation
-        to complete, and returns the hydrated assignment. This changes assignment configuration,
-        not per-resource inclusion or manual attestation; use update-resources for those.
+        Replaces or clears the service-level indicator associations of an existing resilience goal
+        assignment in a service group. Preserves the assignment's zonal resiliency requirement and does not delete
+        the indicator resources. Uses the GA assignment update API, waits for completion, and returns the updated
+        assignment. This changes assignment configuration, not per-resource inclusion or manual attestation; use
+        update-resources for those.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]

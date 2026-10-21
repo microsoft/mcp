@@ -15,11 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     Name = "create",
     Title = "Create Resilience Goal Assignment",
     Description = """
-        Creates an Azure resilience goal assignment in a service group using the GA goal schema.
-        Specify require-zonal-resiliency=true and optional service-level indicator resource IDs.
-        No goal template is needed. Waits for provisioning and returns the hydrated assignment.
-        May retry failed provisioning, but does not replace successfully provisioned assignments.
-        To change an existing assignment's SLI associations, use update.
+        Creates a new resilience goal assignment in a service group, with zonal resiliency required
+        (require-zonal-resiliency=true) and optional service-level indicator target resource IDs. Uses the GA goal
+        schema; no goal template is needed. Waits for provisioning and returns the created assignment. May retry
+        failed provisioning, but does not replace a successfully provisioned assignment. To change an existing
+        assignment's SLI associations, use update.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]

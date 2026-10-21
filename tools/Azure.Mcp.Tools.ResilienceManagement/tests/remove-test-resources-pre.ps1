@@ -256,6 +256,22 @@ foreach ($groupName in @($drillsDeleteAssetResourceGroupName, $drillsResourceGro
         continue
     }
     $path = "/subscriptions/$subscriptionId/resourceGroups/$groupName`?api-version=2024-03-01"
+    $groupResponse = Invoke-ManagementRestMethod -Method GET -Path $path
+    if ($groupResponse.StatusCode -eq 404) {
+        continue
+    }
+    if ($groupResponse.StatusCode -ne 200) {
+        Write-Warning "Skipping '$groupName': GET failed with status $($groupResponse.StatusCode), so fixture ownership cannot be verified."
+        continue
+    }
+    # Setup refuses untagged groups; teardown must not delete a group it cannot prove it owns.
+    $tags = ($groupResponse.Content | ConvertFrom-Json).tags
+    $purpose = $tags ? ($tags.PSObject.Properties | Where-Object { $_.Name -ieq 'Purpose' } | Select-Object -First 1).Value : $null
+    if ($purpose -ne 'mcp-drills-ga-live-tests') {
+        Write-Warning "Skipping '$groupName': it is not tagged Purpose=mcp-drills-ga-live-tests."
+        continue
+    }
+
     Write-Information "DELETE $path"
     $response = Invoke-ManagementRestMethod -Method DELETE -Path $path
     if ($response.StatusCode -notin @(200, 202, 204, 404)) {

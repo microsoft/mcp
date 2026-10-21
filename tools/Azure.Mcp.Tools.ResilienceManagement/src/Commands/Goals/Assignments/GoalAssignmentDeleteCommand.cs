@@ -15,10 +15,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     Name = "delete",
     Title = "Delete Resilience Goal Assignment",
     Description = """
-        Deletes the named Azure resilience goal assignment from its service group and waits for deletion
-        to finish. Removes the assignment and its tracked goal members, not the underlying Azure resources
-        or service group. Returns whether the assignment existed and was deleted; an absent assignment
-        returns deleted=false.
+        Deletes (removes) a resilience goal assignment from its service group and waits for deletion to
+        finish. Reports whether the assignment existed: deleted=true when it was removed, deleted=false when it was
+        already absent. Removes the assignment and its tracked goal members, not the underlying Azure resources or
+        the service group.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]

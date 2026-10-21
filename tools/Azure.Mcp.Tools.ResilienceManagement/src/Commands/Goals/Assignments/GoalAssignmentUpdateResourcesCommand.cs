@@ -15,11 +15,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     Name = "update-resources",
     Title = "Update Resilience Goal Resource Participation",
     Description = """
-        Updates tracked resources in an Azure resilience goal assignment: include or exclude resources from
-        zonal goals, set or clear manual attestation, or record user confirmation of resilience solutions.
-        Accepts a GA JSON resources array with properties.resourceArmId and nested zonalResiliency settings.
-        Does not delete underlying Azure resources. Returns the service operation ID and Accepted status
-        unless already completed. Attest only resilience that has actually been verified.
+        Updates goal resources in a resilience goal assignment in a service group: exclude a resource
+        from zonal goal participation without deleting it, or include it again; record ManuallyAttested zonal
+        resiliency or clear it; or confirm that you approve a zonal resilience solution for the resource
+        (ApprovedByUser). Accepts a JSON resources array of resourceArmId with zonalResiliency settings. Returns
+        the operation ID and Accepted status unless already completed. Attest only verified resilience.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
