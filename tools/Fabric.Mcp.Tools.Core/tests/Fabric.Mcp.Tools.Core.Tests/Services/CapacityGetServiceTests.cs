@@ -328,10 +328,9 @@ public class CapacityGetServiceTests()
     [InlineData(false)]
     public async Task ExistingOperations_PreservePostRequestsAndResults(bool createItem)
     {
-        using var response = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(createItem ? """{"id":"existing-item"}""" : """{"value":[]}""")
-        };
+        using var response = createItem
+            ? FabricOperationTestData.ItemResponse(CapacityGetTestData.CapacityId, "New item")
+            : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("""{"value":[]}""") };
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
@@ -350,8 +349,8 @@ public class CapacityGetServiceTests()
         if (createItem)
         {
             var item = await service.CreateItemAsync(CapacityGetTestData.CapacityId,
-                new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, TestContext.Current.CancellationToken);
-            Assert.Equal("existing-item", item.Id);
+                new CreateItemRequest { DisplayName = "New item", Type = "Lakehouse" }, cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal(FabricOperationTestData.ItemId, item.Item?.Id);
         }
         else
         {

@@ -63,14 +63,14 @@ public class SingleProxyToolLoaderTests
             var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
             var registryLogger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
             var registryDiscoveryStrategy = CreateStrategy(runtimeConfiguration.Value, registryLogger);
-            var toolLoader = new SingleProxyToolLoader(commandFactory, logger, runtimeConfiguration, serverConfiguration, registryDiscoveryStrategy);
+            var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, runtimeConfiguration, serverConfiguration, registryDiscoveryStrategy);
             return (toolLoader, commandFactory, registryDiscoveryStrategy);
         }
         else
         {
             var mockCommandFactory = Substitute.For<ICommandFactory>();
             var mockDiscoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-            var toolLoader = new SingleProxyToolLoader(mockCommandFactory, logger, runtimeConfiguration, serverConfiguration, mockDiscoveryStrategy);
+            var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(), mockCommandFactory, logger, runtimeConfiguration, serverConfiguration, mockDiscoveryStrategy);
             return (toolLoader, mockCommandFactory, mockDiscoveryStrategy);
         }
     }
@@ -350,12 +350,12 @@ public class SingleProxyToolLoaderTests
         rootGroup.AddSubGroup(new CommandGroup("keyvault", "Key Vault tools"));
         commandFactory.RootGroup.Returns(rootGroup);
         commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "keyvault"))
-            .Returns(new Dictionary<string, IBaseCommand> { ["secret_list"] = command });
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["secret_list"] = command });
+            .Returns(new Dictionary<string, CommandRegistration> { ["secret_list"] = new CommandRegistration(command, null) });
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration> { ["secret_list"] = new CommandRegistration(command, null) });
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns([]);
         var configuration = new ServerRuntimeConfiguration();
-        await using var toolLoader = new SingleProxyToolLoader(
+        await using var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(),
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
             Microsoft.Extensions.Options.Options.Create(configuration),
@@ -486,10 +486,10 @@ public class SingleProxyToolLoaderTests
         command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Destructive = false });
         command.GetCommand().Returns(new Command("account_list", "List storage accounts"));
         commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"))
-            .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+            .Returns(new Dictionary<string, CommandRegistration> { ["account_list"] = new CommandRegistration(command, null) });
 
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-        var toolLoader = new SingleProxyToolLoader(
+        var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(),
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
             Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
@@ -538,10 +538,10 @@ public class SingleProxyToolLoaderTests
         rootGroup.AddSubGroup(new CommandGroup("storage", "Storage tools"));
         commandFactory.RootGroup.Returns(rootGroup);
         commandFactory.GroupCommands(Arg.Is<string[]>(groups => groups.Length == 1 && groups[0] == "storage"))
-            .Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand> { ["account_list"] = command });
+            .Returns(new Dictionary<string, CommandRegistration> { ["account_list"] = new CommandRegistration(command, null) });
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration> { ["account_list"] = new CommandRegistration(command, null) });
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
-        var toolLoader = new SingleProxyToolLoader(
+        var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(),
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
             Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["storage"] }),
@@ -668,8 +668,8 @@ public class SingleProxyToolLoaderTests
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("azmcp", "Azure MCP");
         commandFactory.RootGroup.Returns(rootGroup);
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
-        var loader = new SingleProxyToolLoader(
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration>());
+        var loader = new SingleProxyToolLoader(new CommandContextAccessor(),
             commandFactory,
             Substitute.For<ILogger<SingleProxyToolLoader>>(),
             Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
@@ -712,14 +712,14 @@ public class SingleProxyToolLoaderTests
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("azmcp", "Azure MCP");
         commandFactory.RootGroup.Returns(rootGroup);
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration>());
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { ReadOnly = true });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(commandFactory, logger, configuration, CreateServerConfigurationOptions(), discoveryStrategy);
+        var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, configuration, CreateServerConfigurationOptions(), discoveryStrategy);
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -759,14 +759,14 @@ public class SingleProxyToolLoaderTests
         var commandFactory = Substitute.For<ICommandFactory>();
         var rootGroup = new CommandGroup("azmcp", "Azure MCP");
         commandFactory.RootGroup.Returns(rootGroup);
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration>());
         var discoveryStrategy = Substitute.For<IMcpDiscoveryStrategy>();
         discoveryStrategy.GetOrCreateClientAsync("storage", Arg.Any<McpClientOptions?>(), TestContext.Current.CancellationToken)
             .Returns(mcpClient);
         var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration() { Transport = TransportTypes.Http });
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
 
-        var toolLoader = new SingleProxyToolLoader(commandFactory, logger, configuration, CreateServerConfigurationOptions(), discoveryStrategy);
+        var toolLoader = new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, configuration, CreateServerConfigurationOptions(), discoveryStrategy);
         var request = McpTestUtilities.CreateToolCallRequest("storage");
 
         // Act
@@ -821,10 +821,10 @@ public class SingleProxyToolLoaderTests
         var serverConfigurationOptions = CreateServerConfigurationOptions();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(null!, logger, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, null!, configuration, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, logger, null!, serverConfigurationOptions));
-        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(commandFactory, logger, configuration, null!));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(new CommandContextAccessor(), null!, logger, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, null!, configuration, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, null!, serverConfigurationOptions));
+        Assert.Throws<ArgumentNullException>(() => new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, configuration, null!));
     }
 
     #region Execution-Time Mode Enforcement Tests
@@ -842,7 +842,7 @@ public class SingleProxyToolLoaderTests
             rootGroup.AddSubGroup(new CommandGroup(serverName, "Ignored local group"));
         }
         commandFactory.RootGroup.Returns(rootGroup);
-        commandFactory.AllCommands.Returns(new Dictionary<string, IBaseCommand>());
+        commandFactory.AllCommands.Returns(new Dictionary<string, CommandRegistration>());
         var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
             .AddServer(serverName, serverName, $"{serverName} description", clientBuilder)
             .Build();
@@ -850,7 +850,7 @@ public class SingleProxyToolLoaderTests
         var logger = Substitute.For<ILogger<SingleProxyToolLoader>>();
         var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration);
 
-        return new SingleProxyToolLoader(commandFactory, logger, runtimeConfiguration, CreateServerConfigurationOptions(), discoveryStrategy);
+        return new SingleProxyToolLoader(new CommandContextAccessor(), commandFactory, logger, runtimeConfiguration, CreateServerConfigurationOptions(), discoveryStrategy);
     }
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequestWithToolAndCommand(

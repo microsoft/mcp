@@ -22,15 +22,26 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// A tool loader that creates MCP tools from the registered command factory.
 /// Exposes MCP commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
+/// <param name="contextAccessor">The singleton accessor shared with services executing command work.</param>
+/// <param name="commandFactory">The factory containing the commands exposed as individual tools.</param>
+/// <param name="configuration">The server's filtering, transport, consent, and output settings.</param>
+/// <param name="logger">The logger for discovery and command execution.</param>
+/// <remarks>
+/// Reads the selected registration's original namespace and enters an ambient scope only around
+/// its awaited execution. Discovery, elicitation, and rejected arguments do not establish a scope.
+/// Use the host's shared accessor rather than constructing a separate accessor for the loader.
+/// </remarks>
 public sealed class CommandFactoryToolLoader(
+    ICommandContextAccessor contextAccessor,
     ICommandFactory commandFactory,
     IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
+    private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
     private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
-    private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
+    private IReadOnlyDictionary<string, CommandRegistration> _toolCommands =
         (configuration.Value.Namespace == null || configuration.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(configuration.Value.Namespace);
@@ -56,9 +67,9 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var tools = visibleCommands
-            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly)
-            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
-            .Select(kvp => GetTool(kvp.Key, kvp.Value, StructuredOutputEnabled))
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
+            .Select(kvp => GetTool(kvp.Key, kvp.Value.Command, StructuredOutputEnabled))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
@@ -115,8 +126,8 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
-        var command = _toolCommands.GetValueOrDefault(toolName);
-        if (command == null)
+        CommandRegistration? registration = _toolCommands.GetValueOrDefault(toolName);
+        if (registration == null)
         {
             activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
@@ -132,6 +143,7 @@ public sealed class CommandFactoryToolLoader(
             };
         }
 
+        IBaseCommand command = registration.Command;
         var serviceArea = _commandFactory.GetServiceArea(toolName);
 
         // serviceArea shouldn't be null here, but safe guard just in case.
@@ -176,7 +188,8 @@ public sealed class CommandFactoryToolLoader(
         var commandContext = new CommandContext(activity)
         {
             McpServer = request.Server,
-            ProgressToken = request.Params.ProgressToken
+            ProgressToken = request.Params.ProgressToken,
+            ToolNamespaceName = registration.ToolNamespaceName
         };
 
         // Check if this tool requires elicitation for sensitive or destructive operations
@@ -228,7 +241,11 @@ public sealed class CommandFactoryToolLoader(
         try
         {
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            CommandResponse commandResponse;
+            using (_contextAccessor.BeginScope(commandContext))
+            {
+                commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            }
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
             var callToolResult = StructuredOutputHelper.CreateCallToolResult(

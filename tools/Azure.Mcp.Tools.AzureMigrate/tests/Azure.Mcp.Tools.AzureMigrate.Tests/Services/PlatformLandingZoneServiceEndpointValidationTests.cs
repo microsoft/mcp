@@ -3,6 +3,7 @@
 
 using System.Security;
 using System.Text.Json;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Xunit;
 
@@ -27,7 +28,7 @@ public sealed class PlatformLandingZoneServiceEndpointValidationTests()
     public void TryGetValidatedDownloadUrl_InternalOrUnsafeUrl_ThrowsSecurityException(string response)
     {
         Assert.Throws<SecurityException>(() =>
-            PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+            PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 
     [Theory]
@@ -36,7 +37,7 @@ public sealed class PlatformLandingZoneServiceEndpointValidationTests()
     [InlineData("{\"sasUrl\":null}")]
     public void TryGetValidatedDownloadUrl_NoDownloadUrl_ReturnsNull(string response)
     {
-        Assert.Null(PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+        Assert.Null(PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 
     [Theory]
@@ -45,7 +46,7 @@ public sealed class PlatformLandingZoneServiceEndpointValidationTests()
     public void TryGetValidatedDownloadUrl_PublicAddress_ReturnsUrl(string response)
     {
         Assert.Equal("https://8.8.8.8/output.zip?sig=Sanitized",
-            PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+            PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 
     [Theory]
@@ -54,6 +55,6 @@ public sealed class PlatformLandingZoneServiceEndpointValidationTests()
     public void TryGetValidatedDownloadUrl_MalformedResponse_ThrowsJsonException(string response)
     {
         Assert.ThrowsAny<JsonException>(() =>
-            PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+            PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 }

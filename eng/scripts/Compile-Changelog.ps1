@@ -24,8 +24,9 @@
     If not specified, uses the "Unreleased" section or creates one.
 
 .PARAMETER VsCodeVersion
-    Version number for the VS Code changelog. If omitted, it is derived from the main
-    changelog version. For example, "3.0.0-beta.27" becomes "3.0.27".
+    Version number for the VS Code changelog. If omitted, it is resolved with the same
+    rules used to package the public VSIX. For example, "3.0.0-beta.27" becomes "3.0.27",
+    while stable Azure MCP releases use the next available Marketplace patch version.
 
 .PARAMETER DryRun
     Preview the compiled and synchronized changelog entries without modifying any files.
@@ -86,6 +87,7 @@ param(
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/../common/scripts/common.ps1"
 . "$PSScriptRoot/../common/scripts/Helpers/PSModule-Helpers.ps1"
+. "$PSScriptRoot/helpers/VsixVersionHelpers.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
@@ -286,20 +288,6 @@ function Build-SubsectionMapping {
     }
     
     return $subsectionMapping
-}
-
-function ConvertTo-VsCodeVersion {
-    param([string]$MainVersion)
-
-    if ($MainVersion -match '^(\d+)\.(\d+)\.\d+-[^.]+\.(\d+)$') {
-        return "$($Matches[1]).$($Matches[2]).$($Matches[3])"
-    }
-
-    if ($MainVersion -match '^\d+\.\d+\.\d+$') {
-        return $MainVersion
-    }
-
-    throw "Unable to derive a VS Code version from '$MainVersion'. Specify -VsCodeVersion explicitly."
 }
 
 # Set up paths using $RepoRoot from common.ps1
@@ -833,8 +821,16 @@ $finalChangelog = [regex]::Replace(
 
 $newVscodeContent = $null
 if (-not $SkipVsCode) {
+    $vsixIsPrerelease = $mainVersion -match '^\d+\.0\.0-beta\.\d+$'
     if (-not $VsCodeVersion) {
-        $VsCodeVersion = ConvertTo-VsCodeVersion -MainVersion $mainVersion
+        $serverName = Split-Path $changelogDir -Leaf
+        $packageJsonPath = Join-Path $changelogDir "vscode/package.json"
+        $resolvedVsixVersion = Resolve-PublicVsixVersion `
+            -ServerName $serverName `
+            -ServerVersion $mainVersion `
+            -PackageJsonPath (Join-Path $RepoRoot $packageJsonPath)
+        $VsCodeVersion = $resolvedVsixVersion.Version
+        $vsixIsPrerelease = $resolvedVsixVersion.IsPrerelease
     }
     elseif ($VsCodeVersion -notmatch '^\d+\.\d+\.\d+$') {
         Write-Error "VS Code version '$VsCodeVersion' must use the '<major>.<minor>.<patch>' format."
@@ -873,7 +869,7 @@ if (-not $SkipVsCode) {
         $sections[$currentSection] = $currentEntries
     }
 
-    $preReleaseSuffix = if ($mainVersion.Contains('-')) { ' (pre-release)' } else { '' }
+    $preReleaseSuffix = if ($vsixIsPrerelease) { ' (pre-release)' } else { '' }
     $vscodeEntry = @(
         "## $VsCodeVersion ($releaseDate)$preReleaseSuffix"
         ""

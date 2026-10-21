@@ -10,8 +10,6 @@ using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
@@ -25,9 +23,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 /// it wants to change, echo back the full effective configuration the service computed, and stay free of
 /// reflection-based polymorphic serialization.
 /// </remarks>
-public sealed class PlatformLandingZoneService(
-    IAzureService azureService,
-    ILogger<PlatformLandingZoneService> logger)
+public sealed class PlatformLandingZoneService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IPlatformLandingZoneService
 {
     private static readonly JsonSerializerOptions s_indented = new() { WriteIndented = true };
@@ -278,7 +274,7 @@ public sealed class PlatformLandingZoneService(
                 $"Failed to generate a download URL for '{artifactFilePath}' ({(int)result.StatusCode} {result.StatusCode}): {result.Body}");
         }
 
-        var sasUrl = TryGetValidatedDownloadUrl(result.Body, logger)
+        var sasUrl = TryGetValidatedDownloadUrl(AzureService, result.Body)
             ?? throw new InvalidOperationException(
                 $"The download URL response for '{artifactFilePath}' did not contain a SAS URL.");
 
@@ -383,7 +379,7 @@ public sealed class PlatformLandingZoneService(
         return candidate is JsonValue value && value.TryGetValue<int>(out var number) ? number : null;
     }
 
-    internal static string? TryGetValidatedDownloadUrl(string json, ILogger? logger)
+    internal static string? TryGetValidatedDownloadUrl(IAzureService azureService, string json)
     {
         if (JsonNode.Parse(json) is not JsonObject root)
         {
@@ -396,7 +392,7 @@ public sealed class PlatformLandingZoneService(
             return null;
         }
 
-        EndpointValidator.ValidatePublicTargetUrl(sasUrl, logger, "azuremigrate");
+        azureService.ValidatePublicTargetUrl(sasUrl);
         return sasUrl;
     }
 }

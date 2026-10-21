@@ -6,6 +6,7 @@ using System.Security;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ServiceFabric.Commands;
 using Azure.Mcp.Tools.ServiceFabric.Models;
 using Azure.Mcp.Tools.ServiceFabric.Services;
@@ -163,7 +164,7 @@ public sealed class ServiceFabricServiceEndpointValidationTests
         SubscriptionResource subscription = Substitute.For<SubscriptionResource>();
         subscription.Id.Returns(SubscriptionResource.CreateResourceIdentifier(SubscriptionId));
 
-        IAzureService azureService = Substitute.For<IAzureService>();
+        IAzureService azureService = AzureServiceTestHelpers.CreateAzureService();
         azureService.CloudConfiguration.Returns(cloudConfiguration);
         azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(subscription);

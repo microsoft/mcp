@@ -6,13 +6,10 @@ using System.Net;
 using System.Security;
 using System.Text;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Azure.Mcp.Tools.AzureMigrate.Tests.TestSupport;
-using Azure.ResourceManager;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -89,16 +86,13 @@ public sealed class PlatformLandingZoneServiceTests()
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             };
         });
-        var azureService = Substitute.For<IAzureService>();
-        var cloud = Substitute.For<IAzureCloudConfiguration>();
-        cloud.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
-        azureService.CloudConfiguration.Returns(cloud);
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         azureService.GetClient().Returns(_ => new HttpClient(handler, disposeHandler: false));
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new ValueTask<AccessToken>(new AccessToken("test-token", DateTimeOffset.MaxValue)));
         azureService.GetTokenCredentialAsync(null, Arg.Any<CancellationToken>()).Returns(credential);
-        var service = new PlatformLandingZoneService(azureService, NullLogger<PlatformLandingZoneService>.Instance);
+        var service = new PlatformLandingZoneService(azureService);
         var outputDirectory = Path.Combine(Path.GetTempPath(), $"plz-download-{Guid.NewGuid():N}");
 
         try

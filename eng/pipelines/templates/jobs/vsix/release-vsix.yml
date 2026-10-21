@@ -35,7 +35,7 @@ jobs:
   - task: 1ES.PublishPipelineArtifact@1
     displayName: Publish authenticated .npmrc
     inputs:
-      path: $(Agent.TempDirectory)
+      path: $(Agent.TempDirectory)/vsix_npmrc
       artifact: vsix_npmrc
 
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
@@ -99,7 +99,14 @@ jobs:
                 "@
 
                 Write-Host "`nInstalling vsce from authenticated feed..."
-                npm install -g @vscode/vsce --userconfig "$(Agent.TempDirectory)/vsix_npmrc/.npmrc"
+                $npmrcPath = "$(Agent.TempDirectory)/vsix_npmrc/.npmrc"
+                if (-not (Test-Path -LiteralPath $npmrcPath -PathType Leaf)) {
+                    throw "Authenticated npm configuration not found at '$npmrcPath'."
+                }
+                npm install -g @vscode/vsce --userconfig $npmrcPath
+                if ($LASTEXITCODE -ne 0) {
+                    throw "Failed to install vsce from the authenticated feed."
+                }
 
                 Write-Host "Executing: vsce publish $($publishArgs -join ' ')"
                 vsce publish @publishArgs

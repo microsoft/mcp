@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.SreAgent.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -20,7 +21,7 @@ public class SreAgentServiceEndpointValidationTests
     public void ValidateDataPlaneEndpoint_ValidHost_DoesNotThrow(string endpoint)
     {
         var exception = Record.Exception(() =>
-            SreAgentService.ValidateDataPlaneEndpoint(new Uri(endpoint), ArmEnvironment.AzurePublicCloud));
+            SreAgentService.ValidateDataPlaneEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), new Uri(endpoint)));
 
         Assert.Null(exception);
     }
@@ -33,7 +34,7 @@ public class SreAgentServiceEndpointValidationTests
     public void ValidateDataPlaneEndpoint_InvalidHost_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            SreAgentService.ValidateDataPlaneEndpoint(new Uri(endpoint), ArmEnvironment.AzurePublicCloud));
+            SreAgentService.ValidateDataPlaneEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), new Uri(endpoint)));
     }
 
     [Theory]
@@ -46,6 +47,6 @@ public class SreAgentServiceEndpointValidationTests
         var armEnvironment = cloud == "china" ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
 
         Assert.Throws<SecurityException>(() =>
-            SreAgentService.ValidateDataPlaneEndpoint(new Uri("https://agent1.azuresre.ai"), armEnvironment));
+            SreAgentService.ValidateDataPlaneEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), new Uri("https://agent1.azuresre.ai")));
     }
 }

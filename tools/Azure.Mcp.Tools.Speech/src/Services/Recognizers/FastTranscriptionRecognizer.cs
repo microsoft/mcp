@@ -31,9 +31,8 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
-        Uri apiUrl = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(
-            endpoint,
-            AzureService.CloudConfiguration.ArmEnvironment);
+        Uri apiUrl = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(AzureService,
+            endpoint);
 
         // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
         filePath = FilePathValidator.ValidateAndCanonicalize(filePath);

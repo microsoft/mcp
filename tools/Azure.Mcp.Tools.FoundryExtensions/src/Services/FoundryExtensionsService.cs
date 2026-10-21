@@ -19,8 +19,6 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Services;
 public class FoundryExtensionsService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IFoundryExtensionsService
 {
-    private ArmEnvironment GetArmEnvironment() => AzureService.CloudConfiguration.ArmEnvironment;
-
     /// <summary>
     /// Validates that the endpoint value satisfies the pattern of a Foundry project endpoint.
     /// </summary>
@@ -31,11 +29,9 @@ public class FoundryExtensionsService(IAzureService azureService)
         try
         {
             var uri = new Uri(endpoint);
-            EndpointValidator.ValidateAzureServiceEndpoint(
+            AzureService.ValidateAzureServiceEndpoint(
                 endpoint: uri.AbsoluteUri,
-                serviceType: "foundry",
-                armEnvironment: GetArmEnvironment(),
-                executingToolNamespaceName: "foundryextensions");
+                serviceType: "foundry");
 
             // Additional validation after anti-SSRF validation based on the requirements outlined by
             // FoundryExtensionsOptionDescriptions.Endpoint's description where the endpoint must be in the format
@@ -69,11 +65,9 @@ public class FoundryExtensionsService(IAzureService azureService)
         try
         {
             var uri = new Uri(endpoint);
-            EndpointValidator.ValidateAzureServiceEndpoint(
+            AzureService.ValidateAzureServiceEndpoint(
                 endpoint: uri.AbsoluteUri,
-                serviceType: "azure-openai",
-                armEnvironment: GetArmEnvironment(),
-                executingToolNamespaceName: "foundryextensions");
+                serviceType: "azure-openai");
 
             // Azure OpenAI-specific structural checks beyond domain validation
             // Azure OpenAI endpoints should not contain path segments

@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
@@ -30,7 +31,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class RecordListCommand(IStorageService storageService)
+public sealed class RecordListCommand(IEndpointValidator endpointValidator, IStorageService storageService)
     : AuthenticatedCommand<RecordListOptions, QueryRecordsResponse>
 {
     private const int DefaultLimit = 10;
@@ -40,7 +41,7 @@ public sealed class RecordListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateKind(options.Kind, validationResult);
 
         if (options.Limit is < 1 or > MaxLimit)

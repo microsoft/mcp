@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Adme;
 
@@ -30,6 +31,7 @@ public sealed class AdmeSetup : IAreaSetup
     /// </summary>
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointValidation();
         services.AddHttpClient(AdmeServiceHelper.HttpClientName)
             .AddStandardResilienceHandler(options =>
             {

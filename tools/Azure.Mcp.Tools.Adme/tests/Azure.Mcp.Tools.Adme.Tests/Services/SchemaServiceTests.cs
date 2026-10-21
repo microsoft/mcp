@@ -7,6 +7,9 @@ using Azure.Core;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -29,7 +32,7 @@ public sealed class SchemaServiceTests
             return response;
         });
         var provider = CreateCredentialProvider(TestConstants.AccessToken);
-        var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         var result = await service.GetSchemaAsync(
             TestConstants.Endpoint,
@@ -58,7 +61,7 @@ public sealed class SchemaServiceTests
             {"schemaInfos":[{"schemaIdentity":{"id":"osdu:wks:master-data--Well:1.4.0"},"status":"PUBLISHED","scope":"SHARED","supersededBy":{"id":"osdu:wks:master-data--Well:2.0.0"}}],"offset":2,"count":1,"totalCount":3}
             """);
         var provider = CreateCredentialProvider();
-        var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
 
         var result = await service.ListSchemasAsync(
             TestConstants.Endpoint,
@@ -100,7 +103,7 @@ public sealed class SchemaServiceTests
     public async Task ListSchemasAsync_OmitsOptionalParametersWhenUnset()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """{"schemaInfos":[],"offset":0,"count":0,"totalCount":0}""");
-        var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         await service.ListSchemasAsync(
             TestConstants.Endpoint,
@@ -132,7 +135,7 @@ public sealed class SchemaServiceTests
     [InlineData("http://sample.oep.ppe.azure-int.net")]
     public async Task GetSchemaAsync_RejectsUntrustedEndpoint(string endpoint)
     {
-        var service = new SchemaService(
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
             CreateCredentialProvider(),
             new FakeHttpClientFactory(JsonHandler(HttpStatusCode.OK, "{}")));
 
@@ -148,7 +151,7 @@ public sealed class SchemaServiceTests
     public async Task GetSchemaAsync_PreservesAdmeResponseBodyOnFailure()
     {
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
-        var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetSchemaAsync(
             TestConstants.Endpoint,

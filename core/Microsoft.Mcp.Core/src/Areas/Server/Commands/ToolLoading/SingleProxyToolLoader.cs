@@ -23,13 +23,31 @@ using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
+/// <summary>
+/// Exposes a single routing tool for local command execution and external tool forwarding.
+/// </summary>
+/// <param name="contextAccessor">The singleton accessor shared with services executing local command work.</param>
+/// <param name="commandFactory">The factory supplying commands that can execute in process.</param>
+/// <param name="logger">The logger for routing, discovery, sampling, and execution.</param>
+/// <param name="configuration">The server's filtering, transport, consent, and output settings.</param>
+/// <param name="serverConfiguration">The identity, description, and schema settings for the routing tool.</param>
+/// <param name="discoveryStrategy">
+/// The optional discovery strategy for external servers, or <see langword="null"/> for local commands only.
+/// </param>
+/// <remarks>
+/// Only awaited local command execution establishes an ambient context. Sampling and external
+/// forwarding do not open a scope. The context identifies the selected command's original
+/// namespace, not the routing tool name or a caller-supplied group name.
+/// </remarks>
 public sealed class SingleProxyToolLoader(
+    ICommandContextAccessor contextAccessor,
     ICommandFactory commandFactory,
     ILogger<SingleProxyToolLoader> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> serverConfiguration,
     IMcpDiscoveryStrategy? discoveryStrategy = null) : BaseToolLoader(logger)
 {
+    private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IMcpDiscoveryStrategy? _discoveryStrategy = discoveryStrategy;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -277,7 +295,7 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup"/>.
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
@@ -324,8 +342,8 @@ public sealed class SingleProxyToolLoader(
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
-                .Where(command => ShouldKeepBaseCommand(command.Value, _configuration.Value))
-                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
+                .Where(command => ShouldKeepBaseCommand(command.Value.Command, _configuration.Value))
+                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
                 .ToList();
             _cachedCommandFactoryTools[tool] = groupTools;
             return groupTools;
@@ -469,9 +487,9 @@ public sealed class SingleProxyToolLoader(
 
         command = resolvedTool.Name;
 
-        if (_commandFactory.AllCommands.TryGetValue(command, out var baseCommand))
+        if (_commandFactory.AllCommands.TryGetValue(command, out CommandRegistration? registration))
         {
-            return await LocalCommandModeAsync(request, baseCommand, tool, command, parameters, activity, cancellationToken);
+            return await LocalCommandModeAsync(request, registration, tool, command, parameters, activity, cancellationToken);
         }
         else if (_discoveryStrategy != null)
         {
@@ -490,13 +508,14 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<CallToolResult> LocalCommandModeAsync(
         RequestContext<CallToolRequestParams> request,
-        IBaseCommand baseCommand,
+        CommandRegistration registration,
         string tool,
         string command,
         IDictionary<string, object?> parameters,
         Activity? activity,
         CancellationToken cancellationToken)
     {
+        IBaseCommand baseCommand = registration.Command;
         try
         {
             activity?.SetTag(TagName.ToolName, command)
@@ -555,7 +574,8 @@ public sealed class SingleProxyToolLoader(
             var commandContext = new CommandContext(activity)
             {
                 McpServer = request.Server,
-                ProgressToken = request.Params?.ProgressToken
+                ProgressToken = request.Params?.ProgressToken,
+                ToolNamespaceName = registration.ToolNamespaceName
             };
             var realCommand = baseCommand.GetCommand();
 
@@ -595,7 +615,11 @@ public sealed class SingleProxyToolLoader(
             // this case, which will be executed.
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
-            var commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            CommandResponse commandResponse;
+            using (_contextAccessor.BeginScope(commandContext))
+            {
+                commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            }
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
