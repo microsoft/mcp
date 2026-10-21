@@ -38,7 +38,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
     [Fact]
     public async Task ExecuteAsync_DefaultsAutomaticFailoverToFalse()
     {
-        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, false, null, Arg.Any<CancellationToken>())
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, false, null, null, Arg.Any<CancellationToken>())
             .Returns(OperationId);
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
             "--drill-run", DrillRun, "--source-locations", SourceLocation);
@@ -46,13 +46,13 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun,
             Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { SourceLocation })),
-            null, false, null, Arg.Any<CancellationToken>());
+            null, false, null, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_PreservesAutomaticFailoverFlag()
     {
-        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, true, null, Arg.Any<CancellationToken>())
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, true, null, null, Arg.Any<CancellationToken>())
             .Returns(OperationId);
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
             "--drill-run", DrillRun, "--source-locations", SourceLocation, "--auto-failover");
@@ -60,6 +60,32 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(OperationId, ValidateAndDeserializeResponse(response,
             ResilienceManagementJsonContext.Default.DrillRunFailoverCommandResult).OperationId);
+    }
+
+    [Theory]
+    [InlineData("allowed", "Allowed")]
+    [InlineData("Unspecified", "Unspecified")]
+    public async Task ExecuteAsync_ForwardsNormalizedUserConsent(string userConsent, string expected)
+    {
+        Service.FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun, Arg.Any<IEnumerable<string>>(), null, false, expected, null, Arg.Any<CancellationToken>())
+            .Returns(OperationId);
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation, "--user-consent", userConsent);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).FailoverDrillRunAsync(ServiceGroup, Drill, DrillRun,
+            Arg.Any<IEnumerable<string>>(), null, false, expected, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsUnknownUserConsent()
+    {
+        var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
+            "--drill-run", DrillRun, "--source-locations", SourceLocation, "--user-consent", "Denied");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--user-consent must be Unspecified or Allowed", response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
@@ -102,6 +128,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -156,6 +183,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -171,6 +199,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<IEnumerable<string>?>(),
             true,
+            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(OperationId);
@@ -197,6 +226,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Is<IEnumerable<string>>(resourceIds => resourceIds.SequenceEqual(new[] { selectedResourceId })),
             true,
             null,
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -215,6 +245,7 @@ public sealed class DrillRunFailoverCommandTests : CommandUnitTestsBase<DrillRun
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<IEnumerable<string>?>(),
             Arg.Any<bool>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));

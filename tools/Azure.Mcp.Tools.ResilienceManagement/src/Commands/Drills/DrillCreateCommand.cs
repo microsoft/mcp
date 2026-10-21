@@ -52,7 +52,9 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
         try
         {
             _ = DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
-                options.HealthModelMonitoringProperties, options.SliMonitoringProperties);
+                options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties);
+            _ = DrillConfiguration.ParseManagedIdentity(options.Identity);
         }
         catch (ArgumentException ex)
         {
@@ -73,7 +75,9 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
                 options.DrillType,
                 options.RbacSetupMode,
                 DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
-                    options.HealthModelMonitoringProperties, options.SliMonitoringProperties),
+                    options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                    options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties),
+                DrillConfiguration.ParseManagedIdentity(options.Identity),
                 options.Tenant,
                 cancellationToken);
 

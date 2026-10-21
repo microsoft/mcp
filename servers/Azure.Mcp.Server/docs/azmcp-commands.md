@@ -4335,7 +4335,8 @@ azmcp resiliency usageplan get --subscription <subscription> \
 azmcp resiliency usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --usage-plan <usage-plan> \
-                                  --plan-type <plan-type>
+                                  --plan-type <plan-type> \
+                                  [--tags '<json-object>']
 
 # Delete a resilience usage plan from a resource group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4376,14 +4377,17 @@ azmcp resiliency recoveryplan create --service-group <service-group> \
                                       --recoveryplan <recoveryplan> \
                                       --plan-type Zonal \
                                       [--plan-description <plan-description>] \
-                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
+                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned|None> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
                                       [--default-group-description <default-group-description>] \
+                                      [--default-group-unique-id <guid>] \
                                       [--default-group-pre-actions '<json-array>'] \
                                       [--default-group-post-actions '<json-array>'] \
                                       [--additional-groups '<json-array>']
 
-# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
+# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned; the service supports one user-assigned identity per plan.
+# --default-group-unique-id applies only when the plan is created; the default group's orderId is always 0.
+# CustomRunbook actions accept an optional associatedIdentity object: {"type":"...","userAssignedIdentity":"<ARM ID>"}.
 # Directly replacing one user-assigned identity with another is not currently supported.
 # Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
 # Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
@@ -4510,7 +4514,11 @@ azmcp resiliency drill create --service-group <service-group> \
                               [--resource-group <resource-group>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json>] \
-                              [--sli-monitoring-properties <json>]
+                              [--sli-monitoring-properties <json>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4535,11 +4543,15 @@ azmcp resiliency drill end --service-group <service-group> \
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
-                              [--subscription <subscription> --region <region>] \
+                              [--subscription <subscription> --region <region> [--resource-group <resource-group>]] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json-or-null>] \
-                              [--sli-monitoring-properties <json-or-null>]
+                              [--sli-monitoring-properties <json-or-null>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4595,7 +4607,8 @@ azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill-run <drill-run> \
                                     --source-locations <source-location> \
                                     [--selected-resource-ids <drill-resource-id>] \
-                                    [--auto-failover <true|false>]
+                                    [--auto-failover <true|false>] \
+                                    [--user-consent <Unspecified|Allowed>]
 
 # Resume a failover drill run paused after fault injection
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

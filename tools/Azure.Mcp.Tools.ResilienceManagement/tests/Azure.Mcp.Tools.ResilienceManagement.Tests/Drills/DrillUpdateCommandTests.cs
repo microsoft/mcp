@@ -9,6 +9,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
+using Azure.ResourceManager.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Tests.Client;
@@ -38,6 +39,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
     [InlineData("--service-group sg1 --rbac-setup-mode Manual", false)]
     [InlineData("--service-group sg1 --drill drill1", false)]
     [InlineData("--service-group sg1 --drill drill1 --subscription sub", false)]
+    [InlineData("--service-group sg1 --drill drill1 --subscription sub --region westus2 --resource-group rg", true)]
+    [InlineData("--service-group sg1 --drill drill1 --rbac-setup-mode Manual --resource-group rg", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -49,6 +52,46 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Theory]
+    [InlineData("--monitoring-properties", "{\"identity\":{\"type\":\"SystemAssigned\"}}", true)]
+    [InlineData("--recovery-plan-properties", "{\"identity\":{\"type\":\"SystemAssigned\"}}", true)]
+    [InlineData("--chaos-resource-properties", "{\"identity\":{\"type\":\"SystemAssigned\"}}", true)]
+    [InlineData("--identity", "{\"type\":\"UserAssigned\"}", false)]
+    [InlineData("--monitoring-properties", "{}", false)]
+    public async Task ExecuteAsync_ValidatesIdentityOptionsAsSoleUpdate(string option, string json, bool shouldSucceed)
+    {
+        if (shouldSucceed)
+        {
+            ConfigureUpdatedDrill();
+        }
+
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", option, json);
+
+        Assert.True((shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest) == response.Status, response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsResourceGroupAndIdentity()
+    {
+        ConfigureUpdatedDrill();
+
+        var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", "--subscription", "sub",
+            "--region", "westus2", "--resource-group", "rg2", "--identity", "{\"type\":\"SystemAssigned\"}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateDrillAsync(
+            "sg1",
+            "drill1",
+            "sub",
+            "westus2",
+            null,
+            Arg.Any<DrillUpdateProperties>(),
+            Arg.Is<ManagedServiceIdentity?>(identity => identity != null && identity.ManagedServiceIdentityType == ManagedServiceIdentityType.SystemAssigned),
+            "rg2",
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -67,6 +110,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             null,
             DrillRbacSetupMode.Manual,
             Arg.Any<DrillUpdateProperties>(),
+            Arg.Any<ManagedServiceIdentity?>(),
+            Arg.Any<string?>(),
             null,
             Arg.Any<CancellationToken>());
     }
@@ -85,6 +130,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<DrillUpdateProperties?>(),
+            Arg.Any<ManagedServiceIdentity?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, "Sensitive provider details"));
@@ -105,6 +152,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<string?>(),
             Arg.Any<DrillRbacSetupMode?>(),
             Arg.Any<DrillUpdateProperties?>(),
+            Arg.Any<ManagedServiceIdentity?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new DrillInfo("id1", "drill1"));

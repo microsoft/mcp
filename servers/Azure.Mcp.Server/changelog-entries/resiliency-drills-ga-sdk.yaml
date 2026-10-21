@@ -9,6 +9,8 @@ changes:
     description: "Forward drill action operation IDs in the query as well as the header for resync readiness, validation, resource add/update, start, and end, matching the existing run-action routing."
   - section: "Features Added"
     description: "Added GA goal-assignment identity, Health Model and SLI configuration to resiliency drill create/update, including sparse PATCH and explicit clearing. Drill validation accepts an optional operation selector and requires source locations except for explicit Reprotect. Reprotect supports selected recovery resources."
+  - section: "Features Added"
+    description: "Exposed the remaining GA SDK request fields on existing resiliency tools: drill create/update `--identity`, `--chaos-resource-properties`, `--recovery-plan-properties`, and `--monitoring-properties` (plus `--resource-group` on update); drill run failover `--user-consent`; recoveryplan create `None` identity, `--default-group-unique-id`, and CustomRunbook action `associatedIdentity`; recoveryplan resource update `CrossZoneVMRecovery` protection; and usage plan create `--tags`."
   - section: "Other Changes"
     description: "Updated Azure.ResourceManager.ResilienceManagement to 1.0.0 and migrated existing resiliency drill, usage-plan, recovery-plan, and recovery-job operations to the GA 2026-10-01 API."
     subsection: "Dependency Updates"

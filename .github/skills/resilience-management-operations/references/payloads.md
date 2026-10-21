@@ -89,6 +89,7 @@ Rules:
 - `timeoutInMinutes`: positive whole number.
 - `actionResourceId`: required only for `CustomRunbook`; use a full Automation runbook resource ID.
 - `parameters`: optional or `null` for `CustomRunbook`; every value must be a string.
+- `associatedIdentity`: optional for `CustomRunbook` only; `{"type":"None|SystemAssigned|UserAssigned|SystemAssigned, UserAssigned","userAssignedIdentity":"<user-assigned identity ARM ID>"}`. `userAssignedIdentity` is required exactly when `type` includes `UserAssigned`.
 - Omit an action-list option to preserve it during update. Pass `[]` only to clear it intentionally.
 
 ### Group action behavior
@@ -183,7 +184,8 @@ The VM must already have a discovered `AzureSiteRecovery` solution in `Protected
 |---|---|---|
 | `CustomRunbook` | Runbooks implement resource-level failover and reprotect | Only a group-level pre/post action is needed |
 | `AzureSiteRecovery` | The resource is a VM with healthy ASR protection and complete reprotect/test-failover inputs | The resource is not a VM or ASR is not `Protected` |
-| `AzureNative` | Never for an included resource in the current tool | Adding or re-including any resource |
+| `CrossZoneVMRecovery` | The resource is a zone-pinned VM with zone movement enabled (`resiliencyProfile.zoneMovement.isEnabled`, all disks ZRS) so the service detects zone-movement protection; optionally set `targetZone` and `capacityReservationGroupId` (`Microsoft.Compute/capacityReservationGroups`) | The resource is not a VM, or zone-movement protection is not detected (the service rejects the update as not protected) |
+| `AzureNative` | Never for an included resource; Recovery Orchestration rejects it | Adding or re-including any resource |
 
 ## Drill Resource Inclusion and Updates
 
