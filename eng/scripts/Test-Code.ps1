@@ -144,7 +144,8 @@ function Create-CoverageReport {
     Write-Host "Merging coverage files into $mergedFile..."
     Invoke-LoggedCommand ("dotnet-coverage merge $TestResultsPath/coverage.cobertura.*.xml" +
         " --output '$mergedFile'" +
-        " --output-format cobertura")
+        " --output-format cobertura" +
+        " --remove-input-files")
 
     if ($env:TF_BUILD) {
         # Write the path to the cover file to a pipeline variable

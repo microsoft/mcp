@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <HasLiveTests>true</HasLiveTests>
     <HasUnitTests>true</HasUnitTests>
+    <LiveTestResourcesCanBeReused>true</LiveTestResourcesCanBeReused>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Core.csproj" />
