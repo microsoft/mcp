@@ -1148,6 +1148,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
+### 🔧 Azure Device Provisioning Service
+
+* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
+* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
@@ -1198,12 +1204,6 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
 * "Generate insights about my Azure environment to help me plan a new data analytics platform"
 * "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
-
-### 🔧 Azure Device Provisioning Service
-
-* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
-* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
-* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
 
 ### 🌐 Azure IoT Hub
 

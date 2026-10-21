@@ -2925,6 +2925,17 @@ azmcp deploy plan get --project-name <project-name> \
                       [--subscription <subscription>]
 ```
 
+### Azure Device Provisioning Service Operations
+
+```bash
+# Get Azure Device Provisioning Service details by service name in a specific resource group.
+# The response excludes linked-hub connection strings, authorization policies, and keys.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceprovisioning service get --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <device-provisioning-service-name>
+```
+
 ### Azure Device Registry Operations
 
 ```bash
@@ -3273,17 +3284,6 @@ azmcp insights get [--scope <subscription|tenant>] \
 azmcp insights get --scope tenant \
                    --query "Prioritise cost and reliability patterns" \
                    --nocache
-```
-
-### Azure Device Provisioning Service Operations
-
-```bash
-# Get Azure Device Provisioning Service details by service name in a specific resource group.
-# The response excludes linked-hub connection strings, authorization policies, and keys.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deviceprovisioning service get --subscription <subscription> \
-                                        --resource-group <resource-group> \
-                                        --service <device-provisioning-service-name>
 ```
 
 ### Azure IoT Hub Operations
