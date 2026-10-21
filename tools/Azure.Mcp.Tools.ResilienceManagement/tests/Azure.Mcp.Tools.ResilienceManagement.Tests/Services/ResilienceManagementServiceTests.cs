@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
@@ -19,6 +20,44 @@ public sealed class ResilienceManagementServiceTests
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
+
+    [Fact]
+    public void CreateRecoveryPlanSubmissionClientOptions_DisablesAutomaticRetries()
+    {
+        ArmClientOptions options =
+            ResilienceManagementService.CreateRecoveryPlanSubmissionClientOptions();
+
+        Assert.Equal(0, options.Retry.MaxRetries);
+    }
+
+    [Theory]
+    [InlineData("Creating")]
+    [InlineData("Succeeded")]
+    [InlineData("Failed")]
+    public void GetRecoveryPlanProvisioningState_ParsesArmResourceResponse(string state)
+    {
+        BinaryData response = BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                provisioningState = state
+            }
+        });
+
+        Assert.Equal(
+            state,
+            ResilienceManagementService.GetRecoveryPlanProvisioningState(response));
+    }
+
+    [Fact]
+    public void GetRecoveryPlanProvisioningState_RejectsMissingState()
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
+            ResilienceManagementService.GetRecoveryPlanProvisioningState(
+                BinaryData.FromString("""{"properties":{}}""")));
+
+        Assert.Contains("properties.provisioningState", exception.Message, StringComparison.Ordinal);
+    }
 
     [Theory]
     [InlineData(true)]
