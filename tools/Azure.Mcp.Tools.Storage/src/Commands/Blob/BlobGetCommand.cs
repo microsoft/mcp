@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -18,13 +17,18 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     Title = "Get Storage Blob Details",
     Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
-        get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
-        filtering on a prefix. The prefix is ignored if a blob is specified.
+        get details for a specific blob. Use --prefix to filter blob names and --delimiter '/' to browse virtual
+        directories one level at a time. Use --max-results to limit the combined number of blobs and directory
+        prefixes returned per page, and --continuation-token to retrieve the next page with the same listing options.
+        Listing is paged when --delimiter, --max-results, or --continuation-token is supplied, with a default page size of 100 and a
+        maximum of 5000. Otherwise, lists all matching blobs as before. The prefix is ignored if a blob is specified.
+        The delimiter, max-results, and continuation-token options cannot be used with --blob.
 
         Required: --account, --container
-        Optional: --blob, --tenant, --prefix
+        Optional: --blob, --tenant, --prefix, --delimiter, --max-results, --continuation-token
 
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
+        Paged listings also return prefixes (virtual directory paths) and a continuationToken when more results exist.
         Do not use this tool to list containers in the storage account.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -40,10 +44,48 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     private readonly ILogger<BlobGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
+    public override void ValidateOptions(BlobGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (options.MaxResults is < 1 or > 5000)
+        {
+            validationResult.Errors.Add("--max-results must be between 1 and 5000.");
+        }
+
+        if (options.Delimiter is { Length: 0 })
+        {
+            validationResult.Errors.Add("--delimiter must not be empty.");
+        }
+
+        if (!string.IsNullOrEmpty(options.Blob) && UsesPagedListing(options))
+        {
+            validationResult.Errors.Add("--delimiter, --max-results, and --continuation-token cannot be used with --blob.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobGetOptions options, CancellationToken cancellationToken)
     {
         try
         {
+            if (UsesPagedListing(options))
+            {
+                var page = await _storageService.ListBlobs(
+                    options.Account,
+                    options.Container,
+                    options.MaxResults ?? 100,
+                    options.Prefix,
+                    options.Delimiter,
+                    options.ContinuationToken,
+                    options.Tenant,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(
+                    new BlobGetCommandResult(page.Blobs, page.Prefixes, page.ContinuationToken),
+                    StorageJsonContext.Default.BlobGetCommandResult);
+                return context.Response;
+            }
+
             var details = await _storageService.GetBlobDetails(
                 options.Account,
                 options.Container,
@@ -71,6 +113,9 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         }
     }
 
+    private static bool UsesPagedListing(BlobGetOptions options) =>
+        options.Delimiter is not null || options.MaxResults.HasValue || options.ContinuationToken is not null;
+
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
@@ -87,5 +132,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         _ => base.GetErrorMessage(ex)
     };
 
-    public record BlobGetCommandResult(List<BlobInfo> Blobs);
+    public record BlobGetCommandResult(
+        List<BlobInfo> Blobs,
+        List<string>? Prefixes = null,
+        string? ContinuationToken = null);
 }

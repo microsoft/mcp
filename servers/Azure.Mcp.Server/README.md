@@ -1355,6 +1355,8 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Browse the top-level blobs and virtual folders in my blob container, returning at most 100 results"
+* "Show the blobs and subfolders directly under datasets/ in my blob container"
 * "Upload my file to the blob container"
 
 ### 🔄 Azure Migrate

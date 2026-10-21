@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
@@ -45,6 +46,10 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         Assert.NotNull(result.Blobs);
         Assert.Equal(expectedBlobs.Count, result.Blobs.Count);
         Assert.Equal(expectedBlobs.Select(a => a.Name), result.Blobs.Select(a => a.Name));
+        var json = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.BlobGetCommandResult);
+        Assert.False(json.TryGetProperty("prefixes", out _));
+        Assert.False(json.TryGetProperty("continuationToken", out _));
+        Assert.DoesNotContain(Service.ReceivedCalls(), call => call.GetMethodInfo().Name == nameof(IStorageService.ListBlobs));
     }
 
     [Fact]
@@ -269,5 +274,120 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Theory]
+    [InlineData("--delimiter /", null, "/", 100, null)]
+    [InlineData("--max-results 2 --prefix folder/", "folder/", null, 2, null)]
+    [InlineData("--max-results 5000", null, null, 5000, null)]
+    [InlineData("--delimiter :: --prefix folder:: --max-results 2 --continuation-token next-token", "folder::", "::", 2, "next-token")]
+    [InlineData("--continuation-token next-token", null, null, 100, "next-token")]
+    public async Task ExecuteAsync_PagedListing_ForwardsOptionsAndReturnsPage(
+        string listingArgs, string? prefix, string? delimiter, int maxResults, string? continuationToken)
+    {
+        var expectedBlob = new BlobInfo("folder/file.txt", DateTimeOffset.UtcNow, null, 42, "text/plain", null, null,
+            new Dictionary<string, string>(), null, null, null, null, null, null, null, null, false, null, null, null);
+        List<string> prefixes = delimiter is null ? [] : ["folder/subfolder/"];
+
+        Service.ListBlobs("testaccount", "container", maxResults, prefix, delimiter, continuationToken, "test-tenant", Arg.Any<CancellationToken>())
+            .Returns(new BlobListResult([expectedBlob], prefixes, "next-page"));
+
+        var response = await ExecuteCommandAsync($"--account testaccount --container container --tenant test-tenant {listingArgs}");
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+
+        Assert.Equal(expectedBlob.Name, Assert.Single(result.Blobs).Name);
+        Assert.Equal(prefixes, result.Prefixes);
+        Assert.Equal("next-page", result.ContinuationToken);
+        await Service.Received(1).ListBlobs(
+            "testaccount", "container", maxResults, prefix, delimiter, continuationToken, "test-tenant", Arg.Any<CancellationToken>());
+        Assert.DoesNotContain(Service.ReceivedCalls(), call => call.GetMethodInfo().Name == nameof(IStorageService.GetBlobDetails));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrefixOnly_PreservesUnpagedListing()
+    {
+        Service.GetBlobDetails("testaccount", "container", null, "folder/", null, Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync("--account testaccount --container container --prefix folder/");
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+
+        Assert.Empty(result.Blobs);
+        Assert.Null(result.Prefixes);
+        Assert.Null(result.ContinuationToken);
+        await Service.Received(1).GetBlobDetails("testaccount", "container", null, "folder/", null, Arg.Any<CancellationToken>());
+        Assert.DoesNotContain(Service.ReceivedCalls(), call => call.GetMethodInfo().Name == nameof(IStorageService.ListBlobs));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PagedListing_ReturnsDirectoriesWithoutBlobs()
+    {
+        Service.ListBlobs("testaccount", "container", 1, null, "/", null, null, Arg.Any<CancellationToken>())
+            .Returns(new BlobListResult([], ["folder/"], "opaque+/=token"));
+
+        var response = await ExecuteCommandAsync("--account testaccount --container container --delimiter / --max-results 1");
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+
+        Assert.Empty(result.Blobs);
+        Assert.Equal(["folder/"], result.Prefixes);
+        Assert.Equal("opaque+/=token", result.ContinuationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PagedListing_ReturnsEmptyPageWithoutContinuationToken()
+    {
+        Service.ListBlobs("testaccount", "container", 1, null, null, null, null, Arg.Any<CancellationToken>())
+            .Returns(new BlobListResult([], [], null));
+
+        var response = await ExecuteCommandAsync("--account testaccount --container container --max-results 1");
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+
+        Assert.Empty(result.Blobs);
+        Assert.NotNull(result.Prefixes);
+        Assert.Empty(result.Prefixes);
+        Assert.Null(result.ContinuationToken);
+        var json = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.BlobGetCommandResult);
+        Assert.Equal(JsonValueKind.Array, json.GetProperty("blobs").ValueKind);
+        Assert.Equal(JsonValueKind.Array, json.GetProperty("prefixes").ValueKind);
+        Assert.False(json.TryGetProperty("continuationToken", out _));
+    }
+
+    [Theory]
+    [InlineData("--max-results 0", "--max-results must be between 1 and 5000.")]
+    [InlineData("--max-results -1", "--max-results must be between 1 and 5000.")]
+    [InlineData("--max-results 5001", "--max-results must be between 1 and 5000.")]
+    [InlineData("--blob file.txt --delimiter /", "cannot be used with --blob")]
+    [InlineData("--blob file.txt --max-results 1", "cannot be used with --blob")]
+    [InlineData("--blob file.txt --continuation-token token", "cannot be used with --blob")]
+    public async Task ExecuteAsync_InvalidListingOptions_ReturnsBadRequest(string listingArgs, string expectedError)
+    {
+        var response = await ExecuteCommandAsync($"--account testaccount --container container {listingArgs}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedError, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EmptyDelimiter_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--account", "testaccount", "--container", "container", "--delimiter", string.Empty);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--delimiter must not be empty.", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PagedListing_HandlesServiceErrors()
+    {
+        Service.ListBlobs("testaccount", "container", 1, null, null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed", "AuthorizationPermissionMismatch", null));
+
+        var response = await ExecuteCommandAsync("--account testaccount --container container --max-results 1");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Storage Blob Data Reader", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
     }
 }

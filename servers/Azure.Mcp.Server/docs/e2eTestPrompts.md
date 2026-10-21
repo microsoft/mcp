@@ -1515,6 +1515,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
+| storage_blob_get | Browse the top-level blobs and virtual folders in container \<container> in storage account \<account> using / as the delimiter and at most 100 results | none |
+| storage_blob_get | Show blobs and subfolders directly under datasets/ in container \<container> in storage account \<account>, using / as the delimiter and at most 50 results | none |
+| storage_blob_get | Get the next page of blobs and virtual folders under datasets/ in container \<container> in storage account \<account>, using delimiter /, at most 50 results, and continuation token \<continuation-token> | none |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
