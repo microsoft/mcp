@@ -5339,6 +5339,59 @@ azmcp storage blob upload --account <account> \
                           --local-file-path <path-to-local-file>
 ```
 
+#### Disk Diagnostics
+
+Disk diagnostics use an Azure public cloud Storage Intelligence endpoint and application scope by
+default.
+Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
+`AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. Each value defaults independently; operators should set the
+endpoint and application scope supplied for their Storage Intelligence deployment. Endpoint overrides
+must use HTTPS and the production host `https://storageintelligenceweb.production.portalrp.azure.com`.
+Non-production hosts are not allowlisted.
+
+No sovereign-cloud endpoint mappings are built in. Other hosts require the explicit server-start option
+`--dangerously-disable-ssrf-protections-by-namespace storage`. This disables SSRF protection for the
+entire Storage namespace; use it only for trusted operator-managed endpoints. HTTPS remains required
+for disk diagnostics even with this bypass.
+
+The optional `--tenant` accepts a Microsoft Entra tenant GUID or display name. It takes precedence over
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID` and applies consistently to attached-disk ARM lookups
+and Storage Intelligence authentication. If neither is configured, the existing credential or
+authenticated remote-caller context is used. In remote HTTP on-behalf-of mode, an explicitly selected
+tenant must match the authenticated caller's tenant; it cannot switch caller identity.
+
+Direct VM scale set selection requires the canonical nested instance resource ID:
+`/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
+The optional `--disk` argument accepts at most 64 attached disk names. Timestamps must use ISO 8601
+with an explicit `Z` or UTC offset, such as `2026-07-19T00:00:00Z` or
+`2026-07-19T00:00:00.1234567+05:30`. Provide `--start-time` and `--end-time` together, or omit both
+to analyze the previous 24 hours. A provisional 10 MiB client safety cap rejects larger successful
+responses with a sanitized upstream-service error. High-cardinality responses may require this cap to
+be revised after Storage Intelligence publishes or measures its maximum response size.
+Host-side latency metrics depend on Storage Intelligence telemetry support. The recorded test uses a
+`Standard_D2ds_v6` VM in `westus2` to exercise the V6 host-telemetry path.
+
+```bash
+# Diagnose VM or managed disk performance using Storage Intelligence
+# Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+
+# Diagnose a VM by friendly name, optionally selecting attached disks by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --vm <virtual-machine-name> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+```
+
 #### Table Storage
 
 ```bash
