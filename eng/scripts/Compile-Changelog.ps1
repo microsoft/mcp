@@ -917,7 +917,7 @@ if (-not $SkipVsCode) {
     $vscodeEntryText = $vscodeEntry -join "`n"
 
     $vscodeContent = Get-Content -Path $vscodeChangelogFile -Raw
-    $headerMatch = [regex]::Match($vscodeContent, '(?ms)^(# Release History\s*\r?\n)')
+    $headerMatch = [regex]::Match($vscodeContent, '^(# Release History[^\S\r\n]*\r?\n)')
     if (-not $headerMatch.Success) {
         Write-Error "Could not find '# Release History' header in VS Code CHANGELOG."
         exit 1

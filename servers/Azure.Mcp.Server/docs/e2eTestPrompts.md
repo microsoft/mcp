@@ -688,6 +688,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
 
+## Azure Device Provisioning Service
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
+| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
+| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+
 ## Azure Device Registry
 
 | Tool Name | Test Prompt | Interaction |
@@ -839,14 +847,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project | none |
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform | none |
 | insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? | none |
-
-## Azure Device Provisioning Service
-
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
-| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
-| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
-| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
 
 ## Azure IoT Hub
 
@@ -1520,6 +1520,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
+| storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to VM \<vm-name> in resource group \<resource-group> and subscription \<subscription> using tenant \<tenant> | none |
+| storage_disk_diagnose | Analyze managed disk \<disk-resource-id> for IOPS or throughput throttling during the last 24 hours | none |
+| storage_disk_diagnose | Diagnose disks \<disk-name-1> and \<disk-name-2> attached to VM \<vm-name> in resource group \<resource-group> | none |
+| storage_disk_diagnose | Diagnose managed disk \<disk-resource-id> and include host-side 1-second and 5-second latency signals | none |
+| storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
 

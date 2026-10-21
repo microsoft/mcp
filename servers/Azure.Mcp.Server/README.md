@@ -1148,6 +1148,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
+### 🔧 Azure Device Provisioning Service
+
+* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
+* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
@@ -1198,12 +1204,6 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
 * "Generate insights about my Azure environment to help me plan a new data analytics platform"
 * "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
-
-### 🔧 Azure Device Provisioning Service
-
-* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
-* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
-* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
 
 ### 🌐 Azure IoT Hub
 
@@ -1355,6 +1355,7 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 
 ### 🔄 Azure Migrate
@@ -1498,7 +1499,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
-- 💾 **Azure Storage** - Blob storage
+- 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation

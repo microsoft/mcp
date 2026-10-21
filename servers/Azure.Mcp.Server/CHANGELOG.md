@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.2 (Unreleased)
+## 4.0.0-beta.3 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,32 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 4.0.0-beta.2 (2026-10-20)
+
+### Features Added
+
+- Added GA goal-assignment identity, Health Model and SLI configuration to resiliency drill create/update, including sparse PATCH and explicit clearing. Drill validation accepts an optional operation selector and requires source locations except for explicit Reprotect. Reprotect supports selected recovery resources. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+### Breaking Changes
+
+- Resiliency usage-plan create now accepts only the GA Standard plan type; the preview-only Basic plan type has been removed. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Removed the `--recoveryplan` option from resiliency drill create and update. The GA API treats `recoveryPlanId` as read-only, so the value was never sent; the service links the service group's recovery plan automatically. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Resiliency goal assignment get responses now return the GA requireZonalResiliency, serviceLevelResources, and errorDetails fields, and goal resource get responses return resourceArmId and zonalResiliency. The preview-only goalAssignmentType, goalTemplateId, high-availability and disaster-recovery participation/attestation/exclusion fields, and serviceGroupMemberships have been removed. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+### Bugs Fixed
+
+- Corrected drill resource include, update, and exclude inputs and examples to require drill-resource IDs rather than underlying VM IDs, and reject identifiers belonging to another drill. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Corrected drill-run failover selections to accept full drill-resource IDs under the requested service group and drill rather than recovery-resource IDs. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Drill-run reprotect now always sends a request body; without selected resources it sends empty reprotect properties, because the service does not process a reprotect request without a body. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Forward drill action operation IDs in the query as well as the header for resync readiness, validation, resource add/update, start, and end, matching the existing run-action routing. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Resiliency drill get, create, and update responses now include the drill's managed identity, and drill resync, validation, resource add-or-update, and run mark-complete responses always include `hasCompleted`. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+### Other Changes
+
+#### Dependency Updates
+
+- Updated Azure.ResourceManager.ResilienceManagement to 1.0.0 and migrated existing resiliency drill, usage-plan, recovery-plan, and recovery-job operations to the GA 2026-10-01 API. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
 
 ## 4.0.0-beta.1 (2026-10-19)
 
