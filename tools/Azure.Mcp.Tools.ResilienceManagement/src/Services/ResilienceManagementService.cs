@@ -2349,11 +2349,12 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             drillRun,
             tenant,
             cancellationToken);
-        if (!SupportsDrillRunStageVerb(drillRunState, "Reprotect", "Start", "Retry"))
+        if (!SupportsDrillRunStageVerb(drillRunState, "Reprotect", "Start", "Retry") &&
+            !SupportsDrillRunStageVerb(drillRunState, "ReprotectReverse", "Start", "Retry"))
         {
             throw new RequestFailedException(
                 409,
-                "The Reprotect stage does not currently expose Start or Retry. Wait for the preceding stage completion to converge before submitting reprotection.");
+                "Neither Reprotect nor ReprotectReverse currently exposes Start or Retry. Wait for the preceding stage completion to converge before submitting reprotection.");
         }
 
         BinaryData content = CreateDrillRunReprotectContent(selectedResourceIds);

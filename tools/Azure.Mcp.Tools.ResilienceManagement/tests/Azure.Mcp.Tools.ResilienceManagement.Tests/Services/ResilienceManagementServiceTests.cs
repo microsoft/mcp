@@ -188,7 +188,29 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.Equal(409, exception.Status);
         Assert.Equal(1, handler.RequestCount);
-        Assert.DoesNotContain("/reprotect", handler.RequestUris);
+        Assert.DoesNotContain(
+            handler.RequestUris,
+            uri => uri.Contains("/reprotect", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ReprotectDrillRunAsync_AllowsReprotectReverseStage()
+    {
+        var handler = new OperationIdRecordingHandler(
+            drillRunContent: DrillRunContent("ReprotectReverse", "Start"));
+        var service = CreateService(handler);
+
+        DrillRunReprotectResult result = await service.ReprotectDrillRunAsync(
+            "sg1",
+            "drill1",
+            "run1",
+            operationId: "abcdefab-cdef-abcd-efab-cdefabcdefab",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Accepted", result.Status);
+        Assert.Contains(
+            handler.RequestUris,
+            uri => uri.Contains("/reprotect", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
