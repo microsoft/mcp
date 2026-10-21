@@ -16,6 +16,8 @@ var planLifecycleEnrollmentName = take('ep${uniqueSuffix}', 24)
 var planLifecycleServiceGroupName = take('sgp${uniqueSuffix}', 24)
 var workflowEnrollmentName = take('ew${uniqueSuffix}', 24)
 var workflowServiceGroupName = take('sgw${uniqueSuffix}', 24)
+// Goals allow one assignment per service group; lifecycle tests need one without the shared assignment.
+var goalsServiceGroupName = take('sgg${uniqueSuffix}', 24)
 var goalAssignmentName = take('ga${uniqueSuffix}', 24)
 var recoveryPlanName = take('rp${uniqueSuffix}', 24)
 var workflowRecoveryPlanName = take('rw${uniqueSuffix}', 24)
@@ -101,6 +103,7 @@ output planLifecycleEnrollmentName string = planLifecycleEnrollmentName
 output planLifecycleServiceGroupName string = planLifecycleServiceGroupName
 output workflowEnrollmentName string = workflowEnrollmentName
 output workflowServiceGroupName string = workflowServiceGroupName
+output goalsServiceGroupName string = goalsServiceGroupName
 output goalAssignmentName string = goalAssignmentName
 output recoveryPlanName string = recoveryPlanName
 output workflowRecoveryPlanName string = workflowRecoveryPlanName

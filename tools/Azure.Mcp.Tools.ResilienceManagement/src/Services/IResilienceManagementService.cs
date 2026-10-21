@@ -44,7 +44,7 @@ public interface IResilienceManagementService
 
     Task<JsonElement> GetRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null,     IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null, string? defaultGroupUniqueId = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanInfo> CreateRecoveryPlanAsync(string serviceGroup, string recoveryPlan, RecoveryPlanKind planType, string? planDescription, RecoveryPlanIdentityKind identityType, string? userAssignedIdentity = null, string? defaultGroupDescription = null, string? tenant = null, IReadOnlyList<RecoveryPlanGroupInput>? additionalGroups = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPreActions = null, IReadOnlyList<RecoveryPlanGroupActionInput>? defaultGroupPostActions = null, string? defaultGroupUniqueId = null, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
 

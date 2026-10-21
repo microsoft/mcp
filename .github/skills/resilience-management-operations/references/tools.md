@@ -50,8 +50,8 @@ Update GETs the assignment and calls
 SDK `UpdateAsync`, preserving its zonal requirement; GA PATCH cannot change that
 flag. Clear removes associations, not SLI resources. Never invent SLI fixture IDs.
 
-Goals target API `2026-10-01`. See [development](./development.md#goals-canary-recording-and-playback)
-for isolated ECY recording; production tools retain their normal ARM endpoint.
+Goals target API `2026-10-01`. See [development](./development.md#goals-canary-recording)
+for canary recording; production tools retain their normal ARM endpoint.
 
 With API `2026-10-01`, assignment details include `requireZonalResiliency`, `serviceLevelResources`, and `errorDetails`, and member details include `resourceArmId` and `zonalResiliency`. Preview-only HA/DR goal fields are not returned. Do not infer HA/DR participation or attestation from zonal resiliency.
 

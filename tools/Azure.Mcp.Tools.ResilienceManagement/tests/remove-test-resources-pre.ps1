@@ -267,6 +267,8 @@ $serviceGroupName = Get-OutputValue -Name 'serviceGroupName'
 $lifecycleServiceGroupName = Get-OutputValue -Name 'lifecycleServiceGroupName'
 $planLifecycleServiceGroupName = Get-OutputValue -Name 'planLifecycleServiceGroupName'
 $workflowServiceGroupName = Get-OutputValue -Name 'workflowServiceGroupName'
+$goalsServiceGroupName = Get-OptionalOutputValue -Name 'goalsServiceGroupName'
+$storageAccountId = Get-OptionalOutputValue -Name 'storageAccountId'
 $usagePlanName = Get-OutputValue -Name 'usagePlanName'
 $enrollmentName = Get-OutputValue -Name 'enrollmentName'
 $lifecycleEnrollmentName = Get-OutputValue -Name 'lifecycleEnrollmentName'
@@ -293,6 +295,7 @@ $serviceGroupId = "/providers/Microsoft.Management/serviceGroups/$serviceGroupNa
 $lifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$lifecycleServiceGroupName"
 $planLifecycleServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$planLifecycleServiceGroupName"
 $workflowServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$workflowServiceGroupName"
+$goalsServiceGroupId = "/providers/Microsoft.Management/serviceGroups/$goalsServiceGroupName"
 $resilienceBase = "$serviceGroupId/providers/Microsoft.AzureResilienceManagement"
 $usagePlanId = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.AzureResilienceManagement/usagePlans/$usagePlanName"
 
@@ -308,6 +311,13 @@ if (![string]::IsNullOrWhiteSpace($workflowServiceGroupName)) {
     Remove-RecoveryPlanCollection -ServiceGroupId $workflowServiceGroupId -Confirm:$false
 }
 Remove-Resource -ResourceId "$resilienceBase/goalAssignments/$goalAssignmentName" -ApiVersion $resilienceApiVersion
+if (![string]::IsNullOrWhiteSpace($goalsServiceGroupName)) {
+    # Interrupted goal lifecycle tests can leave their assignment behind.
+    Remove-ResourceCollection -CollectionId "$goalsServiceGroupId/providers/Microsoft.AzureResilienceManagement/goalAssignments" -ApiVersion $resilienceApiVersion -Confirm:$false
+    if (![string]::IsNullOrWhiteSpace($storageAccountId)) {
+        Remove-Resource -ResourceId "$storageAccountId/providers/Microsoft.Relationships/serviceGroupMember/rhub-goals-member" -ApiVersion $membershipApiVersion
+    }
+}
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$enrollmentName" -ApiVersion $resilienceApiVersion
 Remove-Resource -ResourceId "$usagePlanId/enrollments/$lifecycleEnrollmentName" -ApiVersion $resilienceApiVersion
 if (![string]::IsNullOrWhiteSpace($planLifecycleEnrollmentName)) {
@@ -321,7 +331,7 @@ Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$Reso
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-plan-lifecycle-rg-member" -ApiVersion $membershipApiVersion
 Remove-Resource -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Relationships/serviceGroupMember/rhub-workflow-rg-member" -ApiVersion $membershipApiVersion
 
-foreach ($serviceGroupIdToDelete in @($workflowServiceGroupName ? $workflowServiceGroupId : $null, $planLifecycleServiceGroupName ? $planLifecycleServiceGroupId : $null, $lifecycleServiceGroupId, $serviceGroupId)) {
+foreach ($serviceGroupIdToDelete in @($goalsServiceGroupName ? $goalsServiceGroupId : $null, $workflowServiceGroupName ? $workflowServiceGroupId : $null, $planLifecycleServiceGroupName ? $planLifecycleServiceGroupId : $null, $lifecycleServiceGroupId, $serviceGroupId)) {
     if ($serviceGroupIdToDelete -notmatch '/$') {
         Remove-Resource -ResourceId $serviceGroupIdToDelete -ApiVersion $serviceGroupApiVersion
     }

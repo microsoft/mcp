@@ -1,6 +1,7 @@
 # Resilience Management Tool Development
 
 <!-- cspell:words reprotect reprotection resync zonal -->
+<!-- cspell:ignore GOALSSERVICEGROUPNAME STORAGEACCOUNTID -->
 
 Follow [add-azure-mcp-tools](../../add-azure-mcp-tools/SKILL.md) as the canonical command, options, service, security, registration, AOT, documentation, changelog, testing, recording, and pull-request workflow. This reference contains only Resilience Management-specific requirements and overrides.
 
@@ -12,7 +13,7 @@ The GA SDK reuses required-on-create nested models in PATCH and can serialize om
 
 ### Drills fixtures
 
-`eng/scripts/Deploy-TestResources.ps1 -Paths ResilienceManagement` provisions everything the live tests need in one run. `test-resources-pre.ps1` creates dedicated `<group>-drills` and `<group>-drills-delete` resource groups tagged `Purpose=mcp-drills-ga-live-tests`. `test-resources.bicep` deploys the fault-injection VM fixture (`test-resources-drills.bicep`) into the drills group, and `test-resources-post.ps1` configures it through `test-resources-drills-post.ps1`. The VM stays out of the general service group so its recovery plan never discovers the fault-injection target. Drill-run resources exist only after failover, so the post script runs one complete manual failover and reprotect cycle on the dedicated VM to produce the drill-run outputs, then leaves the drill `NotRunning`. Recovery Orchestration rejects failover unless the recovery plan is `Ready`, and newly discovered service-group members move it to `Warning`; before and after the cycle the script explicitly excludes every member except the target VM, finalizes, and re-runs readiness until the plan is `Ready`. The deployment needs a region with availability zones, Chaos, and Automation capacity.
+`eng/scripts/Deploy-TestResources.ps1 -Paths ResilienceManagement` provisions everything the live tests need in one run. `test-resources-pre.ps1` creates dedicated `<group>-drills` and `<group>-drills-delete` resource groups tagged `Purpose=mcp-drills-ga-live-tests`. `test-resources.bicep` deploys the fault-injection VM fixture (`test-resources-drills.bicep` module) into the drills group, and `test-resources-post.ps1` configures it in `Initialize-DrillsFixture`. The VM stays out of the general service group so its recovery plan never discovers the fault-injection target. Drill-run resources exist only after failover, so the post script runs one complete manual failover and reprotect cycle on the dedicated VM to produce the drill-run outputs, then leaves the drill `NotRunning`. Recovery Orchestration rejects failover unless the recovery plan is `Ready`, and newly discovered service-group members move it to `Warning`; before and after the cycle the script explicitly excludes every member except the target VM, finalizes, and re-runs readiness until the plan is `Ready`. The deployment needs a region with availability zones, Chaos, and Automation capacity.
 
 Destructive drill tests read `DRILLS*` deployment outputs; other tests keep the general outputs. Do not point a drill lifecycle test at the general service group. `remove-test-resources-pre.ps1` removes both fixtures and deletes the drills resource groups.
 
@@ -334,30 +335,6 @@ Commit the updated `assets.json`. Never commit `.proxy/` or `.assets/`.
 
 ## Recording Safeguards
 
-### Goals canary recording and playback
-
-For an approved ECY run, use a Debug server and local `TestMode: Record`.
-The opt-in below routes only Goals clients to `https://eastus2euap.management.azure.com`
-with `x-ms-rhub-routing-location: eastus2euap`. It requires the fixture's `TEST_PROXY_URL`,
-preserves proxy capture, and is absent from Release builds.
-
-```powershell
-$env:MCP_GOALS_TEST_ECY = 'true'
-$env:MCP_TEST_TRANSPORT = 'stdio'
-dotnet test --project tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj --no-build --filter-method '*_ga*'
-```
-
-Use the [storage-only fixture](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/goal-lifecycle-resources.bicep)
-with an explicitly approved small service group and a dedicated resource group tagged
-`purpose=mcp-goals-ga-lifecycle`. It does not provision SLIs or prove nonempty SLI replacement.
-The [cleanup script](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/remove-goal-lifecycle-resources.ps1)
-requires `-ApprovedCleanup` and verifies dedicated fixture identity; never remove a reused parent group.
-
-Run [Sanitize-GoalRecordings.ps1](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Sanitize-GoalRecordings.ps1)
-on the exact `SessionRecords` directory to sanitize recording variables as well as HTTP entries.
-Restore `TestMode: Playback` and replay with both `MCP_TEST_TRANSPORT=stdio` and `http`,
-retaining the ECY opt-in. Keep all existing recordings and do not publish before approval.
-
 - Preserve LRO polling paths by disabling the default `AZSDK2003` sanitizer in `ResilienceManagementCommandTests`; replacing the entire `Location` header breaks playback.
 - Sanitize only signed `t`, `c`, `s`, and `h` query values in LRO locations while retaining the path and operation identifier used for request matching.
 - Sanitize `operation-id` and `x-ms-operation-identifier` headers because they can contain per-run or identity data.
@@ -369,3 +346,15 @@ retaining the ECY opt-in. Keep all existing recordings and do not publish before
 - Use a custom matcher only for intentionally irrelevant request-body differences. Do not hide contract or payload regressions by disabling body comparison broadly.
 - Inspect recordings for credentials, tenant or object identifiers, signed query values, unstable timestamps, and environment-specific resource paths before publishing.
 - Authorization errors can embed caller emails and object IDs inside JSON strings. Use regex sanitizers for embedded identifiers and resource-group names in error prose; body-key sanitizers do not traverse embedded JSON. Preserve error codes and diagnostic meaning.
+
+### Goals canary recording
+
+Goals allow one assignment per service group, so goal lifecycle tests create, update, refresh, and delete their own assignment in the fixture's dedicated goals service group (`GOALSSERVICEGROUPNAME`), whose only member is the storage account (`STORAGEACCOUNTID`). Until the Goals GA service is deployed to production, record every goal test in `GoalAssignmentLifecycleTests.cs` on canary with a Debug build:
+
+```powershell
+$env:MCP_GOALS_TEST_ECY = 'true'
+$env:MCP_TEST_TRANSPORT = 'stdio'
+dotnet test --project tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj --no-build --filter-method '*goal_assignment_ga*' --filter-method '*goal_resource_ga*' --filter-method '*goal_capacity_ga*'
+```
+
+The opt-in routes Goals clients to `https://eastus2euap.management.azure.com` with `x-ms-rhub-routing-location: eastus2euap`, requires `TEST_PROXY_URL`, and is absent from Release builds. The test base starts the server with `--dangerously-disable-ssrf-protections-by-namespace resiliency` only while the opt-in is set. Sanitizers rewrite canary hosts in request URIs and LRO headers, and the class matcher excludes the routing header, so Playback in CI runs without the opt-in. Clear the variables after recording.

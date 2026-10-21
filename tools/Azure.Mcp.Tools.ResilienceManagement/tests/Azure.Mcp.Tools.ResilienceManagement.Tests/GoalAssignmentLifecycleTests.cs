@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore gamcp STORAGEACCOUNTID
+// cspell:ignore gamcp GOALSSERVICEGROUPNAME STORAGEACCOUNTID
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -15,7 +15,7 @@ public partial class ResilienceManagementCommandTests
     [Fact]
     public async Task Should_manage_goal_assignment_ga_lifecycle()
     {
-        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "SERVICEGROUPNAME");
+        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "GOALSSERVICEGROUPNAME");
         string assignment = RegisterOrRetrieveVariable("goalsAssignment", $"gamcp{Guid.NewGuid():N}"[..24]);
         Dictionary<string, object?> parameters = new()
         {
@@ -57,7 +57,7 @@ public partial class ResilienceManagementCommandTests
     [Fact]
     public async Task Should_manage_goal_resource_ga_lifecycle()
     {
-        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "SERVICEGROUPNAME");
+        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "GOALSSERVICEGROUPNAME");
         string resourceId = RegisterOrRetrieveDeploymentOutputVariable("goalsResourceId", "STORAGEACCOUNTID");
         string assignment = RegisterOrRetrieveVariable("goalsAssignment", $"gamcp{Guid.NewGuid():N}"[..24]);
         Dictionary<string, object?> parameters = new()
@@ -101,7 +101,7 @@ public partial class ResilienceManagementCommandTests
     [InlineData("update-resources")]
     public async Task Should_reject_missing_goal_assignment_ga(string operation)
     {
-        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "SERVICEGROUPNAME");
+        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "GOALSSERVICEGROUPNAME");
         string assignment = RegisterOrRetrieveVariable("missingGoalsAssignment", $"missing{Guid.NewGuid():N}"[..24]);
         Dictionary<string, object?> parameters = new()
         {
@@ -127,7 +127,7 @@ public partial class ResilienceManagementCommandTests
     [Fact]
     public async Task Should_recommend_goal_capacity_ga()
     {
-        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "SERVICEGROUPNAME");
+        string serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("goalsServiceGroup", "GOALSSERVICEGROUPNAME");
         string resourceId = RegisterOrRetrieveDeploymentOutputVariable("goalsResourceId", "STORAGEACCOUNTID");
         string assignment = RegisterOrRetrieveVariable("goalsAssignment", $"gamcp{Guid.NewGuid():N}"[..24]);
         Dictionary<string, object?> parameters = new()
