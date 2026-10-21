@@ -840,6 +840,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform | none |
 | insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? | none |
 
+## Azure Device Provisioning Service
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
+| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
+| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+
 ## Azure IoT Hub
 
 | Tool Name | Test Prompt | Interaction |
@@ -1096,6 +1104,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
+| monitor_traces_account_list | List the distributed trace accounts in my subscription | none |
+| monitor_traces_account_list | Show me the Azure Monitor Workspaces enabled for Trace Store | none |
+| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
+| monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
+| monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
+| monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
+| monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_get | Get details for the web test named <webtest_resource_name> in resource group <resource_group> | none |
