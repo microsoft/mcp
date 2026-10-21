@@ -131,14 +131,20 @@ public sealed class IacGenerateCommandTests
     public async Task ExecuteAsync_ReturnsEmbeddedContentForWrittenArtifact()
     {
         var artifact = new AgentArtifact("registry.bicep", null, "text/plain", "resource r ...", "bicep");
+        string artifactPath = Path.Combine(
+            Path.GetTempPath(),
+            "ws",
+            "azure-resiliency",
+            "registry.bicep");
+        string artifactUri = new Uri(Path.GetFullPath(artifactPath)).AbsoluteUri;
         Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
             .Returns(Completed("Generated.", artifact));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
             .Returns([Written(
                 artifact,
                 "registry.bicep",
-                @"C:\ws\azure-resiliency\registry.bicep",
-                "[registry.bicep](file:///C:/ws/azure-resiliency/registry.bicep)")]);
+                artifactPath,
+                $"[registry.bicep]({artifactUri})")]);
 
         var response = await ExecuteCommandAsync("--request", "generate a template");
 
@@ -154,9 +160,7 @@ public sealed class IacGenerateCommandTests
         var embedded = Assert.IsType<EmbeddedResourceBlock>(response.McpContent![1]);
         var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
         Assert.Equal("resource r ...", resource.Text);
-        Assert.Equal(
-            "file:///C:/ws/azure-resiliency/registry.bicep",
-            resource.Uri);
+        Assert.Equal(artifactUri, resource.Uri);
     }
 
     [Fact]
@@ -216,7 +220,12 @@ public sealed class IacGenerateCommandTests
             "text/plain",
             "using './main.bicep'",
             "bicep");
-        const string savedPath = @"C:\ws\azure-resiliency\main.bicep";
+        string savedPath = Path.Combine(
+            Path.GetTempPath(),
+            "ws",
+            "azure-resiliency",
+            "main.bicep");
+        string savedUri = new Uri(Path.GetFullPath(savedPath)).AbsoluteUri;
         Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
             .Returns(Completed("Generated.", savedArtifact, unsavedArtifact));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
@@ -226,7 +235,7 @@ public sealed class IacGenerateCommandTests
                     savedArtifact,
                     "main.bicep",
                     savedPath,
-                    "[main.bicep](file:///C:/ws/azure-resiliency/main.bicep)"),
+                    $"[main.bicep]({savedUri})"),
                 new ArtifactWriteResult(unsavedArtifact, "parameters.bicepparam", null),
             ]);
 
@@ -238,7 +247,7 @@ public sealed class IacGenerateCommandTests
             Assert.IsType<EmbeddedResourceBlock>(response.McpContent[1]).Resource);
         var unsaved = Assert.IsType<TextResourceContents>(
             Assert.IsType<EmbeddedResourceBlock>(response.McpContent[2]).Resource);
-        Assert.Equal("file:///C:/ws/azure-resiliency/main.bicep", saved.Uri);
+        Assert.Equal(savedUri, saved.Uri);
         Assert.StartsWith("azureresiliencyagent://artifacts/conv-1/", unsaved.Uri, StringComparison.Ordinal);
         Assert.Equal("using './main.bicep'", unsaved.Text);
     }

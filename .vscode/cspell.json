@@ -243,6 +243,7 @@
     "azureopenai",
     "azurepipelinescredential",
     "azurepowershellcredential",
+    "azureresiliencyagent",
     "azureresources",
     "azuresdk",
     "azureservicebus",
