@@ -128,9 +128,9 @@ public sealed class MonitorIngestionService(IAzureService azureService)
             || !string.IsNullOrEmpty(endpoint.Fragment))
         {
             throw new CommandValidationException("--ingestion-endpoint must be an HTTPS data collection endpoint root URL             without user information, path, query, or fragment.");
-                    }
+        }
 
-                    azureService.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, EndpointServiceType);
+        azureService.ValidateAzureServiceEndpoint(endpoint.AbsoluteUri, EndpointServiceType);
         return endpoint;
     }
 
