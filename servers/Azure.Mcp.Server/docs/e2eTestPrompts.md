@@ -1184,6 +1184,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_create | Create a zonal resilience drill in service group <service_group> with Health Model monitoring for <health_model_id> using a system-assigned identity | clarification-required |
 | resiliency_drill_create | Configure a new resilience drill with goal-assignment identity and Availability and Latency SLI monitoring | clarification-required |
 | resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and user-assigned identity <user_assigned_identity_id> for its monitoring | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and a drill-level managed identity of type user-assigned with identity <user_assigned_identity_id> | none |
 | resiliency_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resiliency_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_end | End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes "Validation completed" | none |
@@ -1196,6 +1197,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_update | Clear SLI monitoring on resilience drill <drill_name> in service group <service_group> while preserving its other configuration | none |
 | resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription \<subscription> and region \<region> | none |
 | resiliency_drill_update | Change the Chaos resource identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Change the managed identity of resilience drill <drill_name> in service group <service_group> to system-assigned plus user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Change the monitoring identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region>, keeping its existing resource group <resource_group> | none |
 | resiliency_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | Show the resources targeted by resilience drill <drill_name> in service group <service_group> | none |
@@ -1263,6 +1267,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_create | Update the identity of zonal resilience recoveryplan <recoveryplan_name> in service group <service_group> from system-assigned to a user-assigned managed identity | clarification-required |
 | resiliency_recoveryplan_create | Update recoveryplan <recoveryplan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with no managed identity and description <plan_description> | none |
+| resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default recovery group unique ID <default_group_unique_id> | none |
+| resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with user-assigned managed identity <user_assigned_identity_resource_id> and plan description <plan_description>. Add CustomRunbook pre-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> that runs as associated user-assigned identity <runbook_identity_resource_id> | none |
 | resiliency_recoveryplan_checkreadiness | Check whether recoveryplan <recoveryplan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
 | resiliency_recoveryplan_checkreadiness | Discover readiness issues for the resources in recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_delete | Delete the entire recoveryplan <recoveryplan_name> from service group <service_group> | none |
