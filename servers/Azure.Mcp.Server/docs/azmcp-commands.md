@@ -4540,6 +4540,7 @@ azmcp resiliency drill end --service-group <service-group> \
 
 # Update mutable properties of a resilience drill
 # Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
+# --resource-group must match the drill's creation-time resource group; the service rejects changes.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \

@@ -23,7 +23,7 @@ public sealed class DrillUpdateOptions
     [Option(Description = "The Azure region where the drill's supporting resources will be created. Specify together with subscription.")]
     public string? Region { get; set; }
 
-    [Option(Description = "The resource group for the drill's supporting resources. Specify only together with subscription and region.")]
+    [Option(Description = "The drill's existing supporting-resource group. Specify only together with subscription and region; the service rejects a different resource group after creation.")]
     public string? ResourceGroup { get; set; }
 
     [Option(Description = "The RBAC setup mode. Supported values: AutomatedCustomRole, AutomatedBuiltinRoles, Manual.")]
