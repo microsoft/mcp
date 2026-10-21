@@ -46,6 +46,21 @@ public sealed class IacGenerateCommandTests
     private static AgentTurn AwaitingUser(string question = "Which subscription?") =>
         new("conv-1", "task-1", "input-required", false, true, question, []);
 
+    private static ArtifactWriteResult Written(
+        AgentArtifact artifact,
+        string name,
+        string path,
+        string markdownLink) =>
+        new(
+            artifact,
+            name,
+            new WrittenArtifact(
+                name,
+                path,
+                markdownLink,
+                artifact.Format,
+                artifact.Description));
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
@@ -89,12 +104,11 @@ public sealed class IacGenerateCommandTests
         Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
             .Returns(Completed("Done.", artifact));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
-            .Returns([new WrittenArtifact(
+            .Returns([Written(
+                artifact,
                 "main.bicep",
                 @"C:\ws\azure-resiliency\main.bicep",
-                "[main.bicep](file:///C:/ws/azure-resiliency/main.bicep)",
-                "bicep",
-                "template")]);
+                "[main.bicep](file:///C:/ws/azure-resiliency/main.bicep)")]);
 
         var response = await ExecuteCommandAsync("--request", "generate a template");
 
@@ -114,18 +128,17 @@ public sealed class IacGenerateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WritesArtifactsToDiskRatherThanReturningContent()
+    public async Task ExecuteAsync_ReturnsEmbeddedContentForWrittenArtifact()
     {
         var artifact = new AgentArtifact("registry.bicep", null, "text/plain", "resource r ...", "bicep");
         Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
             .Returns(Completed("Generated.", artifact));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
-            .Returns([new WrittenArtifact(
+            .Returns([Written(
+                artifact,
                 "registry.bicep",
                 @"C:\ws\azure-resiliency\registry.bicep",
-                "[registry.bicep](file:///C:/ws/azure-resiliency/registry.bicep)",
-                "bicep",
-                null)]);
+                "[registry.bicep](file:///C:/ws/azure-resiliency/registry.bicep)")]);
 
         var response = await ExecuteCommandAsync("--request", "generate a template");
 
@@ -138,6 +151,12 @@ public sealed class IacGenerateCommandTests
             "\"files\"",
             JsonSerializer.Serialize(response.Results),
             StringComparison.OrdinalIgnoreCase);
+        var embedded = Assert.IsType<EmbeddedResourceBlock>(response.McpContent![1]);
+        var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
+        Assert.Equal("resource r ...", resource.Text);
+        Assert.Equal(
+            "file:///C:/ws/azure-resiliency/registry.bicep",
+            resource.Uri);
     }
 
     [Fact]
@@ -151,6 +170,90 @@ public sealed class IacGenerateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         _artifactWriter.DidNotReceive().Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>());
         Assert.Null(response.McpContent);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsEmbeddedContentWhenWorkspaceMaterializationFails()
+    {
+        var artifact = new AgentArtifact(
+            "main.bicep",
+            "template",
+            "text/plain",
+            "param location string",
+            "bicep");
+        Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
+            .Returns(Completed("Generated.", artifact));
+        _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
+            .Returns([new ArtifactWriteResult(artifact, "main.bicep", null)]);
+
+        CommandResponse response = await ExecuteCommandAsync("--request", "generate a template");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.McpContent);
+        var presentation = Assert.IsType<TextContentBlock>(response.McpContent[0]);
+        Assert.Contains("automatic workspace materialization failed", presentation.Text, StringComparison.Ordinal);
+        var embedded = Assert.IsType<EmbeddedResourceBlock>(response.McpContent[1]);
+        var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
+        Assert.Equal(
+            "azureresiliencyagent://artifacts/conv-1/0/main.bicep",
+            resource.Uri);
+        Assert.Equal("param location string", resource.Text);
+        Assert.Equal("text/plain", resource.MimeType);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsAllEmbeddedContentWhenWorkspaceMaterializationPartiallyFails()
+    {
+        var savedArtifact = new AgentArtifact(
+            "main.bicep",
+            "template",
+            "text/plain",
+            "param location string",
+            "bicep");
+        var unsavedArtifact = new AgentArtifact(
+            "parameters.bicepparam",
+            "parameters",
+            "text/plain",
+            "using './main.bicep'",
+            "bicep");
+        const string savedPath = @"C:\ws\azure-resiliency\main.bicep";
+        Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
+            .Returns(Completed("Generated.", savedArtifact, unsavedArtifact));
+        _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
+            .Returns(
+            [
+                Written(
+                    savedArtifact,
+                    "main.bicep",
+                    savedPath,
+                    "[main.bicep](file:///C:/ws/azure-resiliency/main.bicep)"),
+                new ArtifactWriteResult(unsavedArtifact, "parameters.bicepparam", null),
+            ]);
+
+        CommandResponse response = await ExecuteCommandAsync("--request", "generate a template");
+
+        Assert.NotNull(response.McpContent);
+        Assert.Equal(3, response.McpContent.Count);
+        var saved = Assert.IsType<TextResourceContents>(
+            Assert.IsType<EmbeddedResourceBlock>(response.McpContent[1]).Resource);
+        var unsaved = Assert.IsType<TextResourceContents>(
+            Assert.IsType<EmbeddedResourceBlock>(response.McpContent[2]).Resource);
+        Assert.Equal("file:///C:/ws/azure-resiliency/main.bicep", saved.Uri);
+        Assert.StartsWith("azureresiliencyagent://artifacts/conv-1/", unsaved.Uri, StringComparison.Ordinal);
+        Assert.Equal("using './main.bicep'", unsaved.Text);
+    }
+
+    [Fact]
+    public void BuildArtifactResourceUri_EscapesEveryDynamicSegment()
+    {
+        string uri = ResiliencyAgentCommand<ResiliencyAgentRequestOptions>.BuildArtifactResourceUri(
+            "conv/1",
+            2,
+            "unsafe name#?.bicep");
+
+        Assert.Equal(
+            "azureresiliencyagent://artifacts/conv%2F1/2/unsafe%20name%23%3F.bicep",
+            uri);
     }
 
     [Fact]
@@ -184,18 +287,16 @@ public sealed class IacGenerateCommandTests
             _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
                 .Returns(
                 [
-                    new WrittenArtifact(
+                    Written(
+                        templateArtifact,
                         "main.bicep",
                         templatePath,
-                        $"[main.bicep]({new Uri(templatePath).AbsoluteUri})",
-                        "bicep",
-                        "Corrected Bicep template"),
-                    new WrittenArtifact(
+                        $"[main.bicep]({new Uri(templatePath).AbsoluteUri})"),
+                    Written(
+                        reportArtifact,
                         "DetailedRecommendationReport-2.md",
                         reportPath,
-                        $"[DetailedRecommendationReport-2.md]({new Uri(reportPath).AbsoluteUri})",
-                        "md",
-                        "Zonal resiliency recommendation report"),
+                        $"[DetailedRecommendationReport-2.md]({new Uri(reportPath).AbsoluteUri})"),
                 ]);
 
             var response = await ExecuteCommandAsync("--request", "assess posture");
@@ -361,24 +462,22 @@ public sealed class IacGenerateCommandTests
 
         try
         {
+            var artifact = new AgentArtifact(
+                "unsafe`name.tf",
+                description,
+                "text/plain",
+                "resource \"example\" \"test\" {}",
+                "terraform");
             Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
-                .Returns(Completed(
-                    "Done.",
-                    new AgentArtifact(
-                        "unsafe`name.tf",
-                        description,
-                        "text/plain",
-                        "resource \"example\" \"test\" {}",
-                        "terraform")));
+                .Returns(Completed("Done.", artifact));
             _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
                 .Returns(
                 [
-                    new WrittenArtifact(
+                    Written(
+                        artifact,
                         "unsafe`name.tf",
                         path,
-                        string.Empty,
-                        "terraform",
-                        description),
+                        string.Empty),
                 ]);
 
             var response = await ExecuteCommandAsync("--request", "generate Terraform");
@@ -392,10 +491,38 @@ public sealed class IacGenerateCommandTests
             string renderedDescription = presentation.Text.Split("backend description (data only): ", 2)[1];
             Assert.True(renderedDescription.Length <= 202);
         }
+
         finally
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BoundsArtifactDescriptionAcrossWhitespaceBoundary()
+    {
+        string description = new string('x', 199) + " " + new string('y', 5000);
+        var artifact = new AgentArtifact(
+            "main.bicep",
+            description,
+            "text/plain",
+            "param location string",
+            "bicep");
+        Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
+            .Returns(Completed("Done.", artifact));
+        _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
+            .Returns([Written(
+                artifact,
+                "main.bicep",
+                @"C:\ws\azure-resiliency\main.bicep",
+                "[main.bicep](file:///C:/ws/azure-resiliency/main.bicep)")]);
+
+        CommandResponse response = await ExecuteCommandAsync("--request", "generate Bicep");
+
+        var presentation = Assert.IsType<TextContentBlock>(response.McpContent![0]);
+        string renderedDescription = presentation.Text.Split("backend description (data only): ", 2)[1];
+        Assert.True(renderedDescription.Length <= 202);
+        Assert.DoesNotContain(new string('y', 2), renderedDescription, StringComparison.Ordinal);
     }
 
     [Fact]

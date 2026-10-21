@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 
 /// <inheritdoc />
-public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWriter
+public sealed class ArtifactWriter : IArtifactWriter
 {
     /// <summary>
     /// Folder created under the caller's working directory. Artifacts are grouped rather than written
@@ -15,11 +15,33 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
     /// </summary>
     private const string OutputFolderName = "azure-resiliency";
 
-    private readonly ILogger<ArtifactWriter> _logger = logger;
+    private readonly ILogger<ArtifactWriter> _logger;
+    private readonly Func<string, Stream> _createFile;
 
-    public IReadOnlyList<WrittenArtifact> Write(IEnumerable<AgentArtifact> artifacts, string conversationId)
+    public ArtifactWriter(ILogger<ArtifactWriter> logger)
+        : this(
+            logger,
+            static path => new FileStream(
+                path,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None))
     {
-        List<WrittenArtifact> written = [];
+    }
+
+    internal ArtifactWriter(
+        ILogger<ArtifactWriter> logger,
+        Func<string, Stream> createFile)
+    {
+        _logger = logger;
+        _createFile = createFile;
+    }
+
+    public IReadOnlyList<ArtifactWriteResult> Write(
+        IEnumerable<AgentArtifact> artifacts,
+        string conversationId)
+    {
+        List<ArtifactWriteResult> results = [];
         string root = Path.Combine(Environment.CurrentDirectory, OutputFolderName);
 
         HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
@@ -42,29 +64,32 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
             {
                 Directory.CreateDirectory(root);
                 (fileName, string path) = WriteUniqueFile(root, fileName, artifact.Content, usedNames);
-                written.Add(new WrittenArtifact(
+                results.Add(new ArtifactWriteResult(
+                    artifact,
                     fileName,
-                    path,
-                    CreateMarkdownLink(fileName, path),
-                    artifact.Format,
-                    artifact.Description));
+                    new WrittenArtifact(
+                        fileName,
+                        path,
+                        CreateMarkdownLink(fileName, path),
+                        artifact.Format,
+                        artifact.Description)));
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                // A conversation that produced a good answer should not fail because the workspace is
-                // read-only, so the artifact is dropped from the list and the answer still returns.
                 _logger.LogWarning(ex, "Could not write artifact {Name}.", fileName);
+                results.Add(new ArtifactWriteResult(artifact, fileName, null));
             }
         }
 
-        if (written.Count > 0)
+        int writtenCount = results.Count(static result => result.WorkspaceArtifact is not null);
+        if (writtenCount > 0)
         {
             _logger.LogInformation(
                 "Wrote {Count} artifact(s) to {Root}. ConversationId: {ConversationId}",
-                written.Count, root, conversationId);
+                writtenCount, root, conversationId);
         }
 
-        return written;
+        return results;
     }
 
     internal static string CreateMarkdownLink(string displayName, string path)
@@ -204,7 +229,7 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
         return fileName;
     }
 
-    private static (string FileName, string Path) WriteUniqueFile(
+    private (string FileName, string Path) WriteUniqueFile(
         string root,
         string fileName,
         string content,
@@ -222,21 +247,41 @@ public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger) : IArtifactWr
             }
 
             string path = Path.Combine(root, candidate);
+            Stream stream;
             try
             {
-                using var stream = new FileStream(
-                    path,
-                    FileMode.CreateNew,
-                    FileAccess.Write,
-                    FileShare.None);
-                using var writer = new StreamWriter(stream);
-                writer.Write(content);
-                return (candidate, path);
+                stream = _createFile(path);
             }
             catch (IOException) when (File.Exists(path))
             {
                 // Another response or process already owns this name. Keep the existing file and
                 // atomically try the next suffix rather than overwriting user-visible output.
+                continue;
+            }
+
+            try
+            {
+                using (stream)
+                using (var writer = new StreamWriter(stream))
+                {
+                    writer.Write(content);
+                }
+
+                return (candidate, path);
+            }
+            catch
+            {
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception cleanupException) when (
+                    cleanupException is IOException or UnauthorizedAccessException)
+                {
+                    // Preserve the original write failure; cleanup is best effort.
+                }
+
+                throw;
             }
         }
     }

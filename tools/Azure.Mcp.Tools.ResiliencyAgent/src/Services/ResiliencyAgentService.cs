@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Identity;
-using Azure.Mcp.Core;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,24 +18,28 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 /// <c>tasks/get</c> surface Azure Portal Copilot uses, so this tool area adds a second caller rather
 /// than a second agent.
 /// </summary>
-public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposable
+public sealed class ResiliencyAgentService : IResiliencyAgentService
 {
-    /// <summary>
-    /// The deployed Resiliency Agent endpoint.
-    /// </summary>
-    private const string Endpoint = "https://agent.public.resiliencemanagement.azure.com/a2a";
+    internal const string HttpClientName = "ResiliencyAgent.A2A";
 
     /// <summary>
     /// Delegated scope for the Resiliency Agent application. The developer client signs the user in and
     /// acquires this token; the endpoint then exchanges it on-behalf-of for ARM, so the user's own RBAC
     /// applies throughout. This is the same scope Azure Portal Copilot requests in its manifest.
     /// </summary>
-    private const string Scope = "5c43d95c-7a1a-4860-8361-d86bb81364d0/.default";
+    internal const string Scope = "5c43d95c-7a1a-4860-8361-d86bb81364d0/.default";
+
+    internal static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// The deployed Resiliency Agent endpoint.
+    /// </summary>
+    private const string Endpoint = "https://agent.public.resiliencemanagement.azure.com/a2a";
 
     private static readonly TimeSpan s_pollInterval = TimeSpan.FromSeconds(2);
 
     private readonly ILogger<ResiliencyAgentService> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IDataBoundaryResolver _dataBoundaryResolver;
     private readonly IAzureCloudConfiguration _cloudConfiguration;
     private readonly bool _sendDataBoundary;
@@ -44,11 +47,12 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
 
     [ActivatorUtilitiesConstructor]
     public ResiliencyAgentService(
-        IAzureTokenCredentialProvider tokenCredentialProvider,
+        IHttpClientFactory httpClientFactory,
         IDataBoundaryResolver dataBoundaryResolver,
         IAzureCloudConfiguration cloudConfiguration,
         ILogger<ResiliencyAgentService> logger)
     {
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
         _dataBoundaryResolver = dataBoundaryResolver;
         _cloudConfiguration = cloudConfiguration;
@@ -58,24 +62,17 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
             "Calling the Resiliency Agent at {Endpoint} with a delegated token for scope {Scope}.",
             _endpoint,
             Scope);
-
-        var handler = new AccessTokenHandler(tokenCredentialProvider, [Scope])
-        {
-            InnerHandler = new HttpClientHandler(),
-        };
-
-        _httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(2) };
     }
 
     public ResiliencyAgentService(
-        HttpClient httpClient,
+        IHttpClientFactory httpClientFactory,
         IDataBoundaryResolver dataBoundaryResolver,
         IAzureCloudConfiguration cloudConfiguration,
         ILogger<ResiliencyAgentService> logger,
         string endpoint,
         bool sendDataBoundary)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _dataBoundaryResolver = dataBoundaryResolver;
         _cloudConfiguration = cloudConfiguration;
         _logger = logger;
@@ -699,7 +696,8 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
         HttpResponseMessage httpResponse;
         try
         {
-            httpResponse = await _httpClient.SendAsync(request, cancellationToken);
+            using HttpClient client = _httpClientFactory.CreateClient(HttpClientName);
+            httpResponse = await client.SendAsync(request, cancellationToken);
         }
         catch (AuthenticationFailedException ex)
         {
@@ -800,5 +798,4 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService, IDisposabl
     private static string Truncate(string value) =>
         value.Length <= 500 ? value : value[..500] + "...";
 
-    public void Dispose() => _httpClient.Dispose();
 }

@@ -4,7 +4,6 @@
 using System.Net;
 using System.Text.Json;
 using Azure.Identity;
-using Azure.Mcp.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
@@ -20,41 +19,27 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 /// </remarks>
 public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
 {
+    internal const string HttpClientName = "ResiliencyAgent.DataBoundary";
+    internal const string ArmScope = "https://management.azure.com/.default";
+    internal static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+
     private const string BoundaryEndpoint =
         "https://management.azure.com/providers/Microsoft.Resources/dataBoundaries/default?api-version=2024-08-01";
-    private const string ArmScope = "https://management.azure.com/.default";
 
     private readonly ILogger<DataBoundaryResolver> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IAzureCloudConfiguration _cloudConfiguration;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private string? _cachedBoundary;
 
     public DataBoundaryResolver(
-        IAzureTokenCredentialProvider tokenCredentialProvider,
+        IHttpClientFactory httpClientFactory,
         IAzureCloudConfiguration cloudConfiguration,
         ILogger<DataBoundaryResolver> logger)
     {
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
         _cloudConfiguration = cloudConfiguration;
-        _httpClient = new HttpClient(
-            new AccessTokenHandler(tokenCredentialProvider, [ArmScope])
-            {
-                InnerHandler = new HttpClientHandler(),
-            })
-        {
-            Timeout = TimeSpan.FromSeconds(30),
-        };
-    }
-
-    internal DataBoundaryResolver(
-        HttpClient httpClient,
-        IAzureCloudConfiguration cloudConfiguration,
-        ILogger<DataBoundaryResolver> logger)
-    {
-        _httpClient = httpClient;
-        _cloudConfiguration = cloudConfiguration;
-        _logger = logger;
     }
 
     /// <summary>
@@ -77,12 +62,13 @@ public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
                 return _cachedBoundary;
             }
 
+            using HttpClient client = _httpClientFactory.CreateClient(HttpClientName);
             for (int attempt = 1; attempt <= 3; attempt++)
             {
                 try
                 {
                     using HttpResponseMessage response =
-                        await _httpClient.GetAsync(BoundaryEndpoint, cancellationToken);
+                        await client.GetAsync(BoundaryEndpoint, cancellationToken);
                     string body = await response.Content.ReadAsStringAsync(cancellationToken);
                     if (response.IsSuccessStatusCode)
                     {
@@ -164,7 +150,6 @@ public sealed class DataBoundaryResolver : IDataBoundaryResolver, IDisposable
 
     public void Dispose()
     {
-        _httpClient.Dispose();
         _gate.Dispose();
     }
 }

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
+using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
@@ -58,6 +59,14 @@ public sealed class ResiliencyAgentSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<BicepReviewCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<ArmReviewCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<TerraformReviewCommand>());
+
+        IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        using HttpClient a2aClient = httpClientFactory.CreateClient(
+            ResiliencyAgentService.HttpClientName);
+        using HttpClient dataBoundaryClient = httpClientFactory.CreateClient(
+            DataBoundaryResolver.HttpClientName);
+        Assert.Equal(ResiliencyAgentService.RequestTimeout, a2aClient.Timeout);
+        Assert.Equal(DataBoundaryResolver.RequestTimeout, dataBoundaryClient.Timeout);
 
         Assert.All(
             area.SubGroup.SelectMany(group => group.Commands.Values),

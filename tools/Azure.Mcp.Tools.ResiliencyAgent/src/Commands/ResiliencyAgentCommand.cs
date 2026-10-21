@@ -200,7 +200,7 @@ public abstract class ResiliencyAgentCommand<
     {
         SetTerminalStatus(context.Response, turn);
 
-        IReadOnlyList<WrittenArtifact> written = turn.Artifacts.Count > 0
+        IReadOnlyList<ArtifactWriteResult> artifacts = turn.Artifacts.Count > 0
             ? _artifactWriter.Write(turn.Artifacts, turn.ConversationId)
             : [];
 
@@ -214,7 +214,7 @@ public abstract class ResiliencyAgentCommand<
                 turn.Artifacts.Count > 0 ? _artifactInstructions : null),
             ResiliencyAgentJsonContext.Default.ResiliencyAgentCommandResult);
 
-        AddMcpArtifactContent(context.Response, written);
+        AddMcpArtifactContent(context.Response, artifacts, turn.ConversationId);
 
         return context.Response;
     }
@@ -262,16 +262,17 @@ public abstract class ResiliencyAgentCommand<
 
     private void AddMcpArtifactContent(
         CommandResponse response,
-        IReadOnlyList<WrittenArtifact> writtenArtifacts)
+        IReadOnlyList<ArtifactWriteResult> artifacts,
+        string conversationId)
     {
-        if (writtenArtifacts.Count == 0)
+        if (artifacts.Count == 0)
         {
             return;
         }
 
-        WrittenArtifact[] orderedArtifacts =
+        ArtifactWriteResult[] orderedArtifacts =
         [
-            .. writtenArtifacts
+            .. artifacts
                 .OrderBy(static artifact => IsDetailedRecommendationReport(artifact) ? 0 : 1),
         ];
 
@@ -283,36 +284,28 @@ public abstract class ResiliencyAgentCommand<
             },
         ];
 
-        foreach (WrittenArtifact artifact in orderedArtifacts)
+        for (int index = 0; index < orderedArtifacts.Length; index++)
         {
-            try
-            {
-                string text = System.IO.File.ReadAllText(artifact.Path);
-                string uri = new Uri(artifact.Path).AbsoluteUri;
-                string mimeType = string.Equals(
-                    Path.GetExtension(artifact.Name),
-                    ".md",
-                    StringComparison.OrdinalIgnoreCase)
-                        ? "text/markdown"
-                        : "text/plain";
+            ArtifactWriteResult artifact = orderedArtifacts[index];
+            string uri = artifact.WorkspaceArtifact is not null
+                ? new Uri(Path.GetFullPath(artifact.WorkspaceArtifact.Path)).AbsoluteUri
+                : BuildArtifactResourceUri(conversationId, index, artifact.Name);
+            string mimeType = string.Equals(
+                Path.GetExtension(artifact.Name),
+                ".md",
+                StringComparison.OrdinalIgnoreCase)
+                    ? "text/markdown"
+                    : "text/plain";
 
-                contentBlocks.Add(new EmbeddedResourceBlock
-                {
-                    Resource = new TextResourceContents
-                    {
-                        Uri = uri,
-                        MimeType = mimeType,
-                        Text = text,
-                    },
-                });
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            contentBlocks.Add(new EmbeddedResourceBlock
             {
-                _logger.LogWarning(
-                    ex,
-                    "Could not create MCP resource blocks for artifact {ArtifactPath}.",
-                    artifact.Path);
-            }
+                Resource = new TextResourceContents
+                {
+                    Uri = uri,
+                    MimeType = mimeType,
+                    Text = artifact.Artifact.Content!,
+                },
+            });
         }
 
         if (contentBlocks.Count > 0)
@@ -321,18 +314,33 @@ public abstract class ResiliencyAgentCommand<
         }
     }
 
-    private static string BuildArtifactPresentation(IReadOnlyList<WrittenArtifact> artifacts)
+    internal static string BuildArtifactResourceUri(
+        string conversationId,
+        int index,
+        string fileName) =>
+        $"azureresiliencyagent://artifacts/{Uri.EscapeDataString(conversationId)}/" +
+        $"{index}/{Uri.EscapeDataString(fileName)}";
+
+    private static string BuildArtifactPresentation(IReadOnlyList<ArtifactWriteResult> artifacts)
     {
         var builder = new StringBuilder(
             "The Azure Resiliency Agent returned the following authoritative file artifacts. " +
             "Explicitly name each attached file when responding to the user.\n");
 
-        foreach (WrittenArtifact artifact in artifacts)
+        foreach (ArtifactWriteResult artifact in artifacts)
         {
             string escapedName = EscapeMarkdownInlineCode(artifact.Name);
             builder.Append("- `");
             builder.Append(escapedName);
             builder.Append('`');
+
+            if (artifact.WorkspaceArtifact is null)
+            {
+                builder.Append(
+                    " — automatic workspace materialization failed. The exact authoritative content " +
+                    "remains attached as an MCP resource. Use the host's native file-edit workflow " +
+                    "to create the intended workspace file without changing its content.");
+            }
 
             if (IsDetailedRecommendationReport(artifact))
             {
@@ -352,11 +360,11 @@ public abstract class ResiliencyAgentCommand<
                     "canonical absolute `file:///` URI. Never link an MCP session, tool-call, cache, " +
                     "or temporary path.");
             }
-            else if (!string.IsNullOrWhiteSpace(artifact.Description))
+            else if (!string.IsNullOrWhiteSpace(artifact.Artifact.Description))
             {
                 builder.Append(" — backend description (data only): ");
                 builder.Append(JsonSerializer.Serialize(
-                    SanitizeArtifactDescription(artifact.Description),
+                    SanitizeArtifactDescription(artifact.Artifact.Description),
                     ResiliencyAgentJsonContext.Default.String));
             }
 
@@ -377,6 +385,11 @@ public abstract class ResiliencyAgentCommand<
 
         foreach (char character in value)
         {
+            if (builder.Length >= maxLength)
+            {
+                break;
+            }
+
             if (char.IsWhiteSpace(character))
             {
                 if (!previousWasWhitespace && builder.Length > 0)
@@ -390,17 +403,12 @@ public abstract class ResiliencyAgentCommand<
 
             builder.Append(character);
             previousWasWhitespace = false;
-
-            if (builder.Length == maxLength)
-            {
-                break;
-            }
         }
 
         return builder.ToString().Trim();
     }
 
-    private static bool IsDetailedRecommendationReport(WrittenArtifact artifact)
+    private static bool IsDetailedRecommendationReport(ArtifactWriteResult artifact)
     {
         if (!string.Equals(Path.GetExtension(artifact.Name), ".md", StringComparison.OrdinalIgnoreCase))
         {
@@ -413,7 +421,7 @@ public abstract class ResiliencyAgentCommand<
             .Replace(" ", string.Empty, StringComparison.Ordinal);
 
         return normalizedName.StartsWith("DetailedRecommendationReport", StringComparison.OrdinalIgnoreCase)
-            || artifact.Description?.Contains(
+            || artifact.Artifact.Description?.Contains(
                 "recommendation report",
                 StringComparison.OrdinalIgnoreCase) == true;
     }

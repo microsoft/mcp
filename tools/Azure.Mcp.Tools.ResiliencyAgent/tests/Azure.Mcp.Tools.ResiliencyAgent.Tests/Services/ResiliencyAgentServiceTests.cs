@@ -45,11 +45,11 @@ public sealed class ResiliencyAgentServiceTests
                     """),
             };
         });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         IDataBoundaryResolver boundaryResolver = Substitute.For<IDataBoundaryResolver>();
         boundaryResolver.ResolveAsync(Arg.Any<CancellationToken>()).Returns("eu");
-        using var service = new ResiliencyAgentService(
-            client,
+        var service = new ResiliencyAgentService(
+            httpClientFactory,
             boundaryResolver,
             Cloud(AzureCloudConfiguration.AzureCloud.AzurePublicCloud),
             NullLogger<ResiliencyAgentService>.Instance,
@@ -72,6 +72,7 @@ public sealed class ResiliencyAgentServiceTests
 
         Assert.Equal("completed", turn.State);
         Assert.Equal("eu", boundary);
+        Assert.Equal(ResiliencyAgentService.HttpClientName, httpClientFactory.LastClientName);
         using JsonDocument payload = JsonDocument.Parse(body!);
         JsonElement parts = payload.RootElement
             .GetProperty("params")
@@ -99,10 +100,10 @@ public sealed class ResiliencyAgentServiceTests
             requestCount++;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         IDataBoundaryResolver boundaryResolver = Substitute.For<IDataBoundaryResolver>();
-        using var service = new ResiliencyAgentService(
-            client,
+        var service = new ResiliencyAgentService(
+            httpClientFactory,
             boundaryResolver,
             Cloud(cloud),
             NullLogger<ResiliencyAgentService>.Instance,
@@ -115,6 +116,7 @@ public sealed class ResiliencyAgentServiceTests
         Assert.Contains("supported only in Azure public cloud", exception.Message, StringComparison.Ordinal);
         Assert.Contains(cloud.ToString(), exception.Message, StringComparison.Ordinal);
         Assert.Equal(0, requestCount);
+        Assert.Equal(0, httpClientFactory.CreateCount);
         await boundaryResolver.DidNotReceive().ResolveAsync(Arg.Any<CancellationToken>());
     }
 

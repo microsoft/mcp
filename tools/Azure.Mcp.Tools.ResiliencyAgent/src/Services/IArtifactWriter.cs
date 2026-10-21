@@ -17,7 +17,8 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 public interface IArtifactWriter
 {
     /// <summary>
-    /// Writes each artifact and returns where it landed. Artifacts with no content are skipped.
+    /// Attempts to write each artifact and returns both the authoritative in-memory artifact and
+    /// its optional workspace file. Artifacts with no content or no usable name are skipped.
     /// </summary>
-    IReadOnlyList<WrittenArtifact> Write(IEnumerable<AgentArtifact> artifacts, string conversationId);
+    IReadOnlyList<ArtifactWriteResult> Write(IEnumerable<AgentArtifact> artifacts, string conversationId);
 }

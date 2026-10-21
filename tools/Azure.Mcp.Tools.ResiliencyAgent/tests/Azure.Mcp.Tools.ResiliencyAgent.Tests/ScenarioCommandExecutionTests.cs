@@ -182,12 +182,15 @@ public sealed class BicepReviewCommandTests
                 "Review complete.",
                 [artifact]));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), "conv-1")
-            .Returns([new WrittenArtifact(
+            .Returns([new ArtifactWriteResult(
+                artifact,
                 "corrected.bicep",
-                @"C:\ws\corrected.bicep",
-                "[corrected.bicep](file:///C:/ws/corrected.bicep)",
-                "bicep",
-                null)]);
+                new WrittenArtifact(
+                    "corrected.bicep",
+                    @"C:\ws\corrected.bicep",
+                    "[corrected.bicep](file:///C:/ws/corrected.bicep)",
+                    "bicep",
+                    null))]);
 
         var response = await ExecuteCommandAsync("--request", "review this Bicep");
 

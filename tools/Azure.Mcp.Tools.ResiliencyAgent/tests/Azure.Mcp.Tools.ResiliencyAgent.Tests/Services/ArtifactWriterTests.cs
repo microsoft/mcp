@@ -32,7 +32,7 @@ public sealed class ArtifactWriterTests : IDisposable
 
         var written = _writer.Write([artifact], "conv-1");
 
-        var only = Assert.Single(written);
+        WrittenArtifact only = AssertWritten(written);
         Assert.Equal("main.bicep", only.Name);
         Assert.Equal("bicep", only.Format);
         Assert.True(File.Exists(only.Path));
@@ -55,7 +55,7 @@ public sealed class ArtifactWriterTests : IDisposable
 
         var written = _writer.Write([artifact], "conv-1");
 
-        var only = Assert.Single(written);
+        WrittenArtifact only = AssertWritten(written);
         Assert.StartsWith(_workingDirectory, only.Path, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("..", only.Path, StringComparison.Ordinal);
     }
@@ -102,7 +102,7 @@ public sealed class ArtifactWriterTests : IDisposable
     {
         var artifact = new AgentArtifact(name, null, mimeType, "content", format);
 
-        var written = Assert.Single(_writer.Write([artifact], "conv-1"));
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-1"));
 
         Assert.Equal(expectedName, written.Name);
         Assert.True(File.Exists(written.Path));
@@ -133,7 +133,7 @@ public sealed class ArtifactWriterTests : IDisposable
         const string content = "content remains exactly the same";
         var artifact = new AgentArtifact(name, null, mimeType, content, format);
 
-        var written = Assert.Single(_writer.Write([artifact], "conv-1"));
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-1"));
 
         Assert.Equal(expectedName, written.Name);
         Assert.Equal(content, File.ReadAllText(written.Path));
@@ -153,13 +153,15 @@ public sealed class ArtifactWriterTests : IDisposable
 
         Assert.Collection(
             written,
-            artifact =>
+            result =>
             {
+                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
                 Assert.Equal("Zone-Report.md", artifact.Name);
                 Assert.Equal("first", File.ReadAllText(artifact.Path));
             },
-            artifact =>
+            result =>
             {
+                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
                 Assert.Equal("Zone-Report-2.md", artifact.Name);
                 Assert.Equal("second", File.ReadAllText(artifact.Path));
             });
@@ -175,13 +177,15 @@ public sealed class ArtifactWriterTests : IDisposable
 
         Assert.Collection(
             written,
-            artifact =>
+            result =>
             {
+                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
                 Assert.Equal("main.bicep", artifact.Name);
                 Assert.Equal("param first string", File.ReadAllText(artifact.Path));
             },
-            artifact =>
+            result =>
             {
+                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
                 Assert.Equal("main-2.bicep", artifact.Name);
                 Assert.Equal("param second string", File.ReadAllText(artifact.Path));
             });
@@ -196,7 +200,7 @@ public sealed class ArtifactWriterTests : IDisposable
         File.WriteAllText(existingPath, "existing");
         var artifact = new AgentArtifact("main.bicep", null, "text/plain", "new", "bicep");
 
-        WrittenArtifact written = Assert.Single(_writer.Write([artifact], "conv-1"));
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-1"));
 
         Assert.Equal("existing", File.ReadAllText(existingPath));
         Assert.Equal("main-2.bicep", written.Name);
@@ -208,13 +212,46 @@ public sealed class ArtifactWriterTests : IDisposable
     {
         var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
 
-        WrittenArtifact first = Assert.Single(_writer.Write([artifact], "conv-1"));
-        WrittenArtifact second = Assert.Single(_writer.Write([artifact], "conv-2"));
+        WrittenArtifact first = AssertWritten(_writer.Write([artifact], "conv-1"));
+        WrittenArtifact second = AssertWritten(_writer.Write([artifact], "conv-2"));
 
         Assert.Equal("main.bicep", first.Name);
         Assert.Equal("main-2.bicep", second.Name);
         Assert.Equal("content", File.ReadAllText(first.Path));
         Assert.Equal("content", File.ReadAllText(second.Path));
+    }
+
+    [Fact]
+    public void Write_ReturnsInMemoryArtifactWhenWorkspaceDirectoryCannotBeCreated()
+    {
+        File.WriteAllText(Path.Combine(_workingDirectory, "azure-resiliency"), "blocking file");
+        var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
+
+        ArtifactWriteResult result = Assert.Single(_writer.Write([artifact], "conv-1"));
+
+        Assert.Same(artifact, result.Artifact);
+        Assert.Equal("main.bicep", result.Name);
+        Assert.Null(result.WorkspaceArtifact);
+    }
+
+    [Fact]
+    public void Write_DoesNotRetryWithSuffixWhenStreamWriteFails()
+    {
+        int createCount = 0;
+        var writer = new ArtifactWriter(
+            Substitute.For<ILogger<ArtifactWriter>>(),
+            _ =>
+            {
+                createCount++;
+                return new ThrowingWriteStream();
+            });
+        var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
+
+        ArtifactWriteResult result = Assert.Single(writer.Write([artifact], "conv-1"));
+
+        Assert.Equal(1, createCount);
+        Assert.Equal("main.bicep", result.Name);
+        Assert.Null(result.WorkspaceArtifact);
     }
 
     [Theory]
@@ -277,5 +314,17 @@ public sealed class ArtifactWriterTests : IDisposable
         {
             // A leftover temp directory is not worth failing a test run over.
         }
+    }
+
+    private static WrittenArtifact AssertWritten(IReadOnlyList<ArtifactWriteResult> results) =>
+        Assert.IsType<WrittenArtifact>(Assert.Single(results).WorkspaceArtifact);
+
+    private sealed class ThrowingWriteStream : MemoryStream
+    {
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new IOException("Simulated write failure.");
+
+        public override void Write(ReadOnlySpan<byte> buffer) =>
+            throw new IOException("Simulated write failure.");
     }
 }

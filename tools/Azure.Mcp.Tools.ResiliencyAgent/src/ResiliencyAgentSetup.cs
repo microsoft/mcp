@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
@@ -12,6 +13,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent;
 
@@ -26,6 +28,20 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient(
+                ResiliencyAgentService.HttpClientName,
+                static client => client.Timeout = ResiliencyAgentService.RequestTimeout)
+            .AddHttpMessageHandler(serviceProvider =>
+                new AccessTokenHandler(
+                    serviceProvider.GetRequiredService<IAzureTokenCredentialProvider>(),
+                    [ResiliencyAgentService.Scope]));
+        services.AddHttpClient(
+                DataBoundaryResolver.HttpClientName,
+                static client => client.Timeout = DataBoundaryResolver.RequestTimeout)
+            .AddHttpMessageHandler(serviceProvider =>
+                new AccessTokenHandler(
+                    serviceProvider.GetRequiredService<IAzureTokenCredentialProvider>(),
+                    [DataBoundaryResolver.ArmScope]));
         services.AddSingleton<IResiliencyAgentService, ResiliencyAgentService>();
         services.AddSingleton<IDataBoundaryResolver, DataBoundaryResolver>();
         services.AddSingleton<IArtifactWriter, ArtifactWriter>();

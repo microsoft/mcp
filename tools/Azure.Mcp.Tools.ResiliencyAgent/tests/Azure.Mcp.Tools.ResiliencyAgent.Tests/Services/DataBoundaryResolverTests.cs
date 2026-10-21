@@ -23,15 +23,17 @@ public sealed class DataBoundaryResolverTests
                 Content = new StringContent(
                     $"{{\"properties\":{{\"dataBoundary\":\"{armValue}\",\"provisioningState\":\"Succeeded\"}}}}"),
             });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         using var resolver = new DataBoundaryResolver(
-            client,
+            httpClientFactory,
             Cloud(AzureCloudConfiguration.AzureCloud.AzurePublicCloud),
             NullLogger<DataBoundaryResolver>.Instance);
 
         Assert.Equal(expected, await resolver.ResolveAsync(CancellationToken.None));
         Assert.Equal(expected, await resolver.ResolveAsync(CancellationToken.None));
         Assert.Equal(1, handler.CallCount);
+        Assert.Equal(DataBoundaryResolver.HttpClientName, httpClientFactory.LastClientName);
+        Assert.Equal(1, httpClientFactory.CreateCount);
     }
 
     [Fact]
@@ -44,9 +46,9 @@ public sealed class DataBoundaryResolverTests
                 Content = new StringContent(
                     """{"properties":{"dataBoundary":"Global","provisioningState":"Succeeded"}}"""),
             });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         using var resolver = new DataBoundaryResolver(
-            client,
+            httpClientFactory,
             Cloud(AzureCloudConfiguration.AzureCloud.AzurePublicCloud),
             NullLogger<DataBoundaryResolver>.Instance);
 
@@ -63,9 +65,9 @@ public sealed class DataBoundaryResolverTests
                 Content = new StringContent(
                     """{"properties":{"dataBoundary":"Unknown","provisioningState":"Succeeded"}}"""),
             });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         using var resolver = new DataBoundaryResolver(
-            client,
+            httpClientFactory,
             Cloud(AzureCloudConfiguration.AzureCloud.AzurePublicCloud),
             NullLogger<DataBoundaryResolver>.Instance);
 
@@ -87,9 +89,9 @@ public sealed class DataBoundaryResolverTests
                 Content = new StringContent(
                     """{"properties":{"dataBoundary":"Global","provisioningState":"Succeeded"}}"""),
             });
-        using var client = new HttpClient(handler);
+        var httpClientFactory = new TestHttpClientFactory(handler);
         using var resolver = new DataBoundaryResolver(
-            client,
+            httpClientFactory,
             Cloud(cloud),
             NullLogger<DataBoundaryResolver>.Instance);
 
@@ -99,6 +101,7 @@ public sealed class DataBoundaryResolverTests
         Assert.Contains("supported only in Azure public cloud", exception.Message, StringComparison.Ordinal);
         Assert.Contains(cloud.ToString(), exception.Message, StringComparison.Ordinal);
         Assert.Equal(0, handler.CallCount);
+        Assert.Equal(0, httpClientFactory.CreateCount);
     }
 
     private static IAzureCloudConfiguration Cloud(AzureCloudConfiguration.AzureCloud cloud)
