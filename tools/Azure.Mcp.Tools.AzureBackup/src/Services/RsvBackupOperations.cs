@@ -510,25 +510,15 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        // The RecoveryServicesBackup SDK can throw UriFormatException/FormatException while
-        // deserializing individual Azure Files (FileShareRecoveryPoint) recovery points whose
-        // payload contains a malformed URI or duration field. Enumerate defensively so a single
-        // malformed recovery point does not fail the entire list.
+        // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
         return await EnumerateTolerantAsync(
             collection.GetAllAsync(cancellationToken: cancellationToken),
-            static rp => MapToRecoveryPointInfo(rp.Data),
+            static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
             cancellationToken);
     }
 
     /// <summary>
-    /// Enumerates an async pageable, projecting each element with <paramref name="selector"/> while
-    /// tolerating Azure SDK deserialization failures. The RecoveryServicesBackup SDK can throw
-    /// <see cref="FormatException"/> (including its <see cref="UriFormatException"/> subtype) when a
-    /// single item's payload contains a malformed duration or URI - for example an Azure Files
-    /// <c>FileShareRecoveryPoint</c>. Offending items are skipped so the remaining valid items are
-    /// still returned. If the enumerator becomes unusable (a page-level failure where
-    /// <see cref="IAsyncEnumerator{T}.MoveNextAsync"/> keeps throwing), enumeration stops after
-    /// <paramref name="maxConsecutiveFailures"/> consecutive errors to avoid an infinite loop.
+    /// Enumerates an async sequence while tolerating a bounded number of consecutive SDK format failures.
     /// </summary>
     internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
         IAsyncEnumerable<TSource> source,
@@ -558,8 +548,6 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 }
                 catch (FormatException)
                 {
-                    // UriFormatException derives from FormatException; both indicate a single item
-                    // (or page) the SDK cannot deserialize. Skip and continue.
                     if (++consecutiveFailures >= maxConsecutiveFailures)
                     {
                         break;
@@ -793,6 +781,11 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? tenant, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var validation = Policy.PolicyUpdateValidator.Validate(request);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}")));
+        }
 
         var policyName = request.Policy;
         ValidateRequiredParameters(
@@ -805,56 +798,34 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
-
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
             ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
-        DateTimeOffset? newScheduleTime = null;
-        if (!string.IsNullOrWhiteSpace(request.ScheduleTime))
-        {
-            if (!DateTimeOffset.TryParse(request.ScheduleTime, out var st))
-            {
-                throw new ArgumentException($"Invalid schedule time '{request.ScheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
-            }
-            newScheduleTime = st;
-        }
-
-        int? newRetentionDays = null;
-        if (!string.IsNullOrWhiteSpace(request.DailyRetentionDays))
-        {
-            if (!int.TryParse(request.DailyRetentionDays, out var dd) || dd <= 0)
-            {
-                throw new ArgumentException($"Invalid daily retention days '{request.DailyRetentionDays}'. Provide a positive integer.");
-            }
-            newRetentionDays = dd;
-        }
-
+        Policy.IaasVmPolicyUpdater.ValidateWorkload(policyProperties, request);
         if (!request.HasAnyInput())
         {
             return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
         }
 
-        // Extended IaasVM merger (new): applies TimeZone / schedule reshape / weekly-monthly-yearly retention.
-        if (policyProperties is IaasVmProtectionPolicy vmPolicy && request.HasIaasVmExtendedFlags())
+        if (policyProperties is IaasVmProtectionPolicy vmPolicy)
         {
             MergeIaasVmExtended(vmPolicy, request);
+            Policy.IaasVmPolicyUpdater.MergeTags(policyData.Tags, request.PolicyTags);
         }
-
-        // Legacy back-compat: single daily schedule time and/or daily retention days across policy kinds.
-        if (newScheduleTime is not null || newRetentionDays is not null)
+        else
         {
+            DateTimeOffset? newScheduleTime = request.ScheduleTime is null
+                ? null : Policy.PolicyUpdateValidator.ParseTime(request.ScheduleTime);
+            int? newRetentionDays = request.DailyRetentionDays is null
+                ? null : Policy.PolicyUpdateValidator.ParsePositive(request.DailyRetentionDays);
             UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
         }
 
-        // The RecoveryServicesBackup SDK can throw a NullReferenceException from the
-        // BackupProtectionPolicyResource constructor while materializing the CreateOrUpdate response
-        // for certain IaaS VM policy shapes (the returned policy data omits the resource id). The PUT
-        // itself is accepted by the service, so translate the opaque failure into an actionable error
-        // that points the caller at a verification step instead of surfacing a bare 500.
         try
         {
+            // Reuse the fetched resource and properties, including Resource Guard and unknown SDK fields.
             var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
             await WaitForLroCompletionAsync(operation, cancellationToken);
         }
@@ -862,16 +833,12 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         {
             throw CreatePolicyMaterializationError(policyName!, vaultName);
         }
-
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
 
     /// <summary>
-    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy from the
-    /// service response (a known <see cref="NullReferenceException"/> in
-    /// <c>BackupProtectionPolicyResource</c>'s constructor for some IaaS VM policy shapes). The update
-    /// request is accepted server-side, so the message is explicit that the change may have applied
-    /// and directs the caller to verify the current policy state.
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy response.
+    /// The update may have applied, so callers are directed to verify the current policy state.
     /// </summary>
     internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
         new(
@@ -881,131 +848,50 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
 
     /// <summary>
-    /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
-    /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
-    /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
-    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
-    /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
-    /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
+    /// Applies all VM updates through the subtype-preserving updater, including legacy flags.
     /// </summary>
     internal static void MergeIaasVmExtended(IaasVmProtectionPolicy vmPolicy, Policy.PolicyUpdateRequest req)
+        => Policy.IaasVmPolicyUpdater.Apply(vmPolicy, req);
+
+    /// <summary>
+    /// Merges explicitly supplied LTR tiers without replacing existing SDK instances or omitted times.
+    /// </summary>
+    internal static void MergeIaasVmRetention(LongTermRetentionPolicy retention, Policy.PolicyUpdateRequest req,
+        IList<DateTimeOffset> scheduleTimes, bool scheduleChanged = false)
     {
-        if (!string.IsNullOrWhiteSpace(req.TimeZone))
-        {
-            vmPolicy.TimeZone = req.TimeZone;
-        }
-
-        // Prefer the caller-supplied schedule times; otherwise use the existing policy's schedule times
-        // so retention tiers align with the current run times. Fall back to the parser default only when
-        // neither is available.
-        var existingSchedule = vmPolicy.SchedulePolicy as SimpleSchedulePolicy;
-        IList<DateTimeOffset> scheduleTimes;
-        if (!string.IsNullOrWhiteSpace(req.ScheduleTimes))
-        {
-            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
-        }
-        else if (existingSchedule is not null && existingSchedule.ScheduleRunTimes.Count > 0)
-        {
-            scheduleTimes = new List<DateTimeOffset>(existingSchedule.ScheduleRunTimes);
-        }
-        else
-        {
-            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(null);
-        }
-
-        bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
-            || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
-            || !string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek);
-
-        if (scheduleReplaced)
-        {
-            // Determine frequency: explicit --schedule-frequency wins; otherwise infer Weekly when
-            // days-of-week are supplied, and fall back to the existing schedule's frequency.
-            ScheduleRunType freq;
-            if (!string.IsNullOrWhiteSpace(req.ScheduleFrequency))
-            {
-                freq = string.Equals(req.ScheduleFrequency!.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase)
-                    ? ScheduleRunType.Weekly
-                    : ScheduleRunType.Daily;
-            }
-            else if (!string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek))
-            {
-                freq = ScheduleRunType.Weekly;
-            }
-            else
-            {
-                freq = existingSchedule?.ScheduleRunFrequency ?? ScheduleRunType.Daily;
-            }
-
-            var isWeekly = freq == ScheduleRunType.Weekly;
-            var schedule = new SimpleSchedulePolicy
-            {
-                ScheduleRunFrequency = freq,
-            };
-            if (isWeekly)
-            {
-                var days = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.ScheduleDaysOfWeek);
-                if (days.Count == 0 && existingSchedule is not null && existingSchedule.ScheduleRunDays.Count > 0)
-                {
-                    foreach (var d in existingSchedule.ScheduleRunDays)
-                    {
-                        days.Add(d);
-                    }
-                }
-                if (days.Count == 0)
-                {
-                    days.Add(BackupDayOfWeek.Sunday);
-                }
-                foreach (var d in days)
-                {
-                    schedule.ScheduleRunDays.Add(d);
-                }
-            }
-            foreach (var t in scheduleTimes)
-            {
-                schedule.ScheduleRunTimes.Add(t);
-            }
-            vmPolicy.SchedulePolicy = schedule;
-        }
-
-        var retention = vmPolicy.RetentionPolicy as LongTermRetentionPolicy;
-        if (retention is null)
-        {
-            retention = new LongTermRetentionPolicy();
-            vmPolicy.RetentionPolicy = retention;
-        }
-
         if (req.WeeklyRetentionWeeks > 0)
         {
-            var weekly = new WeeklyRetentionSchedule
+            bool replaceTimes = scheduleChanged || retention.WeeklySchedule is null;
+            var weekly = retention.WeeklySchedule ?? new WeeklyRetentionSchedule();
+            weekly.RetentionDuration ??= new RetentionDuration();
+            weekly.RetentionDuration.Count = req.WeeklyRetentionWeeks;
+            weekly.RetentionDuration.DurationType = RetentionDurationType.Weeks;
+            weekly.DaysOfTheWeek.Clear();
+            foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek))
             {
-                RetentionDuration = new RetentionDuration { Count = req.WeeklyRetentionWeeks, DurationType = RetentionDurationType.Weeks },
-            };
-            var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek);
-            if (dow.Count == 0)
-            {
-                dow.Add(BackupDayOfWeek.Sunday);
+                weekly.DaysOfTheWeek.Add(day);
             }
-            foreach (var d in dow)
+            if (replaceTimes)
             {
-                weekly.DaysOfTheWeek.Add(d);
-            }
-            foreach (var t in scheduleTimes)
-            {
-                weekly.RetentionTimes.Add(t);
+                weekly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { weekly.RetentionTimes.Add(time); }
             }
             retention.WeeklySchedule = weekly;
         }
 
         if (req.MonthlyRetentionMonths > 0)
         {
-            var monthly = new MonthlyRetentionSchedule
-            {
-                RetentionDuration = new RetentionDuration { Count = req.MonthlyRetentionMonths, DurationType = RetentionDurationType.Months },
-            };
-            if (!string.IsNullOrWhiteSpace(req.MonthlyRetentionDaysOfMonth))
+            bool replaceTimes = scheduleChanged || retention.MonthlySchedule is null;
+            var monthly = retention.MonthlySchedule ?? new MonthlyRetentionSchedule();
+            monthly.RetentionDuration ??= new RetentionDuration();
+            monthly.RetentionDuration.Count = req.MonthlyRetentionMonths;
+            monthly.RetentionDuration.DurationType = RetentionDurationType.Months;
+            monthly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.MonthlyRetentionDaysOfMonth is not null)
             {
                 monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                monthly.RetentionScheduleWeekly = null;
                 foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.MonthlyRetentionDaysOfMonth))
                 {
                     monthly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
@@ -1014,51 +900,44 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             else
             {
                 monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
-                monthly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
-                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek);
-                if (dow.Count == 0)
+                monthly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                monthly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek))
                 {
-                    dow.Add(BackupDayOfWeek.Sunday);
+                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
                 }
-                foreach (var d in dow)
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth))
                 {
-                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
-                }
-                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth);
-                if (weeks.Count == 0)
-                {
-                    weeks.Add(BackupWeekOfMonth.First);
-                }
-                foreach (var w in weeks)
-                {
-                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
                 }
             }
-            foreach (var t in scheduleTimes)
+            if (replaceTimes)
             {
-                monthly.RetentionTimes.Add(t);
+                monthly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { monthly.RetentionTimes.Add(time); }
             }
             retention.MonthlySchedule = monthly;
         }
 
         if (req.YearlyRetentionYears > 0)
         {
-            var yearly = new YearlyRetentionSchedule
+            bool replaceTimes = scheduleChanged || retention.YearlySchedule is null;
+            var yearly = retention.YearlySchedule ?? new YearlyRetentionSchedule();
+            yearly.RetentionDuration ??= new RetentionDuration();
+            yearly.RetentionDuration.Count = req.YearlyRetentionYears;
+            yearly.RetentionDuration.DurationType = RetentionDurationType.Years;
+            yearly.MonthsOfYear.Clear();
+            foreach (var month in Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths))
             {
-                RetentionDuration = new RetentionDuration { Count = req.YearlyRetentionYears, DurationType = RetentionDurationType.Years },
-            };
-            var months = Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths);
-            if (months.Count == 0)
-            {
-                months.Add(BackupMonthOfYear.January);
+                yearly.MonthsOfYear.Add(month);
             }
-            foreach (var m in months)
-            {
-                yearly.MonthsOfYear.Add(m);
-            }
-            if (!string.IsNullOrWhiteSpace(req.YearlyRetentionDaysOfMonth))
+            yearly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.YearlyRetentionDaysOfMonth is not null)
             {
                 yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                yearly.RetentionScheduleWeekly = null;
                 foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.YearlyRetentionDaysOfMonth))
                 {
                     yearly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
@@ -1067,34 +946,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             else
             {
                 yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
-                yearly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
-                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek);
-                if (dow.Count == 0)
+                yearly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                yearly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek))
                 {
-                    dow.Add(BackupDayOfWeek.Sunday);
+                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
                 }
-                foreach (var d in dow)
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth))
                 {
-                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
-                }
-                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth);
-                if (weeks.Count == 0)
-                {
-                    weeks.Add(BackupWeekOfMonth.First);
-                }
-                foreach (var w in weeks)
-                {
-                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
                 }
             }
-            foreach (var t in scheduleTimes)
+            if (replaceTimes)
             {
-                yearly.RetentionTimes.Add(t);
+                yearly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { yearly.RetentionTimes.Add(time); }
             }
             retention.YearlySchedule = yearly;
         }
     }
-
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
     {
         bool scheduleApplied = newScheduleTime is null;
@@ -1127,36 +999,6 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                             retentionApplied = true;
                         }
                     }
-                }
-                break;
-
-            case IaasVmProtectionPolicy vmPolicy:
-                if (newScheduleTime is not null && vmPolicy.SchedulePolicy is SimpleSchedulePolicy vmSchedule)
-                {
-                    var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                    vmSchedule.ScheduleRunTimes.Clear();
-                    vmSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-                    scheduleApplied = true;
-                }
-
-                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy vmRetention && vmRetention.DailySchedule is not null)
-                {
-                    if (newRetentionDays is not null)
-                    {
-                        vmRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
-                        retentionApplied = true;
-                    }
-
-                    if (newScheduleTime is not null)
-                    {
-                        var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                        vmRetention.DailySchedule.RetentionTimes.Clear();
-                        vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
-                    }
-                }
-                else if (newRetentionDays is not null)
-                {
-                    // Retention policy type not supported for update
                 }
                 break;
 

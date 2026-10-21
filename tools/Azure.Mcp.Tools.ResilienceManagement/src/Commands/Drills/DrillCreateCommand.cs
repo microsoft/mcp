@@ -15,12 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "2458b55c-e911-4d4e-91bc-9003a7cbefb0",
     Name = "create",
     Title = "Create or Update Resilience Drill",
-    Description = """
-        Creates, configures, or updates a resilience drill in an Azure service group. Use this tool when asked
-        to create or provision a resilience drill, including when required drill details must first be clarified.
-        Supports zonal and regional drills, system-assigned managed identity, RBAC setup, and an optional recovery
-        plan in the same service group. Returns the created drill definition and provisioning state.
-        """,
+    Description = "Creates a new resilience drill for a service group. Use this tool to provision a zonal or regional drill with a managed identity and RBAC setup; the service links the service group's recovery plan automatically. Also configures goal-assignment identity, Health Model monitoring, and Availability/Latency SLI monitoring. Clarify missing creation details first. Returns the drill definition and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -54,9 +49,14 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
             validationResult.Errors.Add("The resource group name must be a single path segment.");
         }
 
-        if (options.RecoveryPlan is { } recoveryPlan && recoveryPlan.Contains('/'))
+        try
         {
-            validationResult.Errors.Add("The recoveryplan name must be a single path segment.");
+            _ = DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
+                options.HealthModelMonitoringProperties, options.SliMonitoringProperties);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add(ex.Message);
         }
     }
 
@@ -72,7 +72,8 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
                 options.ResourceGroup,
                 options.DrillType,
                 options.RbacSetupMode,
-                options.RecoveryPlan,
+                DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
+                    options.HealthModelMonitoringProperties, options.SliMonitoringProperties),
                 options.Tenant,
                 cancellationToken);
 
@@ -93,12 +94,13 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        ArgumentException => ex.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The drill could not be created or updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed creating or updating the drill. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "The service group, subscription, resource group, or recoveryplan was not found.",
+            "The service group, subscription, or resource group was not found.",
         RequestFailedException =>
             "The drill request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)

@@ -33,13 +33,13 @@ The mention of a service group supplies context for resolving a usage plan; it d
 
 1. List assignments with `mcp_azure_mcp_ser_resiliency_goal_assignment_get`.
 2. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
-3. Get individual members when full HA/DR attestation, participation, or exclusion details are needed.
+3. Get individual members for the GA `zonalResiliency` details. Preview-only HA/DR fields are not returned; do not substitute zonal resiliency values for them.
 
 These tools do not create or mutate goals.
 
 ## Create and Configure a Drill
 
-1. Collect drill type, region, supporting-resource subscription, RBAC setup mode, and optional recovery plan.
+1. Collect drill type, region, supporting-resource subscription, RBAC setup mode, and optional recovery plan. If GA goal/Health Model/SLI configuration is requested, collect its identity and selected resource IDs using the payload reference; do not supply the read-only goal assignment ID.
 2. Call `mcp_azure_mcp_ser_resiliency_drill_create`.
 3. Get the drill and verify provisioning state.
 4. List targets with `mcp_azure_mcp_ser_resiliency_drill_resource_get`.
@@ -51,7 +51,7 @@ These tools do not create or mutate goals.
 
 1. Get the drill and confirm it is not already running.
 2. Run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
-3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` using the intended physical source locations.
+3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution`. Supply source locations and optionally the intended operation (`Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`). Sources may be omitted only for explicit `Reprotect`; omitting the operation still requires sources.
 4. Stop and report blockers when validation does not qualify the drill for execution.
 5. Ask for `Failover` versus `TestFailover` if not explicit.
 6. Start with `mcp_azure_mcp_ser_resiliency_drill_start` and retain the operation ID.
@@ -59,6 +59,10 @@ These tools do not create or mutate goals.
 8. Inspect run targets with `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` when per-resource results are needed.
 9. Use `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.
 10. End only a running drill with `mcp_azure_mcp_ser_resiliency_drill_end`; require outcome and notes.
+
+For drill-run failover, always collect the physical source zones; the service does not process a failover without them. Automatic failover defaults to `false` (pause after fault injection). Failover selections must be full drill-resource IDs under the requested service group and drill, obtained with drill resource get. Reprotect can restrict processing to selected recovery-resource IDs in the same service group; omission means all qualified resources. Neither request acceptance nor successful input validation proves that fault injection or reprotection has completed.
+
+To update monitoring, send only the fields being changed. A supplied SLI array is a replacement, not an append. Clear Health Model or SLI monitoring only on explicit request, using the string `"null"` as the corresponding JSON option payload. Omission preserves the configuration.
 
 ## Create a Recovery Plan
 

@@ -260,6 +260,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/tests/">
     <Project Path="tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.Tests/Azure.Mcp.Tools.Deploy.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/src/">
+    <Project Path="tools/Azure.Mcp.Tools.DeviceProvisioning/src/Azure.Mcp.Tools.DeviceProvisioning.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.DeviceProvisioning/tests/Azure.Mcp.Tools.DeviceProvisioning.Tests/Azure.Mcp.Tools.DeviceProvisioning.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/" />
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/src/">
     <Project Path="tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />

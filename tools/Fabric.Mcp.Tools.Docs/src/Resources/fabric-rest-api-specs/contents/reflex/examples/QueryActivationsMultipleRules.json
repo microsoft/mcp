@@ -1,0 +1,41 @@
+{
+  "title": "Query activations - multiple rules example",
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "reflexId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "queryActivationsRequest": {
+      "query": "union ruleactivations_341301deecbd499ca5e60fcdc17ca3e2, ruleactivations_a1b2c3d4e5f67890abcdef1234567890 | where ___time > ago(24h) | summarize count() by System.RuleId, bin(___time, 1h)"
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "tables": [
+          {
+            "tableName": "PrimaryResult",
+            "columns": [
+              {
+                "columnName": "System.RuleId",
+                "columnType": "String"
+              },
+              {
+                "columnName": "___time",
+                "columnType": "DateTime"
+              },
+              {
+                "columnName": "count_",
+                "columnType": "Long"
+              }
+            ],
+            "rows": [
+              ["341301de-ecbd-499c-a5e6-0fcdc17ca3e2", "2026-04-29T11:00:00Z", 8],
+              ["341301de-ecbd-499c-a5e6-0fcdc17ca3e2", "2026-04-29T10:00:00Z", 22],
+              ["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "2026-04-29T11:00:00Z", 4],
+              ["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "2026-04-29T10:00:00Z", 15]
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,10 +1,10 @@
-# PyPI Packaging for Azure MCP Server
+# PyPI Packaging for MCP Servers
 
-This document describes how the Azure MCP Server is packaged for distribution on [PyPI](https://pypi.org), enabling installation via `pip`, `pipx`, or execution via `uvx`.
+This document describes how MCP servers are packaged for distribution on [PyPI](https://pypi.org), enabling installation via `pip`, `pipx`, or execution via `uvx`. The examples below use the Azure MCP Server.
 
 ## Package Architecture
 
-The Azure MCP Server is published as a single package (`msmcp-azure`) with platform-specific wheels. Each wheel contains the pre-compiled binary for a specific OS and architecture combination.
+Each configured MCP server is published as a single package (for example, `msmcp-azure`) with platform-specific wheels. Each wheel contains the pre-compiled binary for a specific OS and architecture combination.
 
 ### Wheel Naming Convention
 
@@ -78,6 +78,8 @@ azmcp server start
 
 ## Building PyPI Packages
 
+[Pack-Pypi.ps1](../scripts/Pack-Pypi.ps1) uses each server's `cliName` from the generated `build_info.json` to configure both its console entry point and the executable name in the shared [Python launcher template](./__init__.py). The launcher adds `.exe` on Windows and uses the configured name without a suffix on Linux and macOS. Native packages use the same configured executable name.
+
 ### Prerequisites
 
 1. Python 3.10+ with `pip` and `build` package
@@ -114,6 +116,16 @@ For quick local testing:
 pip install .work/packages_pypi/Azure.Mcp.Server/*.whl
 ```
 
+### Testing
+
+Run the packaging regression tests with:
+
+```powershell
+Invoke-Pester -Path .\eng\scripts\Pack-Pypi.Tests.ps1
+```
+
+The tests check configured executable names on Windows, Linux, and macOS for both standard and native packages, including argument forwarding and exit codes. Wheel building and package installation are stubbed out.
+
 ## Publishing to PyPI
 
 ### Test PyPI (recommended for testing)
@@ -142,7 +154,8 @@ eng/
 │   ├── pyproject.toml.template  # Template for pyproject.toml
 │   └── README.md                # This file
 └── scripts/
-    └── Pack-Pypi.ps1            # Packaging script
+    ├── Pack-Pypi.ps1            # Packaging script
+    └── Pack-Pypi.Tests.ps1      # Packaging regression tests
 ```
 
 ## Debugging

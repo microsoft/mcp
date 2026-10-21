@@ -38,10 +38,10 @@ public sealed class PolicyUpdateRequest
     /// <summary>Windows time-zone identifier (e.g. "Pacific Standard Time").</summary>
     public string? TimeZone { get; set; }
 
-    /// <summary>Schedule frequency: "Daily" or "Weekly".</summary>
+    /// <summary>Schedule frequency: Daily, Weekly, or Hourly on an existing Enhanced policy.</summary>
     public string? ScheduleFrequency { get; set; }
 
-    /// <summary>Comma-separated backup times in HH:mm (e.g. "02:00" or "02:00,14:00").</summary>
+    /// <summary>One Daily/Weekly backup time in HH:mm (e.g. "02:00").</summary>
     public string? ScheduleTimes { get; set; }
 
     /// <summary>Comma-separated days of the week (required with Weekly).</summary>
@@ -63,29 +63,77 @@ public sealed class PolicyUpdateRequest
     public string? YearlyRetentionDaysOfWeek { get; set; }
     public string? YearlyRetentionDaysOfMonth { get; set; }
 
+    public int? HourlyIntervalHours { get; set; }
+    public string? HourlyWindowStartTime { get; set; }
+    public int? HourlyWindowDurationHours { get; set; }
+    public string? PolicySubType { get; set; }
+    public string? InstantRpRetentionDays { get; set; }
+    public string? InstantRpResourceGroup { get; set; }
+    public string? SnapshotConsistency { get; set; }
+    public string? ArchiveTierAfterDays { get; set; }
+    public string? ArchiveTierMode { get; set; }
+    public bool? SmartTier { get; set; }
+    public string? PolicyTags { get; set; }
+
+    internal static PolicyUpdateRequest FromOptions(Options.Policy.PolicyUpdateOptions options) => new()
+    {
+        Policy = options.Policy,
+        ScheduleTime = options.ScheduleTime,
+        DailyRetentionDays = options.DailyRetentionDays,
+        TimeZone = options.TimeZone,
+        ScheduleFrequency = options.ScheduleFrequency,
+        ScheduleTimes = options.ScheduleTimes,
+        ScheduleDaysOfWeek = options.ScheduleDaysOfWeek,
+        WeeklyRetentionWeeks = options.WeeklyRetentionWeeks,
+        WeeklyRetentionDaysOfWeek = options.WeeklyRetentionDaysOfWeek,
+        MonthlyRetentionMonths = options.MonthlyRetentionMonths,
+        MonthlyRetentionWeekOfMonth = options.MonthlyRetentionWeekOfMonth,
+        MonthlyRetentionDaysOfWeek = options.MonthlyRetentionDaysOfWeek,
+        MonthlyRetentionDaysOfMonth = options.MonthlyRetentionDaysOfMonth,
+        YearlyRetentionYears = options.YearlyRetentionYears,
+        YearlyRetentionMonths = options.YearlyRetentionMonths,
+        YearlyRetentionWeekOfMonth = options.YearlyRetentionWeekOfMonth,
+        YearlyRetentionDaysOfWeek = options.YearlyRetentionDaysOfWeek,
+        YearlyRetentionDaysOfMonth = options.YearlyRetentionDaysOfMonth,
+        HourlyIntervalHours = options.HourlyIntervalHours,
+        HourlyWindowStartTime = options.HourlyWindowStartTime,
+        HourlyWindowDurationHours = options.HourlyWindowDurationHours,
+        PolicySubType = options.PolicySubType,
+        InstantRpRetentionDays = options.InstantRpRetentionDays,
+        InstantRpResourceGroup = options.InstantRpResourceGroup,
+        SnapshotConsistency = options.SnapshotConsistency,
+        ArchiveTierAfterDays = options.ArchiveTierAfterDays,
+        ArchiveTierMode = options.ArchiveTierMode,
+        SmartTier = options.SmartTier,
+        PolicyTags = options.PolicyTags,
+    };
+
     /// <summary>
     /// True when the caller supplied any of the new IaasVM-parity fields.
-    /// Used by <c>RsvBackupOperations.UpdatePolicyAsync</c> to decide whether to
-    /// switch on the new merger path or keep the legacy schedule-time /
-    /// retention-days path.
+    /// Used to reject VM-only options on other workloads. All VM updates,
+    /// including legacy schedule-time / retention-days, use the same merger.
     /// </summary>
     public bool HasIaasVmExtendedFlags()
     {
-        return !string.IsNullOrWhiteSpace(TimeZone)
-            || !string.IsNullOrWhiteSpace(ScheduleFrequency)
-            || !string.IsNullOrWhiteSpace(ScheduleTimes)
-            || !string.IsNullOrWhiteSpace(ScheduleDaysOfWeek)
-            || WeeklyRetentionWeeks > 0
-            || !string.IsNullOrWhiteSpace(WeeklyRetentionDaysOfWeek)
-            || MonthlyRetentionMonths > 0
-            || !string.IsNullOrWhiteSpace(MonthlyRetentionWeekOfMonth)
-            || !string.IsNullOrWhiteSpace(MonthlyRetentionDaysOfWeek)
-            || !string.IsNullOrWhiteSpace(MonthlyRetentionDaysOfMonth)
-            || YearlyRetentionYears > 0
-            || !string.IsNullOrWhiteSpace(YearlyRetentionMonths)
-            || !string.IsNullOrWhiteSpace(YearlyRetentionWeekOfMonth)
-            || !string.IsNullOrWhiteSpace(YearlyRetentionDaysOfWeek)
-            || !string.IsNullOrWhiteSpace(YearlyRetentionDaysOfMonth);
+        return TimeZone is not null
+            || ScheduleFrequency is not null
+            || ScheduleTimes is not null
+            || ScheduleDaysOfWeek is not null
+            || WeeklyRetentionWeeks != 0
+            || WeeklyRetentionDaysOfWeek is not null
+            || MonthlyRetentionMonths != 0
+            || MonthlyRetentionWeekOfMonth is not null
+            || MonthlyRetentionDaysOfWeek is not null
+            || MonthlyRetentionDaysOfMonth is not null
+            || YearlyRetentionYears != 0
+            || YearlyRetentionMonths is not null
+            || YearlyRetentionWeekOfMonth is not null
+            || YearlyRetentionDaysOfWeek is not null
+            || YearlyRetentionDaysOfMonth is not null
+            || HourlyIntervalHours.HasValue || HourlyWindowStartTime is not null || HourlyWindowDurationHours.HasValue
+            || PolicySubType is not null || InstantRpRetentionDays is not null || InstantRpResourceGroup is not null
+            || SnapshotConsistency is not null || ArchiveTierAfterDays is not null || ArchiveTierMode is not null
+            || SmartTier.HasValue || PolicyTags is not null;
     }
 
     /// <summary>
@@ -94,8 +142,8 @@ public sealed class PolicyUpdateRequest
     /// </summary>
     public bool HasAnyInput()
     {
-        return !string.IsNullOrWhiteSpace(ScheduleTime)
-            || !string.IsNullOrWhiteSpace(DailyRetentionDays)
+        return ScheduleTime is not null
+            || DailyRetentionDays is not null
             || HasIaasVmExtendedFlags();
     }
 }

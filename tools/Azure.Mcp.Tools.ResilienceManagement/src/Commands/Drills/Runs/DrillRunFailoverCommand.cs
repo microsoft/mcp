@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -16,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Initiates failover for a run of a resilience drill from specified physical Azure zones in an Azure service group.",
+    Description = "Starts failover for a resilience drill run in a service group from physical source zones. Optional selected drill resources limit fault injection and failover; auto-failover continues automatically to failover instead of pausing for manual input after fault injection.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -27,7 +25,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> logger, IResilienceManagementService resilienceManagementService)
     : AuthenticatedCommand<DrillRunFailoverOptions, DrillRunFailoverCommand.DrillRunFailoverCommandResult>
 {
-    private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
     private readonly ILogger<DrillRunFailoverCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
 
@@ -38,19 +35,16 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
 
-        if (options.SourceLocations.Length == 0)
+        if (options.SourceLocations is null or { Length: 0 })
         {
             validationResult.Errors.Add("At least one source location is required.");
         }
-        else if (options.SourceLocations.Any(location => !IsValidPhysicalZone(location)))
+        else if (options.SourceLocations.Any(location => string.IsNullOrWhiteSpace(location) || !IsValidPhysicalZone(location)))
         {
             validationResult.Errors.Add("Each source location must use the physical Azure zone format '<region>-az<zone-number>', such as 'eastus-az1'.");
         }
 
-        if (options.SelectedResourceIds?.Any(resourceId => !IsRecoveryResourceIdForServiceGroup(resourceId, options.ServiceGroup)) == true)
-        {
-            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under the requested service group with a GUID resource name.");
-        }
+        DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult, drill: options.Drill);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillRunFailoverOptions options, CancellationToken cancellationToken)
@@ -131,25 +125,6 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
 
         return true;
-    }
-
-    private static bool IsRecoveryResourceIdForServiceGroup(string resourceId, string serviceGroup)
-    {
-        try
-        {
-            var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? recoveryPlanId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
-                serviceGroupId?.ResourceType == ServiceGroupResourceType &&
-                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
-                Guid.TryParse(parsed.Name, out _);
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            return false;
-        }
     }
 
     public sealed record DrillRunFailoverCommandResult(string OperationId, string DrillRun, bool Accepted);
