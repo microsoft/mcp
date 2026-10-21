@@ -334,6 +334,30 @@ Commit the updated `assets.json`. Never commit `.proxy/` or `.assets/`.
 
 ## Recording Safeguards
 
+### Goals canary recording and playback
+
+For an approved ECY run, use a Debug server and local `TestMode: Record`.
+The opt-in below routes only Goals clients to `https://eastus2euap.management.azure.com`
+with `x-ms-rhub-routing-location: eastus2euap`. It requires the fixture's `TEST_PROXY_URL`,
+preserves proxy capture, and is absent from Release builds.
+
+```powershell
+$env:MCP_GOALS_TEST_ECY = 'true'
+$env:MCP_TEST_TRANSPORT = 'stdio'
+dotnet test --project tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj --no-build --filter-method '*_ga*'
+```
+
+Use the [storage-only fixture](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/goal-lifecycle-resources.bicep)
+with an explicitly approved small service group and a dedicated resource group tagged
+`purpose=mcp-goals-ga-lifecycle`. It does not provision SLIs or prove nonempty SLI replacement.
+The [cleanup script](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/remove-goal-lifecycle-resources.ps1)
+requires `-ApprovedCleanup` and verifies dedicated fixture identity; never remove a reused parent group.
+
+Run [Sanitize-GoalRecordings.ps1](../../../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Sanitize-GoalRecordings.ps1)
+on the exact `SessionRecords` directory to sanitize recording variables as well as HTTP entries.
+Restore `TestMode: Playback` and replay with both `MCP_TEST_TRANSPORT=stdio` and `http`,
+retaining the ECY opt-in. Keep all existing recordings and do not publish before approval.
+
 - Preserve LRO polling paths by disabling the default `AZSDK2003` sanitizer in `ResilienceManagementCommandTests`; replacing the entire `Location` header breaks playback.
 - Sanitize only signed `t`, `c`, `s`, and `h` query values in LRO locations while retaining the path and operation identifier used for request matching.
 - Sanitize `operation-id` and `x-ms-operation-identifier` headers because they can contain per-run or identity data.

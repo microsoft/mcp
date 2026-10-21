@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added resilience goal assignment create, update, delete, recommend-capacity, refresh-resources, and update-resources tools for service-group-scoped zonal resiliency, service-level targets, participation, attestation, and user confirmation.

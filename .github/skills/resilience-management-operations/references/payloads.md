@@ -49,6 +49,68 @@ On update, omitted configurations and nested fields are preserved. Supplying `sl
 
 Each JSON option is limited to 1 MB. Unknown, duplicate, and read-only properties are rejected rather than silently discarded.
 
+## Goal Resource Updates (GA)
+
+`resiliency_goal_assignment_update-resources` takes `resources` as a JSON string
+containing a non-empty array (maximum 1 MB). Each item requires
+`properties.resourceArmId`, a unique complete underlying Azure resource ARM ID,
+and `properties.zonalResiliency` with at least one change:
+
+```json
+[
+  {
+    "properties": {
+      "resourceArmId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vm}",
+      "zonalResiliency": {
+        "goalParticipation": "Included",
+        "attestationStatus": "NotAttested",
+        "userConfirmation": [
+          {
+            "solutionDisplayName": "ZonePinnedVmWithZrsDisk",
+            "confirmationStatus": "ApprovedByUser",
+            "reasonForRequestingConfirmation": "ZonePinnedZrsDataDisksConditional"
+          }
+        ]
+      }
+    }
+  }
+]
+```
+
+The example's confirmation must reflect the user's actual decision; do not copy it
+as a default approval. Omit fields that are not being changed.
+
+| Field | Exact case-sensitive values |
+|---|---|
+| `goalParticipation` | `Included`, `Excluded` |
+| `attestationStatus` | `NotAttested`, `ManuallyAttested` |
+| `userConfirmation[].solutionDisplayName` | `ZonePinnedVmWithZrsDisk`, `VmInMultiZoneVmss` |
+| `userConfirmation[].confirmationStatus` | `ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser` |
+| `userConfirmation[].reasonForRequestingConfirmation` (optional) | `ZonePinnedZrsDataDisksConditional`, `VmInMultiZoneScaleSetStatelessOnly` |
+
+When present, `userConfirmation` must be non-empty and each entry requires a
+solution name and status; solution names cannot repeat. Unknown or duplicate
+properties, empty changes, duplicate resource IDs, and legacy flat HA/DR fields
+are rejected. Manual attestation requires verified resilience.
+
+## Goal Assignment SLI Associations
+
+Assignment create/update `service-level-resource-ids` is an ordinary string array,
+not a JSON string or the member-update payload above. Each unique complete ID must
+refer to an existing `Microsoft.Monitor/slis` resource in the same service group,
+with caller read access. Service-source validation permits at most one SLI per
+category; resolve actual resources rather than inventing IDs or fixtures.
+
+Create requires `require-zonal-resiliency=true`; it cannot replace an existing assignment.
+Update takes exactly one of a non-empty `service-level-resource-ids` array or
+`clear-service-level-resources: true`. The latter removes associations only, not
+the indicators. Update GETs the assignment and preserves its zonal requirement
+through SDK `UpdateAsync`; GA PATCH cannot change `requireZonalResiliency`.
+
+Recommend-capacity `resource-ids` is also an ordinary ARM ID array, but identifies
+underlying Azure resources, not SLIs. Resource IDs may contain subscription
+segments, but Goals tools have no `subscription` option.
+
 ## Recovery Plan Actions
 
 A manual action pauses the workflow for a person:

@@ -2,7 +2,7 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 41 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it.
+This reference lists all 47 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it. The `mcp_azure_mcp_ser_` prefix is the client display prefix; registered tool names start at `resiliency_`. Verb hyphens are preserved.
 
 ## Usage Plans
 
@@ -22,9 +22,36 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_create` | Create an assignment; wait and return hydrated assignment | **`service-group`**, **`goal-assignment`**, **`require-zonal-resiliency`** (`true`, required by the service), `service-level-resource-ids?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update` | Replace or clear SLI associations, preserving the zonal requirement | **`service-group`**, **`goal-assignment`**, `service-level-resource-ids?` (non-empty string array), `clear-service-level-resources?` (boolean), `tenant?`. Exactly one of IDs or clear set to `true` is required. |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` | Delete assignment and tracked members, not underlying Azure resources | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_recommend-capacity` | Start zonal capacity recommendations; does not provision capacity | **`service-group`**, **`goal-assignment`**, `resource-ids?` (at most 50 unique underlying ARM IDs; omit for automatic discovery), `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_refresh-resources` | Rediscover tracked resources from current service-group membership | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update-resources` | Change zonal participation, attestation, or user confirmation | **`service-group`**, **`goal-assignment`**, **`resources`** (non-empty GA JSON array, at most 1 MB), `tenant?`. See [payloads](./payloads.md#goal-resource-updates-ga). |
 | `mcp_azure_mcp_ser_resiliency_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+Only the two GET tools are read-only. Omit `name` for ID/name summaries; provide it
+for full details. Assignments expose `requireZonalResiliency` and
+`serviceLevelResources`; members expose `resourceArmId` and nested
+`zonalResiliency`. No Goals command takes `subscription` or a goal template.
+Create/update/delete wait at most ten minutes; create/update then GET the hydrated
+assignment. Delete reports whether it existed. Other mutations return an operation
+with service operation ID, `Accepted`/`Succeeded`, and `hasCompleted`; acceptance
+is not completion. Recommend-capacity and refresh-resources are non-idempotent.
+Create/update/delete/update-resources are mutating, destructive, and idempotent.
+Service-level resource arrays are ordinary unique ARM ID arrays, not JSON strings.
+IDs must be existing `Microsoft.Monitor/slis` resources in the same service group,
+readable by the caller; service-source validation allows at most one per category.
+Assignment names must match `^[a-zA-Z0-9-]{3,24}$`. The GA service rejects longer
+names and characters other than ASCII letters, digits, and hyphens.
+Create sets initial targets (none when omitted); it cannot replace an existing assignment.
+PUT may retry failed provisioning, so create retains conservative destructive metadata.
+Update GETs the assignment and calls
+SDK `UpdateAsync`, preserving its zonal requirement; GA PATCH cannot change that
+flag. Clear removes associations, not SLI resources. Never invent SLI fixture IDs.
+
+Goals target API `2026-10-01`. See [development](./development.md#goals-canary-recording-and-playback)
+for isolated ECY recording; production tools retain their normal ARM endpoint.
 
 With API `2026-10-01`, assignment details include `requireZonalResiliency`, `serviceLevelResources`, and `errorDetails`, and member details include `resourceArmId` and `zonalResiliency`. Preview-only HA/DR goal fields are not returned. Do not infer HA/DR participation or attestation from zonal resiliency.
 

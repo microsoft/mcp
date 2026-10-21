@@ -15,7 +15,7 @@ public sealed record GoalAssignmentInfo(
 public sealed record GoalAssignmentInfoProperties(
     [property: JsonPropertyName("provisioningState")] string ProvisioningState,
     [property: JsonPropertyName("requireZonalResiliency")] bool? RequireZonalResiliency = null,
-    [property: JsonPropertyName("serviceLevelResources")] JsonElement? ServiceLevelResources = null,
+    [property: JsonPropertyName("serviceLevelResources")] IReadOnlyList<GoalServiceLevelTargetInfo>? ServiceLevelResources = null,
     [property: JsonPropertyName("errorDetails")] JsonElement? ErrorDetails = null);
 
 public sealed record GoalAssignmentInfoSystemData(

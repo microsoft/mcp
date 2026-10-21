@@ -62,8 +62,8 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.NotNull(result.Properties);
         Assert.NotNull(result.Properties.ServiceLevelResources);
-        JsonElement serviceLevelResource = Assert.Single(result.Properties.ServiceLevelResources.Value.EnumerateArray());
-        Assert.Equal(sliId, serviceLevelResource.GetProperty("serviceLevelIndicatorResourceId").GetString());
+        GoalServiceLevelTargetInfo serviceLevelResource = Assert.Single(result.Properties.ServiceLevelResources);
+        Assert.Equal(sliId, serviceLevelResource.ServiceLevelIndicatorResourceId);
         Assert.NotNull(result.Properties.ErrorDetails);
         Assert.Equal("GoalAssignmentFailed", result.Properties.ErrorDetails.Value.GetProperty("code").GetString());
         Assert.Equal("Failed", result.Properties.ProvisioningState);
@@ -97,8 +97,15 @@ public sealed class ResilienceManagementServiceTests
             {
                 resourceArmId = UserAssignedIdentityResourceId,
                 provisioningState = "NeedsAttention",
-                zonalResiliency = new { goalParticipation = "Excluded", attestationStatus = "NotAttested", exclusionReason = "UnsupportedResource" },
-                disasterRecoveryAttestationStatus = "Attested"
+                zonalResiliency = new
+                {
+                    goalParticipation = "Excluded",
+                    attestationStatus = "NotAttested",
+                    exclusionReason = "UnsupportedResource",
+                    userConfirmation = new[] { new { solutionDisplayName = "ZoneRedundantStorage", confirmationStatus = "Pending" } }
+                },
+                disasterRecoveryAttestationStatus = "Attested",
+                serviceGroupMemberships = new[] { new { membershipType = "Direct", serviceGroupId = "/providers/Microsoft.Management/serviceGroups/sg1" } }
             }
         });
         GoalMembersData data = ModelReaderWriter.Read<GoalMembersData>(response)!;
@@ -109,11 +116,45 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal("NeedsAttention", result.Properties.ProvisioningState);
         Assert.Equal(UserAssignedIdentityResourceId, result.Properties.ResourceArmId);
         Assert.NotNull(result.Properties.ZonalResiliency);
-        Assert.Equal("Excluded", result.Properties.ZonalResiliency.Value.GetProperty("goalParticipation").GetString());
-        Assert.Equal("UnsupportedResource", result.Properties.ZonalResiliency.Value.GetProperty("exclusionReason").GetString());
+        Assert.Equal("Excluded", result.Properties.ZonalResiliency.GoalParticipation);
+        Assert.Equal("NotAttested", result.Properties.ZonalResiliency.AttestationStatus);
+        Assert.Equal("UnsupportedResource", result.Properties.ZonalResiliency.ExclusionReason);
+        GoalResourceConfirmationInfo confirmation = Assert.Single(result.Properties.ZonalResiliency.UserConfirmation);
+        Assert.Equal("ZoneRedundantStorage", confirmation.SolutionDisplayName);
+        Assert.Equal("Pending", confirmation.ConfirmationStatus);
         string json = JsonSerializer.Serialize(result.Properties, ResilienceManagementJsonContext.Default.GoalResourceInfoProperties);
         Assert.DoesNotContain("disasterRecoveryAttestationStatus", json, StringComparison.Ordinal);
         Assert.DoesNotContain("serviceGroupMemberships", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MapDrillResource_PreservesLegacyFieldsWithoutInventingSdkDiscriminator()
+    {
+        var content = BinaryData.FromString("""
+            {
+              "id":"/providers/Microsoft.Management/serviceGroups/group/providers/Microsoft.AzureResilienceManagement/drills/drill/drillResources/member",
+              "name":"member",
+              "properties":{
+                "haStatus":"NotResilient",
+                "activePhysicalZones":["zone1"],
+                "recoveryPhysicalZones":["zone2"]
+              }
+            }
+            """);
+        var data = ModelReaderWriter.Read<DrillTargetData>(content, new ModelReaderWriterOptions("W"));
+        Assert.NotNull(data);
+        using var sdkJson = JsonDocument.Parse(ModelReaderWriter.Write(data, new ModelReaderWriterOptions("J")));
+        var sdkProperties = sdkJson.RootElement.GetProperty("properties");
+        Assert.False(sdkProperties.TryGetProperty("haStatus", out _));
+        Assert.Equal("unknown", sdkProperties.GetProperty("drillType").GetString());
+
+        DrillResourceInfo mapped = ResilienceManagementService.MapDrillResource(content);
+
+        Assert.Equal("member", mapped.Name);
+        Assert.Equal("NotResilient", mapped.Properties.GetProperty("haStatus").GetString());
+        Assert.Equal("zone1", mapped.Properties.GetProperty("activePhysicalZones")[0].GetString());
+        Assert.Equal("zone2", mapped.Properties.GetProperty("recoveryPhysicalZones")[0].GetString());
+        Assert.False(mapped.Properties.TryGetProperty("drillType", out _));
     }
 
     [Theory]
