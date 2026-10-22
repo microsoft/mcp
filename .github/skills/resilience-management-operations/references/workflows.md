@@ -84,6 +84,7 @@ option. GET selects an assignment with `name`; mutations use `goal-assignment`.
 8. Inspect run targets with `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` when per-resource results are needed.
 9. Use `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.
 10. End only a running drill with `mcp_azure_mcp_ser_resiliency_drill_end`; require outcome and notes.
+11. After a run finishes, generate its report with `mcp_azure_mcp_ser_resiliency_drill_run_generate-report`, check `properties.report.generationStatus` with `drill_run_get` until it is `Succeeded`, then use `mcp_azure_mcp_ser_resiliency_drill_run_get-report-download-url`. Treat the returned URL as a secret: give it to the user only, never log or store it, and note that it expires.
 
 For drill-run failover, always collect the physical source zones; the service does not process a failover without them. Automatic failover defaults to `false` (pause after fault injection). Failover selections must be full drill-resource IDs under the requested service group and drill, obtained with drill resource get. Reprotect can restrict processing to selected recovery-resource IDs in the same service group; omission means all qualified resources. Neither request acceptance nor successful input validation proves that fault injection or reprotection has completed.
 

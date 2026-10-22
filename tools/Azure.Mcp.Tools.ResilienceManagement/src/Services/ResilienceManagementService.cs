@@ -20,6 +20,7 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DrillReportOperationTimeout = TimeSpan.FromMinutes(5);
 
     // The Drills backend reads the per-operation id from the operationId query parameter, but the generated SDK only
     // emits the operation-id header. Install a policy that mirrors the header into the query for long-running operations.
@@ -2117,6 +2118,73 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
 
         return operationId;
     }
+
+    public async Task<DrillRunGenerateReportResult> GenerateDrillRunReportAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        string operationId = Guid.NewGuid().ToString();
+
+        ArmOperation<DrillReportSummary> operation = await drillRunResource.GenerateReportAsync(WaitUntil.Started, operationId, cancellationToken);
+
+        return new DrillRunGenerateReportResult(
+            operationId,
+            operation.HasCompleted,
+            operation.HasValue ? MapDrillRunReport(operation.Value) : null);
+    }
+
+    public async Task<DrillRunReportDownloadInfo> GetDrillRunReportDownloadUrlAsync(string serviceGroup, string drill, string drillRun, string? format = null, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        var content = new ListReportDownloadUrlContent();
+        if (format is not null)
+        {
+            content.Format = new DrillReportFormat(format);
+        }
+
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ListReportDownloadUrlResult> operation = await drillRunResource.GetReportDownloadUriAsync(WaitUntil.Started, operationId, content, cancellationToken);
+
+        await ExecuteWithTimeoutAsync(
+            async token =>
+            {
+                await WaitForLroCompletionAsync(operation, token);
+                return true;
+            },
+            "drill run report download URL request",
+            DrillReportOperationTimeout,
+            cancellationToken);
+
+        return MapDrillRunReportDownload(operation.Value, format);
+    }
+
+    internal static DrillRunReportInfo MapDrillRunReport(DrillReportSummary summary) => new(
+        summary.GenerationStatus?.ToString(),
+        summary.FinalizationState?.ToString(),
+        summary.StageStatuses
+            .Select(stage => new DrillRunReportStageInfo(
+                stage.DrillRunStage.ToString(),
+                stage.GenerationStatus?.ToString(),
+                stage.LastAttemptOn,
+                MapDrillRunReportError(stage.LastError)))
+            .ToList(),
+        summary.AvailableFormats.Select(format => format.ToString()).ToList(),
+        summary.LastGeneratedOn,
+        summary.SchemaVersion,
+        MapDrillRunReportError(summary.LastError));
+
+    internal static DrillRunReportDownloadInfo MapDrillRunReportDownload(ListReportDownloadUrlResult result, string? requestedFormat) => new(
+        result.Format?.ToString() ?? requestedFormat,
+        result.DownloadUri?.ToString() ?? throw new InvalidOperationException("The service returned no report download URL."),
+        result.ExpiryOn);
+
+    private static DrillRunReportErrorInfo? MapDrillRunReportError(ResilienceManagementErrorDetail? error) =>
+        error is null ? null : new DrillRunReportErrorInfo(error.Code, error.Message, error.Recommendations.ToList());
 
     // The service accepts a reprotect without a request body but never processes it, so always send a JSON body.
     internal static DrillRunReprotectContent CreateDrillRunReprotectContent(IReadOnlyList<string>? selectedResourceIds)

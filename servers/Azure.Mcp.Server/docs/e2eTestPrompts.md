@@ -1230,6 +1230,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
+| resiliency_drill_run_generate-report | Generate the report for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_generate-report | Regenerate the resilience drill run report for run <drill_run_name> of drill <drill_name> in service group <service_group> and show its generation status | none |
+| resiliency_drill_run_get-report-download-url | Get the download URL for the generated report of drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_get-report-download-url | Give me a link to download the HTML report for resilience drill run <drill_run_name> of drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |

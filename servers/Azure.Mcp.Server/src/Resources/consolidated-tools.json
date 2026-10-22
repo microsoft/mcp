@@ -258,6 +258,72 @@
       ]
     },
     {
+      "name": "generate_azure_resilience_drill_run_report",
+      "description": "Generate or regenerate the report for an Azure Resilience Management drill run and return the generation operation and report summary.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only creates or refreshes the report for a drill run and does not change drill execution or delete resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Regenerating the report for the same drill run produces the same report content without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts report generation, which writes the generated report for the drill run."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_drill_run_generate-report"
+      ]
+    },
+    {
+      "name": "get_azure_resilience_drill_run_report_download_url",
+      "description": "Get a short-lived, read-only download URL for the generated report of an Azure Resilience Management drill run.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only returns a download URL and does not modify or delete any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times returns a valid download URL for the same report without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run report."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only provides access to an existing report without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "The returned URL grants time-limited access to the report and must be treated as a secret."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_drill_run_get-report-download-url"
+      ]
+    },
+    {
       "name": "finalize_azure_resilience_recoveryplan",
       "description": "Complete or finalize the current Azure Resilience Management recoveryplan operation by validating resource permissions and updating recoveryplan state. This does not commit a completed failover.",
       "toolMetadata": {
