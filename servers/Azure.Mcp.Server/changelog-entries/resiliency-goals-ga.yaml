@@ -1,8 +1,0 @@
-pr: 4014
-changes:
-  - section: Features Added
-    description: Added resilience goal assignment create, update, delete, recommend-capacity, refresh-resources, and update-resources tools for service-group-scoped zonal resiliency, service-level targets, participation, attestation, and user confirmation.
-  - section: Features Added
-    description: "Exposed the remaining GA SDK request fields on existing resiliency tools: drill create/update `--identity`, `--chaos-resource-properties`, `--recovery-plan-properties`, and `--monitoring-properties` (plus `--resource-group` on update, which must match the creation-time resource group); drill run failover `--user-consent`; recoveryplan create `None` identity, `--default-group-unique-id`, and CustomRunbook action `associatedIdentity`; recoveryplan resource update `CrossZoneVMRecovery` protection; and usage plan create `--tags`."
-  - section: Bugs Fixed
-    description: "Resiliency recoveryplan resource update now reports a rejected long-running operation as a bad request with the service error code instead of surfacing the successful status of its final poll."

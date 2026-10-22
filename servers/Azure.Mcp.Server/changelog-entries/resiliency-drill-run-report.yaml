@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: "Added the resiliency drill run generate-report tool to generate or refresh the report for a drill run and return the operation, completion state, and report summary, and the drill run get-report-download-url tool to get a short-lived, read-only download URL for the generated report."
