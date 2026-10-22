@@ -41,6 +41,18 @@ public sealed class DrillCreateOptions
     [Option(Description = "JSON SLI monitoring properties containing identity and slis: one or two objects with sliId (Microsoft.Monitor/slis ARM ID) and type (Availability or Latency). IDs and types must be unique.")]
     public string? SliMonitoringProperties { get; set; }
 
+    [Option(Description = "JSON drill managed identity: {\"type\":\"None|SystemAssigned|UserAssigned|SystemAssigned, UserAssigned\",\"userAssignedIdentities\":[\"<user-assigned identity ARM ID>\"]}. userAssignedIdentities is required exactly when type includes UserAssigned. Defaults to SystemAssigned.")]
+    public string? Identity { get; set; }
+
+    [Option(Description = "JSON Chaos resource properties: {\"identity\":{...},\"chaosResourceIdentityForFaults\":{...}}, each with type (None, SystemAssigned, UserAssigned, or SystemAssigned, UserAssigned) and userAssignedIdentity when user-assigned. Defaults to SystemAssigned for both.")]
+    public string? ChaosResourceProperties { get; set; }
+
+    [Option(Description = "JSON recovery-plan properties: {\"identity\":{\"type\":\"...\",\"userAssignedIdentity\":\"<ARM ID>\"}} used for recovery plan operations. recoveryPlanId is read-only; the service links the service group's plan. Defaults to SystemAssigned.")]
+    public string? RecoveryPlanProperties { get; set; }
+
+    [Option(Description = "JSON monitoring properties: {\"identity\":{\"type\":\"...\",\"userAssignedIdentity\":\"<ARM ID>\"}} used for drill monitoring. Defaults to SystemAssigned.")]
+    public string? MonitoringProperties { get; set; }
+
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 

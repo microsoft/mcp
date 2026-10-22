@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
+using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 
@@ -15,7 +16,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 
 internal static class DrillConfiguration
 {
-    public static DrillProperties Create(DrillKind kind, string? goal, string? healthModel, string? sli)
+    public static DrillProperties Create(DrillKind kind, string? goal, string? healthModel, string? sli,
+        string? chaos = null, string? recoveryPlan = null, string? monitoring = null)
     {
         DrillProperties properties = kind switch
         {
@@ -35,10 +37,23 @@ internal static class DrillConfiguration
         {
             properties.SliMonitoringProperties = Read<SliMonitoringProperties>(sli, "sli-monitoring-properties", "slis");
         }
+        if (chaos is not null)
+        {
+            properties.ChaosResourceProperties = ReadIdentities<ChaosResourcePropertiesOfDrill>(chaos, ChaosResourceOption, ChaosIdentityProperties);
+        }
+        if (recoveryPlan is not null)
+        {
+            properties.RecoveryPlanProperties = ReadIdentities<RecoveryPlanPropertiesOfDrill>(recoveryPlan, RecoveryPlanOption, IdentityOnly);
+        }
+        if (monitoring is not null)
+        {
+            properties.MonitoringProperties = ReadIdentities<MonitoringPropertiesOfDrill>(monitoring, MonitoringOption, IdentityOnly);
+        }
         return properties;
     }
 
-    public static DrillUpdateProperties Update(string? goal, string? healthModel, string? sli)
+    public static DrillUpdateProperties Update(string? goal, string? healthModel, string? sli,
+        string? chaos = null, string? recoveryPlan = null, string? monitoring = null)
     {
         using var stream = new MemoryStream();
         using (var writer = new Utf8JsonWriter(stream))
@@ -47,10 +62,130 @@ internal static class DrillConfiguration
             WriteUpdate(writer, "goalAssignmentProperties", goal, "goal-assignment-properties", null);
             WriteUpdate(writer, "healthModelMonitoringProperties", healthModel, "health-model-monitoring-properties", "healthModelId");
             WriteUpdate(writer, "sliMonitoringProperties", sli, "sli-monitoring-properties", "slis");
+            WriteIdentitiesUpdate(writer, "chaosResourceProperties", chaos, ChaosResourceOption, ChaosIdentityProperties);
+            WriteIdentitiesUpdate(writer, "recoveryPlanProperties", recoveryPlan, RecoveryPlanOption, IdentityOnly);
+            WriteIdentitiesUpdate(writer, "monitoringProperties", monitoring, MonitoringOption, IdentityOnly);
             writer.WriteEndObject();
         }
         using JsonDocument document = JsonDocument.Parse(stream.ToArray());
         return new DrillConfigurationPatch(document.RootElement);
+    }
+
+    private const string ChaosResourceOption = "chaos-resource-properties";
+    private const string RecoveryPlanOption = "recovery-plan-properties";
+    private const string MonitoringOption = "monitoring-properties";
+    private static readonly string[] ChaosIdentityProperties = ["identity", "chaosResourceIdentityForFaults"];
+    private static readonly string[] IdentityOnly = ["identity"];
+
+    /// <summary>
+    /// Parses the drill's top-level managed identity: {"type": "...", "userAssignedIdentities": ["&lt;ARM ID&gt;"]}.
+    /// </summary>
+    public static ManagedServiceIdentity? ParseManagedIdentity(string? json, string option = "identity")
+    {
+        if (json is null)
+        {
+            return null;
+        }
+        JsonElement root = ParseJson(json, option);
+        ValidateObject(root, option, ["type", "userAssignedIdentities"]);
+        if (!root.TryGetProperty("type", out JsonElement typeElement))
+        {
+            throw new ArgumentException($"--{option} requires type.");
+        }
+        string type = RequiredString(typeElement, option);
+        if (type is not ("None" or "SystemAssigned" or "UserAssigned" or "SystemAssigned, UserAssigned"))
+        {
+            throw new ArgumentException($"--{option} type must be None, SystemAssigned, UserAssigned, or SystemAssigned, UserAssigned.");
+        }
+        var ids = new List<string>();
+        if (root.TryGetProperty("userAssignedIdentities", out JsonElement idsElement))
+        {
+            if (idsElement.ValueKind != JsonValueKind.Array)
+            {
+                throw new ArgumentException($"--{option} userAssignedIdentities must be a JSON array of ARM ID strings.");
+            }
+            foreach (JsonElement id in idsElement.EnumerateArray())
+            {
+                ValidateResourceId(id, "Microsoft.ManagedIdentity/userAssignedIdentities", option);
+                if (ids.Contains(id.GetString()!, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"--{option} userAssignedIdentities must not contain duplicates.");
+                }
+                ids.Add(id.GetString()!);
+            }
+        }
+        bool userAssigned = type.Contains("UserAssigned", StringComparison.Ordinal);
+        if (userAssigned != (ids.Count > 0))
+        {
+            throw new ArgumentException($"--{option} requires userAssignedIdentities exactly when type includes UserAssigned.");
+        }
+        var identity = new ManagedServiceIdentity(new ManagedServiceIdentityType(type));
+        foreach (string id in ids)
+        {
+            identity.UserAssignedIdentities[new ResourceIdentifier(id)] = new UserAssignedIdentity();
+        }
+        return identity;
+    }
+
+    private static T ReadIdentities<T>(string json, string option, string[] identityProperties) where T : class
+    {
+        JsonElement value = ParseIdentities(json, option, identityProperties, update: false);
+        return ModelReaderWriter.Read<T>(BinaryData.FromString(value.GetRawText()), ModelReaderWriterOptions.Json,
+            AzureResourceManagerResilienceManagementContext.Default)
+            ?? throw new ArgumentException($"--{option} could not be parsed.");
+    }
+
+    private static void WriteIdentitiesUpdate(Utf8JsonWriter writer, string property, string? json, string option, string[] identityProperties)
+    {
+        if (json is null)
+        {
+            return;
+        }
+        JsonElement value = ParseIdentities(json, option, identityProperties, update: true);
+        writer.WritePropertyName(property);
+        value.WriteTo(writer);
+    }
+
+    // Validates an object whose writable members are associated identities, e.g. {"identity": {...}}.
+    private static JsonElement ParseIdentities(string json, string option, string[] identityProperties, bool update)
+    {
+        JsonElement root = ParseJson(json, option);
+        ValidateObject(root, option, identityProperties);
+        bool any = false;
+        foreach (string name in identityProperties)
+        {
+            if (root.TryGetProperty(name, out JsonElement identity))
+            {
+                ValidateIdentity(identity, option, update);
+                any = true;
+            }
+            else if (!update)
+            {
+                throw new ArgumentException($"--{option} requires {name}.");
+            }
+        }
+        if (!any)
+        {
+            throw new ArgumentException($"--{option} must contain at least one of: {string.Join(", ", identityProperties)}.");
+        }
+        return root;
+    }
+
+    private static JsonElement ParseJson(string json, string option)
+    {
+        if (Encoding.UTF8.GetByteCount(json) > 1024 * 1024)
+        {
+            throw new ArgumentException($"--{option} must not exceed 1 MB.");
+        }
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            throw new ArgumentException($"--{option} must be valid JSON.");
+        }
     }
 
     private static void WriteUpdate(Utf8JsonWriter writer, string property, string? json, string option, string? selection)
