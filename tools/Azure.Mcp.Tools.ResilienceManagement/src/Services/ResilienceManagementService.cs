@@ -104,6 +104,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         return options;
     }
 
+    private static ArmClientOptions CreateDrillContractArmClientOptions(
+        BinaryData? content = null)
+    {
+        var options = CreateResilienceManagementArmClientOptions();
+        options.AddPolicy(
+            new DrillContractRequestPolicy(content),
+            HttpPipelinePosition.PerCall);
+        return options;
+    }
+
     private static ArmClientOptions CreateResilienceManagementArmClientOptions()
         => ResilienceManagementRoutingPolicy.CreateArmClientOptions();
 
@@ -1512,6 +1522,68 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             return;
         }
 
+        if (string.Equals(
+            effectiveSolutionType.Value.ToString(),
+            "AzureCosmosDB",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(
+                GetProtectionSolutionType(effectiveSolutionSetting),
+                "AzureCosmosDB",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' requires an AzureCosmosDB selectedProtectionSolutionSetting that matches selectedProtectionSolutionType.");
+            }
+
+            if (!string.Equals(existing.ResourceId?.ResourceType.ToString(), "Microsoft.DocumentDB/databaseAccounts", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' can use AzureCosmosDB only for a Microsoft.DocumentDB/databaseAccounts resource.");
+            }
+
+            if (!existing.ResourceProtectionSolutions.Any(solution =>
+                string.Equals(
+                    solution.ProtectionSolutionType.ToString(),
+                    "AzureCosmosDB",
+                    StringComparison.OrdinalIgnoreCase) &&
+                solution.ProtectionStatus == ResourceProtectionStatus.Protected))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureCosmosDB because healthy Azure Cosmos DB protection was not detected.");
+            }
+
+            return;
+        }
+
+        if (string.Equals(
+            effectiveSolutionType.Value.ToString(),
+            "AzureServiceBus",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(
+                GetProtectionSolutionType(effectiveSolutionSetting),
+                "AzureServiceBus",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' requires an AzureServiceBus selectedProtectionSolutionSetting that matches selectedProtectionSolutionType.");
+            }
+
+            if (!string.Equals(existing.ResourceId?.ResourceType.ToString(), "Microsoft.ServiceBus/namespaces", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' can use AzureServiceBus only for a Microsoft.ServiceBus/namespaces resource.");
+            }
+
+            if (!existing.ResourceProtectionSolutions.Any(solution =>
+                string.Equals(
+                    solution.ProtectionSolutionType.ToString(),
+                    "AzureServiceBus",
+                    StringComparison.OrdinalIgnoreCase) &&
+                solution.ProtectionStatus == ResourceProtectionStatus.Protected))
+            {
+                throw new ArgumentException($"Recovery resource '{resourceId}' cannot use AzureServiceBus because healthy Azure Service Bus protection was not detected.");
+            }
+
+            return;
+        }
+
         if (effectiveSolutionType != ResourceProtectionSolutionType.AzureSiteRecovery || effectiveSolutionSetting is not ResourceSiteRecoveryProtectionSetting siteRecoverySetting)
         {
             throw new ArgumentException($"Recovery resource '{resourceId}' has inconsistent selectedProtectionSolutionType and selectedProtectionSolutionSetting values.");
@@ -1975,10 +2047,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             ? subscription
             : (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
 
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
-
         var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
-        ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
         var associatedIdentity = new ResilienceManagementAssociatedIdentity(ManagedServiceIdentityType.SystemAssigned);
         DrillProperties properties = drillType switch
         {
@@ -2020,6 +2089,15 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Properties = properties
         };
 
+        BinaryData payload =
+            ((IPersistableModel<ResilienceManagementDrillData>)drillData)
+            .Write(new ModelReaderWriterOptions("J"));
+        ArmClient armClient = await CreateArmClientAsync(
+            tenantIdOrName: tenant,
+            armClientOptions: CreateDrillContractArmClientOptions(payload),
+            cancellationToken: cancellationToken);
+        ResilienceManagementDrillCollection drills =
+            armClient.GetResilienceManagementDrills(serviceGroupId);
         ArmOperation<ResilienceManagementDrillResource> operation = await drills.CreateOrUpdateAsync(WaitUntil.Started, drill, drillData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
         Response<ResilienceManagementDrillResource> completedDrill = await drills.GetAsync(drill, cancellationToken);

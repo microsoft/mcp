@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 internal sealed class DrillRunReprotectContractRequestPolicy(BinaryData content)
     : HttpPipelineSynchronousPolicy
 {
-    internal const string ApiVersion = "2026-10-31-preview";
+    internal const string ApiVersion = ResilienceManagementApiVersions.Current;
 
     public override void OnSendingRequest(HttpMessage message)
     {

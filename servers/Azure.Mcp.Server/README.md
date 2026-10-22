@@ -1355,6 +1355,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Create a Zonal recovery plan 'my-recovery-plan' in service group 'my-service-group' with a system-assigned identity"
 * "Update recovery plan 'my-recovery-plan' in service group 'my-service-group' to use user-assigned identity '/subscriptions/my-subscription/resourceGroups/my-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/my-identity'"
 * "Include recovery resource 'my-resource' in recovery plan 'my-recovery-plan' in service group 'my-service-group' and configure its protection settings"
+
+Recovery resource inclusion validates that the selected protection solution type matches its
+solution-specific setting and the detected protected resource. Azure Service Bus namespaces use
+`AzureServiceBus` for both values and require a detected protected Service Bus solution.
+
 * "Exclude recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"

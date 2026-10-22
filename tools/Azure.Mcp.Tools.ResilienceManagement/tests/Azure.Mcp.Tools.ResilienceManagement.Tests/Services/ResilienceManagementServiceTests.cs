@@ -134,6 +134,43 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public async Task CreateDrillAsync_UsesCompatibleCreateContractAndSerializesRecoveryPlanId()
+    {
+        const string recoveryPlanId =
+            "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1";
+        var handler = new OperationIdRecordingHandler(
+            HttpStatusCode.OK,
+            DrillContent(recoveryPlanId));
+        var service = CreateService(handler);
+
+        DrillInfo result = await service.CreateDrillAsync(
+            "sg1",
+            "drill1",
+            "00000000-0000-0000-0000-000000000000",
+            "westus2",
+            "rg",
+            DrillKind.Regional,
+            DrillRbacSetupMode.AutomatedBuiltinRoles,
+            "plan1",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("drill1", result.Name);
+        Assert.Contains(
+            "api-version=2026-04-01-preview",
+            handler.RequestUri,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("application/json", handler.ContentType);
+        using JsonDocument document = JsonDocument.Parse(handler.RequestBody!);
+        Assert.Equal(
+            recoveryPlanId,
+            document.RootElement
+                .GetProperty("properties")
+                .GetProperty("recoveryPlanProperties")
+                .GetProperty("recoveryPlanId")
+                .GetString());
+    }
+
+    [Fact]
     public async Task ReprotectDrillRunAsync_UsesPreviewApiAndSerializesReprotectProperties()
     {
         const string selectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
@@ -241,6 +278,56 @@ public sealed class ResilienceManagementServiceTests
                     },
                 },
             },
+        });
+
+    private static string DrillContent(string recoveryPlanId) =>
+        JsonSerializer.Serialize(new
+        {
+            id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1",
+            name = "drill1",
+            type = "Microsoft.AzureResilienceManagement/drills",
+            properties = new
+            {
+                provisioningState = "Succeeded",
+                recoveryPlanProperties = new
+                {
+                    identity = new
+                    {
+                        type = "SystemAssigned"
+                    },
+                    recoveryPlanId
+                },
+                drillAssetProperties = new
+                {
+                    subscription = "00000000-0000-0000-0000-000000000000",
+                    region = "westus2",
+                    resourceGroup = "rg"
+                },
+                chaosResourceProperties = new
+                {
+                    identity = new
+                    {
+                        type = "SystemAssigned"
+                    },
+                    chaosResourceIdentityForFaults = new
+                    {
+                        type = "SystemAssigned"
+                    }
+                },
+                rbacSetupMode = "AutomatedBuiltinRoles",
+                drillType = "Regional",
+                monitoringProperties = new
+                {
+                    identity = new
+                    {
+                        type = "SystemAssigned"
+                    }
+                }
+            },
+            identity = new
+            {
+                type = "SystemAssigned"
+            }
         });
 
     [Fact]
@@ -1423,6 +1510,91 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void ValidateRecoveryResourceUpdate_AllowsValidAzureCosmosDBConfiguration()
+    {
+        RecoveryMembersData requested = CreateCosmosRecoveryResource();
+        RecoveryMembersData existing = CreateProtectedCosmosRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureCosmosDBRequiresMatchingSetting()
+    {
+        RecoveryMembersData requested = CreateCosmosRecoveryResource();
+        requested.Properties!.SelectedProtectionSolutionSetting =
+            new ResourceCustomProtectionSetting();
+        RecoveryMembersData existing = CreateProtectedCosmosRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("AzureCosmosDB selectedProtectionSolutionSetting", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureCosmosDBRequiresDetectedProtection()
+    {
+        RecoveryMembersData requested = CreateCosmosRecoveryResource();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/account");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("healthy Azure Cosmos DB protection", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AllowsValidAzureServiceBusConfiguration()
+    {
+        RecoveryMembersData requested = CreateServiceBusRecoveryResource();
+        RecoveryMembersData existing = CreateProtectedServiceBusRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureServiceBusRequiresMatchingSetting()
+    {
+        RecoveryMembersData requested = CreateServiceBusRecoveryResource();
+        requested.Properties!.SelectedProtectionSolutionSetting =
+            new ResourceCustomProtectionSetting();
+        RecoveryMembersData existing = CreateProtectedServiceBusRecoveryResource();
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("AzureServiceBus selectedProtectionSolutionSetting", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureServiceBusRequiresNamespaceResource()
+    {
+        RecoveryMembersData requested = CreateServiceBusRecoveryResource();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("Microsoft.ServiceBus/namespaces", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ValidateRecoveryResourceUpdate_AzureServiceBusRequiresDetectedProtection()
+    {
+        RecoveryMembersData requested = CreateServiceBusRecoveryResource();
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/namespace");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains("healthy Azure Service Bus protection", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryForNonVirtualMachine()
     {
         RecoveryMembersData requested = CreateRecoveryResource(
@@ -1669,6 +1841,76 @@ public sealed class ResilienceManagementServiceTests
             }
         }))!;
 
+    private static RecoveryMembersData CreateCosmosRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                inclusionState = "Included",
+                selectedProtectionSolutionType = "AzureCosmosDB",
+                selectedProtectionSolutionSetting = new
+                {
+                    protectionSolutionType = "AzureCosmosDB"
+                }
+            }
+        }))!;
+
+    private static RecoveryMembersData CreateProtectedCosmosRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/account",
+                protectionStatus = "Protected",
+                resourceProtectionSolutions = new[]
+                {
+                    new
+                    {
+                        protectionSolutionType = "AzureCosmosDB",
+                        protectionStatus = "Protected",
+                        resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.DocumentDB/databaseAccounts/account"
+                    }
+                }
+            }
+        }))!;
+
+    private static RecoveryMembersData CreateServiceBusRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                inclusionState = "Included",
+                selectedProtectionSolutionType = "AzureServiceBus",
+                selectedProtectionSolutionSetting = new
+                {
+                    protectionSolutionType = "AzureServiceBus"
+                }
+            }
+        }))!;
+
+    private static RecoveryMembersData CreateProtectedServiceBusRecoveryResource()
+        => ModelReaderWriter.Read<RecoveryMembersData>(BinaryData.FromObjectAsJson(new
+        {
+            properties = new
+            {
+                recoveryResourceUniqueId = "12345678-9012-3456-7890-123456789012",
+                resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/namespace",
+                protectionStatus = "Protected",
+                resourceProtectionSolutions = new[]
+                {
+                    new
+                    {
+                        protectionSolutionType = "AzureServiceBus",
+                        protectionStatus = "Protected",
+                        resourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/namespace"
+                    }
+                }
+            }
+        }))!;
+
     private static ResourceCustomProtectionSetting CreateCustomRunbookSetting()
         => new()
         {
@@ -1698,6 +1940,8 @@ public sealed class ResilienceManagementServiceTests
         azureService.CloudConfiguration.Returns(cloudConfiguration);
         azureService.ResolveTenantIdAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((string?)null);
+        azureService.IsSubscriptionId(Arg.Any<string>())
+            .Returns(call => Guid.TryParse(call.Arg<string>(), out _));
         azureService.GetClient(Arg.Any<string?>()).Returns(new HttpClient(handler));
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new FakeTokenCredential());
