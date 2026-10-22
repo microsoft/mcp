@@ -194,6 +194,8 @@ This application requires two environment variables to be configured:
 
 #### Find the Embeddings URL in Microsoft Foundry
 
+To find the complete embeddings URL for your Azure OpenAI resource in Microsoft Foundry:
+
 1. Open your resource and select **Deployments** under **Shared resources**.
 2. Select your `text-embedding-3-large` deployment, not a chat model deployment.
 3. On the deployment details page, find the **Endpoint** section and copy **Target URI**.

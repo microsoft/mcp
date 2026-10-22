@@ -22,7 +22,7 @@ An Azure OpenAI deployment of the text embedding model `text-embedding-3-large`.
 
 ### Minimal Setup
 
-To find the complete embeddings URL in Microsoft Foundry:
+To find the complete embeddings URL for your Azure OpenAI resource in Microsoft Foundry:
 
 1. Open your resource and select **Deployments** under **Shared resources**.
 2. Select your `text-embedding-3-large` deployment, not a chat model deployment.
