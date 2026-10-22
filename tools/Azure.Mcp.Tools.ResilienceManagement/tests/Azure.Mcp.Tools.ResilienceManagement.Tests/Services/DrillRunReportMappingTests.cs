@@ -89,6 +89,21 @@ public sealed class DrillRunReportMappingTests
     }
 
     [Fact]
+    public void MapDrillRunReportDownload_ReadsServiceWireShapeWhenModelIsEmpty()
+    {
+        ListReportDownloadUrlResult result = ArmResilienceManagementModelFactory.ListReportDownloadUrlResult();
+        var raw = BinaryData.FromString("""
+            {"status":"Succeeded","properties":{"format":"Html","downloadUrl":"https://example.invalid/report.html?sig=abc","expiryTimestamp":"2026-10-22T16:30:19Z"}}
+            """);
+
+        var info = ResilienceManagementService.MapDrillRunReportDownload(result, null, raw);
+
+        Assert.Equal("Html", info.Format);
+        Assert.Equal("https://example.invalid/report.html?sig=abc", info.DownloadUri);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-22T16:30:19Z"), info.ExpiresOn);
+    }
+
+    [Fact]
     public void MapDrillRunReportDownload_ThrowsWhenServiceReturnsNoUrl()
     {
         ListReportDownloadUrlResult result = ArmResilienceManagementModelFactory.ListReportDownloadUrlResult(DrillReportFormat.Html);

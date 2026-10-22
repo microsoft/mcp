@@ -41,30 +41,39 @@ public partial class ResilienceManagementCommandTests
     {
         var (serviceGroup, drill, drillRun) = GetDrillRunReportFixture();
 
-        // The download URL is only available once a report exists, so generate it first.
-        await CallToolAsync(
-            "resiliency_drill_run_generate-report",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "drill", drill },
-                { "drill-run", drillRun }
-            });
+        // The fixture drill run has already completed all stages, so its report exists.
         await WaitForDrillRunReportAsync(serviceGroup, drill, drillRun);
 
-        var result = await CallToolAsync(
-            "resiliency_drill_run_get-report-download-url",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "service-group", serviceGroup },
-                { "drill", drill },
-                { "drill-run", drillRun },
-                { "format", "html" }
-            });
+        // A drill run rejects a second POST with 409 until the previous operation (for example a report
+        // generation from another test) releases it.
+        JsonElement? response = null;
+        for (int attempt = 0; attempt < 90; attempt++)
+        {
+            response = await CallToolAsync(
+                "resiliency_drill_run_get-report-download-url",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "service-group", serviceGroup },
+                    { "drill", drill },
+                    { "drill-run", drillRun },
+                    { "format", "html" }
+                },
+                resultProcessor: root => root);
 
-        var download = result.AssertProperty("result");
+            if (response.HasValue && response.Value.TryGetProperty("results", out var results) && results.TryGetProperty("result", out _))
+            {
+                break;
+            }
+
+            Assert.True(
+                response.HasValue && response.Value.TryGetProperty("status", out var status) && status.GetInt32() == 409,
+                $"Unexpected response while requesting the report download URL: {response}");
+
+            await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
+        }
+
+        var download = response.AssertProperty("results").AssertProperty("result");
         Assert.Equal("Html", download.AssertProperty("format").GetString());
         Assert.True(
             Uri.TryCreate(download.AssertProperty("downloadUri").GetString(), UriKind.Absolute, out var uri) &&

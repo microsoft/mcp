@@ -197,6 +197,10 @@ public abstract class ResilienceManagementRecordedTestsBase(
         {
             Value = "https://sanitized.blob.core.windows.net/reports/report.html"
         }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..downloadUrl")
+        {
+            Value = "https://sanitized.blob.core.windows.net/reports/report.html"
+        }),
         // Recovery plan creation generates a new default-group GUID on each run.
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId")
         {

@@ -2160,7 +2160,7 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
             DrillReportOperationTimeout,
             cancellationToken);
 
-        return MapDrillRunReportDownload(operation.Value, format);
+        return MapDrillRunReportDownload(operation.Value, format, operation.GetRawResponse()?.Content);
     }
 
     internal static DrillRunReportInfo MapDrillRunReport(DrillReportSummary summary) => new(
@@ -2178,10 +2178,50 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
         summary.SchemaVersion,
         MapDrillRunReportError(summary.LastError));
 
-    internal static DrillRunReportDownloadInfo MapDrillRunReportDownload(ListReportDownloadUrlResult result, string? requestedFormat) => new(
-        result.Format?.ToString() ?? requestedFormat,
-        result.DownloadUri?.ToString() ?? throw new InvalidOperationException("The service returned no report download URL."),
-        result.ExpiryOn);
+    internal static DrillRunReportDownloadInfo MapDrillRunReportDownload(ListReportDownloadUrlResult result, string? requestedFormat, BinaryData? rawOperationResponse = null)
+    {
+        // The service returns "downloadUrl" and "expiryTimestamp", which the SDK model does not read.
+        JsonElement? properties = ReadReportDownloadProperties(rawOperationResponse);
+        string? downloadUrl = result.DownloadUri?.ToString() ?? ReadString(properties, "downloadUrl");
+        if (string.IsNullOrEmpty(downloadUrl))
+        {
+            throw new InvalidOperationException("The service returned no report download URL.");
+        }
+
+        DateTimeOffset? expiresOn = result.ExpiryOn;
+        if (expiresOn is null &&
+            DateTimeOffset.TryParse(ReadString(properties, "expiryTimestamp"), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExpiry))
+        {
+            expiresOn = parsedExpiry;
+        }
+
+        return new(result.Format?.ToString() ?? ReadString(properties, "format") ?? requestedFormat, downloadUrl, expiresOn);
+    }
+
+    private static JsonElement? ReadReportDownloadProperties(BinaryData? rawOperationResponse)
+    {
+        if (rawOperationResponse is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(rawOperationResponse);
+            return document.RootElement.TryGetProperty("properties", out var properties) && properties.ValueKind == JsonValueKind.Object
+                ? properties.Clone()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadString(JsonElement? element, string propertyName) =>
+        element is { } value && value.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
 
     private static DrillRunReportErrorInfo? MapDrillRunReportError(ResilienceManagementErrorDetail? error) =>
         error is null ? null : new DrillRunReportErrorInfo(error.Code, error.Message, error.Recommendations.ToList());
