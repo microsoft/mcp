@@ -664,13 +664,22 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             operationId,
             content,
             cancellationToken);
+        Response response = operation.GetRawResponse();
         string? jobId = operation.HasCompleted ? operation.Value.JobId : null;
 
         return new RecoveryPlanFailoverResult(
             operationId,
             jobId,
             "Accepted",
-            CreateRecoveryPlanActionTrackingMessage("Failover", jobId));
+            CreateRecoveryPlanActionTrackingMessage("Failover", jobId),
+            operation.HasCompleted,
+            response.Status,
+            ResponseHeader(response, "Location"),
+            ResponseHeader(response, "Azure-AsyncOperation"),
+            ResponseHeader(response, "x-ms-request-id"),
+            ResponseHeader(response, "x-ms-client-request-id"),
+            ResponseHeader(response, "x-ms-correlation-request-id") ??
+                ResponseHeader(response, "x-ms-correlation-id"));
     }
 
     public Task<RecoveryPlanFinalizeResult> FinalizeRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default)

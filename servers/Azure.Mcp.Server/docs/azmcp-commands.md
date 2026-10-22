@@ -4423,7 +4423,8 @@ azmcp resiliency recoveryplan delete --service-group <service-group> \
 # Reuse that ID for the same logical request; omit it to generate a new GUID.
 
 # Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
-# Returns after the request is accepted with an operation ID and a recovery job ID when available.
+# Returns after the request is accepted with the caller operation ID, recovery job ID when
+# available, HTTP completion state, provider LRO tracking URIs, and ARM request identifiers.
 # Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan failover --service-group <service-group> \

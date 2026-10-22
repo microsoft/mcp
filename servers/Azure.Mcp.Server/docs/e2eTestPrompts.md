@@ -1238,6 +1238,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_delete | Delete the entire recoveryplan <recoveryplan_name> from service group <service_group> | none |
 | resiliency_recoveryplan_delete | Recoveryplan <recoveryplan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resiliency_recoveryplan_failover | Start Azure Resiliency Management recovery-plan failover for qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group>; I authorize this failover | none |
+| resiliency_recoveryplan_failover | Start qualified failover for recoveryplan <recoveryplan_name> from <source_location> in service group <service_group>, and return the HTTP status, Location, Azure-AsyncOperation, and ARM request identifiers needed to reconcile the accepted operation | none |
 | resiliency_recoveryplan_failover | Fail over recoveryplan <recoveryplan_name> in service group <service_group> without specifying source locations or recovery resources | clarification-required |
 | resiliency_recoveryplan_finalize | Complete or finalize the current recoveryplan operation for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_finalize | Finish finalizing recoveryplan <recoveryplan_name> in service group <service_group> and return the operation ID | none |

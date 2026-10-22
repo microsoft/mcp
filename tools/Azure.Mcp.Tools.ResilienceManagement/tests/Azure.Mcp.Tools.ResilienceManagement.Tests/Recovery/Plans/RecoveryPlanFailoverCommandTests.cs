@@ -59,7 +59,14 @@ public sealed class RecoveryPlanFailoverCommandTests : CommandUnitTestsBase<Reco
             "11111111-1111-1111-1111-111111111111",
             "22222222-2222-2222-2222-222222222222",
             "Accepted",
-            "Failover was accepted.");
+            "Failover was accepted.",
+            false,
+            202,
+            "https://management.azure.com/operationStatuses/provider-operation",
+            "https://management.azure.com/operations/provider-operation",
+            "request-id",
+            "client-request-id",
+            "correlation-id");
         Service.FailoverRecoveryPlanAsync(
             "sg1",
             "plan1",

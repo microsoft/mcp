@@ -302,6 +302,45 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public async Task FailoverRecoveryPlanAsync_ReturnsLroAndRequestIdentifiers()
+    {
+        const string selectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222";
+        const string locationUri = "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/centralus/operationStatuses/provider-operation?api-version=2026-10-31-preview";
+        const string azureAsyncOperationUri = "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/centralus/operations/provider-operation?api-version=2026-10-31-preview";
+        var handler = new OperationIdRecordingHandler(
+            locationUri: locationUri,
+            azureAsyncOperationUri: azureAsyncOperationUri);
+        var service = CreateService(handler);
+
+        RecoveryPlanFailoverResult result = await service.FailoverRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            ["centralus"],
+            [selectedResourceId],
+            "Allowed",
+            operationId: "abcdefab-cdef-abcd-efab-cdefabcdefab",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Accepted", result.Status);
+        Assert.False(result.HasCompleted);
+        Assert.Equal(202, result.HttpStatus);
+        Assert.Equal(locationUri, result.LocationUri);
+        Assert.Equal(azureAsyncOperationUri, result.AzureAsyncOperationUri);
+        Assert.Equal("request-id", result.RequestId);
+        Assert.Equal("client-request-id", result.ClientRequestId);
+        Assert.Equal("correlation-id", result.CorrelationId);
+        Assert.Equal("abcdefab-cdef-abcd-efab-cdefabcdefab", handler.OperationId);
+        using JsonDocument document = JsonDocument.Parse(handler.RequestBody!);
+        JsonElement properties = document.RootElement.GetProperty("failoverRequestProperties");
+        Assert.Equal(
+            "centralus",
+            Assert.Single(properties.GetProperty("sourceLocations").EnumerateArray()).GetString());
+        Assert.Equal(
+            selectedResourceId,
+            Assert.Single(properties.GetProperty("selectedResourceIds").EnumerateArray()).GetString());
+    }
+
+    [Fact]
     public async Task ReprotectDrillRunAsync_RejectsWhenReprotectStageIsNotAvailable()
     {
         var handler = new OperationIdRecordingHandler(
@@ -2120,6 +2159,9 @@ public sealed class ResilienceManagementServiceTests
             bool isDrillRunGet =
                 request.Method == HttpMethod.Get &&
                 request.RequestUri.AbsolutePath.Contains("/drillRuns/", StringComparison.OrdinalIgnoreCase);
+            bool isRecoveryPlanGet =
+                request.Method == HttpMethod.Get &&
+                request.RequestUri.AbsolutePath.EndsWith("/recoveryPlans/plan1", StringComparison.OrdinalIgnoreCase);
             bool isMonitoringResourceGet =
                 request.Method == HttpMethod.Get &&
                 _monitoringResourceId is not null &&
@@ -2133,14 +2175,24 @@ public sealed class ResilienceManagementServiceTests
                 request.RequestUri.AbsolutePath.EndsWith(
                     "/providers/Microsoft.CloudHealth",
                     StringComparison.OrdinalIgnoreCase);
+            const string recoveryPlanContent = """
+                {
+                  "id": "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1",
+                  "name": "plan1",
+                  "type": "Microsoft.AzureResilienceManagement/recoveryPlans",
+                  "properties": {}
+                }
+                """;
             var response = new HttpResponseMessage(
-                isDrillRunGet || isMonitoringResourceGet || isMonitoringProviderGet
+                isDrillRunGet || isRecoveryPlanGet || isMonitoringResourceGet || isMonitoringProviderGet
                     ? HttpStatusCode.OK
                     : _statusCode)
             {
                 Content = new StringContent(
                     isDrillRunGet
                         ? _drillRunContent
+                        : isRecoveryPlanGet
+                            ? recoveryPlanContent
                         : isMonitoringProviderGet
                             ? JsonSerializer.Serialize(new
                             {
@@ -2172,7 +2224,7 @@ public sealed class ResilienceManagementServiceTests
                     Encoding.UTF8,
                     "application/json")
             };
-            if (!isDrillRunGet && _statusCode == HttpStatusCode.Accepted)
+            if (!isDrillRunGet && !isRecoveryPlanGet && _statusCode == HttpStatusCode.Accepted)
             {
                 response.Headers.TryAddWithoutValidation("Location",
                     _locationUri ??
@@ -2180,6 +2232,9 @@ public sealed class ResilienceManagementServiceTests
                 response.Headers.TryAddWithoutValidation("Azure-AsyncOperation",
                     _azureAsyncOperationUri ??
                     "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
+                response.Headers.TryAddWithoutValidation("x-ms-request-id", "request-id");
+                response.Headers.TryAddWithoutValidation("x-ms-client-request-id", "client-request-id");
+                response.Headers.TryAddWithoutValidation("x-ms-correlation-request-id", "correlation-id");
             }
             return response;
         }
