@@ -20,6 +20,18 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
+    [Fact]
+    public void CreateUsagePlanTagsPatch_CarriesEveryTag()
+    {
+        var tags = new Dictionary<string, string> { ["mcp-test"] = "usage-plan", ["env"] = "prod" };
+
+        UsagePlanPatch patch = ResilienceManagementService.CreateUsagePlanTagsPatch(tags);
+
+        Assert.Equal(2, patch.Tags.Count);
+        Assert.Equal("usage-plan", patch.Tags["mcp-test"]);
+        Assert.Equal("prod", patch.Tags["env"]);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

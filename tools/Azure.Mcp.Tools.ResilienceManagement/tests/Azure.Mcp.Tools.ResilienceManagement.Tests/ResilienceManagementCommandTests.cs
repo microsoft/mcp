@@ -2205,7 +2205,6 @@ public partial class ResilienceManagementCommandTests(
     public async Task Should_create_usage_plan()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("createResourceGroupName", Settings.ResourceGroupName);
-        // The service stores tags only when the usage plan is created, so use a new plan each run.
         var usagePlanName = RegisterOrRetrieveVariable("createUsagePlanName", $"mcp-usage-plan-{Guid.NewGuid().ToString("N")[..8]}");
 
         try
@@ -2224,9 +2223,21 @@ public partial class ResilienceManagementCommandTests(
 
             var usagePlan = result.AssertProperty("usagePlan");
             Assert.EndsWith($"/usagePlans/{usagePlanName}", usagePlan.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
-            // The recorded PUT body carries the tags; the service currently drops them when it completes the
-            // asynchronous create (its provisioning-state PATCH omits tags), so the final GET returns none.
-            Assert.Equal(JsonValueKind.Object, usagePlan.AssertProperty("tags").ValueKind);
+            Assert.Equal("usage-plan", usagePlan.AssertProperty("tags").AssertProperty("mcp-test").GetString());
+
+            // The service drops tags sent on create, so confirm they persisted on the stored plan.
+            var persisted = await CallToolAsync(
+                "resiliency_usageplan_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "name", usagePlanName }
+                });
+            Assert.Equal(
+                "usage-plan",
+                persisted.AssertProperty("usagePlan").AssertProperty("tags").AssertProperty("mcp-test").GetString());
         }
         finally
         {

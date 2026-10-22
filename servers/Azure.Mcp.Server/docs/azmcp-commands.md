@@ -4839,6 +4839,19 @@ azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill-run <drill-run> \
                                      [--selected-resource-ids <selected-resource-id>]
 
+# Generate or refresh the report for a drill run; a finalized report is left unchanged. Starts the operation and returns the operation ID, whether it completed, and the report summary when available; use `drill run get` to check progress.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency drill run generate-report --service-group <service-group> \
+                                           --drill <drill> \
+                                           --drill-run <drill-run>
+
+# Get a short-lived, read-only download URL for the generated report of a drill run (the URL grants access to the report)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp resiliency drill run get-report-download-url --service-group <service-group> \
+                                                   --drill <drill> \
+                                                   --drill-run <drill-run> \
+                                                   [--format <Html>]
+
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run resource get --service-group <service-group> \

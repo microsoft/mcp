@@ -192,6 +192,15 @@ public abstract class ResilienceManagementRecordedTestsBase(
         {
             Value = "Sanitized"
         }),
+        // The report download URL carries a signed token that grants read access to the report.
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..downloadUri")
+        {
+            Value = "https://sanitized.blob.core.windows.net/reports/report.html"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..downloadUrl")
+        {
+            Value = "https://sanitized.blob.core.windows.net/reports/report.html"
+        }),
         // Recovery plan creation generates a new default-group GUID on each run.
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId")
         {

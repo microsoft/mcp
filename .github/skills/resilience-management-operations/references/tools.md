@@ -2,14 +2,14 @@
 
 <!-- cspell:words reprotect reprotection -->
 
-This reference lists all 47 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it. The `mcp_azure_mcp_ser_` prefix is the client display prefix; registered tool names start at `resiliency_`. Verb hyphens are preserved.
+This reference lists all 49 tools registered under the `resiliency` namespace. Parameters marked **required** must be collected before invocation. `tenant` is optional for every tool unless the active environment requires it. The `mcp_azure_mcp_ser_` prefix is the client display prefix; registered tool names start at `resiliency_`. Verb hyphens are preserved.
 
 ## Usage Plans
 
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_usageplan_get` | List or get Azure Resilience Management usage plans; not quota, API Management, or load-testing plans | `subscription?`, `resource-group?`, `name?`, `tenant?`. A specific `name` requires `resource-group`. Omit both to list across the subscription. |
-| `mcp_azure_mcp_ser_resiliency_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Standard`), `tags?` (JSON object of strings, sent on create; updates to an existing plan don't change tags), `subscription?`, `tenant?`. Usage plans are always `global`. |
+| `mcp_azure_mcp_ser_resiliency_usageplan_create` | Create or update a usage plan | **`resource-group`**, **`usage-plan`**, **`plan-type`** (`Standard`), `tags?` (JSON object of strings, applied to the plan after it is created or updated), `subscription?`, `tenant?`. Usage plans are always `global`. |
 | `mcp_azure_mcp_ser_resiliency_usageplan_delete` | Delete the entire usage plan after all child enrollments are removed; returns whether the plan existed | **`resource-group`**, **`usage-plan`**, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_usageplan_enrollment_get` | List or get resilience usage-plan enrollments that associate service groups; not API Management subscriptions | **`resource-group`**, **`usage-plan`**, `name?`, `subscription?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_usageplan_enrollment_create` | Create/update enrollment associating a service group | **`resource-group`**, **`usage-plan`**, **`enrollment`**, **`service-group`**, `subscription?`, `tenant?` |
@@ -77,6 +77,8 @@ Drills tools use `Azure.ResourceManager.ResilienceManagement` 1.0.0 and API `202
 | `mcp_azure_mcp_ser_resiliency_drill_run_resume` | Resume the drill run when its current stage permits it | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Start reprotection after failover when the run permits it | **`service-group`**, **`drill`**, **`drill-run`**, `selected-resource-ids?`, `tenant?`. Omit selected IDs to process all qualified resources. |
+| `mcp_azure_mcp_ser_resiliency_drill_run_generate-report` | Generate or regenerate the drill-run report; returns the operation ID, `hasCompleted`, and the report summary when available | **`service-group`**, **`drill`**, **`drill-run`**, `tenant?`. Check progress with `drill_run_get` (`properties.report`). |
+| `mcp_azure_mcp_ser_resiliency_drill_run_get-report-download-url` | Get a short-lived, read-only download URL for the generated report. The URL is a secret; do not log or share it. | **`service-group`**, **`drill`**, **`drill-run`**, `format?` (`Html`, the default), `tenant?`. Generate the report first. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
 The configuration options accept JSON strings; see [payloads](./payloads.md#drill-ga-configuration). On create, each supplied configuration requires identity, and monitoring requires its selection. Update accepts partial objects and preserves omitted fields. Pass the string `"null"` as the Health Model or SLI option value to clear that configuration. A supplied SLI array replaces the selection; empty arrays are invalid. `goalAssignmentId` is read-only. The identity options use `{"type":"...","userAssignedIdentity":"<ARM ID>"}` for each associated identity (`chaos-resource-properties` requires both `identity` and `chaosResourceIdentityForFaults` on create), and `identity` uses `{"type":"...","userAssignedIdentities":["<ARM ID>"]}`.

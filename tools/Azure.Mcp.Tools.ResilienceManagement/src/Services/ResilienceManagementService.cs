@@ -20,6 +20,7 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DrillReportOperationTimeout = TimeSpan.FromMinutes(5);
 
     // The Drills backend reads the per-operation id from the operationId query parameter, but the generated SDK only
     // emits the operation-id header. Install a policy that mirrors the header into the query for long-running operations.
@@ -2118,6 +2119,147 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
         return operationId;
     }
 
+    public async Task<DrillRunGenerateReportResult> GenerateDrillRunReportAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        string operationId = Guid.NewGuid().ToString();
+
+        ArmOperation<DrillReportSummary> operation = await drillRunResource.GenerateReportAsync(WaitUntil.Started, operationId, cancellationToken);
+
+        // The service replies with the DrillRun envelope, so the SDK model, which reads the summary from the
+        // root object, has no value; the summary is nested at properties.report.
+        DrillReportSummary? report = operation.HasValue
+            ? operation.Value
+            : ReadDrillRunReport(operation.GetRawResponse()?.Content);
+
+        return new DrillRunGenerateReportResult(
+            operationId,
+            operation.HasCompleted,
+            report is null ? null : MapDrillRunReport(report));
+    }
+
+    internal static DrillReportSummary? ReadDrillRunReport(BinaryData? rawOperationResponse)
+    {
+        if (rawOperationResponse is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(rawOperationResponse);
+            if (!document.RootElement.TryGetProperty("properties", out JsonElement properties) ||
+                !properties.TryGetProperty("report", out JsonElement report) ||
+                report.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return ModelReaderWriter.Read<DrillReportSummary>(
+                BinaryData.FromString(report.GetRawText()),
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    public async Task<DrillRunReportDownloadInfo> GetDrillRunReportDownloadUrlAsync(string serviceGroup, string drill, string drillRun, string? format = null, string? tenant = null, CancellationToken cancellationToken = default)
+    {
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateArmClientOptionsWithOperationIdPolicy(), cancellationToken: cancellationToken);
+
+        var drillRunId = DrillRunResource.CreateResourceIdentifier(serviceGroup, drill, drillRun);
+        DrillRunResource drillRunResource = armClient.GetDrillRunResource(drillRunId);
+        var content = new ListReportDownloadUrlContent();
+        if (format is not null)
+        {
+            content.Format = new DrillReportFormat(format);
+        }
+
+        string operationId = Guid.NewGuid().ToString();
+        ArmOperation<ListReportDownloadUrlResult> operation = await drillRunResource.GetReportDownloadUriAsync(WaitUntil.Started, operationId, content, cancellationToken);
+
+        await ExecuteWithTimeoutAsync(
+            async token =>
+            {
+                await WaitForLroCompletionAsync(operation, token);
+                return true;
+            },
+            "drill run report download URL request",
+            DrillReportOperationTimeout,
+            cancellationToken);
+
+        return MapDrillRunReportDownload(operation.Value, format, operation.GetRawResponse()?.Content);
+    }
+
+    internal static DrillRunReportInfo MapDrillRunReport(DrillReportSummary summary) => new(
+        summary.GenerationStatus?.ToString(),
+        summary.FinalizationState?.ToString(),
+        summary.StageStatuses
+            .Select(stage => new DrillRunReportStageInfo(
+                stage.DrillRunStage.ToString(),
+                stage.GenerationStatus?.ToString(),
+                stage.LastAttemptOn,
+                MapDrillRunReportError(stage.LastError)))
+            .ToList(),
+        summary.AvailableFormats.Select(format => format.ToString()).ToList(),
+        summary.LastGeneratedOn,
+        summary.SchemaVersion,
+        MapDrillRunReportError(summary.LastError));
+
+    internal static DrillRunReportDownloadInfo MapDrillRunReportDownload(ListReportDownloadUrlResult result, string? requestedFormat, BinaryData? rawOperationResponse = null)
+    {
+        // The service returns "downloadUrl" and "expiryTimestamp", which the SDK model does not read.
+        JsonElement? properties = ReadReportDownloadProperties(rawOperationResponse);
+        string? downloadUrl = result.DownloadUri?.ToString() ?? ReadString(properties, "downloadUrl");
+        if (string.IsNullOrEmpty(downloadUrl))
+        {
+            throw new InvalidOperationException("The service returned no report download URL.");
+        }
+
+        DateTimeOffset? expiresOn = result.ExpiryOn;
+        if (expiresOn is null &&
+            DateTimeOffset.TryParse(ReadString(properties, "expiryTimestamp"), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedExpiry))
+        {
+            expiresOn = parsedExpiry;
+        }
+
+        return new(result.Format?.ToString() ?? ReadString(properties, "format") ?? requestedFormat, downloadUrl, expiresOn);
+    }
+
+    private static JsonElement? ReadReportDownloadProperties(BinaryData? rawOperationResponse)
+    {
+        if (rawOperationResponse is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(rawOperationResponse);
+            return document.RootElement.TryGetProperty("properties", out var properties) && properties.ValueKind == JsonValueKind.Object
+                ? properties.Clone()
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadString(JsonElement? element, string propertyName) =>
+        element is { } value && value.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+
+    private static DrillRunReportErrorInfo? MapDrillRunReportError(ResilienceManagementErrorDetail? error) =>
+        error is null ? null : new DrillRunReportErrorInfo(error.Code, error.Message, error.Recommendations.ToList());
+
     // The service accepts a reprotect without a request body but never processes it, so always send a JSON body.
     internal static DrillRunReprotectContent CreateDrillRunReprotectContent(IReadOnlyList<string>? selectedResourceIds)
     {
@@ -2216,7 +2358,29 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
         ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
         await WaitForUsagePlanLroCompletionAsync(operation, "usage plan create or update", cancellationToken);
 
-        return MapUsagePlan(operation.Value.Data);
+        UsagePlanResource createdPlan = operation.Value;
+        if (usagePlanData.Tags.Count > 0)
+        {
+            // The service drops tags sent on the PUT when it completes the asynchronous create, but it persists tags
+            // sent in a PATCH, so apply them once the plan exists.
+            ArmOperation<UsagePlanResource> tagOperation = await createdPlan.UpdateAsync(
+                WaitUntil.Started, CreateUsagePlanTagsPatch(usagePlanData.Tags), cancellationToken);
+            await WaitForUsagePlanLroCompletionAsync(tagOperation, "usage plan tag update", cancellationToken);
+            createdPlan = tagOperation.Value;
+        }
+
+        return MapUsagePlan(createdPlan.Data);
+    }
+
+    internal static UsagePlanPatch CreateUsagePlanTagsPatch(IEnumerable<KeyValuePair<string, string>> tags)
+    {
+        var patch = new UsagePlanPatch();
+        foreach (KeyValuePair<string, string> tag in tags)
+        {
+            patch.Tags[tag.Key] = tag.Value;
+        }
+
+        return patch;
     }
 
     public async Task<bool> DeleteUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default)

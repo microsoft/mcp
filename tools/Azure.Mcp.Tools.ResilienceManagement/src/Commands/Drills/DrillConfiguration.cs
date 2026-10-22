@@ -290,6 +290,10 @@ internal static class DrillConfiguration
         }
         if (identity.TryGetProperty("userAssignedIdentity", out JsonElement id))
         {
+            if (type is not null && !type.Contains("UserAssigned", StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"--{option} userAssignedIdentity is allowed only when identity type includes UserAssigned.");
+            }
             ValidateResourceId(id, "Microsoft.ManagedIdentity/userAssignedIdentities", option);
         }
         else if (!update && type?.Contains("UserAssigned", StringComparison.Ordinal) == true)
