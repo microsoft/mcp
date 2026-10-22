@@ -30,6 +30,13 @@ public partial class ResilienceManagementCommandTests
         Assert.True(Guid.TryParse(operation.AssertProperty("operationId").GetString(), out _));
         Assert.True(operation.TryGetProperty("hasCompleted", out _));
 
+        // The service replies with the DrillRun envelope, so the summary must be read from properties.report.
+        var returnedReport = operation.AssertProperty("report");
+        Assert.Equal("Succeeded", returnedReport.AssertProperty("generationStatus").GetString());
+        Assert.Contains(
+            returnedReport.AssertProperty("availableFormats").EnumerateArray(),
+            format => format.GetString() == "Html");
+
         var report = await WaitForDrillRunReportAsync(serviceGroup, drill, drillRun);
         Assert.Equal("Succeeded", report.AssertProperty("generationStatus").GetString());
         Assert.Contains(

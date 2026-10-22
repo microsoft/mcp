@@ -2129,10 +2129,44 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
 
         ArmOperation<DrillReportSummary> operation = await drillRunResource.GenerateReportAsync(WaitUntil.Started, operationId, cancellationToken);
 
+        // The service replies with the DrillRun envelope, so the SDK model, which reads the summary from the
+        // root object, has no value; the summary is nested at properties.report.
+        DrillReportSummary? report = operation.HasValue
+            ? operation.Value
+            : ReadDrillRunReport(operation.GetRawResponse()?.Content);
+
         return new DrillRunGenerateReportResult(
             operationId,
             operation.HasCompleted,
-            operation.HasValue ? MapDrillRunReport(operation.Value) : null);
+            report is null ? null : MapDrillRunReport(report));
+    }
+
+    internal static DrillReportSummary? ReadDrillRunReport(BinaryData? rawOperationResponse)
+    {
+        if (rawOperationResponse is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(rawOperationResponse);
+            if (!document.RootElement.TryGetProperty("properties", out JsonElement properties) ||
+                !properties.TryGetProperty("report", out JsonElement report) ||
+                report.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return ModelReaderWriter.Read<DrillReportSummary>(
+                BinaryData.FromString(report.GetRawText()),
+                ModelReaderWriterOptions.Json,
+                AzureResourceManagerResilienceManagementContext.Default);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<DrillRunReportDownloadInfo> GetDrillRunReportDownloadUrlAsync(string serviceGroup, string drill, string drillRun, string? format = null, string? tenant = null, CancellationToken cancellationToken = default)

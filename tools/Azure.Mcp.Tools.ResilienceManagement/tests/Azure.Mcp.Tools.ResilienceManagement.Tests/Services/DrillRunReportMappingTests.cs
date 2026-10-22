@@ -63,6 +63,55 @@ public sealed class DrillRunReportMappingTests
     }
 
     [Fact]
+    public void ReadDrillRunReport_ReadsSummaryNestedInDrillRunEnvelope()
+    {
+        // Shape of the 202 response from generateReport: the DrillRun resource with the summary at properties.report.
+        var raw = BinaryData.FromString("""
+            {
+              "id": "/providers/Microsoft.Management/serviceGroups/sg/providers/Microsoft.AzureResilienceManagement/drills/d/drillRuns/r",
+              "properties": {
+                "jobType": "DrillRun",
+                "report": {
+                  "generationStatus": "Succeeded",
+                  "stageStatuses": [
+                    { "drillRunStage": "Failover", "generationStatus": "Succeeded", "lastAttemptTimestamp": "2026-10-20T11:29:47Z", "lastError": null }
+                  ],
+                  "availableFormats": ["Html"],
+                  "lastGeneratedTimestamp": "2026-10-20T11:32:33Z",
+                  "schemaVersion": "1",
+                  "finalizationState": "Finalized",
+                  "lastError": null
+                }
+              }
+            }
+            """);
+
+        DrillReportSummary? summary = ResilienceManagementService.ReadDrillRunReport(raw);
+
+        Assert.NotNull(summary);
+        var report = ResilienceManagementService.MapDrillRunReport(summary);
+        Assert.Equal("Succeeded", report.GenerationStatus);
+        Assert.Equal("Finalized", report.FinalizationState);
+        Assert.Equal("Html", Assert.Single(report.AvailableFormats));
+        Assert.Equal(DateTimeOffset.Parse("2026-10-20T11:32:33Z"), report.LastGeneratedOn);
+        Assert.Equal("Failover", Assert.Single(report.StageStatuses).DrillRunStage);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not json")]
+    [InlineData("""{"properties":{"jobType":"DrillRun"}}""")]
+    [InlineData("""{"properties":{"report":null}}""")]
+    [InlineData("""{"id":"/x"}""")]
+    public void ReadDrillRunReport_ReturnsNullWhenNoReportIsPresent(string? content)
+    {
+        BinaryData? raw = content is null ? null : BinaryData.FromString(content);
+
+        Assert.Null(ResilienceManagementService.ReadDrillRunReport(raw));
+    }
+
+    [Fact]
     public void MapDrillRunReportDownload_MapsUrlFormatAndExpiry()
     {
         var expires = DateTimeOffset.Parse("2026-10-22T02:00:00Z");
