@@ -276,4 +276,4 @@ async function driveMcpClient(fileLog) {
 
 function deactivate() { }
 
-module.exports = { activate, deactivate };
+module.exports = { activate, deactivate, driveMcpClient };
