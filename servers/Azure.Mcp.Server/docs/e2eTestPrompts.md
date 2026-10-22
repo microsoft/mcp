@@ -1318,7 +1318,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliencyagent_guidance_get | What does zone resilience mean for an Azure workload? | none |
 | resiliencyagent_guidance_get | Explain the difference between resiliency, high availability, and zone redundancy in Azure | none |
 | resiliencyagent_guidance_get | How should I begin improving the resiliency of a new Azure application? | none |
-| resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` for an Azure Resiliency architecture assessment | context-required |
+| resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` as a local attachment and return an attachment ID; do not assess the architecture yet | context-required |
 | resiliencyagent_file_attach | Prepare `C:\workspace\infra\main.bicep` for review | context-required |
 | resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | none |
 | resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
