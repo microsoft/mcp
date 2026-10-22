@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Starts failover for a resilience drill run in a service group from physical source zones. Optional selected drill resources limit fault injection and failover; auto-failover continues automatically to failover instead of pausing for manual input after fault injection.",
+    Description = "Fails over an existing, already-started resilience drill run in a service group from physical source zones; use drill start to begin a new drill. Optional selected drill resources limit fault injection and failover; auto-failover continues automatically to failover instead of pausing for manual input after fault injection; user consent Allowed lets failover proceed when the recovery plan is not Ready.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -45,6 +45,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
 
         DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult, drill: options.Drill);
+
+        if (options.UserConsent is not null &&
+            !string.Equals(options.UserConsent, "Unspecified", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(options.UserConsent, "Allowed", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--user-consent must be Unspecified or Allowed.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillRunFailoverOptions options, CancellationToken cancellationToken)
@@ -58,6 +65,9 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SourceLocations,
                 options.SelectedResourceIds,
                 options.AutoFailover,
+                options.UserConsent is null
+                    ? null
+                    : string.Equals(options.UserConsent, "Allowed", StringComparison.OrdinalIgnoreCase) ? "Allowed" : "Unspecified",
                 options.Tenant,
                 cancellationToken);
 
