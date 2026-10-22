@@ -92,7 +92,13 @@ function safeExit(exitCode) {
 log('PROXY', `start pid=${process.pid} cwd=${process.cwd()}`);
 log('PROXY', `spawning ${SERVER_EXECUTABLE} server start --mode all`);
 
-const child = spawn(SERVER_EXECUTABLE, ['server', 'start', '--mode', 'all'], {
+// Test launch seam: if the configured executable is a JavaScript file (used by lifecycle unit tests),
+// run it via Node.js so that Windows executes it without requiring shell: true.
+const isJsScript = SERVER_EXECUTABLE.endsWith('.js');
+const spawnExe = isJsScript ? process.execPath : SERVER_EXECUTABLE;
+const spawnArgs = isJsScript ? [SERVER_EXECUTABLE, 'server', 'start', '--mode', 'all'] : ['server', 'start', '--mode', 'all'];
+
+const child = spawn(spawnExe, spawnArgs, {
     stdio: ['pipe', 'pipe', 'pipe']
 });
 

@@ -110,6 +110,19 @@ function Invoke-LoggedCommand {
         $commands | Should -Match "env_$exeName"
     }
 
+    It "runs lifecycle regression tests before outerloop test" {
+        $exeName = if ($IsWindows) { 'azmcp.exe' } else { 'azmcp' }
+        $customExe = Join-Path $fixtureRoot "custom_$exeName"
+        Set-Content -LiteralPath $customExe -Value "custom"
+
+        & $scriptPath -ServerExecutablePath $customExe -VsCodeProjectPath "servers\Azure.Mcp.Server\vscode"
+
+        $commands = Get-Content -LiteralPath (Join-Path $fixtureRoot "commands.txt")
+        $commands[0] | Should -Match "npm ci --omit=optional"
+        $commands[1] | Should -Match "node --test src/test/outerloop/mcpProcessLifecycle.test.js"
+        $commands[2] | Should -Match "npm run outerloop-test"
+    }
+
     It "fails when no executable can be found" {
         {
             & $scriptPath -VsCodeProjectPath "servers\Azure.Mcp.Server\vscode"

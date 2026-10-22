@@ -59,30 +59,26 @@ beforeEachHook(() => {
 });
 
 afterEachHook(() => {
-    process.env = { ...originalEnv };
+    for (const key of Object.keys(process.env)) {
+        if (!(key in originalEnv)) {
+            delete process.env[key];
+        }
+    }
+    Object.assign(process.env, originalEnv);
     if (testTempDir && fs.existsSync(testTempDir)) {
         fs.rmSync(testTempDir, { recursive: true, force: true });
     }
 });
 
 function createMockExecutable(dir, name, jsSource) {
-    const isWin = process.platform === 'win32';
-    if (isWin) {
-        const jsPath = path.join(dir, `${name}.js`);
-        fs.writeFileSync(jsPath, jsSource, 'utf8');
-        const cmdPath = path.join(dir, `${name}.cmd`);
-        fs.writeFileSync(cmdPath, `@echo off\r\n"${process.execPath}" "${jsPath}" %*\r\n`, 'utf8');
-        return cmdPath;
-    } else {
-        const scriptPath = path.join(dir, name);
-        const content = `#!${process.execPath}\n${jsSource}`;
-        fs.writeFileSync(scriptPath, content, { mode: 0o755 });
-        return scriptPath;
-    }
+    const scriptPath = path.join(dir, `${name}.js`);
+    fs.writeFileSync(scriptPath, jsSource, 'utf8');
+    return scriptPath;
 }
 
 function createUnexecutableFile(dir, name) {
-    const filePath = path.join(dir, name);
+    const fileName = process.platform === 'win32' ? `${name}.exe` : name;
+    const filePath = path.join(dir, fileName);
     fs.writeFileSync(filePath, 'not an executable', { mode: 0o644 });
     return filePath;
 }
@@ -119,11 +115,12 @@ function runProxy(envOverrides = {}, stdinData = null) {
 
 describeBlock('mcpProxy process lifecycle & failure handling', () => {
     testRunner('fails with exit code 2 when MCP_SERVER_EXECUTABLE env var is unset', async () => {
+        delete process.env.MCP_SERVER_EXECUTABLE;
         const logPath = path.join(testTempDir, 'proxy.log');
-        const env = { ...process.env, MCP_PROXY_LOG: logPath };
-        delete env.MCP_SERVER_EXECUTABLE;
 
-        const result = await runProxy(env);
+        const result = await runProxy({
+            MCP_PROXY_LOG: logPath
+        });
         assert.equal(result.code, 2);
         assert.match(result.stderr, /MCP_SERVER_EXECUTABLE env var is required/);
     });

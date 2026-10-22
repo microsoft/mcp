@@ -50,8 +50,8 @@ if (-not $ServerExecutablePath) {
     $localCandidates = @(
         "$RepoRoot/.work/build/Azure.Mcp.Server/windows-x64/$exeName",
         "$RepoRoot/.work/build/Azure.Mcp.Server/linux-x64/$exeName",
-        "$RepoRoot/.work/build/Azure.Mcp.Server/osx-x64/$exeName",
-        "$RepoRoot/.work/build/Azure.Mcp.Server/osx-arm64/$exeName",
+        "$RepoRoot/.work/build/Azure.Mcp.Server/macos-x64/$exeName",
+        "$RepoRoot/.work/build/Azure.Mcp.Server/macos-arm64/$exeName",
         "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Release/net10.0/$exeName",
         "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/$exeName"
     )
@@ -75,6 +75,9 @@ $env:MCP_SERVER_EXECUTABLE = $ServerExecutablePath
 Push-Location $projectPath
 try {
     Invoke-LoggedCommand 'npm ci --omit=optional'
+
+    # Run the process lifecycle unit/regression tests before starting the full VS Code scenario.
+    Invoke-LoggedCommand 'node --test src/test/outerloop/mcpProcessLifecycle.test.js'
 
     # The test clears VS Code download caches, fetches the test VS Code build,
     # and starts the built Azure MCP server via $env:MCP_SERVER_EXECUTABLE before driving the UI with Playwright.
