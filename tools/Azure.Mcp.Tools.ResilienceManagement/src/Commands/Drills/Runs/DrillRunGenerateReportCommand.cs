@@ -68,6 +68,13 @@ public sealed class DrillRunGenerateReportCommand(ILogger<DrillRunGenerateReport
         return context.Response;
     }
 
+    protected override void HandleException(CommandContext context, Exception ex)
+    {
+        base.HandleException(context, ex);
+        // The base handler copies the raw exception message into Results; only the sanitized Message may reach callers.
+        context.Response.Results = null;
+    }
+
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>

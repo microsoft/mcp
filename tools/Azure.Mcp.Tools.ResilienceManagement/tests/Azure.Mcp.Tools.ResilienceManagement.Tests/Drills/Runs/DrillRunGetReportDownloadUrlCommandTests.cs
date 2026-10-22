@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -141,6 +142,8 @@ public sealed class DrillRunGetReportDownloadUrlCommandTests
         Assert.Equal(status, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(providerDetails, response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain("Sensitive provider details", JsonSerializer.Serialize(response));
     }
 
     [Theory]
@@ -161,6 +164,8 @@ public sealed class DrillRunGetReportDownloadUrlCommandTests
         Assert.Equal(HttpStatusCode.BadGateway, response.Status);
         Assert.Contains(expectedMessage, response.Message);
         Assert.DoesNotContain(providerDetails, response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain(providerDetails, JsonSerializer.Serialize(response));
     }
 
     [Fact]
@@ -178,5 +183,7 @@ public sealed class DrillRunGetReportDownloadUrlCommandTests
         Assert.Equal(HttpStatusCode.GatewayTimeout, response.Status);
         Assert.Contains("timed out", response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("internal timing details", response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain("internal timing details", JsonSerializer.Serialize(response));
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -133,5 +134,7 @@ public sealed class DrillRunGenerateReportCommandTests
         Assert.Equal(status, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(providerDetails, response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain("Sensitive provider details", JsonSerializer.Serialize(response));
     }
 }

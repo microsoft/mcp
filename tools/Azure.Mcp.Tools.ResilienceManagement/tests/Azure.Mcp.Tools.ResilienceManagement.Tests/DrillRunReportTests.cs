@@ -4,6 +4,7 @@
 
 using System.Text.Json;
 using Microsoft.Mcp.Tests;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
@@ -46,40 +47,23 @@ public partial class ResilienceManagementCommandTests
 
         // A drill run rejects a second POST with 409 until the previous operation (for example a report
         // generation from another test) releases it.
-        JsonElement? response = null;
-        for (int attempt = 0; attempt < 90; attempt++)
+        JsonElement? download = null;
+        for (int attempt = 0; attempt < 90 && download is null; attempt++)
         {
-            response = await CallToolAsync(
-                "resiliency_drill_run_get-report-download-url",
-                new()
-                {
-                    { "tenant", Settings.TenantId },
-                    { "service-group", serviceGroup },
-                    { "drill", drill },
-                    { "drill-run", drillRun },
-                    { "format", "html" }
-                },
-                resultProcessor: root => root);
-
-            if (response.HasValue && response.Value.TryGetProperty("results", out var results) && results.TryGetProperty("result", out _))
+            download = await TryGetReportDownloadWithoutLoggingAsync(serviceGroup, drill, drillRun);
+            if (download is null)
             {
-                break;
+                await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
             }
-
-            Assert.True(
-                response.HasValue && response.Value.TryGetProperty("status", out var status) && status.GetInt32() == 409,
-                $"Unexpected response while requesting the report download URL: {response}");
-
-            await Task.Delay(PollInterval(10000), TestContext.Current.CancellationToken);
         }
 
-        var download = response.AssertProperty("results").AssertProperty("result");
+        Assert.NotNull(download);
         Assert.Equal("Html", download.AssertProperty("format").GetString());
         Assert.True(
             Uri.TryCreate(download.AssertProperty("downloadUri").GetString(), UriKind.Absolute, out var uri) &&
             uri.Scheme == Uri.UriSchemeHttps,
             "The report download URL must be an absolute https URL.");
-        Assert.True(download.TryGetProperty("expiresOn", out _));
+        Assert.True(download.Value.TryGetProperty("expiresOn", out _));
     }
 
     [Fact]
@@ -100,6 +84,39 @@ public partial class ResilienceManagementCommandTests
             resultProcessor: root => root);
 
         Assert.Equal(400, response.AssertProperty("status").GetInt32());
+    }
+
+    // The response carries a signed URL that grants read access to the report. CallToolAsync logs the whole
+    // response (to the test output in debug runs, or on failure), so call the client directly and never log it.
+    private async Task<JsonElement?> TryGetReportDownloadWithoutLoggingAsync(string serviceGroup, string drill, string drillRun)
+    {
+        var result = await Client.CallToolAsync(
+            "resiliency_drill_run_get-report-download-url",
+            new Dictionary<string, object?>
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "drill", drill },
+                { "drill-run", drillRun },
+                { "format", "html" }
+            },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        string? content = McpTestUtilities.GetFirstText(result.Content);
+        Assert.False(string.IsNullOrWhiteSpace(content), "The report download URL call returned no content.");
+
+        using var document = JsonDocument.Parse(content!);
+        JsonElement root = document.RootElement;
+        if (root.TryGetProperty("results", out var results) && results.TryGetProperty("result", out var download))
+        {
+            return download.Clone();
+        }
+
+        // Error responses carry only the sanitized message, so it is safe to include in the failure.
+        int status = root.TryGetProperty("status", out var statusElement) ? statusElement.GetInt32() : 0;
+        string? message = root.TryGetProperty("message", out var messageElement) ? messageElement.GetString() : null;
+        Assert.True(status == 409, $"Unexpected response while requesting the report download URL: {status} {message}");
+        return null;
     }
 
     private (string ServiceGroup, string Drill, string DrillRun) GetDrillRunReportFixture() => (
