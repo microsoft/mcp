@@ -1,6 +1,6 @@
 # Drill run report tools: tool description evaluation
 
-Results of the [Tool Description Evaluator](../../../eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the two tools added in branch `adishi/drillsremaining`:
+Results of the [Tool Description Evaluator](../../../eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the two tools added for drill run reports:
 
 - `resiliency_drill_run_generate-report`
 - `resiliency_drill_run_get-report-download-url`
