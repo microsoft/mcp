@@ -272,6 +272,26 @@ public class ServerToolLoaderTests
         });
     }
 
+    [Fact]
+    public async Task GetAllChildToolsAsync_AfterRemoteTimeToLiveExpires_RefreshesTools()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("old-tool", "Old tool", "Old result")
+            .WithTimeToLive(TimeSpan.Zero);
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("storage", clientBuilder)
+            .Build();
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+
+        var initial = await toolLoader.GetAllChildToolsAsync(request, "storage", TestContext.Current.CancellationToken);
+        clientBuilder.RemoveTool("old-tool").AddTool("new-tool", "New tool", "New result");
+        var refreshed = await toolLoader.GetAllChildToolsAsync(request, "storage", TestContext.Current.CancellationToken);
+
+        Assert.Equal("old-tool", Assert.Single(initial).Name);
+        Assert.Equal("new-tool", Assert.Single(refreshed).Name);
+    }
+
     #region Execution-Time Mode Enforcement Tests
 
     private static ServerToolLoader CreateToolLoaderWithMockClient(
