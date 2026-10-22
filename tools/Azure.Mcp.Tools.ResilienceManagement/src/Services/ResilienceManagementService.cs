@@ -2216,7 +2216,29 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
         ArmOperation<UsagePlanResource> operation = await usagePlans.CreateOrUpdateAsync(WaitUntil.Started, usagePlan, usagePlanData, cancellationToken);
         await WaitForUsagePlanLroCompletionAsync(operation, "usage plan create or update", cancellationToken);
 
-        return MapUsagePlan(operation.Value.Data);
+        UsagePlanResource createdPlan = operation.Value;
+        if (usagePlanData.Tags.Count > 0)
+        {
+            // The service drops tags sent on the PUT when it completes the asynchronous create, but it persists tags
+            // sent in a PATCH, so apply them once the plan exists.
+            ArmOperation<UsagePlanResource> tagOperation = await createdPlan.UpdateAsync(
+                WaitUntil.Started, CreateUsagePlanTagsPatch(usagePlanData.Tags), cancellationToken);
+            await WaitForUsagePlanLroCompletionAsync(tagOperation, "usage plan tag update", cancellationToken);
+            createdPlan = tagOperation.Value;
+        }
+
+        return MapUsagePlan(createdPlan.Data);
+    }
+
+    internal static UsagePlanPatch CreateUsagePlanTagsPatch(IEnumerable<KeyValuePair<string, string>> tags)
+    {
+        var patch = new UsagePlanPatch();
+        foreach (KeyValuePair<string, string> tag in tags)
+        {
+            patch.Tags[tag.Key] = tag.Value;
+        }
+
+        return patch;
     }
 
     public async Task<bool> DeleteUsagePlanAsync(string resourceGroup, string usagePlan, string subscription, string? tenant = null, CancellationToken cancellationToken = default)
