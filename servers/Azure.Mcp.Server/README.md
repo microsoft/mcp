@@ -1355,6 +1355,7 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 
 ### 🔄 Azure Migrate
@@ -1516,7 +1517,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
-- 💾 **Azure Storage** - Blob storage
+- 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation
