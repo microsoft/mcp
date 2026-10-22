@@ -36,6 +36,7 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
         Assert.Contains("excludes it from recovery operations", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("removes a resource", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CustomRunbook", command.Description, StringComparison.Ordinal);
+        Assert.Contains("AzureCosmosDB", command.Description, StringComparison.Ordinal);
         Assert.Contains("AzureSiteRecovery", command.Description, StringComparison.Ordinal);
         Assert.Contains("only for virtual machines", command.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("protection settings", command.Description, StringComparison.OrdinalIgnoreCase);

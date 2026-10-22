@@ -159,6 +159,19 @@ Use only for `Microsoft.Compute/virtualMachines` resources with healthy Azure Si
 
 The VM must already have a discovered `AzureSiteRecovery` solution in `Protected` state. `selectedProtectionSolutionSetting` requires at least one `diskReprotectInputDetails` entry containing a `Microsoft.Compute/disks` ID and a `Microsoft.Storage/storageAccounts` staging ID, plus `testFailoverParams.networkResourceId` for a `Microsoft.Network/virtualNetworks` resource. Do not use this protection type for non-VM resources.
 
+### Azure Cosmos DB protection
+
+Use `AzureCosmosDB` only for a `Microsoft.DocumentDB/databaseAccounts` Recovery Resource that already advertises a protected `AzureCosmosDB` solution. The selected type and setting discriminators must both be `AzureCosmosDB`:
+
+```json
+{
+  "selectedProtectionSolutionType": "AzureCosmosDB",
+  "selectedProtectionSolutionSetting": {
+    "protectionSolutionType": "AzureCosmosDB"
+  }
+}
+```
+
 ### Protection choice
 
 | Protection type | Use when | Do not use when |

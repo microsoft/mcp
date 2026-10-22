@@ -24,8 +24,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         Updates recovery resources in a resilience recoveryplan in an Azure service group: includes and configures a resource
         with protection settings; keeps a resource in the plan but excludes it from recovery operations; or removes a resource
         from membership while retaining the plan and all other resources. Supports CustomRunbook with failover and reprotect
-        runbooks. Supports AzureStorageAccount for native Storage account recovery. Supports AzureSiteRecovery only for
-        virtual machines with disk reprotection, staging storage, and a test failover virtual network.
+        runbooks. Supports AzureStorageAccount for native Storage account recovery. Supports AzureCosmosDB for protected
+        Cosmos DB accounts. Supports AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and
+        a test failover virtual network.
         Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
