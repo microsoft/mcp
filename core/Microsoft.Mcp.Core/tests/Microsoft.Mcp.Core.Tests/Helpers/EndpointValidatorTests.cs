@@ -127,6 +127,47 @@ public class EndpointValidatorTests
 
     #region ValidateAzureServiceEndpoint Tests
 
+    [Fact]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_ApprovesProductionHost()
+    {
+        s_validator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze",
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud);
+    }
+
+    [Theory]
+    [InlineData("https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze")]
+    [InlineData("https://storageintelligenceweb.sg.dogfood.portalrp.azure-test.net/api/Disk/analyze")]
+    [InlineData("https://portalrp.azure.com")]
+    [InlineData("https://evil.portalrp.azure.com")]
+    [InlineData("https://evil.storageintelligenceweb.production.portalrp.azure.com")]
+    [InlineData("https://storageintelligenceweb.production.portalrp.azure.com.evil.example")]
+    [InlineData("https://unapproved.example.com")]
+    [InlineData("https://localhost")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("https://10.0.0.1")]
+    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com")]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsOtherHostsAndSchemes(string endpoint)
+    {
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsUnsupportedClouds(bool isChina)
+    {
+        ArmEnvironment environment = isChina ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com",
+            serviceType: "storage-intelligence",
+            armEnvironment: environment));
+    }
+
     [Theory]
     [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://my-instance.energy.azure.com", "adme")]
@@ -144,6 +185,8 @@ public class EndpointValidatorTests
     [InlineData("https://00000000-0000-0000-0000-000000000000.eastus.cnt-prod.loadtesting.azure.com", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
+    [InlineData("https://workspace.data.monitor.azure.com", "monitor-traces")]
+    [InlineData("https://data.monitor.azure.com", "monitor-traces")]
     [InlineData("https://server.mysql.database.azure.com", "mysql")]
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]
@@ -193,6 +236,7 @@ public class EndpointValidatorTests
     [InlineData("https://resource.eastus.cnt-prod.loadtesting.azure.com.evil.example", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
+    [InlineData("https://workspace.data.monitor.azure.com.evil.example", "monitor-traces")]
     [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
     [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
     [InlineData("https://mystorage.table.core.windows.net.evil.example", "storage-table")]
@@ -227,6 +271,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-resource.openai.azure.com.evil.com", "azure-openai", "not a valid azure-openai domain")]
     [InlineData("http://resource.eastus.cnt-prod.loadtesting.azure.com", "loadtesting", "must use HTTPS")]
     [InlineData("http://eastus.metrics.monitor.azure.com", "monitor-metrics", "must use HTTPS")]
+    [InlineData("http://workspace.data.monitor.azure.com", "monitor-traces", "must use HTTPS")]
     [InlineData("https://evil.com", "postgres", "not a valid postgres domain")]
     [InlineData("http://myserver.postgres.database.azure.com", "postgres", "must use HTTPS")]
     [InlineData("https://myserver.postgres.database.azure.com.evil.com", "postgres", "not a valid postgres domain")]
@@ -318,6 +363,17 @@ public class EndpointValidatorTests
     #endregion
 
     #region Sovereign Cloud Tests
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ValidateAzureServiceEndpoint_TraceStoreRejectsUnsupportedClouds(bool china)
+    {
+        ArmEnvironment environment = china ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
+            "https://workspace.data.monitor.azure.com", "monitor-traces", environment));
+    }
+
 
     [Theory]
     // Azure China Cloud

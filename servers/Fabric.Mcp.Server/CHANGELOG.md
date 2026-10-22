@@ -5,6 +5,22 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.0 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 1.6.0 (2026-10-18)
+
+### Other Changes
+
+- Updated bundled Fabric REST API specifications and examples, including CopyJob execution, Reflex activation queries, Warehouse SQL pool configuration, and item-definition links. [[#3978](https://github.com/microsoft/mcp/pull/3978)]
+
 ## 1.5.0 (2026-10-12)
 
 ### Features Added

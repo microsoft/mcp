@@ -69,10 +69,25 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | List prioritized Advisor recommendations in subscription \<subscription> ranked by metadata priority score, then contextual criticality score | none |
 | advisor_recommendation_list | List postponed Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Find Advisor recommendations for service group \<service-group> matching Service Health tracking ID QNY1-HB8 | none |
 | advisor_recommendation_list | Show active service-retirement Advisor recommendations for service group \<service-group> whose retirement date is before March 31, 2027 | none |
+| advisor_recommendation_list | Show dismissed recommendations of type \<recommendation-type-id> in subscription \<subscription>, with the signals behind their scores | none |
+| advisor_recommendation_list | Show the resources affected by Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, and include the signals behind their scores | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, with available prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality, without prioritization signals | none |
+| advisor_recommendation_list | List Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, with prioritization and signal output disabled | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by savings, with available prioritization signals | none |
+| advisor_recommendation_list | List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show the resources affected by that cost recommendation in service group \<service-group>, largest savings first | context-required |
+| advisor_recommendation_list | List Azure Advisor recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, filtered to retirement dates before March 31, 2027 | none |
+| advisor_recommendation_list | List postponed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List dismissed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
+| advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
+| advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
@@ -311,9 +326,30 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_policy_create | Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00 | investigation-required |
 | azurebackup_policy_update | Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Update Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> with comma-separated schedule times 02:00,14:00, reconciling all retention times and leaving schedule-specific limits to Azure | investigation-required |
 | azurebackup_policy_update | Add a weekly retention of 4 weeks on Sundays to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Add a monthly retention of 12 months on the 1st of every month to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_update | Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> with a 12-hour window in RSV vault <vault_name> under resource group <resource_group>, change only the hourly interval to 6 hours, preserving the window start, duration, retention, and tags | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window start to 08:00, preserving its interval and duration | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, override its time zone with India Standard Time and set the hourly window start to 08:00 local, converted to 02:30 UTC, preserving interval and duration | investigation-required |
+| azurebackup_policy_update | For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window duration to 24 hours, preserving its interval and start | investigation-required |
+| azurebackup_policy_update | Change existing Enhanced Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to Hourly every 4 hours starting 08:00 for a 12-hour window, asserting Enhanced subtype and keeping existing positive daily retention | investigation-required |
+| azurebackup_policy_update | Update existing Enhanced VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to 7 days of instant recovery retention and instant recovery resource-group prefix restorecache, preserving the existing suffix and all omitted settings | investigation-required |
+| azurebackup_policy_update | Set snapshot consistency to CrashConsistent for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, leaving schedule and retention unchanged | investigation-required |
+| azurebackup_policy_update | Restore default ApplicationConsistent snapshot behavior for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Set archive mode TierAfter with archive after 90 days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving other policy settings | investigation-required |
+| azurebackup_policy_update | Set archive mode TierRecommended without archive days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_policy_update | Enable recommended archive tiering using smart-tier true for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, without supplying archive mode or days | investigation-required |
+| azurebackup_policy_update | Disable archive tiering explicitly using smart-tier false for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving unrelated settings | investigation-required |
+| azurebackup_policy_update | Merge policy tags environment=test,owner=team into VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving all unmentioned tags and schedule and retention fields | investigation-required |
+| azurebackup_policy_update | Change Standard Daily VM policy <policy_name> with positive daily retention in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday at 03:00 with explicit weekly retention of 8 weeks on Sunday and instant recovery retention of 5 days, removing daily retention and preserving monthly and yearly tiers | investigation-required |
+| azurebackup_policy_update | Negative test: change Standard Daily VM policy <policy_name> with instant recovery retention of 2 days in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday with explicit weekly retention of 8 weeks on Sunday, omitting instant recovery retention; expect rejection suggesting --instant-rp-retention-days 5 without silently changing the existing value | investigation-required |
+| azurebackup_policy_update | Change Weekly VM policy <policy_name> with no daily retention in RSV vault <vault_name> under resource group <resource_group> to Daily at 03:00 and supply daily retention of 30 days, preserving existing long-term tiers | investigation-required |
+| azurebackup_policy_update | Negative test: assert Enhanced subtype on existing Standard VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>; expect rejection, not subtype migration | investigation-required |
+| azurebackup_policy_update | Negative test: request archive mode CopyOnExpiry for RSV VM policy <policy_name> in vault <vault_name> under resource group <resource_group>; expect rejection because update accepts TierAfter or TierRecommended | investigation-required |
+| azurebackup_policy_update | Negative test: switch Daily VM policy <policy_name> with positive daily retention to Weekly on Sunday in RSV vault <vault_name> under resource group <resource_group> without explicit weekly retention weeks and days; expect rejection rather than silent removal of daily retention | investigation-required |
+| azurebackup_policy_update | Negative test: switch Weekly VM policy <policy_name> with no daily retention to Daily at 03:00 in RSV vault <vault_name> under resource group <resource_group> without supplying daily retention; expect rejection | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -654,6 +690,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep | none |
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
+
+## Azure Device Provisioning Service
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
+| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
+| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
 
 ## Azure Device Registry
 
@@ -1063,6 +1107,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
+| monitor_traces_account_list | List the distributed trace accounts in my subscription | none |
+| monitor_traces_account_list | Show me the Azure Monitor Workspaces enabled for Trace Store | none |
+| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
+| monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
+| monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
+| monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
+| monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_get | Get details for the web test named <webtest_resource_name> in resource group <resource_group> | none |
@@ -1124,9 +1181,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, and automated built-in roles | none |
 | resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
 | resiliency_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
+| resiliency_drill_create | Create a zonal resilience drill in service group <service_group> with Health Model monitoring for <health_model_id> using a system-assigned identity | clarification-required |
+| resiliency_drill_create | Configure a new resilience drill with goal-assignment identity and Availability and Latency SLI monitoring | clarification-required |
 | resiliency_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resiliency_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_end | End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes "Validation completed" | none |
@@ -1134,7 +1193,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_get | List all resilience drills in service group <service_group> | none |
 | resiliency_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
-| resiliency_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_update | Switch resilience drill <drill_name> in service group <service_group> to the AutomatedCustomRole RBAC setup mode | none |
+| resiliency_drill_update | Change the Health Model monitored by resilience drill <drill_name> in service group <service_group> to <health_model_id> without changing its identity | none |
+| resiliency_drill_update | Clear SLI monitoring on resilience drill <drill_name> in service group <service_group> while preserving its other configuration | none |
 | resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription \<subscription> and region \<region> | none |
 | resiliency_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
@@ -1146,6 +1207,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
+| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | none |
+| resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> using default validation from source location <source_location> | none |
 | resiliency_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
 | resiliency_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
@@ -1154,11 +1217,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_add-notes | Add the note \<notes> to drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location> | none |
-| resiliency_drill_run_failover | Fail over selected resources <resource_ids> in drill run <drill_run_name> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> from physical zone <source_location> and continue automatically to failover after fault injection | none |
+| resiliency_drill_run_failover | Fail over drill run <drill_run_name> from physical zone <source_location> and pause for manual input instead of automatic failover | none |
+| resiliency_drill_run_failover | Fail over selected drill-resource ARM IDs <drill_resource_ids> in drill run <drill_run_name> of drill <drill_name> in service group <service_group> from physical zones <source_locations>, and automatically continue after fault injection | none |
 | resiliency_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resiliency_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
 | resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
@@ -1214,9 +1281,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_resource_update | Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources | none |
 | resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_resource_get | Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
+| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Standard plan type | none |
 | resiliency_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
 | resiliency_usageplan_delete | Use Azure Resiliency Management usage-plan delete to permanently remove the entire usage plan <usage_plan_name> from resource group <resource_group_name>, not an enrollment | none |
 | resiliency_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
@@ -1452,6 +1519,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
+| storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to VM \<vm-name> in resource group \<resource-group> and subscription \<subscription> using tenant \<tenant> | none |
+| storage_disk_diagnose | Analyze managed disk \<disk-resource-id> for IOPS or throughput throttling during the last 24 hours | none |
+| storage_disk_diagnose | Diagnose disks \<disk-name-1> and \<disk-name-2> attached to VM \<vm-name> in resource group \<resource-group> | none |
+| storage_disk_diagnose | Diagnose managed disk \<disk-resource-id> and include host-side 1-second and 5-second latency signals | none |
+| storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
 

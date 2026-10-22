@@ -11,6 +11,96 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class AdvisorServiceConversionTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConvertToAdvisorRecommendationModel_OnlyIncludesSignalsWhenRequested(bool showSignals)
+    {
+        const string signals = """
+            {
+                "healthAlertCoverage": { "weightedScore": 0.025 },
+                "serviceHealthEvents": { "weightedScore": 0 },
+                "sgHaGoal": { "weightedScore": 0 },
+                "customSignal": { "weightedScore": -0.1, "details": ["extra", null], "enabled": true },
+                "unpublishedScalarSignal": "unknown-shape"
+            }
+            """;
+        Models.Recommendation result;
+        using (var document = JsonDocument.Parse($$"""
+            {
+                "name": "recommendation",
+                "properties": {
+                    "category": "HighAvailability",
+                    "criticalityScore": 0.55,
+                    "signalBreakdown": {{signals}}
+                }
+            }
+            """))
+        {
+            result = AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement, showSignals);
+        }
+
+        var serialized = JsonSerializer.Serialize(result, Commands.AdvisorJsonContext.Default.Recommendation);
+        using var response = JsonDocument.Parse(serialized);
+        var properties = response.RootElement.GetProperty("properties");
+        Assert.Equal(0.55, properties.GetProperty("criticalityScore").GetDouble());
+        Assert.Equal(showSignals, properties.TryGetProperty("signalBreakdown", out var actual));
+        if (showSignals)
+        {
+            using var expected = JsonDocument.Parse(signals);
+            Assert.True(JsonElement.DeepEquals(expected.RootElement, actual));
+            Assert.Equal(0, actual.GetProperty("sgHaGoal").GetProperty("weightedScore").GetInt32());
+            Assert.True(JsonElement.DeepEquals(expected.RootElement, result.Properties.SignalBreakdown!.Value));
+        }
+        else
+        {
+            Assert.Null(result.Properties.SignalBreakdown);
+        }
+    }
+
+    [Theory]
+    [InlineData("42")]
+    [InlineData("\"unknown-shape\"")]
+    [InlineData("[1,null,{\"weightedScore\":\"unknown\"}]")]
+    public void ConvertToAdvisorRecommendationModel_PreservesUnpublishedSignalShapesWhenRequested(string signalBreakdown)
+    {
+        using var document = JsonDocument.Parse(
+            """{"properties":{"signalBreakdown":""" + signalBreakdown + "}}");
+
+        var included = AdvisorService.ConvertToAdvisorRecommendationModel(
+            document.RootElement,
+            showPrioritizationSignals: true);
+        var excluded = AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement);
+
+        using var expected = JsonDocument.Parse(signalBreakdown);
+        Assert.True(JsonElement.DeepEquals(expected.RootElement, included.Properties.SignalBreakdown!.Value));
+        Assert.Null(excluded.Properties.SignalBreakdown);
+    }
+
+    [Theory]
+    [InlineData("""{"category":"Cost"}""")]
+    [InlineData("""{"category":"Cost","signalBreakdown":null}""")]
+    public void ConvertToAdvisorRecommendationModel_OmitsUnavailableSignals(string properties)
+    {
+        using var document = JsonDocument.Parse($$"""{"properties":{{properties}}}""");
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement, showPrioritizationSignals: true);
+
+        Assert.Null(result.Properties.SignalBreakdown);
+        var serialized = JsonSerializer.Serialize(result, Commands.AdvisorJsonContext.Default.Recommendation);
+        Assert.DoesNotContain("signalBreakdown", serialized);
+    }
+
+    [Fact]
+    public void ConvertToAdvisorRecommendationModel_PreservesEmptySignalsObjectWhenRequested()
+    {
+        using var document = JsonDocument.Parse("""{"properties":{"signalBreakdown":{}}}""");
+        var result = AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement, showPrioritizationSignals: true);
+        var serialized = JsonSerializer.Serialize(result, Commands.AdvisorJsonContext.Default.Recommendation);
+
+        Assert.Contains("\"signalBreakdown\":{}", serialized);
+        Assert.Null(AdvisorService.ConvertToAdvisorRecommendationModel(document.RootElement).Properties.SignalBreakdown);
+    }
+
+    [Theory]
     [InlineData(null, null)]
     [InlineData("", null)]
     [InlineData("/subscriptions/abc", null)]

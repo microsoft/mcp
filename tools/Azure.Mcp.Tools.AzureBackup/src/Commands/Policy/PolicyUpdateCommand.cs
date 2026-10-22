@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Id = "a3f7d2c1-9e84-4b6a-8d3c-5f1e7a2b9c04",
     Name = "update",
     Title = "Update Backup Policy",
-    Description = "Modifies an existing RSV backup policy. Updates the backup schedule time and daily retention days for VM, SQL, SAP HANA, and file share workload policies. The named policy must already exist in the vault.",
+    Description = "Updates an existing RSV backup policy, preserving omitted settings. VM policies support Daily/Weekly schedules, Hourly on existing Enhanced policies, long-term retention, instant recovery, snapshot consistency, archive tiering and tags. Standard/Enhanced subtype changes are rejected. SQL, SAP HANA, and file share policies support only schedule-time and daily-retention-days; VM-only flags are rejected. The named policy must already exist in the vault.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -45,27 +45,7 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
 
         try
         {
-            var request = new Services.Policy.PolicyUpdateRequest
-            {
-                Policy = options.Policy,
-                ScheduleTime = options.ScheduleTime,
-                DailyRetentionDays = options.DailyRetentionDays,
-                TimeZone = options.TimeZone,
-                ScheduleFrequency = options.ScheduleFrequency,
-                ScheduleTimes = options.ScheduleTimes,
-                ScheduleDaysOfWeek = options.ScheduleDaysOfWeek,
-                WeeklyRetentionWeeks = options.WeeklyRetentionWeeks,
-                WeeklyRetentionDaysOfWeek = options.WeeklyRetentionDaysOfWeek,
-                MonthlyRetentionMonths = options.MonthlyRetentionMonths,
-                MonthlyRetentionWeekOfMonth = options.MonthlyRetentionWeekOfMonth,
-                MonthlyRetentionDaysOfWeek = options.MonthlyRetentionDaysOfWeek,
-                MonthlyRetentionDaysOfMonth = options.MonthlyRetentionDaysOfMonth,
-                YearlyRetentionYears = options.YearlyRetentionYears,
-                YearlyRetentionMonths = options.YearlyRetentionMonths,
-                YearlyRetentionWeekOfMonth = options.YearlyRetentionWeekOfMonth,
-                YearlyRetentionDaysOfWeek = options.YearlyRetentionDaysOfWeek,
-                YearlyRetentionDaysOfMonth = options.YearlyRetentionDaysOfMonth,
-            };
+            var request = Services.Policy.PolicyUpdateRequest.FromOptions(options);
 
             var result = await _azureBackupService.UpdatePolicyAsync(
                 request,
@@ -96,8 +76,8 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Policy or vault not found. Verify the policy name, vault name, and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed updating the policy. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
+            "Authorization failed updating the policy. Verify Azure RBAC and Resource Guard permissions.",
+        RequestFailedException => "Azure rejected the policy update. Verify the schedule, retention limits, and vault security restrictions.",
         _ => base.GetErrorMessage(ex)
     };
 

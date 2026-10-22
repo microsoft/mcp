@@ -1,5 +1,11 @@
 # Release History
 
+## 1.6.0 (2026-10-18)
+
+### Changed
+
+- Updated bundled Fabric REST API specifications and examples, including CopyJob execution, Reflex activation queries, Warehouse SQL pool configuration, and item-definition links. [[#3978](https://github.com/microsoft/mcp/pull/3978)]
+
 ## 1.5.0 (2026-10-12)
 
 ### Added
