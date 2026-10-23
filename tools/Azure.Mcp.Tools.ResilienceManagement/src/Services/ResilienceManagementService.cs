@@ -2069,19 +2069,12 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             _ => throw new ArgumentOutOfRangeException(nameof(rbacSetupMode), rbacSetupMode, "Unsupported RBAC setup mode.")
         };
 
-        // The 2026-04-01-preview backend flow requires both identities even when resources do not exist yet.
         properties.RecoveryPlanProperties = ArmResilienceManagementModelFactory.RecoveryPlanPropertiesOfDrill(
             associatedIdentity,
             string.IsNullOrWhiteSpace(recoveryPlan)
                 ? null
                 : RecoveryPlanResource.CreateResourceIdentifier(serviceGroup, recoveryPlan),
             recoveryPlanResourceExcludedCount: null);
-        properties.MonitoringProperties = ArmResilienceManagementModelFactory.MonitoringPropertiesOfDrill(
-            associatedIdentity,
-            logAnalyticsWorkspaceId: null,
-            rawMetricsDataCollectionRuleId: null,
-            serviceGroupMetricsDataCollectionRuleId: null,
-            dataCollectionEndpointId: null);
 
         var drillData = new ResilienceManagementDrillData
         {

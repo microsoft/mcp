@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Updated resilience drill creation to use the `2026-10-31-preview` contract and stopped sending the legacy monitoring setup from the `2026-04-01-preview` flow.
+
 ### Other Changes
 
 ## 3.0.0-beta.50 (2026-10-06)

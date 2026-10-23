@@ -134,7 +134,7 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
-    public async Task CreateDrillAsync_UsesCompatibleCreateContractAndSerializesRecoveryPlanId()
+    public async Task CreateDrillAsync_UsesCurrentContractAndSerializesRecoveryPlanId()
     {
         const string recoveryPlanId =
             "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1";
@@ -156,11 +156,15 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.Equal("drill1", result.Name);
         Assert.Contains(
-            "api-version=2026-04-01-preview",
+            "api-version=2026-10-31-preview",
             handler.RequestUri,
             StringComparison.OrdinalIgnoreCase);
         Assert.Equal("application/json", handler.ContentType);
         using JsonDocument document = JsonDocument.Parse(handler.RequestBody!);
+        Assert.False(
+            document.RootElement
+                .GetProperty("properties")
+                .TryGetProperty("monitoringProperties", out _));
         Assert.Equal(
             recoveryPlanId,
             document.RootElement

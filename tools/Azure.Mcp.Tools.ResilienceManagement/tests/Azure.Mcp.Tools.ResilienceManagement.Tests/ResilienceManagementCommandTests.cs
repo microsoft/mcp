@@ -303,8 +303,7 @@ public class ResilienceManagementCommandTests(
             !recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
             recoveryPlanId.ValueKind == JsonValueKind.Null);
 
-        var monitoringProperties = properties.AssertProperty("monitoringProperties");
-        Assert.Equal("SystemAssigned", monitoringProperties.AssertProperty("identity").AssertProperty("type").GetString());
+        Assert.False(properties.TryGetProperty("monitoringProperties", out _));
     }
 
     [Fact]
