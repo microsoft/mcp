@@ -84,7 +84,8 @@ if ($Force -and
 $successfulPaths = [System.Collections.Generic.HashSet[string]]::new(
     [System.StringComparer]::OrdinalIgnoreCase)
 
-if (Test-Path -LiteralPath $SuccessfulPathsFile -PathType Leaf) {
+if (-not ($Force -and $WhatIfPreference) -and
+    (Test-Path -LiteralPath $SuccessfulPathsFile -PathType Leaf)) {
     foreach ($path in Get-Content -LiteralPath $SuccessfulPathsFile) {
         if (-not [string]::IsNullOrWhiteSpace($path)) {
             $successfulPaths.Add([System.IO.Path]::GetFullPath($path.Trim())) | Out-Null

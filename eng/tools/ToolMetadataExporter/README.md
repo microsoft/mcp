@@ -107,7 +107,8 @@ Successful executable paths are appended to:
 .work\ToolMetadataExporter\Export-DownloadedVersions.successful.txt
 ```
 
-Subsequent runs skip those paths. A failed export is not recorded.
+Subsequent runs skip those paths. A failed export is not recorded. Use `-Force -WhatIf` to preview
+re-exporting all eligible versions without modifying the ledger.
 
 ## Output
 
