@@ -1,0 +1,36 @@
+{
+  "parameters": {
+    "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+    "dataPipelineId": "dddddddd-9999-0000-1111-eeeeeeeeeeee"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+            "itemId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+            "jobType": "Execute",
+            "invokeType": "Manual",
+            "status": "Completed",
+            "rootActivityId": "11111111-2222-3333-4444-555555555555",
+            "startTimeUtc": "2024-06-22T06:35:00.7812154",
+            "endTimeUtc": "2024-06-22T06:35:00.8033333",
+            "failureReason": null
+          },
+          {
+            "id": "cccccccc-3333-4444-5555-dddddddddddd",
+            "itemId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+            "jobType": "Execute",
+            "invokeType": "Scheduled",
+            "status": "Completed",
+            "rootActivityId": "22222222-3333-4444-5555-666666666666",
+            "startTimeUtc": "2024-06-22T07:35:00.7812154",
+            "endTimeUtc": "2024-06-22T08:35:00.8033333",
+            "failureReason": null
+          }
+        ]
+      }
+    }
+  }
+}

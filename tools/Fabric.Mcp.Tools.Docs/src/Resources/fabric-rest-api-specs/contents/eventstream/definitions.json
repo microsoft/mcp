@@ -95,7 +95,7 @@
           "required": ["parts"],
           "properties": {
               "format": {
-                  "description": "The format of the item definition.",
+                  "description": "The format of the eventstream definition.",
                   "type": "string",
                   "readOnly": false
               },

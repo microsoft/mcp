@@ -19,18 +19,19 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.Monitor.Query.Logs" />
+    <PackageReference Include="Azure.Monitor.Query.Metrics" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.ApplicationInsights" />
+    <PackageReference Include="Azure.ResourceManager.CloudHealth" />
     <PackageReference Include="Azure.ResourceManager.OperationalInsights" />
     <PackageReference Include="Azure.ResourceManager.Monitor" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -16,12 +15,19 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "resource",
     Title = "Export Azure Resource to Terraform",
     Description = """
-        Generates an aztfexport command to export a single Azure resource to Terraform configuration.
-        Returns the command and arguments for the agent to execute locally.
-        Specify --resource-id with the full Azure resource ID. Optionally configure the Terraform provider
-        (azurerm or azapi), custom resource name, output folder, parallelism, and whether to include role assignments.
+        Export one existing Azure resource to Terraform configuration by generating an Azure Export for Terraform
+        (aztfexport) command. Use this tool whenever the request identifies the resource by its full Azure resource ID,
+        such as /subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{name}.
+        Exports only that single resource, not the resource group that contains it.
+        Supports the AzureRM (azurerm, default) and AzAPI (azapi) providers;
+        for an AzAPI export, set --provider to azapi.
+        This tool returns the command and arguments for local execution; it does not execute the export or modify Azure resources.
+        Requires --resource-id with the full Azure resource ID. Ask for the resource ID if it is not provided.
+        Optionally configure a custom Terraform resource name, output folder, parallelism, and whether to include role assignments.
+        To export every resource in a resource group by group name instead, use the aztfexport resourcegroup command.
         If aztfexport is not installed locally, returns installation instructions instead.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,
@@ -30,54 +36,21 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     LocalRequired = true)]
 public sealed class AztfexportResourceCommand(
     ILogger<AztfexportResourceCommand> logger,
-    IAztfexportService aztfexportService) : BaseCommand<AztfexportResourceOptions>
+    IAztfexportService aztfexportService) : BaseCommand<AztfexportResourceOptions, AztfexportCommandResult>
 {
     private readonly ILogger<AztfexportResourceCommand> _logger = logger;
     private readonly IAztfexportService _aztfexportService = aztfexportService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.ResourceId.AsRequired());
-        command.Options.Add(AzureTerraformOptionDefinitions.OutputFolderName.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.TerraformProvider.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.TerraformResourceName.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.IncludeRoleAssignment.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.Parallelism.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.ContinueOnError.AsOptional());
-    }
-
-    protected override AztfexportResourceOptions BindOptions(ParseResult parseResult)
-    {
-        return new AztfexportResourceOptions
-        {
-            ResourceId = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ResourceId.Name),
-            OutputFolderName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.OutputFolderName.Name),
-            Provider = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.TerraformProvider.Name),
-            ResourceName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.TerraformResourceName.Name),
-            IncludeRoleAssignment = parseResult.GetValueOrDefault<bool>(AzureTerraformOptionDefinitions.IncludeRoleAssignment.Name),
-            Parallelism = parseResult.GetValueOrDefault<int>(AzureTerraformOptionDefinitions.Parallelism.Name),
-            ContinueOnError = parseResult.GetValueOrDefault<bool>(AzureTerraformOptionDefinitions.ContinueOnError.Name)
-        };
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AztfexportResourceOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var isAvailable = await _aztfexportService.IsAztfexportAvailableAsync(cancellationToken).ConfigureAwait(false);
 
-            Models.AztfexportCommandResult result;
+            AztfexportCommandResult result;
 
             if (!isAvailable)
             {
@@ -86,18 +59,16 @@ public sealed class AztfexportResourceCommand(
             else
             {
                 result = _aztfexportService.GenerateResourceCommand(
-                    options.ResourceId!,
-                    options.OutputFolderName,
+                    options.ResourceId,
+                    options.OutputFolder,
                     options.Provider ?? "azurerm",
-                    options.ResourceName,
+                    options.TerraformResourceName,
                     options.IncludeRoleAssignment,
                     options.Parallelism > 0 ? options.Parallelism : 10,
                     options.ContinueOnError);
             }
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AztfexportCommandResult);
-            context.Response.Message = string.Empty;
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "aztfexport")

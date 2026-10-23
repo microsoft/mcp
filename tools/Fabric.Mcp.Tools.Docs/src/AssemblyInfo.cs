@@ -3,5 +3,4 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Fabric.Mcp.Tools.Docs.UnitTests")]
-[assembly: InternalsVisibleTo("Fabric.Mcp.Tools.Docs.LiveTests")]
+[assembly: InternalsVisibleTo("Fabric.Mcp.Tools.Docs.Tests")]

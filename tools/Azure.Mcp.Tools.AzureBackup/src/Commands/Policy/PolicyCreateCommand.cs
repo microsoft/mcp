@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
@@ -19,60 +17,91 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Name = "create",
     Title = "Create Backup Policy",
     Description = "Creates a backup policy for a specified workload type with schedule and retention rules.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyCreateOptions>()
+public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<PolicyCreateOptions, PolicyCreateCommand.PolicyCreateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyCreateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.WorkloadType.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
-        command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
-    }
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType, options.WorkloadType);
 
-    protected override PolicyCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.WorkloadType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.WorkloadType.Name);
-        options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
-        options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        var validation = Services.Policy.PolicyCreateValidator.Validate(options);
+        if (!validation.IsValid)
         {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}"));
             return context.Response;
         }
 
-        var options = BindOptions(parseResult);
-
-        AzureBackupTelemetryTags.AddVaultAndWorkloadTags(context.Activity, options.VaultType, options.WorkloadType);
-
         try
         {
+            var request = new Services.Policy.PolicyCreateRequest
+            {
+                Policy = options.Policy,
+                WorkloadType = options.WorkloadType,
+                DailyRetentionDays = options.DailyRetentionDays,
+                TimeZone = options.TimeZone,
+                ScheduleFrequency = options.ScheduleFrequency,
+                ScheduleTimes = options.ScheduleTimes,
+                ScheduleDaysOfWeek = options.ScheduleDaysOfWeek,
+                HourlyIntervalHours = options.HourlyIntervalHours,
+                HourlyWindowStartTime = options.HourlyWindowStartTime,
+                HourlyWindowDurationHours = options.HourlyWindowDurationHours,
+                WeeklyRetentionWeeks = options.WeeklyRetentionWeeks,
+                WeeklyRetentionDaysOfWeek = options.WeeklyRetentionDaysOfWeek,
+                MonthlyRetentionMonths = options.MonthlyRetentionMonths,
+                MonthlyRetentionWeekOfMonth = options.MonthlyRetentionWeekOfMonth,
+                MonthlyRetentionDaysOfWeek = options.MonthlyRetentionDaysOfWeek,
+                MonthlyRetentionDaysOfMonth = options.MonthlyRetentionDaysOfMonth,
+                YearlyRetentionYears = options.YearlyRetentionYears,
+                YearlyRetentionMonths = options.YearlyRetentionMonths,
+                YearlyRetentionWeekOfMonth = options.YearlyRetentionWeekOfMonth,
+                YearlyRetentionDaysOfWeek = options.YearlyRetentionDaysOfWeek,
+                YearlyRetentionDaysOfMonth = options.YearlyRetentionDaysOfMonth,
+                ArchiveTierAfterDays = options.ArchiveTierAfterDays,
+                ArchiveTierMode = options.ArchiveTierMode,
+                PolicySubType = options.PolicySubType,
+                InstantRpRetentionDays = options.InstantRpRetentionDays,
+                InstantRpResourceGroup = options.InstantRpResourceGroup,
+                SnapshotConsistency = options.SnapshotConsistency,
+                FullScheduleFrequency = options.FullScheduleFrequency,
+                FullScheduleDaysOfWeek = options.FullScheduleDaysOfWeek,
+                DifferentialScheduleDaysOfWeek = options.DifferentialScheduleDaysOfWeek,
+                DifferentialRetentionDays = options.DifferentialRetentionDays,
+                IncrementalScheduleDaysOfWeek = options.IncrementalScheduleDaysOfWeek,
+                IncrementalRetentionDays = options.IncrementalRetentionDays,
+                LogFrequencyMinutes = options.LogFrequencyMinutes,
+                LogRetentionDays = options.LogRetentionDays,
+                IsCompression = options.IsCompression,
+                IsSqlCompression = options.IsSqlCompression,
+                SmartTier = options.SmartTier,
+                EnableSnapshotBackup = options.EnableSnapshotBackup,
+                SnapshotInstantRpRetentionDays = options.SnapshotInstantRpRetentionDays,
+                SnapshotInstantRpResourceGroup = options.SnapshotInstantRpResourceGroup,
+                EnableVaultTierCopy = options.EnableVaultTierCopy,
+                VaultTierCopyAfterDays = options.VaultTierCopyAfterDays,
+                BackupMode = options.BackupMode,
+                PitrRetentionDays = options.PitrRetentionDays,
+                PolicyTags = options.PolicyTags,
+            };
+
             var result = await _azureBackupService.CreatePolicyAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                request,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.Policy!,
-                options.WorkloadType!,
                 options.VaultType,
-                options.ScheduleTime,
-                options.DailyRetentionDays,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -102,5 +131,5 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record PolicyCreateCommandResult(OperationResult Result);
+    public sealed record PolicyCreateCommandResult(OperationResult Result);
 }

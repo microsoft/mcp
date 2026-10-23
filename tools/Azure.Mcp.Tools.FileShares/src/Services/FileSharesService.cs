@@ -2,21 +2,21 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.FileShares.Models;
 using Azure.ResourceManager.FileShares;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
 /// <summary>
 /// Service for Azure File Shares operations using Azure Resource Manager SDK.
 /// </summary>
-public sealed class FileSharesService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<FileSharesService> logger) : BaseAzureService(tenantService), IFileSharesService
+public sealed class FileSharesService(IAzureService azureService, ILogger<FileSharesService> logger)
+    : BaseAzureService(azureService), IFileSharesService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<FileSharesService> _logger = logger;
     public const string HttpClientName = "AzureMcpFileSharesService";
 
@@ -24,12 +24,11 @@ public sealed class FileSharesService(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
 
         var fileShares = new List<FileShareInfo>();
@@ -72,7 +71,6 @@ public sealed class FileSharesService(
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -82,7 +80,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -111,10 +109,10 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -123,14 +121,15 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(location), location));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
-        var fileShareData = new FileShareData(new(location))
-        {
-            Properties = new()
-        };
+        var existing = await resourceGroupResource.Value.GetFileShares().GetIfExistsAsync(fileShareName, cancellationToken: cancellationToken);
+        var fileShareData = existing.HasValue && existing.Value is { } resource
+            ? resource.Data
+            : new FileShareData(new(location)) { Properties = new() };
+        ConfigureFileShareSecurity(fileShareData, !existing.HasValue, protocol);
 
         // Populate properties from parameters
         if (!string.IsNullOrEmpty(mountName))
@@ -157,11 +156,18 @@ public sealed class FileSharesService(
         if (!string.IsNullOrEmpty(publicNetworkAccess))
             fileShareData.Properties.PublicNetworkAccess = new(publicNetworkAccess);
 
-        if (!string.IsNullOrEmpty(nfsRootSquash))
-            fileShareData.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+        if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+        {
+            fileShareData.Properties.NfsProtocolProperties ??= new();
+            if (!string.IsNullOrEmpty(nfsRootSquash))
+                fileShareData.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                fileShareData.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+        }
 
         if (allowedSubnets != null && allowedSubnets.Length > 0)
         {
+            fileShareData.Properties.PublicAccessAllowedSubnets.Clear();
             foreach (var subnet in allowedSubnets)
             {
                 fileShareData.Properties.PublicAccessAllowedSubnets.Add(subnet);
@@ -172,7 +178,7 @@ public sealed class FileSharesService(
         {
             foreach (var tag in tags)
             {
-                fileShareData.Tags.Add(tag.Key, tag.Value);
+                fileShareData.Tags[tag.Key] = tag.Value;
             }
         }
 
@@ -190,6 +196,23 @@ public sealed class FileSharesService(
         return FileShareInfo.FromResource(operation.Value);
     }
 
+    internal static void ConfigureFileShareSecurity(FileShareData data, bool isNew, string? protocol)
+    {
+        if (!isNew)
+        {
+            return;
+        }
+        data.Properties ??= new();
+        if (string.Equals(protocol, "NFS", StringComparison.OrdinalIgnoreCase))
+        {
+            data.Properties.NfsProtocolProperties = new()
+            {
+                RootSquash = new("RootSquash"),
+                EncryptionInTransitRequired = new("Enabled")
+            };
+        }
+    }
+
     public async Task<FileShareInfo> PatchFileShareAsync(
         string subscription,
         string resourceGroup,
@@ -199,10 +222,10 @@ public sealed class FileSharesService(
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -210,7 +233,7 @@ public sealed class FileSharesService(
             (nameof(resourceGroup), resourceGroup),
             (nameof(fileShareName), fileShareName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -219,46 +242,12 @@ public sealed class FileSharesService(
 
         // Set properties that are explicitly provided
         if (provisionedStorageInGiB.HasValue || provisionedIOPerSec.HasValue || provisionedThroughputMiBPerSec.HasValue ||
-            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || allowedSubnets?.Length > 0)
+            !string.IsNullOrEmpty(publicNetworkAccess) || !string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit) || allowedSubnets?.Length > 0)
         {
             patch.Properties = new();
 
             if (provisionedStorageInGiB.HasValue)
             {
-                patch.Properties = new();
-
-                if (provisionedStorageInGiB.HasValue)
-                {
-                    patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
-                }
-
-                if (provisionedIOPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedIOPerSec = provisionedIOPerSec.Value;
-                }
-
-                if (provisionedThroughputMiBPerSec.HasValue)
-                {
-                    patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
-                }
-
-                if (!string.IsNullOrEmpty(publicNetworkAccess))
-                {
-                    patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
-                }
-
-                if (!string.IsNullOrEmpty(nfsRootSquash))
-                {
-                    patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
-                }
-
-                if (allowedSubnets != null && allowedSubnets.Length > 0)
-                {
-                    foreach (var subnet in allowedSubnets)
-                    {
-                        patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
-                    }
-                }
                 patch.Properties.ProvisionedStorageInGiB = provisionedStorageInGiB.Value;
             }
 
@@ -271,16 +260,28 @@ public sealed class FileSharesService(
             {
                 patch.Properties.ProvisionedThroughputMiBPerSec = provisionedThroughputMiBPerSec.Value;
             }
-        }
 
-        if (!string.IsNullOrEmpty(publicNetworkAccess) && patch.Properties != null)
-        {
-            patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
-        }
+            if (!string.IsNullOrEmpty(publicNetworkAccess))
+            {
+                patch.Properties.PublicNetworkAccess = new(publicNetworkAccess);
+            }
 
-        if (!string.IsNullOrEmpty(nfsRootSquash) && patch.Properties != null)
-        {
-            patch.Properties.NfsProtocolRootSquash = new(nfsRootSquash);
+            if (!string.IsNullOrEmpty(nfsRootSquash) || !string.IsNullOrEmpty(nfsEncryptionInTransit))
+            {
+                patch.Properties.NfsProtocolProperties ??= new();
+                if (!string.IsNullOrEmpty(nfsRootSquash))
+                    patch.Properties.NfsProtocolProperties.RootSquash = new(nfsRootSquash);
+                if (!string.IsNullOrEmpty(nfsEncryptionInTransit))
+                    patch.Properties.NfsProtocolProperties.EncryptionInTransitRequired = new(nfsEncryptionInTransit);
+            }
+
+            if (allowedSubnets != null && allowedSubnets.Length > 0)
+            {
+                foreach (var subnet in allowedSubnets)
+                {
+                    patch.Properties.PublicAccessAllowedSubnets.Add(subnet);
+                }
+            }
         }
 
         if (tags is { Count: > 0 })
@@ -310,7 +311,6 @@ public sealed class FileSharesService(
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -320,7 +320,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             var fileShareResource = await resourceGroupResource.Value.GetFileShares().GetAsync(fileShareName, cancellationToken);
@@ -346,7 +346,6 @@ public sealed class FileSharesService(
         string fileShareName,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -354,7 +353,7 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var content = new ResourceManager.FileShares.Models.FileShareNameAvailabilityContent
         {
             Name = fileShareName,
@@ -381,7 +380,6 @@ public sealed class FileSharesService(
         string snapshotName,
         Dictionary<string, string>? metadata = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -390,7 +388,7 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotName), snapshotName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -431,7 +429,6 @@ public sealed class FileSharesService(
         string fileShareName,
         string snapshotId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -440,7 +437,7 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotId), snapshotId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -449,7 +446,7 @@ public sealed class FileSharesService(
 
         await foreach (var snapshotResource in snapshotCollection.WithCancellation(cancellationToken))
         {
-            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparison.OrdinalIgnoreCase) ||
+            if (snapshotResource.Data.Name.Equals(snapshotId, StringComparisons.ResourceName) ||
                 snapshotResource.Data.Id.ToString().Equals(snapshotId, StringComparison.OrdinalIgnoreCase))
             {
                 return FileShareSnapshotInfo.FromResource(snapshotResource);
@@ -464,7 +461,6 @@ public sealed class FileSharesService(
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -474,7 +470,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -505,7 +501,6 @@ public sealed class FileSharesService(
         string snapshotId,
         Dictionary<string, string>? metadata = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -514,7 +509,7 @@ public sealed class FileSharesService(
             (nameof(fileShareName), fileShareName),
             (nameof(snapshotId), snapshotId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -555,7 +550,6 @@ public sealed class FileSharesService(
         string fileShareName,
         string snapshotId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -566,7 +560,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
@@ -595,14 +589,13 @@ public sealed class FileSharesService(
         string subscription,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(location), location));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var response = await subscriptionResource.GetLimitsAsync(new(location), cancellationToken);
 
         var output = response.Value.Properties;
@@ -611,9 +604,8 @@ public sealed class FileSharesService(
             "Retrieved limits. MaxFileShares: {MaxFileShares}, Subscription: {Subscription}, Location: {Location}",
             output.Limits.MaxFileShares, subscription, location);
 
-        return new()
-        {
-            Limits = new()
+        return new(
+            Limits: new()
             {
                 MaxFileShares = output.Limits.MaxFileShares,
                 MaxFileShareSnapshots = output.Limits.MaxFileShareSnapshots,
@@ -626,21 +618,17 @@ public sealed class FileSharesService(
                 MinProvisionedThroughputMiBPerSec = output.Limits.MinProvisionedThroughputMiBPerSec,
                 MaxProvisionedThroughputMiBPerSec = output.Limits.MaxProvisionedThroughputMiBPerSec
             },
-            ProvisioningConstants = new()
-            {
-                BaseIOPerSec = output.ProvisioningConstants.BaseIOPerSec,
-                ScalarIOPerSec = output.ProvisioningConstants.ScalarIOPerSec,
-                BaseThroughputMiBPerSec = output.ProvisioningConstants.BaseThroughputMiBPerSec,
-                ScalarThroughputMiBPerSec = output.ProvisioningConstants.ScalarThroughputMiBPerSec
-            }
-        };
+            ProvisioningConstants: new(
+                BaseIOPerSec: output.ProvisioningConstants.BaseIOPerSec,
+                ScalarIOPerSec: output.ProvisioningConstants.ScalarIOPerSec,
+                BaseThroughputMiBPerSec: output.ProvisioningConstants.BaseThroughputMiBPerSec,
+                ScalarThroughputMiBPerSec: output.ProvisioningConstants.ScalarThroughputMiBPerSec));
     }
 
     public async Task<FileShareUsageDataResult> GetUsageDataAsync(
         string subscription,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -649,7 +637,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
             var response = await subscriptionResource.GetUsageDataAsync(new(location), cancellationToken);
 
             var result = response.Value;
@@ -658,13 +646,7 @@ public sealed class FileSharesService(
                 "Retrieved usage data. FileShareCount: {Count}, Subscription: {Subscription}, Location: {Location}",
                 result.LiveSharesFileShareCount, subscription, location);
 
-            return new()
-            {
-                LiveShares = new()
-                {
-                    FileShareCount = result.LiveSharesFileShareCount ?? 0
-                }
-            };
+            return new(new(result.LiveSharesFileShareCount));
         }
         catch (Exception ex)
         {
@@ -680,7 +662,6 @@ public sealed class FileSharesService(
         string location,
         int provisionedStorageGiB,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -688,7 +669,7 @@ public sealed class FileSharesService(
             (nameof(location), location),
             (nameof(provisionedStorageGiB), provisionedStorageGiB.ToString()));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken);
         var response = await subscriptionResource.GetProvisioningRecommendationAsync(new(location), new(provisionedStorageGiB), cancellationToken);
 
         var output = response.Value.Properties;
@@ -697,12 +678,10 @@ public sealed class FileSharesService(
             "Retrieved provisioning recommendation. StorageGiB: {Storage}, IOPerSec: {IO}, ThroughputMiBPerSec: {Throughput}, Location: {Location}",
             provisionedStorageGiB, output.ProvisionedIOPerSec, output.ProvisionedThroughputMiBPerSec, location);
 
-        return new()
-        {
-            ProvisionedIOPerSec = output.ProvisionedIOPerSec,
-            ProvisionedThroughputMiBPerSec = output.ProvisionedThroughputMiBPerSec,
-            AvailableRedundancyOptions = output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []
-        };
+        return new(
+            ProvisionedIOPerSec: output.ProvisionedIOPerSec,
+            ProvisionedThroughputMiBPerSec: output.ProvisionedThroughputMiBPerSec,
+            AvailableRedundancyOptions: output.AvailableRedundancyOptions?.Select(r => r.ToString()).ToList() ?? []);
     }
 
     public async Task<PrivateEndpointConnectionInfo> GetPrivateEndpointConnectionAsync(
@@ -711,7 +690,6 @@ public sealed class FileSharesService(
         string fileShareName,
         string connectionName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -722,7 +700,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -751,7 +729,6 @@ public sealed class FileSharesService(
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -761,7 +738,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -797,7 +774,6 @@ public sealed class FileSharesService(
         string status,
         string? description = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -809,7 +785,7 @@ public sealed class FileSharesService(
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy, null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(
                 SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);

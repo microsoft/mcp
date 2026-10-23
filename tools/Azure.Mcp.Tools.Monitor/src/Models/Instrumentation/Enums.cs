@@ -1,6 +1,9 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Monitor.Models;
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 [JsonConverter(typeof(JsonStringEnumConverter<Language>))]
 public enum Language

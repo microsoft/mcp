@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Tools.FileShares.Models;
 
 namespace Azure.Mcp.Tools.FileShares.Services;
 
@@ -17,7 +17,6 @@ public interface IFileSharesService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -28,7 +27,6 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -48,10 +46,10 @@ public interface IFileSharesService
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -67,10 +65,10 @@ public interface IFileSharesService
         int? provisionedThroughputMiBPerSec = null,
         string? publicNetworkAccess = null,
         string? nfsRootSquash = null,
+        string? nfsEncryptionInTransit = null,
         string[]? allowedSubnets = null,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -81,7 +79,6 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -92,7 +89,6 @@ public interface IFileSharesService
         string fileShareName,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -105,7 +101,6 @@ public interface IFileSharesService
         string snapshotName,
         Dictionary<string, string>? metadata = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -117,7 +112,6 @@ public interface IFileSharesService
         string fileShareName,
         string snapshotId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -128,7 +122,6 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -141,7 +134,6 @@ public interface IFileSharesService
         string snapshotId,
         Dictionary<string, string>? metadata = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -153,7 +145,6 @@ public interface IFileSharesService
         string fileShareName,
         string snapshotId,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// Get file share limits for a subscription and location.
@@ -162,7 +153,6 @@ public interface IFileSharesService
         string subscription,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -172,7 +162,6 @@ public interface IFileSharesService
         string subscription,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -183,7 +172,6 @@ public interface IFileSharesService
         string location,
         int provisionedStorageGiB,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
     /// <summary>
     /// Get a specific private endpoint connection for a file share.
@@ -194,7 +182,6 @@ public interface IFileSharesService
         string fileShareName,
         string connectionName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -205,7 +192,6 @@ public interface IFileSharesService
         string resourceGroup,
         string fileShareName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -219,6 +205,5 @@ public interface IFileSharesService
         string status,
         string? description = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

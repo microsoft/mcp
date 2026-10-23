@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -39,7 +38,7 @@ internal class Program
     private static readonly string ServerAreaName =
         Array.Find(Areas, static a => a is Microsoft.Mcp.Core.Areas.Server.ServerSetup)?.Name ?? "server";
 
-    private static async Task<int> Main(string[] args)
+    internal static async Task<int> Main(string[] args)
     {
         try
         {
@@ -52,8 +51,8 @@ internal class Program
             }
 
             // The server start and plugin-telemetry containers always need full area registration.
-            ServiceStartCommand.ConfigureServices = services => ConfigureServices(services);
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServerStartCommand.ConfigureServices = services => ConfigureServices(services);
+            ServerStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             PluginTelemetryCommand.ConfigureServices = services => ConfigureServices(services);
             PluginTelemetryCommand.InitializeServicesAsync = InitializeServicesAsync;
@@ -68,6 +67,8 @@ internal class Program
 
             services.AddLogging(builder =>
             {
+                // Send console logs to stderr so stdout carries only the command's JSON
+                // response. Keeps CLI output parseable and avoids corrupting stdio MCP output.
                 builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -116,7 +117,7 @@ internal class Program
             int status = 0;
 
             if (command is ExtendedCommand extendedCommand &&
-                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+                (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
             {
                 // One of the special commands that need to be handled differently.
                 status = await parseResult.InvokeAsync();
@@ -168,7 +169,7 @@ internal class Program
         }
     }
 
-    private static IAreaSetup[] RegisterAreas()
+    internal static IAreaSetup[] RegisterAreas()
     {
 
         return [
@@ -180,6 +181,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Azure service areas
+            // new Azure.Mcp.Tools.Adme.AdmeSetup(), - disabling for GA release
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
@@ -192,6 +194,7 @@ internal class Program
             new Azure.Mcp.Tools.AzureTerraform.AzureTerraformSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.DeviceProvisioning.DeviceProvisioningSetup(),
             new Azure.Mcp.Tools.DeviceRegistry.DeviceRegistrySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
@@ -209,6 +212,9 @@ internal class Program
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Functions.FunctionsSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
+            new Azure.Mcp.Tools.Insights.InsightsSetup(),
+            new Azure.Mcp.Tools.IoTHub.IoTHubSetup(),
+            new Azure.Mcp.Tools.IoTOperations.IoTOperationsSetup(),
             new Azure.Mcp.Tools.KeyVault.KeyVaultSetup(),
             new Azure.Mcp.Tools.Kusto.KustoSetup(),
             new Azure.Mcp.Tools.LoadTesting.LoadTestingSetup(),
@@ -217,16 +223,20 @@ internal class Program
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
             new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
+            new Azure.Mcp.Tools.Optimization.OptimizationSetup(),
             new Azure.Mcp.Tools.Policy.PolicySetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Pricing.PricingSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.ResilienceManagement.ResilienceManagementSetup(),
+            new Azure.Mcp.Tools.ResiliencyAgent.ResiliencyAgentSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.ServiceFabric.ServiceFabricSetup(),
             new Azure.Mcp.Tools.SignalR.SignalRSetup(),
+            new Azure.Mcp.Tools.SreAgent.SreAgentSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
@@ -264,12 +274,12 @@ internal class Program
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
     /// </item>
     /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// <see cref="ServerStartCommand"/>'s execution: The container is created by some
     /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServerStartCommand"/>
     /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// built separately during <see cref="ServerStartCommand.ExecuteAsync"/>. Thus, this
     /// container is built and this <see cref="ConfigureServices"/> method is called sometime
     /// during that method execution.
     /// </item>
@@ -281,11 +291,11 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// on <see cref="IAzureService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// <see cref="ServerStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
     /// <para>
@@ -313,22 +323,21 @@ internal class Program
     {
         var thisAssembly = typeof(Program).Assembly;
 
-        services.InitializeConfigurationAndOptions();
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddSingleton<IResourceGroupService, ResourceGroupService>();
-        services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
 
         // !!! WARNING !!!
-        // stdio-transport-specific implementations of ITenantService and ICacheService.
+        // stdio-transport-specific implementations of IAzureService and ICacheService.
         // The http-transport-specific implementations and configurations must be registered
-        // within ServiceStartCommand.ExecuteAsync().
+        // within ServerStartCommand.ExecuteAsync().
         services.AddHttpClientServices(configureDefaults: true);
-        services.AddAzureTenantService();
+        services.AddAzureService();
         services.AddSingleUserCliCacheService(disabled: true);
 
         foreach (var area in Areas)
@@ -379,7 +388,7 @@ internal class Program
 
     internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
     {
-        ServiceStartOptions? options = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value;
+        ServerStartOptions? options = serviceProvider.GetService<IOptions<ServerStartOptions>>()?.Value;
 
         if (options != null)
         {

@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -19,15 +18,16 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
         generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to
         the Azure Best Practices category.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AzureTerraformBestPracticesGetCommand()
+    : BaseCommand<EmptyOptions, AzureTerraformBestPracticesGetCommand.AzureTerraformBestPracticesGetCommandResult>
 {
-    private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
 
     private static string GetBestPracticesText() => s_bestPracticesText;
@@ -39,14 +39,16 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = HttpStatusCode.OK;
-        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
+        context.Response.Results = ResponseResult.Create(
+            new([bestPractices]),
+            AzureTerraformBestPracticesJsonContext.Default.AzureTerraformBestPracticesGetCommandResult);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }
+
+    public sealed record AzureTerraformBestPracticesGetCommandResult(List<string> BestPractices);
 }

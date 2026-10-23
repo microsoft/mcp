@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Options;
+
 namespace Azure.Mcp.Tools.Sql.Options.FirewallRule;
 
 /// <summary>
 /// Options for the SQL Server Firewall Rules List command.
 /// </summary>
-public class FirewallRuleListOptions : BaseSqlOptions
+public sealed class FirewallRuleListOptions : BaseSqlOptions
 {
-    // No additional options needed - inherits subscription, resource group, and server from BaseSqlOptions
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

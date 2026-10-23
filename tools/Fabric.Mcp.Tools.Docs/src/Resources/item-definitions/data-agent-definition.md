@@ -277,3 +277,7 @@ The top-level configuration for a data agent per stage.  Sandbox and production 
   "aiInstructions": "You are a helpful sales data assistant. Always provide accurate data from the sales warehouse. When answering questions about revenue, include currency formatting.",
 }
 ```
+
+## Related content
+
+- [Microsoft Fabric REST API documentation](https://learn.microsoft.com/rest/api/fabric/articles/)

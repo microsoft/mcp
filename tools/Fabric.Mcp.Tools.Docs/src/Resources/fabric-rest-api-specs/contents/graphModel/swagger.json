@@ -568,7 +568,7 @@
     "/workspaces/{workspaceId}/graphModels/{graphModelId}/jobs/refreshGraph/instances": {
       "post": {
         "summary": "Run on-demand RefreshGraph job model.",
-        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Required Delegated Scopes\n\nGraphModel.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Required Delegated Scopes\n\nItem.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "BackgroundJobs"
         ],
@@ -599,17 +599,7 @@
             "description": "Request completed successfully."
           },
           "202": {
-            "description": "Request accepted, job execution is in progress.",
-            "headers": {
-              "Location": {
-                "type": "string",
-                "description": "The URL to the job instance resource."
-              },
-              "Retry-After": {
-                "type": "integer",
-                "description": "The number of seconds to wait before retrying the request."
-              }
-            }
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
           },
           "429": {
             "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",

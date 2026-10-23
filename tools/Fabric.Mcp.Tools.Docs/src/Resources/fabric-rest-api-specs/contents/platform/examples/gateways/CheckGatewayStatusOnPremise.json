@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "status": "Online",
+                "gatewayVersion": "1.2.3",
+                "gatewayUpgradeState": "UpToDate",
+                "errorDetails": [
+                    {
+                        "errorCode": "DMTS_GatewayIsDisabled",
+                        "message": "Gateway is disabled",
+                        "relatedResource": {
+                            "resourceId": "f5a83d6a-78e2-4834-af05-b586e3aeb7e6",
+                            "resourceType": "Gateway"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

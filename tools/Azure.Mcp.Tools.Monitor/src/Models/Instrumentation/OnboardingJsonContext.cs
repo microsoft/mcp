@@ -1,8 +1,11 @@
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Tools;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Models;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

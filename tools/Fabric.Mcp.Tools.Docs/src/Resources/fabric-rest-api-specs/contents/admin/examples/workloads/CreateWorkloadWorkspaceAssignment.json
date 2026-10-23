@@ -1,0 +1,20 @@
+{
+  "parameters": {
+    "createWorkloadAssignmentRequest": {
+      "workspaceId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+      "type": "Workspace",
+      "workloadId": "Fabric.SampleWorkloadV2"
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "0002665b-43c2-47ec-9f03-866e34503c35",
+        "type": "Workspace",
+        "workloadId": "Fabric.SampleWorkloadV2",
+        "workspaceId": "a7b12741-80ce-444a-a493-ecf92fed4ffd",
+        "workspaceName": "My workspace"
+      }
+    }
+  }
+}

@@ -11,4 +11,6 @@ public sealed record BackupPolicyInfo(
     int? ProtectedItemsCount,
     string? ScheduleFrequency,
     string? ScheduleTime,
-    int? DailyRetentionDays);
+    int? DailyRetentionDays,
+    BackupPolicyDetails? Details = null,
+    BackupPolicyDppDetails? DppDetails = null);

@@ -1,3 +1,4 @@
+# cSpell:ignore cooldown
 version: 2
 updates:
   # Enable version updates for NuGet packages
@@ -11,3 +12,30 @@ updates:
     # Feel free to extend this to other packages as needed
     allow:
       - dependency-name: "Azure.Bicep.Types"
+
+  # Group npm security updates for the same dependency across the monorepo
+  - package-ecosystem: "npm"
+    directories:
+      - "/servers/Azure.Mcp.Server/vscode"
+      - "/servers/Fabric.Mcp.Server/vscode"
+      - "/servers/Template.Mcp.Server/vscode"
+      - "/eng/vsix-tools"
+    schedule:
+      interval: "weekly"
+    # Configure security updates without enabling routine npm version updates
+    open-pull-requests-limit: 0
+    groups:
+      npm-security-updates:
+        applies-to: "security-updates"
+        group-by: "dependency-name"
+
+  # Group GitHub Actions version updates after a security-observation period
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7

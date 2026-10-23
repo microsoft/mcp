@@ -3,10 +3,6 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.AzureTerraform.Services;
+namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-internal sealed class RemarksJson
-{
-    [JsonPropertyName("TerraformSamples")]
-    public List<TerraformSampleEntry>? TerraformSamples { get; set; }
-}
+internal sealed record RemarksJson([property: JsonPropertyName("TerraformSamples")] List<TerraformSampleEntry> TerraformSamples);

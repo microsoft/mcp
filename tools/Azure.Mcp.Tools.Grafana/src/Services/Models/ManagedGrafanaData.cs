@@ -36,8 +36,6 @@ internal sealed class ManagedGrafanaData
     public ManagedGrafanaProperties? Properties { get; set; }
 
     // Read the JSON response content and create a model instance from it.
-    public static ManagedGrafanaData? FromJson(JsonElement source)
-    {
-        return JsonSerializer.Deserialize<ManagedGrafanaData>(source, GrafanaJsonContext.Default.ManagedGrafanaData);
-    }
+    public static ManagedGrafanaData? FromJson(JsonElement source) =>
+        JsonSerializer.Deserialize(source, GrafanaJsonContext.Default.ManagedGrafanaData);
 }

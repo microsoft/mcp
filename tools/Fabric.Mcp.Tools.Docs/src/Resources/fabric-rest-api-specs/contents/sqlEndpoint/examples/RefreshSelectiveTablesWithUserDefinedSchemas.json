@@ -1,0 +1,47 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "sqlEndpointId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "sqlEndpointRefreshMetadataRequest": {
+      "tables": [
+        {
+          "schema": "sales",
+          "tableNames": ["Orders", "OrderDetails"]
+        },
+        {
+          "schema": "analytics",
+          "tableNames": ["DailySummary"]
+        }
+      ]
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "tableName": "sales.Orders",
+            "startDateTime": "2026-06-09T14:31:22.2708973Z",
+            "endDateTime": "2026-06-09T14:31:25.9651741Z",
+            "status": "Success",
+            "lastSuccessfulSyncDateTime": "2026-06-09T14:31:25.9651741Z"
+          },
+          {
+            "tableName": "sales.OrderDetails",
+            "startDateTime": "2026-06-09T14:31:22.2708973Z",
+            "endDateTime": "2026-06-09T14:31:26.5329616Z",
+            "status": "Success",
+            "lastSuccessfulSyncDateTime": "2026-06-09T14:31:26.5329616Z"
+          },
+          {
+            "tableName": "analytics.DailySummary",
+            "startDateTime": "2026-06-09T14:31:22.2708973Z",
+            "endDateTime": "2026-06-09T14:31:24.9183509Z",
+            "status": "Success",
+            "lastSuccessfulSyncDateTime": "2026-06-09T14:31:24.9183509Z"
+          }
+        ]
+      }
+    }
+  }
+}

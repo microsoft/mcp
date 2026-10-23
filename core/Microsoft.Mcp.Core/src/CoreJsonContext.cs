@@ -14,6 +14,4 @@ namespace Azure.Mcp.Core.Areas.Server;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
-internal sealed partial class CoreJsonContext : JsonSerializerContext
-{
-}
+internal sealed partial class CoreJsonContext : JsonSerializerContext;

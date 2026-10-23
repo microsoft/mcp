@@ -3,8 +3,4 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AvmVersionListResult
-{
-    public string ModuleName { get; set; } = string.Empty;
-    public List<AvmVersion> Versions { get; set; } = [];
-}
+public sealed record AvmVersionListResult(string ModuleName, List<AvmVersion> Versions);

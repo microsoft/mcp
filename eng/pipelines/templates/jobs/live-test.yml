@@ -20,15 +20,24 @@ jobs:
 
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
-  - task: NodeTool@0
-    displayName: "Install Node.js 22"
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: '22.x'
+      version: '24.x'
 
-  - pwsh: >
-      ./eng/scripts/Build-Local.ps1
-      -ServerName $(ServerName)
-      -VerifyNpx
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
+
+  - pwsh: |
+      $serverName = $env:SERVERNAME
+
+      if ([string]::IsNullOrWhiteSpace($serverName)) {
+        ./eng/scripts/Build-Local.ps1 -VerifyNpx
+      }
+      else {
+        ./eng/scripts/Build-Local.ps1 -ServerName $serverName -VerifyNpx
+      }
+
+      exit $LastExitCode
     displayName: "Build local package"
     workingDirectory: $(Build.SourcesDirectory)
 
@@ -55,6 +64,7 @@ jobs:
     displayName: "Run tests (stdio) - az pwsh"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
       azureSubscription: azure-sdk-tests-public
@@ -79,13 +89,15 @@ jobs:
       ServiceConnection: azure-sdk-tests-public
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
-      AdditionalParameters: "@{ UseHttpTransport = true }"
+      SkipEnvironmentSetup: true # environment setup was performed in the first deployment
 
   - task: AzurePowershell@5
     displayName: "Run tests (http) - az pwsh"
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      AZURE_TOKEN_CREDENTIALS: AzurePipelinesCredential
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
+      MCP_TEST_TRANSPORT: 'http'
     inputs:
       azureSubscription: azure-sdk-tests-public
       azurePowerShellVersion: 'LatestVersion'

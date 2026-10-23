@@ -9,10 +9,12 @@ jobs:
   steps:
   - checkout: self
 
-  - task: NodeTool@0
-    displayName: "Use Node.js 20.x"
+  - task: UseNode@1
+    displayName: 'Install Node.js 24'
     inputs:
-      versionSpec: 20.x
+      version: '24.x'
+  
+  - template: /eng/common/pipelines/templates/steps/create-authenticated-npmrc.yml
 
   - task: PowerShell@2
     displayName: "Run VS Code elicitation outerloop test"

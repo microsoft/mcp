@@ -1,0 +1,52 @@
+{
+    "parameters": {
+        "workspaceId": "12345678-1234-1234-1234-123456789abc",
+        "itemId": "87654321-4321-4321-4321-abcdef123456",
+        "scheduleId": "11111111-2222-3333-4444-555555555555",
+        "jobType": "DefaultJob",
+        "updateScheduleRequest": {
+            "enabled": true,
+            "configuration": {
+                "startDateTime": "2024-04-28T00:00:00",
+                "endDateTime": "2024-04-30T23:59:00",
+                "localTimeZoneId": "Central Standard Time",
+                "type": "Weekly",
+                "times": ["10:00", "16:00"],
+                "weekdays": ["Monday", "Wednesday", "Friday"]
+            },
+            "executionData": {
+                "tableName": "Table2",
+                "optimizeSettings": {
+                    "vOrder": false
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "11111111-2222-3333-4444-555555555555",
+                "enabled": true,
+                "createdDateTime": "2024-04-28T05:35:20.5366667",
+                "configuration": {
+                    "startDateTime": "2024-04-28T00:00:00",
+                    "endDateTime": "2024-04-30T23:59:00",
+                    "localTimeZoneId": "Central Standard Time",
+                    "type": "Weekly",
+                    "times": ["10:00", "16:00"],
+                    "weekdays": ["Monday", "Wednesday", "Friday"]
+                },
+                "executionData": {
+                    "tableName": "Table2",
+                    "optimizeSettings": {
+                        "vOrder": false
+                    }
+                },
+                "owner": {
+                    "id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                    "type": "User"
+                }
+            }
+        }
+    }
+}

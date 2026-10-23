@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "createDataAgentDatasourceRequest": {
+            "type": "LakehouseTables",
+            "lakehouseReference": {
+                "referenceType": "ById",
+                "itemId": "b5e7c3a1-2d4f-4890-9a1b-3c5d7e9f0a2b",
+                "workspaceId": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b"
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "c1c6d12f-8d2a-4d5b-9ca1-8bb7b42d4a30",
+                "instructions": "Use this for customer engagement analysis.",
+                "type": "LakehouseTables",
+                "displayName": "CustomerLakehouse",
+                "description": "Customer interaction history and support activity.",
+                "lakehouseReference": {
+                    "referenceType": "ById",
+                    "itemId": "b5e7c3a1-2d4f-4890-9a1b-3c5d7e9f0a2b",
+                    "workspaceId": "e1f2a3b4-5c6d-7e8f-9a0b-1c2d3e4f5a6b"
+                }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/65d59164-2ebd-4cac-9149-55612f8f5bb8",
+                "x-ms-operation-id": "65d59164-2ebd-4cac-9149-55612f8f5bb8",
+                "Retry-After": 30
+            }
+        }
+    }
+}

@@ -8,16 +8,16 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// </summary>
 public enum RsvProtectedItemType
 {
-    /// <summary>IaasComputeVmProtectedItem — Azure Virtual Machines.</summary>
+    /// <summary>IaasComputeVmProtectedItem  -  Azure Virtual Machines.</summary>
     IaasVm,
 
-    /// <summary>VmWorkloadSqlDatabaseProtectedItem — SQL databases in Azure VMs.</summary>
+    /// <summary>VmWorkloadSqlDatabaseProtectedItem  -  SQL databases in Azure VMs.</summary>
     SqlDatabase,
 
-    /// <summary>VmWorkloadSapHanaDatabaseProtectedItem — SAP HANA databases in Azure VMs.</summary>
+    /// <summary>VmWorkloadSapHanaDatabaseProtectedItem  -  SAP HANA databases in Azure VMs.</summary>
     SapHanaDatabase,
 
-    /// <summary>FileshareProtectedItem — Azure File Shares.</summary>
+    /// <summary>FileshareProtectedItem  -  Azure File Shares.</summary>
     AzureFileShare,
 }
 
@@ -26,13 +26,13 @@ public enum RsvProtectedItemType
 /// </summary>
 public enum RsvPolicyType
 {
-    /// <summary>IaasVmProtectionPolicy — for VM backup.</summary>
+    /// <summary>IaasVmProtectionPolicy  -  for VM backup.</summary>
     IaasVm,
 
-    /// <summary>VmWorkloadProtectionPolicy — for SQL/HANA/ASE workload backup (Full + Log sub-policies).</summary>
+    /// <summary>VmWorkloadProtectionPolicy  -  for SQL/HANA/ASE workload backup (Full + Log sub-policies).</summary>
     VmWorkload,
 
-    /// <summary>AzureFileShareProtectionPolicy — for Azure File Share backup.</summary>
+    /// <summary>AzureFileShareProtectionPolicy  -  for Azure File Share backup.</summary>
     AzureFileShare,
 }
 
@@ -41,13 +41,13 @@ public enum RsvPolicyType
 /// </summary>
 public enum RsvBackupContentType
 {
-    /// <summary>IaasVmBackupContent — for VM on-demand backup.</summary>
+    /// <summary>IaasVmBackupContent  -  for VM on-demand backup.</summary>
     IaasVm,
 
-    /// <summary>WorkloadBackupContent — for SQL/HANA/ASE on-demand workload backup.</summary>
+    /// <summary>WorkloadBackupContent  -  for SQL/HANA/ASE on-demand workload backup.</summary>
     Workload,
 
-    /// <summary>AzureFileShareBackupContent — for File Share on-demand backup.</summary>
+    /// <summary>AzureFileShareBackupContent  -  for File Share on-demand backup.</summary>
     AzureFileShare,
 }
 
@@ -56,16 +56,16 @@ public enum RsvBackupContentType
 /// </summary>
 public enum RsvRestoreContentType
 {
-    /// <summary>IaasVmRestoreContent — OLR/ALR/RestoreDisks for VMs.</summary>
+    /// <summary>IaasVmRestoreContent  -  OLR/ALR/RestoreDisks for VMs.</summary>
     IaasVm,
 
-    /// <summary>WorkloadSqlRestoreContent — SQL database OLR/ALR with data directory mappings.</summary>
+    /// <summary>WorkloadSqlRestoreContent  -  SQL database OLR/ALR with data directory mappings.</summary>
     SqlRestore,
 
-    /// <summary>WorkloadSapHanaRestoreContent — SAP HANA database OLR/ALR.</summary>
+    /// <summary>WorkloadSapHanaRestoreContent  -  SAP HANA database OLR/ALR.</summary>
     SapHanaRestore,
 
-    /// <summary>AzureFileShareRestoreContent — File Share restore.</summary>
+    /// <summary>AzureFileShareRestoreContent  -  File Share restore.</summary>
     AzureFileShareRestore,
 }
 
@@ -74,7 +74,7 @@ public enum RsvRestoreContentType
 /// Eliminates hardcoded if/else branching by centralizing datasource-specific SDK type selection.
 /// </summary>
 /// <remarks>
-/// AOT-safe: no reflection, no Func delegates — pure data record with enum-driven dispatch.
+/// AOT-safe: no reflection, no Func delegates  -  pure data record with enum-driven dispatch.
 /// RSV SDK uses polymorphic types (IaasVmProtectedItem, VmWorkloadSqlDatabaseProtectedItem, etc.)
 /// so the profile maps user-facing names to the correct enum values that drive construction.
 ///

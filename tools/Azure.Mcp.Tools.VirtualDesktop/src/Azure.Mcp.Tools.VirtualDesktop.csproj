@@ -15,6 +15,5 @@
     <PackageReference Include="Azure.ResourceManager.DesktopVirtualization" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

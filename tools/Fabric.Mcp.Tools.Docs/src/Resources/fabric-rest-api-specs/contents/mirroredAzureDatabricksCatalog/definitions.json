@@ -232,8 +232,8 @@
           "type": "string",
           "readOnly": false
         },
-        "publicUpdateableExtendedProperties": {
-          "description": "The MirroredAzureDatabricksCatalog updateable properties payload.",
+        "properties": {
+          "description": "The MirroredAzureDatabricksCatalog updatable properties payload.",
           "$ref": "#/definitions/MirroredAzureDatabricksCatalogUpdatePayload",
           "readOnly": false
         }
@@ -307,7 +307,7 @@
       ],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the mirrored Azure Databricks catalog definition.",
           "type": "string",
           "readOnly": false
         },

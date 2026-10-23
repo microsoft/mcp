@@ -22,6 +22,14 @@
                     "userDetails": {
                         "userPrincipalName": "Jacob@example.com"
                     }
+                },
+                "defaultIdentity": {
+                    "id": "ff3c8689-591c-4298-a228-4ffcc77cb661",
+                    "displayName": "Caleb Foster",
+                    "type": "User",
+                    "userDetails": {
+                        "userPrincipalName": "caleb@example.com"
+                    }
                 }
             }
         }

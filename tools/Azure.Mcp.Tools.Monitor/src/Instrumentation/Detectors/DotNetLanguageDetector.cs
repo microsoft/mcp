@@ -1,6 +1,9 @@
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 public class DotNetLanguageDetector : ILanguageDetector
 {

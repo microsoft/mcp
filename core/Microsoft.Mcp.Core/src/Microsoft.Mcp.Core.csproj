@@ -26,6 +26,7 @@
     <PackageReference Include="Microsoft.Identity.Abstractions" />
     <PackageReference Include="Microsoft.Identity.Web" />
     <PackageReference Include="Microsoft.Identity.Web.Azure" />
+    <PackageReference Include="Microsoft.Security.AntiSSRF" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
@@ -34,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="$(AssemblyName).UnitTests" />
+    <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    <InternalsVisibleTo Include="Azure.Mcp.Core.Tests" />
   </ItemGroup>
 </Project>

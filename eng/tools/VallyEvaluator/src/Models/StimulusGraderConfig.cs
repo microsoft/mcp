@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VallyEvaluator.Models;
+
+public class StimulusGraderConfig
+{
+    public required string Type { get; set; }
+
+    public required GraderConfigEntry Config { get; set; }
+}
+
+public class GraderConfigEntry
+{
+    public List<GraderConfigEntryPair> Required { get; set; } = [];
+}
+
+public class GraderConfigEntryPair
+{
+    public required string Name { get; set; }
+
+    public string? Command { get; set; }
+
+    public Dictionary<string, string> Args { get; set; } = new Dictionary<string, string>();
+}

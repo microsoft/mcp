@@ -8,7 +8,7 @@
     "definitions": {
         "SerializationType": {
             "type": "string",
-            "description": "The serialization type.",
+            "description": "The serialization type. Additional serialization types may be added over time.",
             "enum": [
                 "Avro",
                 "Json",

@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
+using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
@@ -19,39 +22,32 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
         user session objects available on the specified session host. Results include user session details such as
         user principal name, session state, application type, and creation time.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger, IVirtualDesktopService virtualDesktopService)
-    : BaseSessionHostCommand
+public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSessionListCommand> logger, IVirtualDesktopService virtualDesktopService, ISubscriptionResolver subscriptionResolver)
+    : BaseHostPoolCommand<SessionHostUserSessionListOptions, SessionHostUserSessionListCommand.SessionHostUserSessionListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SessionHostUserSessionListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, SessionHostUserSessionListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             IReadOnlyList<UserSession> userSessions;
 
-            if (!string.IsNullOrEmpty(options.HostPoolResourceId))
+            if (!string.IsNullOrEmpty(options.HostpoolResourceId))
             {
                 userSessions = await _virtualDesktopService.ListUserSessionsByResourceIdAsync(
                     options.Subscription!,
-                    options.HostPoolResourceId,
-                    options.SessionHostName!,
+                    options.HostpoolResourceId,
+                    options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
@@ -59,20 +55,18 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                 userSessions = await _virtualDesktopService.ListUserSessionsByResourceGroupAsync(
                     options.Subscription!,
                     options.ResourceGroup,
-                    options.HostPoolName!,
-                    options.SessionHostName!,
+                    options.Hostpool!,
+                    options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
             {
                 userSessions = await _virtualDesktopService.ListUserSessionsAsync(
                     options.Subscription!,
-                    options.HostPoolName!,
-                    options.SessionHostName!,
+                    options.Hostpool!,
+                    options.Sessionhost,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 
@@ -81,7 +75,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error listing user sessions for session host {SessionHostName} in hostpool {HostPoolName} / {HostPoolResourceId}",
-                options.SessionHostName, options.HostPoolName, options.HostPoolResourceId);
+                options.Sessionhost, options.Hostpool, options.HostpoolResourceId);
             HandleException(context, ex);
         }
 
@@ -98,5 +92,5 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record SessionHostUserSessionListCommandResult(List<UserSession> UserSessions);
+    public sealed record SessionHostUserSessionListCommandResult(List<UserSession> UserSessions);
 }

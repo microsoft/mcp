@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.AzureBackup.Models;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
 
-public class GovernanceImmutabilityOptions : BaseAzureBackupOptions
+public sealed class GovernanceImmutabilityOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.ImmutabilityStateName)]
-    public string? ImmutabilityState { get; set; }
+    [Option(Description = AzureBackupOptionDefinitions.ImmutabilityState)]
+    public required AzureBackupImmutabilityState ImmutabilityState { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.ImmutabilityType)]
+    public required AzureBackupImmutabilityType ImmutabilityType { get; set; }
+
+    [Option(Description = AzureBackupOptionDefinitions.ImmutabilityDurationDays)]
+    public int? ImmutabilityDurationDays { get; set; }
 }

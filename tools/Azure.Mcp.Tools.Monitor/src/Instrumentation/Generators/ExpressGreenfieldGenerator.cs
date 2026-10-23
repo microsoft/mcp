@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Express.js greenfield projects (no existing telemetry)
@@ -12,11 +15,10 @@ public class ExpressGreenfieldGenerator : IGenerator
     {
         // Single Express project, greenfield
         var expressProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.Express)
-            .ToList();
+            .Count(p => p.AppType == AppType.Express);
 
         return analysis.Language == Language.NodeJs
-            && expressProjects.Count == 1
+            && expressProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

@@ -3,14 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
+using Azure.Mcp.Tools.AzureBackup.Options.Vault;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
 
@@ -25,71 +24,68 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Description = """
         Retrieves backup vault information. When --vault and --resource-group are specified,
         returns detailed information about a single vault including type, location, SKU, and
-        storage redundancy. When omitted, lists all backup vaults (RSV and Backup vaults) in
-        the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
+        storage redundancy, plus managed identity details when configured. Identity details
+        include the identity type, principal ID, tenant ID, and attached user-assigned
+        identities. When omitted, lists all backup vaults (RSV and Backup vaults) in the
+        subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or
         --resource-group to narrow the listing results.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService) : SubscriptionCommand<BaseAzureBackupOptions>()
+public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<VaultGetOptions, VaultGetCommand.VaultGetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<VaultGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(VaultGetOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(AzureBackupOptionDefinitions.Vault.AsOptional());
-        command.Options.Add(AzureBackupOptionDefinitions.VaultType);
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrEmpty(options.Vault) && string.IsNullOrEmpty(options.ResourceGroup))
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.Vault.Name) &&
-                !commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
-            {
-                commandResult.AddError("--resource-group is required when --vault is specified.");
-            }
-
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.VaultType.Name))
-            {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.VaultType.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("dpp", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
-                }
-            }
-        });
-    }
-
-    protected override BaseAzureBackupOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Vault = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Vault.Name);
-        options.VaultType = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.VaultType.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("--resource-group is required when --vault is specified.");
         }
 
-        var options = BindOptions(parseResult);
+        if (!string.IsNullOrEmpty(options.VaultType) &&
+            !options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
+            !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+        }
 
+        if (!string.IsNullOrEmpty(options.Expand))
+        {
+            try
+            {
+                _ = VaultExpandParser.Parse(options.Expand);
+            }
+            catch (ArgumentException ex)
+            {
+                validationResult.AddError(ex.Message, "Invalid backup vault expansion.");
+            }
+        }
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, VaultGetOptions options, CancellationToken cancellationToken)
+    {
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
         context.Activity?.AddTag(AzureBackupTelemetryTags.OperationScope, string.IsNullOrEmpty(options.Vault) ? "list" : "single");
 
         try
         {
+            var expand = VaultExpandParser.Parse(options.Expand);
+            if (expand != VaultExpand.None)
+            {
+                context.Activity?.AddTag(AzureBackupTelemetryTags.VaultExpand, expand.ToString());
+            }
+
             if (!string.IsNullOrEmpty(options.Vault))
             {
                 var vault = await _azureBackupService.GetVaultAsync(
@@ -98,8 +94,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.Subscription!,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new([vault]),
@@ -112,8 +108,8 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
                     options.ResourceGroup,
                     options.VaultType,
                     options.Tenant,
-                    options.RetryPolicy,
-                    cancellationToken);
+                    cancellationToken,
+                    expand);
 
                 context.Response.Results = ResponseResult.Create(
                     new(vaults),
@@ -135,9 +131,11 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
         KeyNotFoundException => "Vault not found. Verify the vault name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Vault not found. Verify the vault name and resource group.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            "Authorization failed accessing vault information. Ensure you have 'Reader' or 'Backup Reader' role at subscription scope.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record VaultGetCommandResult(List<BackupVaultInfo> Vaults);
+    public sealed record VaultGetCommandResult(List<BackupVaultInfo> Vaults);
 }

@@ -49,7 +49,7 @@ public class Program
             .Bind(configuration);
 
         services.AddOptions<AppConfiguration>()
-            .Bind<AppConfiguration>(configuration.GetSection("AppConfig"))
+            .Bind(configuration.GetSection("AppConfig"))
             .Configure<IOptions<CommandLineOptions>>((existing, commandLineOptions) =>
             {
                 // Command-line IsDryRun overrides appsettings.json file value.
@@ -84,9 +84,8 @@ public class Program
         services.AddScoped<TokenCredential>(sp =>
         {
             var credential = new ChainedTokenCredential(
-                new ManagedIdentityCredential(),
-                new DefaultAzureCredential()
-            );
+                new ManagedIdentityCredential(new ManagedIdentityCredentialOptions()),
+                new DefaultAzureCredential());
 
             return credential;
         });

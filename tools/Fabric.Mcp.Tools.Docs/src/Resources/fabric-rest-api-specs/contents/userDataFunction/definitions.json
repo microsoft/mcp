@@ -86,7 +86,7 @@
             "required": ["parts"],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition.",
+                    "description": "The format of the user data function definition.",
                     "type": "string",
                     "readOnly": false
                 },

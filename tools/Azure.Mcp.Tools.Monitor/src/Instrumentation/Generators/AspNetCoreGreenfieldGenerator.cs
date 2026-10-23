@@ -1,29 +1,26 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for ASP.NET Core greenfield projects (no existing telemetry)
 /// </summary>
 public class AspNetCoreGreenfieldGenerator : IGenerator
 {
-    private readonly GeneratorConfig _config;
-
-    public AspNetCoreGreenfieldGenerator()
-    {
-        _config = GeneratorConfigLoader.LoadConfig("aspnetcore-greenfield");
-    }
+    private readonly GeneratorConfig _config = GeneratorConfigLoader.LoadConfig("aspnetcore-greenfield");
 
     public bool CanHandle(Analysis analysis)
     {
         // Single ASP.NET Core project, greenfield
         var aspNetCoreProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.AspNetCore)
-            .ToList();
+            .Count(p => p.AppType == AppType.AspNetCore);
 
         return analysis.Language == Language.DotNet
-            && aspNetCoreProjects.Count == 1
+            && aspNetCoreProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 
@@ -36,10 +33,7 @@ public class AspNetCoreGreenfieldGenerator : IGenerator
 
         return new OnboardingSpecBuilder(analysis)
             .WithAgentPreExecuteInstruction(AgentPreExecuteInstruction)
-            .WithDecision(
-                Intents.Onboard,
-                _config.Decision.Solution,
-                _config.Decision.Rationale)
+            .WithDecision(Intents.Onboard, _config.Decision.Solution, _config.Decision.Rationale)
             .AddActionsFromConfig(_config, projectFile, entryPoint, projectDir)
             .Build();
     }

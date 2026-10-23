@@ -15,6 +15,10 @@
               "workspaceId": "85173301-af01-49c9-b667-03edc44517da"
             }
           }
+        },
+        "lifecycle": {
+          "defaultTier": "Cool",
+          "policy": "Active"
         }
       }
     }

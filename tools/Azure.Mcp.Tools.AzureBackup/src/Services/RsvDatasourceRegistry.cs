@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 ///   1. Add a static RsvDatasourceProfile instance below
 ///   2. Register it in the AllProfiles array
 ///   3. If it uses new SDK types, add enum values to RsvDatasourceProfile.cs
-///   — Minimises changes needed in RsvBackupOperations.
+///    -  Minimises changes needed in RsvBackupOperations.
 /// </summary>
 public static class RsvDatasourceRegistry
 {
@@ -138,18 +138,18 @@ public static class RsvDatasourceRegistry
             return null;
         }
 
-        var normalised = datasourceType.ToLowerInvariant();
+        var normalized = datasourceType.ToLowerInvariant();
 
         foreach (var profile in AllProfiles)
         {
-            if (normalised.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
+            if (normalized.Equals(profile.FriendlyName, StringComparison.OrdinalIgnoreCase))
             {
                 return profile;
             }
 
             foreach (var alias in profile.Aliases)
             {
-                if (normalised.Equals(alias, StringComparison.OrdinalIgnoreCase))
+                if (normalized.Equals(alias, StringComparison.OrdinalIgnoreCase))
                 {
                     return profile;
                 }

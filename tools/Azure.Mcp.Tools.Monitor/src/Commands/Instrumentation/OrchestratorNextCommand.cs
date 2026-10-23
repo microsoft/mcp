@@ -2,14 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.Monitor.Commands;
+namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 
 [CommandMetadata(
     Id = "dd7d9a59-fb6d-436a-9e08-8bbdf6d5f9d5",
@@ -27,6 +26,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 
         Returns: The next action to execute, or 'complete' status when all steps are done.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
@@ -34,41 +34,21 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
     Secret = false,
     LocalRequired = true)]
 public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> logger, OrchestratorTool orchestratorTool)
-    : BaseCommand<OrchestratorNextOptions>
+    : BaseCommand<OrchestratorNextOptions, OrchestratorNextCommand.OrchestratorNextCommandResult>
 {
     private readonly ILogger<OrchestratorNextCommand> _logger = logger;
     private readonly OrchestratorTool _orchestratorTool = orchestratorTool;
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, OrchestratorNextOptions options, CancellationToken cancellationToken)
     {
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.SessionId);
-        command.Options.Add(MonitorInstrumentationOptionDefinitions.CompletionNote);
-    }
-
-    protected override OrchestratorNextOptions BindOptions(ParseResult parseResult)
-    {
-        return new OrchestratorNextOptions
-        {
-            SessionId = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.SessionId.Name),
-            CompletionNote = parseResult.CommandResult.GetValueOrDefault<string>(MonitorInstrumentationOptionDefinitions.CompletionNote.Name)
-        };
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = _orchestratorTool.Next(options.SessionId!, options.CompletionNote!);
+            var result = _orchestratorTool.Next(options.SessionId, options.CompletionNote);
 
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create(result, MonitorInstrumentationJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(
+                new(result),
+                MonitorJsonContext.Default.OrchestratorNextCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -79,4 +59,6 @@ public sealed class OrchestratorNextCommand(ILogger<OrchestratorNextCommand> log
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record OrchestratorNextCommandResult(string Result);
 }

@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the Azure MCP extension for Visua
 
 ## Building and Installation
 
-You need to have `Node.js`, `npm` and `powershell` installed. Node 20 (LTS) or later is recommended for development.
+You need to have `Node.js`, `npm` and `powershell` installed. Node 22 (LTS) or later is recommended for development.
 
 1. **Build the VSIX file containing the extension**
     ```powershell

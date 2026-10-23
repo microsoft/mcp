@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 

@@ -1,12 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.Database;
 
-public class DatabaseRenameOptions : BaseDatabaseOptions
+public sealed class DatabaseRenameOptions : BaseSqlOptions
 {
-    [JsonPropertyName(SqlOptionDefinitions.NewDatabaseName)]
-    public string? NewDatabaseName { get; set; }
+    [Option(Description = "The new name for the Azure SQL Database.")]
+    public required string NewDatabaseName { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Database)]
+    public required string Database { get; set; }
+
+    [Option(Description = SqlOptionDescriptions.Server)]
+    public required string Server { get; set; }
 }

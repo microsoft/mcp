@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!--
+      This tool serializes ad-hoc anonymous types to JSON for the measurement report, which
+      is incompatible with AOT/trimming analysis (System.Text.Json needs a JsonTypeInfo or
+      source-generated context for that). The tool is a developer/CI utility, not a shipped
+      product binary, so AOT compatibility isn't required here.
+    -->
+    <IsAotCompatible>false</IsAotCompatible>
+    <RootNamespace>McpOutputSizeMeasurer</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="McpOutputSizeMeasurer.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" />
+    <ProjectReference Include="..\..\McpToolEvaluator.Core\src\McpToolEvaluator.Core.csproj" />
+  </ItemGroup>
+
+</Project>

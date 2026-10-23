@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.AppConfig.Options;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
@@ -22,53 +23,35 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
         and key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.
         Default is unlocking the key-value.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueLockSetOptions>()
+public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<KeyValueLockSetOptions, KeyValueLockSetCommand.KeyValueLockSetCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
-    protected override void RegisterOptions(Command command)
+    public override JsonTypeInfo<KeyValueLockSetCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueLockSetCommandResult;
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueLockSetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AppConfigOptionDefinitions.Lock);
-    }
-
-    protected override KeyValueLockSetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Lock = parseResult.GetValueOrDefault(AppConfigOptionDefinitions.Lock);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             await _appConfigService.SetKeyValueLockState(
-                options.Account!,
-                options.Key!,
-                options.Lock,
+                options.Account,
+                options.Key,
+                options.Lock ?? false,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key!, options.Label, options.Lock), AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
+            SetResult(context, new(options.Key, options.Label, options.Lock ?? false));
         }
         catch (Exception ex)
         {
@@ -80,5 +63,5 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
         return context.Response;
     }
 
-    internal record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
+    public sealed record KeyValueLockSetCommandResult(string Key, string? Label, bool Locked);
 }

@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Storage.Options;
+using System.Net;
+using Azure;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
@@ -19,49 +20,29 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
         ETag, and content hash of the uploaded blob.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService) : BaseBlobCommand<BlobUploadOptions>
+public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService)
+    : AuthenticatedCommand<BlobUploadOptions, BlobUploadResult>
 {
     private readonly ILogger<BlobUploadCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobUploadOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.LocalFilePath);
-    }
-
-    protected override BlobUploadOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.LocalFilePath.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _storageService.UploadBlob(
-                options.Account!,
-                options.Container!,
-                options.Blob!,
-                options.LocalFilePath!,
-                options.Subscription!,
+                options.Account,
+                options.Container,
+                options.Blob,
+                options.LocalFilePath,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
@@ -79,4 +60,18 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorag
             return context.Response;
         }
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden && reqEx.ErrorCode is "AuthorizationPermissionMismatch" or "InsufficientAccountPermissions" =>
+            $"Access denied uploading blob. This commonly happens when the caller has a management-plane role (e.g., Contributor/Owner) but lacks a data-plane role such as 'Storage Blob Data Contributor' or 'Storage Blob Data Owner' on this storage account. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Access denied uploading blob. This can result from a missing data-plane RBAC role, storage account network/firewall restrictions, or an invalid/expired credential. See https://learn.microsoft.com/rest/api/storageservices/blob-service-error-codes for error code details. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "BlobAlreadyExists" =>
+            $"Blob already exists. This tool only uploads when the blob does not already exist; delete or rename the existing blob first if you intend to replace it, or use 'storage blob get' to check for an existing blob before uploading. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.ErrorCode == "ContainerNotFound" =>
+            $"Container not found. Verify the account and container names. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
 }

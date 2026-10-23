@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Update PluginTelemetryCommand to retrieve tool names from host it creates"

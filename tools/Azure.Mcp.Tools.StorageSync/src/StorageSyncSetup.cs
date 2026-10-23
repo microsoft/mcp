@@ -55,6 +55,7 @@ public class StorageSyncSetup : IAreaSetup
         // Register CloudEndpoint commands
         services.AddSingleton<CloudEndpointGetCommand>();
         services.AddSingleton<CloudEndpointCreateCommand>();
+        services.AddSingleton<CloudEndpointUpdateCommand>();
         services.AddSingleton<CloudEndpointDeleteCommand>();
         services.AddSingleton<CloudEndpointTriggerChangeDetectionCommand>();
 
@@ -71,10 +72,9 @@ public class StorageSyncSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var storageSync = new CommandGroup(Name,
-            """
-            Azure Storage Sync Operations - Commands to manage Azure File Sync resources, including Storage Sync services, sync groups, cloud and server
-            endpoints, and registered servers. Use this tool to deploy and maintain hybrid cloud file synchronization.
-            """,
+            "Azure Storage Sync Operations - Commands to manage Azure File Sync resources, including Storage " +
+            "Sync services, sync groups, cloud and server endpoints, and registered servers. Use this tool to " +
+            "deploy and maintain hybrid cloud file synchronization.",
             Title);
 
         // StorageSyncService subgroup
@@ -112,6 +112,7 @@ public class StorageSyncSetup : IAreaSetup
 
         cloudEndpointGroup.AddCommand<CloudEndpointGetCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointCreateCommand>(serviceProvider);
+        cloudEndpointGroup.AddCommand<CloudEndpointUpdateCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointDeleteCommand>(serviceProvider);
         cloudEndpointGroup.AddCommand<CloudEndpointTriggerChangeDetectionCommand>(serviceProvider);
 

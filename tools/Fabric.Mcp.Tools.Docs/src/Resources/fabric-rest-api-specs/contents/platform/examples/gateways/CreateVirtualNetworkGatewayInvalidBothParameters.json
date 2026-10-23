@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "createGatewayRequest": {
+            "type": "VirtualNetwork",
+            "displayName": "ContosoVirtualNetworkGateway",
+            "capacityId": "ed26b6f3-7bc5-44b0-9565-a8942619ef4c",
+            "virtualNetworkAzureResource": {
+                "subscriptionId": "879b4ba0-ed17-4ff2-851e-4a2228e00b70",
+                "resourceGroupName": "ContosoResourceGroup",
+                "virtualNetworkName": "ContosoVirtualNetwork",
+                "subnetName": "ContosoSubnet"
+            },
+            "inactivityMinutesBeforeSleep": 120,
+            "numberOfMemberGateways": 3,
+            "maxMemberGatewayCount": 5,
+            "minMemberGatewayCount": 1
+        }
+    },
+    "responses": {
+        "400": {
+          "body": {
+              "requestId": "c07cc625-4354-4b3e-b345-d13a4ba78f91",
+              "errorCode": "ConflictingMemberGatewayCountProperties",
+              "message": "Cannot specify both 'numberOfMemberGateways' and 'maxMemberGatewayCount'/'minMemberGatewayCount'. Use either the legacy property (fixed value) or the new properties (value range).",
+              "isRetriable": false
+          }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "apacheAirflowJobId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "beta": true,
+        "filePath": "dags/requirements.txt"
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/12345678-1234-1234-1234-123456789012",
+                "x-ms-operation-id": "12345678-1234-1234-1234-123456789012",
+                "Retry-After": 30
+            }
+        }
+    }
+}

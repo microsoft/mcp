@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 
@@ -18,58 +16,44 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Policy;
     Id = "a3f7d2c1-9e84-4b6a-8d3c-5f1e7a2b9c04",
     Name = "update",
     Title = "Update Backup Policy",
-    Description = "Modifies an existing RSV backup policy. Updates the backup schedule time and daily retention days for VM, SQL, SAP HANA, and file share workload policies. The named policy must already exist in the vault.",
+    Description = "Updates an existing RSV backup policy, preserving omitted settings. VM policies support Daily/Weekly schedules, Hourly on existing Enhanced policies, long-term retention, instant recovery, snapshot consistency, archive tiering and tags. Standard/Enhanced subtype changes are rejected. SQL, SAP HANA, and file share policies support only schedule-time and daily-retention-days; VM-only flags are rejected. The named policy must already exist in the vault.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<PolicyUpdateOptions>()
+public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<PolicyUpdateOptions, PolicyUpdateCommand.PolicyUpdateCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<PolicyUpdateCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, PolicyUpdateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.Policy.AsRequired());
-        command.Options.Add(AzureBackupOptionDefinitions.ScheduleTime);
-        command.Options.Add(AzureBackupOptionDefinitions.DailyRetentionDays);
-    }
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
+        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
-    protected override PolicyUpdateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Policy = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.Policy.Name);
-        options.ScheduleTime = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ScheduleTime.Name);
-        options.DailyRetentionDays = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.DailyRetentionDays.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        var validation = Services.Policy.PolicyUpdateValidator.Validate(options);
+        if (!validation.IsValid)
         {
+            context.Response.Status = HttpStatusCode.BadRequest;
+            context.Response.Message = string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}"));
             return context.Response;
         }
 
-        var options = BindOptions(parseResult);
-
-        AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
-
         try
         {
+            var request = Services.Policy.PolicyUpdateRequest.FromOptions(options);
+
             var result = await _azureBackupService.UpdatePolicyAsync(
-                options.Vault!,
-                options.ResourceGroup!,
+                request,
+                options.Vault,
+                options.ResourceGroup,
                 options.Subscription!,
-                options.Policy!,
                 options.VaultType,
-                options.ScheduleTime,
-                options.DailyRetentionDays,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -92,21 +76,17 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Policy or vault not found. Verify the policy name, vault name, and resource group.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed updating the policy. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        InvalidOperationException ioEx when ioEx.Message.Contains("DPP", StringComparison.OrdinalIgnoreCase) =>
-            "Update is only supported for RSV (Recovery Services vault) policies. DPP policies do not support update.",
-        InvalidOperationException ioEx => ioEx.Message,
+            "Authorization failed updating the policy. Verify Azure RBAC and Resource Guard permissions.",
+        RequestFailedException => "Azure rejected the policy update. Verify the schedule, retention limits, and vault security restrictions.",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,
-        InvalidOperationException => HttpStatusCode.BadRequest,
         RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 
-    internal record PolicyUpdateCommandResult(OperationResult Result);
+    public sealed record PolicyUpdateCommandResult(OperationResult Result);
 }

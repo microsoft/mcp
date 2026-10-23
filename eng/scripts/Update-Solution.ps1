@@ -54,8 +54,8 @@ function Update-Solution {
             $projectArea = Split-Path -Parent $projectDirectory
 
             if($serverName -ne 'Azure.Mcp.Server' -and $projectArea -like "*Azure.Mcp.Core*") {
-                # Because of the Azure.Mcp.Core.UnitTests -> Azure.Mcp.Server -> All Azure Tools dependency chain, when
-                # we're not building the Azure.Mcp.Server solution, avoid adding the Azure.Mcp.Core.UnitTests project
+                # Because of the Azure.Mcp.Core.Tests -> Azure.Mcp.Server -> All Azure Tools dependency chain, when
+                # we're not building the Azure.Mcp.Server solution, avoid adding the Azure.Mcp.Core.Tests project
                 continue
             }
             $testProjects += Get-ChildItem -Path "$projectArea/tests" -Filter "*.csproj" -Recurse -ErrorAction SilentlyContinue

@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
-public class VaultCreateOptions : BaseAzureBackupOptions
+public sealed class VaultCreateOptions : BaseAzureBackupOptions
 {
-    [JsonPropertyName(AzureBackupOptionDefinitions.LocationName)]
-    public string? Location { get; set; }
+    [Option(Description = AzureBackupOptionDefinitions.Location)]
+    public required string Location { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.SkuName)]
+    [Option(Description = "The vault SKU.")]
     public string? Sku { get; set; }
 
-    [JsonPropertyName(AzureBackupOptionDefinitions.StorageTypeName)]
+    [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.")]
     public string? StorageType { get; set; }
+
+    [Option(Description = "Enable public network access for a Recovery Services vault (insecure). Defaults to false. Only supported with --vault-type rsv; configure private endpoints for private access.")]
+    public bool EnablePublicNetworkAccess { get; set; }
 }

@@ -1,0 +1,32 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredCatalogId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMirroredCatalogRequest": {
+      "displayName": "warehouse_ops_updated",
+      "description": "Updated description for catalog"
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "description": "Updated description for catalog",
+        "displayName": "warehouse_ops_updated",
+        "id": "5b218778-e7a5-4d73-8187-f10824047715",
+        "properties": {
+          "sourceType": "DremioIcebergCatalog",
+          "connectionId": "4eb6b767-e786-45ed-b7cf-d25023e52222",
+          "scope": ["Accounting", "US"],
+          "oneLakeTablesPath": "https://onelake.dfs.fabric.microsoft.com/cfafbeb1-8037-4d0c-896e-a46fb27ff229/5b218778-e7a5-4d73-8187-f10824047715/Tables",
+          "sqlEndpointProperties": {
+            "connectionString": "jb7plbunhsduflm44ar4kllxze-r44fqlcgr3nexgcqfsuczoced4.datawarehouse.fabric.microsoft.com",
+            "id": "a2f8c91b-3b7d-4e5a-9f1c-8d4e6b3a2c1f",
+            "provisioningStatus": "Success"
+          }
+        },
+        "type": "MirroredCatalog",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+      }
+    }
+  }
+}

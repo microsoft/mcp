@@ -7,15 +7,15 @@
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" />
     <PackageReference Include="Azure.ResourceManager" />
+    <PackageReference Include="Azure.ResourceManager.Compute" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
-    <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>

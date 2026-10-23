@@ -20,7 +20,7 @@ public class ProductDetails : ProductSummary
     public MarketingMaterial? MarketingMaterial { get; set; }
     public string? LegalTermsUri { get; set; }
     public string? CSPLegalTermsUri { get; set; }
-    public LegalTermsType? LegalTermsType { get; set; }
+    public string? LegalTermsType { get; set; }
     public string? PrivacyPolicyUri { get; set; }
     public string? SupportUri { get; set; }
     public string? UiDefinitionUri { get; set; }
@@ -48,16 +48,16 @@ public class ProductSummary
     public IReadOnlyList<string>? CategoryIds { get; set; }
     public IReadOnlyList<string>? IndustryIds { get; set; }
     public string? PublisherId { get; set; }
-    public AzureBenefit? AzureBenefit { get; set; }
+    public string? AzureBenefit { get; set; }
     public IReadOnlyList<string>? Badges { get; set; }
     public IReadOnlyList<string>? ProductBadges { get; set; }
     public IReadOnlyList<string>? ProductLabels { get; set; }
-    public PublisherType? PublisherType { get; set; }
-    public PublishingStage? PublishingStage { get; set; }
+    public string? PublisherType { get; set; }
+    public string? PublishingStage { get; set; }
     public string? UniqueProductId { get; set; }
     public string? ProductType { get; set; }
     public IReadOnlyList<string>? OperatingSystems { get; set; }
-    public IReadOnlyList<PricingType>? PricingTypes { get; set; }
+    public IReadOnlyList<string>? PricingTypes { get; set; }
     public string? PublisherDisplayName { get; set; }
     public string? LongSummary { get; set; }
     public string? Summary { get; set; }
@@ -65,7 +65,7 @@ public class ProductSummary
     public string? SmallIconUri { get; set; }
     public string? MediumIconUri { get; set; }
     public string? Description { get; set; }
-    public IReadOnlyList<RatingBucket>? RatingBuckets { get; set; }
+    public IReadOnlyList<string>? RatingBuckets { get; set; }
     public double? RatingAverage { get; set; }
     public int? RatingCount { get; set; }
     public MarketStartPrice? StartingPrice { get; set; }
@@ -126,16 +126,16 @@ public class PlanSummary
     public string? PlanId { get; set; }
     public string? UniquePlanId { get; set; }
     public string? DisplayName { get; set; }
-    public VmArchitectureType? VmArchitectureType { get; set; }
-    public CspState? CspState { get; set; }
+    public string? VmArchitectureType { get; set; }
+    public string? CspState { get; set; }
     public PlanMetadata? Metadata { get; set; }
     public string? AltStackReference { get; set; }
     public string? StackType { get; set; }
     public string? AltArchitectureReference { get; set; }
     public IReadOnlyList<string>? CategoryIds { get; set; }
     public bool? HasProtectedArtifacts { get; set; }
-    public IReadOnlyList<PricingType>? PricingTypes { get; set; }
-    public IReadOnlyList<VmSecurityType>? VmSecurityTypes { get; set; }
+    public IReadOnlyList<string>? PricingTypes { get; set; }
+    public IReadOnlyList<string>? VmSecurityTypes { get; set; }
     public string? Summary { get; set; }
     public string? Description { get; set; }
     public string? SkuId { get; set; }
@@ -223,7 +223,7 @@ public class MarketStartPrice
 public class StopSellInfo
 {
     public DateTime? StartDate { get; set; }
-    public StopSellReason? Reason { get; set; }
+    public string? Reason { get; set; }
     public string? AlternativeOfferId { get; set; }
     public string? AlternativePlanId { get; set; }
 }
@@ -302,7 +302,7 @@ public class Artifact
 {
     public string? Name { get; set; }
     public string? Uri { get; set; }
-    public ArtifactType? Type { get; set; }
+    public string? Type { get; set; }
 }
 
 // ===============================
@@ -360,86 +360,9 @@ public class TermUpn
 // ===============================
 // ENUMS
 // ===============================
-
-public enum LegalTermsType
-{
-    None = 0,
-    EA = 1
-}
-
-public enum ArtifactType
-{
-    Template,
-    Fragment,
-    Custom,
-    Metadata
-}
-
-public enum AzureBenefit
-{
-    Eligible,
-    NotEligible
-}
-
-public enum PublisherType
-{
-    Microsoft,
-    ThirdParty
-}
-
-public enum PublishingStage
-{
-    Preview,
-    Public
-}
-
-public enum PricingType
-{
-    Free = 0,
-    FreeTrial = 1,
-    Byol = 2,
-    Payg = 3,
-    Ri = 4,
-    ContactPublisher = 5
-}
-
-public enum RatingBucket
-{
-    AboveOne = 1,
-    AboveTwo = 2,
-    AboveThree = 3,
-    AboveFour = 4
-}
-
-public enum VmArchitectureType
-{
-    X64Gen1 = 0,
-    X64Gen2 = 1,
-    Arm64 = 2
-}
-
-public enum CspState
-{
-    OptIn,
-    OptOut,
-    Terminated,
-    SelectiveOptIn
-}
-
-public enum VmSecurityType
-{
-    None = 0,
-    Trusted = 1,
-    Confidential = 2
-}
-
-public enum StopSellReason
-{
-    EndOfSupport,
-    SecurityIssue,
-    Other
-}
-
+// The Marketplace catalog API models all of these fields as open enums
+// (x-ms-enum modelAsString: true), so they are surfaced as strings to stay
+// forward compatible with values the service adds over time.
 
 public class LeadGenerationInfo
 {

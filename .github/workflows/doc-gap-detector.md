@@ -14,6 +14,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 network:
   allowed:
@@ -160,7 +161,7 @@ For each file that needs changes, provide:
 Depending on the gap, verify the relevant doc file follows the expected format:
 
 **`servers/Azure.Mcp.Server/docs/azmcp-commands.md`** — must include:
-- A global options table at the top (subscription, resource-group, tenant, retry-max-retries, retry-delay)
+- A global options table at the top (subscription, resource-group, tenant)
 - One `## azmcp <service> <resource> <operation>` section per command, containing a description, parameters table, and example usage block
 
 **`servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** — must include:
@@ -183,7 +184,7 @@ Run these commands in order. Each must succeed before proceeding to the next:
 
 1. `dotnet build servers/Azure.Mcp.Server/` — confirms the server project compiles cleanly
 2. `dotnet build tools/Azure.Mcp.Tools.<Service>/src/` — confirms the affected toolset compiles
-3. `dotnet test tools/Azure.Mcp.Tools.<Service>/tests/Azure.Mcp.Tools.<Service>.UnitTests/` — runs unit tests for the affected toolset
+3. `dotnet test tools/Azure.Mcp.Tools.<Service>/tests/Azure.Mcp.Tools.<Service>.Tests/ --filter "TestType!=Live"` — runs unit tests for the affected toolset
 4. `.\eng\common\spelling\Invoke-Cspell.ps1` — checks spelling in new or modified documentation
 
 </details>

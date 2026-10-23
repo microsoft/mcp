@@ -1,8 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 /// <summary>
 /// Loads and caches Python instrumentation data from the JSON resource file.

@@ -1,0 +1,40 @@
+{
+  "parameters": {
+    "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+    "lakehouseId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+    "mlvExecutionDefinitionId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+        "displayName": "Gold Chain – Sales",
+        "description": "Weekly report on Gold chain",
+        "settings": {
+          "environment": {
+            "referenceType": "ById",
+            "itemId": "aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb",
+            "workspaceId": "11111111-2222-3333-4444-555555555555"
+          },
+          "refreshMode": "Optimal"
+        },
+        "currentLakehouseExecutionContext": {
+          "mode": "Selected",
+          "selectedMlvs": [
+            "schema.mlvName1"
+          ]
+        },
+        "extendedLineageExecutionContext": {
+          "mode": "Selected",
+          "selectedLakehouses": [
+            {
+              "referenceType": "ById",
+              "itemId": "cccccccc-4444-5555-6666-dddddddddddd",
+              "workspaceId": "11111111-2222-3333-4444-555555555555"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

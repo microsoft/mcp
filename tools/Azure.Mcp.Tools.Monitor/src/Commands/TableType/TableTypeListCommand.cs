@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Options.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -14,34 +16,28 @@ namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
     Name = "list",
     Title = "List Log Analytics Table Types",
     Description = "List available table types in a Log Analytics workspace. Returns table type names.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, IMonitorService monitorService) : BaseWorkspaceMonitorCommand<TableTypeListOptions>()
+public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<TableTypeListOptions, TableTypeListCommand.TableTypeListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<TableTypeListCommand> _logger = logger;
     private readonly IMonitorService _monitorService = monitorService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableTypeListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var tableTypes = await _monitorService.ListTableTypes(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.Workspace!,
+                options.ResourceGroup,
+                options.Workspace,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);
@@ -55,5 +51,5 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger, I
         return context.Response;
     }
 
-    internal record TableTypeListCommandResult(List<string> TableTypes);
+    public sealed record TableTypeListCommandResult(List<string> TableTypes);
 }

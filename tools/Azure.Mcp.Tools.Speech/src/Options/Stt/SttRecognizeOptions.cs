@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Speech.Options.Stt;
 
-public class SttRecognizeOptions : BaseSpeechOptions
+public sealed class SttRecognizeOptions : BaseSpeechOptions
 {
-    [JsonPropertyName(SpeechOptionDefinitions.FileName)]
-    public string? File { get; set; }
+    [Option(Description = "Path to the audio file to recognize.")]
+    public required string File { get; set; }
 
-    [JsonPropertyName(SpeechOptionDefinitions.LanguageName)]
+    [Option(Description = SpeechOptionDescriptions.Language)]
     public string? Language { get; set; }
 
-    [JsonPropertyName(SpeechOptionDefinitions.PhrasesName)]
+    [Option(Description = "Phrase hints to improve recognition accuracy. Can be specified multiple times (--phrases \"phrase1\" --phrases \"phrase2\") or as comma-separated values (--phrases \"phrase1,phrase2\").")]
     public string[]? Phrases { get; set; }
 
-    [JsonPropertyName(SpeechOptionDefinitions.FormatName)]
+    [Option(Description = SpeechOptionDescriptions.Format)]
     public string? Format { get; set; }
 
-    [JsonPropertyName(SpeechOptionDefinitions.ProfanityName)]
+    [Option(Description = "Profanity filter: masked, removed, or raw. Default is masked.")]
     public string? Profanity { get; set; }
 }

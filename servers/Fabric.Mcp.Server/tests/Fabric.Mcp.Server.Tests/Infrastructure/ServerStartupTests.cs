@@ -1,0 +1,394 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using System.Net.ServerSentEvents;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using ModelContextProtocol.Protocol;
+using Xunit;
+
+namespace Fabric.Mcp.Server.Tests.Infrastructure;
+
+public class ServerStartupTests
+{
+    private const string StatelessProtocolVersion = "2026-07-28";
+
+    /// <summary>
+    /// Builds a <see cref="StringContent"/> for a 2026-07-28 stateless JSON-RPC request
+    /// containing the required <c>_meta</c> envelope fields.
+    /// </summary>
+    private static StringContent CreateStateless2026RequestContent(string method, int id = 1)
+    {
+        var body = new JsonObject
+        {
+            ["jsonrpc"] = "2.0",
+            ["id"] = id,
+            ["method"] = method,
+            ["params"] = new JsonObject
+            {
+                ["_meta"] = new JsonObject
+                {
+                    ["io.modelcontextprotocol/protocolVersion"] = StatelessProtocolVersion,
+                    ["io.modelcontextprotocol/clientInfo"] = new JsonObject { ["name"] = "test-client", ["version"] = "1.0" },
+                    ["io.modelcontextprotocol/clientCapabilities"] = new JsonObject()
+                }
+            }
+        };
+        return new StringContent(body.ToJsonString(), System.Text.Encoding.UTF8, "application/json");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
+    {
+        var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
+        var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(fabmcpPath), $"Executable not found at {fabmcpPath}");
+
+        var port = GetAvailablePort();
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fabmcpPath,
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
+            UseShellExecute = false,
+            RedirectStandardInput = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+        processStartInfo.Environment["ASPNETCORE_URLS"] = $"http://127.0.0.1:{port}";
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        var stderrBuilder = new System.Text.StringBuilder();
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                stderrBuilder.AppendLine(e.Data);
+            }
+        };
+        process.BeginErrorReadLine();
+
+        try
+        {
+            using var client = new HttpClient();
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"http://127.0.0.1:{port}/")
+            {
+                Content = CreateStateless2026RequestContent(RequestMethods.ToolsList)
+            };
+            request.Headers.TryAddWithoutValidation("Accept", "application/json, text/event-stream");
+            request.Headers.TryAddWithoutValidation("MCP-Protocol-Version", StatelessProtocolVersion);
+            request.Headers.TryAddWithoutValidation("Mcp-Method", RequestMethods.ToolsList);
+            request.Headers.TryAddWithoutValidation("Mcp-Name", RequestMethods.ToolsList);
+
+            var response = await SendWithRetryAsync(client, request, TestContext.Current.CancellationToken);
+            var content = await ReadToolResponseAsync(response, TestContext.Current.CancellationToken);
+
+            var errorOutput = stderrBuilder.ToString();
+            Assert.DoesNotContain("Unable to resolve service", errorOutput);
+            Assert.DoesNotContain("InvalidOperationException", errorOutput);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Contains("\"result\"", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertRepresentativeCoreTools(content);
+                AssertListItemsTool(content);
+            }
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
+    {
+        // Arrange
+        var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
+        var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(fabmcpPath), $"Executable not found at {fabmcpPath}");
+
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fabmcpPath,
+            Arguments = listAllTools ? "server start --mode all" : "server start",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        // Collect stderr asynchronously
+        var stderrBuilder = new System.Text.StringBuilder();
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                stderrBuilder.AppendLine(e.Data);
+            }
+        };
+        process.BeginErrorReadLine();
+
+        try
+        {
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+
+            var listToolsRequest = """
+                {"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}
+                """;
+            await process.StandardInput.WriteLineAsync(listToolsRequest);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            // Read response - should get valid JSON, not an exception
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var response = await process.StandardOutput.ReadLineAsync(cts.Token);
+
+            // Check stderr for DI exceptions
+            var errorOutput = stderrBuilder.ToString();
+            Assert.DoesNotContain("Unable to resolve service", errorOutput);
+            Assert.DoesNotContain("InvalidOperationException", errorOutput);
+
+            // Verify we got a valid response
+            Assert.NotNull(response);
+            Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
+            if (listAllTools)
+            {
+                AssertRepresentativeCoreTools(response);
+                AssertListItemsTool(response);
+            }
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Server_Should_Interop_With_Legacy_Initialize_Without_DI_Errors()
+    {
+        // Arrange
+        var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
+        var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+
+        Assert.True(File.Exists(fabmcpPath), $"Executable not found at {fabmcpPath}");
+
+        var processStartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = fabmcpPath,
+            Arguments = "server start",
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using var process = System.Diagnostics.Process.Start(processStartInfo);
+        Assert.NotNull(process);
+
+        var stderrBuilder = new System.Text.StringBuilder();
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null)
+            {
+                stderrBuilder.AppendLine(e.Data);
+            }
+        };
+        process.BeginErrorReadLine();
+
+        try
+        {
+            await Task.Delay(500, TestContext.Current.CancellationToken);
+
+            var initRequest = """
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+                """;
+            await process.StandardInput.WriteLineAsync(initRequest);
+            await process.StandardInput.FlushAsync(TestContext.Current.CancellationToken);
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var response = await process.StandardOutput.ReadLineAsync(cts.Token);
+
+            var errorOutput = stderrBuilder.ToString();
+            Assert.DoesNotContain("Unable to resolve service", errorOutput);
+            Assert.DoesNotContain("InvalidOperationException", errorOutput);
+
+            Assert.NotNull(response);
+            Assert.Contains("\"result\"", response, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+        }
+    }
+
+    private static void AssertRepresentativeCoreTools(string response)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
+        var itemGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item");
+        Assert.True(itemGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.False(itemGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemGet.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_assign-workspace-to-capacity");
+        Assert.False(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.False(assignment.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["capacity-id", "workspace-id"], assignment.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var creation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-workspace");
+        Assert.False(creation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(creation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["display-name"], creation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var update = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-workspace");
+        Assert.False(update.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(update.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["workspace-id"], update.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var itemUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item");
+        Assert.False(itemUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var itemDelete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-item");
+        Assert.False(itemDelete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(itemDelete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], itemDelete.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var workspaceDelete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-workspace");
+        Assert.False(workspaceDelete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(workspaceDelete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(workspaceDelete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["workspace-id"], workspaceDelete.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+        var hardDelete = itemDelete.GetProperty("inputSchema").GetProperty("properties").GetProperty("hard-delete");
+        Assert.Equal(["boolean", "null"], hardDelete.GetProperty("type").EnumerateArray().Select(value => value.GetString()));
+        Assert.False(hardDelete.TryGetProperty("default", out _));
+        foreach (var name in new[] { "core_get-operation-state", "core_get-operation-result" })
+        {
+            var operation = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == name);
+            Assert.True(operation.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(operation.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(operation.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("required").EnumerateArray()).GetString());
+            Assert.Equal("operation-id", Assert.Single(operation.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()).Name);
+        }
+        var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
+        var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("boolean", creationOptions.GetProperty("sync").GetProperty("type").GetString());
+        Assert.Equal("boolean", creationOptions.GetProperty("early-poll").GetProperty("type").GetString());
+        Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
+        Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+    }
+
+    private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.Content.Headers.ContentType?.MediaType != "text/event-stream")
+        {
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var messages = new List<string>();
+        await foreach (var item in SseParser.Create(stream).EnumerateAsync(cancellationToken))
+        {
+            messages.Add(item.Data);
+        }
+        return Assert.Single(messages);
+    }
+
+    private static void AssertListItemsTool(string response)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var tool = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-items");
+        Assert.True(tool.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.Equal(["workspace-id"], tool.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()));
+    }
+
+    private static int GetAvailablePort()
+    {
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        return ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+    }
+
+    private static async Task<HttpResponseMessage> SendWithRetryAsync(HttpClient client, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        Exception? lastException = null;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                using var clonedRequest = CloneRequest(request);
+                var response = await client.SendAsync(clonedRequest, cancellationToken);
+                if (response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    return response;
+                }
+
+                // Dispose the 404 response before retrying to avoid socket/handler leaks.
+                response.Dispose();
+            }
+            catch (HttpRequestException ex)
+            {
+                lastException = ex;
+            }
+
+            await Task.Delay(250, cancellationToken);
+        }
+
+        throw new InvalidOperationException("Timed out waiting for Fabric MCP HTTP endpoint to accept requests.", lastException);
+    }
+
+    private static HttpRequestMessage CloneRequest(HttpRequestMessage request)
+    {
+        var clone = new HttpRequestMessage(request.Method, request.RequestUri)
+        {
+            Content = request.Content == null ? null : new StringContent(request.Content.ReadAsStringAsync().GetAwaiter().GetResult(), System.Text.Encoding.UTF8, request.Content.Headers.ContentType?.MediaType)
+        };
+
+        foreach (var header in request.Headers)
+        {
+            clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+
+        return clone;
+    }
+}

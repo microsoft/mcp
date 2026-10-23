@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Postgres.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Postgres.Commands.Server;
@@ -17,45 +17,26 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
     Name = "set",
     Title = "Set PostgreSQL Server Parameter",
     Description = "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
+public sealed class ServerParamSetCommand(IPostgresService postgresService, ILogger<ServerParamSetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerParamSetOptions, ServerParamSetCommand.ServerParamSetCommandResult>(subscriptionResolver)
 {
     private readonly IPostgresService _postgresService = postgresService;
+    private readonly ILogger<ServerParamSetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerParamSetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Param);
-        command.Options.Add(PostgresOptionDefinitions.Value);
-    }
-
-    protected override ServerParamSetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Param.Name);
-        options.Value = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Value.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             ServerParameterValidator.EnsureParameterAllowed(options.Param);
 
-            var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!, cancellationToken);
+            var result = await _postgresService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup, options.Server, options.Param, options.Value, options.Tenant, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
                 ResponseResult.Create(new(result, options.Param!, options.Value!), PostgresJsonContext.Default.ServerParamSetCommandResult) :
                 null;
@@ -68,5 +49,5 @@ public sealed class ServerParamSetCommand(IPostgresService postgresService, ILog
         return context.Response;
     }
 
-    internal record ServerParamSetCommandResult(string Message, string Parameter, string Value);
+    public sealed record ServerParamSetCommandResult(string Message, string Parameter, string Value);
 }

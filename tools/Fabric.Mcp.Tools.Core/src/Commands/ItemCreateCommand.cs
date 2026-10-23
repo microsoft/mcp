@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
+using System.Net;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Identity;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Commands;
 
@@ -18,7 +17,25 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Id = "bfdfd3c0-4551-4454-a930-5bf5b1ad5690",
     Name = "create-item",
     Title = "Create Fabric Item",
-    Description = "Creates a new item in a Fabric workspace. Use this when the user wants to create a Lakehouse, Notebook, or other Fabric item type. Requires workspace ID, item name, and item type.",
+    Description = """
+        Creates a Fabric item using a nonempty workspace UUID, display-name, and item-type.
+        Supply workspace-id or the backward-compatible workspace UUID alias; workspace names are not resolved.
+        Sends one creation request. A 201 response returns item metadata; 202 returns a resumable operation receipt.
+        With sync=true, asynchronously wait up to max-wait-seconds (default 120, server maximum 600 seconds)
+        after acceptance and retrieve the result if available. Both modes immediately return synchronous completion without polling.
+        early-poll=true permits one probe after at most 3 seconds instead of the initial 202 Retry-After;
+        false honors that hint. Later polls and 429/503 retries honor validated hints.
+        Wait expiry returns last-known state, not a failed mutation; client cancellation can stop waiting sooner.
+        Description is limited to 256 characters; naming rules depend on item type.
+        Requires Contributor or higher workspace access and, for delegated callers, Item.ReadWrite.All or
+        the item-specific ReadWrite.All scope. Non-Power BI items require a supported Fabric capacity and
+        tenant/capacity settings that enable Fabric item creation; Power BI items require the appropriate license.
+        Service-principal and managed-identity support depends on item type.
+        Does not supply definitions or creation payloads, cancel Fabric operations, or resubmit creation.
+        Only JSON/empty operation responses up to 1 MiB are supported; created item metadata is required.
+        Acceptance is not completion. Resume using get-operation-state and get-operation-result, not another create.
+        """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
     LocalRequired = false,
@@ -27,85 +44,116 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
-    IFabricCoreService fabricCoreService) : GlobalCommand<ItemCreateOptions>()
+    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemCreateOptions, ItemCreateCommandResult>
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
 
-    protected override void RegisterOptions(Command command)
+    public override JsonTypeInfo<ItemCreateCommandResult> ResultTypeInfo => CoreJsonContext.Default.ItemCreateCommandResult;
+
+    public override void ValidateOptions(ItemCreateOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(CoreOptionDefinitions.WorkspaceId.AsOptional());
-        command.Options.Add(CoreOptionDefinitions.Workspace.AsOptional());
-        command.Options.Add(CoreOptionDefinitions.DisplayName.AsRequired());
-        command.Options.Add(CoreOptionDefinitions.ItemType.AsRequired());
-        command.Options.Add(CoreOptionDefinitions.Description.AsOptional());
-        command.Validators.Add(result =>
+        base.ValidateOptions(options, validationResult);
+        if (!Guid.TryParse(GetWorkspaceId(options), out var workspaceId) || workspaceId == Guid.Empty)
         {
-            var workspaceId = result.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
-            var workspace = result.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
-
-            if (string.IsNullOrWhiteSpace(workspaceId) && string.IsNullOrWhiteSpace(workspace))
-            {
-                result.AddError("Workspace identifier is required. Provide --workspace or --workspace-id.");
-            }
-        });
-    }
-
-    protected override ItemCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        var workspaceId = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.WorkspaceId.Name);
-        var workspaceName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Workspace.Name);
-        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
-            ? workspaceId!
-            : workspaceName ?? string.Empty;
-        options.ItemName = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.DisplayName.Name) ?? string.Empty;
-        options.ItemType = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.ItemType.Name) ?? string.Empty;
-        options.ItemDescription = parseResult.GetValueOrDefault<string>(CoreOptionDefinitions.Description.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            validationResult.Errors.Add("Provide a nonempty workspace UUID using --workspace-id or --workspace; workspace names are not supported.");
         }
+        if (!FabricOperationWaitOptions.IsValidBudget(options.MaxWaitSeconds))
+        {
+            validationResult.Errors.Add(FormattableString.Invariant(
+                $"--max-wait-seconds must be finite, greater than zero, and at most {FabricOperationWaitOptions.MaximumWaitSeconds} seconds."));
+        }
+        if (options.Description?.Length > 256)
+        {
+            validationResult.Errors.Add("--description must be at most 256 characters.");
+        }
+    }
 
-        var options = BindOptions(parseResult);
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemCreateOptions options, CancellationToken cancellationToken)
+    {
+        var workspaceId = GetWorkspaceId(options);
+
         try
         {
             var request = new CreateItemRequest
             {
-                DisplayName = options.ItemName,
+                DisplayName = options.DisplayName,
                 Type = options.ItemType,
-                Description = options.ItemDescription
+                Description = options.Description
             };
 
-            var item = await _fabricCoreService.CreateItemAsync(options.WorkspaceId, request, cancellationToken);
-
-            _logger.LogInformation("Successfully created {ItemType} '{ItemName}' in workspace {WorkspaceId}",
-                options.ItemType, options.ItemName, options.WorkspaceId);
-
-            var result = new ItemCreateCommandResult(item);
-            context.Response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ItemCreateCommandResult);
+            var result = await _fabricCoreService.CreateItemAsync(workspaceId!, request,
+                new(options.Sync, options.MaxWaitSeconds, options.EarlyPoll), cancellationToken);
+            SetResult(context, result);
+            context.Response.Status = result.Operation switch
+            {
+                { Status: FabricOperationStatus.Failed } => HttpStatusCode.BadGateway,
+                { Status: FabricOperationStatus.TrackingStopped or FabricOperationStatus.ResultUnavailable, Issue.HttpStatus: { } status } => (HttpStatusCode)status,
+                { Status: not FabricOperationStatus.Succeeded } => HttpStatusCode.Accepted,
+                _ => HttpStatusCode.OK
+            };
+            if (result.Operation?.Issue is { } issue)
+            {
+                context.Response.Message = issue.Message;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating item '{ItemName}' in workspace {WorkspaceId}.",
-                options.ItemName, options.WorkspaceId);
+            _logger.LogError("Error creating a Fabric item ({ExceptionType}).", ex.GetType().Name);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-}
 
-public sealed class ItemCreateOptions : GlobalOptions
-{
-    public string WorkspaceId { get; set; } = string.Empty;
-    public string ItemName { get; set; } = string.Empty;
-    public string ItemType { get; set; } = string.Empty;
-    public string? ItemDescription { get; set; }
+    protected override void HandleException(CommandContext context, Exception ex)
+    {
+        base.HandleException(context, ex);
+        if (ex is FabricOperationCanceledException canceled)
+        {
+            SetResult(context, new(null, canceled.Operation));
+            context.Response.Message = canceled.Message;
+        }
+        if (ex is CommandValidationException validationException)
+        {
+            context.Response.Message = GetValidationErrorMessage(validationException,
+                "Invalid item creation request. Provide a nonempty workspace UUID, display name, and item type; check option names and values.");
+        }
+    }
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) =>
+        ex is FabricOperationCanceledException ? HttpStatusCode.RequestTimeout : base.GetStatusCode(ex);
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        CredentialUnavailableException =>
+            "Fabric credentials are unavailable. Authenticate the configured Fabric identity before creating an item",
+        FabricOperationException { StatusCode: HttpStatusCode.BadGateway } => ex.Message,
+        HttpRequestException { StatusCode: null } =>
+            "Service unavailable or network connectivity issues prevented Fabric item creation. Check whether the item was created before retrying",
+        OperationCanceledException or TimeoutException =>
+            "Fabric item creation timed out or was canceled. Check whether the item was created before retrying",
+        _ => GetStatusCode(ex) switch
+        {
+            HttpStatusCode.BadRequest =>
+                "Fabric rejected the item creation request. Check the workspace UUID, item type, display name, and description",
+            HttpStatusCode.Unauthorized =>
+                "Authentication failed while creating the Fabric item. Check the configured Fabric identity and its access to the workspace",
+            HttpStatusCode.Forbidden =>
+                "Fabric denied item creation. Check workspace permissions and whether the item type is supported and enabled for the tenant and capacity",
+            HttpStatusCode.NotFound =>
+                "The Fabric workspace was not found, or the caller does not have access",
+            HttpStatusCode.Conflict =>
+                "Item creation conflicts with an existing item name or workspace state. Check for an existing item before retrying",
+            HttpStatusCode.TooManyRequests =>
+                "Fabric throttled item creation or reached a capacity limit. Retry the request later",
+            _ when ex is HttpRequestException { StatusCode: { } statusCode } =>
+                $"Fabric item creation failed with HTTP {(int)statusCode}. Check whether the item was created before retrying",
+            _ =>
+                "Fabric item creation could not be completed. Check whether the item was created before retrying"
+        }
+    };
+
+    private static string? GetWorkspaceId(ItemCreateOptions options) =>
+        !string.IsNullOrWhiteSpace(options.WorkspaceId) ? options.WorkspaceId : options.Workspace;
 }

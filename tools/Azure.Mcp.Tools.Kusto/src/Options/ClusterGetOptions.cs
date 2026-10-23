@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public class ClusterGetOptions : SubscriptionOptions
+public sealed class ClusterGetOptions : ISubscriptionOption
 {
-    [JsonPropertyName(KustoOptionDefinitions.ClusterName)]
-    public string? ClusterName { get; set; }
+    [Option(Description = KustOptionDescriptions.Cluster)]
+    public required string Cluster { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 }

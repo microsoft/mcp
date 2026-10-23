@@ -3,14 +3,13 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Sql.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
@@ -25,64 +24,45 @@ namespace Azure.Mcp.Tools.Sql.Commands.Server;
         'az sql server list' (list all Azure SQL servers in a resource group). Returns server information
         including configuration details and current state.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger)
-    : SubscriptionCommand<ServerGetOptions>
+public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ServerGetOptions, ServerGetCommand.ServerGetCommandResult>(subscriptionResolver)
 {
     private readonly ISqlService _sqlService = sqlService;
     private readonly ILogger<ServerGetCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ServerGetOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(SqlOptionDefinitions.Server.AsOptional());
-    }
-
-    protected override ServerGetOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Server = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.Server.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!string.IsNullOrEmpty(options.Server))
             {
                 var server = await _sqlService.GetServerAsync(
                     options.Server,
-                    options.ResourceGroup!,
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create([server], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new([server]),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
             else
             {
                 var servers = await _sqlService.ListServersAsync(
-                    options.ResourceGroup!,
+                    options.ResourceGroup,
                     options.Subscription!,
-                    options.RetryPolicy,
                     cancellationToken);
 
-                context.Response.Results = ResponseResult.Create(servers ?? [], SqlJsonContext.Default.ListSqlServer);
+                context.Response.Results = ResponseResult.Create(
+                    new(servers ?? []),
+                    SqlJsonContext.Default.ServerGetCommandResult);
             }
         }
         catch (Exception ex)
@@ -106,4 +86,5 @@ public sealed class ServerGetCommand(ISqlService sqlService, ILogger<ServerGetCo
         _ => base.GetErrorMessage(ex)
     };
 
+    public sealed record ServerGetCommandResult(List<SqlServer> Servers);
 }

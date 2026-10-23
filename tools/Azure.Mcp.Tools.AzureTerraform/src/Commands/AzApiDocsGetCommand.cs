@@ -16,7 +16,12 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "get",
     Title = "Get AzAPI Provider Documentation",
     Description = """
-        Retrieves AzAPI Terraform provider documentation and schema for a specified Azure resource type.
+        Retrieves AzAPI Terraform provider documentation and schema for an Azure resource type named in ARM
+        namespace format, such as Microsoft.Storage/storageAccounts, Microsoft.Network/virtualNetworks, or
+        Microsoft.Compute/virtualMachines. Returns the schema for the latest stable API version unless a specific
+        API version, such as 2024-07-01, is requested. Use this tool for AzAPI
+        provider documentation, AzAPI docs, and azapi_resource schema questions; it reads reference
+        documentation and does not query, read, or modify any live Azure resources in a subscription.
         Returns the resource schema in HCL format suitable for azapi_resource blocks, including property
         definitions with types and requirements, parent resource information, and Terraform usage examples.
         Use --resource-type to specify the Azure resource type in ARM format
@@ -24,6 +29,7 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
         Optionally specify --api-version to target a specific API version.
         This tool reuses Azure Bicep type definitions to generate accurate AzAPI schemas.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,
@@ -33,46 +39,29 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
 public sealed class AzApiDocsGetCommand(
     ILogger<AzApiDocsGetCommand> logger,
     IAzApiDocsService docsService,
-    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions>
+    IAzApiExamplesService examplesService) : BaseCommand<AzApiDocsOptions, AzApiDocsResult>
 {
     private readonly ILogger<AzApiDocsGetCommand> _logger = logger;
     private readonly IAzApiDocsService _docsService = docsService;
     private readonly IAzApiExamplesService _examplesService = examplesService;
 
-    protected override void RegisterOptions(Command command)
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.AzApiResourceType.AsRequired());
-        command.Options.Add(AzureTerraformOptionDefinitions.ApiVersion.AsOptional());
-    }
-
-    protected override AzApiDocsOptions BindOptions(ParseResult parseResult)
-    {
-        return new AzApiDocsOptions
-        {
-            ResourceType = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AzApiResourceType.Name),
-            ApiVersion = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ApiVersion.Name)
-        };
-    }
+        InvalidDataException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AzApiDocsOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var result = _docsService.GetDocumentation(options.ResourceType!, options.ApiVersion);
+            var result = _docsService.GetDocumentation(options.ResourceType, options.ApiVersion);
 
             var examples = await _examplesService.GetExamplesAsync(
-                options.ResourceType!,
+                options.ResourceType,
                 cancellationToken).ConfigureAwait(false);
 
             if (examples.Count > 0)
@@ -80,9 +69,7 @@ public sealed class AzApiDocsGetCommand(
                 result.Examples = examples;
             }
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzApiDocsResult);
-            context.Response.Message = string.Empty;
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "azapi")

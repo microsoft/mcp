@@ -1,0 +1,776 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Policy set data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "PolicySet": {
+      "description": "A policy set item.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+        "properties": {
+          "description": "The policy set properties.",
+          "$ref": "#/definitions/PolicySetProperties"
+        }
+      }
+    },
+    "PolicySetProperties": {
+      "description": "The policy set properties.",
+      "type": "object",
+      "required": [
+        "scope",
+        "status"
+      ],
+      "properties": {
+        "scope": {
+          "description": "Policy set scope object.",
+          "$ref": "#/definitions/PolicyScope"
+        },
+        "status": {
+          "type": "string",
+          "description": "Policy status type. Additional types may be added over time.",
+          "enum": [
+            "Active",
+            "Inactive"
+          ],
+          "x-ms-enum": {
+            "name": "PolicyStatus",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Active",
+                "description": "Active policy status."
+              },
+              {
+                "value": "Inactive",
+                "description": "Inactive policy status."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "Scope": {
+      "type": "string",
+      "description": "Policy scope type. Additional types may be added over time.",
+      "enum": [
+        "Tenant",
+        "Capacity"
+      ],
+      "x-ms-enum": {
+        "name": "ScopeType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Tenant",
+            "description": "Tenant policy scope."
+          },
+          {
+            "value": "Capacity",
+            "description": "Capacity policy scope."
+          }
+        ]
+      }
+    },
+    "PolicyScope": {
+      "type": "object",
+      "description": "A policy scope object.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "description": "Policy scope type.",
+          "$ref": "#/definitions/Scope"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The scope ID.",
+          "readOnly": true
+        }
+      }
+    },
+    "PolicySets": {
+      "description": "A list of policy sets.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of policy sets.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PolicySet"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreatePolicySetRequest": {
+      "description": "Create policy set request payload.",
+      "required": [
+        "displayName"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The policy set display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy set description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+          "description": "The folder ID. If not specified or null, the policy set is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        },
+        "creationPayload": {
+          "description": "The policy set creation payload. Use `definition` or `creationPayload`, you can't use both at the same time.",
+          "$ref": "#/definitions/PolicySetCreationPayload",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The policy set public definition. Use `definition` or `creationPayload`, you can't use both at the same time.",
+          "$ref": "#/definitions/PolicySetDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "PolicySetCreationPayload": {
+      "description": "Policy set item payload.",
+      "type": "object",
+      "required": [
+        "scope"
+      ],
+      "properties": {
+        "scope": {
+          "description": "Policy set scope object.",
+          "$ref": "#/definitions/PolicyScope"
+        }
+      }
+    },
+    "UpdatePolicySetRequest": {
+      "description": "Update policy set request.",
+      "properties": {
+        "displayName": {
+          "description": "The policy set display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy set description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "PolicySetDefinition": {
+      "description": "Policy set public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/policyset-definition) for more details on the structure of the policy set definition.",
+      "type": "object",
+      "required": [
+        "parts",
+        "format"
+      ],
+      "properties": {
+        "format": {
+          "description": "The format of the policy set definition. Additional `format` types may be added over time.",
+          "type": "string",
+          "enum": [
+            "Beta"
+          ],
+          "x-ms-enum": {
+            "name": "PolicySetDefinitionFormat",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Beta",
+                "description": "The beta format for the PolicySet public definition, provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use."
+              }
+            ]
+          },
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PolicySetDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "PolicySetDefinitionPart": {
+      "description": "Policy set definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The policy set part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The policy set part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "PolicySetDefinitionResponse": {
+      "description": "Policy set public definition response.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "description": "The policy set public definition.",
+          "$ref": "#/definitions/PolicySetDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "UpdatePolicySetDefinitionRequest": {
+      "description": "Update policy set public definition request payload.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "description": "The policy set public definition.",
+          "$ref": "#/definitions/PolicySetDefinition"
+        }
+      }
+    },
+    "PolicyRules": {
+      "description": "A list of policy rules.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of policy rules.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PolicyRule"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "PolicyRule": {
+      "description": "Policy rule object.",
+      "type": "object",
+      "required": [
+        "displayName",
+        "description",
+        "policy",
+        "conditions",
+        "effects"
+      ],
+      "properties": {
+        "id": {
+          "description": "The policy rule ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The policy rule display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy rule description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "policy": {
+          "description": "The policy rule policy type.",
+          "$ref": "#/definitions/Policy",
+          "readOnly": false
+        },
+        "conditions": {
+          "description": "The policy rule conditions, all conditions must be met.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "readOnly": false
+        },
+        "createdDateTime": {
+          "type": "string",
+          "description": "The creation date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "readOnly": true
+        },
+        "lastModifiedDateTime": {
+          "type": "string",
+          "description": "The last modification date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "readOnly": true
+        },
+        "modifiedByUser": {
+          "description": "The user who last modified the policy rule.",
+          "$ref": "../common/definitions.json#/definitions/Principal",
+          "readOnly": true
+        },
+        "effects": {
+          "description": "The list of effects to apply when all conditions are met.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "Policy": {
+      "type": "string",
+      "description": "Policy. Additional types may be added over time.",
+      "enum": [
+        "ItemCreation",
+        "WorkspaceSettingsEditing"
+      ],
+      "x-ms-enum": {
+        "name": "PolicyType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "ItemCreation",
+            "description": "ItemCreation policy. Refer to this [article](/fabric/governance/fabric-policies-item-creation) for more details."
+          },
+          {
+            "value": "WorkspaceSettingsEditing",
+            "description": "WorkspaceSettingsEditing policy. Refer to this [article](/fabric/governance/fabric-policies-edit-workspace-settings) for more details."
+          }
+        ]
+      }
+    },
+    "Operator": {
+      "type": "string",
+      "description": "Operator type. Additional types may be added over time.",
+      "enum": [
+        "AnyOf",
+        "NoneOf"
+      ],
+      "x-ms-enum": {
+        "name": "OperatorType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "AnyOf",
+            "description": "AnyOf operator."
+          },
+          {
+            "value": "NoneOf",
+            "description": "NoneOf operator."
+          }
+        ]
+      }
+    },
+    "Predicate": {
+      "type": "object",
+      "description": "A policy rule predicate object.",
+      "required": [
+        "operator"
+      ],
+      "properties": {
+        "operator": {
+          "description": "The predicate operator.",
+          "$ref": "#/definitions/Operator"
+        }
+      },
+      "discriminator": "operator"
+    },
+    "AnyOfPredicate": {
+      "type": "object",
+      "description": "Predicate that matches when any of the provided values match.",
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "description": "List of values to compare against the targeted property.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 50
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/Predicate"
+        }
+      ],
+      "x-ms-discriminator-value": "AnyOf"
+    },
+    "NoneOfPredicate": {
+      "type": "object",
+      "description": "Predicate that matches when none of the provided values match.",
+      "required": [
+        "values"
+      ],
+      "properties": {
+        "values": {
+          "description": "List of values to compare against the targeted property.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 50
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/Predicate"
+        }
+      ],
+      "x-ms-discriminator-value": "NoneOf"
+    },
+    "Condition": {
+      "type": "object",
+      "description": "A policy rule condition object.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Condition type. Additional types may be added over time.",
+          "enum": [
+            "Static",
+            "Dynamic"
+          ],
+          "x-ms-enum": {
+            "name": "ConditionType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Static",
+                "description": "Static boolean condition."
+              },
+              {
+                "value": "Dynamic",
+                "description": "Dynamic condition that evaluates a target property against a list of values."
+              }
+            ]
+          }
+        }
+      },
+      "discriminator": "type"
+    },
+    "StaticCondition": {
+      "type": "object",
+      "description": "Static boolean condition.",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "description": "The static value.",
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/Condition"
+        }
+      ],
+      "x-ms-discriminator-value": "Static"
+    },
+    "DynamicCondition": {
+      "type": "object",
+      "description": "Dynamic condition that evaluates a target property using a predicate.",
+      "required": [
+        "targetProperty",
+        "predicate"
+      ],
+      "properties": {
+        "targetProperty": {
+          "type": "string",
+          "description": "Dot-separated target property path to evaluate.",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "predicate": {
+          "description": "The predicate that defines the operator and operand(s) for evaluating the targeted property.",
+          "$ref": "#/definitions/Predicate"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/Condition"
+        }
+      ],
+      "x-ms-discriminator-value": "Dynamic"
+    },
+    "CreatePolicyRuleRequest": {
+      "description": "Create policy rule request.",
+      "type": "object",
+      "required": [
+        "displayName",
+        "policy",
+        "conditions",
+        "effects"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The policy rule display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy rule description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "policy": {
+          "description": "The policy.",
+          "$ref": "#/definitions/Policy",
+          "readOnly": false
+        },
+        "conditions": {
+          "description": "The policy rule conditions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "readOnly": false
+        },
+        "effects": {
+          "description": "The list of effects to apply when all conditions are met.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "UpdatePolicyRuleRequest": {
+      "description": "Update policy rule request.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "The policy rule display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy rule description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "conditions": {
+          "description": "The policy rule conditions. Updating the conditions will overwrite all existing conditions of the policy rule.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "ReplacePolicyRulesByPolicyRequest": {
+      "description": "Replace policy rules by policy request payload. The provided list overwrites all existing policy rules of that policy in the policy set.",
+      "type": "object",
+      "required": [
+        "policy",
+        "policyRules"
+      ],
+      "properties": {
+        "policy": {
+          "description": "The policy.",
+          "$ref": "#/definitions/Policy"
+        },
+        "policyRules": {
+          "description": "A list of policy rules for the specified policy.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreatePolicyRuleForPolicyRequest"
+          }
+        }
+      }
+    },
+    "CreatePolicyRuleForPolicyRequest": {
+      "description": "Create policy rule request used when the policy is provided outside of the rule object.",
+      "type": "object",
+      "required": [
+        "displayName",
+        "conditions",
+        "effects"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The policy rule display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy rule description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "conditions": {
+          "description": "The policy rule conditions.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "readOnly": false
+        },
+        "effects": {
+          "description": "The list of effects to apply when all conditions are met.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "Effect": {
+      "type": "object",
+      "description": "A policy rule effect object.",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Effect type. Additional types may be added over time.",
+          "enum": [
+            "Allow"
+          ],
+          "x-ms-enum": {
+            "name": "EffectType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "Allow",
+                "description": "Allow effect."
+              }
+            ]
+          }
+        }
+      },
+      "discriminator": "type"
+    },
+    "AllowEffect": {
+      "type": "object",
+      "description": "Allow effect.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Effect"
+        }
+      ],
+      "x-ms-discriminator-value": "Allow"
+    },
+    "ScopeActivationRequest": {
+      "description": "Scope activation request payload. The `scopeType` discriminator selects the concrete request shape.",
+      "type": "object",
+      "required": [
+        "scopeType"
+      ],
+      "properties": {
+        "scopeType": {
+          "description": "Scope type. Determines the concrete activation request type.",
+          "$ref": "#/definitions/Scope"
+        }
+      },
+      "discriminator": "scopeType"
+    },
+    "ActivateInCapacityScopeRequest": {
+      "description": "Activation request for activating a policy set on a capacity scope.",
+      "type": "object",
+      "required": [
+        "capacityId"
+      ],
+      "properties": {
+        "capacityId": {
+          "description": "The capacity ID on which to activate the policy set.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/ScopeActivationRequest"
+        }
+      ],
+      "x-ms-discriminator-value": "Capacity"
+    },
+    "ScopeDeactivationRequest": {
+      "description": "Scope deactivation request payload.",
+      "type": "object",
+      "required": [
+        "scopeType"
+      ],
+      "properties": {
+        "scopeType": {
+          "description": "Scope type.",
+          "$ref": "#/definitions/Scope"
+        }
+      }
+    },
+    "ActivePolicySetResponse": {
+      "description": "The active policy set response.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The policy set ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The policy set display name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The policy set description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "workspaceId": {
+          "description": "The ID of the workspace that contains the policy set.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        }
+      }
+    }
+  }
+}

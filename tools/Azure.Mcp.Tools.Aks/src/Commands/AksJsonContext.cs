@@ -4,6 +4,7 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
+using Azure.Mcp.Tools.Aks.Services;
 
 namespace Azure.Mcp.Tools.Aks.Commands;
 
@@ -46,5 +47,14 @@ namespace Azure.Mcp.Tools.Aks.Commands;
 [JsonSerializable(typeof(Models.WorkloadAutoScalerProfile))]
 [JsonSerializable(typeof(Models.WorkloadAutoScalerKeda))]
 [JsonSerializable(typeof(Models.WorkloadAutoScalerVerticalPodAutoscaler))]
+[JsonSerializable(typeof(AksClusterResourceGraphResponse))]
+[JsonSerializable(typeof(AksClusterSkuJson))]
+[JsonSerializable(typeof(AksClusterPropertiesJson))]
+[JsonSerializable(typeof(AksPowerStateJson))]
+[JsonSerializable(typeof(AksClusterNetworkProfileJson))]
+[JsonSerializable(typeof(AksNetworkLoadBalancerProfileJson))]
+[JsonSerializable(typeof(AksManagedOutboundIPsJson))]
+[JsonSerializable(typeof(AksAddonProfileJson))]
+[JsonSerializable(typeof(AksAddonIdentityJson))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class AksJsonContext : JsonSerializerContext;

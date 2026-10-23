@@ -9,4 +9,8 @@ public sealed record UnprotectedResourceInfo(
     string? ResourceType,
     string? ResourceGroup,
     string? Location,
-    IDictionary<string, string>? Tags);
+    IDictionary<string, string>? Tags,
+    string? ParentResourceId = null,
+    string? DiscoverySource = null,
+    string? VaultName = null,
+    string? ProtectionState = null);

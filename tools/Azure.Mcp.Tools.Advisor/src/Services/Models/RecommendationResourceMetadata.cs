@@ -1,4 +1,7 @@
-﻿namespace Azure.Mcp.Tools.Advisor.Services.Models;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace Azure.Mcp.Tools.Advisor.Services.Models;
 
 internal sealed class RecommendationResourceMetadata
 {

@@ -5,17 +5,16 @@ using System.Collections.Immutable;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -25,16 +24,9 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// Uses Azure Resource Graph to discover resources by name and validates
 /// that the resource type is supported by AppLens before creating a session.
 /// </summary>
-public class AppLensService(
-    IHttpClientFactory httpClientFactory,
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILogger<AppLensService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAppLensService
+public class AppLensService(IAzureService azureService)
+    : BaseAzureResourceService(azureService), IAppLensService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<AppLensService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly AppLensOptions _options = new();
 
     /// <inheritdoc />
@@ -52,7 +44,7 @@ public class AppLensService(
 
         if (findResult is DidNotFindResourceResult notFound)
         {
-            throw new InvalidOperationException(notFound.Message);
+            return new DiagnosticResult([notFound.Message], [], string.Empty, string.Empty);
         }
 
         var foundResource = (FoundResourceResult)findResult;
@@ -107,7 +99,7 @@ public class AppLensService(
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             var rgFiltered = filteredResults
-                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase))
+                .Where(r => r.ResourceGroup.Equals(resourceGroup, StringComparisons.ResourceGroup))
                 .ToImmutableArray();
 
             if (rgFiltered.Length == 0)
@@ -147,7 +139,7 @@ public class AppLensService(
 
         // Filter to supported resource types
         var supportedResults = filteredResults
-            .Where(r => IsResourceTypeSupported(r.ResourceType, r.ResourceKind))
+            .Where(r => IsResourceTypeSupported(r.ResourceType))
             .ToImmutableArray();
 
         if (supportedResults.Length == 0)
@@ -205,7 +197,7 @@ public class AppLensService(
         Guid? targetTenantId = null;
         if (!string.IsNullOrEmpty(subscription))
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
+            var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
             queryContent.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
             targetTenantId = subscriptionResource.Data.TenantId;
         }
@@ -214,7 +206,7 @@ public class AppLensService(
             targetTenantId = Guid.Parse(tenantId);
         }
 
-        var tenants = await TenantService.GetTenants(cancellationToken);
+        var tenants = await AzureService.GetTenants(cancellationToken);
         var tenantResource = targetTenantId.HasValue
             ? tenants.FirstOrDefault(t => t.Data.TenantId == targetTenantId)
             : tenants.FirstOrDefault();
@@ -255,19 +247,11 @@ public class AppLensService(
     }
 
     /// <summary>
-    /// Checks whether a resource type (and optionally kind) is supported by AppLens diagnostics.
+    /// Checks whether a resource type is supported by AppLens diagnostics.
     /// </summary>
-    internal static bool IsResourceTypeSupported(string resourceType, string resourceKind)
+    internal static bool IsResourceTypeSupported(string resourceType)
     {
-        if (resourceType.Equals("microsoft.web/sites", StringComparison.OrdinalIgnoreCase))
-        {
-            return resourceKind.Equals("app", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("linux", StringComparison.OrdinalIgnoreCase)
-                || resourceKind.Equals("functionapp", StringComparison.OrdinalIgnoreCase);
-        }
-
-        return resourceType.Equals("microsoft.containerservice/managedclusters", StringComparison.OrdinalIgnoreCase)
-            || resourceType.Equals("microsoft.apimanagement/service", StringComparison.OrdinalIgnoreCase);
+        return SupportedResourceTypes().Contains(resourceType, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -291,12 +275,11 @@ public class AppLensService(
             cancellationToken);
 
         // Call the AppLens token endpoint
-        using var request = new HttpRequestMessage(HttpMethod.Get,
-            GetAppLensTokenEndpoint(resourceId));
+        using var request = new HttpRequestMessage(HttpMethod.Get, GetAppLensTokenEndpoint(resourceId));
 
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
+        request.Headers.Authorization = new("Bearer", token.Token);
 
-        var client = _httpClientFactory.CreateClient();
+        var client = AzureService.GetClient();
         using var response = await client.SendAsync(request, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -535,18 +518,18 @@ public class AppLensService(
 
     private string GetConversationalDiagnosticsSignalREndpoint()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschat.azure.com/chatHub",
+            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschatnext.azure.com/chatHub",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschat.azure.cn/chatHub",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschat.azure.us/chatHub",
-            _ => "https://diagnosticschat.azure.com/chatHub",
+            _ => "https://diagnosticschatnext.azure.com/chatHub",
         };
     }
 
     private string GetManagementImpersonationEndpoint()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://management.azure.com/user_impersonation",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://management.chinacloudapi.cn/user_impersonation",
@@ -558,7 +541,7 @@ public class AppLensService(
     private string GetAppLensTokenEndpoint(string resourceId)
     {
         const string detectorsTokenPath = "detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01";
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/{detectorsTokenPath}",
@@ -569,7 +552,7 @@ public class AppLensService(
 
     private string GetDiagnosticsPortalEndpoint()
     {
-        return _tenantService.CloudConfiguration.CloudType switch
+        return AzureService.CloudConfiguration.CloudType switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://appservice-diagnostics.trafficmanager.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://appservice-diagnostics.azure.cn",

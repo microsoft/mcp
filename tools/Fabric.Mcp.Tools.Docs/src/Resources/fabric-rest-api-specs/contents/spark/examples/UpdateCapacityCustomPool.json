@@ -1,0 +1,43 @@
+{
+    "parameters": {
+        "capacityId": "ce6db599-0877-4fb1-aa1f-9b1b8d99dc40",
+        "beta": true,
+        "poolId": "2367293d-b70b-4b33-97f2-161b8d04a8d7",
+        "updateCustomPoolRequest": {
+            "name": "pool1",
+            "nodeFamily": "MemoryOptimized",
+            "nodeSize": "Small",
+            "autoScale": {
+                "enabled": true,
+                "minNodeCount": 1,
+                "maxNodeCount": 2
+            },
+            "dynamicExecutorAllocation": {
+                "enabled": true,
+                "minExecutors": 1,
+                "maxExecutors": 1
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "2367293d-b70b-4b33-97f2-161b8d04a8d7",
+                "name": "pool1",
+                "type": "Capacity",
+                "nodeFamily": "MemoryOptimized",
+                "nodeSize": "Small",
+                "autoScale": {
+                    "enabled": true,
+                    "minNodeCount": 1,
+                    "maxNodeCount": 2
+                },
+                "dynamicExecutorAllocation": {
+                    "enabled": true,
+                    "minExecutors": 1,
+                    "maxExecutors": 1
+                }
+            }
+        }
+    }
+}

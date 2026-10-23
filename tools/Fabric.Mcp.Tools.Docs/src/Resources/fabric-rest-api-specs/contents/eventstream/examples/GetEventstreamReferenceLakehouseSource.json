@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "eventstreamId": "8c500070-073f-4a88-b478-8fabe1941c52",
+        "sourceId": "f2886002-d696-4c05-969c-51361365cc25"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2886002-d696-4c05-969c-51361365cc25",
+                "name": "ReferenceLakehouseSource",
+                "type": "ReferenceLakehouse",
+                "properties": {
+                    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                    "itemId": "11111111-2222-3333-4444-555555555555",
+                    "absoluteOneLakePath": "https://onelake.dfs.fabric.microsoft.com/cfafbeb1-8037-4d0c-896e-a46fb27ff229/11111111-2222-3333-4444-555555555555/Tables/dbo/customers",
+                    "referencedColumns": [
+                        "id",
+                        "name",
+                        "email"
+                    ],
+                    "refreshRate": "00:05:00"
+                },
+                "status": "Running",
+                "error": null
+            }
+        }
+    }
+}

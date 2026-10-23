@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "workspaceId": "a97f3e88-9f0a-4183-b1d9-31e6eb00e778",
+    "updateSQLPoolsConfigurationRequest": {
+      "customSQLPoolsEnabled": true,
+      "customSQLPools": [
+        {
+          "name": "ETL",
+          "maxResourcePercentage": 20
+        },
+        {
+          "name": "Adhoc"
+        },
+        {
+          "name": "Reporting"
+        }
+      ]
+    }
+  },
+  "responses": {
+    "200": {}
+  }
+}

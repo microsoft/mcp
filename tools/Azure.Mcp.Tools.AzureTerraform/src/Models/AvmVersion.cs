@@ -3,9 +3,4 @@
 
 namespace Azure.Mcp.Tools.AzureTerraform.Models;
 
-public sealed class AvmVersion
-{
-    public string TagName { get; set; } = string.Empty;
-    public string CreatedAt { get; set; } = string.Empty;
-    public string TarballUrl { get; set; } = string.Empty;
-}
+public sealed record AvmVersion(string TagName, string CreatedAt, string TarballUrl);

@@ -30,8 +30,6 @@ internal sealed class ContainerRegistryData
     public ContainerRegistryProperties? Properties { get; set; }
 
     // Read the JSON response content and create a model instance from it.
-    public static ContainerRegistryData? FromJson(JsonElement source)
-    {
-        return JsonSerializer.Deserialize<ContainerRegistryData>(source, AcrJsonContext.Default.ContainerRegistryData);
-    }
+    public static ContainerRegistryData? FromJson(JsonElement source) =>
+        JsonSerializer.Deserialize(source, AcrJsonContext.Default.ContainerRegistryData);
 }

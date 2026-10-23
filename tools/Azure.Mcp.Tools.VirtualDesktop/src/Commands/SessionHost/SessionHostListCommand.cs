@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
-using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
+using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 
@@ -21,37 +21,31 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
         in the specified --subscription and hostpool. Results include SessionHost details and are
         returned as a JSON array.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService) : BaseHostPoolCommand<SessionHostListOptions>
+public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logger, IVirtualDesktopService virtualDesktopService, ISubscriptionResolver subscriptionResolver)
+    : BaseHostPoolCommand<BaseHostPoolOptions, SessionHostListCommand.SessionHostListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<SessionHostListCommand> _logger = logger;
     private readonly IVirtualDesktopService _virtualDesktopService = virtualDesktopService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BaseHostPoolOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             IReadOnlyList<Models.SessionHost> sessionHosts;
 
-            if (!string.IsNullOrEmpty(options.HostPoolResourceId))
+            if (!string.IsNullOrEmpty(options.HostpoolResourceId))
             {
                 sessionHosts = await _virtualDesktopService.ListSessionHostsByResourceIdAsync(
                     options.Subscription!,
-                    options.HostPoolResourceId,
+                    options.HostpoolResourceId,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
@@ -59,18 +53,16 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                 sessionHosts = await _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
                     options.Subscription!,
                     options.ResourceGroup,
-                    options.HostPoolName!,
+                    options.Hostpool!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
             else
             {
                 sessionHosts = await _virtualDesktopService.ListSessionHostsAsync(
                     options.Subscription!,
-                    options.HostPoolName!,
+                    options.Hostpool!,
                     options.Tenant,
-                    options.RetryPolicy,
                     cancellationToken);
             }
 
@@ -79,7 +71,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error listing session hosts for hostpool {HostPoolName} / {HostPoolResourceId}",
-                options.HostPoolName, options.HostPoolResourceId);
+                options.Hostpool, options.HostpoolResourceId);
             HandleException(context, ex);
         }
 
@@ -96,5 +88,5 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record SessionHostListCommandResult(List<Models.SessionHost> SessionHosts);
+    public sealed record SessionHostListCommandResult(List<Models.SessionHost> SessionHosts);
 }

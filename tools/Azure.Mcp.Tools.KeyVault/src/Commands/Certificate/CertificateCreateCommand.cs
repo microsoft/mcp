@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Tools.KeyVault.Models;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -16,77 +14,38 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     Id = "a11e024a-62e6-4237-8d7d-4b9b8439f50e",
     Name = "create",
     Title = "Create Key Vault Certificate",
-    Description = "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
+    Description = "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> logger, IKeyVaultService keyVaultService) : SubscriptionCommand<CertificateCreateOptions>
+public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> logger, IKeyVaultService keyVaultService)
+    : AuthenticatedCommand<CertificateCreateOptions, CertificateDetails>
 {
     private readonly ILogger<CertificateCreateCommand> _logger = logger;
     private readonly IKeyVaultService _keyVaultService = keyVaultService;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CertificateCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
-        command.Options.Add(KeyVaultOptionDefinitions.CertificateName);
-    }
-
-    protected override CertificateCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
-        options.CertificateName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateName.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var certificate = await _keyVaultService.CreateCertificate(
-                options.VaultName!,
-                options.CertificateName!,
-                options.Subscription!,
+                options.Vault,
+                options.Certificate,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(
-                new(
-                    certificate.Name,
-                    certificate.Id,
-                    certificate.KeyId,
-                    certificate.SecretId,
-                    Convert.ToBase64String(certificate.Cer),
-                    certificate.Properties.X509ThumbprintString,
-                    certificate.Properties.Enabled,
-                    certificate.Properties.NotBefore,
-                    certificate.Properties.ExpiresOn,
-                    certificate.Properties.CreatedOn,
-                    certificate.Properties.UpdatedOn,
-                    certificate.Policy.Subject,
-                    certificate.Policy.IssuerName),
-                KeyVaultJsonContext.Default.CertificateCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(CertificateDetails.FromCertificate(certificate), KeyVaultJsonContext.Default.CertificateDetails);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating certificate {CertificateName} in vault {VaultName}", options.CertificateName, options.VaultName);
+            _logger.LogError(ex, "Error creating certificate {CertificateName} in vault {VaultName}", options.Certificate, options.Vault);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
-
-    internal record CertificateCreateCommandResult(string Name, Uri Id, Uri KeyId, Uri SecretId, string Cer, string Thumbprint, bool? Enabled, DateTimeOffset? NotBefore, DateTimeOffset? ExpiresOn, DateTimeOffset? CreatedOn, DateTimeOffset? UpdatedOn, string Subject, string IssuerName);
 }

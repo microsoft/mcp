@@ -30,15 +30,15 @@ internal class Program
     {
         try
         {
-            ServiceStartCommand.ConfigureServices = ConfigureServices;
-            ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
+            ServerStartCommand.ConfigureServices = ConfigureServices;
+            ServerStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
             ConfigureServices(services);
 
             services.AddLogging(builder =>
             {
-                builder.AddConsole();
+                builder.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
@@ -52,7 +52,7 @@ internal class Program
             int status = 0;
 
             if (command is ExtendedCommand extendedCommand &&
-                (extendedCommand.BaseCommand is ServiceStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
+                (extendedCommand.BaseCommand is ServerStartCommand || extendedCommand.BaseCommand is PluginTelemetryCommand))
             {
                 // One of the special commands that need to be handled differently.
                 status = await parseResult.InvokeAsync();
@@ -114,6 +114,7 @@ internal class Program
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
             new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
+            new Fabric.Mcp.Tools.DataFactory.DataFactoryAreaSetup(),
         ];
     }
 
@@ -139,12 +140,12 @@ internal class Program
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http).
     /// </item>
     /// <item>
-    /// <see cref="ServiceStartCommand"/>'s execution: The container is created by some
+    /// <see cref="ServerStartCommand"/>'s execution: The container is created by some
     /// dynamically created <c>Microsoft.Extensions.Hosting.IHostBuilder</c> (stdio) or
     /// <c>Microsoft.AspNetCore.Hosting.IWebHostBuilder</c> (http). While the
-    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServiceStartCommand"/>
+    /// <see cref="IBaseCommand.ExecuteAsync"/>instance of <see cref="ServerStartCommand"/>
     /// is created by the first container, this second container it creates and runs is
-    /// built separately during <see cref="ServiceStartCommand.ExecuteAsync"/>. Thus, this
+    /// built separately during <see cref="ServerStartCommand.ExecuteAsync"/>. Thus, this
     /// container is built and this <see cref="ConfigureServices"/> method is called sometime
     /// during that method execution.
     /// </item>
@@ -156,11 +157,11 @@ internal class Program
     /// </para>
     /// <para>
     /// For example, most <see cref="IBaseCommand"/> instances take an indirect dependency
-    /// on <see cref="ITenantService"/> or <see cref="ICacheService"/>, both of which have
+    /// on <see cref="IAzureService"/> or <see cref="ICacheService"/>, both of which have
     /// transport-specific implementations. This method can add the stdio-specific
     /// implementation to allow the first container (used for command picking) to work,
     /// but such transport-specific registrations must be overridden within
-    /// <see cref="ServiceStartCommand.ExecuteAsync"/> with the appropriate
+    /// <see cref="ServerStartCommand.ExecuteAsync"/> with the appropriate
     /// transport-specific implementation based on command line arguments.
     /// </para>
     /// <para>
@@ -175,7 +176,9 @@ internal class Program
     /// <param name="services">A service collection.</param>
     internal static void ConfigureServices(IServiceCollection services)
     {
-        services.InitializeConfigurationAndOptions();
+        var thisAssembly = typeof(Program).Assembly;
+
+        services.InitializeConfigurationAndOptions(thisAssembly);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
@@ -186,7 +189,7 @@ internal class Program
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ICacheService.
         // The http-transport-specific implementations and configurations must be registered
-        // within ServiceStartCommand.ExecuteAsync().
+        // within ServerStartCommand.ExecuteAsync().
         services.AddHttpClientServices();
         services.AddSingleUserCliCacheService(disabled: true);
 

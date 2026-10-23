@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Compute.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
@@ -14,14 +13,12 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<VmInfo>> ListVmsAsync(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmInstanceView> GetVmInstanceViewAsync(
@@ -29,7 +26,6 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<(VmInfo VmInfo, VmInstanceView InstanceView)> GetVmWithInstanceViewAsync(
@@ -37,7 +33,6 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmCreateResult> CreateVmAsync(
@@ -61,7 +56,6 @@ public interface IComputeService
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Virtual Machine Scale Set operations
@@ -70,14 +64,12 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<VmssInfo>> ListVmssAsync(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<VmssVmInfo>> ListVmssVmsAsync(
@@ -85,7 +77,6 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmssVmInfo> GetVmssVmAsync(
@@ -94,7 +85,6 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmssCreateResult> CreateVmssAsync(
@@ -116,7 +106,6 @@ public interface IComputeService
         int? osDiskSizeGb = null,
         string? osDiskType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmssUpdateResult> UpdateVmssAsync(
@@ -131,7 +120,6 @@ public interface IComputeService
         string? scaleInPolicy = null,
         string? tags = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<VmUpdateResult> UpdateVmAsync(
@@ -144,7 +132,6 @@ public interface IComputeService
         string? bootDiagnostics = null,
         string? userData = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Delete operations
@@ -154,7 +141,17 @@ public interface IComputeService
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    // Power state operations
+    Task<VmPowerStateResult> ChangeVmPowerStateAsync(
+        string vmName,
+        string resourceGroup,
+        string subscription,
+        string powerAction,
+        bool noWait = false,
+        bool skipShutdown = false,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteVmssAsync(
@@ -163,7 +160,6 @@ public interface IComputeService
         string subscription,
         bool? forceDeletion = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     // Disk operations
@@ -172,14 +168,12 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<DiskInfo>> ListDisksAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<DiskInfo> CreateDiskAsync(
@@ -195,7 +189,7 @@ public interface IComputeService
         string? hyperVGeneration = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
@@ -209,7 +203,6 @@ public interface IComputeService
         long? uploadSizeBytes = null,
         string? securityType = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<DiskInfo> UpdateDiskAsync(
@@ -222,14 +215,13 @@ public interface IComputeService
         long? diskMbpsReadWrite = null,
         int? maxShares = null,
         string? networkAccessPolicy = null,
-        string? enableBursting = null,
+        bool? enableBursting = null,
         string? tags = null,
         string? diskEncryptionSet = null,
         string? encryptionType = null,
         string? diskAccessId = null,
         string? tier = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteDiskAsync(
@@ -237,6 +229,5 @@ public interface IComputeService
         string resourceGroup,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

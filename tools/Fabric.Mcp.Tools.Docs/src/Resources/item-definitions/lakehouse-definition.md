@@ -39,8 +39,10 @@ An object that contains the target datasource, and must specify exactly one of t
 | Name               | Type                    | Required | Description                                                                 |
 |--------------------|-------------------------|:--------:|-----------------------------------------------------------------------------|
 | adlsGen2           | AdlsGen2                | false    | An object containing the properties of the target ADLS Gen2 data source.    |
+| azureBlobStorage   | AzureBlobStorage        | false    | An object containing the properties of the target Azure Blob Storage data source. |
 | amazonS3           | AmazonS3                | false    | An object containing the properties of the target Amazon S3 data source.    |
 | dataverse          | Dataverse               | false    | An object containing the properties of the target Dataverse data source.    |
+| oneDriveSharePoint | OneDriveSharePoint      | false    | An object containing the properties of the target OneDrive for Business and SharePoint Online data source. |
 | googleCloudStorage | GoogleCloudStorage      | false    | An object containing the properties of the target Google Cloud Storage data source. |
 | oneLake            | OneLake                 | false    | An object containing the properties of the target OneLake data source.      |
 | s3Compatible       | S3Compatible            | false    | An object containing the properties of the target S3 compatible data source.|
@@ -58,6 +60,8 @@ The type object contains properties like target shortcut account type. Additiona
 | GoogleCloudStorage | GoogleCloudStorage   |
 | S3Compatible       | S3Compatible         |
 | Dataverse          | Dataverse            |
+| AzureBlobStorage   | AzureBlobStorage     |
+| OneDriveSharePoint | OneDriveSharePoint   |
 
 ### OneLake
 
@@ -79,6 +83,16 @@ An object containing the properties of the target ADLS Gen2 data source.
 | location     | string (uri)  | true     | Specifies the location of the target ADLS container. The URI must be in the format https://[account-name].dfs.core.windows.net where [account-name] is the name of the target ADLS account. |
 | subpath      | string        | true     | Specifies the container and subfolder within the ADLS account where the target folder is located. Must be of the format [container]/[subfolder] where [container] is the name of the container that holds the files and folders; [subfolder] is the name of the subfolder within the container (optional). For example: /mycontainer/mysubfolder |
 
+### AzureBlobStorage
+
+An object containing the properties of the target Azure Blob Storage data source.
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| connectionId | string (uuid) | true | A string representing the connection that is bound with the shortcut. The `connectionId` is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first create a cloud connection to be used by the shortcut when connecting to the Azure Blob Storage data location. Open the cloud connection's settings view and copy the GUID that is the connection ID. |
+| location | string (uri) | true | Specifies the location of the target Azure Blob Storage container. The URI must be in the format `https://[account-name].blob.core.windows.net` where `[account-name]` is the name of the target Azure Blob Storage account. |
+| subpath | string | true | Specifies the container and subfolder within the Azure Blob Storage account where the target folder is located. Must be in the format `[container]/[subfolder]`. `[container]` is the name of the container that holds the files and folders. `[subfolder]` is optional and is the name of the subfolder within the container. Example: `/mycontainer/mysubfolder`. |
+
 ### AmazonS3
 
 An object containing the properties of the target Amazon S3 data source.
@@ -86,7 +100,7 @@ An object containing the properties of the target Amazon S3 data source.
 | Name         | Type          | Required | Description                                                                 |
 |--------------|---------------|:--------:|-----------------------------------------------------------------------------|
 | connectionId | string (uuid) | true     | A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first create a cloud connection to be used by the shortcut when connecting to the Amazon S3 data location. Open the cloud connection's Settings view and copy the connection ID; this is a GUID. |
-| location     | string (uri)  | true     | HTTP URL that points to the target bucket in S3. The URL should be in the format https://[bucket-name].s3.[region-code].amazonaws.com, where "bucket-name" is the name of the S3 bucket you want to point to, and "region-code" is the code for the region where the bucket is located. For example: <https://my-s3-bucket.s3.us-west-2.amazonaws.com> |
+| location     | string (uri)  | true     | HTTP URL that points to the target bucket in S3. The URL should be in the format https://[bucket-name].s3.[region-code].amazonaws.com, where "bucket-name" is the name of the S3 bucket you want to point to, and "region-code" is the code for the region where the bucket is located. For example: `https://my-s3-bucket.s3.us-west-2.amazonaws.com` |
 | subpath      | string        | true     | Specifies a target folder or subfolder within the S3 bucket. |
 
 ### Dataverse
@@ -110,6 +124,17 @@ An object containing the properties of the target S3 compatible data source.
 | connectionId | string (uuid) | true     | A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. |
 | location     | string (uri)  | true     | HTTP URL of the S3 compatible endpoint. This endpoint must be able to receive ListBuckets S3 API calls. The URL must be in the non-bucket specific format; no bucket should be specified here. For example: `https://s3endpoint.contoso.com` |
 | subpath      | string        | true     | Specifies a target folder or subfolder within the S3 compatible bucket. For example: `/folder` |
+
+### OneDriveSharePoint
+
+An object containing the properties of the target OneDrive for Business or SharePoint Online data source.
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| connectionId | string (uuid) | true | A string representing the connection that is bound with the shortcut. The `connectionId` is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first create a cloud connection to be used by the shortcut when connecting to the OneDrive SharePoint data location. Open the cloud connection's settings view and copy the GUID that is the connection ID. |
+| location | string (uri) | true | Specifies the location of the target OneDrive SharePoint container. The URI must be in the format `https://microsoft.sharepoint.com` which is the path of the target OneDrive SharePoint account. |
+| subpath | string | true | Specifies the container and subfolder within the OneDrive SharePoint account where the target folder is located. Must be in the format `[container]/[subfolder]`. `[container]` is the name of the container that holds the files and folders. `[subfolder]` is optional and is the name of the subfolder within the container. Example: `/mycontainer/mysubfolder`. |
+| updateFabricItemSensitivity | boolean | false | Specifies whether the user wants the Fabric item sensitivity to be consistent with site-level labels for SharePoint shortcuts. If the user sets it to `true`, and if a SharePoint site has a more restrictive label than the Fabric item, then only the label of the Fabric item will be updated to match the SharePoint site. |
 
 ## DataAccessRole
 

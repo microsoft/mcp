@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Node.js Console greenfield projects (no existing telemetry)
@@ -11,11 +14,10 @@ public class ConsoleNodeJsGreenfieldGenerator : IGenerator
     public bool CanHandle(Analysis analysis)
     {
         var consoleProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.ConsoleNodeJs)
-            .ToList();
+            .Count(p => p.AppType == AppType.ConsoleNodeJs);
 
         return analysis.Language == Language.NodeJs
-            && consoleProjects.Count == 1
+            && consoleProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 

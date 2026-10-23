@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
 using Azure.ResourceManager;
@@ -11,13 +10,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService(
-    ITenantService tenantService,
-    ILoggerFactory loggerFactory,
-    IHttpClientFactory httpClientFactory)
-    : BaseAzureService(tenantService), IQuotaService
+public class QuotaService : BaseAzureService, IQuotaService
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+    private readonly ILogger<QuotaService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
+
+    public QuotaService(IAzureService azureService, ILoggerFactory loggerFactory)
+        : base(azureService)
+    {
+        _loggerFactory = loggerFactory;
+        _logger = _loggerFactory.CreateLogger<QuotaService>();
+    }
 
     public async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
@@ -25,16 +28,69 @@ public class QuotaService(
         string location,
         CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential(cancellationToken);
-        return await AzureQuotaService.GetAzureQuotaAsync(
-            credential,
-            resourceTypes,
-            subscriptionId,
-            location,
-            TenantService,
-            loggerFactory,
-            _httpClientFactory,
-            cancellationToken);
+        Dictionary<string, List<string>> providerToResourceTypes = resourceTypes
+            .GroupBy(resourceType => resourceType.Split('/')[0])
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        TokenCredential credential = await GetCredential(null, cancellationToken);
+        ArmClient resourceClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
+
+        IEnumerable<Task<IEnumerable<KeyValuePair<string, List<UsageInfo>>>>> quotaTasks =
+            providerToResourceTypes.Select(async providerResourceTypes =>
+            {
+                string provider = providerResourceTypes.Key;
+                List<string> resourceTypesForProvider = providerResourceTypes.Value;
+
+                try
+                {
+                    IUsageChecker usageChecker = UsageCheckerFactory.CreateUsageChecker(
+                        resourceClient,
+                        credential,
+                        provider,
+                        subscriptionId,
+                        _loggerFactory,
+                        AzureService);
+                    List<UsageInfo> quotaInfo = await usageChecker.GetUsageForLocationAsync(location, cancellationToken);
+                    _logger.LogDebug(
+                        "Retrieved quota info for provider {Provider}: {ItemCount} items",
+                        provider,
+                        quotaInfo.Count);
+
+                    return resourceTypesForProvider.Select(resourceType =>
+                        new KeyValuePair<string, List<UsageInfo>>(resourceType, quotaInfo));
+                }
+                catch (ArgumentException ex) when (ex.Message.Contains(
+                    "Unsupported resource provider",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return resourceTypesForProvider.Select(resourceType =>
+                        new KeyValuePair<string, List<UsageInfo>>(
+                            resourceType,
+                            [new(resourceType, 0, 0, Description: "No Limit")]));
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Told to cancel. Don't return anything.
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(
+                        "Error fetching quota for provider {Provider}: {Error}",
+                        provider,
+                        exception.Message);
+                    return resourceTypesForProvider.Select(resourceType =>
+                        new KeyValuePair<string, List<UsageInfo>>(
+                            resourceType,
+                            [new(resourceType, 0, 0, Description: exception.Message)]));
+                }
+            });
+
+        IEnumerable<KeyValuePair<string, List<UsageInfo>>>[] results = await Task.WhenAll(quotaTasks);
+
+        return results
+            .SelectMany(result => result)
+            .ToDictionary(result => result.Key, result => result.Value);
     }
 
     public async Task<List<string>> GetAvailableRegionsForResourceTypesAsync(
@@ -65,15 +121,9 @@ public class QuotaService(
             armClient,
             resourceTypes,
             subscriptionId,
-            loggerFactory,
+            _loggerFactory,
             cognitiveServiceProperties,
             cancellationToken);
-
-        var allRegions = availableRegions.Values
-            .Where(regions => regions.Count > 0)
-            .SelectMany(regions => regions)
-            .Distinct()
-            .ToList();
 
         List<string> commonValidRegions = availableRegions.Values
             .Aggregate((current, next) => [.. current.Intersect(next)]);

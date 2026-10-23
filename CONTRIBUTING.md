@@ -6,12 +6,19 @@ After cloning and building the repo, check out the [GitHub project](https://gith
 >[!IMPORTANT]
 If you are contributing significant changes, or if the issue is already assigned to a specific milestone, please discuss with the assignee of the issue first before starting to work on the issue.
 
+> [!TIP]
+> **New contributor?** Use the onboarding agent for interactive help:
+> 1. Open GitHub Copilot Chat in VS Code (or VS Code Insiders)
+> 2. Type `@onboarding` followed by your question (e.g., `@onboarding how do I set up my dev environment?`)
+> 3. The agent will walk you through setup, first issues, adding commands, and more
+
 ## Table of Contents
 
 - [Contributing to Azure MCP](#contributing-to-azure-mcp)
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
+    - [Central NuGet Feed](#central-nuget-feed)
     - [Project Structure](#project-structure)
   - [Development Workflow](#development-workflow)
     - [Development Process](#development-process)
@@ -66,8 +73,36 @@ If you are contributing significant changes, or if the issue is already assigned
 
 1. **VS Code**: Install either [stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-3. **Node.js**: Install [Node.js](https://nodejs.org/en/download) 20 or later (ensure `node` and `npm` are in your PATH)
+3. **Node.js**: Install latest [Node.js](https://nodejs.org/en/download) version (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
+
+### Central NuGet Feed
+
+This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.
+
+The feed has an **upstream** configured to nuget.org. When an authenticated user restores a package that is not yet cached in the feed, it is automatically ingested from nuget.org. Unauthenticated users can only consume package versions that have already been ingested into the feed.
+
+You can browse the feed directly at: <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>
+
+#### Installing the Azure Artifacts Credential Provider
+
+To authenticate with the feed you need the **Azure Artifacts Credential Provider**:
+
+1. Install it from <https://go.microsoft.com/fwlink/?linkid=2099625> (you can also find this link by clicking **Connect to Feed** from the feed page above).
+2. Once installed, the first `dotnet restore` (or any command with an implicit restore) will trigger an authentication prompt.
+3. Valid Users of the Azure DevOps project will be authenticated as a **Collaborator** on the feed, which allows you to:
+   - Pull any package already in the feed.
+   - Trigger the feed to query nuget.org and ingest new packages or versions that are not yet present.
+
+The feed is **public**, so anyone can read packages that are already cached. The credential provider is only needed to cause new packages to be ingested from the upstream.
+
+#### External Contributors
+
+External contributors will not be able to authenticate to the feed as **Collaborator**, but our Pull Request pipeline can. External contributors should temporarily add nuget.org as an additional source in `nuget.config` to build locally with new packages, then revert that `nuget.config` change before submitting their pull request. Our pipeline will authenticate to the feed, ingest the new package, and build normally.
+
+If you need local-only NuGet configuration for development, use a user-level `NuGet.Config` and a temporary `--configfile` rather than editing this repository's tracked `nuget.config`. Do not commit local feed changes to the repo.
+
+Do not assume the Pull Request pipeline will always ingest a missing package automatically. Upstream ingestion can fail or be delayed. If your PR depends on a package/version that is not yet visible in the feed, ask a maintainer or Microsoft contributor to pre-ingest it by restoring against the feed first, then retry once the package appears in <https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-net>.
 
 ### Project Structure
 
@@ -76,21 +111,20 @@ If you are contributing significant changes, or if the issue is already assigned
   - `Fabric.Mcp.Core` - Fabric.Mcp.Core, depends on Azure.Mcp.Core (fabric uses azure)
   - `Microsoft.Mcp.Core` - Microsoft.Mcp.Core library
 - `servers\`
-  - `{server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
+  - `{Server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
     - `src` - Source for the server
     - `tests` - Any unit or live tests for the server
     - `README.md` - Specific readme for this server
     - `CHANGELOG.md` - Specific changelog for this server
 - `tools/` - Service-specific implementations
-  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
+  - `{Server}.Mcp.Tools.{ToolArea}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
     - `src` - Service specific code
       - `Commands/` - Command implementations
       - `Models/` - Service specific models
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
-      - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
+      - `{Server}.Mcp.Tools.{ToolArea}.Tests/` - Unit tests (no Azure resources) and Integration tests (requires Azure)
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
@@ -134,10 +168,12 @@ If you are contributing significant changes, or if the issue is already assigned
 
    ```txt
    Execute in Copilot Chat:
-   "create [namespace] [resource] [operation] command using #new-command.md as a reference"
+   "create [namespace] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"
    ```
 
-4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
+4. **Follow implementation guidelines** in [.github/skills/add-azure-mcp-tools/SKILL.md](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
+
+  Tools marked `LocalRequired = true` need special recorded-test handling. In every applicable test in a class extending `RecordedCommandTestsBase`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true` so the test verifies that remote HTTP mode excludes the local-only tool.
 
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
@@ -180,7 +216,7 @@ If you are contributing significant changes, or if the issue is already assigned
    - Include tests in the `/tests` folder
    - Ensure all tests pass
    - Follow code style requirements
-   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
+   - Run [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) for the new tool description (excluding Fabric MCP tools) and obtain a score of `0.4` or more and a top 3 ranking for all related test prompts
 
 ## Testing
 
@@ -212,13 +248,17 @@ Requirements:
 
 To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
 
-Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+Mocks created with `NSubstitute.Substitute.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
 
 Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to the server's `/server/<servername>/docs/e2eTestPrompts.md` file.
+
+### Running evals with vally
+
+vally is the evaluation framework used to test the performance/accuracy of Azure MCP server and its tools. See [`/docs/testing-with-vally.md`](https://github.com/microsoft/mcp/blob/main/docs/testing-with-vally.md).
 
 ### Testing Local Build with VS Code
 
@@ -618,7 +658,7 @@ To ensure consistent spelling across the codebase, run the spelling check before
 .\eng\common\spelling\Invoke-Cspell.ps1
 ```
 
-This will check all files for spelling errors using the project's dictionary. Add any new technical terms or proper nouns to `.vscode/cspell.json` if needed.
+This will check all files for spelling errors using the project's dictionary. Add project-specific technical terms or proper nouns to the `cspell.yaml` in that project folder. Add cross-cutting terms used by multiple projects to `.vscode/cspell.json`.
 
 #### Requirements
 
@@ -670,9 +710,81 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 - Handle errors according to MCP specifications
 - Provide proper argument suggestions
 
+#### Executing command context
+
+Injected services can use `ICommandContextAccessor.CurrentContext` to access the current
+`CommandContext` during an in-process MCP command invocation. `ToolNamespaceName` is the
+command's original registered `IAreaSetup.Name`, even in single-tool or consolidated mode.
+`CommandFactory` stores this identity alongside the command in an immutable
+`CommandRegistration`. Tool loaders use the selected registration directly; consolidation
+preserves that same registration under its new routing name.
+Do not derive this identity from proxy names, request arguments, or telemetry tags.
+
+The local tool loaders enter an execution scope around the awaited command execution.
+Discovery, learn responses, sampling, and elicitation do not create a scope; a real
+command selected through sampling receives its own execution context. Direct CLI
+execution and external proxy forwarding do not populate the accessor.
+
+The accessor is a singleton with asynchronous-flow-local state, not per-command instance
+state. Do not retain `CurrentContext` or its response after execution. Scope disposal
+clears inherited context for work that outlives the invocation. Only one command execution
+scope can be active in an asynchronous flow; nested scopes are rejected. Dispose the scope
+in the same asynchronous flow that created it. `CurrentContext` is null outside execution.
+An active context can have a null namespace if the original identity is unresolved;
+command registration logs a warning rather than inferring an identity from the displayed group.
+
+Shared ARM clients created through `AzureHelper.CreateArmClientAsync` call
+`IAzureService.ConfigureArmClientOptions` to configure cloud, transport, and endpoint
+validation. Its injected validator reads the accessor on every send, including retries
+and paging, so cached ARM resources never retain the creating invocation's namespace. In server
+mode the domain policy validates every send, including direct CLI calls and background work
+using the shared pipeline. All factory-created HTTP clients disable automatic redirects.
+Missing contexts and unresolved namespaces cannot enable a namespace bypass, including
+`ALL`. Raw ARM HTTP requests and independently created SDK clients without the policy
+remain outside its scope.
+
+Endpoint validation uses a DI-registered `IEndpointValidator` implemented by
+`EndpointValidator` and an immutable `SsrfProtectionPolicy` owned by each host. Tool services should call
+`AzureService.ValidateAzureServiceEndpoint` with the completed URL, endpoint service
+key. The facade supplies its own configured cloud. The validator resolves the original
+tool namespace through the host's `ICommandContextAccessor` on every validation call; callers cannot supply
+a namespace to select an override. Static helpers must receive the Azure service or
+`IEndpointValidator` explicitly; do not create a separate policy at a production
+validation boundary. `IAzureService.ValidatePublicTargetUrl` shares the same policy
+for deliberately arbitrary public targets. Pure external-host and IP helpers remain
+static. The validator receives `ILogger<EndpointValidator>` through DI for diagnostics,
+rather than requiring callers to pass a logger. Tests can create independent policies
+and accessors, opening actual command scopes to exercise no overrides, selected namespaces,
+or `ALL`; no process-wide setter, reset, or isolated test execution is required.
+Proxy routing does not disable endpoint validation. Public-target validation continues
+to resolve and reject private or reserved addresses for the original URL because callers
+may pass that URL to a downstream Azure service rather than dereference it through the
+local HTTP transport.
+
+Shared factory HTTP transports additionally use `AntiSSRFPolicy` with `ExternalOnlyLatest`.
+Default, named, and ARM clients evaluate the namespace override on every send and keep
+protected, namespace-override, and proxied connection pools separate. Explicit proxy
+settings and `.NET`'s `HttpClient.DefaultProxy` are evaluated for each destination.
+Actually proxied requests omit transport DNS/IP validation because the trusted proxy is
+the network boundary; `NO_PROXY`, operating-system bypass, and PAC `DIRECT` routes retain
+protection. Missing contexts remain protected.
+
+**Proxy security warning:** The factory selects one explicit proxy in `ALL_PROXY`,
+`HTTPS_PROXY`, then `HTTP_PROXY` order and applies it to both HTTP and HTTPS requests.
+Requests actually routed through that proxy omit transport checks; requests excluded by
+`NO_PROXY` connect through the protected direct transport. When no explicit proxy is selected,
+`HttpClient.DefaultProxy` supplies destination-specific environment, operating-system, PAC,
+and bypass routing with the same protected-direct behavior. Debug recording proxies still
+take precedence over transport protection for every rewritten request. Endpoint validation
+remains active unless separately bypassed. Use only trusted proxies with appropriate network
+restrictions. System and PAC routing is evaluated once when selecting a transport and again
+by the proxy transport while connecting. A dynamic proxy-to-direct change between evaluations
+uses the proxy-designated transport without direct-route DNS/IP filtering, so configurations
+must provide a stable decision for each destination during a request.
+
 ### Package README
 
-A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion whem processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
+A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion when processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
 
 Supported comment annotations:
 
@@ -710,11 +822,11 @@ To extract README.md for a specific package, run the `Extract-PackageSpecificRea
 
 ### Configuring External MCP Servers
 
-The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface. The registry follows the same configuration schema as VS Code's `mcp.json`.
+The Azure MCP Server supports connecting to external MCP servers through an embedded `registry.json` configuration file. This enables the server to act as a proxy, aggregating tools from multiple MCP servers into a single interface.
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `servers/Azure.Mcp.Server/src/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following a format similar to the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -725,7 +837,7 @@ The registry structure follows this format:
       "url": "https://learn.microsoft.com/api/mcp",
       "description": "Search official Microsoft/Azure documentation..."
     },
-    "another-server": {
+    "another-stdio-server": {
       "type": "stdio",
       "command": "path/to/executable",
       "args": ["arg1", "arg2"],
@@ -733,6 +845,13 @@ The registry structure follows this format:
         "ENV_VAR": "value"
       },
       "description": "Another MCP server using stdio transport"
+    },
+    "another-http-server": {
+      "url": "<server_endpoint>",
+      "title": "<server_title>",
+      "description": "Another MCP server that offers X, Y, Z features",
+      "toolPrefix": "uniqueprefix_",
+      "oauthScopes": ["Entra-client-ID/identifier-uri"]
     }
   }
 }
@@ -745,6 +864,20 @@ The registry structure follows this format:
 - Use the `url` property to specify the endpoint
 - Supports HTTP-based communication with automatic transport mode detection
 - Best for web-based MCP servers and remote endpoints
+- Use `title` as the display name for the namespace tool (optional)
+- Use `description` as the description of the namespace tool for the MCP server
+- Use `toolPrefix` to assign unique prefix to tools of the MCP server
+- If the MCP server requires authentication, use `oauthScopes` to specify the Entra client registration representing the MCP server
+
+When running in namespace mode, the registered MCP server will appear as a namespace tool like all the built-in namespaces, exposing the underlying tools via dynamic discovery. When running in all mode, the registered MCP server's tools will be listed along with all the built-in tools.
+
+For HTTP-transport external servers, Azure MCP supports unauthenticated endpoints and Entra ID-protected endpoints (via `oauthScopes`). The registered MCP server needs to have an Entra app registration that accepts authorization and token requests from common clients (e.g. Azure CLI and VS Code). Depending on how Azure MCP runs, there are several different authentication scenarios involving the external MCP server.
+
+- Azure MCP runs in stdio mode and uses a user principal. For example, a user starts Azure MCP in stdio mode and lets it use AzureCliCredential. The registered MCP server will receive user principal access tokens from Azure MCP.
+- Azure MCP runs in stdio mode and uses a service principal. For example, a user runs Azure MCP in stdio mode and lets it use EnvironmentCredential (for example, Managed Identity). The registered MCP server will receive service principal access tokens from Azure MCP.
+- Azure MCP runs in remote mode and uses On-Behalf-Of (OBO). For example, a user runs Azure MCP in HTTP mode and hosts it as a service. The user then uses some client to access this Azure MCP service. This Azure MCP service receives a user/service principal access token for itself, exchanges it for a new token for the registered MCP server, and accesses the registered MCP server using the new token. The registered MCP server will receive an OBO token from the Azure MCP service's configured Entra app registration.
+
+There are two kinds of user principals in Entra ID, personal users and organizational users. Each user can be a direct member of a tenant or a guest of a tenant. The configuration of the registered MCP server's Entra client registration may accidentally block access from some users. When adding a registered MCP server that requires authentication, make sure to test the Entra client registration to make sure the expected clients and users can successfully authorize and acquire access tokens for it. Also test the registered MCP server's implementation to make sure it can accept valid access tokens from all kinds of supported scenarios. If a commonly acceptable scenario is by design not supported, document these scenarios in the registered MCP server's entry in [README.md](https://github.com/microsoft/mcp/blob/main/README.md).
 
 **Stdio Transport:**
 
@@ -770,7 +903,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
+1. Edit `servers/Azure.Mcp.Server/src/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport
@@ -795,9 +928,23 @@ External servers integrate seamlessly with the Azure MCP Server's tool aggregati
 3. Reference the original issue
 4. Wait for review and address any feedback
 
+#### Assisted Pull Request Review
+
+The repository includes the `.github/skills/mcp-code-reviewer/SKILL.md` skill for consistent, repository-aware reviews in supported IDE, CLI, and GitHub Copilot Code Review sessions.
+
+1. Open the repository in the pull request branch or worktree.
+2. Ask the reviewing agent to `Review pull request <number> using the mcp-code-reviewer skill. Return draft inline comments only and do not post them.`
+3. Inspect each draft finding against the diff and post only the comments you agree with.
+
+In GitHub Copilot Code Review, requesting a review authorizes the agent to post qualified inline comments directly. The skill keeps these reviews read-only and comment-only: it does not modify the branch, approve or request changes, resolve threads, or invoke another agent to implement changes.
+
+The skill does not replace maintainer judgment, required validation, or the security inspection required before authorizing live tests for an untrusted contribution.
+
 ### Builds and Releases (Internal)
 
-The internal pipeline [azure-mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571) is used for all official releases and CI builds. On every merge to main, a build will run and will produce a dynamically named prerelease package on the public dev feed, e.g. [@azure/mcp@0.0.10-beta.4799791](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js/Npm/@azure%2Fmcp/overview/0.0.10-beta.4799791).
+**For instructions on managing Azure MCP releases, follow the [release checklist](https://eng.ms/docs/products/azure-developer-experience/mcp/release-checklist).**
+
+The internal pipeline [azure-mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7866) is used for all official releases and CI builds. On every merge to main, a build will run and will produce a dynamically named prerelease package on the public dev feed, e.g. [@azure/mcp@0.0.10-beta.4799791](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js/Npm/@azure%2Fmcp/overview/0.0.10-beta.4799791).
 
 Only manual runs of the pipeline sign and publish packages. Building `main` or `hotfix/*` will publish to `npmjs.com`, all other refs will publish to the [public dev feed](https://dev.azure.com/azure-sdk/public/_artifacts/feed/azure-sdk-for-js).
 
@@ -824,6 +971,7 @@ All PRs automatically run the following validation checks:
 - **Spelling check** - Validates spelling across the codebase
 - **AOT compatibility** - Checks ahead-of-time compilation compatibility
 - **Tool metadata verification** - Ensures `azmcp-commands.md` is up-to-date with tool metadata (run `.\eng\scripts\Update-AzCommandsMetadata.ps1` if this fails)
+- **VSIX packaging** - On changes to a VS Code extension's `package.json` or `package-lock.json`, resolves its npm dependencies and packages the extension without signing or publishing.
 
 ## Support and Community
 
@@ -838,7 +986,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 

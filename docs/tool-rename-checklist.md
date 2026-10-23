@@ -2,7 +2,7 @@
 
 This document defines the steps required when renaming an existing MCP tool (i.e., changing the value returned by a command's `Name` property or its parent group name). Tool names form part of the MCP protocol surface, they are how AI agents discover and invoke capabilities, so renames are **breaking changes** and must be handled carefully.
 
-> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md) instead.
+> **Note:** If you are adding a *new* tool rather than renaming an existing one, follow [`.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md) instead.
 
 ## What counts as a tool rename?
 
@@ -45,7 +45,7 @@ Recorded tests reference tool names inside their JSON session files. Old recordi
   ```
 - [ ] Verify playback passes locally:
   ```powershell
-  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests --no-build
+  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests --no-build
   ```
 
 ### 4. Unit tests
@@ -54,7 +54,7 @@ Recorded tests reference tool names inside their JSON session files. Old recordi
 - [ ] Update test class names and file names if they encode the old command name.
 - [ ] Confirm all unit tests pass:
   ```powershell
-  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests
+  dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests
   ```
 
 ### 5. Changelog
@@ -72,7 +72,7 @@ A tool rename is a **breaking change** for any MCP client or agent that hard-cod
 
 ### 6. Spelling
 
-- [ ] Run the spelling check and add any new technical terms to `.vscode/cspell.json` if needed:
+- [ ] Run the spelling check. Add project-specific technical terms to that project's `cspell.yaml`, and add cross-cutting terms to the `.vscode/cspell.json`:
   ```powershell
   .\eng\common\spelling\Invoke-Cspell.ps1
   ```
@@ -93,4 +93,4 @@ MCP clients including AI agents, IDE extensions, and automation scripts referenc
 - Users who have configured explicit tool allow-lists by name must update their configuration.
 - Recorded sessions keyed on the old name will fail playback until re-recorded.
 
-For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`new-command.md`](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.
+For these reasons, **avoid renames unless necessary**. If the existing name is genuinely misleading or inconsistent with the naming conventions in [`.github/skills/add-azure-mcp-tools/SKILL.md`](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md), prefer doing the rename as part of a larger breaking-change release batch rather than as a standalone PR.

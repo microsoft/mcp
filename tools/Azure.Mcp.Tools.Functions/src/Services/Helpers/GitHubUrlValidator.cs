@@ -199,8 +199,7 @@ internal static class GitHubUrlValidator
 
         if (totalBytesRead > maxSize)
         {
-            throw new InvalidOperationException(
-                $"Response size exceeds maximum allowed ({maxSize} bytes).");
+            throw new InvalidOperationException($"Response size exceeds maximum allowed ({maxSize} bytes).");
         }
 
         return Encoding.UTF8.GetString(buffer, 0, totalBytesRead);

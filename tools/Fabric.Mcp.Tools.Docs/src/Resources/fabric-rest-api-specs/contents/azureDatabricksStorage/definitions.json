@@ -1,0 +1,173 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "AzureDatabricksStorage data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "AzureDatabricksStorage": {
+      "description": "An Azure Databricks storage object.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ]
+    },
+    "AzureDatabricksStorages": {
+      "description": "A list of AzureDatabricksStorage items.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of AzureDatabricksStorage items.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AzureDatabricksStorage"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreateAzureDatabricksStorageRequest": {
+      "description": "The request payload for creating an AzureDatabricksStorage.",
+      "required": [
+        "displayName"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The AzureDatabricksStorage display name. The display name must follow naming rules according to the item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The AzureDatabricksStorage description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+          "description": "The folder ID. If not specified or null, the AzureDatabricksStorage is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The AzureDatabricksStorage public definition.",
+          "$ref": "#/definitions/AzureDatabricksStorageDefinition",
+          "readOnly": false
+        },
+        "sensitivityLabelSettings": {
+          "description": "The sensitivity label settings for the AzureDatabricksStorage.",
+          "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateAzureDatabricksStorageDefinitionRequest": {
+      "description": "The request payload for updating an AzureDatabricksStorage's public definition.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "description": "The AzureDatabricksStorage public definition.",
+          "$ref": "#/definitions/AzureDatabricksStorageDefinition"
+        }
+      }
+    },
+    "AzureDatabricksStorageDefinitionResponse": {
+      "description": "The response containing an AzureDatabricksStorage's public definition.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "description": "The AzureDatabricksStorage public definition.",
+          "$ref": "#/definitions/AzureDatabricksStorageDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "AzureDatabricksStorageDefinition": {
+      "description": "AzureDatabricksStorage public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/azure-databricks-storage-definition) for more details on the structure of the AzureDatabricksStorage definition.",
+      "type": "object",
+      "required": [
+        "parts"
+      ],
+      "properties": {
+        "format": {
+          "description": "The format of the AzureDatabricksStorage definition. Additional AzureDatabricksStorageFormat types may be added over time.",
+          "type": "string",
+          "enum": [
+            "AzureDatabricksStorageV1"
+          ],
+          "x-ms-enum": {
+            "name": "AzureDatabricksStorageDefinitionFormat",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "AzureDatabricksStorageV1",
+                "description": "Custom format for the AzureDatabricksStorage definition."
+              }
+            ]
+          },
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AzureDatabricksStorageDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "AzureDatabricksStorageDefinitionPart": {
+      "description": "An AzureDatabricksStorage definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The AzureDatabricksStorage public definition part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The AzureDatabricksStorage public definition part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateAzureDatabricksStorageRequest": {
+      "description": "The request payload for updating an AzureDatabricksStorage.",
+      "properties": {
+        "displayName": {
+          "description": "The AzureDatabricksStorage display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The AzureDatabricksStorage description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    }
+  }
+}

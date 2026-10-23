@@ -1,0 +1,22 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Helpers;
+using NSubstitute;
+
+namespace Azure.Mcp.Core.Tests;
+
+public class RegistryDiscoveryStrategyHelper
+{
+    public static RegistryDiscoveryStrategy CreateStrategy(ServerRuntimeConfiguration? configuration = null)
+    {
+        var serverConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
+        var logger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var registryRoot = RegistryServerHelper.GetRegistryRoot(typeof(Server.Program).Assembly, "Azure.Mcp.Server.Resources.registry.json");
+        return new(serverConfiguration, logger, httpClientFactory, registryRoot!);
+    }
+}

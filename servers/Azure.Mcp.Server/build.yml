@@ -9,7 +9,11 @@ parameters:
 - name: TestTimeoutInMinutes
   displayName: Test Timeout In Minutes
   type: number
-  default: 30
+  default: 45
+- name: BuildTimeoutInMinutes
+  displayName: Build Timeout In Minutes
+  type: number
+  default: 90
 - name: RunVSCodeIntegrationTests
   displayName: Run VS Code Integration Tests (Outerloop Playwright)
   type: boolean
@@ -22,12 +26,15 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Azure.Mcp.Server
+    NetworkIsolationPolicy: Preferred,CFSClean
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     RunVSCodeIntegrationTests: ${{ parameters.RunVSCodeIntegrationTests }}
+    RunPerfTests: true
     PackageDocker: true
     PackageVSIX: true
     PackagePyPI: true
     PackageMCPB: true
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}

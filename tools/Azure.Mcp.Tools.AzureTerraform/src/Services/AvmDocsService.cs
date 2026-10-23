@@ -3,13 +3,29 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
 public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmDocsService
 {
-    private const string AvailableModulesUrl =
+    private const string ResourceModulesUrl =
         "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformResourceModules.csv";
+
+    private const string PatternModulesUrl =
+        "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformPatternModules.csv";
+
+    // GitHub hosts this service is permitted to reach. Restricts outbound requests to the expected hosts
+    // when a URL is derived from externally-sourced data (for example the RepoURL column in the fetched
+    // module-index CSV). This is a host allow-list check on the initial request URL, not redirect-aware.
+    private static readonly string[] s_allowedHosts =
+    [
+        "raw.githubusercontent.com",
+        "api.github.com"
+    ];
+
+    public const string ModuleTypeResource = "resource";
+    public const string ModuleTypePattern = "pattern";
 
     private const string ModuleNameColumn = "ModuleName";
     private const string DescriptionColumn = "Description";
@@ -17,9 +33,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     private const string ModuleRepoUrlColumn = "RepoURL";
     private const string ModuleStatusProposed = "Proposed";
 
-    private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(24);
+    private static readonly TimeSpan s_cacheExpiration = TimeSpan.FromHours(24);
 
-    private static readonly Lock CacheLock = new();
+    private static readonly Lock s_cacheLock = new();
     private static List<AvmModule>? s_cachedModules;
     private static DateTime s_cacheTimestamp;
 
@@ -32,10 +48,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     {
         var modules = await GetModuleCollectionAsync(cancellationToken).ConfigureAwait(false);
         var module = modules.Find(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Module '{moduleName}' not found in available modules.");
+            ?? throw new ArgumentException($"Module '{moduleName}' not found in available modules.", nameof(moduleName));
 
-        var apiUrl = module.RepoUrl
-            .Replace("github.com", "api.github.com/repos", StringComparison.OrdinalIgnoreCase) + "/releases";
+        var apiUrl = BuildValidatedReleasesUrl(module.RepoUrl);
 
         using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
@@ -51,12 +66,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         foreach (var release in releases)
         {
             var tagName = release.TagName.TrimStart('v');
-            versions.Add(new AvmVersion
-            {
-                TagName = tagName,
-                CreatedAt = release.CreatedAt,
-                TarballUrl = release.TarballUrl
-            });
+            versions.Add(new(tagName, release.CreatedAt, release.TarballUrl));
         }
 
         versions.Sort((a, b) => string.Compare(b.CreatedAt, a.CreatedAt, StringComparison.Ordinal));
@@ -67,9 +77,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
     {
         var modules = await GetModuleCollectionAsync(cancellationToken).ConfigureAwait(false);
         var module = modules.Find(m => string.Equals(m.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Module '{moduleName}' not found in available modules.");
+            ?? throw new ArgumentException($"Module '{moduleName}' not found in available modules.", nameof(moduleName));
 
-        var cleanVersion = moduleVersion.TrimStart('v');
+        var cleanVersion = Uri.EscapeDataString(moduleVersion.TrimStart('v'));
 
         var repoPath = ExtractRepoPath(module.RepoUrl);
         var readmeUrl = $"https://raw.githubusercontent.com/{repoPath}/v{cleanVersion}/README.md";
@@ -77,11 +87,13 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         using var client = httpClientFactory.CreateClient();
         ConfigureGitHubHeaders(client);
 
+        EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
         var response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
             readmeUrl = $"https://raw.githubusercontent.com/{repoPath}/{cleanVersion}/README.md";
+            EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
             response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
         }
 
@@ -96,9 +108,9 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
     private async Task<List<AvmModule>> GetModuleCollectionAsync(CancellationToken cancellationToken)
     {
-        lock (CacheLock)
+        lock (s_cacheLock)
         {
-            if (s_cachedModules is not null && DateTime.UtcNow - s_cacheTimestamp < CacheExpiration)
+            if (s_cachedModules is not null && DateTime.UtcNow - s_cacheTimestamp < s_cacheExpiration)
             {
                 return s_cachedModules.ToList();
             }
@@ -106,13 +118,17 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
         using var client = httpClientFactory.CreateClient();
 
-        var response = await client.GetAsync(new Uri(AvailableModulesUrl), cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        var resourceTask = FetchModulesAsync(client, ResourceModulesUrl, ModuleTypeResource, cancellationToken);
+        var patternTask = FetchModulesAsync(client, PatternModulesUrl, ModuleTypePattern, cancellationToken);
 
-        var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        var modules = ParseModuleCsv(csvContent);
+        var resourceModules = await resourceTask.ConfigureAwait(false);
+        var patternModules = await patternTask.ConfigureAwait(false);
 
-        lock (CacheLock)
+        var modules = new List<AvmModule>(resourceModules.Count + patternModules.Count);
+        modules.AddRange(resourceModules);
+        modules.AddRange(patternModules);
+
+        lock (s_cacheLock)
         {
             s_cachedModules = modules;
             s_cacheTimestamp = DateTime.UtcNow;
@@ -121,7 +137,45 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         return modules;
     }
 
-    internal static List<AvmModule> ParseModuleCsv(string csvContent)
+    private static async Task<List<AvmModule>> FetchModulesAsync(
+        HttpClient client, string url, string moduleType, CancellationToken cancellationToken)
+    {
+        EndpointValidator.ValidateExternalUrl(url, s_allowedHosts);
+        using var response = await client.GetAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var csvContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return ParseModuleCsv(csvContent, moduleType);
+    }
+
+    /// <summary>
+    /// Builds the GitHub releases API URL for a module repository and validates that the resulting host is
+    /// an allowed GitHub host. The repository URL originates from externally-sourced CSV data, so the derived
+    /// endpoint's host is checked against the allow-list before the request is made.
+    /// </summary>
+    /// <param name="repoUrl">The module repository URL sourced from the fetched module-index CSV.</param>
+    /// <returns>The validated GitHub releases API URL for the repository.</returns>
+    /// <remarks>
+    /// This method is <see langword="internal"/> <see langword="static"/> only to enable unit testing. Use
+    /// within the class is expected; do not call it from anything else.
+    /// </remarks>
+    internal static string BuildValidatedReleasesUrl(string repoUrl)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repoUrl);
+
+        // Rewrite only the host (github.com -> api.github.com) and prefix the path with "/repos", so a
+        // "github.com" appearing inside the repository path (e.g. a repo named "github.com-foo") is not
+        // rewritten. Non-GitHub hosts are left intact and rejected by the allow-list check below.
+        var apiUrl = Uri.TryCreate(repoUrl, UriKind.Absolute, out var repoUri)
+            && repoUri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+            ? $"{repoUri.Scheme}://api.github.com/repos{repoUri.AbsolutePath.TrimEnd('/')}/releases"
+            : repoUrl + "/releases";
+
+        EndpointValidator.ValidateExternalUrl(apiUrl, s_allowedHosts);
+        return apiUrl;
+    }
+
+    internal static List<AvmModule> ParseModuleCsv(string csvContent, string moduleType)
     {
         var lines = csvContent.Split('\n');
         if (lines.Length == 0)
@@ -129,7 +183,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
             return [];
         }
 
-        var headerLine = lines[0].Trim();
+        var headerLine = lines[0].Trim().TrimStart('\uFEFF');
         if (string.IsNullOrEmpty(headerLine))
         {
             return [];
@@ -177,13 +231,12 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
                 continue;
             }
 
-            modules.Add(new AvmModule
-            {
-                ModuleName = moduleName,
-                Description = descIdx >= 0 && descIdx < values.Count ? values[descIdx] : string.Empty,
-                RepoUrl = repoUrl,
-                Source = SourceFromRepoUrl(repoUrl)
-            });
+            modules.Add(new(
+                ModuleName: moduleName,
+                Description: descIdx >= 0 && descIdx < values.Count ? values[descIdx] : string.Empty,
+                RepoUrl: repoUrl,
+                Source: SourceFromRepoUrl(repoUrl),
+                ModuleType: moduleType));
         }
 
         return modules;
@@ -254,8 +307,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(githubToken))
         {
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", githubToken);
+            client.DefaultRequestHeaders.Authorization = new("Bearer", githubToken);
         }
     }
 

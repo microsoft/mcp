@@ -1,0 +1,1065 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tools.Advisor.Commands;
+using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
+using Azure.Mcp.Tools.Advisor.Options.Recommendation;
+using Azure.Mcp.Tools.Advisor.Services;
+using Microsoft.Mcp.Core.Commands;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Advisor.Tests.Recommendation;
+
+public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<RecommendationListCommand, IAdvisorService>
+{
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = Command.GetCommand();
+        Assert.Equal("list", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
+    }
+
+    [Theory]
+    [InlineData("List, show, or search individual Azure Advisor recommendations")]
+    [InlineData("recommendation status such as New, Postponed, Dismissed, or Completed")]
+    [InlineData("broad or unscoped top, critical, important, prioritized, priority")]
+    [InlineData("--group-by recommendation-type and --prioritized true")]
+    [InlineData("If the request identifies a specific recommendation type, use this tool directly")]
+    [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
+    public void Description_ExplainsIndividualRecommendationListing(string guidance)
+    {
+        Assert.Contains(guidance, Command.GetCommand().Description);
+    }
+
+    [Theory]
+    [InlineData("criticalityScore descending, treating missing scores as zero")]
+    [InlineData("setting it to true requires --recommendation-type-id")]
+    [InlineData("summary --group-by recommendation-type --prioritized true first")]
+    [InlineData("A request that identifies a specific recommendation type can use this option directly")]
+    [InlineData("selected type's recommendation metadata category determines the instance metric")]
+    [InlineData("savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4")]
+    [InlineData("extendedProperties.annualSavingsAmount as fallback")]
+    [InlineData("annual savings score is rounded to two decimal places")]
+    [InlineData("Missing, invalid, or non-finite savings sort last; zero is valid")]
+    [InlineData("effective retirement date ascending")]
+    [InlineData("then resource name A-Z (case-insensitive), then recommendation ID A-Z")]
+    public void PrioritizedDescription_ExplainsIndividualRecordOrdering(string guidance)
+    {
+        var command = Command.GetCommand();
+        var prioritized = Assert.Single(command.Options, option => option.Name == "--prioritized");
+
+        Assert.Contains(guidance, prioritized.Description);
+    }
+
+    [Fact]
+    public void PrioritizedDescription_ExplainsDefaultAndScope()
+    {
+        var prioritized = Assert.Single(Command.GetCommand().Options, option => option.Name == "--prioritized");
+
+        Assert.Contains("Defaults to false; when false, no explicit ordering is applied", prioritized.Description);
+        Assert.Contains("both subscription and Service Group scopes", prioritized.Description);
+    }
+
+    [Fact]
+    public void ShowPrioritizationSignalsDescription_ExplainsPrerequisiteAndOutputOnlyBehavior()
+    {
+        var command = Command.GetCommand();
+        var option = Assert.Single(command.Options, option => option.Name == "--show-prioritization-signals");
+
+        Assert.Contains("properties.signalBreakdown", option.Description);
+        Assert.Contains("Defaults to false", option.Description);
+        Assert.Contains("requires --prioritized true", option.Description);
+        Assert.Contains("does not change filtering or ordering", option.Description);
+        Assert.Contains("omitted when signals are unavailable", option.Description);
+        Assert.DoesNotContain("--show-prioritization-signals", command.Description);
+    }
+
+    [Theory]
+    [InlineData("--category", "English recommendation metadata")]
+    [InlineData("--impact", "English recommendation metadata")]
+    [InlineData("--resource-type", "exact match against the supported resource type")]
+    [InlineData("--resource-type", "substring match in the instance resource ID")]
+    [InlineData("--resource", "substring of the impacted resource's full ARM resource ID")]
+    [InlineData("--search", "Prefer a structured filter")]
+    [InlineData("--search", "original instance problem text before metadata enrichment")]
+    [InlineData("--retirement-date", "service-retirement date in English recommendation metadata")]
+    public void FilterDescriptions_ExplainMatchingBehavior(string optionName, string guidance)
+    {
+        var option = Assert.Single(Command.GetCommand().Options, option => option.Name == optionName);
+
+        Assert.Contains(guidance, option.Description);
+    }
+
+    [Fact]
+    public void Description_ExplainsOutputWithoutDuplicatingOrderingDetails()
+    {
+        var description = Command.GetCommand().Description;
+
+        Assert.Contains("ARM resource shape and a truncation indicator", description);
+        Assert.Contains("Each recommendation's name is its recommendation ID", description);
+        Assert.DoesNotContain("dailyPotentialSavings", description);
+        Assert.DoesNotContain("criticalityScore", description);
+        Assert.DoesNotContain("--subscription", description);
+        Assert.DoesNotContain("--service-group", description);
+        Assert.DoesNotContain("at most 100", description);
+    }
+
+    [Theory]
+    [InlineData("--top", "not distinct affected resources or recommendation groups")]
+    [InlineData("--top", "Defaults to 50")]
+    [InlineData("--top", "1 through 100")]
+    [InlineData("--service-group", "Specify either --service-group or --subscription, not both")]
+    [InlineData("--service-group", "If both are omitted, the configured default subscription is used")]
+    [InlineData("--service-group", "--resource-group applies only to subscription scope")]
+    public void OptionDescriptions_ExplainListingBehavior(string optionName, string guidance)
+    {
+        var option = Assert.Single(Command.GetCommand().Options, option => option.Name == optionName);
+        Assert.Contains(guidance, option.Description);
+    }
+
+    [Theory]
+    [InlineData(false, null, null)]
+    [InlineData(false, null, "false")]
+    [InlineData(false, null, "true")]
+    [InlineData(false, false, null)]
+    [InlineData(false, false, "false")]
+    [InlineData(false, false, "true")]
+    [InlineData(false, true, null)]
+    [InlineData(false, true, "false")]
+    [InlineData(false, true, "true")]
+    [InlineData(true, false, null)]
+    [InlineData(true, false, "false")]
+    [InlineData(true, false, "true")]
+    [InlineData(true, true, null)]
+    [InlineData(true, true, "false")]
+    [InlineData(true, true, "true")]
+    [InlineData(true, null, null)]
+    [InlineData(true, null, "false")]
+    [InlineData(true, null, "true")]
+    public async Task ExecuteAsync_ValidatesAndForwardsShowPrioritizationSignals(
+        bool serviceGroupScope, bool? prioritized, string? showSignals)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(filters => captured = filters),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+        var args = new List<string>
+        {
+            serviceGroupScope ? "--service-group" : "--subscription",
+            serviceGroupScope ? "commerce" : "sub123",
+        };
+        if (prioritized is { } prioritizedValue)
+        {
+            args.AddRange(["--prioritized", prioritizedValue ? "true" : "false"]);
+            if (prioritizedValue)
+            {
+                args.AddRange(["--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d"]);
+            }
+        }
+        if (showSignals is not null)
+        {
+            args.AddRange(["--show-prioritization-signals", showSignals]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        if (showSignals == "true" && prioritized != true)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("--show-prioritization-signals true requires --prioritized true", response.Message);
+            Assert.Null(captured);
+            await Service.DidNotReceive().ListRecommendationsAsync(
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Models.RecommendationFilters?>(),
+                Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(showSignals is null ? (bool?)null : bool.Parse(showSignals), captured.ShowPrioritizationSignals);
+        Assert.Equal(prioritized, captured.Prioritized);
+        Assert.Equal(serviceGroupScope ? "commerce" : null, captured.ServiceGroup);
+    }
+
+    [Theory]
+    [InlineData("--subscription sub1 --resource-group rg1", true)]
+    [InlineData("--subscription sub1", true)]  // Missing resource-group
+    [InlineData("", false)]                    // Missing all required options
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        // Arrange
+        if (shouldSucceed)
+        {
+            Service.ListRecommendationsAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<Models.RecommendationFilters?>(),
+                Arg.Any<int>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+        }
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+
+        // Assert
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (shouldSucceed)
+        {
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Contains("required", response.Message.ToLower());
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsRecommendationsList()
+    {
+        // Arrange
+        var expectedRecommendations = new List<Models.Recommendation>
+        {
+            new(new Models.RecommendationProperties(Category: "HighAvailability"), Id: "/recommendations/recId1", Name: "recId1"),
+            new(new Models.RecommendationProperties(Category: "Cost"), Id: "/recommendations/recId2", Name: "recId2"),
+            new(new Models.RecommendationProperties(Category: "Performance"), Id: "/recommendations/recId3", Name: "recId3")
+        };
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>(expectedRecommendations, false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+
+        Assert.Equal(expectedRecommendations.Count, result.Recommendations.Count);
+        Assert.Equal(expectedRecommendations[0].Id, result.Recommendations[0].Id);
+        Assert.Equal(expectedRecommendations[0].Name, result.Recommendations[0].Name);
+        Assert.Equal(expectedRecommendations[0].Properties.Category, result.Recommendations[0].Properties.Category);
+
+        // Verify the mock was called
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoRecommendations()
+    {
+        // Arrange
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+
+        Assert.Empty(result.Recommendations);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithTenant_PassesTenantToService()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            "tenant456",
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tenant", "tenant456");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            "tenant456",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesServiceErrors()
+    {
+        // Arrange
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Handles403Forbidden()
+    {
+        // Arrange
+        var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(forbiddenException);
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription", "--resource-group", "test-rg");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Handles404NotFound()
+    {
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not found");
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(notFoundException);
+
+        var response = await ExecuteCommandAsync("--subscription", "test-subscription");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Advisor recommendation not found", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MissingResourceGroup_ReturnsNotFound()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new KeyNotFoundException("Resource group 'missing' does not exist"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-subscription",
+            "--resource-group", "missing");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("Resource group 'missing' does not exist", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsFiltersToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            "--impact", "High",
+            "--status", "Postponed",
+            "--recommendation-type-id", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--resource", "mystorage",
+            "--search", "encryption");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("Security", captured!.Category);
+        Assert.Equal("High", captured.Impact);
+        Assert.Equal(Models.RecommendationStatus.Postponed, captured.Status);
+        Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured.RecommendationTypeId);
+        Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
+        Assert.Equal("mystorage", captured.Resource);
+        Assert.Equal("encryption", captured.Search);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TrimsCategoryAndImpactBeforeForwarding()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "  Security  ",
+            "--impact", "  High  ",
+            "--resource-type", "  Microsoft.Storage/storageAccounts  ",
+            "--resource", "  mystorage  ",
+            "--search", "  encryption  ");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("Security", captured!.Category);
+        Assert.Equal("High", captured.Impact);
+        Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
+        Assert.Equal("mystorage", captured.Resource);
+        Assert.Equal("encryption", captured.Search);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedFiltersAreNull()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Category);
+        Assert.Null(captured.Impact);
+        Assert.Null(captured.Status);
+        Assert.Null(captured.RecommendationTypeId);
+        Assert.Null(captured.ResourceType);
+        Assert.Null(captured.Resource);
+        Assert.Null(captured.Search);
+    }
+
+    [Theory]
+    [InlineData("--recommendation-type-id", "not-a-guid")]
+    [InlineData("--recommendation-type-id", "{1d70919c-1a4a-4f79-8300-bb576c291e9d}")]
+    [InlineData("--category", "Unknown")]
+    [InlineData("--impact", "Critical")]
+    [InlineData("--status", "Unknown")]
+    public async Task ExecuteAsync_InvalidClosedFilter_ReturnsBadRequest(string option, string value)
+    {
+        var response = await ExecuteCommandAsync("--subscription", "sub123", option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(option, response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public void ValidateOptions_UndefinedStatus_AddsValidationError()
+    {
+        var options = new RecommendationListOptions
+        {
+            Subscription = "sub123",
+            Status = (Models.RecommendationStatus)999,
+        };
+        var validationResult = new ValidationResult();
+
+        Command.ValidateOptions(options, validationResult);
+
+        Assert.False(validationResult.IsValid);
+        Assert.Contains(validationResult.Errors, error => error.Contains("--status", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RecommendationTypeId_TrimsAndNormalizesGuid()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--recommendation-type-id", "  1D70919C-1A4A-4F79-8300-BB576C291E9D  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured!.RecommendationTypeId);
+    }
+
+    [Theory]
+    [InlineData(null, 50)]
+    [InlineData(10, 10)]
+    [InlineData(0, 1)]
+    [InlineData(500, 100)]
+    public async Task ExecuteAsync_ForwardsTopWithClamping(int? top, int expectedTop)
+    {
+        // Arrange
+        int capturedTop = -1;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Do<int>(t => capturedTop = t),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var args = top is null
+            ? new[] { "--subscription", "sub123" }
+            : new[] { "--subscription", "sub123", "--top", top.Value.ToString() };
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal(expectedTop, capturedTop);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsMetadataFiltersToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "ServiceUpgradeAndRetirement",
+            "--tracking-ids", "QNY1-HB8",
+            "--retirement-date", "ge:2026-03-31");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("ServiceUpgradeAndRetirement", captured!.SubCategory);
+        Assert.Equal(["QNY1-HB8"], captured.TrackingIds);
+        Assert.Equal("ge", captured.RetirementDateOperator);
+        Assert.Equal(new DateOnly(2026, 3, 31), captured.RetirementDate);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsMultipleTrackingIdsToService()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tracking-ids", "QNY1-HB8", "9G0V-_G8", "ABC1-D23");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(["QNY1-HB8", "9G0V-_G8", "ABC1-D23"], captured!.TrackingIds);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedMetadataFiltersAreNull()
+    {
+        // Arrange
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.SubCategory);
+        Assert.Null(captured.TrackingIds);
+        Assert.Null(captured.RetirementDateOperator);
+        Assert.Null(captured.RetirementDate);
+    }
+
+    [Theory]
+    [InlineData("2026-03-31")]          // Missing operator
+    [InlineData("between:2026-03-31")]  // Unsupported operator
+    [InlineData("ge:31-03-2026")]       // Wrong date format
+    [InlineData("ge:not-a-date")]
+    public async Task ExecuteAsync_InvalidRetirementDate_ReturnsBadRequest(string retirementDate)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--retirement-date", retirementDate);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--retirement-date", response.Message);
+    }
+
+    [Theory]
+    [InlineData("--tracking-ids", "QNY1-HB8")]
+    [InlineData("--retirement-date", "ge:2026-03-31")]
+    public async Task ExecuteAsync_ConflictingSubCategory_ReturnsBadRequest(string option, string value)
+    {
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "ZoneResiliency",
+            option, value);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("ServiceUpgradeAndRetirement", response.Message);
+    }
+
+    [Theory]
+    [InlineData("--sub-category", "ZoneResiliency")]
+    [InlineData("--tracking-ids", "QNY1-HB8")]
+    [InlineData("--retirement-date", "ge:2026-03-31")]
+    public async Task ExecuteAsync_SecurityMetadataFilters_AreAccepted(
+        string option,
+        string value)
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            option,
+            value);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            "sub123",
+            Arg.Any<string?>(),
+            Arg.Is<Models.RecommendationFilters>(filters => filters.Category == "Security"),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceRetirementFiltersWithoutExplicitSubCategory_AreAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--tracking-ids", "QNY1-HB8");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RetirementDateWithoutExplicitSubCategory_IsAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--retirement-date", "ge:2026-03-31");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SecurityCategoryWithValidNonMetadataFilters_IsAccepted()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--category", "Security",
+            "--impact", "High",
+            "--resource-type", "Microsoft.Storage/storageAccounts",
+            "--search", "encryption");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MatchingSubCategory_IsAccepted()
+    {
+        // Arrange
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--sub-category", "serviceupgradeandretirement",
+            "--tracking-ids", "QNY1-HB8");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsMetadataEnrichedFields()
+    {
+        // Arrange
+        var recommendations = new List<Models.Recommendation>
+        {
+            new(
+                new Models.RecommendationProperties(
+                    Category: "HighAvailability",
+                    Impact: "High",
+                    RecommendationTypeId: "Type-A",
+                    RecommendationStatus: "New",
+                    CreatedTime: new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero),
+                    ShortDescription: new Models.RecommendationShortDescription(
+                        "Migrate off the retiring feature",
+                        "Move to the replacement SKU")),
+                Id: "resId1")
+        };
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>(recommendations, false));
+
+        // Act
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationListResult);
+
+        var recommendation = Assert.Single(result.Recommendations);
+        Assert.Equal("Type-A", recommendation.Properties.RecommendationTypeId);
+        Assert.Equal("HighAvailability", recommendation.Properties.Category);
+        Assert.Equal("High", recommendation.Properties.Impact);
+        Assert.Equal("New", recommendation.Properties.RecommendationStatus);
+        Assert.Equal(new DateTimeOffset(2026, 5, 13, 3, 19, 48, TimeSpan.Zero), recommendation.Properties.CreatedTime);
+        Assert.NotNull(recommendation.Properties.ShortDescription);
+        Assert.Equal("Migrate off the retiring feature", recommendation.Properties.ShortDescription!.Problem);
+        Assert.Equal("Move to the replacement SKU", recommendation.Properties.ShortDescription.Solution);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScope_SucceedsWithoutSubscription()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "  sg1  ");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("sg1", captured!.ServiceGroup);
+
+        // Service Group scope must not pass a subscription.
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Is<string?>(s => s == null),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithSubscription_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithResourceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--resource-group", "rg1");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group can only be used with subscription scope", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidServiceGroup_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--service-group", "bad/name");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoScopeProvided_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync("--prioritized", "true");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("subscription", response.Message.ToLower());
+    }
+
+    [Theory]
+    [InlineData("true", true)]
+    [InlineData("false", false)]
+    public async Task ExecuteAsync_ForwardsPrioritizedToService(string prioritized, bool expected)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--prioritized", prioritized,
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(expected, captured!.Prioritized);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OmittedPrioritized_IsNull()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub123");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.Prioritized);
+        Assert.Null(captured.ServiceGroup);
+    }
+
+    [Theory]
+    [InlineData("New")]
+    [InlineData("Postponed")]
+    [InlineData("Dismissed")]
+    [InlineData("Completed")]
+    public async Task ExecuteAsync_PrioritizedForwardsRequestedStatus(string status)
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--prioritized", "true",
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+            "--status", status);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Is<Models.RecommendationFilters?>(filters =>
+                filters != null && filters.Prioritized == true && filters.Status.ToString() == status),
+            Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceGroupScopeWithPrioritized_ForwardsBoth()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--prioritized", "true",
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+            "--category", "Cost");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal("sg1", captured!.ServiceGroup);
+        Assert.True(captured.Prioritized);
+        Assert.Equal("Cost", captured.Category);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrioritizedWithoutRecommendationType_ReturnsBadRequest()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--prioritized", "true");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--prioritized true requires --recommendation-type-id", response.Message);
+        await Service.DidNotReceive().ListRecommendationsAsync(
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+}

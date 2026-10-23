@@ -45,6 +45,11 @@ internal static class CosmosQueryValidator
         @"\bor\s+true\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    // Matches identifier-like tokens (letters and underscores) for blocked-keyword analysis.
+    private static readonly Regex IdentifierTokenPattern = RegexHelper.CreateRegex(
+        "[A-Za-z_]+",
+        RegexOptions.Compiled);
+
     // Keywords/patterns that might indicate attempts to execute stored procedures or triggers
     private static readonly HashSet<string> BlockedPatterns = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -106,7 +111,7 @@ internal static class CosmosQueryValidator
 
         // Check for attempts to execute stored procedures or triggers
         // While these cannot be executed via SQL queries, this is defense-in-depth
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexHelper.DefaultRegexTimeout);
+        var matches = IdentifierTokenPattern.Matches(withoutStrings);
 
         foreach (Match m in matches)
         {

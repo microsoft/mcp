@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
@@ -10,6 +11,9 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
 {
     private const string RawContentBase =
         "https://raw.githubusercontent.com/Azure/template-reference-generator/main/settings/remarks";
+
+    // GitHub host this service is permitted to reach.
+    private static readonly string[] s_allowedHosts = ["raw.githubusercontent.com"];
 
     public async Task<List<AzApiExample>> GetExamplesAsync(
         string resourceTypeName,
@@ -56,12 +60,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
             string? content = await FetchExampleContentAsync(@namespace, sample.Path, cancellationToken).ConfigureAwait(false);
             if (content != null)
             {
-                examples.Add(new AzApiExample
-                {
-                    Description = sample.Description,
-                    Content = content,
-                    SourcePath = $"settings/remarks/{@namespace}/{sample.Path}"
-                });
+                examples.Add(new(sample.Description, content, $"settings/remarks/{@namespace}/{sample.Path}"));
             }
         }
 
@@ -78,6 +77,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
 
         try
         {
+            EndpointValidator.ValidateExternalUrl(remarksUrl, s_allowedHosts);
             var response = await client.GetAsync(new Uri(remarksUrl), cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -105,6 +105,7 @@ public sealed class AzApiExamplesService(IHttpClientFactory httpClientFactory) :
 
         try
         {
+            EndpointValidator.ValidateExternalUrl(contentUrl, s_allowedHosts);
             var response = await client.GetAsync(new Uri(contentUrl), cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {

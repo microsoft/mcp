@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Fabric.Mcp.Tools.Docs.Options;
+using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.Docs.Options.BestPractices;
 using Fabric.Mcp.Tools.Docs.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
@@ -17,6 +16,7 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     Name = "best-practices",
     Title = "Best Practices",
     Description = "Retrieves embedded best practice documentation for a specific Fabric topic. Use this when the user needs guidance, recommendations, or implementation patterns for Fabric features. Returns detailed best practice content.",
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
@@ -24,38 +24,20 @@ namespace Fabric.Mcp.Tools.Docs.Commands.BestPractices;
     LocalRequired = false,
     Secret = false)]
 public sealed class GetBestPracticesCommand(IFabricPublicApiService service, ILogger<GetBestPracticesCommand> logger)
-    : GlobalCommand<GetBestPracticesOptions>()
+    : AuthenticatedCommand<GetBestPracticesOptions, GetBestPracticesCommand.GetBestPracticesCommandResult>
 {
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricPublicApiService _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    protected override void RegisterOptions(Command command)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, GetBestPracticesOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.Topic);
-    }
-
-    protected override GetBestPracticesOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Topic = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Topic.Name);
-        return options;
-    }
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return Task.FromResult(context.Response);
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            var bestPractices = _service.GetTopicBestPractices(options.Topic!);
+            var bestPractices = _service.GetTopicBestPractices(options.Topic);
 
-            context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
+            context.Response.Results = ResponseResult.Create(
+                new(bestPractices),
+                FabricJsonContext.Default.GetBestPracticesCommandResult);
         }
         catch (ArgumentException argEx)
         {
@@ -71,4 +53,7 @@ public sealed class GetBestPracticesCommand(IFabricPublicApiService service, ILo
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record GetBestPracticesCommandResult(
+        [property: JsonPropertyName("bestPractices")] IEnumerable<string> BestPractices);
 }

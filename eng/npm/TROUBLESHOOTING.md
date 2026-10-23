@@ -23,6 +23,15 @@ Process exited with code: 0
 
 This is useful if you want to see where the package is installed and how it's resolving the platform specific dependency.
 
+# Platform package auto-install
+
+The wrapper runs the server from a platform-specific package (for example `@azure/mcp-linux-x64`) that npm installs as an optional dependency. npm skips it in some cases, most commonly when the running Node version does not satisfy the package's `engines` field. With npm, the wrapper's install script then usually fails the install with a "Missing required package" error. Installs that skip install scripts (pnpm and bun by default, or npm with `--ignore-scripts`) complete without it. When the wrapper can't find it at startup, it runs `npm install --no-save` itself, into the first writable one of:
+
+1. A `.platform` directory inside the wrapper package.
+2. A per-user cache directory: `~/Library/Caches/microsoft-mcp/<package>/<version>` on macOS, `%LOCALAPPDATA%\microsoft-mcp\<package>\<version>` on Windows, and `$XDG_CACHE_HOME/microsoft-mcp/<package>/<version>` (default `~/.cache`) elsewhere.
+
+It never installs into the current working directory. Later runs reuse the install, and with `DEBUG=true` the wrapper logs which directory it used. Delete that directory to force a fresh install.
+
 # NPX Debugging
 
 To debug javascript invoked during the npx call, you can start the run with the node option `--inspect-brk` enabled:

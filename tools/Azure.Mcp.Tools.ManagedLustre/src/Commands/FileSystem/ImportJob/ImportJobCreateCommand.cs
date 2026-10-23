@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ManagedLustre.Options;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ImportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
 
@@ -26,51 +25,21 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.ImportJob;
         - import-prefixes: Blob prefixes to import (default: imports all data from root '/')
         - maximum-errors: Maximum errors allowed before job failure (-1: infinite, 0: fail on first error, default: use service default)
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger)
-    : BaseManagedLustreCommand<ImportJobCreateOptions>(logger)
+public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogger<ImportJobCreateCommand> logger, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<ImportJobCreateOptions, ImportJobCreateCommand.ImportJobCreateResult>(subscriptionResolver)
 {
-
     private readonly IManagedLustreService _service = service;
-    private new readonly ILogger<ImportJobCreateCommand> _logger = logger;
+    private readonly ILogger<ImportJobCreateCommand> _logger = logger;
 
-    protected override void RegisterOptions(Command command)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ImportJobCreateOptions options, CancellationToken cancellationToken)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption.AsRequired());
-        command.Options.Add(ManagedLustreOptionDefinitions.OptionalJobNameOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.ConflictResolutionModeOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.ImportPrefixesOption);
-        command.Options.Add(ManagedLustreOptionDefinitions.MaximumErrorsOption);
-    }
-
-    protected override ImportJobCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
-        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalJobNameOption.Name);
-        options.ConflictResolutionMode = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.ConflictResolutionModeOption.Name);
-        options.ImportPrefixes = parseResult.GetValueOrDefault<string[]>(ManagedLustreOptionDefinitions.ImportPrefixesOption.Name);
-        options.MaximumErrors = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.MaximumErrorsOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
 
@@ -86,14 +55,13 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
 
             var job = await _service.CreateImportJobAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.FileSystemName!,
+                options.ResourceGroup,
+                options.FilesystemName,
                 options.JobName,
                 options.ConflictResolutionMode,
                 options.ImportPrefixes,
                 options.MaximumErrors,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(job), ManagedLustreJsonContext.Default.ImportJobCreateResult);
@@ -101,12 +69,12 @@ public sealed class ImportJobCreateCommand(IManagedLustreService service, ILogge
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating import job for AMLFS filesystem {FileSystem}.",
-                options.FileSystemName);
+                options.FilesystemName);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record ImportJobCreateResult(string JobName);
+    public sealed record ImportJobCreateResult(string JobName);
 }

@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Governance;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 
@@ -19,56 +17,51 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Governance;
     Name = "immutability",
     Title = "Configure Vault Immutability",
     Description = """
-        Configures the immutability state for a backup vault. States include 'Disabled', 'Enabled',
-        or 'Locked'. Warning: 'Locked' state is irreversible.
+        Configures the immutability state for a backup vault. --immutability-state 'Locked'
+        is irreversible, 'Enabled' is an alias for 'Unlocked'. --immutability-type 'TimeBased'
+        also requires --immutability-duration-days (30-36135) unless --immutability-state
+        is 'Disabled'.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService) : BaseAzureBackupCommand<GovernanceImmutabilityOptions>()
+public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutabilityCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+    : BaseAzureBackupCommand<GovernanceImmutabilityOptions, GovernanceImmutabilityCommand.GovernanceImmutabilityCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<GovernanceImmutabilityCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(GovernanceImmutabilityOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureBackupOptionDefinitions.ImmutabilityState.AsRequired());
-        command.Validators.Add(commandResult =>
+        base.ValidateOptions(options, validationResult);
+
+        // Enum values are validated by the model binder. Extra semantic rules:
+        //  * TimeBased requires a duration in [30, 36135] days, but only when the state
+        //    is not Disabled (the service accepts and ignores duration when state=Disabled).
+        //  * AsPerPolicy ignores duration.
+        //  * Locked is IRREVERSIBLE - surfaced in the command description; we do not
+        //    silently reject it here because the caller may legitimately want to lock.
+        if (options.ImmutabilityType == AzureBackupImmutabilityType.TimeBased
+            && options.ImmutabilityState != AzureBackupImmutabilityState.Disabled)
         {
-            if (commandResult.HasOptionResult(AzureBackupOptionDefinitions.ImmutabilityState.Name))
+            if (options.ImmutabilityDurationDays is null)
             {
-                var value = commandResult.GetValue<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
-                if (!string.IsNullOrEmpty(value) &&
-                    !value.Equals("Disabled", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Enabled", StringComparison.OrdinalIgnoreCase) &&
-                    !value.Equals("Locked", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("--immutability-state must be 'Disabled', 'Enabled', or 'Locked'. Warning: 'Locked' is irreversible.");
-                }
+                validationResult.Errors.Add("--immutability-duration-days is required when --immutability-type is 'TimeBased' and --immutability-state is not 'Disabled'.");
             }
-        });
-    }
-
-    protected override GovernanceImmutabilityOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ImmutabilityState = parseResult.GetValueOrDefault<string>(AzureBackupOptionDefinitions.ImmutabilityState.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
+            else if (options.ImmutabilityDurationDays < 30 || options.ImmutabilityDurationDays > 36135)
+            {
+                validationResult.Errors.Add("--immutability-duration-days must be between 30 and 36135 for TimeBased immutability.");
+            }
         }
+    }
 
-        var options = BindOptions(parseResult);
-
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GovernanceImmutabilityOptions options, CancellationToken cancellationToken)
+    {
+        AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);
         AzureBackupTelemetryTags.AddVaultTags(context.Activity, options.VaultType);
 
         try
@@ -77,10 +70,11 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
                 options.Vault!,
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.ImmutabilityState!,
+                options.ImmutabilityState,
+                options.ImmutabilityType,
+                options.ImmutabilityDurationDays,
                 options.VaultType,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -108,5 +102,5 @@ public sealed class GovernanceImmutabilityCommand(ILogger<GovernanceImmutability
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record GovernanceImmutabilityCommandResult(OperationResult Result);
+    public sealed record GovernanceImmutabilityCommandResult(OperationResult Result);
 }

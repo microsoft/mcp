@@ -27,46 +27,44 @@ public class FabricPublicApiService(
 
     #region IFabricPublicApiService
 
-    public async Task<FabricWorkloadPublicApi> GetWorkloadPublicApis(string workload, CancellationToken cancellationToken)
+    public async Task<FabricPublicApi> GetPublicApis(string itemType, CancellationToken cancellationToken)
     {
-        var workloadApiSpecPath = string.Format(FormattedSpecPath, workload);
+        var apiSpecPath = string.Format(FormattedSpecPath, itemType);
 
-        _logger.LogInformation("Getting public API specifications for workload {workload}", workload);
+        _logger.LogInformation("Getting public API specifications for item type {itemType}", itemType);
 
-        var workloadSpec = await _resourceProviderService.GetResource(workloadApiSpecPath, cancellationToken);
+        var spec = await _resourceProviderService.GetResource(apiSpecPath, cancellationToken);
 
-        return new(workloadSpec ?? string.Empty, await GetWorkloadSpecDefinitionsAsync(workload, cancellationToken));
+        return new(spec ?? string.Empty, await GetSpecDefinitionsAsync(itemType, cancellationToken));
     }
 
-    public async Task<IEnumerable<string>> ListWorkloadsAsync(CancellationToken cancellationToken)
+    public async Task<IEnumerable<string>> ListItemTypesAsync(CancellationToken cancellationToken)
     {
         var contentDirPath = BaseResourcePath;
 
-        _logger.LogInformation("Listing available Fabric workloads");
+        _logger.LogInformation("Listing available Fabric item types");
 
-        var workloads = await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory, cancellationToken);
-        return workloads.Where(w => !string.Equals(w, "common", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var itemTypes = await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory, cancellationToken);
+        return itemTypes.Where(w => !string.Equals(w, "common", StringComparison.OrdinalIgnoreCase)).ToArray();
     }
 
-    public async Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType, CancellationToken cancellationToken)
+    public async Task<IDictionary<string, string>> GetExamplesAsync(string itemType, CancellationToken cancellationToken)
     {
-        // Construct the full path: workloadType/examples
-        var workloadExamplesDirPath = BaseResourcePath + workloadType + "/" + APISpecExamplesDirName;
+        // Construct the full path: itemType/examples
+        var examplesDirPath = BaseResourcePath + itemType + "/" + APISpecExamplesDirName;
 
-        _logger.LogInformation("Getting example files for workload {workloadType}", workloadType);
+        _logger.LogInformation("Getting example files for item type {itemType}", itemType);
 
-        var res = new Dictionary<string, string>();
-
-        return await GetExamplesFromDirectoryAsync(workloadExamplesDirPath, cancellationToken);
+        return await GetExamplesFromDirectoryAsync(examplesDirPath, cancellationToken);
     }
 
-    public string GetWorkloadItemDefinition(string workloadType)
+    public string GetItemDefinition(string itemType)
     {
-        var workloadItemDefinitionPattern = BuildItemDefinitionPattern(workloadType);
+        var itemDefinitionPattern = BuildItemDefinitionPattern(itemType);
 
-        _logger.LogInformation("Getting item definition for workload {workloadType}", workloadType);
+        _logger.LogInformation("Getting item definition for item type {itemType}", itemType);
 
-        return EmbeddedResourceProviderService.GetEmbeddedResource(workloadItemDefinitionPattern);
+        return EmbeddedResourceProviderService.GetEmbeddedResource(itemDefinitionPattern);
     }
 
     public IEnumerable<string> GetTopicBestPractices(string topic)
@@ -80,30 +78,30 @@ public class FabricPublicApiService(
 
     /// <summary>
     /// Builds a regex pattern for matching item definition resources.
-    /// Workload names from directory listings are camelCase (e.g., "kqlDatabase"),
+    /// Item type names from directory listings are camelCase (e.g., "kqlDatabase"),
     /// while item definition files use kebab-case (e.g., "kql-database-definition.md").
     /// This method handles three kinds of naming mismatches:
     /// 1. camelCase boundaries → optional hyphens plus extra kebab-case segments
     ///    (e.g., "mirroredAzureDatabricksCatalog" matches "mirrored-azuredatabricks-unitycatalog")
-    /// 2. All-lowercase workload names → optional hyphens between every character
+    /// 2. All-lowercase item type names → optional hyphens between every character
     ///    (e.g., "sparkjob" matches "spark-job")
-    /// 3. Trailing "definition" in workload names is stripped since the file suffix
+    /// 3. Trailing "definition" in item type names is stripped since the file suffix
     ///    already includes "-definition.md" (e.g., "sparkjobdefinition" → "sparkjob")
     /// </summary>
-    internal static string BuildItemDefinitionPattern(string workloadType)
+    internal static string BuildItemDefinitionPattern(string itemType)
     {
         // Strip trailing "definition" since the file naming convention already includes "-definition.md"
-        if (workloadType.EndsWith("definition", StringComparison.OrdinalIgnoreCase))
+        if (itemType.EndsWith("definition", StringComparison.OrdinalIgnoreCase))
         {
-            workloadType = workloadType[..^10];
+            itemType = itemType[..^10];
         }
 
         var sb = new StringBuilder("item-definitions/");
-        for (int i = 0; i < workloadType.Length; i++)
+        for (int i = 0; i < itemType.Length; i++)
         {
             if (i > 0)
             {
-                if (char.IsUpper(workloadType[i]))
+                if (char.IsUpper(itemType[i]))
                 {
                     // At camelCase boundaries, allow extra lowercase chars and hyphens
                     // to handle naming inconsistencies (e.g., "AzureDatabricksCatalog"
@@ -118,29 +116,29 @@ public class FabricPublicApiService(
                 }
             }
 
-            sb.Append(char.ToLowerInvariant(workloadType[i]));
+            sb.Append(char.ToLowerInvariant(itemType[i]));
         }
 
         sb.Append("-definition\\.md");
         return sb.ToString();
     }
 
-    private async Task<IDictionary<string, string>> GetWorkloadSpecDefinitionsAsync(string workloadType, CancellationToken cancellationToken)
+    private async Task<IDictionary<string, string>> GetSpecDefinitionsAsync(string itemType, CancellationToken cancellationToken)
     {
-        var workloadDirPath = BaseResourcePath + workloadType + '/';
+        var specDirPath = BaseResourcePath + itemType + '/';
 
-        var content = await _resourceProviderService.ListResourcesInPath(workloadDirPath, cancellationToken: cancellationToken);
+        var content = await _resourceProviderService.ListResourcesInPath(specDirPath, cancellationToken: cancellationToken);
 
         var res = new Dictionary<string, string>();
 
         if (content.Contains(APISpecDefinitionsFileName))
         {
-            res[APISpecDefinitionsFileName] = await _resourceProviderService.GetResource($"{workloadDirPath}{APISpecDefinitionsFileName}", cancellationToken);
+            res[APISpecDefinitionsFileName] = await _resourceProviderService.GetResource($"{specDirPath}{APISpecDefinitionsFileName}", cancellationToken);
         }
 
         if (content.Contains(APISpecDefinitionsDirName))
         {
-            var definitions = await _resourceProviderService.ListResourcesInPath($"{workloadDirPath}{APISpecDefinitionsDirName}", cancellationToken: cancellationToken);
+            var definitions = await _resourceProviderService.ListResourcesInPath($"{specDirPath}{APISpecDefinitionsDirName}", cancellationToken: cancellationToken);
             foreach (var definition in definitions)
             {
 

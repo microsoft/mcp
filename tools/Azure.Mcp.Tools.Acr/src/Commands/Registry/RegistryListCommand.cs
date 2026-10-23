@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;
@@ -18,33 +20,27 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
         includes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results
         (consistent with other list commands).
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService) : BaseAcrCommand<RegistryListOptions>
+public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAcrService acrService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<RegistryListOptions, RegistryListCommand.RegistryListCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<RegistryListCommand> _logger = logger;
     private readonly IAcrService _acrService = acrService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RegistryListOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var registries = await _acrService.ListRegistries(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(registries?.Results ?? [], registries?.AreResultsTruncated ?? false), AcrJsonContext.Default.RegistryListCommandResult);
@@ -60,5 +56,5 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger, IAc
         return context.Response;
     }
 
-    internal record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
+    public record RegistryListCommandResult(List<Models.AcrRegistryInfo> Registries, bool AreResultsTruncated);
 }

@@ -1,6 +1,9 @@
 parameters:
 - name: DependsOn
   type: object
+- name: PypiDevFeed
+  type: string
+  default: 'public/azure-sdk-for-python'
 
 jobs:
 - job: PackPyPI
@@ -9,6 +12,12 @@ jobs:
   timeoutInMinutes: 120
   steps:
   - checkout: self
+
+  - task: PipAuthenticate@1
+    displayName: Authenticate to Dev feed for pip
+    inputs:
+      artifactFeeds: ${{ parameters.PypiDevFeed }}
+      onlyAddExtraIndex: false
 
   - task: UsePythonVersion@0
     displayName: Use Python 3.12

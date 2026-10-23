@@ -1,0 +1,53 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "scope": [
+      "Accounting",
+      "US"
+    ],
+    "connectionId": "4eb6b767-e786-45ed-b7cf-d25023e52222",
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "fullyQualifiedScope": [
+              "Accounting",
+              "US",
+              "Taxes"
+            ],
+            "name": "TaxInfo"
+          },
+          {
+            "fullyQualifiedScope": [
+              "Accounting",
+              "US",
+              "Taxes"
+            ],
+            "name": "AnotherTable"
+          },
+          {
+            "fullyQualifiedScope": [
+              "Accounting",
+              "US",
+              "Receivable"
+            ],
+            "name": "AccountRecords"
+          },
+          {
+            "fullyQualifiedScope": [
+              "Accounting",
+              "US",
+              "Receivable"
+            ],
+            "name": "Invoices"
+          }
+        ],
+        "continuationToken": null,
+        "continuationUri": null
+      }
+    }
+  }
+}

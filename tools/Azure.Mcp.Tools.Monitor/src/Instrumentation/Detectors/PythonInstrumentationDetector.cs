@@ -1,6 +1,9 @@
-using Azure.Mcp.Tools.Monitor.Models;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Detectors;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
 /// <summary>
 /// Detects Python application instrumentation status.
@@ -48,10 +51,7 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
         // No dependency files found = Greenfield
         if (evidenceFile == null)
         {
-            return new InstrumentationResult(
-                InstrumentationState.Greenfield,
-                null
-            );
+            return new(InstrumentationState.Greenfield, null);
         }
 
         // Normalize and deduplicate package names
@@ -122,10 +122,7 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
         // }
 
         // No instrumentation found (Brownfield checks disabled)
-        return new InstrumentationResult(
-            InstrumentationState.Greenfield,
-            null
-        );
+        return new(InstrumentationState.Greenfield, null);
     }
 
     /// <summary>
@@ -148,13 +145,13 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
             }
 
             // Skip comments
-            if (trimmed.StartsWith("#"))
+            if (trimmed.StartsWith('#'))
             {
                 continue;
             }
 
             // Skip flags like -r, -e, --index-url, etc.
-            if (trimmed.StartsWith("-"))
+            if (trimmed.StartsWith('-'))
             {
                 continue;
             }
@@ -180,7 +177,7 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
         var endIndex = line.Length;
 
         // Find the earliest occurrence of any delimiter
-        char[] delimiters = { '=', '<', '>', '!', '~', '[', ';', '@', ' ' };
+        char[] delimiters = ['=', '<', '>', '!', '~', '[', ';', '@', ' '];
         foreach (var delimiter in delimiters)
         {
             var index = line.IndexOf(delimiter);
@@ -208,25 +205,25 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
             var trimmed = line.Trim();
 
             // Check for section headers
-            if (trimmed.StartsWith("["))
+            if (trimmed.StartsWith('['))
             {
                 inPoetryDependencies = trimmed == "[tool.poetry.dependencies]";
                 continue;
             }
 
             // Check for inline dependencies array: dependencies = ["pkg1", "pkg2"]
-            if (trimmed.StartsWith("dependencies") && trimmed.Contains("=") && trimmed.Contains("["))
+            if (trimmed.StartsWith("dependencies") && trimmed.Contains('=') && trimmed.Contains('['))
             {
                 packages.AddRange(ExtractPackagesFromArray(trimmed));
                 continue;
             }
 
             // Poetry format: package-name = "version" or package-name = {version = "x"}
-            if (inPoetryDependencies && trimmed.Contains("="))
+            if (inPoetryDependencies && trimmed.Contains('='))
             {
                 var packageName = trimmed.Split('=')[0].Trim();
                 // Skip python version and empty names
-                if (!string.IsNullOrEmpty(packageName) && packageName.ToLowerInvariant() != "python")
+                if (!string.IsNullOrEmpty(packageName) && !packageName.Equals("python", StringComparison.OrdinalIgnoreCase))
                 {
                     packages.Add(packageName);
                 }

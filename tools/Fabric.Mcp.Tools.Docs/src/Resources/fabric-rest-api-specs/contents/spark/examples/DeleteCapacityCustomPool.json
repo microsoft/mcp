@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "capacityId": "ce6db599-0877-4fb1-aa1f-9b1b8d99dc40",
+        "beta": true,
+        "poolId": "2367293d-b70b-4b33-97f2-161b8d04a8d7"
+    },
+    "responses": {
+        "200": {}
+    }
+}

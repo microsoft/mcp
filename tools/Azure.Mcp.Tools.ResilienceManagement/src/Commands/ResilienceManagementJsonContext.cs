@@ -1,0 +1,114 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans.Resources;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans;
+using Azure.Mcp.Tools.ResilienceManagement.Commands.UsagePlans.Enrollments;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
+
+namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
+
+[JsonSerializable(typeof(GoalAssignmentGetCommand.GoalAssignmentGetCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentCreateCommand.GoalAssignmentCreateCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentUpdateCommand.GoalAssignmentUpdateCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentDeleteCommand.GoalAssignmentDeleteCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentRecommendCapacityCommand.GoalAssignmentRecommendCapacityCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentRefreshResourcesCommand.GoalAssignmentRefreshResourcesCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentUpdateResourcesCommand.GoalAssignmentUpdateResourcesCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentOperationResult))]
+[JsonSerializable(typeof(GoalResourceResiliencyInfo))]
+[JsonSerializable(typeof(GoalResourceConfirmationInfo))]
+[JsonSerializable(typeof(GoalServiceLevelTargetInfo))]
+[JsonSerializable(typeof(GoalAssignmentInfo))]
+[JsonSerializable(typeof(GoalAssignmentInfoProperties))]
+[JsonSerializable(typeof(GoalAssignmentInfoSystemData))]
+[JsonSerializable(typeof(GoalResourceGetCommand.GoalResourceGetCommandResult))]
+[JsonSerializable(typeof(GoalResourceInfo))]
+[JsonSerializable(typeof(GoalResourceInfoProperties))]
+[JsonSerializable(typeof(GoalResourceInfoSystemData))]
+[JsonSerializable(typeof(UsagePlanGetCommand.UsagePlanGetCommandResult))]
+[JsonSerializable(typeof(UsagePlanCreateCommand.UsagePlanCreateCommandResult))]
+[JsonSerializable(typeof(UsagePlanDeleteCommand.UsagePlanDeleteCommandResult))]
+[JsonSerializable(typeof(UsagePlanInfo))]
+[JsonSerializable(typeof(UsagePlanInfoProperties))]
+[JsonSerializable(typeof(UsagePlanInfoSystemData))]
+[JsonSerializable(typeof(UsagePlanEnrollmentGetCommand.UsagePlanEnrollmentGetCommandResult))]
+[JsonSerializable(typeof(UsagePlanEnrollmentCreateCommand.UsagePlanEnrollmentCreateCommandResult))]
+[JsonSerializable(typeof(UsagePlanEnrollmentDeleteCommand.UsagePlanEnrollmentDeleteCommandResult))]
+[JsonSerializable(typeof(UsagePlanEnrollmentInfo))]
+[JsonSerializable(typeof(UsagePlanEnrollmentInfoProperties))]
+[JsonSerializable(typeof(UsagePlanEnrollmentInfoErrorDetails))]
+[JsonSerializable(typeof(UsagePlanEnrollmentInfoSystemData))]
+[JsonSerializable(typeof(DrillInfo))]
+[JsonSerializable(typeof(DrillResourceInfo))]
+[JsonSerializable(typeof(DrillCreateCommand.DrillCreateCommandResult))]
+[JsonSerializable(typeof(DrillGetCommand.DrillGetCommandResult))]
+[JsonSerializable(typeof(DrillStartCommand.DrillStartCommandResult))]
+[JsonSerializable(typeof(DrillEndCommand.DrillEndCommandResult))]
+[JsonSerializable(typeof(DrillUpdateCommand.DrillUpdateCommandResult))]
+[JsonSerializable(typeof(DrillDeleteCommand.DrillDeleteCommandResult))]
+[JsonSerializable(typeof(DrillResourceGetCommand.DrillResourceGetCommandResult))]
+[JsonSerializable(typeof(DrillAddOrUpdateResourcesCommand.DrillAddOrUpdateResourcesCommandResult))]
+[JsonSerializable(typeof(DrillAddOrUpdateResourcesResult))]
+[JsonSerializable(typeof(DrillRunGetCommand.DrillRunGetCommandResult))]
+[JsonSerializable(typeof(DrillRunAddNotesCommand.DrillRunAddNotesCommandResult))]
+[JsonSerializable(typeof(DrillRunFailoverCommand.DrillRunFailoverCommandResult))]
+[JsonSerializable(typeof(DrillRunResumeCommand.DrillRunResumeCommandResult))]
+[JsonSerializable(typeof(DrillRunMarkCompleteCommand.DrillRunMarkCompleteCommandResult))]
+[JsonSerializable(typeof(DrillRunMarkCompleteResult))]
+[JsonSerializable(typeof(DrillRunGenerateReportCommand.DrillRunGenerateReportCommandResult))]
+[JsonSerializable(typeof(DrillRunGenerateReportResult))]
+[JsonSerializable(typeof(DrillRunReportInfo))]
+[JsonSerializable(typeof(DrillRunReportStageInfo))]
+[JsonSerializable(typeof(DrillRunReportErrorInfo))]
+[JsonSerializable(typeof(DrillRunGetReportDownloadUrlCommand.DrillRunGetReportDownloadUrlCommandResult))]
+[JsonSerializable(typeof(DrillRunReportDownloadInfo))]
+[JsonSerializable(typeof(DrillRunReprotectCommand.DrillRunReprotectCommandResult))]
+[JsonSerializable(typeof(DrillRunResourceGetCommand.DrillRunResourceGetCommandResult))]
+[JsonSerializable(typeof(DrillCheckResyncReadinessCommand.DrillCheckResyncReadinessCommandResult))]
+[JsonSerializable(typeof(DrillResyncReadinessResult))]
+[JsonSerializable(typeof(DrillValidateForExecutionCommand.DrillValidateForExecutionCommandResult))]
+[JsonSerializable(typeof(DrillValidateForExecutionResult))]
+[JsonSerializable(typeof(RecoveryPlanGetCommand.RecoveryPlanGetCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanCreateCommand.RecoveryPlanCreateCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanInfo))]
+[JsonSerializable(typeof(RecoveryPlanIdentityInfo))]
+[JsonSerializable(typeof(RecoveryPlanGroupInfo))]
+[JsonSerializable(typeof(RecoveryPlanDeleteCommand.RecoveryPlanDeleteCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanFailoverResult))]
+[JsonSerializable(typeof(RecoveryPlanFinalizeResult))]
+[JsonSerializable(typeof(RecoveryPlanReprotectResult))]
+[JsonSerializable(typeof(RecoveryPlanValidateForFailoverResult))]
+[JsonSerializable(typeof(RecoveryPlanValidateForReprotectResult))]
+[JsonSerializable(typeof(RecoveryPlanValidateForOperationResult))]
+[JsonSerializable(typeof(RecoveryPlanFailoverQualification))]
+[JsonSerializable(typeof(RecoveryPlanUpdateResourcesCommand.RecoveryPlanUpdateResourcesCommandResult))]
+[JsonSerializable(typeof(RecoveryPlanReadinessResult))]
+[JsonSerializable(typeof(RecoveryPlanReadinessError))]
+[JsonSerializable(typeof(RecoveryPlanReadinessFailedTask))]
+[JsonSerializable(typeof(RecoveryPlanReadinessFailedResource))]
+[JsonSerializable(typeof(RecoveryPlanUpdateResourcesResult))]
+[JsonSerializable(typeof(RecoveryPlanUpdateResourcesFailedResource))]
+[JsonSerializable(typeof(RecoveryPlanUpdateResourcesError))]
+[JsonSerializable(typeof(RecoveryResourceGetCommand.RecoveryResourceGetCommandResult))]
+[JsonSerializable(typeof(RecoveryJobGetCommand.RecoveryJobGetCommandResult))]
+[JsonSerializable(typeof(RecoveryJobRetryResult))]
+[JsonSerializable(typeof(RecoveryJobResumeResult))]
+[JsonSerializable(typeof(RecoveryJobResourceGetCommand.RecoveryJobResourceGetCommandResult))]
+[JsonSerializable(typeof(ResourceSummary))]
+[JsonSerializable(typeof(JsonElement))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
+internal sealed partial class ResilienceManagementJsonContext : JsonSerializerContext
+{
+}

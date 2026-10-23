@@ -1,8 +1,11 @@
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for Python greenfield projects (no existing telemetry).
@@ -46,10 +49,7 @@ public class PythonGreenfieldGenerator : IGenerator
 
         var builder = new OnboardingSpecBuilder(analysis)
             .WithAgentPreExecuteInstruction(AgentPreExecuteInstruction)
-            .WithDecision(
-                Intents.Onboard,
-                "azure-monitor-opentelemetry",
-                description);
+            .WithDecision(Intents.Onboard, "azure-monitor-opentelemetry", description);
 
         // Step 1: Review educational materials
         builder.AddReviewEducationAction(
@@ -342,7 +342,7 @@ configure_azure_monitor()
 
         // Add instrumentor calls for detected GenAI libraries
         var genaiPackages = GetGenAIInstrumentationPackages(dependencies);
-        if (genaiPackages.Any())
+        if (genaiPackages.Count != 0)
         {
             foreach (var pkg in genaiPackages)
             {

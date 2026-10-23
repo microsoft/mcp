@@ -5,13 +5,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using CopilotCliTester.Models;
+using McpToolEvaluator.Core;
+using McpToolEvaluator.Core.Models;
 
 namespace CopilotCliTester;
 
 /// <summary>
 /// E2E Test Runner for Azure MCP tools using Copilot SDK. Runs prompts from e2eTestPrompts.md and verifies correct tools are invoked.
 /// </summary>
-static class Program
+internal static class Program
 {
     private static readonly TimeSpan PerAttemptTimeout = TimeSpan.FromMinutes(5);
 
@@ -19,8 +21,8 @@ static class Program
     private static readonly Lock _reportLock = new();
     private static readonly string ServerProjectRelativePath =
         Path.Combine("servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
-    private static readonly string runId = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 6);
-    static async Task<int> Main(string[] args)
+    private static readonly string s_runId = string.Concat(DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss"), "-", Guid.NewGuid().ToString("N").AsSpan(0, 6));
+    private static async Task<int> Main(string[] args)
     {
         var command = args.Length > 0 ? args[0].ToLowerInvariant() : "run";
 
@@ -32,7 +34,7 @@ static class Program
         };
     }
 
-    static int ShowHelp()
+    private static int ShowHelp()
     {
         Console.WriteLine("""
             Azure MCP E2E Test Runner (Copilot SDK)
@@ -57,7 +59,7 @@ static class Program
         return 0;
     }
 
-    static async Task<int> RunE2ETestsFromArgs(string[] args)
+    private static async Task<int> RunE2ETestsFromArgs(string[] args)
     {
         string? namespaceFilter = null, tool = null, outputDir = CopilotTestConstants.OutputDirectory, model = CopilotTestConstants.ModelName, promptsFile = null;
         int max = CopilotTestConstants.MaxPrompts, retries = CopilotTestConstants.MaxRetryAttempts, parallel = CopilotTestConstants.Parallel;
@@ -178,13 +180,13 @@ static class Program
         return await RunE2ETests(namespaceFilter, tool, max, retries, onePerTool, outputDir, model, parallel, threshold, failOnNoMatch, promptsFile);
     }
 
-    static void CleanStaleWorkspaces()
+    private static void CleanStaleWorkspaces()
     {
         try
         {
             var staleDirectoryDeleteThreshold = DateTimeOffset.UtcNow.AddMinutes(-20);
             var allDirectories = Directory.GetDirectories(Path.GetTempPath(), $"mcp-test-*")
-                .Where(dir => !dir.Contains(runId) && Directory.GetCreationTimeUtc(dir) < staleDirectoryDeleteThreshold);
+                .Where(dir => !dir.Contains(s_runId) && Directory.GetCreationTimeUtc(dir) < staleDirectoryDeleteThreshold);
             var count = 0;
             foreach (var directory in allDirectories)
             {
@@ -209,7 +211,7 @@ static class Program
         }
     }
 
-    static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, double threshold, bool failOnNoMatch, string? promptsFile = null)
+    private static async Task<int> RunE2ETests(string? namespaceFilter, string? tool, int max, int retries, bool onePerTool, string outputDir, string model, int parallel, double threshold, bool failOnNoMatch, string? promptsFile = null)
     {
         CleanStaleWorkspaces();
 
@@ -316,7 +318,7 @@ static class Program
             try
             {
                 // Create a dedicated client per task. When the client is disposed, it kills its CLI process tree, ensuring child azmcp.exe processes are cleaned up.
-                var (client, workspacePath) = AgentRunner.CreateSharedClient(runId, debug, outputDir);
+                var (client, workspacePath) = AgentRunner.CreateSharedClient(s_runId, debug, outputDir);
                 await using var runner = new AgentRunner(client, serverExecutablePath, outputDir, workspacePath);
                 var result = await ProcessPromptAsync(runner, prompt, prompt.Namespace, testContext, model, retries);
                 AppendResultToMarkdown(reportFile, result);
@@ -377,7 +379,7 @@ static class Program
     /// <summary>
     /// Processes a single prompt with retry logic and returns the test result.
     /// </summary>
-    static async Task<TestResult> ProcessPromptAsync(
+    private static async Task<TestResult> ProcessPromptAsync(
         AgentRunner runner,
         TestPrompt prompt,
         string namespaceName,
@@ -475,7 +477,7 @@ static class Program
     /// <summary>
     /// Initializes the live markdown report with header and table columns.
     /// </summary>
-    static void InitializeMarkdownReport(string filePath)
+    private static void InitializeMarkdownReport(string filePath)
     {
         using var writer = new StreamWriter(filePath, append: false);
         writer.WriteLine("# Azure MCP E2E Test Report");
@@ -491,7 +493,7 @@ static class Program
     /// <summary>
     /// Appends a single test result row to the live markdown report.
     /// </summary>
-    static void AppendResultToMarkdown(string filePath, TestResult result)
+    private static void AppendResultToMarkdown(string filePath, TestResult result)
     {
         lock (_reportLock)
         {
@@ -519,7 +521,7 @@ static class Program
     /// <summary>
     /// Appends summary and failed tests sections to the live markdown report.
     /// </summary>
-    static void AppendMarkdownSummary(string filePath, List<TestResult> results, TimeSpan duration)
+    private static void AppendMarkdownSummary(string filePath, List<TestResult> results, TimeSpan duration)
     {
         var passed = results.Count(r => r.Status == TestStatus.Pass);
         var failed = results.Count(r => r.Status == TestStatus.Fail);
@@ -569,7 +571,7 @@ static class Program
         }
     }
 
-    static void WriteLineLock(string message)
+    private static void WriteLineLock(string message)
     {
         lock (_consoleLock)
         {
@@ -577,9 +579,9 @@ static class Program
         }
     }
 
-    static (string? TestContextPath, string? PromptsPath) LoadFiles()
+    private static (string? TestContextPath, string? PromptsPath) LoadFiles()
     {
-        string? root = null;
+        string? root;
         try
         {
             root = AgentRunnerUtils.FindRepoRoot(Directory.GetCurrentDirectory());
@@ -664,13 +666,8 @@ static class Program
         }
 
         // After build, the Debug output should exist
-        var builtPath = FindBuildExecutable(repoRoot);
-
-        if (builtPath is null)
-        {
-            throw new InvalidOperationException(
+        var builtPath = FindBuildExecutable(repoRoot) ?? throw new InvalidOperationException(
                 "Build succeeded but server executable could not be located in any output directory.");
-        }
 
         if (!File.Exists(builtPath))
         {
@@ -682,7 +679,7 @@ static class Program
         return builtPath;
     }
 
-    private static readonly string[] configurations = ["Debug", "Release"];
+    private static readonly string[] s_configurations = ["Debug", "Release"];
 
     private static string? FindBuildExecutable(string repoRoot)
     {
@@ -690,7 +687,7 @@ static class Program
         var binDirectory = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin");
 
         // Check well-known output paths (bin/{Debug,Release}/*/) and pick the most recent
-        var knownPath = configurations
+        var knownPath = s_configurations
             .Select(config => Path.Combine(binDirectory, config))
             .Where(Directory.Exists)
             .SelectMany(configDir => Directory.GetFiles(configDir, exeName, SearchOption.AllDirectories))
@@ -709,7 +706,7 @@ static class Program
             return null;
         }
 
-        var knownConfigDirs = configurations
+        var knownConfigDirs = s_configurations
             .Select(config => Path.Combine(binDirectory, config))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 

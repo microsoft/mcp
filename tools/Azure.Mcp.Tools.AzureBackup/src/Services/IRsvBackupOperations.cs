@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBackup.Models;
-using Microsoft.Mcp.Core.Options;
+using Azure.ResourceManager.RecoveryServicesBackup.Models;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -16,22 +16,22 @@ public interface IRsvBackupOperations
         string? sku,
         string? storageType,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
+        bool enablePublicNetworkAccess = false,
+        CancellationToken cancellationToken = default);
 
     Task<BackupVaultInfo> GetVaultAsync(
         string vaultName,
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None);
 
     Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None);
 
     Task<OperationResult> UpdateVaultAsync(
         string vaultName,
@@ -42,9 +42,10 @@ public interface IRsvBackupOperations
         string? softDeleteRetentionDays,
         string? immutabilityState,
         string? identityType,
+        string? userAssignedIdentity,
+        string? publicNetworkAccess,
         string? tags,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<BackupPolicyInfo> GetPolicyAsync(
@@ -53,7 +54,6 @@ public interface IRsvBackupOperations
         string subscription,
         string policyName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<List<BackupPolicyInfo>> ListPoliciesAsync(
@@ -61,30 +61,22 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string workloadType,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> UpdatePolicyAsync(
+        Policy.PolicyUpdateRequest request,
         string vaultName,
         string resourceGroup,
         string subscription,
-        string policyName,
-        string? scheduleTime,
-        string? dailyRetentionDays,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<ProtectResult> ProtectItemAsync(
@@ -95,8 +87,19 @@ public interface IRsvBackupOperations
         string policyName,
         string? containerName,
         string? datasourceType,
+        DiskExclusionSpec? diskExclusion,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<ProtectResult> UpdateProtectionAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string datasourceId,
+        string? policyName,
+        DiskExclusionSpec? diskExclusion,
+        string? containerName,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<ProtectedItemInfo> GetProtectedItemAsync(
@@ -106,7 +109,6 @@ public interface IRsvBackupOperations
         string protectedItemName,
         string? containerName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
@@ -114,7 +116,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
@@ -122,9 +123,7 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? workloadType,
-        string? containerName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> UndeleteProtectedItemAsync(
@@ -134,7 +133,32 @@ public interface IRsvBackupOperations
         string datasourceId,
         string? containerName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string storageAccountId,
+        bool acquireLock,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<InquireResult> InquireContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
         CancellationToken cancellationToken);
 
     Task<BackupJobInfo> GetJobAsync(
@@ -143,7 +167,6 @@ public interface IRsvBackupOperations
         string subscription,
         string jobId,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<List<BackupJobInfo>> ListJobsAsync(
@@ -151,7 +174,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<RecoveryPointInfo> GetRecoveryPointAsync(
@@ -162,7 +184,6 @@ public interface IRsvBackupOperations
         string recoveryPointId,
         string? containerName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
@@ -172,26 +193,25 @@ public interface IRsvBackupOperations
         string protectedItemName,
         string? containerName,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName,
         string resourceGroup,
         string subscription,
-        string immutabilityState,
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> ConfigureSoftDeleteAsync(
         string vaultName,
         string resourceGroup,
         string subscription,
-        string softDeleteState,
-        string? softDeleteRetentionDays,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> ConfigureCrossRegionRestoreAsync(
@@ -199,7 +219,6 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
@@ -208,7 +227,6 @@ public interface IRsvBackupOperations
         string subscription,
         string resourceGuardId,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken);
 
     Task<OperationResult> DisableMultiUserAuthorizationAsync(
@@ -216,6 +234,88 @@ public interface IRsvBackupOperations
         string resourceGroup,
         string subscription,
         string? tenant,
-        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken);
+
+    Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string keyVaultUri,
+        string keyName,
+        string identityType,
+        string? keyVersion,
+        string? userAssignedIdentityId,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    // Private endpoint operations
+    Task<PrivateEndpointConnectionInfo> CreatePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointName,
+        string vnetSubnetId,
+        string groupId,
+        string? location,
+        bool autoApprove,
+        string? privateDnsZoneIds,
+        string? privateDnsZoneGroupName,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<List<PrivateEndpointConnectionInfo>> ListPrivateEndpointsAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<PrivateEndpointConnectionInfo> GetPrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<OperationResult> DeletePrivateEndpointAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+
+    Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken);
+    Task<PrivateEndpointConnectionInfo> SetPrivateEndpointConnectionStateAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string privateEndpointConnectionName,
+        PrivateEndpointConnectionStatus targetStatus,
+        string? description,
+        string? tenant,
         CancellationToken cancellationToken);
 }

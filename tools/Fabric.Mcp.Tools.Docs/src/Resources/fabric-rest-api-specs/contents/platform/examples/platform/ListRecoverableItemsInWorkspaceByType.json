@@ -1,0 +1,22 @@
+{
+  "parameters": {
+    "workspaceId": "52984ceb-fd5b-4da9-a0c5-2fe9887b509f",
+    "type": "Lakehouse"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "ab9e10d6-abee-4b9d-9af0-813a539d75dd",
+            "displayName": "Lakehouse",
+            "description": "A lakehouse used by the analytics team.",
+            "type": "Lakehouse",
+            "workspaceId": "52984ceb-fd5b-4da9-a0c5-2fe9887b509f",
+            "retentionExpirationDateTime": "2025-12-31T23:59:59.999Z"
+          }
+        ]
+      }
+    }
+  }
+}

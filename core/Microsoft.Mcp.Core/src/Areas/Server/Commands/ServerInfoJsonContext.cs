@@ -1,0 +1,10 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+
+namespace Microsoft.Mcp.Core.Areas.Server.Commands;
+
+[JsonSerializable(typeof(ServerInfoCommand.ServiceInfoCommandResult))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+internal partial class ServerInfoJsonContext : JsonSerializerContext;

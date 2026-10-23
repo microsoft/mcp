@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
@@ -11,6 +12,9 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
         "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/main/website/docs/r";
     private const string BaseDataSourcesUrl =
         "https://raw.githubusercontent.com/hashicorp/terraform-provider-azurerm/main/website/docs/d";
+
+    // GitHub host this service is permitted to reach.
+    private static readonly string[] s_allowedHosts = ["raw.githubusercontent.com"];
 
     public async Task<AzureRMDocsResult> GetDocumentationAsync(
         string resourceTypeName,
@@ -36,6 +40,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
         string? markdownContent = null;
         bool isDataSourceUrl = isDataSource;
 
+        EndpointValidator.ValidateExternalUrl(docUrl, s_allowedHosts);
         var response = await client.GetAsync(new Uri(docUrl), cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -45,6 +50,7 @@ public sealed class AzureRMDocsService(IHttpClientFactory httpClientFactory) : I
                 ? $"{BaseResourcesUrl}/{normalizedType}.html.markdown"
                 : $"{BaseDataSourcesUrl}/{normalizedType}.html.markdown";
 
+            EndpointValidator.ValidateExternalUrl(fallbackUrl, s_allowedHosts);
             var fallbackResponse = await client.GetAsync(new Uri(fallbackUrl), cancellationToken).ConfigureAwait(false);
             if (fallbackResponse.IsSuccessStatusCode)
             {

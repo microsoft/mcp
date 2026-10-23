@@ -1,20 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
-using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
+using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
+using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.Traces;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
-using Azure.Mcp.Tools.Monitor.Detectors;
-using Azure.Mcp.Tools.Monitor.Generators;
-using Azure.Mcp.Tools.Monitor.Pipeline;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
+using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
-using Azure.Mcp.Tools.Monitor.Tools;
+using Azure.Mcp.Tools.Monitor.Services.Traces;
+using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -29,10 +31,12 @@ public class MonitorSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMonitorService, MonitorService>();
+        services.AddSingleton<IMonitorLogSearchService, MonitorLogSearchService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
+        services.AddSingleton<IMonitorTracesService, MonitorTracesService>();
 
         services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
         services.AddSingleton<ILanguageDetector, NodeJsLanguageDetector>();
@@ -69,9 +73,9 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<WorkspaceAnalyzer>();
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
-        services.AddSingleton<SendEnhancementSelectTool>();
 
         services.AddSingleton<WorkspaceLogQueryCommand>();
+        services.AddSingleton<WorkspaceLogSearchCommand>();
         services.AddSingleton<ResourceLogQueryCommand>();
 
         services.AddSingleton<WorkspaceListCommand>();
@@ -79,9 +83,11 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<TableTypeListCommand>();
 
-        services.AddSingleton<EntityGetHealthCommand>();
+        services.AddSingleton<HealthModelListCommand>();
+        services.AddSingleton<HealthModelGetCommand>();
 
         services.AddSingleton<MetricsQueryCommand>();
+        services.AddSingleton<MetricsBatchQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
 
         services.AddSingleton<ActivityLogListCommand>();
@@ -94,20 +100,25 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<OrchestratorNextCommand>();
         services.AddSingleton<SendBrownfieldAnalysisCommand>();
         services.AddSingleton<SendEnhancementSelectCommand>();
+
+        services.AddSingleton<TraceAccountListCommand>();
+        services.AddSingleton<TraceFieldListCommand>();
+        services.AddSingleton<TraceQueryRunCommand>();
+        services.AddSingleton<TraceQueryResumeCommand>();
+        services.AddSingleton<TraceQueryCancelCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
         var monitor = new CommandGroup(Name,
-            """
-            Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and metrics, listing
-            tables and table types, working with health models and entities, web tests, and orchestrating instrumentation
-            workflows. Use this tool to list Log Analytics workspaces, tables, and table types; run KQL queries against workspace
-            and resource logs; retrieve health for monitor entities; query metrics and metric definitions; inspect resource activity
-            logs; manage availability web tests; and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor
-            observability workflows. Set learn=true to discover sub-commands.
-            """,
+            "Monitor operations - Commands for managing Azure Monitor workspaces, querying and analyzing logs and " +
+            "metrics, listing tables and table types, working with health models and entities, web tests, and " +
+            "orchestrating instrumentation workflows. Use this tool to list Log Analytics workspaces, tables, and " +
+            "table types; run KQL queries against workspace and resource logs; retrieve health for monitor entities; " +
+            "query metrics and metric definitions; inspect resource activity logs; manage availability web tests; " +
+            "and guide instrumentation onboarding and enhancement flows. Covers Azure Monitor observability " +
+            "workflows. Set learn=true to discover sub-commands.",
             Title);
 
         // Create Monitor subgroups
@@ -131,6 +142,7 @@ public class MonitorSetup : IAreaSetup
 
         // Register Monitor commands
         workspaceLogs.AddCommand<WorkspaceLogQueryCommand>(serviceProvider);
+        workspaceLogs.AddCommand<WorkspaceLogSearchCommand>(serviceProvider);
 
         resourceLogs.AddCommand<ResourceLogQueryCommand>(serviceProvider);
 
@@ -140,19 +152,18 @@ public class MonitorSetup : IAreaSetup
 
         monitorTableType.AddCommand<TableTypeListCommand>(serviceProvider);
 
-        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
+        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for listing and retrieving Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels).");
         monitor.AddSubGroup(health);
 
-        var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
-        health.AddSubGroup(entity);
-
-        entity.AddCommand<EntityGetHealthCommand>(serviceProvider);
+        health.AddCommand<HealthModelListCommand>(serviceProvider);
+        health.AddCommand<HealthModelGetCommand>(serviceProvider);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
         metrics.AddCommand<MetricsQueryCommand>(serviceProvider);
+        metrics.AddCommand<MetricsBatchQueryCommand>(serviceProvider);
         metrics.AddCommand<MetricsDefinitionsCommand>(serviceProvider);
 
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
@@ -175,6 +186,25 @@ public class MonitorSetup : IAreaSetup
         instrumentation.AddCommand<OrchestratorNextCommand>(serviceProvider);
         instrumentation.AddCommand<SendBrownfieldAnalysisCommand>(serviceProvider);
         instrumentation.AddCommand<SendEnhancementSelectCommand>(serviceProvider);
+
+        // Distributed tracing - a Monitor sub-feature backed by
+        // Microsoft.Monitor/accounts/traceContainers on an Azure Monitor Workspace.
+        var traces = new CommandGroup("traces", "Azure Monitor distributed-trace operations - Commands for listing distributed-trace accounts (Azure Monitor Workspaces enabled for Trace Store) and querying trace data using the caller's Azure identity.");
+        monitor.AddSubGroup(traces);
+
+        var traceAccounts = new CommandGroup("account", "Distributed-trace account operations - Commands for listing Azure Monitor Workspaces enabled for Trace Store.");
+        traces.AddSubGroup(traceAccounts);
+        traceAccounts.AddCommand<TraceAccountListCommand>(serviceProvider);
+
+        var traceFields = new CommandGroup("field", "Distributed-trace field-name operations - Commands for discovering the trace + span schema exposed by a trace account.");
+        traces.AddSubGroup(traceFields);
+        traceFields.AddCommand<TraceFieldListCommand>(serviceProvider);
+
+        var traceQuery = new CommandGroup("query", "Distributed-trace query operations - Commands for running, resuming, and cancelling queries against Trace Store.");
+        traces.AddSubGroup(traceQuery);
+        traceQuery.AddCommand<TraceQueryRunCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceQueryResumeCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceQueryCancelCommand>(serviceProvider);
 
         return monitor;
     }

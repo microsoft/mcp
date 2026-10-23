@@ -10,7 +10,13 @@
                 "type": "Workspace",
                 "state": "Active",
                 "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84",
-                "domainId": "8badadb6-9945-4e07-8134-00e0defec00b"
+                "domainId": "8badadb6-9945-4e07-8134-00e0defec00b",
+                "tags": [
+                    {
+                        "id": "b3f2c8e9-4d8e-4a7c-9a32-f8c1b2e4d6af",
+                        "displayName": "Finance"
+                    }
+                ]
             }
         }
     }

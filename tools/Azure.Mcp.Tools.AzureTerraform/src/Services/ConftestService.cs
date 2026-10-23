@@ -150,15 +150,15 @@ public sealed class ConftestService : IConftestService
         VerifyCommand = "conftest --version",
         InstallationMethods =
         [
-            new() { Platform = "windows", Method = "scoop", Command = "scoop install conftest", ManagesPath = true },
-            new() { Platform = "windows", Method = "choco", Command = "choco install conftest", ManagesPath = true },
-            new() { Platform = "macos", Method = "brew", Command = "brew install conftest", ManagesPath = true },
-            new() { Platform = "linux", Method = "brew", Command = "brew install conftest", ManagesPath = true },
-            new() { Platform = "linux", Method = "apt", Command = "wget https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_Linux_x86_64.deb && sudo dpkg -i conftest_Linux_x86_64.deb", ManagesPath = true },
-            new() { Platform = "linux", Method = "dnf", Command = "wget https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_Linux_x86_64.rpm && sudo rpm -ivh conftest_Linux_x86_64.rpm", ManagesPath = true },
-            new() { Platform = "windows", Method = "manual", Command = "Download the zip for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and add the folder containing conftest.exe to your system PATH.", ManagesPath = false },
-            new() { Platform = "linux", Method = "manual", Command = "Download the tar.gz for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and move the conftest binary to a directory in your PATH (e.g., /usr/local/bin).", ManagesPath = false },
-            new() { Platform = "macos", Method = "manual", Command = "Download the tar.gz for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and move the conftest binary to /usr/local/bin/.", ManagesPath = false }
+            new(Platform: "windows", Method: "scoop", Command: "scoop install conftest", ManagesPath: true),
+            new(Platform: "windows", Method: "choco", Command: "choco install conftest", ManagesPath: true),
+            new(Platform: "macos", Method: "brew", Command: "brew install conftest", ManagesPath: true),
+            new(Platform: "linux", Method: "brew", Command: "brew install conftest", ManagesPath: true),
+            new(Platform: "linux", Method: "apt", Command: "wget https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_Linux_x86_64.deb && sudo dpkg -i conftest_Linux_x86_64.deb", ManagesPath: true),
+            new(Platform: "linux", Method: "dnf", Command: "wget https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_Linux_x86_64.rpm && sudo rpm -ivh conftest_Linux_x86_64.rpm", ManagesPath: true),
+            new(Platform: "windows", Method: "manual", Command: "Download the zip for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and add the folder containing conftest.exe to your system PATH.", ManagesPath: false),
+            new(Platform: "linux", Method: "manual", Command: "Download the tar.gz for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and move the conftest binary to a directory in your PATH (e.g., /usr/local/bin).", ManagesPath: false),
+            new(Platform: "macos", Method: "manual", Command: "Download the tar.gz for your architecture from https://github.com/open-policy-agent/conftest/releases, extract it, and move the conftest binary to /usr/local/bin/.", ManagesPath: false)
         ],
         AdditionalNotes =
         [

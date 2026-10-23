@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.FoundryExtensions.Models;
-using Azure.Mcp.Tools.FoundryExtensions.Options;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
-using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
@@ -31,54 +29,32 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
             - These indexes can be used with AI agents for knowledge retrieval and RAG applications.
             - The list may change as new indexes are created or existing ones are updated.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService) : GlobalCommand<KnowledgeIndexListOptions>
+public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryExtensionsService, IEndpointValidator endpointValidator)
+    : AuthenticatedCommand<KnowledgeIndexListOptions, KnowledgeIndexListCommand.KnowledgeIndexListCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
 
-    protected override void RegisterOptions(Command command)
+    public override void ValidateOptions(KnowledgeIndexListOptions options, ValidationResult validationResult)
     {
-        base.RegisterOptions(command);
-        command.Options.Add(FoundryExtensionsOptionDefinitions.EndpointOption);
-        command.Validators.Add(commandResult =>
-        {
-            var endpointValue = commandResult.GetValueOrDefault(FoundryExtensionsOptionDefinitions.EndpointOption);
-            if (string.IsNullOrWhiteSpace(endpointValue))
-            {
-                return;
-            }
+        base.ValidateOptions(options, validationResult);
 
-            ValidateFoundryEndpoint(endpointValue, commandResult);
-        });
+        FoundryExtensionsHelpers.ValidateFoundryEndpoint(endpointValidator, options.Endpoint, validationResult);
     }
 
-    protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KnowledgeIndexListOptions options, CancellationToken cancellationToken)
     {
-        var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryExtensionsOptionDefinitions.EndpointOption.Name);
-        return options;
-    }
-
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
-    {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var indexes = await _foundryExtensionsService.ListKnowledgeIndexes(
-                options.Endpoint!,
+                options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy,
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryExtensionsJsonContext.Default.KnowledgeIndexListCommandResult);
@@ -91,26 +67,5 @@ public sealed class KnowledgeIndexListCommand(IFoundryExtensionsService foundryE
         return context.Response;
     }
 
-    private static void ValidateFoundryEndpoint(string endpoint, System.CommandLine.Parsing.CommandResult commandResult)
-    {
-        ArmEnvironment[] clouds = [ArmEnvironment.AzurePublicCloud, ArmEnvironment.AzureChina, ArmEnvironment.AzureGovernment, ArmEnvironment.AzureGermany];
-        string? lastError = null;
-
-        foreach (var cloud in clouds)
-        {
-            try
-            {
-                EndpointValidator.ValidateAzureServiceEndpoint(endpoint, "foundry", cloud);
-                return;
-            }
-            catch (Exception ex)
-            {
-                lastError = ex.Message;
-            }
-        }
-
-        commandResult.AddError(lastError ?? $"Invalid Foundry project endpoint: {endpoint}");
-    }
-
-    internal record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);
+    public sealed record KnowledgeIndexListCommandResult(IEnumerable<KnowledgeIndexInformation> Indexes);
 }

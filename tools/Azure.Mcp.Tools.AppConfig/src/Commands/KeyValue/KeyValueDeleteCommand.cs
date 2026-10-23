@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Logging;
@@ -18,39 +21,38 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
         If a label is specified, only the labeled version is deleted. If no label is specified, the key-value with the matching
         key and the default label will be deleted.
         """,
+    OperationPlane = ToolOperationPlane.Data,
     Destructive = true,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService)
-    : BaseKeyValueCommand<KeyValueDeleteOptions>()
+public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
+    : SubscriptionCommand<KeyValueDeleteOptions, KeyValueDeleteCommand.KeyValueDeleteCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
     private readonly IAppConfigService _appConfigService = appConfigService;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override JsonTypeInfo<KeyValueDeleteCommandResult>? ResultTypeInfo => AppConfigJsonContext.Default.KeyValueDeleteCommandResult;
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KeyValueDeleteOptions options, CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
-            await _appConfigService.DeleteKeyValue(
-                options.Account!,
-                options.Key!,
+            var existed = await _appConfigService.DeleteKeyValue(
+                options.Account,
+                options.Key,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy,
                 options.Label,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            var labelSuffix = options.Label is null ? string.Empty : $" with label '{options.Label}'";
+            var message = existed
+                ? $"Key '{options.Key}'{labelSuffix} deleted successfully."
+                : $"Key '{options.Key}'{labelSuffix} did not exist in store '{options.Account}'.";
+            SetResult(context, new(options.Key, options.Label, existed, message));
         }
         catch (Exception ex)
         {
@@ -61,5 +63,5 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger,
         return context.Response;
     }
 
-    internal record KeyValueDeleteCommandResult(string? Key, string? Label);
+    public sealed record KeyValueDeleteCommandResult(string? Key, string? Label, bool Existed, string Message);
 }

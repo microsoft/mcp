@@ -1,0 +1,29 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "connectionId": "4eb6b767-e786-45ed-b7cf-d25023e52222",
+    "parent": [
+      "Accounting"
+    ],
+    "beta": true
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "name": "US",
+            "fullyQualifiedScope": [
+              "Accounting",
+              "US"
+            ],
+            "isSelectable": "Selectable",
+            "children": null
+          }
+        ],
+        "continuationToken": null,
+        "continuationUri": null
+      }
+    }
+  }
+}

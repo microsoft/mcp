@@ -104,7 +104,7 @@
             ],
             "properties": {
                 "format": {
-                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "description": "The format of the graph model definition. Additional `format` types may be added over time.",
                     "type": "string",
                     "enum": [
                         "json"

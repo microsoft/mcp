@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "gatewayId": "7015263e-885f-455b-80f7-bbf862899176",
+        "updateGatewayRequest": {
+            "type": "StreamingVirtualNetwork",
+            "displayName": "ContosoStreamingVirtualNetworkGateway1"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "7015263e-885f-455b-80f7-bbf862899176",
+                "type": "StreamingVirtualNetwork",
+                "displayName": "ContosoStreamingVirtualNetworkGateway1",
+                "virtualNetworkAzureResource": {
+                    "subscriptionId": "879b4ba0-ed17-4ff2-851e-4a2228e00b70",
+                    "resourceGroupName": "ContosoResourceGroup",
+                    "virtualNetworkName": "ContosoVirtualNetwork",
+                    "subnetName": "ContosoSubnet"
+                }
+            }
+        }
+    }
+}

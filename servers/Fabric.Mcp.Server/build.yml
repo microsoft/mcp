@@ -9,7 +9,11 @@ parameters:
 - name: TestTimeoutInMinutes
   displayName: Test Timeout In Minutes
   type: number
-  default: 30
+  default: 45
+- name: BuildTimeoutInMinutes
+  displayName: Build Timeout In Minutes
+  type: number
+  default: 90
 
 trigger: none
 pr: none
@@ -18,6 +22,7 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Fabric.Mcp.Server
+    NetworkIsolationPolicy: Preferred,CFSClean,GitHub,ESRP,AzureContainerRegistry,AzureStorage
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     PackageDocker: true
@@ -26,3 +31,4 @@ extends:
     PackageMCPB: false
     IncludeNative: ${{ parameters.IncludeNative }}
     TestTimeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    BuildTimeoutInMinutes: ${{ parameters.BuildTimeoutInMinutes }}

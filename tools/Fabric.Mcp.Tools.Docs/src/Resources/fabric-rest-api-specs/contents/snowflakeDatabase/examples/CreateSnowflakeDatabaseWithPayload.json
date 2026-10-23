@@ -4,7 +4,6 @@
     "createSnowflakeDatabaseRequest": {
       "displayName": "My Database",
       "description": "This is an example Snowflake Database item.",
-      "type": "SnowflakeDatabase",
       "creationPayload": {
         "snowflakeDatabaseName": "ExampleDatabase",
         "connectionId": "456e7890-e89b-12d3-a456-426614174002"

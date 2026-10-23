@@ -146,23 +146,6 @@
           "description": "The description of the Snowflake Database.",
           "type": "string"
         },
-        "type": {
-          "description": "The type of the item. Additional types may be added over time.",
-          "type": "string",
-          "enum": [
-            "SnowflakeDatabase"
-          ],
-          "x-ms-enum": {
-            "name": "SnowflakeDatabaseItemType",
-            "modelAsString": true,
-            "values": [
-              {
-                "value": "SnowflakeDatabase",
-                "description": "The Snowflake Database item type."
-              }
-            ]
-          }
-        },
         "creationPayload": {
           "description": "The creation payload for the Snowflake Database.",
           "$ref": "#/definitions/SnowflakeDatabaseCreationPayload"
@@ -238,7 +221,7 @@
       ],
       "properties": {
         "format": {
-          "description": "The format of the item definition.",
+          "description": "The format of the snowflake database definition.",
           "type": "string",
           "readOnly": false
         },

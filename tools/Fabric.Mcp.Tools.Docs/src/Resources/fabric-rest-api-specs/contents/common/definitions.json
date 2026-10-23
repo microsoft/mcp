@@ -28,12 +28,17 @@
                         "$ref": "#/definitions/ErrorResponseDetails"
                     },
                     "readOnly": true
+                },
+                "isRetriable": {
+                    "type": "boolean",
+                    "description": "When true, the request can be retried. Use the `Retry-After` response header to determine the delay, if available.",
+                    "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "ErrorResponseDetails": {
             "description": "The error response details.",
+            "type": "object",
             "required": ["message", "errorCode"],
             "properties": {
                 "errorCode": {
@@ -50,11 +55,20 @@
                     "description": "The error related resource details.",
                     "$ref": "#/definitions/ErrorRelatedResource",
                     "readOnly": true
+                },
+                "parameters": {
+                    "description": "Structured parameters providing additional machine-readable context about the error.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ErrorParameter"
+                    },
+                    "readOnly": true
                 }
             }
         },
         "ErrorRelatedResource": {
             "description": "The error related resource details object.",
+            "type": "object",
             "required": ["resourceId", "resourceType"],
             "properties": {
                 "resourceId": {
@@ -67,8 +81,7 @@
                     "description": "The type of the resource that's involved in the error.",
                     "readOnly": true
                 }
-            },
-            "readOnly": true
+            }
         },
         "Principal": {
             "description": "Represents an identity or a Microsoft Entra group.",
@@ -123,8 +136,7 @@
                         "description": "Principal represents all tenant users."
                     }
                 ]
-            },
-            "readOnly": false
+            }
         },
         "UserPrincipal": {
             "description": "Represents a Microsoft Entra user principal.",
@@ -256,7 +268,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent"],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog", "PolicySet", "AppBackend", "OrgApp", "OrgAppAudience", "DataBuildToolJob", "AzureDatabricksStorage", "Plan" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -369,17 +381,17 @@
               "value": "CopyJob",
               "description": "A Copy job."
             },
-			{
-                "value": "VariableLibrary",
-                "description": "A VariableLibrary."                          
+            {
+              "value": "VariableLibrary",
+              "description": "A VariableLibrary."
             },
             {
               "value": "MirroredAzureDatabricksCatalog",
               "description": "A mirrored azure databricks catalog."
             },
             {
-                "value": "Dataflow",
-                "description": "A Dataflow."
+              "value": "Dataflow",
+              "description": "A Dataflow."
             },
             {
               "value": "WarehouseSnapshot",
@@ -390,56 +402,87 @@
               "description": "A DigitalTwinBuilder."
             },
             {
-                "value": "DigitalTwinBuilderFlow",
-                "description": "A Digital Twin Builder Flow."
+              "value": "DigitalTwinBuilderFlow",
+              "description": "A Digital Twin Builder Flow."
             },
             {
-                "value": "AnomalyDetector",
-                "description": "An Anomaly Detector."
+              "value": "AnomalyDetector",
+              "description": "An Anomaly Detector."
             },
             {
-                "value": "Map",
-                "description": "A Map."
+              "value": "Map",
+              "description": "A Map."
             },
             {
               "value": "Ontology",
               "description": "An Ontology."
             },
             {
-                "value": "UserDataFunction",
-                "description": "A User Data Function."
+              "value": "UserDataFunction",
+              "description": "A User Data Function."
             },
             {
-                "value": "GraphModel",
-                "description": "A GraphModel."
+              "value": "GraphModel",
+              "description": "A GraphModel."
             },
             {
-                "value": "GraphQuerySet",
-                "description": "A Graph QuerySet."
+              "value": "GraphQuerySet",
+              "description": "A Graph QuerySet."
             },
             {
               "value": "SnowflakeDatabase",
               "description": "A Snowflake Database to store Iceberg tables created from Snowflake account."
             },
             {
-                "value": "OperationsAgent",
-                "description": "A OperationsAgent."
+              "value": "OperationsAgent",
+              "description": "A OperationsAgent."
             },
             {
-                "value": "CosmosDBDatabase",
-                "description": "A Cosmos DB Database."
+              "value": "CosmosDBDatabase",
+              "description": "A Cosmos DB Database."
             },
             {
-                "value": "EventSchemaSet",
-                "description": "An EventSchemaSet."
+              "value": "EventSchemaSet",
+              "description": "An EventSchemaSet."
             },
             {
-                "value": "DataAgent",
-                "description": "A DataAgent."
+              "value": "DataAgent",
+              "description": "A DataAgent."
+            },
+            {
+              "value": "MirroredCatalog",
+              "description": "A MirroredCatalog."
+            },
+            {
+              "value": "PolicySet",
+              "description": "A PolicySet."
+            },
+            {
+              "value": "AppBackend",
+              "description": "An AppBackend."
+            },
+            {
+              "value": "OrgApp",
+              "description": "An Org App."
+            },
+            {
+              "value": "OrgAppAudience",
+              "description": "An Org App Audience."
+            },
+            {
+              "value": "DataBuildToolJob",
+              "description": "A DataBuildToolJob."
+            },
+            {
+              "value": "AzureDatabricksStorage",
+              "description": "A OneLake-backed storage item for Azure Databricks."
+            },
+            {
+              "value": "Plan",
+              "description": "A plan."
             }
           ]
-        },
-        "readOnly": false
+        }
       },
         "WorkspaceRole": {
             "type": "string",
@@ -489,8 +532,7 @@
                         "description": "Admin monitoring workspace. Contains admin reports such as the audit report and the usage and adoption report."
                     }
                 ]
-            },
-            "readOnly": true
+            }
         },
         "ItemPermissions": {
             "type": "string",
@@ -536,8 +578,7 @@
                         "description": "Inline Base 64."
                     }
                 ]
-            },
-            "readOnly": false
+            }
         },
         "PaginatedResponse": {
             "properties": {
@@ -558,6 +599,12 @@
             "properties": {
                 "id": {
                     "description": "The item ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "logicalId": {
+                    "description": "The item's logical identifier. Corresponding item instances share the same logical ID. The value is null when no logical ID has been assigned.",
                     "type": "string",
                     "format": "uuid",
                     "readOnly": true
@@ -596,6 +643,11 @@
                         "$ref": "#/definitions/ItemTag"
 
                     },
+                    "readOnly": true
+                },
+                "defaultIdentity": {
+                    "description": "The item's default identity.",
+                    "$ref": "#/definitions/Principal",
                     "readOnly": true
                 },
                 "sensitivityLabel": {
@@ -715,7 +767,7 @@
                 "customDomainName": {
                     "type": "string",
                     "maxLength": 100,
-                    "description": "> [!NOTE]\n> Support for GitHub Enterprise with Data residency (ghe.com) is currently in Preview.([learn more](/fabric/fundamentals/preview)).\n\nThe name of the enterprise github domain if it's not github.com. Only GitHub Enterprise with data residency domains (ghe.com) are supported. Maximum length is 100 characters."
+                    "description": "The name of the enterprise GitHub domain if it is not github.com. Only GitHub Enterprise with data residency domains (ghe.com) are supported. Maximum length is 100 characters."
                 }
             },
             "allOf": [
@@ -813,6 +865,16 @@
                 "id",
                 "displayName"
             ],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/AppliedTag"
+                }
+            ]
+        },
+        "AppliedTag": {
+            "type": "object",
+            "description": "Represents an applied tag.",
+            "required": ["id", "displayName"],
             "properties": {
                 "id": {
                     "type": "string",
@@ -824,6 +886,16 @@
                     "description": "The name of the tag."
                 }
             }
+        },
+        "WorkspaceAppliedTag": {
+            "type": "object",
+            "description": "Represents an applied tag.",
+            "required": ["id", "displayName"],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/AppliedTag"
+                }
+            ]
         },
         "TagScope": {
             "type": "object",
@@ -885,7 +957,7 @@
             ],
             "x-ms-discriminator-value": "Domain"
         },
-        
+
         "ItemReference": {
            "description": "An item reference object.",
            "type": "object",
@@ -913,8 +985,8 @@
                    {
                        "value": "ByVariable",
                        "description": "The item is referenced by a variable."
-                   }                   
-                   
+                   }
+
                ]
            }
        },
@@ -989,8 +1061,8 @@
                    {
                        "value": "ByVariable",
                        "description": "The connection is referenced by a variable."
-                   }                   
-                   
+                   }
+
                ]
            }
        },
@@ -1031,7 +1103,7 @@
                }
            ],
            "x-ms-discriminator-value": "ByVariable"
-       },       
+       },
        "Duration": {
             "description": "A duration.",
             "type": "object",
@@ -1092,6 +1164,12 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression that determines whether an audit event is processed. Specify only the `<predicate_expression>` value; don't include the `WHERE` keyword. The expression uses the following syntax from [CREATE SERVER AUDIT (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/create-server-audit-transact-sql?view=sql-server-ver17):\n\n```syntaxsql\n<predicate_expression> ::=\n    { [ NOT ] <predicate_factor>\n    [ { AND | OR } [ NOT ] { <predicate_factor> } ] [ ,... n ] }\n\n<predicate_factor> ::=\n    event_field_name { = | < > | != | > | >= | < | <= | LIKE }\n    { number | 'string' }\n```\n\nEvent field names correspond to the audit record columns documented in [sys.fn_get_audit_file (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-functions/sys-fn-get-audit-file-transact-sql?view=sql-server-ver17&tabs=sqlserver). All documented fields can be used except `file_name`, `audit_file_offset`, and `event_time`. Although `action_id` and `class_type` are returned as strings, they can only be compared with numeric values in a predicate. String comparisons don't perform implicit type conversion. The maximum expression length is 3,000 characters. An empty string means that no predicate is applied.",
+                    "type": "string",
+                    "maxLength": 3000,
+                    "readOnly": true
                 }
             }
         },
@@ -1107,6 +1185,12 @@
                     "description": "Retention days.",
                     "type": "integer",
                     "default": 0
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression that determines whether an audit event is processed. Specify only the `<predicate_expression>` value; don't include the `WHERE` keyword. The expression uses the following syntax from [CREATE SERVER AUDIT (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/create-server-audit-transact-sql?view=sql-server-ver17):\n\n```syntaxsql\n<predicate_expression> ::=\n    { [ NOT ] <predicate_factor>\n    [ { AND | OR } [ NOT ] { <predicate_factor> } ] [ ,... n ] }\n\n<predicate_factor> ::=\n    event_field_name { = | < > | != | > | >= | < | <= | LIKE }\n    { number | 'string' }\n```\n\nEvent field names correspond to the audit record columns documented in [sys.fn_get_audit_file (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-functions/sys-fn-get-audit-file-transact-sql?view=sql-server-ver17&tabs=sqlserver). All documented fields can be used except `file_name`, `audit_file_offset`, and `event_time`. Although `action_id` and `class_type` are returned as strings, they can only be compared with numeric values in a predicate. String comparisons don't perform implicit type conversion. The maximum expression length is 3,000 characters. When SQL auditing is enabled for the first time, omitting this property applies no predicate. On subsequent updates, omitting this property leaves the existing predicate unchanged. Specify an empty string to remove the existing predicate.",
+                    "type": "string",
+                    "maxLength": 3000,
+                    "readOnly": false
                 }
             }
         },
@@ -1178,6 +1262,63 @@
                         "description": "Ignore the sensitivity label if it cannot be applied and proceed with the operation without applying the label."
                     }
                 ]
+            }
+        },
+        "ErrorParameter": {
+            "description": "A structured parameter providing additional machine-readable context about an error.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The parameter identifier.",
+                    "readOnly": true
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The parameter value.",
+                    "readOnly": true
+                },
+                "message": {
+                    "type": "string",
+                    "description": "A human-readable description of the parameter's meaning.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ItemOptionsByLogicalIdEntry": {
+            "description": "A per-item options entry that targets its item by logical ID. Each targeted item may appear at most once.",
+            "type": "object",
+            "required": ["logicalId", "options"],
+            "properties": {
+                "logicalId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The logical ID of the target item.",
+                    "readOnly": false
+                },
+                "options": {
+                    "description": "The options for the targeted item. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+                    "type": "object",
+                    "readOnly": false
+                }
+            }
+        },
+        "ItemOptionsBySourceItemIdEntry": {
+            "description": "A per-item options entry that targets its item by source item ID. Each targeted item may appear at most once.",
+            "type": "object",
+            "required": ["sourceItemId", "options"],
+            "properties": {
+                "sourceItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The source item ID of the target item.",
+                    "readOnly": false
+                },
+                "options": {
+                    "description": "The options for the targeted item. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+                    "type": "object",
+                    "readOnly": false
+                }
             }
         }
     }

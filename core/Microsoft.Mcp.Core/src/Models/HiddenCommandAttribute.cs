@@ -4,6 +4,4 @@
 namespace Microsoft.Mcp.Core.Models;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class HiddenCommandAttribute : Attribute
-{
-}
+public class HiddenCommandAttribute : Attribute;

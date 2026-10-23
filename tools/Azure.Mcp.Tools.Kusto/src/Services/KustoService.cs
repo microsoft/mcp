@@ -1,35 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Validation;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Models;
-using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Validation;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
 
-public sealed class KustoService(
-    ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ICacheService cacheService,
-    IHttpClientFactory httpClientFactory,
-    ILogger<KustoService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IKustoService
+public sealed class KustoService(IAzureService azureService, ICacheService cacheService)
+    : BaseAzureResourceService(azureService), IKustoService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-    private readonly ILogger<KustoService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private const string CacheGroup = "kusto";
-    private const string KustoClustersCacheKey = "clusters";
-    private static readonly TimeSpan s_cacheDuration = CacheDurations.ServiceData;
     private static readonly TimeSpan s_providerCacheDuration = CacheDurations.AuthenticatedClient;
 
     /// <summary>
@@ -68,16 +57,14 @@ public sealed class KustoService(
         string subscriptionId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
         var clusters = await ExecuteResourceQueryAsync(
             "Microsoft.Kusto/clusters",
-            resourceGroup: resourceGroup,
+            resourceGroup,
             subscriptionId,
-            retryPolicy,
             item => ConvertToClusterModel(item).ClusterName,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -89,17 +76,15 @@ public sealed class KustoService(
         string subscriptionId,
         string clusterName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
         var cluster = await ExecuteSingleResourceQueryAsync(
             "Microsoft.Kusto/clusters",
-            resourceGroup: null, // all resource groups
-            subscription: subscriptionId,
-            retryPolicy: retryPolicy,
-            converter: ConvertToClusterModel,
+            null, // all resource groups
+            subscriptionId,
+            ConvertToClusterModel,
             additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'",
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -115,24 +100,19 @@ public sealed class KustoService(
         string subscriptionId,
         string clusterName,
         string? tenant = null,
-        AuthMethod? authMethod =
-        AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscriptionId), subscriptionId),
             (nameof(clusterName), clusterName));
 
-        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
-        return await ListDatabasesAsync(clusterUri, tenant, authMethod, retryPolicy, cancellationToken);
+        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant);
+        return await ListDatabasesAsync(clusterUri, tenant, cancellationToken);
     }
 
     public async Task<List<string>> ListDatabasesAsync(
         string clusterUri,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(clusterUri), clusterUri));
@@ -150,8 +130,6 @@ public sealed class KustoService(
         string clusterName,
         string databaseName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -159,16 +137,14 @@ public sealed class KustoService(
             (nameof(clusterName), clusterName),
             (nameof(databaseName), databaseName));
 
-        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
-        return await ListTablesAsync(clusterUri, databaseName, tenant, authMethod, retryPolicy, cancellationToken);
+        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant);
+        return await ListTablesAsync(clusterUri, databaseName, tenant, cancellationToken);
     }
 
     public async Task<List<string>> ListTablesAsync(
         string clusterUri,
         string databaseName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(clusterUri), clusterUri), (nameof(databaseName), databaseName));
@@ -187,12 +163,10 @@ public sealed class KustoService(
         string databaseName,
         string tableName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
-        return await GetTableSchemaAsync(clusterUri, databaseName, tableName, tenant, authMethod, retryPolicy, cancellationToken);
+        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant);
+        return await GetTableSchemaAsync(clusterUri, databaseName, tableName, tenant, cancellationToken);
     }
 
     public async Task<string> GetTableSchemaAsync(
@@ -200,8 +174,6 @@ public sealed class KustoService(
         string databaseName,
         string tableName,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -231,8 +203,6 @@ public sealed class KustoService(
         string databaseName,
         string query,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -241,8 +211,8 @@ public sealed class KustoService(
             (nameof(databaseName), databaseName),
             (nameof(query), query));
 
-        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
-        return await QueryItemsAsync(clusterUri, databaseName, query, tenant, authMethod, retryPolicy, cancellationToken);
+        string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant);
+        return await QueryItemsAsync(clusterUri, databaseName, query, tenant, cancellationToken);
     }
 
     public async Task<List<JsonElement>> QueryItemsAsync(
@@ -250,8 +220,6 @@ public sealed class KustoService(
         string databaseName,
         string query,
         string? tenant = null,
-        AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -348,7 +316,7 @@ public sealed class KustoService(
         if (kustoClient == null)
         {
             var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -362,7 +330,7 @@ public sealed class KustoService(
         if (kustoClient == null)
         {
             var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, _httpClientFactory);
+            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -372,10 +340,9 @@ public sealed class KustoService(
     private async Task<string> GetClusterUriAsync(
         string subscriptionId,
         string clusterName,
-        string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        string? tenant)
     {
-        var cluster = await GetClusterAsync(subscriptionId, clusterName, tenant, retryPolicy);
+        var cluster = await GetClusterAsync(subscriptionId, clusterName, tenant);
         var value = cluster?.ClusterUri;
 
         if (string.IsNullOrEmpty(value))

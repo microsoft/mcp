@@ -3,13 +3,12 @@
 
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 using Azure.Monitor.Query.Logs;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
-public class DeployService(ITenantService tenantService) : BaseAzureService(tenantService), IDeployService
+public class DeployService(IAzureService azureService) : BaseAzureService(azureService), IDeployService
 {
     public async Task<string> GetAzdResourceLogsAsync(
          string workspaceFolder,
@@ -34,9 +33,9 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
 
     private async Task<LogsQueryClient> CreateLogsQueryClientAsync(CancellationToken cancellationToken)
     {
-        var credential = await GetCredential(cancellationToken);
+        var credential = await GetCredential(null, cancellationToken);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
-        options.Transport = new HttpClientTransport(TenantService.GetClient());
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
         return new(credential, options);
     }
 }

@@ -29,10 +29,10 @@ public sealed class CustomMatcherAttribute : BeforeAfterTestAttribute
 
     public CustomMatcherAttribute(
         bool compareBody = false,
-        bool ignoreQueryordering = false)
+        bool ignoreQueryOrdering = false)
     {
         CompareBodies = compareBody;
-        IgnoreQueryOrdering = ignoreQueryordering;
+        IgnoreQueryOrdering = ignoreQueryOrdering;
     }
 
     public override void Before(MethodInfo methodUnderTest, IXunitTest xunitTest)

@@ -11,9 +11,11 @@
             "description": "Represents the type of the destination. Additional destination types may be added over time.",
             "enum": [
                 "Activator",
+                "BusinessEvents",
                 "CustomEndpoint",
                 "Eventhouse",
-                "Lakehouse"
+                "Lakehouse",
+                "Notebook"
             ],
             "x-ms-enum": {
                 "name": "DestinationType",
@@ -22,6 +24,10 @@
                     {
                         "value": "Activator",
                         "description": "The Activator destination type."
+                    },
+                    {
+                        "value": "BusinessEvents",
+                        "description": "The Business Events destination type."
                     },
                     {
                         "value": "CustomEndpoint",
@@ -34,6 +40,10 @@
                     {
                         "value": "Lakehouse",
                         "description": "The Lakehouse destination type."
+                    },
+                    {
+                        "value": "Notebook",
+                        "description": "The Notebook destination type."
                     }
                 ]
             }
@@ -93,24 +103,6 @@
             ],
             "discriminator": "type"
         },
-        "DestinationConnectionResponse": {
-            "type": "object",
-            "description": "Represents the connection information for a destination custom endpoint.",
-            "required": [
-                "consumerGroupName"
-            ],
-            "properties": {
-                "consumerGroupName": {
-                    "type": "string",
-                    "description": "The consumer group name."
-                }
-            },
-            "allOf": [
-                {
-                    "$ref": "./common.json#/definitions/BaseCustomEndpointConnection"
-                }
-            ]
-        },
         "ActivatorDestinationResponse": {
             "type": "object",
             "description": "Activator destination response.",
@@ -129,6 +121,25 @@
                 }
             ],
             "x-ms-discriminator-value": "Activator"
+        },
+        "BusinessEventsDestinationResponse": {
+            "type": "object",
+            "description": "Represents a Business Events destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Business Events destination.",
+                    "$ref": "#/definitions/BusinessEventsDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "BusinessEvents"
         },
         "CustomEndpointDestinationResponse": {
             "type": "object",
@@ -186,6 +197,25 @@
             ],
             "x-ms-discriminator-value": "Lakehouse"
         },
+        "NotebookDestinationResponse": {
+            "type": "object",
+            "description": "Represents a Notebook destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Notebook destination.",
+                    "$ref": "#/definitions/NotebookDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Notebook"
+        },
         "ActivatorDestinationProperties": {
             "type": "object",
             "description": "Activator destination properties.",
@@ -205,6 +235,35 @@
                     "format": "uuid"
                 },
                 "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "BusinessEventsDestinationProperties": {
+            "type": "object",
+            "description": "Represents the Business Events destination properties.",
+            "required": [
+                "workspaceId",
+                "itemId",
+                "businessEventTypeId"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace containing the target Event Schema Set item.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The target Event Schema Set item identifier.",
+                    "format": "uuid"
+                },
+                "businessEventTypeId": {
+                    "type": "string",
+                    "description": "The identifier of the business event type defined by the target Event Schema Set."
+                },
+                "inputSerialization": {
+                    "description": "The serialization applied to incoming destination data.",
                     "$ref": "./serialization.json#/definitions/SerializationInfo"
                 }
             }
@@ -348,6 +407,26 @@
                 },
                 "inputSerialization": {
                     "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "NotebookDestinationProperties": {
+            "type": "object",
+            "description": "Notebook destination properties.",
+            "required": [
+                "workspaceId",
+                "itemId"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The Notebook workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The Notebook item identifier.",
+                    "format": "uuid"
                 }
             }
         }

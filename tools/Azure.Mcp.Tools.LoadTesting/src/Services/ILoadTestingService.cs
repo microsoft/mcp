@@ -4,7 +4,6 @@
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
@@ -15,7 +14,6 @@ public interface ILoadTestingService
         string resourceGroup,
         string? testResourceName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<TestResource>> GetLoadTestResourcesAsync(
@@ -23,7 +21,6 @@ public interface ILoadTestingService
         string? resourceGroup = null,
         string? testResourceName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<TestRun> GetLoadTestRunAsync(
@@ -32,21 +29,19 @@ public interface ILoadTestingService
         string testRunId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<TestRun> CreateOrUpdateLoadTestRunAsync(
         string subscription,
         string testResourceName,
         string testId,
-        string? testRunId = null,
+        string testRunId,
         string? oldTestRunId = null,
         string? resourceGroup = null,
         string? tenant = null,
         string? displayName = null,
         string? description = null,
         bool? debugMode = false,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<TestRun>> GetLoadTestRunsFromTestIdAsync(
@@ -55,7 +50,6 @@ public interface ILoadTestingService
         string testId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<Test> GetTestAsync(
@@ -64,7 +58,6 @@ public interface ILoadTestingService
         string testId,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<Test> CreateTestAsync(
@@ -79,6 +72,5 @@ public interface ILoadTestingService
         int? rampUpTime = 1,
         string? endpointUrl = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

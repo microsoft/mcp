@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
+[Trait("TestType", "Live")]
 public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : CommandTestsBase(output, liveServerFixture), IClassFixture<TestProxyFixture>, IClassFixture<LiveServerFixture>
 {
@@ -161,6 +162,27 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     // todo: use this when we have versioned tests to run this against.
     protected virtual string? VersionQualifier => null;
 
+    /// <summary>
+    /// In HTTP mode, verifies that a local-only tool is unavailable and indicates that the test should return early.
+    /// </summary>
+    /// <param name="toolName">The fully qualified MCP tool name.</param>
+    /// <returns><see langword="true"/> when running in HTTP mode; otherwise, <see langword="false"/>.</returns>
+    protected async Task<bool> AssertLocalToolIsUnavailableInHttpMode(string toolName)
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var result = await Client.CallToolAsync(
+            toolName,
+            new Dictionary<string, object?>(),
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.True(result.IsError);
+        Assert.Contains("not found", McpTestUtilities.GetFirstText(result.Content), StringComparison.OrdinalIgnoreCase);
+        return true;
+    }
+
     protected override async ValueTask LoadSettingsAsync()
     {
         await base.LoadSettingsAsync();
@@ -175,10 +197,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
 
         // skip tests marked [LiveTestOnly] when not in Live mode
-        if (TestMode != TestMode.Live && HasLiveTestOnlyAttribute(methodInfo))
-        {
-            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
-        }
+        CheckLiveTestOnly(methodInfo);
 
         if (fixture.Proxy == null)
         {
@@ -193,7 +212,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeMatcherSettings(methodInfo);
+        await ApplyAttributeMatcherSettings(TestMethodResolver.TryResolveCurrentMethodInfo());
 
         SetRecordingOptions(RecordingOptions);
     }
@@ -228,11 +247,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         };
 
         await SetMatcher(matcher, RecordingId);
-    }
-
-    private static bool HasLiveTestOnlyAttribute(MethodInfo? methodInfo)
-    {
-        return methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null;
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)

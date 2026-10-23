@@ -24,7 +24,9 @@ public class FunctionAppSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.", Title);
+        var functionApp = new CommandGroup(Name,
+            "Function App operations - Commands for managing and accessing Azure Function App resources.",
+            Title);
 
         functionApp.AddCommand<FunctionAppGetCommand>(serviceProvider);
 

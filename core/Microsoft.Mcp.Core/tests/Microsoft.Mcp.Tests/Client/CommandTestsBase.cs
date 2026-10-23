@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
@@ -12,6 +14,7 @@ using Xunit;
 
 namespace Microsoft.Mcp.Tests.Client;
 
+[Trait("TestType", "Live")]
 public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixture liveServerFixture)
     : IAsyncLifetime, IDisposable, IClassFixture<LiveServerFixture>
 {
@@ -37,6 +40,11 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     public virtual async ValueTask InitializeAsync()
     {
+        // load settings first to determine test mode
+        await LoadSettingsAsync();
+
+        CheckLiveTestOnly(TestMethodResolver.TryResolveCurrentMethodInfo());
+
         await InitializeAsyncInternal(null);
     }
 
@@ -66,7 +74,37 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         TestMode = Settings.TestMode;
     }
 
+    // xUnit creates a new instance of the test class (and thus calls InitializeAsync/
+    // LoadSettingsAsync) for every single test method. Without caching, a suite with
+    // 100 live tests would acquire a fresh Entra ID token via LiveTestSettingsFixture's
+    // CustomChainedCredential 100 times over, which under load has been observed to
+    // hit "Azure PowerShell authentication timed out" failures. The underlying
+    // .testsettings.json-derived settings (including the principal name/type) are
+    // identical for every test in a run, so it's safe - and much more reliable - to
+    // load them once per test process and share the result.
+    private static Lazy<Task<LiveTestSettings?>> s_liveSettingsTask =
+        CreateLiveSettingsTask();
+
+    private static Lazy<Task<LiveTestSettings?>> CreateLiveSettingsTask() =>
+        new(LoadLiveSettingsCoreAsync, LazyThreadSafetyMode.ExecutionAndPublication);
+
     private static async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
+    {
+        var cached = Volatile.Read(ref s_liveSettingsTask);
+
+        try
+        {
+            return await cached.Value.ConfigureAwait(false);
+        }
+        catch
+        {
+            // Only replace the failed attempt, not a newer attempt started by another caller.
+            Interlocked.CompareExchange(ref s_liveSettingsTask, CreateLiveSettingsTask(), cached);
+            throw;
+        }
+    }
+
+    private static async Task<LiveTestSettings?> LoadLiveSettingsCoreAsync()
     {
         try
         {
@@ -118,14 +156,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
 
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
-        await LoadSettingsAsync();
-
         // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
         var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
         List<string> defaultArgs = enableDebug
-            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching"]
-            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching"];
+            ? ["server", "start", "--mode", "all", "--debug", "--dangerously-disable-elicitation", "--disable-caching", "--disable-proxy-tools"]
+            : ["server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching", "--disable-proxy-tools"];
         var arguments = CustomArguments?.ToList() ?? defaultArgs;
 
         LiveServerFixture.EnvironmentVariables = GetEnvironmentVariables(proxy);
@@ -232,6 +268,18 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
         return resultProcessor.Invoke(root);
     }
 
+    internal void CheckLiveOnly()
+    {
+        // resolve the current test method once for all attribute checks
+        var methodInfo = TestMethodResolver.TryResolveCurrentMethodInfo();
+
+        // skip tests marked [LiveTestOnly] when not in Live mode
+        if (TestMode != TestMode.Live && methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null)
+        {
+            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
+        }
+    }
+
     public void Dispose()
     {
         Dispose(disposing: true);
@@ -267,4 +315,13 @@ public abstract class CommandTestsBase(ITestOutputHelper output, LiveServerFixtu
     // subclasses should override this method to dispose async resources
     // overrides should still call base.DisposeAsyncCore()
     protected virtual ValueTask DisposeAsyncCore() => ValueTask.CompletedTask;
+
+    protected void CheckLiveTestOnly(MethodInfo? methodInfo)
+    {
+        // skip tests marked [LiveTestOnly] when not in Live mode
+        if (TestMode != TestMode.Live && methodInfo?.GetCustomAttribute<LiveTestOnlyAttribute>() != null)
+        {
+            Assert.Skip("Test is marked [LiveTestOnly] and cannot run in Playback or Record mode.");
+        }
+    }
 }

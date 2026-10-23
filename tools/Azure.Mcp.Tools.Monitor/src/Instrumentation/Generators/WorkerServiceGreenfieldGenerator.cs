@@ -1,7 +1,10 @@
-using Azure.Mcp.Tools.Monitor.Models;
-using static Azure.Mcp.Tools.Monitor.Models.OnboardingConstants;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Generators;
+using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
+
+namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 
 /// <summary>
 /// Generator for .NET Worker Service greenfield projects (no existing telemetry).
@@ -13,11 +16,10 @@ public class WorkerServiceGreenfieldGenerator : IGenerator
     {
         // Single Worker Service project, greenfield
         var workerProjects = analysis.Projects
-            .Where(p => p.AppType == AppType.Worker)
-            .ToList();
+            .Count(p => p.AppType == AppType.Worker);
 
         return analysis.Language == Language.DotNet
-            && workerProjects.Count == 1
+            && workerProjects == 1
             && analysis.State == InstrumentationState.Greenfield;
     }
 
@@ -75,13 +77,10 @@ public class WorkerServiceGreenfieldGenerator : IGenerator
     /// <summary>
     /// Returns the appropriate code insertion marker based on the detected hosting pattern.
     /// </summary>
-    private static string GetCodeMarkerForHostingPattern(HostingPattern pattern)
+    private static string GetCodeMarkerForHostingPattern(HostingPattern pattern) => pattern switch
     {
-        return pattern switch
-        {
-            HostingPattern.GenericHost => CodePatterns.HostCreateDefaultBuilderMarker,
-            // For unknown patterns, default to GenericHost as Worker Services typically use that
-            _ => CodePatterns.HostCreateDefaultBuilderMarker
-        };
-    }
+        HostingPattern.GenericHost => CodePatterns.HostCreateDefaultBuilderMarker,
+        // For unknown patterns, default to GenericHost as Worker Services typically use that
+        _ => CodePatterns.HostCreateDefaultBuilderMarker
+    };
 }

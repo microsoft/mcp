@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AppService.Models;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppService.Services;
 
@@ -17,7 +16,6 @@ public interface IAppServiceService
         string connectionString,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<WebappDetails>> GetWebAppsAsync(
@@ -25,7 +23,6 @@ public interface IAppServiceService
         string? resourceGroup = null,
         string? appName = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<IDictionary<string, string>> GetAppSettingsAsync(
@@ -33,7 +30,6 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> UpdateAppSettingsAsync(
@@ -44,7 +40,6 @@ public interface IAppServiceService
         string settingUpdateType,
         string? settingValue = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<DeploymentDetails>> GetDeploymentsAsync(
@@ -53,7 +48,6 @@ public interface IAppServiceService
         string appName,
         string? deploymentId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<List<DetectorDetails>> ListDetectorsAsync(
@@ -61,7 +55,6 @@ public interface IAppServiceService
         string resourceGroup,
         string appName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<DiagnosisResults> DiagnoseDetectorAsync(
@@ -73,7 +66,6 @@ public interface IAppServiceService
         DateTimeOffset? endTime = null,
         string? interval = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     Task<string> ChangeWebAppStateAsync(
@@ -84,6 +76,5 @@ public interface IAppServiceService
         bool softRestart,
         bool waitForCompletion,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 }

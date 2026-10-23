@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServices;
@@ -11,41 +11,37 @@ using Azure.ResourceManager.RecoveryServices.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
-public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzureService(tenantService), IRsvBackupOperations
+public sealed partial class RsvBackupOperations(IAzureService azureService) : BaseAzureService(azureService), IRsvBackupOperations
 {
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
 
-    private static void ValidateSubscriptionFormat(string subscription)
-    {
-        if (!Guid.TryParse(subscription, out _))
-        {
-            throw new ArgumentException(
-                $"Invalid subscription ID '{subscription}'. Expected a GUID (e.g., 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'). " +
-                "If you provided a subscription name, use the subscription ID instead.");
-        }
-    }
-
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(location), location));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetRecoveryServicesVaults();
+
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+        }
 
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
         var vaultData = new RecoveryServicesVaultData(new AzureLocation(location))
@@ -53,46 +49,52 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = VaultPublicNetworkAccess.Enabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled
             }
         };
 
-        var result = await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, vaultData, cancellationToken);
+        var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
+        await WaitForLroCompletionAsync(result, cancellationToken);
 
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState);
+            result.Value.Data.Properties?.ProvisioningState,
+            result.Value.Data.Properties?.PublicNetworkAccess?.ToString());
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
-        return MapToVaultInfo(vault.Value.Data, resourceGroup);
+        var mua = (expand & VaultExpand.Mua) != 0
+            ? await GetMuaProxyAsync(armClient, subscription, resourceGroup, vaultName, cancellationToken)
+            : default;
+
+        return MapToVaultInfo(vault.Value.Data, resourceGroup, expand, mua.state, mua.resourceGuardId);
     }
 
     public async Task<List<BackupVaultInfo>> ListVaultsAsync(
         string subscription, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        VaultExpand expand = VaultExpand.None)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var subId = SubscriptionResource.CreateResourceIdentifier(subscription);
         var subResource = armClient.GetSubscriptionResource(subId);
 
@@ -100,17 +102,38 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         await foreach (var vault in subResource.GetRecoveryServicesVaultsAsync(cancellationToken))
         {
             var rg = vault.Id?.ResourceGroupName;
-            vaults.Add(MapToVaultInfo(vault.Data, rg));
+            var mua = (expand & VaultExpand.Mua) != 0 && rg is not null
+                ? await GetMuaProxyAsync(armClient, subscription, rg, vault.Data.Name, cancellationToken)
+                : default;
+            vaults.Add(MapToVaultInfo(vault.Data, rg, expand, mua.state, mua.resourceGuardId));
         }
 
         return vaults;
     }
 
+    private static async Task<(string? state, string? resourceGuardId)> GetMuaProxyAsync(
+        ArmClient armClient, string subscription, string resourceGroup, string vaultName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
+            var proxyId = proxyResponse.Value.Data.Properties?.ResourceGuardResourceId?.ToString();
+            return ("Enabled", proxyId);
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            return ("Disabled", null);
+        }
+    }
+
     public async Task<ProtectResult> ProtectItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string policyName, string? containerName,
-        string? datasourceType, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? datasourceType, DiskExclusionSpec? diskExclusion, string? tenant,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -118,9 +141,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
@@ -131,6 +153,16 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             subscription, resourceGroup, vaultName, policyName);
 
         var profile = RsvDatasourceRegistry.ResolveOrDefault(datasourceType);
+
+        // Selective disk backup is only meaningful for IaaS VM protected items.
+        var hasDiskExclusion = diskExclusion is not null && diskExclusion.HasAnyValue;
+        if (hasDiskExclusion && profile.ProtectedItemType != RsvProtectedItemType.IaasVm)
+        {
+            throw new ArgumentException(
+                "Selective disk backup (--disk-list-setting, --disks-list, --exclude-all-data-disks) is only supported for RSV IaaS VM protected items. " +
+                $"The specified datasource resolved to '{profile.FriendlyName}'. " +
+                "See https://learn.microsoft.com/azure/backup/selective-disk-backup-restore for details.");
+        }
 
         if (profile.IsWorkloadType)
         {
@@ -162,10 +194,10 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var result = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
 
             var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse());
+            var operationId = ExtractOperationIdFromResponse(result.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId,
+                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId, operationId,
                 "Workload protection", cancellationToken);
         }
 
@@ -209,10 +241,10 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var fsResult = await fsProtectedItemResource.UpdateAsync(WaitUntil.Started, fsProtectedItemData, cancellationToken);
 
             var fsJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            fsJobId ??= ExtractOperationIdFromResponse(fsResult.GetRawResponse());
+            var fsOperationId = ExtractOperationIdFromResponse(fsResult.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId,
+                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId, fsOperationId,
                 "File share protection", cancellationToken);
         }
 
@@ -226,44 +258,47 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var vmProtectedItemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, container, vmProtectedItemName);
 
+        var vmProtectedItem = new IaasComputeVmProtectedItem
+        {
+            PolicyId = policyArmId,
+            SourceResourceId = new ResourceIdentifier(datasourceId)
+        };
+
+        ApplyDiskExclusionToProtectedItem(vmProtectedItem, diskExclusion);
+
         var vmProtectedItemData = new BackupProtectedItemData(vaultLocation)
         {
-            Properties = new IaasComputeVmProtectedItem
-            {
-                PolicyId = policyArmId,
-                SourceResourceId = new ResourceIdentifier(datasourceId)
-            }
+            Properties = vmProtectedItem
         };
 
         var vmProtectedItemResource = armClient.GetBackupProtectedItemResource(vmProtectedItemId);
         var vmResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-        vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
+        var vmOperationId = ExtractOperationIdFromResponse(vmResult.GetRawResponse());
 
         return await BuildRsvProtectResultAsync(
-            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId,
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId, vmOperationId,
             "VM protection", cancellationToken);
     }
 
     public async Task<ProtectedItemInfo> GetProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         if (string.IsNullOrEmpty(containerName))
         {
             // Search by both internal RSV name and friendly/datasource name
-            var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+            var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
             var found = items.FirstOrDefault(i =>
                 (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
                 MatchesFriendlyName(i, protectedItemName));
@@ -315,15 +350,14 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -339,16 +373,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<BackupPolicyInfo> GetPolicyAsync(
         string vaultName, string resourceGroup, string subscription,
         string policyName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var policyId = BackupProtectionPolicyResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, policyName);
         var policyResource = armClient.GetBackupProtectionPolicyResource(policyId);
@@ -359,15 +392,14 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<List<BackupPolicyInfo>> ListPoliciesAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -383,16 +415,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<BackupJobInfo> GetJobAsync(
         string vaultName, string resourceGroup, string subscription,
         string jobId, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(jobId), jobId));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var jobResourceId = BackupJobResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, jobId);
         var jobResource = armClient.GetBackupJobResource(jobResourceId);
@@ -403,15 +434,14 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
@@ -427,7 +457,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<RecoveryPointInfo> GetRecoveryPointAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string recoveryPointId, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -435,18 +465,17 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName),
             (nameof(recoveryPointId), recoveryPointId));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
             // Auto-discover container from protected items list
             var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
             containerName = resolvedItem.ContainerName;
             protectedItemName = resolvedItem.Name;
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rpId = BackupRecoveryPointResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName, recoveryPointId);
         var rpResource = armClient.GetBackupRecoveryPointResource(rpId);
@@ -458,37 +487,80 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? containerName,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
-        ValidateSubscriptionFormat(subscription);
 
         if (string.IsNullOrEmpty(containerName))
         {
             // Auto-discover container from protected items list
             var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, retryPolicy, cancellationToken);
+                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
             containerName = resolvedItem.ContainerName;
             protectedItemName = resolvedItem.Name;
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var itemId = BackupProtectedItemResource.CreateResourceIdentifier(
             subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName);
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
+        return await EnumerateTolerantAsync(
+            collection.GetAllAsync(cancellationToken: cancellationToken),
+            static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Enumerates an async sequence while tolerating a bounded number of consecutive SDK format failures.
+    /// </summary>
+    internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
+        IAsyncEnumerable<TSource> source,
+        Func<TSource, TResult> selector,
+        CancellationToken cancellationToken,
+        int maxConsecutiveFailures = 3)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
+
+        var results = new List<TResult>();
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    results.Add(selector(enumerator.Current));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
-        return points;
+        return results;
     }
 
     /// <summary>
@@ -499,9 +571,9 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     private async Task<ProtectedItemInfo> ResolveProtectedItemContainerAsync(
         string vaultName, string resourceGroup, string subscription,
         string protectedItemName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, retryPolicy, cancellationToken);
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
         var found = items.FirstOrDefault(i =>
             (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
             MatchesFriendlyName(i, protectedItemName));
@@ -521,16 +593,16 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<OperationResult> UpdateVaultAsync(
         string vaultName, string resourceGroup, string subscription,
         string? redundancy, string? softDelete, string? softDeleteRetentionDays,
-        string? immutabilityState, string? identityType, string? tags,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? immutabilityState, string? identityType, string? userAssignedIdentity,
+        string? publicNetworkAccess, string? tags,
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -539,8 +611,18 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         if (!string.IsNullOrEmpty(identityType))
         {
-            patchData.Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(
-                ParseIdentityType(identityType));
+            patchData.Identity = VaultIdentityHelper.BuildManagedServiceIdentity(identityType, userAssignedIdentity);
+        }
+        else if (!string.IsNullOrEmpty(userAssignedIdentity))
+        {
+            throw new ArgumentException(
+                "--user-assigned-identity was provided but --identity-type is not set. Set --identity-type to 'UserAssigned' or 'SystemAssigned,UserAssigned' to associate user-assigned identities.");
+        }
+
+        if (!string.IsNullOrEmpty(publicNetworkAccess))
+        {
+            patchData.Properties ??= new RecoveryServicesVaultProperties();
+            patchData.Properties.PublicNetworkAccess = ParsePublicNetworkAccess(publicNetworkAccess);
         }
 
         if (!string.IsNullOrEmpty(tags))
@@ -559,7 +641,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         }
 
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
         // not the vault patch endpoint.
@@ -572,12 +655,36 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // since RSV vault patch only supports identity and tag updates.
         if (!string.IsNullOrEmpty(softDelete))
         {
-            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDelete, softDeleteRetentionDays, tenant, retryPolicy, cancellationToken);
+            if (!Enum.TryParse<AzureBackupSoftDeleteState>(softDelete, ignoreCase: true, out var softDeleteEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid soft delete state '{softDelete}'. Valid values: Off, On, AlwaysOn.",
+                    nameof(softDelete));
+            }
+            if (!int.TryParse(softDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
+            {
+                throw new ArgumentException(
+                    "Soft delete retention days is required (14-180) when updating soft delete state via 'vault update'.",
+                    nameof(softDeleteRetentionDays));
+            }
+            await ConfigureSoftDeleteAsync(vaultName, resourceGroup, subscription, softDeleteEnum, retentionDays, tenant, cancellationToken);
         }
 
         if (!string.IsNullOrEmpty(immutabilityState))
         {
-            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, immutabilityState, tenant, retryPolicy, cancellationToken);
+            if (!Enum.TryParse<AzureBackupImmutabilityState>(immutabilityState, ignoreCase: true, out var immutabilityEnum))
+            {
+                throw new ArgumentException(
+                    $"Invalid immutability state '{immutabilityState}'. Valid values: Disabled, Unlocked, Enabled, Locked.",
+                    nameof(immutabilityState));
+            }
+            var normalizedImmutability = immutabilityEnum == AzureBackupImmutabilityState.Enabled
+                ? AzureBackupImmutabilityState.Unlocked
+                : immutabilityEnum;
+            // 'vault update' does not currently plumb immutability-type / duration; default to
+            // AsPerPolicy which is safe for both Disabled and Unlocked. Users needing TimeBased
+            // should use 'governance immutability' instead.
+            await ConfigureImmutabilityAsync(vaultName, resourceGroup, subscription, normalizedImmutability, AzureBackupImmutabilityType.AsPerPolicy, immutabilityDurationDays: null, tenant, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
@@ -597,24 +704,28 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetBackupResourceConfigs();
-        await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
+        Policy.PolicyCreateRequest request,
         string vaultName, string resourceGroup, string subscription,
-        string policyName, string workloadType,
-        string? scheduleTime, string? dailyRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? tenant, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var policyName = request.Policy;
+        var workloadType = request.WorkloadType;
+
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName),
             (nameof(workloadType), workloadType));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultResourceId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultResourceId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -624,157 +735,238 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
 
-        var retentionDays = int.TryParse(dailyRetentionDays, out var dd) ? dd : 30;
-
-        // Stage 2 TODO: Multi-tier retention
-        // When adding weekly/monthly/yearly retention support, add the parameters
-        // back to this method and replace the current DailyRetentionSchedule-only approach
-        // with a full LongTermRetentionPolicy:
-        //   - DailySchedule: always present, using retentionDays.
-        //   - WeeklySchedule: WeeklyRetentionSchedule with DaysOfTheWeek=[Sunday].
-        //   - MonthlySchedule: MonthlyRetentionSchedule with WeeksOfTheMonth=[First].
-        //   - YearlySchedule: YearlyRetentionSchedule with MonthsOfYear=[January].
-        // For VmWorkload: multi-tier retention goes on the Full sub-policy only.
-
-        var scheduleDateTime = DateTimeOffset.TryParse(scheduleTime, out var st) ? st : new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero);
-        var scheduleRunTime = new DateTimeOffset(scheduleDateTime.Year, scheduleDateTime.Month, scheduleDateTime.Day,
-            scheduleDateTime.Hour, scheduleDateTime.Minute, 0, TimeSpan.Zero);
-
-        BackupGenericProtectionPolicy policyProperties;
-
-        var profile = RsvDatasourceRegistry.ResolveOrDefault(workloadType);
-
-        if (profile.PolicyType == RsvPolicyType.VmWorkload)
-        {
-            var fullSchedule = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            fullSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var fullRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            fullRetention.RetentionTimes.Add(scheduleRunTime);
-
-            var fullSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Full"),
-                SchedulePolicy = fullSchedule,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = fullRetention }
-            };
-
-            var logSubPolicy = new SubProtectionPolicy
-            {
-                PolicyType = new SubProtectionPolicyType("Log"),
-                SchedulePolicy = new LogSchedulePolicy { ScheduleFrequencyInMins = 60 },
-                RetentionPolicy = new SimpleRetentionPolicy { RetentionDuration = new RetentionDuration { Count = 15, DurationType = RetentionDurationType.Days } }
-            };
-
-            var wlPolicy = new VmWorkloadProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType(profile.ApiWorkloadType ?? "SQLDataBase"),
-                Settings = new BackupCommonSettings
-                {
-                    TimeZone = "UTC",
-                    IsCompression = false,
-                    IsSqlCompression = false
-                }
-            };
-            wlPolicy.SubProtectionPolicy.Add(fullSubPolicy);
-            wlPolicy.SubProtectionPolicy.Add(logSubPolicy);
-
-            policyProperties = wlPolicy;
-        }
-        else if (profile.PolicyType == RsvPolicyType.AzureFileShare)
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new FileShareProtectionPolicy
-            {
-                WorkLoadType = new BackupWorkloadType("AzureFileShare"),
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
-        else
-        {
-            var schedulePolicy = new SimpleSchedulePolicy { ScheduleRunFrequency = ScheduleRunType.Daily };
-            schedulePolicy.ScheduleRunTimes.Add(scheduleRunTime);
-
-            var dailyRetention = new DailyRetentionSchedule { RetentionDuration = new RetentionDuration { Count = retentionDays, DurationType = RetentionDurationType.Days } };
-            dailyRetention.RetentionTimes.Add(scheduleRunTime);
-
-            policyProperties = new IaasVmProtectionPolicy
-            {
-                SchedulePolicy = schedulePolicy,
-                RetentionPolicy = new LongTermRetentionPolicy { DailySchedule = dailyRetention }
-            };
-        }
+        var policyProperties = Policy.RsvPolicyBuilder.Build(request);
 
         var policyData = new BackupProtectionPolicyData(vaultLocation)
         {
             Properties = policyProperties
         };
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
+        // --policy-tags maps to ARM resource tags on the policy (RSV only).
+        ApplyPolicyTags(policyData.Tags, request.PolicyTags);
+
+        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' created in vault '{vaultName}'.");
     }
 
-    public async Task<OperationResult> UpdatePolicyAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string policyName,
-        string? scheduleTime, string? dailyRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+    private static void ApplyPolicyTags(IDictionary<string, string> destination, string? tagsCsv)
     {
+        if (string.IsNullOrWhiteSpace(tagsCsv))
+        {
+            return;
+        }
+
+        foreach (var pair in tagsCsv!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var idx = pair.IndexOf('=');
+            if (idx <= 0 || idx == pair.Length - 1)
+            {
+                continue;
+            }
+
+            var key = pair[..idx].Trim();
+            var value = pair[(idx + 1)..].Trim();
+            if (key.Length > 0)
+            {
+                destination[key] = value;
+            }
+        }
+    }
+
+    public async Task<OperationResult> UpdatePolicyAsync(
+        Policy.PolicyUpdateRequest request,
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var validation = Policy.PolicyUpdateValidator.Validate(request);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}")));
+        }
+
+        var policyName = request.Policy;
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(policyName), policyName));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
-
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
-            ?? throw new InvalidOperationException($"Policy '{policyName}' has an unsupported properties type.");
+            ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
-        DateTimeOffset? newScheduleTime = null;
-        if (!string.IsNullOrWhiteSpace(scheduleTime))
-        {
-            if (!DateTimeOffset.TryParse(scheduleTime, out var st))
-            {
-                throw new ArgumentException($"Invalid schedule time '{scheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
-            }
-            newScheduleTime = st;
-        }
-
-        int? newRetentionDays = null;
-        if (!string.IsNullOrWhiteSpace(dailyRetentionDays))
-        {
-            if (!int.TryParse(dailyRetentionDays, out var dd) || dd <= 0)
-            {
-                throw new ArgumentException($"Invalid daily retention days '{dailyRetentionDays}'. Provide a positive integer.");
-            }
-            newRetentionDays = dd;
-        }
-
-        if (newScheduleTime is null && newRetentionDays is null)
+        Policy.IaasVmPolicyUpdater.ValidateWorkload(policyProperties, request);
+        if (!request.HasAnyInput())
         {
             return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
         }
 
-        UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        if (policyProperties is IaasVmProtectionPolicy vmPolicy)
+        {
+            MergeIaasVmExtended(vmPolicy, request);
+            Policy.IaasVmPolicyUpdater.MergeTags(policyData.Tags, request.PolicyTags);
+        }
+        else
+        {
+            DateTimeOffset? newScheduleTime = request.ScheduleTime is null
+                ? null : Policy.PolicyUpdateValidator.ParseTime(request.ScheduleTime);
+            int? newRetentionDays = request.DailyRetentionDays is null
+                ? null : Policy.PolicyUpdateValidator.ParsePositive(request.DailyRetentionDays);
+            UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
+        }
 
-        await policyCollection.CreateOrUpdateAsync(WaitUntil.Completed, policyName, policyData, cancellationToken);
-
+        try
+        {
+            // Reuse the fetched resource and properties, including Resource Guard and unknown SDK fields.
+            var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (NullReferenceException)
+        {
+            throw CreatePolicyMaterializationError(policyName!, vaultName);
+        }
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
 
+    /// <summary>
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy response.
+    /// The update may have applied, so callers are directed to verify the current policy state.
+    /// </summary>
+    internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
+        new(
+            (int)HttpStatusCode.InternalServerError,
+            $"The update for policy '{policyName}' in vault '{vaultName}' was submitted, but the Azure SDK could not " +
+            "deserialize the updated policy from the service response (a known SDK limitation for some IaaS VM policy shapes). " +
+            "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
+
+    /// <summary>
+    /// Applies all VM updates through the subtype-preserving updater, including legacy flags.
+    /// </summary>
+    internal static void MergeIaasVmExtended(IaasVmProtectionPolicy vmPolicy, Policy.PolicyUpdateRequest req)
+        => Policy.IaasVmPolicyUpdater.Apply(vmPolicy, req);
+
+    /// <summary>
+    /// Merges explicitly supplied LTR tiers without replacing existing SDK instances or omitted times.
+    /// </summary>
+    internal static void MergeIaasVmRetention(LongTermRetentionPolicy retention, Policy.PolicyUpdateRequest req,
+        IList<DateTimeOffset> scheduleTimes, bool scheduleChanged = false)
+    {
+        if (req.WeeklyRetentionWeeks > 0)
+        {
+            bool replaceTimes = scheduleChanged || retention.WeeklySchedule is null;
+            var weekly = retention.WeeklySchedule ?? new WeeklyRetentionSchedule();
+            weekly.RetentionDuration ??= new RetentionDuration();
+            weekly.RetentionDuration.Count = req.WeeklyRetentionWeeks;
+            weekly.RetentionDuration.DurationType = RetentionDurationType.Weeks;
+            weekly.DaysOfTheWeek.Clear();
+            foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek))
+            {
+                weekly.DaysOfTheWeek.Add(day);
+            }
+            if (replaceTimes)
+            {
+                weekly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { weekly.RetentionTimes.Add(time); }
+            }
+            retention.WeeklySchedule = weekly;
+        }
+
+        if (req.MonthlyRetentionMonths > 0)
+        {
+            bool replaceTimes = scheduleChanged || retention.MonthlySchedule is null;
+            var monthly = retention.MonthlySchedule ?? new MonthlyRetentionSchedule();
+            monthly.RetentionDuration ??= new RetentionDuration();
+            monthly.RetentionDuration.Count = req.MonthlyRetentionMonths;
+            monthly.RetentionDuration.DurationType = RetentionDurationType.Months;
+            monthly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.MonthlyRetentionDaysOfMonth is not null)
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                monthly.RetentionScheduleWeekly = null;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.MonthlyRetentionDaysOfMonth))
+                {
+                    monthly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                monthly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                monthly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek))
+                {
+                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
+                }
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth))
+                {
+                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
+                }
+            }
+            if (replaceTimes)
+            {
+                monthly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { monthly.RetentionTimes.Add(time); }
+            }
+            retention.MonthlySchedule = monthly;
+        }
+
+        if (req.YearlyRetentionYears > 0)
+        {
+            bool replaceTimes = scheduleChanged || retention.YearlySchedule is null;
+            var yearly = retention.YearlySchedule ?? new YearlyRetentionSchedule();
+            yearly.RetentionDuration ??= new RetentionDuration();
+            yearly.RetentionDuration.Count = req.YearlyRetentionYears;
+            yearly.RetentionDuration.DurationType = RetentionDurationType.Years;
+            yearly.MonthsOfYear.Clear();
+            foreach (var month in Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths))
+            {
+                yearly.MonthsOfYear.Add(month);
+            }
+            yearly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.YearlyRetentionDaysOfMonth is not null)
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                yearly.RetentionScheduleWeekly = null;
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.YearlyRetentionDaysOfMonth))
+                {
+                    yearly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
+                }
+            }
+            else
+            {
+                yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
+                yearly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                yearly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek))
+                {
+                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
+                }
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth))
+                {
+                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
+                }
+            }
+            if (replaceTimes)
+            {
+                yearly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { yearly.RetentionTimes.Add(time); }
+            }
+            retention.YearlySchedule = yearly;
+        }
+    }
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
     {
         bool scheduleApplied = newScheduleTime is null;
@@ -810,36 +1002,6 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 }
                 break;
 
-            case IaasVmProtectionPolicy vmPolicy:
-                if (newScheduleTime is not null && vmPolicy.SchedulePolicy is SimpleSchedulePolicy vmSchedule)
-                {
-                    var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                    vmSchedule.ScheduleRunTimes.Clear();
-                    vmSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-                    scheduleApplied = true;
-                }
-
-                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy vmRetention && vmRetention.DailySchedule is not null)
-                {
-                    if (newRetentionDays is not null)
-                    {
-                        vmRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
-                        retentionApplied = true;
-                    }
-
-                    if (newScheduleTime is not null)
-                    {
-                        var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                        vmRetention.DailySchedule.RetentionTimes.Clear();
-                        vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
-                    }
-                }
-                else if (newRetentionDays is not null)
-                {
-                    // Retention policy type not supported for update
-                }
-                break;
-
             case FileShareProtectionPolicy fsPolicy:
                 if (newScheduleTime is not null && fsPolicy.SchedulePolicy is SimpleSchedulePolicy fsSchedule)
                 {
@@ -871,18 +1033,18 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 break;
 
             default:
-                throw new InvalidOperationException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
+                throw new ArgumentException($"Unsupported policy type '{policyProperties.GetType().Name}'. Only IaasVM, VmWorkload (SQL/HANA), and FileShare policies are supported for update.");
         }
 
         if (!scheduleApplied)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 $"Schedule update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a schedule type that is not supported for update. Only SimpleSchedulePolicy is supported.");
         }
 
         if (!retentionApplied)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 $"Retention update could not be applied. Policy uses '{policyProperties.GetType().Name}' with a retention type that is not supported for update. Only LongTermRetentionPolicy with a daily schedule is supported.");
         }
     }
@@ -892,97 +1054,158 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<OperationResult> ConfigureImmutabilityAsync(
         string vaultName, string resourceGroup, string subscription,
-        string immutabilityState, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
-    {
-        ValidateRequiredParameters(
-            (nameof(vaultName), vaultName),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(immutabilityState), immutabilityState));
-        ValidateSubscriptionFormat(subscription);
-
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-        var vault = await vaultResource.GetAsync(cancellationToken);
-
-        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-        {
-            Properties = new RecoveryServicesVaultProperties
-            {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    ImmutabilityState = new ImmutabilityState(immutabilityState)
-                }
-            }
-        };
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
-
-        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'");
-    }
-
-    public async Task<OperationResult> ConfigureSoftDeleteAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string softDeleteState, string? softDeleteRetentionDays,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
-    {
-        ValidateRequiredParameters(
-            (nameof(vaultName), vaultName),
-            (nameof(resourceGroup), resourceGroup),
-            (nameof(subscription), subscription),
-            (nameof(softDeleteState), softDeleteState));
-        ValidateSubscriptionFormat(subscription);
-
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
-        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-        var vault = await vaultResource.GetAsync(cancellationToken);
-
-        var rsvSoftDeleteState = softDeleteState.ToUpperInvariant() switch
-        {
-            "ON" => RecoveryServicesSoftDeleteState.Enabled,
-            "OFF" => RecoveryServicesSoftDeleteState.Disabled,
-            "ALWAYSON" => RecoveryServicesSoftDeleteState.AlwaysON,
-            _ => new RecoveryServicesSoftDeleteState(softDeleteState)
-        };
-
-        var softDeleteSettings = new RecoveryServicesSoftDeleteSettings()
-        {
-            SoftDeleteState = rsvSoftDeleteState,
-        };
-
-        if (int.TryParse(softDeleteRetentionDays, out var retentionDays))
-        {
-            softDeleteSettings.SoftDeleteRetentionPeriodInDays = retentionDays;
-        }
-
-        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-        {
-            Properties = new RecoveryServicesVaultProperties
-            {
-                SecuritySettings = new RecoveryServicesSecuritySettings
-                {
-                    SoftDeleteSettings = softDeleteSettings
-                }
-            }
-        };
-
-        await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
-
-        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'");
-    }
-
-    public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
-        string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays,
+        string? tenant, CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
+
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
+        {
+            Properties = new RecoveryServicesVaultProperties
+            {
+                SecuritySettings = BuildImmutabilitySettings(immutabilityState, immutabilityType, immutabilityDurationDays),
+            }
+        };
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Immutability set to '{immutabilityState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for an immutability update.
+    /// Extracted for regression testing: api-version 2026-05-01+ requires
+    /// <c>ImmutabilitySettings.Configuration.Type</c> whenever the state is not <c>Disabled</c>.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildImmutabilitySettings(
+        AzureBackupImmutabilityState immutabilityState,
+        AzureBackupImmutabilityType immutabilityType,
+        int? immutabilityDurationDays)
+    {
+        var immutabilitySettings = new ImmutabilitySettings
+        {
+            State = immutabilityState.ToString() switch
+            {
+                nameof(AzureBackupImmutabilityState.Disabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Disabled,
+                nameof(AzureBackupImmutabilityState.Unlocked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                nameof(AzureBackupImmutabilityState.Locked) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Locked,
+                // 'Enabled' should have been normalized to 'Unlocked' upstream; guard here just in case.
+                nameof(AzureBackupImmutabilityState.Enabled) => Azure.ResourceManager.RecoveryServices.Models.ImmutabilityState.Unlocked,
+                _ => throw new ArgumentOutOfRangeException(nameof(immutabilityState), immutabilityState, "Unsupported immutability state."),
+            },
+        };
+
+        // api-version 2026-05-01+ requires ImmutabilityConfiguration whenever state != Disabled.
+        // For Disabled, omit Configuration so we don't send a nonsensical Type/Duration pair.
+        if (immutabilityState != AzureBackupImmutabilityState.Disabled)
+        {
+            immutabilitySettings.Configuration = new ImmutabilityConfiguration
+            {
+                Type = immutabilityType switch
+                {
+                    AzureBackupImmutabilityType.AsPerPolicy => ImmutabilityType.AsPerPolicy,
+                    AzureBackupImmutabilityType.TimeBased => ImmutabilityType.TimeBased,
+                    _ => throw new ArgumentOutOfRangeException(nameof(immutabilityType), immutabilityType, "Unsupported immutability type."),
+                },
+                DurationInDays = immutabilityType == AzureBackupImmutabilityType.TimeBased ? immutabilityDurationDays : null,
+            };
+        }
+
+        return new RecoveryServicesSecuritySettings
+        {
+            ImmutabilitySettings = immutabilitySettings,
+        };
+    }
+
+    public async Task<OperationResult> ConfigureSoftDeleteAsync(
+        string vaultName, string resourceGroup, string subscription,
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
+
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
+        {
+            Properties = new RecoveryServicesVaultProperties
+            {
+                SecuritySettings = BuildSoftDeleteSettings(softDeleteState, softDeleteRetentionDays),
+            }
+        };
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null, $"Soft delete set to '{softDeleteState}' for vault '{vaultName}'.");
+    }
+
+    /// <summary>
+    /// Builds the RSV vault security-settings payload for a soft-delete update.
+    /// Extracted for regression testing: api-version 2026-02-01+ requires both
+    /// <c>SoftDeleteRetentionPeriodInDays</c> and <c>EnhancedSecurityState</c> to be set
+    /// whenever the state changes; RP rejects state-only patches.
+    /// </summary>
+    internal static RecoveryServicesSecuritySettings BuildSoftDeleteSettings(
+        AzureBackupSoftDeleteState softDeleteState,
+        int softDeleteRetentionDays)
+    {
+        var rsvSoftDeleteState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesSoftDeleteState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesSoftDeleteState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesSoftDeleteState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        // Mirror EnhancedSecurityState from SoftDeleteState. api-version 2026-02-01+ rejects
+        // updates missing this field. AlwaysON is IRREVERSIBLE — mirror it exactly.
+        var enhancedSecurityState = softDeleteState switch
+        {
+            AzureBackupSoftDeleteState.On => RecoveryServicesEnhancedSecurityState.Enabled,
+            AzureBackupSoftDeleteState.Off => RecoveryServicesEnhancedSecurityState.Disabled,
+            AzureBackupSoftDeleteState.AlwaysOn => RecoveryServicesEnhancedSecurityState.AlwaysON,
+            _ => throw new ArgumentOutOfRangeException(nameof(softDeleteState), softDeleteState, "Unsupported soft delete state."),
+        };
+
+        return new RecoveryServicesSecuritySettings
+        {
+            SoftDeleteSettings = new RecoveryServicesSoftDeleteSettings
+            {
+                SoftDeleteState = rsvSoftDeleteState,
+                SoftDeleteRetentionPeriodInDays = softDeleteRetentionDays,
+                EnhancedSecurityState = enhancedSecurityState,
+            },
+        };
+    }
+
+    public async Task<OperationResult> ConfigureCrossRegionRestoreAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
@@ -1002,28 +1225,50 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             var currentConfig = await configResource.GetAsync(cancellationToken);
 
             var data = currentConfig.Value.Data;
+
+            // The BackupResourceConfig GET reliably returns the CRR state even when the
+            // Vault GET RedundancySettings.CrossRegionRestore property is not populated.
+            if (data.Properties.EnableCrossRegionRestore == true)
+            {
+                return new OperationResult("Succeeded", null, $"Cross-Region Restore is already enabled for vault '{vaultName}'.");
+            }
             data.Properties.EnableCrossRegionRestore = true;
 
             var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
             var rgResource = armClient.GetResourceGroupResource(rgId);
             var collection = rgResource.GetBackupResourceConfigs();
-            await collection.CreateOrUpdateAsync(WaitUntil.Completed, vaultName, data, cancellationToken);
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
         catch (RequestFailedException ex) when (ex.ErrorCode == "BMSUserErrorRedundancySettingsUseVaultApi")
         {
             // Legacy API rejected — vault requires Vault PATCH API for redundancy settings.
+            // Preserve any sibling RedundancySettings fields (e.g. StandardTierStorageRedundancy)
+            // that the newer Recovery Services api-version requires to be present on the PATCH
+            // payload. Sending a bare RedundancySettings PATCH with only CrossRegionRestore
+            // populated is rejected as an incomplete PATCH after the Azure.ResourceManager.
+            // RecoveryServices upgrade (state-only PATCH is no longer accepted for
+            // Properties.RedundancySettings on api-version 2026-02-01+).
+            var existingRedundancy = vault.Value.Data.Properties?.RedundancySettings;
+            var redundancySettings = new VaultPropertiesRedundancySettings
+            {
+                CrossRegionRestore = CrossRegionRestore.Enabled
+            };
+            if (existingRedundancy?.StandardTierStorageRedundancy is { } tierRedundancy)
+            {
+                redundancySettings.StandardTierStorageRedundancy = tierRedundancy;
+            }
+
             var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
             {
                 Properties = new RecoveryServicesVaultProperties
                 {
-                    RedundancySettings = new VaultPropertiesRedundancySettings
-                    {
-                        CrossRegionRestore = CrossRegionRestore.Enabled
-                    }
+                    RedundancySettings = redundancySettings
                 }
             };
 
-            await vaultResource.UpdateAsync(WaitUntil.Completed, patchData, cancellationToken);
+            var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
         }
 
         return new OperationResult("Succeeded", null, $"Cross-Region Restore enabled for vault '{vaultName}'.");
@@ -1031,7 +1276,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<OperationResult> ConfigureMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string resourceGuardId, string? tenant, RetryPolicyOptions? retryPolicy,
+        string resourceGuardId, string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1040,7 +1285,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(subscription), subscription),
             (nameof(resourceGuardId), resourceGuardId));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
@@ -1054,18 +1299,19 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
         };
 
-        await proxyCollection.CreateOrUpdateAsync(
-            WaitUntil.Completed,
+        var operation = await proxyCollection.CreateOrUpdateAsync(
+            WaitUntil.Started,
             "VaultProxy",
             proxyData,
             cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization enabled on vault '{vaultName}' with Resource Guard '{resourceGuardId}'.");
     }
 
     public async Task<OperationResult> DisableMultiUserAuthorizationAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? tenant, RetryPolicyOptions? retryPolicy,
+        string? tenant,
         CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
@@ -1073,36 +1319,143 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
         var proxyResponse = await rgResource.GetResourceGuardProxyAsync(vaultName, "VaultProxy", cancellationToken);
-        await proxyResponse.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
+        var operation = await proxyResponse.Value.DeleteAsync(WaitUntil.Started, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
 
         return new OperationResult("Succeeded", null, $"Multi-User Authorization disabled on vault '{vaultName}'.");
     }
 
 
-    private static Azure.ResourceManager.Models.ManagedServiceIdentityType ParseIdentityType(string identityType) =>
-        identityType.ToUpperInvariant() switch
+    public async Task<OperationResult> ConfigureEncryptionAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string keyVaultUri, string keyName, string identityType,
+        string? keyVersion, string? userAssignedIdentityId,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(keyVaultUri), keyVaultUri),
+            (nameof(keyName), keyName),
+            (nameof(identityType), identityType));
+        var isSystemAssigned = "SystemAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        var isUserAssigned = "UserAssigned".Equals(identityType, StringComparison.OrdinalIgnoreCase);
+        if (!isSystemAssigned && !isUserAssigned)
         {
-            "SYSTEMASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssigned,
-            "USERASSIGNED" => Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned,
-            "SYSTEMASSIGNED,USERASSIGNED" or "SYSTEMASSIGNEDUSERASSIGNED"
-                => Azure.ResourceManager.Models.ManagedServiceIdentityType.SystemAssignedUserAssigned,
-            "NONE" => Azure.ResourceManager.Models.ManagedServiceIdentityType.None,
+            throw new ArgumentException(
+                $"Invalid identity type '{identityType}' for CMK encryption. Supported values: 'SystemAssigned', 'UserAssigned'.");
+        }
+
+        if (isUserAssigned && string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        {
+            throw new ArgumentException(
+                "The --user-assigned-identity-id parameter is required when --identity-type is 'UserAssigned'.");
+        }
+
+        // Build the full key URI: {keyVaultUri}/keys/{keyName}[/{keyVersion}]
+        var kvUri = keyVaultUri.TrimEnd('/');
+        var keyUriString = string.IsNullOrEmpty(keyVersion)
+            ? $"{kvUri}/keys/{keyName}"
+            : $"{kvUri}/keys/{keyName}/{keyVersion}";
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken);
+
+        var kekIdentity = new CmkKekIdentity();
+        if (isSystemAssigned)
+        {
+            kekIdentity.UseSystemAssignedIdentity = true;
+        }
+        else
+        {
+            kekIdentity.UseSystemAssignedIdentity = false;
+            kekIdentity.UserAssignedIdentity = new ResourceIdentifier(userAssignedIdentityId!);
+        }
+
+        var encryption = new VaultPropertiesEncryption
+        {
+            KeyUri = new Uri(keyUriString),
+            KekIdentity = kekIdentity,
+            InfrastructureEncryption = Azure.ResourceManager.RecoveryServices.Models.InfrastructureEncryptionState.Enabled
+        };
+
+        var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
+        {
+            Properties = new RecoveryServicesVaultProperties
+            {
+                Encryption = encryption
+            }
+        };
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        return new OperationResult("Succeeded", null,
+            $"Customer-Managed Key encryption configured on vault '{vaultName}' using key '{keyName}' from '{kvUri}'.");
+    }
+
+    private static VaultPublicNetworkAccess ParsePublicNetworkAccess(string publicNetworkAccess) =>
+        publicNetworkAccess.ToUpperInvariant() switch
+        {
+            "ENABLED" => VaultPublicNetworkAccess.Enabled,
+            "DISABLED" => VaultPublicNetworkAccess.Disabled,
             _ => throw new ArgumentException(
-                $"Invalid identity type '{identityType}'. Supported values: 'SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned', 'None'.")
+                $"Invalid --public-network-access value '{publicNetworkAccess}'. Supported values: 'Enabled', 'Disabled'.")
         };
 
     private static BackupVaultInfo MapToVaultInfo(RecoveryServicesVaultData data, string? resourceGroup)
+        => MapToVaultInfo(data, resourceGroup, VaultExpand.None, muaState: null, muaResourceGuardId: null);
+
+    private static BackupVaultInfo MapToVaultInfo(
+        RecoveryServicesVaultData data,
+        string? resourceGroup,
+        VaultExpand expand,
+        string? muaState,
+        string? muaResourceGuardId)
     {
-        var securitySettings = data.Properties?.SecuritySettings;
+        var properties = data.Properties;
+        var securitySettings = properties?.SecuritySettings;
         var softDeleteSettings = securitySettings?.SoftDeleteSettings;
         var immutabilityState = securitySettings?.ImmutabilityState?.ToString();
         var identityType = data.Identity?.ManagedServiceIdentityType.ToString();
+        var identityDetails = data.Identity is null
+            ? null
+            : new BackupVaultIdentityDetails(
+                data.Identity.PrincipalId?.ToString(),
+                data.Identity.TenantId?.ToString(),
+                data.Identity.ManagedServiceIdentityType.ToString(),
+                data.Identity.UserAssignedIdentities?.Select(static kvp => new BackupVaultUserAssignedIdentity(
+                    kvp.Key.ToString(),
+                    kvp.Value?.PrincipalId?.ToString(),
+                    kvp.Value?.ClientId?.ToString())).ToList());
+
+        string? crossRegionRestoreState = null;
+        // NOTE: RSV encryption state is intentionally left null. The RSV vault GET API
+        // (VaultPropertiesEncryption) does not return a first-class encryption state field —
+        // only the CMK URI (when configured) and infrastructure encryption flag. We surface
+        // encryptionKeyUri as returned by the service and skip the state field rather than
+        // inferring a synthetic value. DPP vaults populate encryptionState authoritatively
+        // from SecuritySettings.EncryptionSettings.State in DppBackupOperations.
+        string? encryptionState = null;
+        string? encryptionKeyUri = null;
+
+        if ((expand & VaultExpand.Security) != 0)
+        {
+            encryptionKeyUri = properties?.Encryption?.KeyUri?.ToString();
+
+            // CrossRegionRestore comes from RedundancySettings and is part of the security posture.
+            crossRegionRestoreState = properties?.RedundancySettings?.CrossRegionRestore?.ToString();
+        }
 
         return new BackupVaultInfo(
             data.Id?.ToString(),
@@ -1110,15 +1463,21 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             VaultType,
             data.Location.Name,
             resourceGroup,
-            data.Properties?.ProvisioningState,
+            properties?.ProvisioningState,
             data.Sku?.Name.ToString(),
             null,
-            data.Properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
+            properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString(),
             softDeleteSettings?.SoftDeleteState?.ToString(),
             softDeleteSettings?.SoftDeleteRetentionPeriodInDays,
             immutabilityState,
             identityType,
-            data.Tags?.ToDictionary(t => t.Key, t => t.Value));
+            data.Tags?.ToDictionary(t => t.Key, t => t.Value),
+            MuaState: muaState,
+            MuaResourceGuardId: muaResourceGuardId,
+            CrossRegionRestoreState: crossRegionRestoreState,
+            EncryptionState: encryptionState,
+            EncryptionKeyUri: encryptionKeyUri,
+            IdentityDetails: identityDetails);
     }
 
     private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
@@ -1129,6 +1488,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         string? policyName = null;
         DateTimeOffset? lastBackupTime = null;
         string? container = null;
+        ProtectedItemDetails? protectedItemDetails = null;
 
         if (data.Properties is BackupGenericProtectedItem genericItem)
         {
@@ -1139,14 +1499,141 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
             if (genericItem is IaasVmProtectedItem vmItem)
             {
-                protectionStatus = vmItem.ProtectionState?.ToString();
+                protectionStatus = vmItem.ProtectionStatus;
                 lastBackupTime = vmItem.LastBackupOn;
+
+                var extendedInfo = vmItem.ExtendedInfo;
+                var extendedProperties = vmItem.ExtendedProperties;
+                var diskExclusionProperties = extendedProperties?.DiskExclusionProperties;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: vmItem.BackupManagementType?.ToString(),
+                    WorkloadType: vmItem.WorkloadType?.ToString(),
+                    LastRecoverOn: vmItem.LastRecoverOn,
+                    BackupSetName: vmItem.BackupSetName,
+                    CreateMode: vmItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: vmItem.DeferredDeletedOn,
+                    IsScheduledForDeferredDelete: vmItem.IsScheduledForDeferredDelete,
+                    DeferredDeleteTimeRemaining: vmItem.DeferredDeleteTimeRemaining?.ToString(),
+                    IsDeferredDeleteScheduleUpcoming: vmItem.IsDeferredDeleteScheduleUpcoming,
+                    IsRehydrate: vmItem.IsRehydrate,
+                    ResourceGuardOperationRequests: vmItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: vmItem.IsArchiveEnabled,
+                    PolicyName: vmItem.PolicyName,
+                    SoftDeleteRetentionPeriodInDays: vmItem.SoftDeleteRetentionPeriodInDays,
+                    SoftDeleteRetentionPeriod: vmItem.SoftDeleteRetentionPeriod,
+                    VaultId: vmItem.VaultId?.ToString(),
+                    FriendlyName: vmItem.FriendlyName,
+                    VirtualMachineId: vmItem.VirtualMachineId?.ToString(),
+                    ProtectionStatus: vmItem.ProtectionStatus,
+                    ProtectionState: vmItem.ProtectionState?.ToString(),
+                    HealthStatus: vmItem.HealthStatus?.ToString(),
+                    HealthDetails: vmItem.HealthDetails?.Select(MapToProtectedItemHealthDetails).ToList(),
+                    KpisHealths: vmItem.KpisHealths?.ToDictionary(
+                        static kpi => kpi.Key,
+                        static kpi => new ProtectedItemKpiHealthDetails(
+                            kpi.Value?.ResourceHealthStatus?.ToString(),
+                            kpi.Value?.ResourceHealthDetails?.Select(MapToProtectedItemHealthDetails).ToList())),
+                    LastBackupStatus: vmItem.LastBackupStatus,
+                    ProtectedItemDataId: vmItem.ProtectedItemDataId,
+                    PolicyType: vmItem.PolicyType,
+                    LastBackupOn: vmItem.LastBackupOn,
+                    OldestRecoverOn: extendedInfo?.OldestRecoverOn,
+                    OldestRecoveryPointInVault: extendedInfo?.OldestRecoveryPointInVault,
+                    OldestRecoveryPointInArchive: extendedInfo?.OldestRecoveryPointInArchive,
+                    NewestRecoveryPointInArchive: extendedInfo?.NewestRecoveryPointInArchive,
+                    RecoveryPointCount: extendedInfo?.RecoveryPointCount,
+                    IsPolicyInconsistent: extendedInfo?.IsPolicyInconsistent,
+                    ExtendedProperties: extendedProperties is null
+                        ? null
+                        : new ProtectedItemExtendedProperties(
+                            diskExclusionProperties is null
+                                ? null
+                                : new ProtectedItemDiskExclusionProperties(
+                                    diskExclusionProperties.DiskLunList?.ToList(),
+                                    diskExclusionProperties.IsInclusionList),
+                            extendedProperties.LinuxVmApplicationName));
+
             }
             else if (genericItem is VmWorkloadProtectedItem workloadItem)
             {
                 protectionStatus = workloadItem.ProtectionState?.ToString();
                 lastBackupTime = workloadItem.LastBackupOn;
                 datasourceType = workloadItem.WorkloadType?.ToString();
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: null,
+                    BackupSetName: null,
+                    CreateMode: null,
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: null,
+                    IsArchiveEnabled: null,
+                    PolicyName: policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: null,
+                    FriendlyName: null,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: workloadItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: workloadItem.LastBackupStatus?.ToString(),
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
+            }
+            else if (genericItem is FileshareProtectedItem fileShareItem)
+            {
+                protectionStatus = fileShareItem.ProtectionState?.ToString();
+                lastBackupTime = fileShareItem.LastBackupOn;
+                protectedItemDetails = new ProtectedItemDetails(
+                    BackupManagementType: genericItem.BackupManagementType?.ToString(),
+                    WorkloadType: datasourceType,
+                    LastRecoverOn: fileShareItem.LastRecoverOn,
+                    BackupSetName: fileShareItem.BackupSetName,
+                    CreateMode: fileShareItem.CreateMode?.ToString(),
+                    DeferredDeletedOn: null,
+                    IsScheduledForDeferredDelete: null,
+                    DeferredDeleteTimeRemaining: null,
+                    IsDeferredDeleteScheduleUpcoming: null,
+                    IsRehydrate: null,
+                    ResourceGuardOperationRequests: fileShareItem.ResourceGuardOperationRequests?.ToList(),
+                    IsArchiveEnabled: fileShareItem.IsArchiveEnabled,
+                    PolicyName: fileShareItem.PolicyName ?? policyName,
+                    SoftDeleteRetentionPeriodInDays: null,
+                    SoftDeleteRetentionPeriod: null,
+                    VaultId: fileShareItem.VaultId?.ToString(),
+                    FriendlyName: fileShareItem.FriendlyName,
+                    VirtualMachineId: null,
+                    ProtectionStatus: protectionStatus,
+                    ProtectionState: fileShareItem.ProtectionState?.ToString(),
+                    HealthStatus: null,
+                    HealthDetails: null,
+                    KpisHealths: null,
+                    LastBackupStatus: fileShareItem.LastBackupStatus,
+                    ProtectedItemDataId: null,
+                    PolicyType: null,
+                    LastBackupOn: lastBackupTime,
+                    OldestRecoverOn: null,
+                    OldestRecoveryPointInVault: null,
+                    OldestRecoveryPointInArchive: null,
+                    NewestRecoveryPointInArchive: null,
+                    RecoveryPointCount: null,
+                    IsPolicyInconsistent: null,
+                    ExtendedProperties: null);
             }
         }
 
@@ -1159,8 +1646,12 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             datasourceId,
             policyName,
             lastBackupTime,
-            container);
+            container,
+            protectedItemDetails);
     }
+
+    private static ProtectedItemHealthDetails MapToProtectedItemHealthDetails(ResourceHealthDetails details) =>
+        new(details.Code, details.Title, details.Message, details.Recommendations?.ToList());
 
     private static BackupPolicyInfo MapToPolicyInfo(BackupProtectionPolicyData data)
     {
@@ -1169,57 +1660,104 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         string? scheduleFrequency = null;
         string? scheduleTime = null;
         int? dailyRetentionDays = null;
+        BackupPolicyDetails? details = null;
 
         if (data.Properties is BackupGenericProtectionPolicy genericPolicy)
         {
             protectedItemsCount = genericPolicy.ProtectedItemsCount;
+            string? backupManagementType = null;
+            var resourceGuardOperationRequests = genericPolicy.ResourceGuardOperationRequests?.ToList();
 
             if (genericPolicy is IaasVmProtectionPolicy vmPolicy)
             {
                 workloadType = "AzureIaasVM";
-                if (vmPolicy.SchedulePolicy is SimpleSchedulePolicy simpleSchedule)
-                {
-                    scheduleFrequency = simpleSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = simpleSchedule.ScheduleRunTimes?.Count > 0 ? simpleSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                backupManagementType = "AzureIaasVM";
+                var schedulePolicy = MapSchedulePolicy(vmPolicy.SchedulePolicy);
+                var retentionPolicy = MapRetentionPolicy(vmPolicy.RetentionPolicy);
+                scheduleFrequency = schedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = schedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(vmPolicy.RetentionPolicy);
 
-                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy longTermRetention)
-                {
-                    dailyRetentionDays = longTermRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: vmPolicy.TimeZone,
+                    PolicyType: vmPolicy.PolicyType?.ToString(),
+                    SnapshotConsistencyType: vmPolicy.SnapshotConsistencyType?.ToString(),
+                    InstantRPRetentionRangeInDays: vmPolicy.InstantRPRetentionRangeInDays,
+                    InstantRPResourceGroupNamePrefix: vmPolicy.InstantRPDetails?.AzureBackupRGNamePrefix,
+                    InstantRPResourceGroupNameSuffix: vmPolicy.InstantRPDetails?.AzureBackupRGNameSuffix,
+                    MakePolicyConsistent: null,
+                    Settings: null,
+                    SchedulePolicy: schedulePolicy,
+                    RetentionPolicy: retentionPolicy,
+                    TieringPolicies: MapTieringPolicies(vmPolicy.TieringPolicy),
+                    SubProtectionPolicies: null);
             }
             else if (genericPolicy is FileShareProtectionPolicy fsPolicy)
             {
                 workloadType = "AzureFileShare";
-                if (fsPolicy.SchedulePolicy is SimpleSchedulePolicy fsSchedule)
-                {
-                    scheduleFrequency = fsSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = fsSchedule.ScheduleRunTimes?.Count > 0 ? fsSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                backupManagementType = "AzureStorage";
+                var schedulePolicy = MapSchedulePolicy(fsPolicy.SchedulePolicy);
+                var retentionPolicy = MapRetentionPolicy(fsPolicy.RetentionPolicy);
+                scheduleFrequency = schedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = schedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(fsPolicy.RetentionPolicy);
 
-                if (fsPolicy.RetentionPolicy is LongTermRetentionPolicy fsRetention)
-                {
-                    dailyRetentionDays = fsRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: fsPolicy.WorkLoadType?.ToString() ?? workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: fsPolicy.TimeZone,
+                    PolicyType: null,
+                    SnapshotConsistencyType: null,
+                    InstantRPRetentionRangeInDays: null,
+                    InstantRPResourceGroupNamePrefix: null,
+                    InstantRPResourceGroupNameSuffix: null,
+                    MakePolicyConsistent: null,
+                    Settings: null,
+                    SchedulePolicy: schedulePolicy,
+                    RetentionPolicy: retentionPolicy,
+                    TieringPolicies: null,
+                    SubProtectionPolicies: null);
             }
             else if (genericPolicy is VmWorkloadProtectionPolicy wlPolicy)
             {
                 workloadType = wlPolicy.WorkLoadType?.ToString();
+                backupManagementType = "AzureWorkload";
+                var subProtectionPolicies = MapSubProtectionPolicies(wlPolicy.SubProtectionPolicy);
                 var fullSubPolicy = wlPolicy.SubProtectionPolicy?.FirstOrDefault(
                     s => string.Equals(s.PolicyType?.ToString(), "Full", StringComparison.OrdinalIgnoreCase));
-                if (fullSubPolicy?.SchedulePolicy is SimpleSchedulePolicy wlSchedule)
-                {
-                    scheduleFrequency = wlSchedule.ScheduleRunFrequency?.ToString();
-                    var firstRunTime = wlSchedule.ScheduleRunTimes?.Count > 0 ? wlSchedule.ScheduleRunTimes[0] : (DateTimeOffset?)null;
-                    scheduleTime = firstRunTime?.ToString("HH:mm");
-                }
+                var fullSchedulePolicy = MapSchedulePolicy(fullSubPolicy?.SchedulePolicy);
+                scheduleFrequency = fullSchedulePolicy?.ScheduleRunFrequency;
+                scheduleTime = fullSchedulePolicy?.ScheduleRunTimes?.FirstOrDefault();
+                dailyRetentionDays = GetDailyRetentionDays(fullSubPolicy?.RetentionPolicy);
 
-                if (fullSubPolicy?.RetentionPolicy is LongTermRetentionPolicy wlRetention)
-                {
-                    dailyRetentionDays = wlRetention.DailySchedule?.RetentionDuration?.Count;
-                }
+                details = new BackupPolicyDetails(
+                    BackupManagementType: backupManagementType,
+                    WorkloadType: workloadType,
+                    ProtectedItemsCount: protectedItemsCount,
+                    ResourceGuardOperationRequests: resourceGuardOperationRequests,
+                    TimeZone: wlPolicy.Settings?.TimeZone,
+                    PolicyType: null,
+                    SnapshotConsistencyType: null,
+                    InstantRPRetentionRangeInDays: null,
+                    InstantRPResourceGroupNamePrefix: null,
+                    InstantRPResourceGroupNameSuffix: null,
+                    MakePolicyConsistent: wlPolicy.DoesMakePolicyConsistent,
+                    Settings: wlPolicy.Settings is null
+                        ? null
+                        : new BackupPolicyWorkloadSettings(
+                            wlPolicy.Settings.TimeZone,
+                            wlPolicy.Settings.IsCompression,
+                            wlPolicy.Settings.IsSqlCompression),
+                    SchedulePolicy: null,
+                    RetentionPolicy: null,
+                    TieringPolicies: null,
+                    SubProtectionPolicies: subProtectionPolicies);
             }
         }
 
@@ -1231,7 +1769,168 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             protectedItemsCount,
             scheduleFrequency,
             scheduleTime,
-            dailyRetentionDays);
+            dailyRetentionDays,
+            details);
+    }
+
+    private static string FormatRunTime(DateTimeOffset time) => time.ToString("HH:mm");
+
+    private static BackupPolicyHourlySchedule? MapHourlySchedule(BackupHourlySchedule? hourly) =>
+        hourly is null
+            ? null
+            : new BackupPolicyHourlySchedule(
+                hourly.Interval,
+                hourly.ScheduleWindowStartOn?.ToString("HH:mm"),
+                hourly.ScheduleWindowDuration);
+
+    private static BackupPolicySchedule? MapSchedulePolicy(BackupSchedulePolicy? schedule)
+    {
+        switch (schedule)
+        {
+            case SimpleSchedulePolicy simple:
+                return new BackupPolicySchedule(
+                    SchedulePolicyType: "SimpleSchedulePolicy",
+                    ScheduleRunFrequency: simple.ScheduleRunFrequency?.ToString(),
+                    ScheduleRunDays: simple.ScheduleRunDays?.Select(static d => d.ToString()).ToList(),
+                    ScheduleRunTimes: simple.ScheduleRunTimes?.Select(FormatRunTime).ToList(),
+                    ScheduleWeeklyFrequency: simple.ScheduleWeeklyFrequency,
+                    HourlySchedule: MapHourlySchedule(simple.HourlySchedule));
+            case SimpleSchedulePolicyV2 v2:
+                return new BackupPolicySchedule(
+                    SchedulePolicyType: "SimpleSchedulePolicyV2",
+                    ScheduleRunFrequency: v2.ScheduleRunFrequency?.ToString(),
+                    ScheduleRunDays: v2.WeeklySchedule?.ScheduleRunDays?.Select(static d => d.ToString()).ToList(),
+                    ScheduleRunTimes: v2.ScheduleRunTimes?.Select(FormatRunTime).ToList(),
+                    ScheduleWeeklyFrequency: null,
+                    HourlySchedule: MapHourlySchedule(v2.HourlySchedule));
+            default:
+                return null;
+        }
+    }
+
+
+    private static IReadOnlyList<string>? MapDaysOfMonth(RetentionScheduleFormat? formatType, IEnumerable<BackupDay>? days)
+    {
+        if (formatType != RetentionScheduleFormat.Daily || days is null)
+        {
+            return null;
+        }
+
+        var mapped = days
+            .Select(static d => d.IsLast == true ? "Last" : d.Date?.ToString() ?? string.Empty)
+            .Where(static value => !string.IsNullOrEmpty(value))
+            .ToList();
+        return mapped.Count > 0 ? mapped : null;
+    }
+
+    private static BackupPolicyRetention? MapRetentionPolicy(BackupRetentionPolicy? retention)
+    {
+        switch (retention)
+        {
+            case SimpleRetentionPolicy simple:
+                return new BackupPolicyRetention(
+                    RetentionPolicyType: "SimpleRetentionPolicy",
+                    SimpleRetentionDurationCount: simple.RetentionDuration?.Count,
+                    SimpleRetentionDurationType: simple.RetentionDuration?.DurationType?.ToString(),
+                    Schedules: null);
+            case LongTermRetentionPolicy longTerm:
+                var schedules = new List<BackupPolicyRetentionSchedule>();
+                if (longTerm.DailySchedule is { } daily)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Daily",
+                        RetentionScheduleFormatType: null,
+                        RetentionTimes: daily.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: daily.RetentionDuration?.Count,
+                        DurationType: daily.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: null,
+                        WeeksOfMonth: null,
+                        MonthsOfYear: null,
+                        DaysOfMonth: null));
+                }
+
+                if (longTerm.WeeklySchedule is { } weekly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Weekly",
+                        RetentionScheduleFormatType: null,
+                        RetentionTimes: weekly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: weekly.RetentionDuration?.Count,
+                        DurationType: weekly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: weekly.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: null,
+                        MonthsOfYear: null,
+                        DaysOfMonth: null));
+                }
+
+                if (longTerm.MonthlySchedule is { } monthly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Monthly",
+                        RetentionScheduleFormatType: monthly.RetentionScheduleFormatType?.ToString(),
+                        RetentionTimes: monthly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: monthly.RetentionDuration?.Count,
+                        DurationType: monthly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: monthly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: monthly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
+                        MonthsOfYear: null,
+                        DaysOfMonth: MapDaysOfMonth(monthly.RetentionScheduleFormatType, monthly.RetentionScheduleDailyDaysOfTheMonth)));
+                }
+
+                if (longTerm.YearlySchedule is { } yearly)
+                {
+                    schedules.Add(new BackupPolicyRetentionSchedule(
+                        Frequency: "Yearly",
+                        RetentionScheduleFormatType: yearly.RetentionScheduleFormatType?.ToString(),
+                        RetentionTimes: yearly.RetentionTimes?.Select(FormatRunTime).ToList(),
+                        DurationCount: yearly.RetentionDuration?.Count,
+                        DurationType: yearly.RetentionDuration?.DurationType?.ToString(),
+                        DaysOfWeek: yearly.RetentionScheduleWeekly?.DaysOfTheWeek?.Select(static d => d.ToString()).ToList(),
+                        WeeksOfMonth: yearly.RetentionScheduleWeekly?.WeeksOfTheMonth?.Select(static w => w.ToString()).ToList(),
+                        MonthsOfYear: yearly.MonthsOfYear?.Select(static m => m.ToString()).ToList(),
+                        DaysOfMonth: MapDaysOfMonth(yearly.RetentionScheduleFormatType, yearly.RetentionScheduleDailyDaysOfTheMonth)));
+                }
+
+                return new BackupPolicyRetention(
+                    RetentionPolicyType: "LongTermRetentionPolicy",
+                    SimpleRetentionDurationCount: null,
+                    SimpleRetentionDurationType: null,
+                    Schedules: schedules.Count > 0 ? schedules : null);
+            default:
+                return null;
+        }
+    }
+
+    private static int? GetDailyRetentionDays(BackupRetentionPolicy? retention) =>
+        retention is LongTermRetentionPolicy longTerm ? longTerm.DailySchedule?.RetentionDuration?.Count : null;
+
+    private static IReadOnlyList<BackupPolicyTiering>? MapTieringPolicies(IDictionary<string, BackupTieringPolicy>? tiering)
+    {
+        if (tiering is null || tiering.Count == 0)
+        {
+            return null;
+        }
+
+        return tiering.Select(static kvp => new BackupPolicyTiering(
+            kvp.Key,
+            kvp.Value?.TieringMode?.ToString(),
+            kvp.Value?.DurationValue,
+            kvp.Value?.DurationType?.ToString())).ToList();
+    }
+
+    private static IReadOnlyList<BackupPolicySubProtection>? MapSubProtectionPolicies(IList<SubProtectionPolicy>? subPolicies)
+    {
+        if (subPolicies is null || subPolicies.Count == 0)
+        {
+            return null;
+        }
+
+        return subPolicies.Select(static sub => new BackupPolicySubProtection(
+            sub.PolicyType?.ToString(),
+            MapSchedulePolicy(sub.SchedulePolicy),
+            MapRetentionPolicy(sub.RetentionPolicy),
+            MapTieringPolicies(sub.TieringPolicy),
+            sub.SnapshotBackupAdditionalDetails?.InstantRpRetentionRangeInDays)).ToList();
     }
 
     private static BackupJobInfo MapToJobInfo(BackupJobData data)
@@ -1332,16 +2031,15 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     public async Task<OperationResult> UndeleteProtectedItemAsync(
         string vaultName, string resourceGroup, string subscription,
         string datasourceId, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription),
             (nameof(datasourceId), datasourceId));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         // Find the soft-deleted protected item by datasource ID
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -1411,7 +2109,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
             else if (exactMatches.Count > 1)
             {
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     $"Multiple protected items found with datasource ID '{datasourceId}' in vault '{vaultName}'. " +
                     "Provide --container to disambiguate.");
             }
@@ -1421,7 +2119,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             }
             else if (prefixMatches.Count > 1)
             {
-                throw new InvalidOperationException(
+                throw new ArgumentException(
                     $"Multiple protected items match datasource ID '{datasourceId}' in vault '{vaultName}' " +
                     "(shared storage account prefix). Provide a more specific datasource ID or --container to disambiguate.");
             }
@@ -1451,7 +2149,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
         // the full protection definition (PolicyId, ContainerName, etc.).
         if (matchedItemData.Properties is not BackupGenericProtectedItem existingProperties)
         {
-            throw new InvalidOperationException(
+            throw new ArgumentException(
                 "The matched protected item does not contain properties required to perform undelete.");
         }
 
@@ -1464,12 +2162,13 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         var protectedItemResource = armClient.GetBackupProtectedItemResource(protectedItemId);
         var operation = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
-        var jobId = ExtractOperationIdFromResponse(operation.GetRawResponse());
+        var operationId = ExtractOperationIdFromResponse(operation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            jobId != null
-                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup job get --job {jobId}' to monitor progress."
-                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'.");
+        return new OperationResult("Accepted", JobId: null,
+            string.IsNullOrEmpty(operationId)
+                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup protecteditem get' to verify."
+                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify.",
+            OperationId: operationId);
     }
 
     /// <summary>
@@ -1505,16 +2204,27 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
     /// </summary>
     private static async Task<ProtectResult> BuildRsvProtectResultAsync(
         ArmClient armClient, string subscription, string resourceGroup, string vaultName,
-        string protectedItemName, string? jobId, string operationDescription,
+        string protectedItemName, string? jobId, string? operationId, string operationDescription,
         CancellationToken cancellationToken)
     {
+        // Only a genuine ConfigureBackup job id (found via FindLatestJobIdAsync) can be polled
+        // or queried with 'azurebackup job get'. The async operation id from the PUT response is
+        // NOT a job id, so when no job is available we surface it separately as OperationId and
+        // avoid polling a non-existent job (which previously wasted the full 12-minute budget and
+        // returned a "jobId" that 'azurebackup job get' could not resolve).
         if (string.IsNullOrEmpty(jobId))
         {
+            var acceptedMessage = string.IsNullOrEmpty(operationId)
+                ? $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify."
+                : $"{operationDescription} initiated. Operation id '{operationId}' tracks the request " +
+                  "(it is not a backup job id); use 'azurebackup protecteditem get' to verify.";
+
             return new ProtectResult(
                 "Accepted",
                 protectedItemName,
-                null,
-                $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify.");
+                JobId: null,
+                acceptedMessage,
+                OperationId: operationId);
         }
 
         var finalJob = await WaitForJobAsync(
@@ -1527,7 +2237,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 protectedItemName,
                 jobId,
                 $"{operationDescription} is still running after the polling budget elapsed. " +
-                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.");
+                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.",
+                OperationId: operationId);
         }
 
         var status = finalJob.Status ?? "Unknown";
@@ -1545,7 +2256,8 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             jobId,
             message,
             ProtectionStatus: null,
-            ErrorMessage: isFailure ? errorMessage ?? status : null);
+            ErrorMessage: isFailure ? errorMessage ?? status : null,
+            OperationId: operationId);
     }
 
     /// <summary>
@@ -1611,30 +2323,20 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
     public async Task<List<ProtectableItemInfo>> ListProtectableItemsAsync(
         string vaultName, string resourceGroup, string subscription,
-        string? workloadType, string? containerName, string? tenant,
-        RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
+        string? workloadType, string? tenant,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
-        ValidateSubscriptionFormat(subscription);
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
 
-        string filter;
-        if (!string.IsNullOrEmpty(workloadType))
-        {
-            var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
-            filter = $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
-        }
-        else
-        {
-            filter = "backupManagementType eq 'AzureWorkload'";
-        }
+        var filter = BuildProtectableItemFilter(workloadType);
 
         var items = new List<ProtectableItemInfo>();
         await foreach (var item in rgResource.GetBackupProtectableItemsAsync(vaultName, filter: filter, cancellationToken: cancellationToken))
@@ -1644,6 +2346,333 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
 
         return items;
     }
+
+    // Builds the OData $filter for GetBackupProtectableItems. Azure File shares are surfaced
+    // under the 'AzureStorage' backup management type (not 'AzureWorkload') and are not further
+    // discriminated by a workloadType clause, so an AzureFileShare request must route to
+    // AzureStorage; otherwise the register -> inquire -> list flow would return no file shares.
+    internal static string BuildProtectableItemFilter(string? workloadType)
+    {
+        if (string.IsNullOrEmpty(workloadType))
+        {
+            return "backupManagementType eq 'AzureWorkload'";
+        }
+
+        var normalizedType = NormalizeWorkloadTypeForFilter(workloadType);
+        if (string.Equals(normalizedType, "AzureFileShare", StringComparison.OrdinalIgnoreCase))
+        {
+            return "backupManagementType eq 'AzureStorage'";
+        }
+
+        return $"backupManagementType eq 'AzureWorkload' and workloadType eq '{normalizedType}'";
+    }
+
+    public async Task<List<ProtectableItemInfo>> ListDiscoveredProtectableItemsAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        var items = new List<ProtectableItemInfo>();
+
+        // Query protectable items: AzureWorkload (SQL, HANA, SAP ASE) and AzureStorage (file shares)
+        string[] filters = ["backupManagementType eq 'AzureWorkload'", "backupManagementType eq 'AzureStorage'"];
+
+        foreach (var filter in filters)
+        {
+            try
+            {
+                await foreach (var item in rgResource.GetBackupProtectableItemsAsync(
+                    vaultName, filter: filter, cancellationToken: cancellationToken))
+                {
+                    items.Add(MapToProtectableItemInfo(item));
+                }
+            }
+            catch (RequestFailedException ex) when (ex.Status is 404)
+            {
+                // Vault may not have registered containers for this backup management type — skip
+            }
+        }
+
+        return items;
+    }
+
+    public async Task<BackupContainerInfo?> GetContainerAsync(
+        string vaultName, string resourceGroup, string subscription, string containerName,
+        string? tenant, CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+
+        try
+        {
+            var response = await rgResource.GetBackupProtectionContainerAsync(vaultName, FabricName, containerName, cancellationToken);
+            return MapContainer(response.Value.Data);
+        }
+        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        {
+            // Not registered - callers rely on null to signal the idempotency case.
+            return null;
+        }
+    }
+
+    private static BackupContainerInfo MapContainer(BackupProtectionContainerData data)
+    {
+        var props = data.Properties;
+        string? sourceResourceId = null;
+        int? protectedItemCount = null;
+
+        if (props is StorageContainer storage)
+        {
+            sourceResourceId = storage.SourceResourceId?.ToString();
+            protectedItemCount = (int?)storage.ProtectedItemCount;
+        }
+
+        return new BackupContainerInfo(
+            Name: data.Name,
+            FriendlyName: props?.FriendlyName,
+            ContainerType: props?.GetType().Name,
+            BackupManagementType: props?.BackupManagementType?.ToString(),
+            SourceResourceId: sourceResourceId,
+            RegistrationStatus: props?.RegistrationStatus,
+            HealthStatus: props?.HealthStatus,
+            ProtectedItemCount: protectedItemCount);
+    }
+
+    public async Task<List<ProtectableContainerInfo>> ListAvailableContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string? filter,
+        string? storageAccount,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var containers = new List<ProtectableContainerInfo>();
+
+        await foreach (var container in rgResource.GetProtectableContainersAsync(
+            vaultName, FabricName, filter, cancellationToken))
+        {
+            var properties = container.Properties;
+            var info = new ProtectableContainerInfo(
+                container.Name,
+                properties?.FriendlyName,
+                GetProtectableContainerType(properties),
+                properties?.BackupManagementType?.ToString(),
+                properties?.ContainerId,
+                properties?.HealthStatus);
+
+            if (string.IsNullOrWhiteSpace(storageAccount)
+                || string.Equals(info.FriendlyName, storageAccount, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(info.SourceResourceId, storageAccount, StringComparison.OrdinalIgnoreCase))
+            {
+                containers.Add(info);
+            }
+        }
+
+        return containers;
+    }
+
+    private static string? GetProtectableContainerType(ProtectableContainer? container) => container switch
+    {
+        StorageProtectableContainer => "StorageContainer",
+        VmAppContainerProtectableContainer => "VMAppContainer",
+        null => null,
+        _ => container.GetType().Name
+    };
+
+    public async Task RefreshContainersAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string backupManagementType,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var filter = backupManagementType switch
+        {
+            "AzureStorage" or "AzureIaasVM" or "AzureWorkload" => $"backupManagementType eq '{backupManagementType}'",
+            _ => throw new ArgumentException("backupManagementType must be 'AzureStorage', 'AzureIaasVM', or 'AzureWorkload'.", nameof(backupManagementType))
+        };
+
+        var response = await rgResource.RefreshProtectionContainerAsync(
+            vaultName,
+            FabricName,
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        if (response.Status != (int)HttpStatusCode.Accepted)
+        {
+            throw new RequestFailedException(response.Status, "The container discovery request was not accepted.");
+        }
+    }
+
+    public async Task<ContainerRegisterResult> RegisterContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string storageAccountId,
+        bool acquireLock,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(storageAccountId), storageAccountId));
+
+        ResourceIdentifier storageAccountResourceId;
+        try
+        {
+            storageAccountResourceId = new ResourceIdentifier(storageAccountId);
+        }
+        catch (Exception ex) when (ex is FormatException or ArgumentException or UriFormatException)
+        {
+            throw new ArgumentException(
+                $"Invalid storage account ID '{storageAccountId}'. Expected a storage account name or a fully-qualified ARM resource ID " +
+                "(e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{name}).", ex);
+        }
+
+        var storageAccountName = storageAccountResourceId.Name;
+        var storageAccountResourceGroup = storageAccountResourceId.ResourceGroupName ?? resourceGroup;
+        var containerName = $"StorageContainer;Storage;{storageAccountResourceGroup};{storageAccountName}";
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+        var rgResource = armClient.GetResourceGroupResource(rgId);
+        var collection = rgResource.GetBackupProtectionContainers();
+
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var vault = await vaultResource.GetAsync(cancellationToken: cancellationToken);
+        var vaultLocation = vault.Value.Data.Location;
+
+        // Idempotency pre-check: if the container is already registered, return early without
+        // issuing another registration request.
+        try
+        {
+            var existing = await collection.GetAsync(vaultName, FabricName, containerName, cancellationToken);
+            var existingProperties = existing.Value.Data.Properties;
+            if (string.Equals(existingProperties?.RegistrationStatus, "Registered", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ContainerRegisterResult(
+                    Status: "Succeeded",
+                    Container: MapRegisteredContainer(containerName, existingProperties),
+                    AlreadyRegistered: true,
+                    Message: $"Storage account '{storageAccountName}' is already registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to (re)discover file shares.");
+            }
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            // Container is not registered yet - continue with registration below.
+        }
+
+        var data = new BackupProtectionContainerData(vaultLocation)
+        {
+            Properties = new StorageContainer
+            {
+                BackupManagementType = BackupManagementType.AzureStorage,
+                FriendlyName = storageAccountName,
+                SourceResourceId = storageAccountResourceId,
+                AcquireStorageAccountLock = acquireLock ? AcquireStorageAccountLock.Acquire : AcquireStorageAccountLock.NotAcquire,
+            }
+        };
+
+        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, FabricName, containerName, data, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var registeredProperties = operation.Value.Data.Properties;
+        return new ContainerRegisterResult(
+            Status: registeredProperties?.RegistrationStatus ?? "Succeeded",
+            Container: MapRegisteredContainer(containerName, registeredProperties),
+            AlreadyRegistered: false,
+            Message: $"Storage account '{storageAccountName}' registered with vault '{vaultName}'. Run 'azurebackup protectableitem inquire' to discover file shares, then 'azurebackup protecteditem protect' to enable backup.");
+    }
+
+    public async Task<InquireResult> InquireContainerAsync(
+        string vaultName,
+        string resourceGroup,
+        string subscription,
+        string containerName,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ValidateRequiredParameters(
+            (nameof(vaultName), vaultName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(containerName), containerName));
+
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+        var containerId = BackupProtectionContainerResource.CreateResourceIdentifier(
+            subscription, resourceGroup, vaultName, FabricName, containerName);
+        var containerResource = armClient.GetBackupProtectionContainerResource(containerId);
+
+        try
+        {
+            await containerResource.InquireAsync(filter: null, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
+        {
+            throw new KeyNotFoundException(
+                $"Protection container '{containerName}' was not found in vault '{vaultName}'. " +
+                "Register the storage account first with 'azurebackup container register'.");
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.Conflict)
+        {
+            return new InquireResult(
+                Status: "Accepted",
+                Container: containerName,
+                Message: "An inquiry is already in progress for this container. Poll 'azurebackup protectableitem list' to see discovered file shares.");
+        }
+
+        return new InquireResult(
+            Status: "Accepted",
+            Container: containerName,
+            Message: "Container inquiry accepted. The vault will asynchronously enumerate backup-able file shares. Poll 'azurebackup protectableitem list' to see discovered items.");
+    }
+
+    private static RegisteredContainerInfo MapRegisteredContainer(string name, BackupGenericProtectionContainer? properties) =>
+        new(
+            Name: name,
+            FriendlyName: properties?.FriendlyName,
+            BackupManagementType: properties?.BackupManagementType?.ToString(),
+            RegistrationStatus: properties?.RegistrationStatus,
+            HealthStatus: properties?.HealthStatus,
+            SourceResourceId: (properties as StorageContainer)?.SourceResourceId?.ToString());
 
     /// <summary>
     /// Normalizes user-provided workload type values to the API filter format.
@@ -1693,6 +2722,7 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
                 VmWorkloadSapHanaDatabaseProtectableItem => "SAPHanaDatabase",
                 VmWorkloadSqlInstanceProtectableItem => "SQLInstance",
                 VmWorkloadSapHanaSystemProtectableItem => "SAPHanaSystem",
+                FileShareProtectableItem => "AzureFileShare",
                 _ => workloadItem.GetType().Name
             };
             workloadType = workloadItem.WorkloadType;
@@ -1708,6 +2738,11 @@ public sealed class RsvBackupOperations(ITenantService tenantService) : BaseAzur
             {
                 serverName = hanaDb.ServerName;
                 parentName = hanaDb.ParentName;
+            }
+            else if (workloadItem is FileShareProtectableItem fileShare)
+            {
+                parentName = fileShare.ParentContainerFriendlyName;
+                containerName = fileShare.ParentContainerFabricId;
             }
         }
 

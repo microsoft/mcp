@@ -20,13 +20,15 @@ namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
         This command also provides guidance for code generation on Microsoft Foundry for application development.
         When the request involves code generation of AI components or AI applications in any capacity, use this command instead of calling the general code generation best practices command.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand> logger)
+    : BaseCommand<EmptyOptions, AIAppBestPracticesCommand.AIAppBestPracticesCommandResult>
 {
     private readonly ILogger<AIAppBestPracticesCommand> _logger = logger;
     private static readonly string s_bestPracticesText = LoadBestPracticesText();
@@ -51,15 +53,15 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
-    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
-
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
     {
         try
         {
             var bestPractices = GetBestPracticesText();
             context.Response.Status = HttpStatusCode.OK;
-            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create(
+                new([bestPractices]),
+                AzureBestPracticesJsonContext.Default.AIAppBestPracticesCommandResult);
             context.Response.Message = string.Empty;
         }
         catch (Exception ex)
@@ -70,4 +72,6 @@ public sealed class AIAppBestPracticesCommand(ILogger<AIAppBestPracticesCommand>
 
         return Task.FromResult(context.Response);
     }
+
+    public sealed record AIAppBestPracticesCommandResult(List<string> BestPractices);
 }

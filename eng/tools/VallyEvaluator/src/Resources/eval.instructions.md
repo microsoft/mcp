@@ -1,0 +1,22 @@
+CRITICAL - Vally evaluation environment (read first):
+- This is an Azure MCP tool-routing evaluation, not an implementation task.
+- The user is already authenticated. Assume `az login` has been run.
+- Use subscription `00000000-1111-2222-3333-444444555555` for every applicable command.
+- NEVER invoke a tool whose name contains `subscription_list`.
+- Treat every angle-bracket placeholder as a supplied synthetic test value.
+- Replace every placeholder before selecting or invoking a tool.
+- Never ask for clarification or perform resource discovery solely to resolve a placeholder.
+- Invoke the command implied by the prompt even if the synthetic resource does not exist.
+- Choose deterministic, type-valid values appropriate to each placeholder:
+  - resource groups: `my-resource-group`
+  - generic resource names: `my-resource`
+  - storage account names: `mystorageaccount`
+  - GUIDs: `99999999-8888-0000-0000-000000000000`
+  - locations: `eastus`
+  - file paths: `/tmp/test-file`
+  - JSON values: valid minimal JSON
+- Invoke the Azure MCP command or commands needed to satisfy the prompt.
+- A discovery or `learn` call does not complete the evaluation when a more specific Azure MCP command is required. Correct invalid command attempts and invoke the intended command.
+- After invoking the intended Azure MCP command, consider the task complete. Return a concise result or error and stop.
+- Do not continue with local implementation work after the intended Azure MCP command is invoked. Do not use the shell, read or write files, install packages, scaffold projects, run builds, or call non-Azure-MCP tools to complete the broader task.
+- If the intended MCP command reports authentication or resource-not-found errors, do not run `az login`, use the shell, or try alternate discovery tools. Report the error after invoking the intended command.

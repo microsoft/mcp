@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.AzureTerraform.Options;
 using Azure.Mcp.Tools.AzureTerraform.Services;
@@ -16,12 +15,17 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "get",
     Title = "Get AzureRM Provider Documentation",
     Description = """
-        Retrieves comprehensive AzureRM Terraform provider documentation for a specified resource type.
+        Retrieves AzureRM Terraform provider documentation and schema for a Terraform resource type or data source
+        whose name starts with the azurerm_ prefix, such as azurerm_virtual_network, azurerm_storage_account, or
+        azurerm_subscription. Use this tool to look up the arguments, attributes, schema, or usage examples of an
+        azurerm_ Terraform resource; it reads reference documentation and does not query, read, list, or modify any
+        live Azure resources, accounts, or data in a subscription.
         Returns the resource summary, arguments with descriptions and requirements, attributes,
         usage examples, and important notes. Use --resource-type to specify the resource
         (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),
         --argument, or --attribute.
         """,
+    OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = true,
@@ -30,55 +34,26 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     LocalRequired = false)]
 public sealed class AzureRMDocsGetCommand(
     ILogger<AzureRMDocsGetCommand> logger,
-    IAzureRMDocsService docsService) : BaseCommand<AzureRMDocsOptions>
+    IAzureRMDocsService docsService) : BaseCommand<AzureRMDocsOptions, AzureRMDocsResult>
 {
     private readonly ILogger<AzureRMDocsGetCommand> _logger = logger;
     private readonly IAzureRMDocsService _docsService = docsService;
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(AzureTerraformOptionDefinitions.ResourceType.AsRequired());
-        command.Options.Add(AzureTerraformOptionDefinitions.DocType.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.ArgumentName.AsOptional());
-        command.Options.Add(AzureTerraformOptionDefinitions.AttributeName.AsOptional());
-    }
-
-    protected override AzureRMDocsOptions BindOptions(ParseResult parseResult)
-    {
-        return new AzureRMDocsOptions
-        {
-            ResourceType = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ResourceType.Name),
-            DocType = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.DocType.Name),
-            ArgumentName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.ArgumentName.Name),
-            AttributeName = parseResult.GetValueOrDefault<string>(AzureTerraformOptionDefinitions.AttributeName.Name)
-        };
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,
-        ParseResult parseResult,
+        AzureRMDocsOptions options,
         CancellationToken cancellationToken)
     {
-        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        var options = BindOptions(parseResult);
-
         try
         {
             var result = await _docsService.GetDocumentationAsync(
-                options.ResourceType!,
+                options.ResourceType,
                 options.DocType ?? "resource",
-                options.ArgumentName,
-                options.AttributeName,
+                options.Argument,
+                options.Attribute,
                 cancellationToken).ConfigureAwait(false);
 
-            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, AzureTerraformJsonContext.Default.AzureRMDocsResult);
-            context.Response.Message = string.Empty;
 
             context.Activity
                 ?.AddTag(AzureTerraformTelemetryTags.ToolArea, "azurerm")

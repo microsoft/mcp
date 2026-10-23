@@ -6,20 +6,19 @@ using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Azure.Mcp.Tools.BicepSchema.Services.Support;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Azure.Mcp.Tools.BicepSchema.Services
+namespace Azure.Mcp.Tools.BicepSchema.Services;
+
+public class BicepSchemaService : IBicepSchemaService
 {
-    public class BicepSchemaService : IBicepSchemaService
+    public TypesDefinitionResult GetResourceTypeDefinitions(IServiceProvider serviceProvider, string resourceTypeName, string? apiVersion = null)
     {
-        public TypesDefinitionResult GetResourceTypeDefinitions(IServiceProvider serviceProvider, string resourceTypeName, string? apiVersion = null)
+        ResourceVisitor resourceVisitor = serviceProvider.GetRequiredService<ResourceVisitor>();
+
+        if (string.IsNullOrEmpty(apiVersion))
         {
-            ResourceVisitor resourceVisitor = serviceProvider.GetRequiredService<ResourceVisitor>();
-
-            if (string.IsNullOrEmpty(apiVersion))
-            {
-                apiVersion = ApiVersionSelector.SelectLatestStable(resourceVisitor.GetResourceApiVersions(resourceTypeName));
-            }
-
-            return resourceVisitor.LoadSingleResource(resourceTypeName, apiVersion);
+            apiVersion = ApiVersionSelector.SelectLatestStable(resourceVisitor.GetResourceApiVersions(resourceTypeName));
         }
+
+        return resourceVisitor.LoadSingleResource(resourceTypeName, apiVersion);
     }
 }

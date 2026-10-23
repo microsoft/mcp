@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.CommandLine;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Commands;
@@ -13,19 +15,29 @@ namespace Microsoft.Mcp.Core.Commands;
 public static class CommandExtensions
 {
     /// <summary>
-    /// Parse command options directly from a dictionary of arguments
+    /// Attempts to parse command options directly from a dictionary of arguments.
     /// </summary>
-    /// <param name="command">The command to parse options for</param>
-    /// <param name="arguments">Dictionary of argument name/value pairs</param>
-    /// <returns>ParseResult containing the parsed arguments</returns>
-    public static ParseResult ParseFromDictionary(this Command command, IDictionary<string, JsonElement>? arguments)
+    /// <param name="command">The command parsing options.</param>
+    /// <param name="arguments">Dictionary of argument name/value pairs.</param>
+    /// <param name="parseResult">The resulting ParseResult if parsing was successful.</param>
+    /// <param name="parseError">Error message if parsing failed.</param>
+    /// <returns>Whether parsing was successful.</returns>
+    public static bool TryParseFromDictionary(
+        this Command command,
+        IDictionary<string, JsonElement>? arguments,
+        out ParseResult? parseResult,
+        out string? parseError)
     {
+        parseError = null;
+
         if (arguments == null || arguments.Count == 0)
         {
-            return command.Parse([]);
+            parseResult = command.Parse([]);
+            return true;
         }
 
         var args = new List<string>();
+        var invalidKeys = new List<string>();
 
         foreach (var (key, value) in arguments)
         {
@@ -45,6 +57,7 @@ public static class CommandExtensions
 
             if (option == null)
             {
+                invalidKeys.Add(key);
                 continue;
             }
 
@@ -81,7 +94,15 @@ public static class CommandExtensions
             }
         }
 
-        return command.Parse([.. args]);
+        if (invalidKeys.Count > 0)
+        {
+            parseResult = null;
+            parseError = $"Request rejected due to unknown arguments: {string.Join(", ", invalidKeys)}";
+            return false;
+        }
+
+        parseResult = command.Parse([.. args]);
+        return true;
     }
 
     public static ParseResult ParseFromRawMcpToolInput(this Command command, IDictionary<string, JsonElement>? arguments)
@@ -91,8 +112,7 @@ public static class CommandExtensions
         // Try to find an option named "raw-mcp-tool-input" (normalized), otherwise fall back to first option
         var option = command.Options.FirstOrDefault(o =>
             string.Equals(NameNormalization.NormalizeOptionName(o.Name), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)
-            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase))
-        );
+            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)));
 
         option ??= command.Options.FirstOrDefault();
 
@@ -131,10 +151,7 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="option">The option to check</param>
     /// <returns>True if the option expects a collection type, false otherwise</returns>
-    private static bool IsArrayOption(Option option)
-    {
-        return CollectionTypeHelper.IsArrayType(option.ValueType);
-    }
+    private static bool IsArrayOption(Option option) => CollectionTypeHelper.IsArrayType(option.ValueType);
 
     private static string GetOptionToken(Option option)
     {
@@ -151,16 +168,13 @@ public static class CommandExtensions
     /// </summary>
     /// <param name="element">The JsonElement to convert</param>
     /// <returns>String representation of the element, or null if conversion fails</returns>
-    private static string? ConvertJsonElementToString(JsonElement element)
+    private static string? ConvertJsonElementToString(JsonElement element) => element.ValueKind switch
     {
-        return element.ValueKind switch
-        {
-            JsonValueKind.True => "true",
-            JsonValueKind.False => "false",
-            JsonValueKind.Number => element.GetRawText(),
-            JsonValueKind.String => element.GetString(),
-            JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
-            _ => element.GetRawText()
-        };
-    }
+        JsonValueKind.True => "true",
+        JsonValueKind.False => "false",
+        JsonValueKind.Number => element.GetRawText(),
+        JsonValueKind.String => element.GetString(),
+        JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
+        _ => element.GetRawText()
+    };
 }

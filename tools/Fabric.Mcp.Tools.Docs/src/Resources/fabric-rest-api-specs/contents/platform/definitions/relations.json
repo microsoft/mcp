@@ -1,0 +1,151 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Relations data types"
+    },
+    "paths": {},
+    "definitions": {
+        "RelationsResponse": {
+            "description": "A response containing related items, relation edges, and referenced workspaces.",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "A list of related items.",
+                    "type": "array",
+                    "readOnly": true,
+                    "items": {
+                        "$ref": "#/definitions/RelationsRelatedItem"
+                    }
+                },
+                "relations": {
+                    "description": "A list of relation edges between items.",
+                    "type": "array",
+                    "readOnly": true,
+                    "items": {
+                        "$ref": "#/definitions/RelationsEdge"
+                    }
+                },
+                "workspaces": {
+                    "description": "A list of workspaces referenced by the related items.",
+                    "type": "array",
+                    "readOnly": true,
+                    "items": {
+                        "$ref": "#/definitions/RelationsWorkspace"
+                    }
+                }
+            }
+        },
+        "RelationsRelatedItem": {
+            "description": "An item that is related to the specified item. This is a subset of the full item object, containing only the properties returned by the relations APIs.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The item ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "type": {
+                    "description": "The item type.",
+                    "$ref": "../../common/definitions.json#/definitions/ItemType",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The item display name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "workspaceId": {
+                    "description": "The ID of the workspace that contains the item. Use this ID to find the workspace in the `workspaces` list.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                }
+            }
+        },
+        "RelationsEdge": {
+            "description": "A relation edge between two items.",
+            "type": "object",
+            "properties": {
+                "itemId": {
+                    "description": "The source item identifier.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "dependentOnItemId": {
+                    "description": "The identifier of the item that the source item depends on.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "relationType": {
+                    "description": "The type of relation between the two items. Additional relation types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "CascadeDelete",
+                        "WeakAssociation",
+                        "Datasource",
+                        "PushData",
+                        "Orchestration",
+                        "Shortcut",
+                        "HiddenInWorkspace"
+                    ],
+                    "x-ms-enum": {
+                        "name": "RelationType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "CascadeDelete",
+                                "description": "A CascadeDelete relationship indicates that the item is the Parent of the dependentOnItemId and deleting the item will cause the Dependent item to also be deleted."
+                            },
+                            {
+                                "value": "WeakAssociation",
+                                "description": "A WeakAssociation relationship indicates that there is a soft dependency on the item identified by the dependentOnItemId.  If the Dependent item is deleted, the relationship will be removed."
+                            },
+                            {
+                                "value": "Datasource",
+                                "description": "A Datasource relationship indicates that there is a soft dependency on the item identified by a common Datasource. If the Dependent item is deleted, the relationship will be removed."
+                            },
+                            {
+                                "value": "PushData",
+                                "description": "A PushData relationship indicates that a dependent item writes/pushes data to dependecy item(the item identified by the dependentOnItemId). If the Dependent item is deleted, the relationship will be removed."
+                            },
+                            {
+                                "value": "Orchestration",
+                                "description": "An Orchestration relationship indicates that an item executes management or orchestration processes of the dependency item(the item identified by the dependentOnItemId). If the Dependent item is deleted, the relationship will be removed."
+                            },
+                            {
+                                "value": "Shortcut",
+                                "description": "A Shortcut relationship indicates that an item has a shortcut or link to data or data area from item identified by the dependentOnItemId. If the Dependent item is deleted, the relationship will be removed."
+                            },
+                            {
+                                "value": "HiddenInWorkspace",
+                                "description": "HiddenInWorkspace indicates that the item that owns this relationship will be hidden in the workspace."
+                            }
+                        ]
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "RelationsWorkspace": {
+            "description": "A workspace referenced in the relations response.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The workspace identifier.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The workspace display name.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "dataAgentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "datasourceId": "70f9282b-1b64-4f08-9e4e-2ab9f0e20e01"
+    },
+    "responses": {
+        "200": {}
+    }
+}

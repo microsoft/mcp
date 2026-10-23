@@ -9,6 +9,11 @@ namespace Microsoft.Mcp.Core.Areas.Server.Options;
 internal static class ModeTypes
 {
     /// <summary>
+    /// The default proxy mode.
+    /// </summary>
+    public const string Default = NamespaceProxy;
+
+    /// <summary>
     /// Single tool proxy mode - exposes a single "azure" tool that handles internal routing across all MCP tools.
     /// </summary>
     public const string SingleToolProxy = "single";
