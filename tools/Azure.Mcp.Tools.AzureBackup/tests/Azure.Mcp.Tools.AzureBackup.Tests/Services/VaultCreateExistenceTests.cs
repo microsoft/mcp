@@ -60,6 +60,64 @@ public class VaultCreateExistenceTests
         Assert.Equal([HttpMethod.Get, HttpMethod.Put], methods);
     }
 
+    [Fact]
+    public async Task CreateVaultAsync_RsvWithStorageType_ConfiguresStorageRedundancy()
+    {
+        var requests = new List<string>();
+        string? storageConfigBody = null;
+        var handler = Substitute.For<HttpMessageHandler>();
+        handler.ReturnsForAll(callInfo =>
+        {
+            var request = callInfo.Arg<HttpRequestMessage>();
+            var path = request.RequestUri!.AbsolutePath;
+            requests.Add($"{request.Method} {path[(path.IndexOf("/vaults/", StringComparison.Ordinal) + "/vaults/".Length)..]}");
+            if (path.EndsWith("/backupstorageconfig/vaultstorageconfig", StringComparison.Ordinal))
+            {
+                if (request.Method == HttpMethod.Put)
+                {
+                    storageConfigBody = request.Content!.ReadAsStringAsync().Result;
+                }
+
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                        {
+                          "id": "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault/backupstorageconfig/vaultstorageconfig",
+                          "name": "vaultstorageconfig",
+                          "type": "Microsoft.RecoveryServices/vaults/backupstorageconfig",
+                          "properties": { "storageModelType": "GeoRedundant", "storageType": "GeoRedundant" }
+                        }
+                        """, null, "application/json")
+                });
+            }
+
+            var status = request.Method == HttpMethod.Get ? HttpStatusCode.NotFound : HttpStatusCode.OK;
+            return Task.FromResult(new HttpResponseMessage(status)
+            {
+                Content = new StringContent(status == HttpStatusCode.OK ? """
+                    {
+                      "id": "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault",
+                      "name": "vault",
+                      "type": "Microsoft.RecoveryServices/vaults",
+                      "location": "eastus",
+                      "sku": { "name": "Standard" },
+                      "properties": { "provisioningState": "Succeeded" }
+                    }
+                    """ : """{"error":{"code":"ResourceNotFound","message":"Not found."}}""", null, "application/json")
+            });
+        });
+        using var client = new HttpClient(handler);
+
+        await new RsvBackupOperations(CreateAzureService(client)).CreateVaultAsync(
+            "vault", "rg", "22222222-2222-2222-2222-222222222222", "eastus", null, "LocallyRedundant", null,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            ["GET vault", "PUT vault", "GET vault/backupstorageconfig/vaultstorageconfig", "PUT vault/backupstorageconfig/vaultstorageconfig"],
+            requests);
+        Assert.Contains("\"storageModelType\":\"LocallyRedundant\"", storageConfigBody);
+    }
+
     private static Task<VaultCreateResult> CreateVaultAsync(IAzureService service, string vaultType, CancellationToken cancellationToken) =>
         vaultType == "rsv"
             ? new RsvBackupOperations(service).CreateVaultAsync(

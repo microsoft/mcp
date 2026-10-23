@@ -56,6 +56,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
         await WaitForLroCompletionAsync(result, cancellationToken);
 
+        // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
+        // not the vault create payload.
+        if (!string.IsNullOrEmpty(storageType))
+        {
+            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, storageType, cancellationToken);
+        }
+
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
             result.Value.Data.Name,
