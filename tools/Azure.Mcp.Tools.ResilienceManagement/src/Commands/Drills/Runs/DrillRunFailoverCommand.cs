@@ -47,11 +47,12 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
 
         if (options.SelectedResourceIds?.Any(resourceId =>
-                !DrillRunSelectedResourceValidation.IsRecoveryResourceId(
+                !DrillRunSelectedResourceValidation.IsSupportedResourceId(
                     resourceId,
-                    options.ServiceGroup)) == true)
+                    options.ServiceGroup,
+                    options.Drill)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under a recovery plan in the requested service group with a GUID resource name.");
+            validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested drill or a recovery-resource ID under a recovery plan in the requested service group, with a GUID resource name.");
         }
     }
 

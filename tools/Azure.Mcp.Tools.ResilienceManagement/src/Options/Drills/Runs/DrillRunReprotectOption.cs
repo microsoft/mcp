@@ -17,7 +17,7 @@ public sealed class DrillRunReprotectOptions : ResilienceManagementOperationOpti
     [Option(Description = "The name of the drill run whose failed-over resources will be reprotected.")]
     public required string DrillRun { get; set; }
 
-    [Option(Description = "The full ARM IDs of recovery resources to reprotect. Omit this option to reprotect all eligible resources in the drill run.")]
+    [Option(Description = "The full ARM IDs selected for reprotection: drill resources for forward Drill stages or recovery resources for reverse stages. Omit this option to reprotect all eligible resources in the drill run.")]
     public string[]? SelectedResourceIds { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

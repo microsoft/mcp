@@ -11,17 +11,27 @@ internal static class DrillRunSelectedResourceValidation
     private static readonly ResourceType ServiceGroupResourceType =
         new("Microsoft.Management/serviceGroups");
 
-    public static bool IsRecoveryResourceId(
+    public static bool IsSupportedResourceId(
         string resourceId,
-        string serviceGroup)
+        string serviceGroup,
+        string drill)
     {
         try
         {
             var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? recoveryPlanId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = recoveryPlanId?.Parent;
-            return parsed.ResourceType == RecoveryMembersResource.ResourceType &&
-                recoveryPlanId?.ResourceType == RecoveryPlanResource.ResourceType &&
+            ResourceIdentifier? parentId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = parentId?.Parent;
+            bool isRecoveryResource =
+                parsed.ResourceType == RecoveryMembersResource.ResourceType &&
+                parentId?.ResourceType == RecoveryPlanResource.ResourceType;
+            bool isDrillResource =
+                parsed.ResourceType == DrillTargetResource.ResourceType &&
+                parentId?.ResourceType == ResilienceManagementDrillResource.ResourceType &&
+                string.Equals(
+                    parentId.Name,
+                    drill,
+                    StringComparison.OrdinalIgnoreCase);
+            return (isRecoveryResource || isDrillResource) &&
                 serviceGroupId?.ResourceType == ServiceGroupResourceType &&
                 string.Equals(
                     serviceGroupId.Name,
