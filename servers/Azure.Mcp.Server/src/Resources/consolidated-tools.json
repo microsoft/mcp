@@ -2875,7 +2875,7 @@
     },
     {
       "name": "update_azure_netapp_files_accounts",
-      "description": "Update Azure Netapp Files accounts tags or NFSv4 user ID mapping domain.",
+      "description": "Update Azure Netapp Files accounts tags.",
       "toolMetadata": {
         "destructive": {
           "value": true,

@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
     Id = "3d2ccbae-3d80-4be3-8f48-d951abfb0bb5",
     Name = "update",
     Title = "Update Azure NetApp Files Account",
-    Description = "Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account. Returns the updated account name, resource ID, location, and provisioning state.",
+    Description = "Updates the tags of an Azure NetApp Files account. Returns the updated account name, resource ID, location, and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
