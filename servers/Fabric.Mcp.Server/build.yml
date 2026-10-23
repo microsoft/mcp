@@ -22,6 +22,7 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Fabric.Mcp.Server
+    NetworkIsolationPolicy: Preferred,CFSClean,GitHub,ESRP,AzureContainerRegistry,AzureStorage
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     PackageDocker: true
