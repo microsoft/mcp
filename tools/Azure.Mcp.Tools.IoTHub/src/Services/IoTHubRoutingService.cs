@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
@@ -1031,9 +1032,9 @@ public class IoTHubRoutingService(
     {
         var descriptor = GetTargetDescriptor(endpoint.EndpointType);
         if (descriptor is null ||
-            string.IsNullOrWhiteSpace(endpoint.SubscriptionId) ||
-            string.IsNullOrWhiteSpace(endpoint.ResourceGroup) ||
-            string.IsNullOrWhiteSpace(endpoint.EndpointResourceName))
+            !Guid.TryParse(endpoint.SubscriptionId, out _) ||
+            !IoTHubValidation.IsValidResourceGroupName(endpoint.ResourceGroup) ||
+            !IsResourceNameSegment(endpoint.EndpointResourceName))
         {
             return null;
         }
@@ -1045,24 +1046,31 @@ public class IoTHubRoutingService(
             endpoint.EndpointResourceName);
         ResourceIdentifier? routedResource = endpoint.EndpointType switch
         {
-            "EventHub" when !string.IsNullOrWhiteSpace(endpoint.EntityPath)
+            "EventHub" when IsResourceNameSegment(endpoint.EntityPath)
                 => new ResourceIdentifier($"{parent}/eventhubs/{endpoint.EntityPath}"),
-            "ServiceBusQueue" when !string.IsNullOrWhiteSpace(endpoint.EntityPath)
+            "ServiceBusQueue" when IsResourceNameSegment(endpoint.EntityPath)
                 => new ResourceIdentifier($"{parent}/queues/{endpoint.EntityPath}"),
-            "ServiceBusTopic" when !string.IsNullOrWhiteSpace(endpoint.EntityPath)
+            "ServiceBusTopic" when IsResourceNameSegment(endpoint.EntityPath)
                 => new ResourceIdentifier($"{parent}/topics/{endpoint.EntityPath}"),
-            "StorageContainer" when !string.IsNullOrWhiteSpace(endpoint.ContainerName)
+            "StorageContainer" when IsResourceNameSegment(endpoint.ContainerName)
                 => new ResourceIdentifier(
                     $"{parent}/blobServices/default/containers/{endpoint.ContainerName}"),
             "CosmosDBSqlContainer" when
-                !string.IsNullOrWhiteSpace(endpoint.DatabaseName) &&
-                !string.IsNullOrWhiteSpace(endpoint.ContainerName)
+                IsResourceNameSegment(endpoint.DatabaseName) &&
+                IsResourceNameSegment(endpoint.ContainerName)
                 => new ResourceIdentifier(
                     $"{parent}/sqlDatabases/{endpoint.DatabaseName}/containers/{endpoint.ContainerName}"),
             _ => null
         };
         return routedResource is null ? null : new ResolvedTarget(descriptor, parent, routedResource);
     }
+
+    // Endpoint values from the hub configuration are interpolated into ARM resource IDs. A name that is not a single
+    // literal path segment could make URI normalization target a different resource, so the target stays unresolved.
+    private static bool IsResourceNameSegment([NotNullWhen(true)] string? value) =>
+        !string.IsNullOrWhiteSpace(value) &&
+        value is not ("." or "..") &&
+        value.AsSpan().IndexOfAny("/\\?#%") < 0;
 
     private static RoutingTargetDescriptor? GetTargetDescriptor(string endpointType) => endpointType switch
     {
@@ -1184,11 +1192,14 @@ public class IoTHubRoutingService(
     private static void ValidateInputs(
         string hubName,
         string resourceGroup,
-        string subscription) =>
+        string subscription)
+    {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(hubName), hubName));
+        IoTHubValidation.ThrowIfInvalidResourceNames(hubName, resourceGroup);
+    }
 
     private static ResourceIdentifier BuildResourceId(
         string subscription,

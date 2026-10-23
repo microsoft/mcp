@@ -27,6 +27,7 @@ public class IoTHubService(IAzureService azureService, ILogger<IoTHubService> lo
             (nameof(subscription), subscription),
             (nameof(resourceGroup), resourceGroup),
             (nameof(hubName), hubName));
+        IoTHubValidation.ThrowIfInvalidResourceNames(hubName, resourceGroup);
 
         try
         {

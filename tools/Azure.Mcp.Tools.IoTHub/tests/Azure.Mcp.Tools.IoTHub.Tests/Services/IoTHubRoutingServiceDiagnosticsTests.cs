@@ -326,6 +326,44 @@ public class IoTHubRoutingServiceDiagnosticsTests()
     }
 
     [Theory]
+    [InlineData(false, "hub1", "rg1/../rg2", "resourceGroup")]
+    [InlineData(false, "hub1", @"rg1\..\rg2", "resourceGroup")]
+    [InlineData(false, "hub1", "..", "resourceGroup")]
+    [InlineData(false, "hub1/../hub2", "rg1", "hubName")]
+    [InlineData(true, "hub1", "rg1/../rg2", "resourceGroup")]
+    [InlineData(true, "hub1", @"rg1\..\rg2", "resourceGroup")]
+    [InlineData(true, "hub1", "..", "resourceGroup")]
+    [InlineData(true, "hub1/../hub2", "rg1", "hubName")]
+    public async Task RoutingOperations_RejectInvalidResourceNamesBeforeAnyRequest(
+        bool health, string hubName, string resourceGroup, string parameterName)
+    {
+        using var handler = CreateHandler((request, _) => Metrics(Metric(GetQuery(request, "metricnames"))));
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
+        var service = CreateService(handler, azureService);
+
+        var exception = await Record.ExceptionAsync(async () =>
+        {
+            if (health)
+            {
+                await service.GetRoutingEndpointHealth(
+                    hubName, resourceGroup, Subscription, cancellationToken: TestContext.Current.CancellationToken);
+            }
+            else
+            {
+                await service.GetRoutingEndpointDiagnostics(
+                    hubName, resourceGroup, Subscription, null, s_startTime, s_startTime.AddHours(1), "PT1H",
+                    cancellationToken: TestContext.Current.CancellationToken);
+            }
+        });
+
+        // URI normalization would otherwise turn these values into a request for a different resource group or hub.
+        Assert.Empty(handler.RequestUris);
+        Assert.Equal(parameterName, Assert.IsType<ArgumentException>(exception).ParamName);
+        await azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
     [InlineData("RoutingDeliveries")]
     [InlineData("RoutingDeliveryLatency")]
     [InlineData("targetMetrics")]
@@ -505,6 +543,31 @@ public class IoTHubRoutingServiceDiagnosticsTests()
             "/providers/Microsoft.Devices", uri.AbsolutePath, StringComparison.OrdinalIgnoreCase));
     }
 
+    [Theory]
+    [InlineData(Subscription, "rg1/../rg2", "container1")]
+    [InlineData(Subscription, "..", "container1")]
+    [InlineData("not-a-subscription-id", "rg1", "container1")]
+    [InlineData(Subscription, "rg1", "..")]
+    [InlineData(Subscription, "rg1", "a/b")]
+    public async Task Diagnostics_LeavesTargetUnresolvedWhenEndpointNamesAreNotSingleSegments(
+        string endpointSubscription, string endpointResourceGroup, string endpointContainerName)
+    {
+        using var handler = CreateHandler(
+            (request, _) => Metrics(Metric(GetQuery(request, "metricnames"))),
+            endpointSubscription: endpointSubscription,
+            endpointResourceGroup: endpointResourceGroup,
+            endpointContainerName: endpointContainerName);
+
+        var endpoint = Assert.Single((await DiagnoseAsync(
+            CreateService(handler), TestContext.Current.CancellationToken)).Endpoints);
+
+        Assert.Equal("unresolved", endpoint.Target.ResolutionStatus);
+        Assert.Equal("notChecked", endpoint.Target.ExistenceStatus);
+        Assert.Equal("unresolved", endpoint.TargetEmitted.QueryStatus);
+        Assert.All(handler.RequestUris, uri => Assert.Contains(
+            "/providers/Microsoft.Devices", uri.AbsolutePath, StringComparison.OrdinalIgnoreCase));
+    }
+
     [Fact]
     public async Task Diagnostics_FallsBackAfterBatchRequestFailureAndKeepsEmptySuccess()
     {
@@ -625,7 +688,10 @@ public class IoTHubRoutingServiceDiagnosticsTests()
         bool eventHub = false,
         int endpointCount = 1,
         Func<HttpRequestMessage, CancellationToken, HttpResponseMessage>? existenceResponse = null,
-        bool keyBased = false) =>
+        bool keyBased = false,
+        string endpointSubscription = Subscription,
+        string endpointResourceGroup = "rg1",
+        string? endpointContainerName = null) =>
         new((request, token) =>
         {
             var path = request.RequestUri!.AbsolutePath;
@@ -644,7 +710,7 @@ public class IoTHubRoutingServiceDiagnosticsTests()
                     ? "\"id\":\"dbc3cb4d-0119-4d46-9824-e8e3e83fb04a\",\"authenticationType\":\"keyBased\""
                     : $"\"endpointUri\":\"{(eventHub ? "sb://shared.servicebus.windows.net/" : "https://shared.blob.core.windows.net/")}\"";
                 var endpoints = string.Join(",", Enumerable.Range(1, endpointCount).Select(index =>
-                    $$"""{"name":"endpoint{{index}}","subscriptionId":"{{Subscription}}","resourceGroup":"rg1",{{targetProperties}},"entityPath":"eventhub{{index}}","containerName":"container{{index}}"}"""));
+                    $$"""{"name":"endpoint{{index}}","subscriptionId":"{{endpointSubscription}}","resourceGroup":"{{endpointResourceGroup}}",{{targetProperties}},"entityPath":"eventhub{{index}}","containerName":"{{endpointContainerName ?? $"container{index}"}}"}"""));
                 return JsonResponse($$"""{"id":"{{HubId}}","name":"hub1","type":"Microsoft.Devices/IotHubs","location":"westus","properties":{"routing":{"endpoints":{"{{(eventHub ? "eventHubs" : "storageContainers")}}":[{{endpoints}}]} } } }""");
             }
             return existenceResponse?.Invoke(request, token) ?? JsonResponse("{}");
