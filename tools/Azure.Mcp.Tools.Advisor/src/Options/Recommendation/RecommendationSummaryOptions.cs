@@ -60,7 +60,7 @@ public sealed class RecommendationSummaryOptions : IRecommendationScopeOptions
     [Option(Description = "Filter recommendations by service-retirement date in '<operator>:<yyyy-MM-dd>' format, for example 'le:2026-12-31'. Supported operators are eq, lt, le, gt, and ge. The ServiceUpgradeAndRetirement subcategory is inferred when omitted.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "For Cost summaries, include only recommendations whose annualized retail potential savings (daily savings × 364.8) are at least this non-negative amount.")]
+    [Option(Description = "For Cost summaries, include only recommendations whose annualized retail potential savings (daily savings × 30.4 × 12) are at least this non-negative amount.")]
     public decimal? MinimumSavings { get; set; }
 
     [Option(Description = "For Cost summaries, calculate savings as of this UTC timestamp. Use an ISO 8601 timestamp such as 2026-09-30T23:59:59Z. Historical values are Advisor estimates, not billing data.")]

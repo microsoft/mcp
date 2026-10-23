@@ -39,8 +39,9 @@ public sealed class RecommendationServiceGroupScopeCommandTests
         var handler = CreateHandler(
             tenantId,
             CreateResourceGraphResponse(
-                new { serviceGroupId = "sg-b" },
-                new { serviceGroupId = "SG-A" }));
+                new { id = "/providers/Microsoft.Management/serviceGroups/sg-b", name = "Group B" },
+                new { id = "/providers/Microsoft.Management/serviceGroups/SG-A", name = "Group A" },
+                new { id = "/providers/Microsoft.Management/serviceGroups/sg-c", name = "Group C" }));
         var tenant = await CreateTenantResourceAsync(tenantId, handler);
         Service.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
         Service.ResolveTenantIdAsync("tenant-alias", Arg.Any<CancellationToken>())
@@ -51,13 +52,19 @@ public sealed class RecommendationServiceGroupScopeCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         using var result = JsonDocument.Parse(JsonSerializer.Serialize(response.Results));
         Assert.Equal(
-            ["SG-A", "sg-b"],
+            ["SG-A", "sg-b", "sg-c"],
             result.RootElement.GetProperty("serviceGroups").EnumerateArray().Select(item => item.GetString()));
-        Assert.Equal(2, result.RootElement.GetProperty("totalGroups").GetInt32());
+        Assert.Equal(3, result.RootElement.GetProperty("totalServiceGroupCount").GetInt32());
         await Service.Received(1).ResolveTenantIdAsync("tenant-alias", Arg.Any<CancellationToken>());
         using var request = JsonDocument.Parse(handler.LastRequestBody);
         Assert.Contains(
-            "extract(@\"/providers/microsoft.management/servicegroups/([^/]+)\", 1, tostring(tolower(id)))",
+            "resourcecontainers",
+            request.RootElement.GetProperty("query").GetString());
+        Assert.Contains(
+            "microsoft.management/servicegroups",
+            request.RootElement.GetProperty("query").GetString());
+        Assert.Contains(
+            "properties.parent.resourceId",
             request.RootElement.GetProperty("query").GetString());
     }
 
@@ -82,7 +89,11 @@ public sealed class RecommendationServiceGroupScopeCommandTests
         var tenantId = Guid.NewGuid();
         var tenant = await CreateTenantResourceAsync(
             tenantId,
-            CreateHandler(tenantId, CreateResourceGraphResponse(resultTruncated: true, new { serviceGroupId = "sg-a" })));
+            CreateHandler(
+                tenantId,
+                CreateResourceGraphResponse(
+                    resultTruncated: true,
+                    new { id = "/providers/Microsoft.Management/serviceGroups/sg-a", name = "Group A" })));
         Service.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
 
         var response = await ExecuteCommandAsync();

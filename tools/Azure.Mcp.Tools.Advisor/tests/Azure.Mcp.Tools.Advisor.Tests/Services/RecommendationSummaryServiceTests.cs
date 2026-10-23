@@ -314,13 +314,31 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("properties.savings.retail.realizedAccumulatedSavings", query);
         Assert.Contains("properties.savings.resourceDeletedOn", query);
         Assert.Contains("_isOpen = tostring(properties.recommendationStatus) !~ 'Completed'", query);
-        Assert.Contains("potential = iif(_isOpen and isfinite(_daily), _daily * 364.8, double(null))", query);
+        Assert.Contains("potential = iif(_isOpen and isfinite(_daily), _daily * 30.4 * 12, double(null))", query);
         Assert.Contains("recommendationStatus = tostring(properties.recommendationStatus)", query);
-        Assert.Contains("_daily * 364.8", query);
+        Assert.Contains("_daily * 30.4 * 12", query);
         Assert.Contains("properties.savings.providerCurrency", query);
         Assert.Contains("by currency", query);
         Assert.Contains("billReducingOpportunityCount", query);
         Assert.DoesNotContain("subscriptionId in~", query);
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_UsesUnavailableCurrencyForRowsWithoutSavings()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(Category: "Cost"));
+
+        Assert.Contains(
+            "currency = iff(isfinite(potential) or isfinite(cost) or isfinite(realized),",
+            query);
+        Assert.Contains(
+            " 'Unavailable')",
+            query);
+        Assert.Contains(
+            "arg_max(coalesce(_effectiveOn, datetime(1970-01-01)), *)",
+            query);
     }
 
     [Fact]
@@ -359,7 +377,7 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("_deletedOn <= datetime(2026-09-30", query);
         Assert.Contains("by currency, recommendationStatus", query);
         Assert.Contains(
-            "summarize arg_max(_effectiveOn, *) by recommendationTypeId, " +
+            "summarize arg_max(coalesce(_effectiveOn, datetime(1970-01-01)), *) by recommendationTypeId, " +
             "tostring(properties.resourceMetadata.resourceId), recommendationStatus",
             query);
         Assert.DoesNotContain("recommendationStatus) =~ 'New'", query);

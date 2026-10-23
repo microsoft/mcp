@@ -14,8 +14,8 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Id = "e8f4f6d2-2a11-4e26-9f9e-0ee65e6ab7f5",
     Name = "recommendation_service_group_scope",
     Title = "Resolve Advisor Recommendation Service Group Scope",
-    Description = "Resolve observed Azure Advisor Service Group IDs from Advisor recommendation records. " +
-        "This is the dedicated read-only scope operation for broad Service Group cost analysis; it does not enumerate generic Azure resources. " +
+    Description = "Resolve tenant-root Azure Service Group IDs from Azure Resource Graph. " +
+        "This is the dedicated read-only scope operation for broad Service Group cost analysis. " +
         "The result contains deduplicated Service Group IDs and completeness metadata.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -31,15 +31,27 @@ public sealed class RecommendationServiceGroupScopeCommand(
         RecommendationServiceGroupScopeOptions,
         RecommendationServiceGroupScopeCommand.RecommendationServiceGroupScopeResult>
 {
+    // Service Groups are tenant-root resources. Querying resourcecontainers rather than
+    // recommendation instances returns groups even when they have no Advisor record.
     private const string ServiceGroupScopeQuery =
         """
-        advisorresources
-        | where type =~ "microsoft.advisor/recommendations"
-        | where tolower(id) startswith "/providers/microsoft.management/servicegroups/"
-        | project serviceGroupId = extract(@"/providers/microsoft.management/servicegroups/([^/]+)", 1, tostring(tolower(id)))
+        resourcecontainers
+        | where type =~ "microsoft.management/servicegroups"
+        | extend
+            serviceGroupId = tostring(id),
+            serviceGroupName = coalesce(
+                tostring(properties.displayName),
+                tostring(name)
+            ),
+            parentServiceGroupId = tostring(properties.parent.resourceId),
+            tenantRootServiceGroupId =
+                strcat(
+                    "/providers/Microsoft.Management/serviceGroups/",
+                    tostring(tenantId))
         | where isnotempty(serviceGroupId)
-        | distinct serviceGroupId
-        | order by serviceGroupId asc
+        | where parentServiceGroupId =~ tenantRootServiceGroupId
+        | project id = serviceGroupId, name = serviceGroupName
+        | order by name asc
         """;
 
     private readonly ILogger<RecommendationServiceGroupScopeCommand> _logger = logger;
@@ -60,10 +72,10 @@ public sealed class RecommendationServiceGroupScopeCommand(
                 cancellationToken);
 
             var serviceGroups = result.Rows
-                .Where(static row => row.TryGetProperty("serviceGroupId", out _))
-                .Select(static row => row.GetProperty("serviceGroupId").GetString())
+                .Where(static row => row.TryGetProperty("id", out _))
+                .Select(static row => row.GetProperty("id").GetString())
                 .Where(static id => !string.IsNullOrWhiteSpace(id))
-                .Select(static id => id!)
+                .Select(static id => id![(id!.LastIndexOf('/') + 1)..])
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(static id => id, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
@@ -87,7 +99,7 @@ public sealed class RecommendationServiceGroupScopeCommand(
 
     public sealed record RecommendationServiceGroupScopeResult(
         IReadOnlyList<string> ServiceGroups,
-        int TotalGroups,
+        int TotalServiceGroupCount,
         bool ResultTruncated,
         string ExecutedQuery);
 }

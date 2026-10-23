@@ -56,7 +56,7 @@ public class RecommendationListOptions : IRecommendationScopeOptions
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "For Cost recommendations, return only records whose annualized retail potential savings (daily savings × 364.8) are at least this non-negative amount.")]
+    [Option(Description = "For Cost recommendations, return only records whose annualized retail potential savings (daily savings × 30.4 × 12) are at least this non-negative amount.")]
     public decimal? MinimumSavings { get; set; }
 
     [Option(Description = "Maximum number of individual recommendation records to return, not distinct affected resources or recommendation groups. " +

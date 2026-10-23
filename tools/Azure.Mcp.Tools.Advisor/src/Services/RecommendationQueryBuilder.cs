@@ -52,7 +52,7 @@ internal static class RecommendationQueryBuilder
                 var threshold = minimumSavings.ToString("G29", CultureInfo.InvariantCulture);
                 clauses.Add(
                     $"isfinite(todouble(properties.savings.retail.dailyPotentialSavings)) and " +
-                    $"todouble(properties.savings.retail.dailyPotentialSavings) * 364.8 >= {threshold}");
+                    $"todouble(properties.savings.retail.dailyPotentialSavings) * 30.4 * 12 >= {threshold}");
             }
 
             if (includeCategoryAndImpact &&

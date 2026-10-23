@@ -233,9 +233,9 @@ public sealed class RecommendationSummaryCommand(
                         cancellationToken);
 
             var totalGroups = summary.Groups.Count;
-            if (summary.TotalGroups == 0)
+            if (summary.TotalRecommendationGroupCount == 0)
             {
-                summary = summary with { TotalGroups = totalGroups };
+                summary = summary with { TotalRecommendationGroupCount = totalGroups };
             }
 
             if (top is int limit && summary.Groups.Count > limit)
@@ -244,8 +244,8 @@ public sealed class RecommendationSummaryCommand(
                 summary = summary with
                 {
                     Groups = groups,
-                    TotalGroups = totalGroups,
-                    RemainingGroups = totalGroups - groups.Count,
+                    TotalRecommendationGroupCount = totalGroups,
+                    RemainingRecommendationGroupCount = totalGroups - groups.Count,
                 };
             }
 

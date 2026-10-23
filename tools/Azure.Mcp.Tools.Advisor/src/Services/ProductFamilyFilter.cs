@@ -67,11 +67,13 @@ internal static class ProductFamilyFilter
         string resourceTypeExpression = "properties.impactedField")
     {
         var metadataFamily = $"tolower(tostring(metadataServiceFamily)) =~ '{productFamily.ToLowerInvariant()}'";
-        var resourceIdExpression = resourceTypeExpression == "properties.impactedField"
+        // impactedField is the resource-type expression. The resource ID is a separate
+        // provider-prefix fallback used only when metadataServiceFamily is empty.
+        var resourceIdFallbackExpression = resourceTypeExpression == "properties.impactedField"
             ? "properties.resourceMetadata.resourceId"
             : "resourceId";
         return $"({metadataFamily} or (isempty(tostring(metadataServiceFamily)) and " +
-            $"{BuildProviderFallbackPredicate(productFamily, resourceTypeExpression, resourceIdExpression)}))";
+            $"{BuildProviderFallbackPredicate(productFamily, resourceTypeExpression, resourceIdFallbackExpression)}))";
     }
 
     internal static string BuildProviderFallbackPredicate(

@@ -13,12 +13,12 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 /// </param>
 /// <param name="Groups">The returned groups, in display order.</param>
 /// <param name="Cost">Cost-specific aggregates when the summary is filtered to Cost; otherwise null.</param>
-/// <param name="TotalGroups">The total number of matching recommendation-type groups before <c>--top</c> is applied.</param>
-/// <param name="RemainingGroups">The number of matching groups not returned because of <c>--top</c>.</param>
+/// <param name="TotalRecommendationGroupCount">The total number of matching recommendation-type groups before <c>--top</c> is applied.</param>
+/// <param name="RemainingRecommendationGroupCount">The number of matching recommendation-type groups not returned because of <c>--top</c>.</param>
 public sealed record RecommendationSummary(
     string GroupBy,
     int TotalRecommendations,
     List<RecommendationGroup> Groups,
     RecommendationCostSummary? Cost = null,
-    int TotalGroups = 0,
-    int RemainingGroups = 0);
+    int TotalRecommendationGroupCount = 0,
+    int RemainingRecommendationGroupCount = 0);

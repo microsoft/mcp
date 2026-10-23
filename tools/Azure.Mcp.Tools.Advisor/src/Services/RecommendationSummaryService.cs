@@ -281,7 +281,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             $" | extend _asOf = {BuildAsOfExpression(filters)}" +
             " | extend _idleDays = max_of(floor((_asOf - _effectiveOn) / 1d, 1), 0.0)" +
             " | extend _deletedDays = max_of(floor((_asOf - _deletedOn) / 1d, 1), 0.0)" +
-            " | extend potential = iif(_isOpen and isfinite(_daily), _daily * 364.8, double(null))" +
+            " | extend potential = iif(_isOpen and isfinite(_daily), _daily * 30.4 * 12, double(null))" +
             " | extend cost = iif(_isOpen and isfinite(_daily) and isnotnull(_effectiveOn), " +
             "_idleDays * _daily + _estimatedAccumulated, double(null))" +
             " | extend realized = iif(not(_isOpen) and isnotnull(_deletedOn) and isfinite(_daily), " +
@@ -290,7 +290,9 @@ public class RecommendationSummaryService(IAzureService azureService)
             "iff(isempty(tostring(properties.savings.providerCurrency)), 'USD', " +
             "tostring(properties.savings.providerCurrency)), 'Unavailable')" +
             BuildHistoricalCompletedFilter(filters) +
-            " | summarize arg_max(_effectiveOn, *) by recommendationTypeId, " +
+            // Use a stable fallback so ARG does not emit an empty aggregate row when every
+            // recommendation in a resource/type/status group lacks an effective date.
+            " | summarize arg_max(coalesce(_effectiveOn, datetime(1970-01-01)), *) by recommendationTypeId, " +
             "tostring(properties.resourceMetadata.resourceId), recommendationStatus" +
             " | summarize potentialTotal=sum(potential), potentialCount=countif(isfinite(potential)), " +
             "costTotal=sum(cost), costCount=countif(isfinite(cost)), " +
@@ -577,7 +579,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         var total = groups.Aggregate(
             0,
             static (current, group) => checked(current + group.Count));
-        return new(groupBy, total, groups, TotalGroups: groups.Count);
+        return new(groupBy, total, groups, TotalRecommendationGroupCount: groups.Count);
     }
 
     /// <summary>
