@@ -9,6 +9,9 @@ namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
 {
+    // These members satisfy the shared multi-scope interface; update intentionally exposes and uses only one scope.
+    public string[]? ServiceGroups { get; set; }
+
     [Option(Description = "The ID of the Azure service group that contains the recommendation, provided as the name segment in its ARM resource ID. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
     public string? ServiceGroup { get; set; }
 
@@ -30,6 +33,8 @@ public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
+
+    public string[]? Subscriptions { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

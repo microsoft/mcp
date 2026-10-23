@@ -70,6 +70,22 @@ public class RecommendationSummaryServiceTests
     }
 
     [Fact]
+    public void BuildSummaryQuery_MultipleSubscriptionsUsesInPredicate()
+    {
+        var scope = RecommendationQueryScope.ForSubscriptions(
+            ["sub-123", "sub-456", "SUB-123"],
+            null);
+
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            scope,
+            "category",
+            null);
+
+        Assert.Contains("subscriptionId in~ ('sub-123', 'sub-456')", query);
+        Assert.DoesNotContain("subscriptionId =~", query);
+    }
+
+    [Fact]
     public void BuildServiceGroupSummaryQuery_Category_UsesExactScopeWithoutSubscription()
     {
         var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
@@ -80,7 +96,7 @@ public class RecommendationSummaryServiceTests
         Assert.DoesNotContain("subscriptionId =~", query);
         Assert.DoesNotContain("resourceGroup =~", query);
         Assert.Contains(
-            "tostring(properties.serviceGroupId) =~ " +
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ " +
             $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
             query);
         Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
@@ -284,6 +300,321 @@ public class RecommendationSummaryServiceTests
 
         Assert.Throws<OverflowException>(() =>
             RecommendationSummaryService.ParseSummary("category", document.RootElement));
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_UsesSelectedPricingBasisAndKeepsCurrenciesSeparate()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(Category: "Cost"));
+
+        Assert.Contains("properties.savings.retail.dailyPotentialSavings", query);
+        Assert.Contains("properties.savings.retail.estimatedAccumulatedSavings", query);
+        Assert.Contains("properties.savings.retail.realizedAccumulatedSavings", query);
+        Assert.Contains("properties.savings.resourceDeletedOn", query);
+        Assert.Contains("_isOpen = tostring(properties.recommendationStatus) !~ 'Completed'", query);
+        Assert.Contains("potential = iif(_isOpen and isfinite(_daily), _daily * 30.4 * 12, double(null))", query);
+        Assert.Contains("recommendationStatus = tostring(properties.recommendationStatus)", query);
+        Assert.Contains("_daily * 30.4 * 12", query);
+        Assert.Contains("properties.savings.providerCurrency", query);
+        Assert.Contains("by currency", query);
+        Assert.Contains("billReducingOpportunityCount", query);
+        Assert.DoesNotContain("subscriptionId in~", query);
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_UsesUnavailableCurrencyForRowsWithoutSavings()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(Category: "Cost"));
+
+        Assert.Contains(
+            "currency = iff(isfinite(potential) or isfinite(cost) or isfinite(realized),",
+            query);
+        Assert.Contains(
+            " 'Unavailable')",
+            query);
+        Assert.Contains(
+            "arg_max(coalesce(_effectiveOn, datetime(1970-01-01)), *)",
+            query);
+    }
+
+    [Fact]
+    public void BuildMetadataSummaryQuery_ProductFamilyFiltersUsingProjectedResourceTypeFallback()
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription("sub-123", null),
+            RecommendationSummaryService.GroupByRecommendationType,
+            new RecommendationFilters(ProductFamily: "Compute"));
+
+        Assert.Contains("metadataServiceFamily=tostring(properties.serviceFamily)", query);
+        Assert.Contains("tolower(tostring(metadataServiceFamily)) =~ 'compute'", query);
+        Assert.Contains("isempty(tostring(metadataServiceFamily))", query);
+        Assert.Contains("tolower(tostring(impactedField)) startswith 'microsoft.web/serverfarms/'", query);
+        Assert.Contains(
+            "tolower(tostring(resourceId)) contains '/providers/microsoft.web/serverfarms/'",
+            query);
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_HistoricalWindowUsesAsOfAndKeepsOpenStates()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(
+                Category: "Cost",
+                SavingsAsOf: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero),
+                SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
+                SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
+
+        Assert.Contains("datetime(2026-09-30", query);
+        Assert.Contains("T23:59:59.000Z", query);
+        Assert.Contains("_isOpen", query);
+        Assert.Contains("_deletedOn >= datetime(2026-09-01", query);
+        Assert.Contains("T00:00:00.000Z", query);
+        Assert.Contains("_deletedOn <= datetime(2026-09-30", query);
+        Assert.Contains("by currency, recommendationStatus", query);
+        Assert.Contains(
+            "summarize arg_max(coalesce(_effectiveOn, datetime(1970-01-01)), *) by recommendationTypeId, " +
+            "tostring(properties.resourceMetadata.resourceId), recommendationStatus",
+            query);
+        Assert.DoesNotContain("recommendationStatus) =~ 'New'", query);
+        Assert.Contains("_isOpen or ((_deletedOn >= datetime(2026-09-01", query);
+        Assert.Contains("T00:00:00.000Z)) and (_deletedOn <= datetime(2026-09-30", query);
+    }
+
+    [Fact]
+    public void BuildSummaryQuery_HistoricalWindowRequiresCompletedDeletionDateWithinAllBounds()
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            RecommendationSummaryService.GroupByCategory,
+            new RecommendationFilters(
+                Category: "Cost",
+                SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
+                SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
+
+        Assert.Contains(
+            "tostring(properties.recommendationStatus) !~ 'Completed' or " +
+            "(todatetime(properties.savings.resourceDeletedOn) >= datetime(2026-09-01",
+            query);
+        Assert.Contains(
+            "T00:00:00.000Z) and todatetime(properties.savings.resourceDeletedOn) <= datetime(2026-09-30",
+            query);
+        Assert.DoesNotContain(
+            "tostring(properties.recommendationStatus) !~ 'Completed' or todatetime(",
+            query);
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_StatusGroupingIncludesEveryLifecycleState()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(Category: "Cost"),
+            RecommendationSummaryService.GroupByStatus);
+
+        Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+        Assert.Contains("recommendationStatus = tostring(properties.recommendationStatus)", query);
+    }
+
+    [Fact]
+    public void BuildCostSummaryQuery_UnavailablePricingRequiresAllMeasuresToBeMissing()
+    {
+        var query = RecommendationSummaryService.BuildCostSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            new RecommendationFilters(Category: "Cost"));
+
+        Assert.Contains(
+            "unavailablePricingCount=countif(not(isfinite(potential) or isfinite(cost) or isfinite(realized)))",
+            query);
+    }
+
+    [Fact]
+    public void ParseCostSummary_SeparatesUnavailablePricingAndCurrencyTotals()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "currency": "USD",
+                "potentialSavings": 120.5,
+                "accumulatedWaste": 40.25,
+                "realizedSavings": 30,
+                "recommendationCount": 2,
+                "potentialCount": 2,
+                "costCount": 2,
+                "realizedCount": 1,
+                "billReducingOpportunityCount": 1,
+                "zeroSavingsCount": 1,
+                "unavailablePricingCount": 0
+              },
+              {
+                "currency": "Unavailable",
+                "potentialSavings": null,
+                "accumulatedWaste": null,
+                "realizedSavings": null,
+                "recommendationCount": 3,
+                "potentialCount": 0,
+                "costCount": 0,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 0,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 3
+              },
+              {
+                "currency": "USD",
+                "recommendationStatus": "Completed",
+                "potentialSavings": 10,
+                "accumulatedWaste": null,
+                "realizedSavings": 5,
+                "recommendationCount": 1,
+                "potentialCount": 1,
+                "costCount": 0,
+                "realizedCount": 1,
+                "billReducingOpportunityCount": 1,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 0
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParseCostSummary(document.RootElement);
+
+        Assert.Equal(6, summary.RecommendationCount);
+        Assert.Equal(2, summary.BillReducingOpportunityCount);
+        Assert.Equal(1, summary.ZeroSavingsCount);
+        Assert.Equal(3, summary.UnavailablePricingCount);
+        var currency = Assert.Single(summary.CurrencyTotals, item => item.Currency == "USD");
+        Assert.Equal("USD", currency.Currency);
+        Assert.Equal(130.5m, currency.PotentialSavings);
+        Assert.Equal(40.25m, currency.AccumulatedWaste);
+        Assert.Equal(35m, currency.RealizedSavings);
+        Assert.Equal(3, currency.PotentialValueCount);
+        Assert.Equal(2, currency.AccumulatedWasteCount);
+        Assert.Equal(2, currency.RealizedSavingsCount);
+        var unavailable = Assert.Single(summary.CurrencyTotals, item => item.Currency == "Unavailable");
+        Assert.Null(unavailable.PotentialSavings);
+        Assert.Null(unavailable.AccumulatedWaste);
+        Assert.Null(unavailable.RealizedSavings);
+        Assert.Equal(5, Assert.Single(summary.StatusTotals!, item => item.Status == "Unknown").RecommendationCount);
+        Assert.Equal(1, Assert.Single(summary.StatusTotals!, item => item.Status == "Completed").RecommendationCount);
+        Assert.Equal(3, currency.RecommendationCount);
+    }
+
+    [Fact]
+    public void ParseCostSummary_MissingCurrencyUsesUnavailableBucket()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "potentialSavings": null,
+                "accumulatedWaste": null,
+                "realizedSavings": null,
+                "recommendationCount": 2,
+                "potentialCount": 0,
+                "costCount": 0,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 0,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 2
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParseCostSummary(document.RootElement);
+
+        var unavailable = Assert.Single(summary.CurrencyTotals);
+        Assert.Equal("Unavailable", unavailable.Currency);
+        Assert.Equal(2, unavailable.RecommendationCount);
+        Assert.Equal(2, summary.UnavailablePricingCount);
+    }
+
+    [Fact]
+    public void ParseCostSummary_MissingCurrencyWithSavingsUsesRetailCurrency()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "potentialSavings": 2189.24,
+                "accumulatedWaste": 42.01,
+                "realizedSavings": null,
+                "recommendationCount": 1,
+                "potentialCount": 1,
+                "costCount": 1,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 1,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 0
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParseCostSummary(document.RootElement);
+
+        var currency = Assert.Single(summary.CurrencyTotals);
+        Assert.Equal("USD", currency.Currency);
+        Assert.Equal(2189.24m, currency.PotentialSavings);
+        Assert.Equal(42.01m, currency.AccumulatedWaste);
+    }
+
+    [Fact]
+    public void ParseCostSummary_OrdersTypeTotalsByPotentialSavingsDescending()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "currency": "USD",
+                "recommendationTypeId": "type-low",
+                "recommendationName": "Low savings",
+                "potentialSavings": 10,
+                "recommendationCount": 1,
+                "potentialCount": 1,
+                "costCount": 0,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 1,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 0
+              },
+              {
+                "currency": "USD",
+                "recommendationTypeId": "type-high",
+                "recommendationName": "High savings",
+                "potentialSavings": 100,
+                "recommendationCount": 1,
+                "potentialCount": 1,
+                "costCount": 0,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 1,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 0
+              },
+              {
+                "currency": "Unavailable",
+                "recommendationTypeId": "type-unknown",
+                "recommendationName": "Unknown savings",
+                "potentialSavings": null,
+                "recommendationCount": 1,
+                "potentialCount": 0,
+                "costCount": 0,
+                "realizedCount": 0,
+                "billReducingOpportunityCount": 0,
+                "zeroSavingsCount": 0,
+                "unavailablePricingCount": 1
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParseCostSummary(document.RootElement);
+
+        Assert.Equal(
+            ["type-high", "type-low", "type-unknown"],
+            summary.TypeTotals!.Select(static item => item.RecommendationTypeId));
     }
 
     [Theory]

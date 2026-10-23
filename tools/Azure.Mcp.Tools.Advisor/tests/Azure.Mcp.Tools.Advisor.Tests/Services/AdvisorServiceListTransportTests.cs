@@ -267,7 +267,7 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Contains("| distinct *", query);
         if (serviceGroupScope)
         {
-            Assert.Contains("tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'", query);
+            Assert.Contains("isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'", query);
             Assert.DoesNotContain("tostring(properties.serviceGroupId) in~", query);
             Assert.DoesNotContain("subscriptionId =~", query);
             await azureService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
@@ -456,7 +456,7 @@ public sealed class AdvisorServiceListTransportTests
         }
 
         Assert.Contains(
-            "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/commerce'",
             query);
         Assert.Contains(
             "extend properties = iff(keepInstanceProperties, properties, bag_merge(metadataOverrides, properties))",
@@ -464,6 +464,174 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Contains("metadataRetirementDate", query);
         Assert.DoesNotContain("| limit", query);
         Assert.EndsWith("| take 2 | project id, name, type, properties", query);
+    }
+
+    [Fact]
+    public async Task ListRecommendationsAsync_MultipleSubscriptionsUsesOnePagedQuery()
+    {
+        var tenantId = Guid.NewGuid();
+        var subscriptionIds = new[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
+        var postCount = 0;
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return request.RequestUri!.AbsolutePath.Contains("/tenants", StringComparison.OrdinalIgnoreCase)
+                    ? CreateTenantListResponse(tenantId)
+                    : CreateSubscriptionResponse(
+                        tenantId,
+                        request.RequestUri.AbsolutePath.Split('/').Last());
+            }
+
+            Interlocked.Increment(ref postCount);
+            return CreateResourceGraphResponse(
+                CreateRecommendation("subscription-one"),
+                CreateRecommendation("subscription-two"));
+        });
+        var credential = CreateCredential();
+        var armClient = CreateArmClient(credential, handler);
+        var subscriptions = new List<SubscriptionResource>();
+        foreach (var subscriptionId in subscriptionIds)
+        {
+            subscriptions.Add((await armClient
+                .GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId))
+                .GetAsync(TestContext.Current.CancellationToken)).Value);
+        }
+
+        var tenant = await CreateTenantResourceAsync(tenantId, credential, handler);
+        handler.Reset();
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetSubscription(subscriptionIds[0], null, Arg.Any<CancellationToken>())
+            .Returns(subscriptions[0]);
+        azureService.GetSubscription(subscriptionIds[1], null, Arg.Any<CancellationToken>())
+            .Returns(subscriptions[1]);
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+
+        var result = await new AdvisorService(azureService).ListRecommendationsAsync(
+            subscriptionIds,
+            resourceGroup: null,
+            filters: new RecommendationFilters(RecommendationTypeId: "type-a"),
+            top: 10,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(["subscription-one", "subscription-two"], result.Results.Select(row => row.Name));
+        Assert.False(result.AreResultsTruncated);
+        Assert.Equal(1, postCount);
+        Assert.Contains(
+            "subscriptionId in~ ('" + string.Join("', '", subscriptionIds) + "')",
+            GetResourceGraphQuery(handler.LastRequestBody));
+    }
+
+    [Fact]
+    public async Task ListRecommendationsAsync_MultipleServiceGroupsUsesOnePagedQuery()
+    {
+        var tenantId = Guid.NewGuid();
+        var postCount = 0;
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            Interlocked.Increment(ref postCount);
+            return CreateResourceGraphResponse(
+                CreateRecommendation("service-group-one"),
+                CreateRecommendation("service-group-two"));
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        handler.Reset();
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+
+        var result = await new AdvisorService(azureService).ListRecommendationsAsync(
+            subscription: null,
+            resourceGroup: null,
+            filters: new RecommendationFilters(
+                ServiceGroups: ["service-group-a", "service-group-b"],
+                RecommendationTypeId: "type-a"),
+            top: 10,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(["service-group-one", "service-group-two"], result.Results.Select(row => row.Name));
+        Assert.False(result.AreResultsTruncated);
+        Assert.Equal(1, postCount);
+        Assert.Contains(
+            "tostring(properties.serviceGroupId) in~ ('/providers/Microsoft.Management/serviceGroups/service-group-a', '/providers/Microsoft.Management/serviceGroups/service-group-b')",
+            GetResourceGraphQuery(handler.LastRequestBody));
+    }
+
+    [Fact]
+    public async Task ListRecommendationsAsync_FollowsSkipTokenAcrossPages()
+    {
+        var tenantId = Guid.NewGuid();
+        var page = 0;
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            page++;
+            return page == 1
+                ? CreateResourceGraphResponseWithSkipToken(
+                    "next-page",
+                    resultTruncated: true,
+                    CreateRecommendation("first-page"))
+                : CreateResourceGraphResponse(CreateRecommendation("second-page"));
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        handler.Reset();
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+
+        var result = await new AdvisorService(azureService).ListRecommendationsAsync(
+            subscription: null,
+            resourceGroup: null,
+            filters: new RecommendationFilters(ServiceGroup: "service-group-a", RecommendationTypeId: "type-a"),
+            top: 10,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(["first-page", "second-page"], result.Results.Select(row => row.Name));
+        Assert.False(result.AreResultsTruncated);
+        Assert.Equal(2, page);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteBatchedPagedAsync_SplitsLargeScopeIntoFiftyItemBatches(bool serviceGroupScope)
+    {
+        var tenantId = Guid.NewGuid();
+        var postCount = 0;
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            Interlocked.Increment(ref postCount);
+            return CreateResourceGraphResponse(CreateRecommendation($"batch-{postCount}"));
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        var ids = Enumerable.Range(0, 51)
+            .Select(index => serviceGroupScope ? $"service-group-{index}" : $"subscription-{index}")
+            .ToArray();
+        var scope = serviceGroupScope
+            ? RecommendationQueryScope.ForServiceGroups(ids)
+            : RecommendationQueryScope.ForSubscriptions(ids, null);
+
+        var results = await AdvisorResourceGraphQueryExecutor.ExecuteBatchedPagedAsync(
+            scope,
+            tenant,
+            batch => batch.Kind.ToString(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, postCount);
+        Assert.Equal(2, results.Count);
+        Assert.All(results, result => Assert.Single(result.Rows));
     }
 
     private static async Task<TenantResource> CreateTenantResourceAsync(
@@ -566,6 +734,86 @@ public sealed class AdvisorServiceListTransportTests
         Assert.True(result.AreResultsTruncated);
     }
 
+    [Fact]
+    public async Task ExecutePagedAsync_RepeatedSkipToken_ThrowsInsteadOfLooping()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+            request.Method == HttpMethod.Get
+                ? CreateTenantListResponse(tenantId)
+                : CreateResourceGraphResponseWithSkipToken(
+                    "repeated-token",
+                    recommendations: [CreateRecommendation("first")]));
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(
+                tenant,
+                "advisorresources",
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("repeated skip token", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ExecutePagedAsync_UsesTerminalPageTruncationState()
+    {
+        var tenantId = Guid.NewGuid();
+        var page = 0;
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            page++;
+            return page == 1
+                ? CreateResourceGraphResponseWithSkipToken(
+                    "next-page",
+                    resultTruncated: true,
+                    CreateRecommendation("first"))
+                : CreateResourceGraphResponse(CreateRecommendation("last"));
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+
+        var result = await AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(
+            tenant,
+            "advisorresources",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Rows.Count);
+        Assert.False(result.IsTruncated);
+    }
+
+    [Fact]
+    public async Task ExecutePagedAsync_TenantSubscriptionLimitHit_ThrowsInsteadOfReturningPartialResults()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+
+            var response = CreateResourceGraphResponse(CreateRecommendation("first"));
+            response.Headers.Add(
+                AdvisorResourceGraphQueryExecutor.TenantSubscriptionLimitHitHeader,
+                "true");
+            return response;
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(
+                tenant,
+                "advisorresources",
+                TestContext.Current.CancellationToken));
+
+        Assert.Contains("10,000 accessible subscriptions", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -653,6 +901,19 @@ public sealed class AdvisorServiceListTransportTests
             count = recommendations.Length,
             resultTruncated = resultTruncated ? "true" : "false",
             data = recommendations,
+        });
+
+    private static HttpResponseMessage CreateResourceGraphResponseWithSkipToken(
+        string skipToken,
+        bool resultTruncated = false,
+        params object[] recommendations) =>
+        CreateJsonResponse(new Dictionary<string, object?>
+        {
+            ["totalRecords"] = recommendations.Length,
+            ["count"] = recommendations.Length,
+            ["resultTruncated"] = resultTruncated ? "true" : "false",
+            ["$skipToken"] = skipToken,
+            ["data"] = recommendations,
         });
 
     private static HttpResponseMessage CreateJsonResponse(object payload) => new(HttpStatusCode.OK)

@@ -124,6 +124,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Group active service-retirement Advisor recommendations in service group \<service-group> by retirement date | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active recommendations for services retiring on December 31, 2026 | none |
+| advisor_recommendation_service_group_scope | Discover the tenant-root Azure Service Group IDs available in my tenant | none |
+| advisor_recommendation_service_group_scope | List the Service Group scopes available for Azure Advisor recommendations | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or before December 31, 2026 | none |
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026 | none |
 | advisor_recommendation_summary | Show the impact breakdown for Advisor recommendations affecting resource my-web-app | none |

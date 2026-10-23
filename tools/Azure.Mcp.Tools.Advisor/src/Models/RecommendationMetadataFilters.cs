@@ -5,6 +5,7 @@ namespace Azure.Mcp.Tools.Advisor.Models;
 
 public sealed record RecommendationMetadataFilters(
     string? ResourceType = null,
+    IReadOnlyList<string>? ResourceTypes = null,
     string? Impact = null,
     string? Category = null,
     string? SubCategory = null,

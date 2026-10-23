@@ -24,6 +24,7 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<RecommendationListCommand>();
         services.AddSingleton<RecommendationUpdateCommand>();
         services.AddSingleton<RecommendationSummaryCommand>();
+        services.AddSingleton<RecommendationServiceGroupScopeCommand>();
         services.AddSingleton<RecommendationMetadataListCommand>();
         services.AddSingleton<MetadataGetCommand>();
         services.AddSingleton<RemediationGetCommand>();
@@ -47,6 +48,7 @@ public class AdvisorSetup : IAreaSetup
             "recommendation",
             "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates, or rank recommendation types by priority; or update subscription- or service-group-scoped customer-provided state.");
         advisor.AddSubGroup(recommendation);
+        advisor.AddCommand<RecommendationServiceGroupScopeCommand>(serviceProvider);
 
         var metadata = new CommandGroup(
             "metadata",
