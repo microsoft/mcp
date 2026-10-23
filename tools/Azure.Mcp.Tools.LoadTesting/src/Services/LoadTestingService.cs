@@ -10,14 +10,14 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
+using Azure.ResourceManager;
 using Azure.ResourceManager.LoadTesting;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
-public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingService> logger)
+public class LoadTestingService(IAzureService azureService)
     : BaseAzureService(azureService), ILoadTestingService
 {
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(
@@ -130,8 +130,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
+        var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
 
         var loadTestRunResponse = await loadTestClient.GetTestRunAsync(testRunId, new() { CancellationToken = cancellationToken });
         if (loadTestRunResponse == null || loadTestRunResponse.IsError)
@@ -161,8 +160,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
+        var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
 
         var loadTestRunResponse = loadTestClient.GetTestRunsAsync(testId: testId)
             ?? throw new Exception($"Failed to retrieve Azure Load Test Run.");
@@ -208,8 +206,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestRunClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
+        var loadTestClient = await CreateLoadTestRunClient(dataPlaneUri, cancellationToken, tenant);
 
         TestRunRequest requestBody = new()
         {
@@ -253,8 +250,7 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
+        var loadTestClient = await CreateLoadTestAdministrationClient(dataPlaneUri, cancellationToken, tenant);
 
         var loadTestResponse = await loadTestClient.GetTestAsync(testId, new RequestContext { CancellationToken = cancellationToken });
         if (loadTestResponse == null || loadTestResponse.IsError)
@@ -283,10 +279,8 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
         if (!string.IsNullOrEmpty(endpointUrl))
         {
-            EndpointValidator.ValidatePublicTargetUrl(
-                url: endpointUrl,
-                logger: logger,
-                executingToolNamespaceName: "loadtesting");
+            AzureService.ValidatePublicTargetUrl(
+                url: endpointUrl);
         }
 
         var subscriptionId = (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
@@ -299,8 +293,8 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
             throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
         }
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var loadTestClient = new LoadTestAdministrationClient(new($"https://{dataPlaneUri}"), credential, CreateLoadTestingClientOptions());
+        var loadTestClient = await CreateLoadTestAdministrationClient(dataPlaneUri, cancellationToken, tenant);
+
         OptionalLoadTestConfig optionalLoadTestConfig = new()
         {
             Duration = (duration ?? 20) * 60, // Convert minutes to seconds
@@ -328,6 +322,41 @@ public class LoadTestingService(IAzureService azureService, ILogger<LoadTestingS
 
         var loadTest = loadTestResponse.Content.ToString();
         return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new();
+    }
+
+    private async Task<LoadTestRunClient> CreateLoadTestRunClient(
+        string endpoint,
+        CancellationToken cancellationToken,
+        string? tenant = null)
+    {
+        Uri uri = CreateValidatedDataPlaneUri(AzureService, endpoint);
+        var credential = await GetCredential(tenant, cancellationToken);
+        return new LoadTestRunClient(uri, credential, CreateLoadTestingClientOptions());
+    }
+
+    private async Task<LoadTestAdministrationClient> CreateLoadTestAdministrationClient(
+        string endpoint,
+        CancellationToken cancellationToken,
+        string? tenant = null)
+    {
+        Uri uri = CreateValidatedDataPlaneUri(AzureService, endpoint);
+        var credential = await GetCredential(tenant, cancellationToken);
+        return new LoadTestAdministrationClient(uri, credential, CreateLoadTestingClientOptions());
+    }
+
+    /// <summary>
+    /// Validates that the given Load Test endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The endpoint of the Load Test to validate.</param>
+    /// <returns>The validated URI of the Load Test endpoint.</returns>
+    internal static Uri CreateValidatedDataPlaneUri(IAzureService azureService, string endpoint)
+    {
+        var uri = new Uri($"https://{endpoint}", UriKind.Absolute);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: uri.AbsoluteUri,
+            serviceType: "loadtesting");
+        return uri;
     }
 
     private LoadTestingClientOptions CreateLoadTestingClientOptions()

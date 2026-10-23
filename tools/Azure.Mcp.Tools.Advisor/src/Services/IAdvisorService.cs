@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 public interface IAdvisorService
 {
     Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
-        string subscription,
+        string? subscription,
         string? resourceGroup,
         RecommendationFilters? filters = null,
         int top = 50,
@@ -18,6 +18,15 @@ public interface IAdvisorService
 
     Task<Recommendation> UpdateRecommendationAsync(
         string subscription,
+        string recommendationId,
+        RecommendationStatus recommendationStatus,
+        DateTimeOffset? postponedUntilDateTime = null,
+        RecommendationDismissReason? recommendationDismissReason = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<Recommendation> UpdateServiceGroupRecommendationAsync(
+        string serviceGroup,
         string recommendationId,
         RecommendationStatus recommendationStatus,
         DateTimeOffset? postponedUntilDateTime = null,

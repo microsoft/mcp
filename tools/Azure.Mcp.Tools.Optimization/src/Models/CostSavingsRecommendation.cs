@@ -4,7 +4,7 @@
 namespace Azure.Mcp.Tools.Optimization.Models;
 
 /// <summary>
-/// A single Azure Advisor cost-saving recommendation projected from the curated Azure Resource
+/// A single cost-saving recommendation projected from the curated Azure Resource
 /// Graph query, with savings normalized for ranking.
 /// </summary>
 public sealed record CostSavingsRecommendation(

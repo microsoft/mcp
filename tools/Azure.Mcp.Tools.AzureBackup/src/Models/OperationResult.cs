@@ -6,4 +6,5 @@ namespace Azure.Mcp.Tools.AzureBackup.Models;
 public sealed record OperationResult(
     string Status,
     string? JobId,
-    string? Message);
+    string? Message,
+    string? OperationId = null);

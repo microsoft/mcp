@@ -99,7 +99,10 @@ public sealed class MonitorLogSearchService(
 
         if (limit is < 1 or > MaxRowLimit)
         {
-            throw new CommandValidationException($"--limit must be between 1 and {MaxRowLimit}.");
+            throw new CommandValidationException($"--limit must be between 1 and {MaxRowLimit}.")
+            {
+                TelemetrySafeMessage = $"--limit must be between 1 and {MaxRowLimit}."
+            };
         }
 
         return LogSearchTimeRangeParser.Parse(timespan, now);
@@ -134,7 +137,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "The specified resource group was not found.",
                 HttpStatusCode.NotFound,
-                "ResourceGroupNotFound");
+                "ResourceGroupNotFound")
+            {
+                TelemetrySafeMessage = "The specified resource group was not found."
+            };
         }
 
         OperationalInsightsWorkspaceResource workspaceResource;
@@ -159,7 +165,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "The Log Analytics workspace metadata did not contain a customer identifier.",
                 HttpStatusCode.BadGateway,
-                "InvalidWorkspaceMetadata");
+                "InvalidWorkspaceMetadata")
+            {
+                TelemetrySafeMessage = "The Log Analytics workspace metadata did not contain a customer identifier."
+            };
         }
 
         OperationalInsightsTableResource tableResource;
@@ -197,7 +206,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "This tool only searches Basic and Auxiliary tables. Use monitor_workspace_log_query for Analytics tables.",
                 HttpStatusCode.Conflict,
-                "UnsupportedTablePlan");
+                "UnsupportedTablePlan")
+            {
+                TelemetrySafeMessage = "This tool only searches Basic and Auxiliary tables. Use monitor_workspace_log_query for Analytics tables."
+            };
         }
 
         var lastPlanModifiedDate = tableResource.Data.LastPlanModifiedDate;
@@ -215,7 +227,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "The Log Analytics table plan transition metadata was invalid.",
                 HttpStatusCode.BadGateway,
-                "InvalidTableMetadata");
+                "InvalidTableMetadata")
+            {
+                TelemetrySafeMessage = "The Log Analytics table plan transition metadata was invalid."
+            };
         }
 
         if (isBasic && timeRange.Start < now - LogSearchTimeRangeParser.MaximumTimespan)
@@ -223,7 +238,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "Basic table searches cannot start more than 30 days ago.",
                 HttpStatusCode.BadRequest,
-                "BasicTimespanTooOld");
+                "BasicTimespanTooOld")
+            {
+                TelemetrySafeMessage = "Basic table searches cannot start more than 30 days ago."
+            };
         }
 
         if (timeRange.Start < transition)
@@ -233,10 +251,16 @@ public sealed class MonitorLogSearchService(
                     $"The requested interval is entirely before the table's current plan boundary at {transition:O}. Query a range beginning at or after that boundary.",
                     HttpStatusCode.Conflict,
                     "HistoricalTablePlanRange")
+                {
+                    TelemetrySafeMessage = "The requested interval is entirely before the table's current plan boundary."
+                }
                 : new CommandValidationException(
                     $"The requested interval crosses a table plan boundary at {transition:O}. Split the interval and query the supported portion beginning at that boundary.",
                     HttpStatusCode.Conflict,
-                    "TablePlanTransition");
+                    "TablePlanTransition")
+                {
+                    TelemetrySafeMessage = "The requested interval crosses a table plan boundary."
+                };
         }
 
         return plan;
@@ -298,7 +322,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 SearchTimedOutMessage,
                 HttpStatusCode.GatewayTimeout,
-                "LogsSearchTimeout");
+                "LogsSearchTimeout")
+            {
+                TelemetrySafeMessage = SearchTimedOutMessage
+            };
         }
     }
 
@@ -320,14 +347,20 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "Azure credentials were unavailable for the Logs search.",
                 HttpStatusCode.Unauthorized,
-                "CredentialUnavailable");
+                "CredentialUnavailable")
+            {
+                TelemetrySafeMessage = "Azure credentials were unavailable for the Logs search."
+            };
         }
         catch (AuthenticationFailedException)
         {
             throw new CommandValidationException(
                 "Authentication failed while acquiring credentials for the Logs search.",
                 HttpStatusCode.Unauthorized,
-                "LogsAuthenticationFailed");
+                "LogsAuthenticationFailed")
+            {
+                TelemetrySafeMessage = "Authentication failed while acquiring credentials for the Logs search."
+            };
         }
         catch (RequestFailedException ex)
         {
@@ -337,7 +370,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 $"Azure could not resolve the requested tenant ({SanitizeBackendCode(ex.ErrorCode)}).",
                 status,
-                "TenantResolutionFailed");
+                "TenantResolutionFailed")
+            {
+                TelemetrySafeMessage = $"Azure could not resolve the requested tenant ({SanitizeBackendCode(ex.ErrorCode)})."
+            };
         }
     }
 
@@ -361,7 +397,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "The Logs service returned a malformed response.",
                 HttpStatusCode.BadGateway,
-                "MalformedLogsResponse");
+                "MalformedLogsResponse")
+            {
+                TelemetrySafeMessage = "The Logs service returned a malformed response."
+            };
         }
 
         var result = MapLogSearchResponse(apiResponse, table, plan, timespan, limit);
@@ -384,6 +423,9 @@ public sealed class MonitorLogSearchService(
                 "Synchronous Basic and Auxiliary log search is not supported for the configured Azure cloud because its endpoint has not been verified.",
                 HttpStatusCode.NotImplemented,
                 "UnsupportedCloud")
+            {
+                TelemetrySafeMessage = "Synchronous Basic and Auxiliary log search is not supported for the configured Azure cloud because its endpoint has not been verified."
+            }
         };
 
     /// <summary>
@@ -474,7 +516,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 $"The Logs service returned a fatal query error ({SanitizeBackendCode(response.Error.Code)}).",
                 HttpStatusCode.BadGateway,
-                "FatalLogsError");
+                "FatalLogsError")
+            {
+                TelemetrySafeMessage = $"The Logs service returned a fatal query error ({SanitizeBackendCode(response.Error.Code)})."
+            };
         }
 
         if (response.Tables is null)
@@ -482,7 +527,10 @@ public sealed class MonitorLogSearchService(
             throw new CommandValidationException(
                 "The Logs service response did not contain a tables collection.",
                 HttpStatusCode.BadGateway,
-                "MalformedLogsResponse");
+                "MalformedLogsResponse")
+            {
+                TelemetrySafeMessage = "The Logs service response did not contain a tables collection."
+            };
         }
 
         List<LogSearchColumn> columns = [];
@@ -496,7 +544,10 @@ public sealed class MonitorLogSearchService(
                 throw new CommandValidationException(
                     "The Logs service response contained invalid table metadata.",
                     HttpStatusCode.BadGateway,
-                    "MalformedLogsResponse");
+                    "MalformedLogsResponse")
+                {
+                    TelemetrySafeMessage = "The Logs service response contained invalid table metadata."
+                };
             }
 
             if (resultTable.Rows.Count > limit ||
@@ -505,7 +556,10 @@ public sealed class MonitorLogSearchService(
                 throw new CommandValidationException(
                     "The Logs service response contained an invalid row shape.",
                     HttpStatusCode.BadGateway,
-                    "InvalidRowShape");
+                    "InvalidRowShape")
+                {
+                    TelemetrySafeMessage = "The Logs service response contained an invalid row shape."
+                };
             }
 
             columns = resultTable.Columns
@@ -541,6 +595,9 @@ public sealed class MonitorLogSearchService(
                 "The Logs service response contained an ambiguous table shape.",
                 HttpStatusCode.BadGateway,
                 "MalformedLogsResponse")
+            {
+                TelemetrySafeMessage = "The Logs service response contained an ambiguous table shape."
+            }
         };
     }
 

@@ -44,13 +44,19 @@ internal static class LogSearchQueryValidator
     {
         if (string.IsNullOrEmpty(table))
         {
-            throw new CommandValidationException("--table is required.");
+            throw new CommandValidationException("--table is required.")
+            {
+                TelemetrySafeMessage = "--table is required."
+            };
         }
 
         if (!IsAsciiLetter(table[0]) || table.Any(character => !IsAsciiLetterOrDigitOrUnderscore(character)))
         {
             throw new CommandValidationException(
-                "--table must be an ASCII KQL identifier beginning with a letter and containing only letters, digits, or underscores.");
+                "--table must be an ASCII KQL identifier beginning with a letter and containing only letters, digits, or underscores.")
+            {
+                TelemetrySafeMessage = "--table must be an ASCII KQL identifier beginning with a letter and containing only letters, digits, or underscores."
+            };
         }
     }
 
@@ -58,24 +64,36 @@ internal static class LogSearchQueryValidator
     {
         if (string.IsNullOrWhiteSpace(pipeline))
         {
-            throw new CommandValidationException("--query is required.");
+            throw new CommandValidationException("--query is required.")
+            {
+                TelemetrySafeMessage = "--query is required."
+            };
         }
 
         if (pipeline.Length > MaxPipelineLength)
         {
             throw new CommandValidationException(
-                $"--query cannot exceed {MaxPipelineLength:N0} characters.");
+                $"--query cannot exceed {MaxPipelineLength:N0} characters.")
+            {
+                TelemetrySafeMessage = $"--query cannot exceed {MaxPipelineLength:N0} characters."
+            };
         }
 
         var trimmed = pipeline.Trim();
         if (trimmed.Any(character => char.IsControl(character) && character is not ('\t' or '\r' or '\n')))
         {
-            throw new CommandValidationException("--query contains a disallowed control character.");
+            throw new CommandValidationException("--query contains a disallowed control character.")
+            {
+                TelemetrySafeMessage = "--query contains a disallowed control character."
+            };
         }
 
         if (trimmed[0] != '|')
         {
-            throw new CommandValidationException("--query must be a KQL pipeline fragment beginning with '|'.");
+            throw new CommandValidationException("--query must be a KQL pipeline fragment beginning with '|'.")
+            {
+                TelemetrySafeMessage = "--query must be a KQL pipeline fragment beginning with '|'."
+            };
         }
 
         ValidateStructure(BlankQuotedTextAndRejectComments(trimmed));
@@ -104,7 +122,10 @@ internal static class LogSearchQueryValidator
                     (character == '*' && index + 1 < pipeline.Length &&
                      pipeline[index + 1] == '/'))
                 {
-                    throw new CommandValidationException("--query comments are not allowed.");
+                    throw new CommandValidationException("--query comments are not allowed.")
+                    {
+                        TelemetrySafeMessage = "--query comments are not allowed."
+                    };
                 }
 
                 if (character is '\'' or '"')
@@ -147,7 +168,10 @@ internal static class LogSearchQueryValidator
 
         if (quote != '\0')
         {
-            throw new CommandValidationException("--query contains an unterminated string literal.");
+            throw new CommandValidationException("--query contains an unterminated string literal.")
+            {
+                TelemetrySafeMessage = "--query contains an unterminated string literal."
+            };
         }
 
         return new(result);
@@ -161,7 +185,10 @@ internal static class LogSearchQueryValidator
             if (character == ';')
             {
                 throw new CommandValidationException(
-                    "--query must contain one pipeline and cannot contain semicolons or multiple statements.");
+                    "--query must contain one pipeline and cannot contain semicolons or multiple statements.")
+                {
+                    TelemetrySafeMessage = "--query must contain one pipeline and cannot contain semicolons or multiple statements."
+                };
             }
 
             if (character == '(')
@@ -173,19 +200,28 @@ internal static class LogSearchQueryValidator
                 parenthesisDepth--;
                 if (parenthesisDepth < 0)
                 {
-                    throw new CommandValidationException("--query contains unbalanced parentheses.");
+                    throw new CommandValidationException("--query contains unbalanced parentheses.")
+                    {
+                        TelemetrySafeMessage = "--query contains unbalanced parentheses."
+                    };
                 }
             }
             else if (character == '|' && parenthesisDepth > 0)
             {
                 throw new CommandValidationException(
-                    "--query cannot contain nested tabular pipelines or source expressions.");
+                    "--query cannot contain nested tabular pipelines or source expressions.")
+                {
+                    TelemetrySafeMessage = "--query cannot contain nested tabular pipelines or source expressions."
+                };
             }
         }
 
         if (parenthesisDepth != 0)
         {
-            throw new CommandValidationException("--query contains unbalanced parentheses.");
+            throw new CommandValidationException("--query contains unbalanced parentheses.")
+            {
+                TelemetrySafeMessage = "--query contains unbalanced parentheses."
+            };
         }
 
         var tokens = Tokenize(pipeline);
@@ -194,13 +230,19 @@ internal static class LogSearchQueryValidator
             var token = tokens[index];
             if (token.Equals("let", StringComparison.OrdinalIgnoreCase))
             {
-                throw new CommandValidationException("--query cannot contain statement or source rebinding.");
+                throw new CommandValidationException("--query cannot contain statement or source rebinding.")
+                {
+                    TelemetrySafeMessage = "--query cannot contain statement or source rebinding."
+                };
             }
 
             if (s_unsupportedOperators.Contains(token))
             {
                 throw new CommandValidationException(
-                    $"The '{token}' operator is not supported for Basic or Auxiliary table searches.");
+                    $"The '{token}' operator is not supported for Basic or Auxiliary table searches.")
+                {
+                    TelemetrySafeMessage = "Unsupported log search operator."
+                };
             }
 
             if (s_sourceFunctions.Contains(token) &&
@@ -208,7 +250,10 @@ internal static class LogSearchQueryValidator
                 tokens[index + 1] == "(")
             {
                 throw new CommandValidationException(
-                    $"The '{token}()' source form is not allowed in a workspace log search.");
+                    $"The '{token}()' source form is not allowed in a workspace log search.")
+                {
+                    TelemetrySafeMessage = "Disallowed log search source function."
+                };
             }
         }
     }

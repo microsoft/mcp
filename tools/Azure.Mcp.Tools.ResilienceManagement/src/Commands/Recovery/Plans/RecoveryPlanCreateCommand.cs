@@ -78,16 +78,22 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
         }
         catch (ArgumentException ex)
         {
-            validationResult.Errors.Add(ex.Message);
+            validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
         }
 
-        if (options.IdentityType != Models.RecoveryPlanIdentityKind.SystemAssigned && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        if (options.DefaultGroupUniqueId is not null && !Guid.TryParse(options.DefaultGroupUniqueId, out _))
+        {
+            validationResult.Errors.Add("--default-group-unique-id must be a GUID.");
+        }
+
+        bool usesUserAssignedIdentity = options.IdentityType is Models.RecoveryPlanIdentityKind.UserAssigned or Models.RecoveryPlanIdentityKind.SystemAndUserAssigned;
+        if (usesUserAssignedIdentity && string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
             validationResult.Errors.Add("--user-assigned-identity is required when --identity-type is UserAssigned or SystemAndUserAssigned.");
         }
-        else if (options.IdentityType == Models.RecoveryPlanIdentityKind.SystemAssigned && !string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
+        else if (!usesUserAssignedIdentity && !string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
-            validationResult.Errors.Add("--user-assigned-identity is not allowed when --identity-type is SystemAssigned.");
+            validationResult.Errors.Add("--user-assigned-identity is not allowed when --identity-type is SystemAssigned or None.");
         }
         else if (!string.IsNullOrWhiteSpace(options.UserAssignedIdentity))
         {
@@ -97,7 +103,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add(ex.Message);
+                validationResult.AddError(ex.Message, "Invalid recovery plan configuration.");
             }
         }
     }
@@ -121,6 +127,7 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 additionalGroups: additionalGroups,
                 defaultGroupPreActions: defaultGroupPreActions,
                 defaultGroupPostActions: defaultGroupPostActions,
+                defaultGroupUniqueId: options.DefaultGroupUniqueId is null ? null : Guid.Parse(options.DefaultGroupUniqueId).ToString(),
                 cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -290,6 +297,8 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
 
             string? actionResourceId = null;
             IReadOnlyDictionary<string, string>? parameters = null;
+            string? associatedIdentityType = null;
+            string? associatedUserAssignedIdentity = null;
             if (type == RecoveryPlanGroupActionKind.CustomRunbook)
             {
                 if (!action.TryGetProperty("actionResourceId", out JsonElement actionResourceIdElement) ||
@@ -302,6 +311,11 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 actionResourceId = actionResourceIdElement.GetString()!;
                 ValidateRunbookResourceId(actionResourceId, fieldName);
                 parameters = ParseActionParameters(action, fieldName);
+                (associatedIdentityType, associatedUserAssignedIdentity) = ParseActionIdentity(action, fieldName);
+            }
+            else if (action.TryGetProperty("associatedIdentity", out JsonElement manualIdentity) && manualIdentity.ValueKind != JsonValueKind.Null)
+            {
+                throw new ArgumentException($"Only CustomRunbook {fieldName} actions support associatedIdentity.");
             }
 
             result.Add(new RecoveryPlanGroupActionInput(
@@ -310,10 +324,49 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
                 description,
                 timeoutInMinutes,
                 actionResourceId,
-                parameters));
+                parameters,
+                associatedIdentityType,
+                associatedUserAssignedIdentity));
         }
 
         return result;
+    }
+
+    // Optional identity the runbook runs as: {"type": "...", "userAssignedIdentity": "<ARM ID>"}.
+    private static (string? Type, string? UserAssignedIdentity) ParseActionIdentity(JsonElement action, string fieldName)
+    {
+        if (!action.TryGetProperty("associatedIdentity", out JsonElement identity) || identity.ValueKind == JsonValueKind.Null)
+        {
+            return (null, null);
+        }
+
+        if (identity.ValueKind != JsonValueKind.Object ||
+            !identity.TryGetProperty("type", out JsonElement typeElement) ||
+            typeElement.ValueKind != JsonValueKind.String ||
+            typeElement.GetString() is not ("None" or "SystemAssigned" or "UserAssigned" or "SystemAssigned, UserAssigned") ||
+            identity.EnumerateObject().Any(property => property.Name is not ("type" or "userAssignedIdentity")))
+        {
+            throw new ArgumentException($"Each CustomRunbook {fieldName} action associatedIdentity must be an object with type (None, SystemAssigned, UserAssigned, or SystemAssigned, UserAssigned) and optional userAssignedIdentity.");
+        }
+
+        string type = typeElement.GetString()!;
+        string? userAssignedIdentity = null;
+        if (identity.TryGetProperty("userAssignedIdentity", out JsonElement userAssignedElement) && userAssignedElement.ValueKind != JsonValueKind.Null)
+        {
+            if (userAssignedElement.ValueKind != JsonValueKind.String)
+            {
+                throw new ArgumentException($"Each CustomRunbook {fieldName} action associatedIdentity.userAssignedIdentity must be a string.");
+            }
+
+            userAssignedIdentity = ResilienceManagementService.ParseUserAssignedIdentityResourceId(userAssignedElement.GetString()!).ToString();
+        }
+
+        if (type.Contains("UserAssigned", StringComparison.Ordinal) != (userAssignedIdentity is not null))
+        {
+            throw new ArgumentException($"Each CustomRunbook {fieldName} action associatedIdentity requires userAssignedIdentity exactly when type includes UserAssigned.");
+        }
+
+        return (type, userAssignedIdentity);
     }
 
     private static bool IsValidActionName(string? name)

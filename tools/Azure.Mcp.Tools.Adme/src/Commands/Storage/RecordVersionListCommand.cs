@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.Storage;
@@ -27,7 +28,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class RecordVersionListCommand(IStorageService storageService)
+public sealed class RecordVersionListCommand(IEndpointValidator endpointValidator, IStorageService storageService)
     : AuthenticatedCommand<RecordVersionListOptions, RecordVersionsResponse>
 {
     private readonly IStorageService _storageService = storageService;
@@ -35,7 +36,7 @@ public sealed class RecordVersionListCommand(IStorageService storageService)
     public override void ValidateOptions(RecordVersionListOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateRecordId(options.Id, "--id", validationResult);
     }
 

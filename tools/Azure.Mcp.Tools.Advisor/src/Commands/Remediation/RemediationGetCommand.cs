@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Tools.Advisor.Options.Remediation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Extensions.Logging;
@@ -75,9 +76,32 @@ public sealed class RemediationGetCommand(ILogger<RemediationGetCommand> logger,
         // ARM's exact error payload as the message. Surface it as-is instead of the base class's
         // generic "service unavailable or network connectivity issues" text, which is misleading
         // for normal HTTP error responses such as 404 RemediationNotFound.
+        HttpRequestException httpEx when IsRemediationUnavailableForTenant(httpEx.Message) =>
+            "Azure Advisor returned RemediationNotAvailableForTenant for this recommendation type. " +
+            "Review the recommendation in Azure Advisor for its available guidance. " +
+            "If you expected a remediation package to be available, contact Azure Support and provide this error " +
+            "and the request or correlation ID, if available.",
         HttpRequestException httpEx => httpEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static bool IsRemediationUnavailableForTenant(string errorMessage)
+    {
+        try
+        {
+            using var errorDocument = JsonDocument.Parse(errorMessage);
+            return errorDocument.RootElement.ValueKind == JsonValueKind.Object &&
+                errorDocument.RootElement.TryGetProperty("error", out var error) &&
+                error.ValueKind == JsonValueKind.Object &&
+                error.TryGetProperty("code", out var code) &&
+                code.ValueKind == JsonValueKind.String &&
+                code.GetString() == "RemediationNotAvailableForTenant";
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
     public sealed record RemediationGetResult(Models.RemediationPackage Remediation);
 }

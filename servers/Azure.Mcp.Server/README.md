@@ -102,7 +102,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
-<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false,}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // ⚠️ DANGEROUS: Disable SSRF protections for specific namespaces.}} -->
+<!-- insert-section: vsix {{       // Only use this if you understand the security implications.}} -->
+<!-- insert-section: vsix {{       // Forwards to --dangerously-disable-ssrf-protections-by-namespace.}} -->
+<!-- insert-section: vsix {{       "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": ["storage"]}} -->
 <!-- insert-section: vsix {{       ```}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
@@ -951,14 +956,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 ### 📊 Azure Advisor
 
 * "List my Advisor recommendations"
+* "List Advisor recommendations for service group 'my-service-group'"
+* "Show the prioritized Advisor recommendations for service group 'my-service-group'"
+* "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
+* "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
+* "Mark an Advisor recommendation as completed in service group 'my-service-group'"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
-* "Apply Advisor recommendations to IaaC files"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"
@@ -1009,12 +1020,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Read asynchronous operation status with `azurebackup_operation_get` (Recovery Services vaults only).
+Query vault scope, or supply both container and protected item for item scope. Operation IDs are not
+job IDs: only actual job IDs returned by Azure can be used with `azurebackup_job_get`; no job is valid.
+
+* "Get asynchronous operation 'operation-id' in RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+* "Check operation 'operation-id' for protected item 'item' in container 'container' of RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+
 Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
 * "Update backup policy schedule time to 04:00 in vault 'myvault'"
+* "Update existing Enhanced Hourly VM policy 'myEnhancedPolicy' in Recovery Services vault 'myvault', resource group 'myRG', subscription 'my-subscription': set time zone to 'India Standard Time' and hourly window start to 08:00 local (converted to 02:30 UTC), preserving the interval and duration"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"
@@ -1136,6 +1155,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
+### 🔧 Azure Device Provisioning Service
+
+* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
+* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
@@ -1243,6 +1268,13 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "List the distributed trace accounts in my subscription"
+* "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+
+_Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
@@ -1337,6 +1369,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 
 ### 🔄 Azure Migrate
@@ -1347,8 +1380,24 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 
 ### 🛡️ Azure Resilience Management
 
+Goals support the GA `2026-10-01` API with nested zonal resiliency settings, not
+goal templates or flat HA/DR payloads. Commands are service-group-scoped and do
+not take a subscription option. Assignment names use 3-24 ASCII letters, digits,
+or hyphens. Assignment PATCH only replaces or clears SLI
+associations; it cannot change the zonal requirement. See the
+[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract)
+for payloads and completion semantics. The tools use the released
+`Azure.ResourceManager.ResilienceManagement` SDK `1.0.0`.
+
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' in service group 'my-service-group' requiring zonal resiliency"
+* "Replace the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group' with existing Microsoft.Monitor/slis resources from that same service group, preserving its zonal requirement"
+* "Clear the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group', without deleting the indicators or changing its zonal requirement"
+* "Delete goal assignment 'my-assignment' from service group 'my-service-group' without deleting the underlying Azure resources"
+* "Recommend zonal capacity for non-resilient resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Refresh tracked resources of goal assignment 'my-assignment' in service group 'my-service-group' after membership changes"
+* "Exclude a selected resource from zonal participation in goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
 * "List all resilience recovery plans in service group 'my-service-group'"
@@ -1385,6 +1434,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Generate the report for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
+* "Get a download link for the report of drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1446,6 +1497,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- 🔧 **Azure Device Provisioning Service** - Device Provisioning Service resource configuration and linked IoT Hub metadata
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
@@ -1461,16 +1513,17 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - 💾 **Azure NetApp Files** - Enterprise file storage account management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignment lifecycle, zonal capacity recommendations, goal resource rediscovery, participation and attestation, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🧭 **Azure Resiliency Agent** - General Azure resiliency guidance, application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
@@ -1480,7 +1533,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
-- 💾 **Azure Storage** - Blob storage
+- 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation

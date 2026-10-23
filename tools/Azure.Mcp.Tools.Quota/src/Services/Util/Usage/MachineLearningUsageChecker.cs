@@ -3,13 +3,14 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.ResourceManager;
 using Azure.ResourceManager.MachineLearning;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class MachineLearningUsageChecker(TokenCredential credential, string subscriptionId, ILogger<MachineLearningUsageChecker> logger, IAzureService azureService)
-    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
+public class MachineLearningUsageChecker(ArmClient resourceClient, TokenCredential credential, string subscriptionId, ILogger<MachineLearningUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(resourceClient, credential, subscriptionId, logger, azureService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

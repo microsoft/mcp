@@ -74,12 +74,20 @@ public static class KqlQueryValidator
 
         // Detect management/control commands using regex to handle all whitespace
         // variants (tabs, newlines, carriage returns) between separators and commands.
-        var match = s_managementCommandPattern.Match(queryWithoutStrings);
-        if (match.Success)
+        var matches = s_managementCommandPattern.Matches(queryWithoutStrings);
+        if (matches.Count > 0)
         {
-            throw new CommandValidationException(
-                $"Management command '{match.Value.TrimStart('|', ';').Trim()}' is not allowed in queries for security reasons.",
-                HttpStatusCode.BadRequest);
+            var matchedCommands = string.Join(", ", matches.Select(match => $"'{match.Value.TrimStart('|', ';').Trim()}'"));
+            var message = matches.Count > 1 ?
+                $"Management commands {matchedCommands} are not allowed in queries for security reasons." :
+                $"Management command {matchedCommands} is not allowed in queries for security reasons.";
+
+            // Safe to have the same exception message and telemetry safe message here as the captured values are
+            // controlled by use with 's_dangerousCommands'.
+            throw new CommandValidationException(message, HttpStatusCode.BadRequest)
+            {
+                TelemetrySafeMessage = message
+            };
         }
     }
 

@@ -15,7 +15,11 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "get",
     Title = "Get AzureRM Provider Documentation",
     Description = """
-        Retrieves comprehensive AzureRM Terraform provider documentation for a specified resource type.
+        Retrieves AzureRM Terraform provider documentation and schema for a Terraform resource type or data source
+        whose name starts with the azurerm_ prefix, such as azurerm_virtual_network, azurerm_storage_account, or
+        azurerm_subscription. Use this tool to look up the arguments, attributes, schema, or usage examples of an
+        azurerm_ Terraform resource; it reads reference documentation and does not query, read, list, or modify any
+        live Azure resources, accounts, or data in a subscription.
         Returns the resource summary, arguments with descriptions and requirements, attributes,
         usage examples, and important notes. Use --resource-type to specify the resource
         (e.g., azurerm_resource_group). Optionally filter by --doc-type (resource or data-source),

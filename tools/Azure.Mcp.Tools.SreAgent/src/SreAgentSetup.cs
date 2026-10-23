@@ -99,8 +99,8 @@ public sealed class SreAgentSetup : IAreaSetup
     {
         var sreAgent = new CommandGroup(
             Name,
-            "Azure SRE Agent operations - Commands for managing and interacting with Azure SRE Agent resources, " +
-            "including agents, skills, connectors, threads, hooks, scheduled tasks, incidents, knowledge memory, " +
+            "Azure SRE Agent operations - Commands for investigating, troubleshooting, and root-causing live-site issues and incidents with Azure SRE Agent, " +
+            "and for managing agents, skills, connectors, threads, hooks, scheduled tasks, incidents, knowledge memory, " +
             "documentation, workflows, and architecture planning.",
             Title);
 
