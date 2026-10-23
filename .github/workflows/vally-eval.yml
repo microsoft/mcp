@@ -18,7 +18,6 @@ on:
         type: number
 
 permissions:
-  copilot-requests: write
   contents: read
   pull-requests: read
 
