@@ -144,6 +144,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
 | advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_insight_list | Show Advisor insights for service group commerce | none |
+| advisor_insight_list | Give me insights across all my service groups | none |
+| advisor_insight_list | Which subscriptions or service groups have the largest remaining retirement backlog? | none |
+| advisor_insight_list | How many idle resources and what potential savings does service group commerce have? | none |
+| advisor_insight_list | What is the zonal resiliency coverage of service group commerce? | none |
+| advisor_insight_list | Use Advisor insight list to get the ServiceRetirement insight for service group commerce | none |
+| advisor_insight_list | How much retirement exposure has subscription <subscription> reduced or increased since its Day 1 count? | none |
+| advisor_insight_list | How much retirement exposure has service group <service-group> reduced or increased since its Day 1 count? | none |
+| advisor_insight_list | Summarize Day 1 exposure, current exposure, and highest-risk retirements for subscription <subscription> | none |
+| advisor_insight_list | Summarize Day 1 exposure, current exposure, and highest-risk retirements for service group <service-group> | none |
+| advisor_insight_list | Which subscriptions or service groups have reached 100 percent burndown with zero remaining exposure? | none |
+| advisor_insight_list | Get ServiceRetirement baseline and current exposure for this subscription | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
