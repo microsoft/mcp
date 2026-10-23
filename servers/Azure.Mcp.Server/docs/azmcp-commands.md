@@ -2821,6 +2821,11 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
+In a long-running stdio server, each cached Kusto client reuses its access token
+until five minutes before expiration or the credential's earlier refresh time.
+Tokens remain scoped to the client's credential and cloud; they are not shared
+across tenants.
+
 ### Azure Database for MySQL Operations
 
 ```bash
