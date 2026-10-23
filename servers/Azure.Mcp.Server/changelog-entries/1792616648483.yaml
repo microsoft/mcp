@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added bounded, connection-independent paging to Storage account inventories, with a 50-account default, page-size and continuation-token options, and continuation arguments that can be used on another server instance. Named account lookups and other tools are unchanged."

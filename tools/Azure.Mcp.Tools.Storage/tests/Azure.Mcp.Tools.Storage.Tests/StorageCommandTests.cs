@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -14,9 +15,36 @@ namespace Azure.Mcp.Tools.Storage.Tests;
 public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+        ArgumentException.ThrowIfNullOrWhiteSpace(Settings.TenantId);
+        GeneralRegexSanitizers.Add(new(new()
+        {
+            Regex = Regex.Escape(Settings.TenantId),
+            Value = "00000000-0000-0000-0000-000000000000"
+        }));
+    }
+
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         .. base.BodyKeySanitizers,
+        new(new("$['$skipToken']") { Value = "SanitizedContinuation" }),
+        new(new("$.options['$skipToken']") { Value = "SanitizedContinuation" }),
+        new(new("$.data[*].name") { Value = "Sanitized" }),
+        new(new("$.data[*].resourceGroup") { Value = "Sanitized" }),
+        new(new("$.data[*].id")
+        {
+            Regex = @"/resource[gG]roups/(?<group>[^/]+)",
+            GroupForReplace = "group",
+            Value = "Sanitized"
+        }),
+        new(new("$.data[*].id")
+        {
+            Regex = @"/providers/[^/]+/[^/]+/(?<name>[^/]+)$",
+            GroupForReplace = "name",
+            Value = "Sanitized"
+        }),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
         {
             Value = "Sanitized"
@@ -25,6 +53,17 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         {
             Regex = @"(?<=/tenants/)[0-9a-fA-F-]{36}",
             Value = "00000000-0000-0000-0000-000000000000"
+        })
+    ];
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers =>
+    [
+        ..base.BodyRegexSanitizers,
+        new(new()
+        {
+            Regex = "\"tags\"\\s*:\\s*\\{(?<tags>(?:[^\"{}]|\"(?:\\\\.|[^\"\\\\])*\")*)\\}",
+            GroupForReplace = "tags",
+            Value = string.Empty
         })
     ];
 
@@ -46,6 +85,37 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         ..base.DisabledDefaultSanitizers,
         "AZSDK2003"
     ];
+
+    [Fact]
+    public async Task Should_list_storage_accounts_with_paging()
+    {
+        var first = await CallToolAsync("storage_account_get", new()
+        {
+            ["subscription"] = Settings.SubscriptionId,
+            ["page-size"] = 1
+        });
+        Assert.Single(first.AssertProperty("accounts").EnumerateArray());
+        var paging = first.AssertProperty("paging");
+        Assert.Equal(1, paging.GetProperty("pageSize").GetInt32());
+
+        if (!paging.TryGetProperty("continuationToken", out var token))
+        {
+            Assert.False(paging.TryGetProperty("continuationArguments", out _));
+            return;
+        }
+
+        Assert.False(string.IsNullOrWhiteSpace(token.GetString()));
+        Assert.True(Guid.TryParse(paging.GetProperty("commandId").GetString(), out _));
+        var arguments = new Dictionary<string, object?>();
+        foreach (var argument in paging.GetProperty("continuationArguments").EnumerateObject())
+        {
+            arguments.Add(argument.Name, argument.Value.Clone());
+        }
+
+        var second = await CallToolAsync("storage_account_get", arguments);
+        Assert.InRange(second.AssertProperty("accounts").GetArrayLength(), 0, 1);
+        Assert.Equal(1, second.AssertProperty("paging").GetProperty("pageSize").GetInt32());
+    }
 
     [Fact]
     public async Task Should_list_storage_accounts_by_subscription_id()

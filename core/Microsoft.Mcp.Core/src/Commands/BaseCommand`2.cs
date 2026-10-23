@@ -88,8 +88,16 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     /// </summary>
     /// <param name="options">The options to validate.</param>
     /// <param name="validationResult">The validation result to populate.</param>
+    /// <remarks>
+    /// Applies shared paging validation when <paramref name="options"/> implements <see cref="IPagingOption"/>.
+    /// Overrides should call the base implementation before adding command-specific validation.
+    /// </remarks>
     public virtual void ValidateOptions(TOptions options, ValidationResult validationResult)
     {
+        if (options is IPagingOption pagingOptions)
+        {
+            PagingOptionValidator.Validate(pagingOptions, validationResult);
+        }
     }
 
     public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, TOptions options, CancellationToken cancellationToken);

@@ -5307,8 +5307,14 @@ azmcp storage account create --subscription <subscription> \
 azmcp storage account get --subscription <subscription> \
                           [--account <account>] \
                           [--resource-group <resource-group>] \
-                          [--tenant <tenant>]
+                          [--tenant <tenant>] \
+                          [--page-size <1-1000>] \
+                          [--continuation-token <token>]
 ```
+
+Without `--account`, returns up to 50 accounts per page by default. With `--account`,
+returns one account and rejects paging options. See [resource inventory paging](../../../docs/paging.md)
+for continuation and cross-instance replay.
 
 #### Blob Storage
 

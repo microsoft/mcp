@@ -6,6 +6,7 @@ using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Models.Paging;
 using NSubstitute;
 using Xunit;
 
@@ -38,14 +39,18 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
         [
             new("account1", null, null, null, null, null, null, null, null, null),
             new("account2", null, null, null, null, null, null, null, null, null)
-        ], false);
+        ], false)
+        {
+            Page = new(PageRequest.DefaultPageSize, null, subscription, "tenant", null)
+        };
 
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
             .Returns(expectedAccounts);
 
         // Act
@@ -60,7 +65,8 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             subscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>());
     }
 
     [Fact]
@@ -75,14 +81,18 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
         [
             new("account1", null, null, null, null, null, null, null, null, null),
             new("account2", null, null, null, null, null, null, null, null, null)
-        ], false);
+        ], false)
+        {
+            Page = new(PageRequest.DefaultPageSize, null, expectedSubscription, "tenant", null)
+        };
 
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(expectedSubscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
             .Returns(expectedAccounts);
 
         // Act
@@ -97,12 +107,14 @@ public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<Account
             expectedSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>());
         await Service.DidNotReceive().GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             ignoredSubscription,
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>());
     }
 }

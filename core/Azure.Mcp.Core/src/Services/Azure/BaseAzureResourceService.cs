@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Buffers.Text;
 using System.ClientModel.Primitives;
+using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Core;
@@ -10,6 +13,8 @@ using Azure.Core.Pipeline;
 using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Models.Paging;
+using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -68,11 +73,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         ArgumentNullException.ThrowIfNull(converter);
         ValidateAdditionalFilter(additionalFilter);
 
-        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken);
-        var tenantId = subscriptionResource!.Data.TenantId?.ToString()
-            ?? await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
-            ?? throw new InvalidOperationException(
-                $"Subscription '{subscriptionResource.Data.SubscriptionId}' does not have a tenant ID.");
+        var (subscriptionResource, tenantId) = await ResolveResourceQueryScopeAsync(subscription, tenant, cancellationToken);
 
         var queryFilter = BuildResourceQuery(tableName, resourceType, resourceGroup, additionalFilter, limit);
 
@@ -81,7 +82,7 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             Subscriptions = { subscriptionResource.Data.SubscriptionId }
         };
 
-        var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
+        var (result, _) = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
 
         if (result.Results.Count == 0 && !string.IsNullOrEmpty(resourceGroup))
         {
@@ -93,6 +94,179 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Returns one ordered Resource Graph page with continuation that can be replayed on another instance.
+    /// </summary>
+    /// <typeparam name="T">The model to which each resource is converted.</typeparam>
+    /// <param name="resourceType">The Azure resource type to query.</param>
+    /// <param name="resourceGroup">The resource group filter, or <see langword="null"/> for the subscription scope.</param>
+    /// <param name="subscription">The subscription ID or name to resolve for the query.</param>
+    /// <param name="converter">The function that converts each resource JSON object to <typeparamref name="T"/>.</param>
+    /// <param name="page">
+    /// The requested page size and optional continuation. An omitted size uses
+    /// <see cref="PageRequest.DefaultPageSize"/> for the first page or retains the previous page size.
+    /// </param>
+    /// <param name="tenant">The optional tenant ID or name used when resolving the subscription.</param>
+    /// <param name="cancellationToken">The token that cancels the Azure requests.</param>
+    /// <returns>
+    /// The converted resources, truncation state, and paging metadata with resolved scope.
+    /// An empty resource collection may still have continuation.
+    /// </returns>
+    /// <remarks>
+    /// Uses Resource Graph page-size and skip-token options with resource-ID ordering instead of a KQL
+    /// limit. Continuation must preserve the query, resolved subscription and tenant, cloud, and page size.
+    /// Each page authenticates independently and requires no state on the issuing server instance.
+    /// Resource Graph indexing and concurrent resource changes mean the iteration is not a snapshot.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="converter"/> or <paramref name="page"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// A required input or paging value is invalid, or the continuation is malformed, unsupported,
+    /// or inconsistent with the current request.
+    /// </exception>
+    /// <exception cref="KeyNotFoundException">The subscription or an explicitly queried resource group does not exist.</exception>
+    /// <exception cref="InvalidOperationException">The tenant ID cannot be determined for the subscription.</exception>
+    /// <exception cref="HttpRequestException">
+    /// The backend page is invalid, exceeds the requested item bound, or cannot provide usable continuation.
+    /// </exception>
+    /// <exception cref="RequestFailedException">An Azure Resource Graph request fails.</exception>
+    protected async Task<ResourceQueryResults<T>> ExecuteResourceQueryPageAsync<T>(
+        string resourceType,
+        string? resourceGroup,
+        string subscription,
+        Func<JsonElement, T> converter,
+        PageRequest page,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
+        ArgumentNullException.ThrowIfNull(converter);
+        PagingOptionValidator.Validate(page);
+
+        var cursor = ReadContinuationToken(page.ContinuationToken);
+        var pageSize = page.PageSize ?? cursor?.PageSize ?? PageRequest.DefaultPageSize;
+        if (cursor is not null && cursor.PageSize != pageSize)
+        {
+            throw new ArgumentException("--page-size must match the previous page. Replay paging.continuationArguments unchanged.", nameof(page));
+        }
+
+        var (subscriptionResource, tenantId) = await ResolveResourceQueryScopeAsync(subscription, tenant, cancellationToken);
+        var subscriptionId = subscriptionResource.Data.SubscriptionId;
+        var cloudEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri;
+        var normalizedResourceGroup = resourceGroup?.ToLowerInvariant();
+        var query = BuildResourceQuery("resources", resourceType, normalizedResourceGroup, additionalFilter: null, limit: null);
+
+        if (cursor is not null &&
+            (!string.Equals(cursor.CloudEndpoint, cloudEndpoint, StringComparison.OrdinalIgnoreCase) ||
+             !string.Equals(cursor.Subscription, subscriptionId, StringComparison.OrdinalIgnoreCase) ||
+             !string.Equals(cursor.Tenant, tenantId, StringComparison.OrdinalIgnoreCase) ||
+             !string.Equals(cursor.Query, query, StringComparison.Ordinal)))
+        {
+            throw new ArgumentException("--continuation-token does not match this resource query, subscription, tenant, or cloud. Replay paging.continuationArguments unchanged.", nameof(page));
+        }
+
+        var queryContent = new ResourceQueryContent(query)
+        {
+            Subscriptions = { subscriptionId },
+            Options = new ResourceQueryRequestOptions
+            {
+                Top = pageSize,
+                SkipToken = cursor?.SkipToken
+            }
+        };
+
+        var (result, skipToken) = await ExecuteResourceGraphQueryAsync(
+            queryContent, tenantId, converter, cancellationToken, pageSize);
+
+        if (cursor is null && result.Results.Count == 0 && skipToken is null &&
+            !string.IsNullOrEmpty(resourceGroup) &&
+            !await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
+        {
+            throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionId}'");
+        }
+
+        string? continuationToken = null;
+        if (skipToken is not null)
+        {
+            continuationToken = Base64Url.EncodeToString(JsonSerializer.SerializeToUtf8Bytes(
+                new ResourceGraphContinuationToken(1, pageSize, cloudEndpoint, subscriptionId, tenantId, query, skipToken),
+                ResourceGraphPagingJsonContext.Default.ResourceGraphContinuationToken));
+            if (continuationToken.Length > PageRequest.MaxContinuationTokenLength)
+            {
+                throw new HttpRequestException("Resource Graph returned a continuation token that exceeds the supported limit.", null, HttpStatusCode.BadGateway);
+            }
+        }
+
+        return result with
+        {
+            Page = new(pageSize, continuationToken, subscriptionId, tenantId, resourceGroup)
+        };
+    }
+
+    /// <summary>
+    /// Resolves the subscription resource and tenant ID used to execute and scope a resource query.
+    /// </summary>
+    /// <param name="subscription">The subscription ID or name to resolve.</param>
+    /// <param name="tenant">The optional tenant ID or name used for subscription resolution.</param>
+    /// <param name="cancellationToken">The token that cancels scope resolution.</param>
+    /// <returns>The subscription resource and resolved tenant ID.</returns>
+    /// <exception cref="KeyNotFoundException">The subscription cannot be found.</exception>
+    /// <exception cref="InvalidOperationException">No tenant ID can be determined for the subscription.</exception>
+    private async Task<(SubscriptionResource Subscription, string Tenant)> ResolveResourceQueryScopeAsync(
+        string subscription,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var subscriptionResource = await AzureService.GetSubscription(subscription, tenant, cancellationToken)
+            ?? throw new KeyNotFoundException($"Subscription '{subscription}' was not found.");
+        var tenantId = subscriptionResource.Data.TenantId?.ToString()
+            ?? await AzureService.ResolveTenantIdAsync(tenant, cancellationToken)
+            ?? throw new InvalidOperationException(
+                $"Subscription '{subscriptionResource.Data.SubscriptionId}' does not have a tenant ID.");
+        return (subscriptionResource, tenantId);
+    }
+
+    /// <summary>
+    /// Decodes a continuation payload and validates its version, page size, and required fields.
+    /// </summary>
+    /// <param name="continuationToken">The encoded token, or <see langword="null"/> for the first page.</param>
+    /// <returns>The decoded payload, or <see langword="null"/> when no token was supplied.</returns>
+    /// <remarks>Request-scope matching and authorization are performed separately by the query service.</remarks>
+    /// <exception cref="ArgumentException">The token is malformed or its payload is invalid or unsupported.</exception>
+    private static ResourceGraphContinuationToken? ReadContinuationToken(string? continuationToken)
+    {
+        if (continuationToken is null)
+        {
+            return null;
+        }
+
+        ResourceGraphContinuationToken? cursor;
+        try
+        {
+            cursor = JsonSerializer.Deserialize(
+                Base64Url.DecodeFromChars(continuationToken),
+                ResourceGraphPagingJsonContext.Default.ResourceGraphContinuationToken);
+        }
+        catch (Exception ex) when (ex is FormatException or JsonException)
+        {
+            throw new ArgumentException("Invalid --continuation-token. Use the token returned by a previous page.", nameof(continuationToken), ex);
+        }
+
+        if (cursor is null || cursor.Version != 1 ||
+            cursor.PageSize is < 1 or > PageRequest.MaxPageSize ||
+            string.IsNullOrWhiteSpace(cursor.CloudEndpoint) ||
+            string.IsNullOrWhiteSpace(cursor.Subscription) ||
+            string.IsNullOrWhiteSpace(cursor.Tenant) ||
+            string.IsNullOrWhiteSpace(cursor.Query) ||
+            string.IsNullOrWhiteSpace(cursor.SkipToken))
+        {
+            throw new ArgumentException("Invalid or unsupported --continuation-token. Use the token returned by a previous page.", nameof(continuationToken));
+        }
+
+        return cursor;
     }
 
     /// <summary>
@@ -136,7 +310,8 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             ManagementGroups = { managementGroup }
         };
 
-        return await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
+        var (result, _) = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, converter, cancellationToken);
+        return result;
     }
 
     private static void ValidateAdditionalFilter(string? additionalFilter)
@@ -149,12 +324,23 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         }
     }
 
+    /// <summary>
+    /// Builds either a limited resource query or a resource-ID-ordered query suitable for continuation.
+    /// </summary>
+    /// <param name="tableName">The Resource Graph table to query.</param>
+    /// <param name="resourceType">The resource type to filter.</param>
+    /// <param name="resourceGroup">The optional resource group filter.</param>
+    /// <param name="additionalFilter">The optional additional KQL filter condition.</param>
+    /// <param name="limit">
+    /// The legacy KQL result limit, or <see langword="null"/> to order by resource ID and use request-level paging.
+    /// </param>
+    /// <returns>The KQL resource query.</returns>
     private static string BuildResourceQuery(
         string? tableName,
         string resourceType,
         string? resourceGroup,
         string? additionalFilter,
-        int limit)
+        int? limit)
     {
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -166,14 +352,32 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             queryFilter += $" and {additionalFilter}";
         }
 
-        return queryFilter + $" | limit {limit}";
+        return limit.HasValue
+            ? queryFilter + $" | limit {limit.Value}"
+            : queryFilter + " | order by id asc";
     }
 
-    private async Task<ResourceQueryResults<T>> ExecuteResourceGraphQueryAsync<T>(
+    /// <summary>
+    /// Executes a Resource Graph request and converts its resource data, validating page boundaries when requested.
+    /// </summary>
+    /// <typeparam name="T">The model to which each resource is converted.</typeparam>
+    /// <param name="queryContent">The query, resource scope, and optional provider paging options.</param>
+    /// <param name="tenantId">The resolved tenant ID used to authenticate the request.</param>
+    /// <param name="converter">The function that converts each resource JSON object.</param>
+    /// <param name="cancellationToken">The token that cancels the request or response parsing.</param>
+    /// <param name="pageSize">
+    /// The maximum permitted number of returned resources. When non-null, also validates the completion
+    /// indicator and continuation token; <see langword="null"/> preserves legacy response handling.
+    /// </param>
+    /// <returns>The converted result and, for a paged request, the provider's next-page skip token.</returns>
+    /// <exception cref="RequestFailedException">The Resource Graph request fails.</exception>
+    /// <exception cref="HttpRequestException">The backend page or its continuation metadata is invalid.</exception>
+    private async Task<(ResourceQueryResults<T> Result, string? SkipToken)> ExecuteResourceGraphQueryAsync<T>(
         ResourceQueryContent queryContent,
         string tenantId,
         Func<JsonElement, T> converter,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? pageSize = null)
     {
         var token = await GetArmAccessTokenAsync(tenantId, cancellationToken);
         using var client = AzureService.GetClient();
@@ -205,8 +409,17 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
         await using var responseStream = response.Content.ToStream();
         using var document = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
         var root = document.RootElement;
+        if (pageSize.HasValue && root.ValueKind != JsonValueKind.Object)
+        {
+            throw new HttpRequestException("Resource Graph returned an invalid resource page.", null, HttpStatusCode.BadGateway);
+        }
         var results = new List<T>();
-        if (root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array)
+        var hasData = root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array;
+        if (pageSize.HasValue && (!hasData || data.GetArrayLength() > pageSize.Value))
+        {
+            throw new HttpRequestException("Resource Graph returned an invalid or oversized resource page.", null, HttpStatusCode.BadGateway);
+        }
+        if (hasData)
         {
             foreach (var item in data.EnumerateArray())
             {
@@ -219,7 +432,42 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
                 || resultTruncated.ValueKind == JsonValueKind.String
                 && string.Equals(resultTruncated.GetString(), "true", StringComparison.OrdinalIgnoreCase));
 
-        return new ResourceQueryResults<T>(results, isTruncated);
+        string? skipToken = null;
+        if (pageSize.HasValue)
+        {
+            var validCompletionIndicator = resultTruncated.ValueKind is JsonValueKind.True or JsonValueKind.False;
+            if (resultTruncated.ValueKind == JsonValueKind.String)
+            {
+                validCompletionIndicator = bool.TryParse(resultTruncated.GetString(), out isTruncated);
+            }
+            if (!validCompletionIndicator)
+            {
+                throw new HttpRequestException("Resource Graph returned an invalid page completion indicator.", null, HttpStatusCode.BadGateway);
+            }
+
+            if (root.TryGetProperty("$skipToken", out var skipTokenElement) && skipTokenElement.ValueKind != JsonValueKind.Null)
+            {
+                if (skipTokenElement.ValueKind != JsonValueKind.String)
+                {
+                    throw new HttpRequestException("Resource Graph returned an invalid continuation token.", null, HttpStatusCode.BadGateway);
+                }
+                skipToken = skipTokenElement.GetString();
+                if (skipToken is { Length: 0 })
+                {
+                    skipToken = null;
+                }
+                else if (skipToken is not null && string.IsNullOrWhiteSpace(skipToken))
+                {
+                    throw new HttpRequestException("Resource Graph returned an invalid continuation token.", null, HttpStatusCode.BadGateway);
+                }
+            }
+            if (isTruncated && skipToken is null)
+            {
+                throw new HttpRequestException("Resource Graph truncated the resource page without a usable continuation token.", null, HttpStatusCode.BadGateway);
+            }
+        }
+
+        return (new(results, isTruncated || skipToken is not null), skipToken);
     }
 
     /// <summary>
@@ -250,6 +498,11 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             nameof(tenant));
     }
 
+    /// <summary>
+    /// Serializes the Resource Graph query and scope, including object-array format and paging options when present.
+    /// </summary>
+    /// <param name="queryContent">The query content to serialize.</param>
+    /// <returns>The JSON request body for the Resource Graph endpoint.</returns>
     private static RequestContent CreateResourceGraphRequestContent(ResourceQueryContent queryContent)
     {
         using var stream = new MemoryStream();
@@ -259,6 +512,20 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
             writer.WriteString("query", queryContent.Query);
             WriteStringArray(writer, "subscriptions", queryContent.Subscriptions);
             WriteStringArray(writer, "managementGroups", queryContent.ManagementGroups);
+            if (queryContent.Options is { } options)
+            {
+                writer.WriteStartObject("options");
+                writer.WriteString("resultFormat", "objectArray");
+                if (options.Top is { } top)
+                {
+                    writer.WriteNumber("$top", top);
+                }
+                if (options.SkipToken is not null)
+                {
+                    writer.WriteString("$skipToken", options.SkipToken);
+                }
+                writer.WriteEndObject();
+            }
             writer.WriteEndObject();
         }
 
@@ -390,4 +657,17 @@ public abstract class BaseAzureResourceService(IAzureService azureService)
     }
 }
 
-public sealed record ResourceQueryResults<T>(List<T> Results, bool AreResultsTruncated);
+/// <summary>
+/// Contains converted Resource Graph results, their truncation state, and optional paging information.
+/// </summary>
+/// <typeparam name="T">The converted resource model.</typeparam>
+/// <param name="Results">The resources returned by the query.</param>
+/// <param name="AreResultsTruncated">Whether the response indicates that additional matching resources were not returned.</param>
+public sealed record ResourceQueryResults<T>(List<T> Results, bool AreResultsTruncated)
+{
+    /// <summary>
+    /// Gets the page state and resolved continuation scope, or <see langword="null"/> for a legacy unpaged query.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ResourceQueryPage? Page { get; init; }
+}

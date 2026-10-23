@@ -13,6 +13,7 @@ using Azure.ResourceManager;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Paging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Storage.Services;
@@ -33,15 +34,26 @@ public sealed class StorageService(IAzureService azureService)
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        PageRequest? page = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
+        if (!string.IsNullOrEmpty(account) && page is not null)
+        {
+            throw new ArgumentException("Paging is available only when the account is omitted.", nameof(page));
+        }
 
         var accounts = new List<StorageAccountInfo>();
 
         if (string.IsNullOrEmpty(account))
         {
-            // List all accounts
+            if (page is not null)
+            {
+                return await ExecuteResourceQueryPageAsync(
+                    "Microsoft.Storage/storageAccounts", resourceGroup, subscription, ConvertToAccountInfoModel,
+                    page, tenant: tenant, cancellationToken: cancellationToken);
+            }
+
             return await ExecuteResourceQueryAsync(
                 "Microsoft.Storage/storageAccounts",
                 resourceGroup,

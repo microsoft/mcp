@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Models.Paging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -25,14 +26,18 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         [
             new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true),
             new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, "Succeeded", DateTimeOffset.UtcNow, false, true)
-        ], false);
+        ], false)
+        {
+            Page = new(PageRequest.DefaultPageSize, null, subscription, "tenant", null)
+        };
 
         Service.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
             .Returns(expectedAccounts);
 
         // Act
@@ -57,8 +62,12 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false)
+            {
+                Page = new(PageRequest.DefaultPageSize, null, subscription, "tenant", null)
+            });
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", subscription);
@@ -67,6 +76,8 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.Empty(result.Accounts);
+        Assert.Equal(PageRequest.DefaultPageSize, Assert.IsType<PagingMetadata>(result.Paging).PageSize);
+        Assert.Null(result.Paging.ContinuationToken);
     }
 
     [Fact]
@@ -81,7 +92,8 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
             Arg.Is(subscription),
             Arg.Any<string?>(),
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
@@ -113,14 +125,18 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         {
             var expectedAccount = new ResourceQueryResults<StorageAccountInfo>(
                 [new("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)],
-                false);
+                false)
+            {
+                Page = new(PageRequest.DefaultPageSize, null, "sub123", "tenant", null)
+            };
 
             Service.GetAccountDetails(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<CancellationToken>(),
+                Arg.Any<PageRequest?>())
                 .Returns(expectedAccount);
         }
 
@@ -155,7 +171,8 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
             Arg.Is(subscription),
             Arg.Any<string?>(),
             Arg.Any<string>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<PageRequest?>())
             .Returns(expectedAccount);
 
         // Act
@@ -168,6 +185,9 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         Assert.Equal(expectedAccount.Results[0].Name, result.Accounts[0].Name);
         Assert.Equal(expectedAccount.Results[0].Location, result.Accounts[0].Location);
         Assert.Equal(expectedAccount.Results[0].Kind, result.Accounts[0].Kind);
+        Assert.Null(result.Paging);
+        await Service.Received(1).GetAccountDetails(
+            account, subscription, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>(), null);
     }
 
     [Fact]
@@ -178,7 +198,7 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>(), Arg.Any<PageRequest?>())
             .ThrowsAsync(new Exception("Test error"));
 
         // Act
@@ -198,7 +218,7 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>(), Arg.Any<PageRequest?>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         // Act
@@ -217,7 +237,7 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         var subscription = "sub123";
 
         Service.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<CancellationToken>(), Arg.Any<PageRequest?>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         // Act
@@ -234,14 +254,33 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         // Arrange
         const string resourceGroup = "test-rg";
         const string subscription = "sub123";
-        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false));
+        Service.GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>(), Arg.Any<PageRequest?>())
+            .Returns(new ResourceQueryResults<StorageAccountInfo>([], false)
+            {
+                Page = new(PageRequest.DefaultPageSize, null, subscription, "tenant", resourceGroup)
+            });
 
         // Act
         var response = await ExecuteCommandAsync("--subscription", subscription, "--resource-group", resourceGroup);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await Service.Received(1).GetAccountDetails(Arg.Any<string?>(), Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>(), Arg.Any<PageRequest?>());
+    }
+
+    [Theory]
+    [InlineData("--page-size 0")]
+    [InlineData("--page-size -1")]
+    [InlineData("--page-size 1001")]
+    [InlineData("--page-size invalid")]
+    [InlineData("--continuation-token \" \"")]
+    [InlineData("--account account --page-size 1")]
+    [InlineData("--account account --continuation-token token")]
+    public async Task ExecuteAsync_RejectsInvalidPagingOptions(string pagingArguments)
+    {
+        var response = await ExecuteCommandAsync($"--subscription sub {pagingArguments}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

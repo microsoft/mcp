@@ -1505,6 +1505,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_account_get | List all storage accounts in my subscription including their location and SKU | none |
 | storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled | none |
 | storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings | none |
+| storage_account_get | List storage accounts two at a time and follow the returned continuation arguments until there are no more pages | none |
+| storage_account_get | Continue this storage account inventory on another compatible server instance using the response's resolved subscription and continuation arguments | none |
 | storage_blob_container_create | Create the storage container mycontainer in storage account \<account> | none |
 | storage_blob_container_get | Show me the properties of the storage container \<container> in the storage account \<account> | none |
 | storage_blob_container_get | List all blob containers in the storage account \<account> | none |

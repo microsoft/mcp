@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Microsoft.Mcp.Core.Models.Paging;
 using Azure.Mcp.Tools.Storage.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
@@ -13,7 +14,8 @@ public interface IStorageService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        PageRequest? page = null);
 
     Task<StorageAccountResult> CreateStorageAccount(
         string account,
