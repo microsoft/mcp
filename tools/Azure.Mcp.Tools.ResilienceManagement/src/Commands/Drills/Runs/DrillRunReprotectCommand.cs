@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
-using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -28,7 +27,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> logger, IResilienceManagementService resilienceManagementService)
     : AuthenticatedCommand<DrillRunReprotectOptions, DrillRunReprotectCommand.DrillRunReprotectCommandResult>
 {
-    private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
     private readonly ILogger<DrillRunReprotectCommand> _logger = logger;
     private readonly IResilienceManagementService _resilienceManagementService = resilienceManagementService;
 
@@ -40,9 +38,11 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
         if (options.SelectedResourceIds?.Any(resourceId =>
-                !IsDrillResourceId(resourceId, options.ServiceGroup, options.Drill)) == true)
+                !DrillRunSelectedResourceValidation.IsRecoveryResourceId(
+                    resourceId,
+                    options.ServiceGroup)) == true)
         {
-            validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested service group and drill with a GUID resource name.");
+            validationResult.Errors.Add("Each selected resource ID must be a full recovery-resource ID under a recovery plan in the requested service group with a GUID resource name.");
         }
     }
 
@@ -101,26 +101,6 @@ public sealed class DrillRunReprotectCommand(ILogger<DrillRunReprotectCommand> l
         if (string.IsNullOrWhiteSpace(value) || value.Contains('/') || value.Contains('\\'))
         {
             validationResult.Errors.Add($"The {optionName} name must be a single non-empty path segment.");
-        }
-    }
-
-    private static bool IsDrillResourceId(string resourceId, string serviceGroup, string drill)
-    {
-        try
-        {
-            var parsed = new ResourceIdentifier(resourceId);
-            ResourceIdentifier? drillId = parsed.Parent;
-            ResourceIdentifier? serviceGroupId = drillId?.Parent;
-            return parsed.ResourceType == DrillTargetResource.ResourceType &&
-                drillId?.ResourceType == ResilienceManagementDrillResource.ResourceType &&
-                serviceGroupId?.ResourceType == ServiceGroupResourceType &&
-                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(drillId.Name, drill, StringComparison.OrdinalIgnoreCase) &&
-                Guid.TryParse(parsed.Name, out _);
-        }
-        catch (Exception ex) when (ex is ArgumentException or FormatException)
-        {
-            return false;
         }
     }
 

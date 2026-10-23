@@ -19,7 +19,7 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
     private const string Drill = "drill1";
     private const string DrillRun = "run1";
     private const string OperationId = "11111111-1111-1111-1111-111111111111";
-    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
+    private const string SelectedResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -62,15 +62,21 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ExecuteAsync_RejectsSelectedResourceOutsideRequestedDrill()
+    [Theory]
+    [InlineData("not-an-arm-id")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/not-a-guid")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/virtualMachines/22222222-2222-2222-2222-222222222222")]
+    public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
     {
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
             "--drill-run", DrillRun,
             "--selected-resource-ids",
-            "/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222");
+            selectedResourceId);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceive().ReprotectDrillRunAsync(
