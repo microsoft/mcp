@@ -318,4 +318,15 @@ public interface IRsvBackupOperations
         string? description,
         string? tenant,
         CancellationToken cancellationToken);
+
+    Task<BackupOperationInfo> GetOperationAsync(
+        string operation,
+        string vault,
+        string resourceGroup,
+        string? subscription,
+        string? container,
+        string? protectedItem,
+        string? fabric,
+        string? tenant,
+        CancellationToken cancellationToken);
 }
