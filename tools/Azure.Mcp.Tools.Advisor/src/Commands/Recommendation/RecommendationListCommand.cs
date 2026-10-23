@@ -35,7 +35,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
+public sealed class RecommendationListCommand(
+    ILogger<RecommendationListCommand> logger,
+    IAdvisorService advisorService,
+    ISubscriptionResolver subscriptionResolver)
     : RecommendationScopeCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
     private const int MinTop = 1;
@@ -132,7 +135,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                     options.Tenant,
                     cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
+            context.Response.Results = ResponseResult.Create(
+                new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
                 AdvisorJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)

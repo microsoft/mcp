@@ -163,9 +163,16 @@ public class AdvisorServiceListQueryTests
 
         Assert.Contains("_dailyPotentialSavings = todouble", query);
         Assert.Contains("_yearlyPotentialSavings = iff(isfinite(_dailyPotentialSavings), _dailyPotentialSavings * 30.4 * 12.0", query);
-        Assert.Contains("yearlyPotentialSavings", query);
+        Assert.Contains("_estimatedAccumulatedSavings = todouble", query);
+        Assert.Contains("_latestSavingsEffectiveOn = todatetime", query);
+        Assert.Contains("_cost = iff(_isOpen and isfinite(_dailyPotentialSavings)", query);
         Assert.Contains(
-            "bag_merge(bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings), properties.savings.retail)",
+            "max_of(floor((now() - _latestSavingsEffectiveOn) / 1d, 1), 0.0) * _dailyPotentialSavings + _estimatedAccumulatedSavings",
+            query);
+        Assert.Contains("yearlyPotentialSavings", query);
+        Assert.Contains("'cost', _cost", query);
+        Assert.Contains(
+            "bag_merge(bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings, 'cost', _cost), properties.savings.retail)",
             query);
         Assert.DoesNotContain(
             "bag_merge(properties.savings.retail, bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings))",

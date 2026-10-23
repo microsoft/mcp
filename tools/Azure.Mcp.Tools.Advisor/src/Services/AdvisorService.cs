@@ -232,10 +232,17 @@ public class AdvisorService(IAzureService azureService)
     private static string BuildYearlySavingsEnrichmentClause() =>
         " | extend _dailyPotentialSavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))" +
         " | extend _yearlyPotentialSavings = iff(isfinite(_dailyPotentialSavings), _dailyPotentialSavings * 30.4 * 12.0, real(null))" +
-        " | extend properties = iff(isfinite(_yearlyPotentialSavings)," +
+        " | extend _estimatedAccumulatedSavings = todouble(tostring(properties.savings.retail.estimatedAccumulatedSavings))" +
+        " | extend _latestSavingsEffectiveOn = todatetime(properties.savings.retail.latestSavingsEffectiveOn)" +
+        " | extend _isOpen = tostring(properties.recommendationStatus) !~ 'Completed'" +
+        " | extend _cost = iff(_isOpen and isfinite(_dailyPotentialSavings) and " +
+        "isfinite(_estimatedAccumulatedSavings) and isnotnull(_latestSavingsEffectiveOn)," +
+        "max_of(floor((now() - _latestSavingsEffectiveOn) / 1d, 1), 0.0) * _dailyPotentialSavings + " +
+        "_estimatedAccumulatedSavings, real(null))" +
+        " | extend properties = iff(isfinite(_yearlyPotentialSavings) or isfinite(_cost)," +
         " bag_merge(bag_pack('savings'," +
         " bag_merge(bag_pack('retail'," +
-        " bag_merge(bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings), properties.savings.retail))," +
+        " bag_merge(bag_pack('yearlyPotentialSavings', _yearlyPotentialSavings, 'cost', _cost), properties.savings.retail))," +
         " properties.savings))," +
         " properties)," +
         " properties)";
@@ -361,12 +368,69 @@ public class AdvisorService(IAzureService azureService)
             rows.AddRange(batchResult.Rows);
         }
 
-        return ParseRecommendationListResult(
+        var parsedResults = ParseRecommendationListResult(
             rows.Count == 0 ? null : BinaryData.FromString($"[{string.Join(',', rows.Select(static row => row.GetRawText()))}]"),
             limit,
             isTruncated,
             null,
             showPrioritizationSignals);
+
+        return await EnrichSubscriptionNamesAsync(parsedResults, tenant, cancellationToken);
+    }
+
+    private async Task<ResourceQueryResults<Recommendation>> EnrichSubscriptionNamesAsync(
+        ResourceQueryResults<Recommendation> results,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        if (results.Results.Count == 0)
+        {
+            return results;
+        }
+
+        var subscriptions = await AzureService.GetSubscriptions(tenant, cancellationToken);
+        if (subscriptions is null || subscriptions.Count == 0)
+        {
+            return results;
+        }
+
+        var subscriptionNames = subscriptions
+            .Where(static subscription =>
+                !string.IsNullOrWhiteSpace(subscription.SubscriptionId) &&
+                !string.IsNullOrWhiteSpace(subscription.DisplayName))
+            .GroupBy(static subscription => subscription.SubscriptionId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                static group => group.Key,
+                static group => group.First().DisplayName,
+                StringComparer.OrdinalIgnoreCase);
+
+        return new(
+            results.Results
+                .Select(recommendation => recommendation with
+                {
+                    SubscriptionName = TryGetSubscriptionId(recommendation) is { } subscriptionId &&
+                        subscriptionNames.TryGetValue(subscriptionId, out var subscriptionName)
+                            ? subscriptionName
+                            : null,
+                })
+                .ToList(),
+            results.AreResultsTruncated);
+    }
+
+    private static string? TryGetSubscriptionId(Recommendation recommendation)
+    {
+        var resourceId = recommendation.Properties.ResourceMetadata?.ResourceId;
+        if (string.IsNullOrWhiteSpace(resourceId))
+        {
+            return null;
+        }
+
+        var segments = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return segments.Length >= 2 &&
+            segments[0].Equals("subscriptions", StringComparison.OrdinalIgnoreCase) &&
+            !string.IsNullOrWhiteSpace(segments[1])
+                ? segments[1]
+                : null;
     }
 
     // The query fetches limit + 1 rows; a row beyond limit proves more results exist, so it is dropped and the
@@ -907,6 +971,8 @@ public class AdvisorService(IAzureService azureService)
                 CompletionType: advisorRecommendation.Properties?.CompletionType,
                 RecommendationDismissReason: advisorRecommendation.Properties?.Reason,
                 PostponedUntilDateTime: advisorRecommendation.Properties?.PostponedTime,
+                CustomerStateUpdatedAt: advisorRecommendation.Properties?.CustomerStateUpdatedAt,
+                PlatformStateUpdatedAt: advisorRecommendation.Properties?.PlatformStateUpdatedAt,
                 LastRefreshed: advisorRecommendation.Properties?.LastRefreshed,
                 LastUpdated: advisorRecommendation.Properties?.LastUpdated,
                 CreatedTime: advisorRecommendation.Properties?.CreatedTime,
