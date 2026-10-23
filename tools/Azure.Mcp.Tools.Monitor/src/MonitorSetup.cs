@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
+using Azure.Mcp.Tools.Monitor.Commands.Ingestion;
 using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -36,6 +37,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
+        services.AddSingleton<IMonitorIngestionService, MonitorIngestionService>();
         services.AddSingleton<IMonitorTracesService, MonitorTracesService>();
 
         services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
@@ -91,6 +93,9 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<MetricsDefinitionsCommand>();
 
         services.AddSingleton<ActivityLogListCommand>();
+
+        services.AddSingleton<IngestionUploadCommand>();
+        services.AddSingleton<IngestionValidateCommand>();
 
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
@@ -170,6 +175,12 @@ public class MonitorSetup : IAreaSetup
         monitor.AddSubGroup(activityLog);
 
         activityLog.AddCommand<ActivityLogListCommand>(serviceProvider);
+
+        var ingestion = new CommandGroup("ingestion", "Azure Monitor log ingestion operations - Commands for uploading custom log data through data collection rules and validating it beforehand.");
+        monitor.AddSubGroup(ingestion);
+
+        ingestion.AddCommand<IngestionUploadCommand>(serviceProvider);
+        ingestion.AddCommand<IngestionValidateCommand>(serviceProvider);
 
         // Register Monitor.WebTest sub-group commands
         var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");

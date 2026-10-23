@@ -1090,6 +1090,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | investigation-required |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
+| monitor_ingestion_upload | Upload these log records to Azure Monitor using data collection endpoint <ingestion_endpoint>, data collection rule <dcr_immutable_id> and stream <stream_name>: <log_data_json> | none |
+| monitor_ingestion_upload | Send custom log data <log_data_json> to the Log Analytics table behind stream <stream_name> using data collection rule <dcr_immutable_id> | none |
+| monitor_ingestion_validate | Validate this log data against the schema of data collection rule <dcr_name> in resource group <resource_group> before uploading: <log_data_json> | none |
+| monitor_ingestion_validate | Check whether <log_data_json> is compliant with stream <stream_name> of data collection rule <dcr_name> in resource group <resource_group> | none |
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Use one Azure Monitor batch metrics query to compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period>; do not issue a single-resource metrics query | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |

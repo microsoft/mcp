@@ -3764,6 +3764,32 @@ azmcp monitor workspace log search --subscription <subscription> \
                                    --limit 50
 ```
 
+#### Ingestion
+
+```bash
+# Upload custom log data through the Logs Ingestion API using a data collection rule.
+# --data-collection-rule is the rule's immutable ID (dcr-...), --stream is the declared stream
+# (for example Custom-MyTable_CL) and --log-data is a JSON array of objects, up to 1 MB.
+# --ingestion-endpoint must be an Azure Monitor data collection endpoint (*.ingest.monitor.azure.com).
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion upload --ingestion-endpoint <ingestion-endpoint> \
+                               --data-collection-rule <data-collection-rule-id> \
+                               --stream <stream> \
+                               --log-data <log-data-json> \
+                               [--tenant <tenant>]
+
+# Validate log data before ingestion. Checks payload shape and, using the stream declared in the
+# data collection rule (looked up by --data-collection-rule NAME), column types. --stream is optional
+# when the rule declares exactly one stream. Returns errors and warnings as JSON.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion validate --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --data-collection-rule <data-collection-rule-name> \
+                                 --log-data <log-data-json> \
+                                 [--stream <stream>] \
+                                 [--tenant <tenant>]
+```
+
 #### Health Models
 
 ```bash

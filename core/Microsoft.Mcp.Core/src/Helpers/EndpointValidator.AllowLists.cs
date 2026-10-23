@@ -182,6 +182,12 @@ public sealed partial class EndpointValidator
             UsGov: [".managedhsm.usgovcloudapi.net"],
             Germany: [],
             UseLegacyCheck: false),
+        ["monitor-ingestion"] = new AllowedSuffixManager(
+            Public: [".ingest.monitor.azure.com"],
+            China: [".ingest.monitor.azure.cn"],
+            UsGov: [".ingest.monitor.azure.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["monitor-metrics"] = new AllowedSuffixManager(
             Public: [".metrics.monitor.azure.com"],
             China: [".metrics.monitor.azure.cn"],
