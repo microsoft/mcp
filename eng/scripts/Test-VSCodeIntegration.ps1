@@ -29,11 +29,15 @@ if (-not $ServerExecutablePath -and $env:MCP_SERVER_EXECUTABLE) {
 if (-not $ServerExecutablePath) {
     $searchDir = if ($ArtifactsPath) { $ArtifactsPath } elseif ($env:PIPELINE_WORKSPACE) { $env:PIPELINE_WORKSPACE } else { $null }
     if ($searchDir -and (Test-Path -Path $searchDir -PathType Container)) {
-        # Pin to the windows-x64 artifact explicitly. The pipeline downloads all
-        # build artifacts (including windows-arm64), so a broad search would
-        # non-deterministically pick the wrong architecture.
+        # Pin to the successful windows-x64 build artifact explicitly.
+        # Avoid failed-attempt or signed artifacts, and exclude arm64.
         $candidates = @(Get-ChildItem -Path $searchDir -Recurse -File -Include @($exeName) |
-            Where-Object { $_.FullName -like '*Azure.Mcp.Server*windows-x64*' })
+            Where-Object {
+                $_.FullName -like '*Azure.Mcp.Server*windows-x64*' -and
+                $_.FullName -notlike '*FailedAttempt*' -and
+                $_.FullName -notlike '*binaries_signed*' -and
+                $_.FullName -notlike '*signed*'
+            })
         if ($candidates.Count -eq 0) {
             Write-Error "MCP server executable not found under '$searchDir'. Expected a file matching '*Azure.Mcp.Server*windows-x64*$exeName'. Verify that the pipeline artifact was downloaded correctly."
         } elseif ($candidates.Count -gt 1) {
@@ -45,13 +49,25 @@ if (-not $ServerExecutablePath) {
     }
 }
 
-# 3. Check standard local build output paths
+# 3. Check standard local build output paths for current OS and architecture
 if (-not $ServerExecutablePath) {
-    $localCandidates = @(
-        "$RepoRoot/.work/build/Azure.Mcp.Server/windows-x64/$exeName",
-        "$RepoRoot/.work/build/Azure.Mcp.Server/linux-x64/$exeName",
-        "$RepoRoot/.work/build/Azure.Mcp.Server/macos-x64/$exeName",
-        "$RepoRoot/.work/build/Azure.Mcp.Server/macos-arm64/$exeName",
+    $currentOs = if ($IsWindows) { 'windows' } elseif ($IsLinux) { 'linux' } elseif ($IsMacOS) { 'macos' } else { $null }
+    $currentArch = try {
+        [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+    } catch {
+        'x64'
+    }
+
+    $localCandidates = @()
+    if ($currentOs) {
+        $localCandidates += "$RepoRoot/.work/build/Azure.Mcp.Server/$currentOs-$currentArch/$exeName"
+        if ($currentArch -eq 'arm64' -and ($IsMacOS -or $IsWindows)) {
+            # macOS (Rosetta) and Windows on ARM support running x64 binaries as secondary fallback
+            $localCandidates += "$RepoRoot/.work/build/Azure.Mcp.Server/$currentOs-x64/$exeName"
+        }
+    }
+
+    $localCandidates += @(
         "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Release/net10.0/$exeName",
         "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/$exeName"
     )

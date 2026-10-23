@@ -123,6 +123,25 @@ function Invoke-LoggedCommand {
         $commands[2] | Should -Match "npm run outerloop-test"
     }
 
+    It "ignores failed-attempt and signed artifacts" {
+        $x64Dir = Join-Path $artifactsDirectory "binaries_Build_windows_x64_windows_x64\Azure.Mcp.Server\windows-x64"
+        $failedDir = Join-Path $artifactsDirectory "binaries_Build_windows_x64_windows_x64-FailedAttempt1\Azure.Mcp.Server\windows-x64"
+        $signedDir = Join-Path $artifactsDirectory "binaries_signed\Azure.Mcp.Server\windows-x64"
+        New-Item -ItemType Directory -Path $x64Dir, $failedDir, $signedDir -Force | Out-Null
+
+        $exeName = if ($IsWindows) { 'azmcp.exe' } else { 'azmcp' }
+        Set-Content -LiteralPath (Join-Path $x64Dir $exeName) -Value "valid-x64"
+        Set-Content -LiteralPath (Join-Path $failedDir $exeName) -Value "failed-x64"
+        Set-Content -LiteralPath (Join-Path $signedDir $exeName) -Value "signed-x64"
+
+        & $scriptPath -ArtifactsPath $artifactsDirectory -VsCodeProjectPath "servers\Azure.Mcp.Server\vscode"
+
+        $commands = Get-Content -LiteralPath (Join-Path $fixtureRoot "commands.txt")
+        $commands | Should -Match "binaries_Build_windows_x64_windows_x64"
+        $commands | Should -Not -Match "FailedAttempt"
+        $commands | Should -Not -Match "binaries_signed"
+    }
+
     It "fails when no executable can be found" {
         {
             & $scriptPath -VsCodeProjectPath "servers\Azure.Mcp.Server\vscode"

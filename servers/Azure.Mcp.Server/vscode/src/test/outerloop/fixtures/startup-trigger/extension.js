@@ -156,7 +156,7 @@ async function driveMcpClient(fileLog) {
 
     // Test launch seam: if the configured executable is a JavaScript file (used by lifecycle unit tests),
     // run it via Node.js so that Windows executes it without requiring shell: true.
-    const isJsScript = serverExecutable.endsWith('.js');
+    const isJsScript = serverExecutable.toLowerCase().endsWith('.js');
     const spawnExe = isJsScript ? process.execPath : serverExecutable;
     const spawnArgs = isJsScript ? [serverExecutable, 'server', 'start', '--mode', 'all'] : ['server', 'start', '--mode', 'all'];
 
