@@ -4418,17 +4418,144 @@ azmcp redis list --subscription <subscription>
 
 ### Azure Resilience Management Operations
 
+#### Goals: GA API contract
+
+Goals use API version `2026-10-01` through `Azure.ResourceManager.ResilienceManagement`
+`1.0.0`, requiring `Azure.Core` `1.63.0` and `System.ClientModel` `1.16.0`.
+The released SDK is available from the repository's configured `azure-sdk-for-net`
+feed; no local package or additional feed is required.
+
+Assignment names must match `^[a-zA-Z0-9-]{3,24}$`: 3-24 ASCII letters, digits, or
+hyphens. The six mutation commands reject invalid names before calling Azure.
+
+All Goals commands are service-group-scoped: use `--service-group`, the assignment
+selector, and optional `--tenant`, not `--subscription`. Assignment GET uses
+`--name`; the six mutation commands use `--goal-assignment`. Tool names join
+command groups with underscores and retain verb hyphens, for example
+`resiliency_goal_assignment_recommend-capacity`.
+
+- Assignment GET returns ID/name summaries without `--name`. Detailed GET and
+  create/update results expose `properties.requireZonalResiliency`,
+  `properties.serviceLevelResources[].serviceLevelIndicatorResourceId`, and
+  provisioning state. No goal template is required or selectable.
+- Resource GET returns ID/name summaries without `--name`. Detailed results expose
+  `properties.resourceArmId` and `properties.zonalResiliency` (participation,
+  attestation, exclusion reason, and user confirmations). Do not use legacy flat
+  HA/DR fields as the GA contract; retained compatibility fields may be null.
+- All six SDK mutation methods return untyped `ArmOperation`. Create, update, and
+  delete wait for completion with a ten-minute bound and caller cancellation.
+  Create/update then GET the hydrated assignment. Delete returns `deleted: true`
+  when removed or `false` when already absent; underlying Azure resources and the
+  service group are not deleted.
+- Create cannot replace an existing assignment; omitted service-level targets become an empty
+  list. GA PATCH cannot change `requireZonalResiliency`. Update requires exactly
+  one of a non-empty `--service-level-resource-ids` array or
+  `--clear-service-level-resources true`. It GETs the assignment and preserves its
+  zonal requirement through the SDK's real `UpdateAsync`. Clear removes only SLI
+  associations, not the SLI resources.
+- Service-level IDs must identify existing `Microsoft.Monitor/slis` resources in
+  the **same service group**, with caller read access. Service-source validation
+  permits at most one SLI per category; do not invent IDs or fixtures. Resource ID
+  lists must contain unique, complete ARM IDs and are ordinary arrays, not JSON
+  strings.
+- Recommend-capacity, refresh-resources, and update-resources return an `operation`
+  containing `serviceGroup`, `goalAssignment`, the service `operationId`, `status`
+  (`Accepted` or already-completed `Succeeded`), and `hasCompleted`. Acceptance
+  does not prove completion. A synchronously completed operation may have no ID.
+  Re-read assignment/member state when appropriate; there is no Goals operation
+  status tool. On timeout, completion is unknown; inspect state before retrying.
+
 ```bash
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \
-                                     [--name <name>]
+                                     [--name <name>] [--tenant <tenant>]
+
+# Create a goal assignment; the service requires zonal resiliency
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment create --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --require-zonal-resiliency true \
+                                        [--service-level-resource-ids <existing-sli-arm-id> ...] [--tenant <tenant>]
+
+# Replace SLI associations on an existing assignment; preserve the zonal requirement
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --service-level-resource-ids <existing-sli-arm-id> ... [--tenant <tenant>]
+
+# Alternatively clear associations, not SLI resources; never combine the two update options
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --clear-service-level-resources true [--tenant <tenant>]
+
+# Delete only the assignment and its tracked goal members, not underlying resources
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment delete --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Start a capacity assessment; omit IDs to discover non-resilient resources automatically
+# Up to 50 unique underlying Azure resource ARM IDs; does not provision or resize resources
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment recommend-capacity --service-group <service-group> \
+                                                    --goal-assignment <goal-assignment> \
+                                                    [--resource-ids <arm-id> ...] [--tenant <tenant>]
+
+# Rediscover tracked members after service-group membership changes
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment refresh-resources --service-group <service-group> \
+                                                   --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Change zonal participation, attestation, or user confirmation using a GA JSON array
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update-resources --service-group <service-group> \
+                                                  --goal-assignment <goal-assignment> \
+                                                  --resources '<resources-json>' [--tenant <tenant>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
-                                   [--name <name>]
+                                   [--name <name>] [--tenant <tenant>]
+```
+
+`update-resources` accepts a non-empty JSON array of at most 1 MB. Each entry
+requires a unique underlying resource ARM ID and at least one zonal change:
+
+```json
+[
+  {
+    "properties": {
+      "resourceArmId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vm}",
+      "zonalResiliency": {
+        "goalParticipation": "Excluded",
+        "attestationStatus": "NotAttested"
+      }
+    }
+  }
+]
+```
+
+Allowed case-sensitive values:
+
+| Field inside `zonalResiliency` | Values |
+|---|---|
+| `goalParticipation` | `Included`, `Excluded` |
+| `attestationStatus` | `NotAttested`, `ManuallyAttested` |
+| `userConfirmation[].solutionDisplayName` | `ZonePinnedVmWithZrsDisk`, `VmInMultiZoneVmss` |
+| `userConfirmation[].confirmationStatus` | `ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser` |
+| `userConfirmation[].reasonForRequestingConfirmation` (optional) | `ZonePinnedZrsDataDisksConditional`, `VmInMultiZoneScaleSetStatelessOnly` |
+
+When supplied, `userConfirmation` must be non-empty; each entry requires a unique
+solution name and confirmation status. Attest manually only after verifying actual
+resilience. Unknown or duplicate fields, flat HA/DR payloads, and empty zonal
+changes are rejected. See the [payload reference](https://github.com/microsoft/mcp/blob/main/.github/skills/resilience-management-operations/references/payloads.md#goal-resource-updates-ga)
+for a user-confirmation example.
+
+#### Usage plans, drills, and recovery
+
+```bash
 
 # Get a resilience usage plan, or list usage plans (omit --name; omit --resource-group to list across the subscription)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4441,7 +4568,8 @@ azmcp resiliency usageplan get --subscription <subscription> \
 azmcp resiliency usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --usage-plan <usage-plan> \
-                                  --plan-type <plan-type>
+                                  --plan-type <plan-type> \
+                                  [--tags '<json-object>']
 
 # Delete a resilience usage plan from a resource group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4482,14 +4610,17 @@ azmcp resiliency recoveryplan create --service-group <service-group> \
                                       --recoveryplan <recoveryplan> \
                                       --plan-type Zonal \
                                       [--plan-description <plan-description>] \
-                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
+                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned|None> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
                                       [--default-group-description <default-group-description>] \
+                                      [--default-group-unique-id <guid>] \
                                       [--default-group-pre-actions '<json-array>'] \
                                       [--default-group-post-actions '<json-array>'] \
                                       [--additional-groups '<json-array>']
 
-# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
+# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned; the service supports one user-assigned identity per plan.
+# --default-group-unique-id applies only when the plan is created; the default group's orderId is always 0.
+# CustomRunbook actions accept an optional associatedIdentity object: {"type":"...","userAssignedIdentity":"<ARM ID>"}.
 # Directly replacing one user-assigned identity with another is not currently supported.
 # Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
 # Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
@@ -4616,7 +4747,11 @@ azmcp resiliency drill create --service-group <service-group> \
                               [--resource-group <resource-group>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json>] \
-                              [--sli-monitoring-properties <json>]
+                              [--sli-monitoring-properties <json>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4638,14 +4773,19 @@ azmcp resiliency drill end --service-group <service-group> \
 
 # Update mutable properties of a resilience drill
 # Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
+# --resource-group must match the drill's creation-time resource group; the service rejects changes.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
-                              [--subscription <subscription> --region <region>] \
+                              [--subscription <subscription> --region <region> [--resource-group <resource-group>]] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
                               [--goal-assignment-properties <json>] \
                               [--health-model-monitoring-properties <json-or-null>] \
-                              [--sli-monitoring-properties <json-or-null>]
+                              [--sli-monitoring-properties <json-or-null>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4701,7 +4841,8 @@ azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill-run <drill-run> \
                                     --source-locations <source-location> \
                                     [--selected-resource-ids <drill-resource-id>] \
-                                    [--auto-failover <true|false>]
+                                    [--auto-failover <true|false>] \
+                                    [--user-consent <Unspecified|Allowed>]
 
 # Resume a failover drill run paused after fault injection
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4723,12 +4864,67 @@ azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill-run <drill-run> \
                                      [--selected-resource-ids <selected-resource-id>]
 
+# Generate or refresh the report for a drill run; a finalized report is left unchanged. Starts the operation and returns the operation ID, whether it completed, and the report summary when available; use `drill run get` to check progress.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency drill run generate-report --service-group <service-group> \
+                                           --drill <drill> \
+                                           --drill-run <drill-run>
+
+# Get a short-lived, read-only download URL for the generated report of a drill run (the URL grants access to the report)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp resiliency drill run get-report-download-url --service-group <service-group> \
+                                                   --drill <drill> \
+                                                   --drill-run <drill-run> \
+                                                   [--format <Html>]
+
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run resource get --service-group <service-group> \
                                         --drill <drill> \
                                         --drill-run <drill-run> \
                                         [--name <name>]
+```
+
+### Azure Resiliency Agent Operations
+
+```bash
+# Get general guidance about Azure resiliency and availability zones
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent guidance get --request <request> \
+                                        [--conversation-id <conversation-id>]
+
+# Prepare one user-approved local file and return an opaque attachment ID
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent file attach --file-path <file-path>
+
+# Assess an application architecture for availability-zone resilience
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent architecture assess --request <request> \
+                                           [--attachment-ids <attachment-id>] \
+                                           [--conversation-id <conversation-id>]
+
+# Generate new resilient Bicep, ARM JSON, or Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent iac generate --request <request> \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing Bicep
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent bicep review --request <request> \
+                                    [--attachment-ids <attachment-id>] \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing ARM JSON
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent arm review --request <request> \
+                                  [--attachment-ids <attachment-id>] \
+                                  [--conversation-id <conversation-id>]
+
+# Review and correct existing Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent terraform review --request <request> \
+                                        [--attachment-ids <attachment-id>] \
+                                        [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations
@@ -5362,6 +5558,59 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+#### Disk Diagnostics
+
+Disk diagnostics use an Azure public cloud Storage Intelligence endpoint and application scope by
+default.
+Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
+`AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. Each value defaults independently; operators should set the
+endpoint and application scope supplied for their Storage Intelligence deployment. Endpoint overrides
+must use HTTPS and the production host `https://storageintelligenceweb.production.portalrp.azure.com`.
+Non-production hosts are not allowlisted.
+
+No sovereign-cloud endpoint mappings are built in. Other hosts require the explicit server-start option
+`--dangerously-disable-ssrf-protections-by-namespace storage`. This disables SSRF protection for the
+entire Storage namespace; use it only for trusted operator-managed endpoints. HTTPS remains required
+for disk diagnostics even with this bypass.
+
+The optional `--tenant` accepts a Microsoft Entra tenant GUID or display name. It takes precedence over
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID` and applies consistently to attached-disk ARM lookups
+and Storage Intelligence authentication. If neither is configured, the existing credential or
+authenticated remote-caller context is used. In remote HTTP on-behalf-of mode, an explicitly selected
+tenant must match the authenticated caller's tenant; it cannot switch caller identity.
+
+Direct VM scale set selection requires the canonical nested instance resource ID:
+`/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
+The optional `--disk` argument accepts at most 64 attached disk names. Timestamps must use ISO 8601
+with an explicit `Z` or UTC offset, such as `2026-07-19T00:00:00Z` or
+`2026-07-19T00:00:00.1234567+05:30`. Provide `--start-time` and `--end-time` together, or omit both
+to analyze the previous 24 hours. A provisional 10 MiB client safety cap rejects larger successful
+responses with a sanitized upstream-service error. High-cardinality responses may require this cap to
+be revised after Storage Intelligence publishes or measures its maximum response size.
+Host-side latency metrics depend on Storage Intelligence telemetry support. The recorded test uses a
+`Standard_D2ds_v6` VM in `westus2` to exercise the V6 host-telemetry path.
+
+```bash
+# Diagnose VM or managed disk performance using Storage Intelligence
+# Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+
+# Diagnose a VM by friendly name, optionally selecting attached disks by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --vm <virtual-machine-name> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
 ```
 
 #### Table Storage

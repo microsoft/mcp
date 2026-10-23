@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// Live / recorded integration tests for the Resilience Management toolset.
 /// Resources are provisioned by test-resources.bicep + test-resources-post.ps1.
 /// </summary>
-public class ResilienceManagementCommandTests(
+public partial class ResilienceManagementCommandTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
     LiveServerFixture liveServerFixture)
@@ -221,13 +221,21 @@ public class ResilienceManagementCommandTests(
                 { "region", location },
                 { "resource-group", resourceGroup },
                 { "drill-type", "Zonal" },
-                { "rbac-setup-mode", "AutomatedBuiltinRoles" }
+                { "rbac-setup-mode", "AutomatedBuiltinRoles" },
+                { "identity", "{\"type\":\"SystemAssigned\"}" },
+                { "chaos-resource-properties", "{\"identity\":{\"type\":\"SystemAssigned\"},\"chaosResourceIdentityForFaults\":{\"type\":\"SystemAssigned\"}}" },
+                { "recovery-plan-properties", "{\"identity\":{\"type\":\"SystemAssigned\"}}" },
+                { "monitoring-properties", "{\"identity\":{\"type\":\"SystemAssigned\"}}" }
             });
             var drill = result.AssertProperty("drill");
             Assert.EndsWith($"/drills/{drillName}", drill.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("SystemAssigned", drill.AssertProperty("identity").AssertProperty("type").GetString());
             var properties = drill.AssertProperty("properties");
             Assert.Equal("Succeeded", properties.AssertProperty("provisioningState").GetString());
             Assert.Equal("Zonal", properties.AssertProperty("drillType").GetString());
+            var chaosProperties = properties.AssertProperty("chaosResourceProperties");
+            Assert.Equal("SystemAssigned", chaosProperties.AssertProperty("identity").AssertProperty("type").GetString());
+            Assert.Equal("SystemAssigned", chaosProperties.AssertProperty("chaosResourceIdentityForFaults").AssertProperty("type").GetString());
             var recoveryPlanProperties = properties.AssertProperty("recoveryPlanProperties");
             Assert.Equal("SystemAssigned", recoveryPlanProperties.AssertProperty("identity").AssertProperty("type").GetString());
             Assert.True(!recoveryPlanProperties.TryGetProperty("recoveryPlanId", out var recoveryPlanId) ||
@@ -817,7 +825,9 @@ public class ResilienceManagementCommandTests(
                 { "drill", drill },
                 { "drill-run", drillRun },
                 { "source-locations", new[] { sourceLocation } },
-                { "auto-failover", autoFailover }
+                { "auto-failover", autoFailover },
+                // Recovery Orchestration otherwise rejects failover whenever newly discovered members leave the plan in Warning.
+                { "user-consent", "Allowed" }
             };
             if (selectResources)
             {
@@ -1241,6 +1251,21 @@ public class ResilienceManagementCommandTests(
     {
         var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("lifecycleServiceGroupName", "PLANLIFECYCLESERVICEGROUPNAME");
         var recoveryPlan = RegisterOrRetrieveVariable("lifecycleRecoveryPlanName", $"mcp-lifecycle-{Guid.NewGuid().ToString("N")[..8]}");
+        var requestedDefaultGroupId = RegisterOrRetrieveVariable("lifecycleDefaultGroupId", Guid.NewGuid().ToString());
+        var automationAccountId = RegisterOrRetrieveDeploymentOutputVariable("automationAccountId", "AUTOMATIONACCOUNTID");
+        var failoverRunbook = RegisterOrRetrieveDeploymentOutputVariable("failoverRunbookName", "FAILOVERRUNBOOKNAME");
+        var preActions = new JsonArray
+        {
+            new JsonObject
+            {
+                ["type"] = "CustomRunbook",
+                ["name"] = "Start-dependencies",
+                ["description"] = "Start application dependencies",
+                ["timeoutInMinutes"] = 30,
+                ["actionResourceId"] = $"{automationAccountId}/runbooks/{failoverRunbook}",
+                ["associatedIdentity"] = new JsonObject { ["type"] = "SystemAssigned" }
+            }
+        };
         bool recoveryPlanExists = false;
 
         try
@@ -1255,7 +1280,9 @@ public class ResilienceManagementCommandTests(
                     { "plan-type", "Zonal" },
                     { "plan-description", "Recovery plan lifecycle test." },
                     { "identity-type", "SystemAssigned" },
-                    { "default-group-description", "Lifecycle default group" }
+                    { "default-group-description", "Lifecycle default group" },
+                    { "default-group-unique-id", requestedDefaultGroupId },
+                    { "default-group-pre-actions", preActions.ToJsonString() }
                 });
             recoveryPlanExists = true;
 
@@ -1265,6 +1292,11 @@ public class ResilienceManagementCommandTests(
             var createdDefaultGroup = createdPlan.AssertProperty("defaultGroup");
             var defaultGroupId = createdDefaultGroup.AssertProperty("groupUniqueId").GetString();
             Assert.False(string.IsNullOrEmpty(defaultGroupId));
+            // Recordings sanitize the default group ID, so only Live and Record runs can compare the requested value.
+            if (TestMode != Microsoft.Mcp.Tests.Helpers.TestMode.Playback)
+            {
+                Assert.Equal(requestedDefaultGroupId, defaultGroupId, ignoreCase: true);
+            }
             Assert.Equal("Lifecycle default group", createdDefaultGroup.AssertProperty("description").GetString());
 
             var getResult = await CallToolAsync(
@@ -1275,9 +1307,14 @@ public class ResilienceManagementCommandTests(
                     { "service-group", serviceGroup },
                     { "name", recoveryPlan }
                 });
+            var retrievedPlan = getResult.AssertProperty("recoveryPlan");
             Assert.EndsWith(
                 $"/recoveryPlans/{recoveryPlan}",
-                getResult.AssertProperty("recoveryPlan").AssertProperty("id").GetString());
+                retrievedPlan.AssertProperty("id").GetString());
+            var preAction = Assert.Single(retrievedPlan.AssertProperty("properties").AssertProperty("recoveryGroupsSetting")
+                .AssertProperty("defaultGroup").AssertProperty("properties").AssertProperty("preActions").EnumerateArray());
+            Assert.Equal($"{automationAccountId}/runbooks/{failoverRunbook}", preAction.AssertProperty("actionResourceId").GetString(), ignoreCase: true);
+            Assert.Equal("SystemAssigned", preAction.AssertProperty("associatedIdentity").AssertProperty("type").GetString());
 
             var updateResult = await CallToolAsync(
                 "resiliency_recoveryplan_create",
@@ -1547,6 +1584,83 @@ public class ResilienceManagementCommandTests(
             .AssertProperty("inclusionState")
             .GetString();
         Assert.Equal("Excluded", inclusionState);
+    }
+
+    [Fact]
+    public async Task Should_reject_cross_zone_vm_recovery_without_zone_movement_protection()
+    {
+        var serviceGroup = RegisterOrRetrieveDeploymentOutputVariable("serviceGroupName", "DRILLSSERVICEGROUPNAME");
+        var recoveryPlan = RegisterOrRetrieveDeploymentOutputVariable("recoveryPlanName", "DRILLSRECOVERYPLANNAME");
+        var recoveryResourceId = RegisterOrRetrieveDeploymentOutputVariable("recoveryResourceId", "DRILLSRECOVERYRESOURCEID");
+        var resourceName = new ResourceIdentifier(recoveryResourceId).Name;
+
+        async Task<JsonElement> GetResourcePropertiesAsync() => (await CallToolAsync("resiliency_recoveryplan_resource_get", new()
+        {
+            { "tenant", Settings.TenantId },
+            { "service-group", serviceGroup },
+            { "recoveryplan", recoveryPlan },
+            { "name", resourceName }
+        })).AssertProperty("recoveryResource").AssertProperty("properties");
+
+        async Task UpdateProtectionAsync(string uniqueId, string solutionType, JsonNode setting)
+        {
+            var update = new JsonObject
+            {
+                ["properties"] = new JsonObject
+                {
+                    ["recoveryResourceUniqueId"] = uniqueId,
+                    ["selectedProtectionSolutionType"] = solutionType,
+                    ["selectedProtectionSolutionSetting"] = setting
+                }
+            };
+            var result = await CallToolAsync("resiliency_recoveryplan_resource_update", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "resources-to-update", $"[{update.ToJsonString()}]" }
+            });
+            Assert.Empty(result.AssertProperty("result").AssertProperty("failedResources").EnumerateArray());
+        }
+
+        // The drills fixture VM is the only VM recovery resource. It has no zone-movement protection
+        // (resiliencyProfile.zoneMovement requires a Compute preview), so the service must reject the selection.
+        var original = await GetResourcePropertiesAsync();
+        Assert.Equal("Included", original.AssertProperty("inclusionState").GetString());
+        var uniqueId = original.AssertProperty("recoveryResourceUniqueId").GetString()!;
+        var originalType = original.AssertProperty("selectedProtectionSolutionType").GetString()!;
+        var originalSetting = JsonNode.Parse(original.AssertProperty("selectedProtectionSolutionSetting").GetRawText())!;
+        Assert.Equal("CustomRunbook", originalType);
+        try
+        {
+            var update = new JsonObject
+            {
+                ["properties"] = new JsonObject
+                {
+                    ["recoveryResourceUniqueId"] = uniqueId,
+                    ["selectedProtectionSolutionType"] = "CrossZoneVMRecovery",
+                    ["selectedProtectionSolutionSetting"] = new JsonObject { ["protectionSolutionType"] = "CrossZoneVMRecovery" }
+                }
+            };
+            var response = await CallToolAsync("resiliency_recoveryplan_resource_update", new()
+            {
+                { "tenant", Settings.TenantId },
+                { "service-group", serviceGroup },
+                { "recoveryplan", recoveryPlan },
+                { "resources-to-update", $"[{update.ToJsonString()}]" }
+            }, resultProcessor: element => element);
+
+            Assert.Equal(400, response.AssertProperty("status").GetInt32());
+            Assert.Contains("RHROUserErrorUpdateResourcesOperationFailed", response.AssertProperty("message").GetString(), StringComparison.Ordinal);
+            Assert.Equal(originalType, (await GetResourcePropertiesAsync()).AssertProperty("selectedProtectionSolutionType").GetString());
+        }
+        finally
+        {
+            if ((await GetResourcePropertiesAsync()).AssertProperty("selectedProtectionSolutionType").GetString() != originalType)
+            {
+                await UpdateProtectionAsync(uniqueId, originalType, originalSetting);
+            }
+        }
     }
 
     [Fact]
@@ -2091,21 +2205,52 @@ public class ResilienceManagementCommandTests(
     public async Task Should_create_usage_plan()
     {
         var resourceGroupName = RegisterOrRetrieveVariable("createResourceGroupName", Settings.ResourceGroupName);
-        const string usagePlanName = "mcp-usage-plan";
+        var usagePlanName = RegisterOrRetrieveVariable("createUsagePlanName", $"mcp-usage-plan-{Guid.NewGuid().ToString("N")[..8]}");
 
-        var result = await CallToolAsync(
-            "resiliency_usageplan_create",
-            new()
-            {
-                { "tenant", Settings.TenantId },
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", resourceGroupName },
-                { "usage-plan", usagePlanName },
-                { "plan-type", "Standard" }
-            });
+        try
+        {
+            var result = await CallToolAsync(
+                "resiliency_usageplan_create",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName },
+                    { "plan-type", "Standard" },
+                    { "tags", "{\"mcp-test\":\"usage-plan\"}" }
+                });
 
-        var usagePlan = result.AssertProperty("usagePlan");
-        Assert.False(string.IsNullOrEmpty(usagePlan.AssertProperty("name").GetString()));
+            var usagePlan = result.AssertProperty("usagePlan");
+            Assert.EndsWith($"/usagePlans/{usagePlanName}", usagePlan.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal("usage-plan", usagePlan.AssertProperty("tags").AssertProperty("mcp-test").GetString());
+
+            // The service drops tags sent on create, so confirm they persisted on the stored plan.
+            var persisted = await CallToolAsync(
+                "resiliency_usageplan_get",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "name", usagePlanName }
+                });
+            Assert.Equal(
+                "usage-plan",
+                persisted.AssertProperty("usagePlan").AssertProperty("tags").AssertProperty("mcp-test").GetString());
+        }
+        finally
+        {
+            await CallToolAsync(
+                "resiliency_usageplan_delete",
+                new()
+                {
+                    { "tenant", Settings.TenantId },
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", resourceGroupName },
+                    { "usage-plan", usagePlanName }
+                });
+        }
     }
 
     [Fact]

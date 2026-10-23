@@ -2,15 +2,19 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.3 (Unreleased)
+## 4.0.0-beta.3 (2026-10-22)
 
 ### Features Added
 
-### Breaking Changes
+- Added the storage disk diagnose tool for Storage Intelligence disk performance and throttling analysis, with optional tenant selection and validated endpoint overrides. [[#3580](https://github.com/microsoft/mcp/pull/3580)]
+- Added the resiliency drill run generate-report tool to generate or refresh the report for a drill run and return the operation, completion state, and report summary, and the drill run get-report-download-url tool to get a short-lived, read-only download URL for the generated report. [[#4018](https://github.com/microsoft/mcp/pull/4018)]
+- Added resilience goal assignment create, update, delete, recommend-capacity, refresh-resources, and update-resources tools for service-group-scoped zonal resiliency, service-level targets, participation, attestation, and user confirmation. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
+- Exposed the remaining GA SDK request fields on existing resiliency tools: drill create/update `--identity`, `--chaos-resource-properties`, `--recovery-plan-properties`, and `--monitoring-properties` (plus `--resource-group` on update, which must match the creation-time resource group); drill run failover `--user-consent`; recoveryplan create `None` identity, `--default-group-unique-id`, and CustomRunbook action `associatedIdentity`; recoveryplan resource update `CrossZoneVMRecovery` protection; and usage plan create `--tags`. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
+- Added the `resiliencyagent` tool area with commands for general Azure resiliency guidance, application architecture assessment, resilient Bicep, ARM JSON, or Terraform generation, review of existing infrastructure-as-code, and consent-based local file attachment. The agent's clarifying questions use MCP elicitation, and generated templates and reports are returned as native MCP file resources. [[#3845](https://github.com/microsoft/mcp/pull/3845)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Resiliency recoveryplan resource update now reports a rejected long-running operation as a bad request with the service error code instead of surfacing the successful status of its final poll. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
 
 ## 4.0.0-beta.2 (2026-10-20)
 

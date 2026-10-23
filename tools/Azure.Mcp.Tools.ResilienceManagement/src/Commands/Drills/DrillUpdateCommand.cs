@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "9c4ad84e-7056-46ad-a857-8a81dce0c676",
     Name = "update",
     Title = "Update Resilience Drill",
-    Description = "Updates an existing resilience drill in a service group: change RBAC setup mode, move supporting resources to a new subscription and region, or change Health Model, SLI monitoring, and goal-assignment identity. Supports clearing monitoring while preserving all other configuration; omitted properties stay unchanged.",
+    Description = "Updates an existing resilience drill in a service group: change RBAC setup mode, move supporting resources to a new subscription and region, or change Health Model, SLI monitoring, and goal-assignment identity. Also changes the drill, Chaos resource, recovery plan, or monitoring identity. Supports clearing monitoring while preserving all other configuration; omitted properties stay unchanged.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -58,14 +58,23 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("Subscription and region must be specified together.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null &&
-            options.GoalAssignmentProperties is null && options.HealthModelMonitoringProperties is null && options.SliMonitoringProperties is null)
+        if (options.ResourceGroup is not null &&
+            (string.IsNullOrWhiteSpace(options.ResourceGroup) || options.ResourceGroup.Contains('/') || string.IsNullOrWhiteSpace(options.Subscription)))
         {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, goal-assignment properties, Health Model monitoring, or SLI monitoring.");
+            validationResult.Errors.Add("The resource group must be a single non-empty path segment specified together with subscription and region.");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null &&
+            options.GoalAssignmentProperties is null && options.HealthModelMonitoringProperties is null && options.SliMonitoringProperties is null &&
+            options.Identity is null && options.ChaosResourceProperties is null && options.RecoveryPlanProperties is null && options.MonitoringProperties is null)
+        {
+            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, identity, Chaos resource, recovery-plan, or monitoring identities, goal-assignment properties, Health Model monitoring, or SLI monitoring.");
         }
         try
         {
-            _ = DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties);
+            _ = DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties);
+            _ = DrillConfiguration.ParseManagedIdentity(options.Identity);
         }
         catch (ArgumentException ex)
         {
@@ -83,7 +92,10 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
                 options.Subscription,
                 options.Region,
                 options.RbacSetupMode,
-                DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties),
+                DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                    options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties),
+                DrillConfiguration.ParseManagedIdentity(options.Identity),
+                options.ResourceGroup,
                 options.Tenant,
                 cancellationToken);
 

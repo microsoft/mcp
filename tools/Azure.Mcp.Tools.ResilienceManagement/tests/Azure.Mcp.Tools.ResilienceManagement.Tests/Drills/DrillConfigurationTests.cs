@@ -121,6 +121,55 @@ public sealed class DrillConfigurationTests
         Assert.Throws<ArgumentException>(() => DrillConfiguration.Update("null", null, null));
     }
 
+    private const string IdentityId = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id1";
+
+    [Theory]
+    [InlineData("SystemAssigned")]
+    [InlineData("None")]
+    public void Update_RejectsUserAssignedIdentityWhenTypeExcludesUserAssigned(string type)
+    {
+        string identity = IdentityJson(type);
+
+        var ex1 = Assert.Throws<ArgumentException>(() => DrillConfiguration.Update(null, null, null, chaos: identity));
+        var ex2 = Assert.Throws<ArgumentException>(() => DrillConfiguration.Update(null, null, null, recoveryPlan: identity));
+        var ex3 = Assert.Throws<ArgumentException>(() => DrillConfiguration.Update(null, null, null, monitoring: identity));
+        Assert.All([ex1, ex2, ex3], ex => Assert.Contains("only when identity type includes UserAssigned", ex.Message));
+    }
+
+    [Theory]
+    [InlineData("SystemAssigned")]
+    [InlineData("None")]
+    public void Create_RejectsUserAssignedIdentityWhenTypeExcludesUserAssigned(string type)
+    {
+        string identity = IdentityJson(type);
+        string chaos = IdentityJson(type, ",\"chaosResourceIdentityForFaults\":{\"type\":\"SystemAssigned\"}");
+
+        Assert.Throws<ArgumentException>(() => DrillConfiguration.Create(DrillKind.Zonal, null, null, null, chaos: chaos));
+        Assert.Throws<ArgumentException>(() => DrillConfiguration.Create(DrillKind.Zonal, null, null, null, recoveryPlan: identity));
+        Assert.Throws<ArgumentException>(() => DrillConfiguration.Create(DrillKind.Zonal, null, null, null, monitoring: identity));
+    }
+
+    [Fact]
+    public void Update_RejectsUserAssignedIdentityOnChaosFaultIdentity()
+    {
+        string chaos = "{\"chaosResourceIdentityForFaults\":{\"type\":\"SystemAssigned\",\"userAssignedIdentity\":\"" + IdentityId + "\"}}";
+
+        Assert.Throws<ArgumentException>(() => DrillConfiguration.Update(null, null, null, chaos: chaos));
+    }
+
+    [Theory]
+    [InlineData("UserAssigned")]
+    [InlineData("SystemAssigned, UserAssigned")]
+    public void Update_AcceptsUserAssignedIdentityWhenTypeIncludesUserAssigned(string type)
+    {
+        string identity = IdentityJson(type);
+
+        Assert.NotNull(DrillConfiguration.Update(null, null, null, monitoring: identity));
+    }
+
+    private static string IdentityJson(string type, string extraProperties = "")
+        => "{\"identity\":{\"type\":\"" + type + "\",\"userAssignedIdentity\":\"" + IdentityId + "\"}" + extraProperties + "}";
+
     [Fact]
     public void Create_AcceptsUserAssignedIdentity()
     {
