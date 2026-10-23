@@ -432,6 +432,29 @@ Download the `.mcpb` file for your platform/architecture from **Assets** section
     4. Click **Install** in the preview window to add the Azure MCP Server to Claude Desktop.
 - **Option 3:** Set Claude Desktop to be the default application for `.mcpb` files on your computer. Then, double-click on the downloaded `.mcpb` file and Claude Desktop will automatically install the bundle.
 
+#### Configure
+
+After installing, open the extension's settings in your client (in Claude Desktop: **Settings** > **Extensions** > **Azure MCP Server** > **Configure**). Each setting maps to a server option or environment variable:
+
+| Setting | Maps to | Default | Sensitive |
+|---------|---------|---------|-----------|
+| Entra Tenant ID | `AZURE_TENANT_ID` | _(empty)_ | |
+| Entra Client ID | `AZURE_CLIENT_ID` | _(empty)_ | |
+| Entra Client Secret | `AZURE_CLIENT_SECRET` | _(empty)_ | ✅ |
+| Azure Subscription ID | `AZURE_SUBSCRIPTION_ID` | _(empty)_ | |
+| Azure Token Credentials | `AZURE_TOKEN_CREDENTIALS` | _(empty)_ | |
+| Azure Cloud Environment | `AZURE_CLOUD` | _(empty, public cloud)_ | |
+| Collect Telemetry | `AZURE_MCP_COLLECT_TELEMETRY` | `true` | |
+| Collect Microsoft Telemetry | `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` | `true` | |
+| Only Use Broker Credential | `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` | `false` | |
+| Enable OTLP Exporter | `AZURE_MCP_ENABLE_OTLP_EXPORTER` | `false` | |
+| Application Insights Connection String | `APPLICATIONINSIGHTS_CONNECTION_STRING` | _(empty)_ | ✅ |
+| Mode | `--mode` | `namespace` | |
+| Read Only | `--read-only` | `false` | |
+| Debug | `--debug` | `false` | |
+
+The bundle always passes these values to the server process, so they take precedence over environment variables set elsewhere. For example, to opt out of telemetry for a bundle install, turn off **Collect Telemetry** rather than exporting `AZURE_MCP_COLLECT_TELEMETRY=false` (see [Telemetry Configuration](#telemetry-configuration)).
+
 </details>
 
 ### GitHub Copilot CLI Configuration
@@ -1294,6 +1317,8 @@ To disable only Microsoft telemetry collection while keeping your own Applicatio
 ```bash
 export AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT=false
 ```
+
+> **Note:** For MCPB bundle installs, use the **Collect Telemetry** and **Collect Microsoft Telemetry** extension settings instead. The bundle always sets these variables, overriding values from your shell environment.
 <!-- remove-section: end remove_telemetry_config_section -->
 
 ## Compliance Responsibility

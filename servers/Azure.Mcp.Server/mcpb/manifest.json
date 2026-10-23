@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.3.schema.json",
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/tags/v2.1.2/schemas/mcpb-manifest-v0.3.schema.json",
   "manifest_version": "0.3",
   "name": "Azure.Mcp.Server",
   "display_name": "Azure MCP Server",
@@ -24,8 +24,7 @@
     "mcp_config": {
       "platform_overrides": {
         "win32": {
-          "command": "${__dirname}\\server\\azmcp.exe",
-          "args": []
+          "command": "${__dirname}\\server\\azmcp.exe"
         }
       },
       "command": "${__dirname}/server/azmcp",
@@ -37,9 +36,7 @@
         "--debug",
         "${user_config.debug}",
         "--read-only",
-        "${user_config.read_only}",
-        "--dangerously-disable-elicitation",
-        "${user_config.dangerously_disable_elicitation}"
+        "${user_config.read_only}"
       ],
       "env": {
         "AZURE_TENANT_ID": "${user_config.azure_tenant_id}",
@@ -144,28 +141,28 @@
       "description": "Default Azure subscription ID or name to use when no subscription is specified in a command. Example: 00000000-0000-0000-0000-000000000000",
       "default": ""
     },
-    "azure_cloud": {
-      "type": "string",
-      "title": "Azure Cloud Environment",
-      "description": "Azure cloud environment to connect to. Examples: AzureCloud (default public cloud), AzureChinaCloud, AzureUSGovernment.",
-      "default": ""
-    },
     "azure_token_credentials": {
       "type": "string",
       "title": "Azure Token Credentials",
       "description": "Credential chain to use for authentication. Values: 'dev' (VS/VSCode/CLI/PowerShell/AzureDeveloperCLI + browser fallback), 'prod' (Workload Identity + Managed Identity, no interactive fallback), or a specific provider name such as 'AzureCliCredential' or 'ManagedIdentityCredential'.",
       "default": ""
     },
+    "azure_cloud": {
+      "type": "string",
+      "title": "Azure Cloud Environment",
+      "description": "Azure cloud environment to connect to. Examples: AzureCloud (default public cloud), AzureChinaCloud, AzureUSGovernment.",
+      "default": ""
+    },
     "azure_mcp_collect_telemetry": {
       "type": "boolean",
       "title": "Collect Telemetry",
-      "description": "Whether to allow Azure MCP Server to collect anonymous usage telemetry. Set to false to opt out.",
+      "description": "Whether to allow Azure MCP Server to collect anonymous usage telemetry. Set to false to opt out. Bundle installs always set this variable, overriding any value from your shell environment.",
       "default": true
     },
     "azure_mcp_collect_telemetry_microsoft": {
       "type": "boolean",
       "title": "Collect Microsoft Telemetry",
-      "description": "Whether to allow Azure MCP Server to send anonymous usage telemetry to Microsoft. Enabled by default in release builds. Set to false to opt out of Microsoft-owned telemetry while keeping other telemetry settings unchanged.",
+      "description": "Whether to allow Azure MCP Server to send anonymous usage telemetry to Microsoft. Enabled by default in release builds. Set to false to opt out of Microsoft-owned telemetry while keeping other telemetry settings unchanged. Bundle installs always set this variable, overriding any value from your shell environment.",
       "default": true
     },
     "azure_mcp_only_use_broker_credential": {
@@ -187,18 +184,6 @@
       "default": "",
       "sensitive": true
     },
-    "debug": {
-      "type": "boolean",
-      "title": "Debug",
-      "description": "Enable debug mode with verbose logging to stderr. Default: false.",
-      "default": false
-    },
-    "dangerously_disable_elicitation": {
-      "type": "boolean",
-      "title": "Disable User Confirmation (Not Recommended)",
-      "description": "Disable user confirmation (elicitation) before allowing high risk commands to run, such as returning secrets (passwords) from KeyVault. When enabled, tools that handle secrets, credentials, or sensitive data will execute without user confirmation. This removes an important security layer designed to prevent unauthorized access to sensitive information. Only use this option in trusted, automated environments where user interaction isn't possible. Never use this option in production environments or when handling untrusted input. Default: false.",
-      "default": false
-    },
     "mode": {
       "type": "string",
       "title": "Mode",
@@ -209,6 +194,12 @@
       "type": "boolean",
       "title": "Read Only",
       "description": "Whether the MCP server should be read-only. If true, no write operations are allowed. Default: false.",
+      "default": false
+    },
+    "debug": {
+      "type": "boolean",
+      "title": "Debug",
+      "description": "Enable debug mode with verbose logging to stderr. Default: false.",
       "default": false
     }
   },
