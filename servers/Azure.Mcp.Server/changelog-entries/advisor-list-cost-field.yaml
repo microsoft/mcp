@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Align Azure Advisor recommendation list cost values with the portal by exposing the calculated retail cost for active recommendations.
