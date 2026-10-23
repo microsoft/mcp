@@ -4410,8 +4410,13 @@ azmcp resiliency drill create --service-group <service-group> \
                               --region <region> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
+                              --monitoring-source-type <HealthModel|Sli> \
+                              --monitoring-source-id <monitoring-source-arm-id> \
+                              --monitoring-identity-type <SystemAssigned|UserAssigned> \
                               [--resource-group <resource-group>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--recoveryplan <recoveryplan>] \
+                              [--monitoring-user-assigned-identity-id <identity-arm-id>] \
+                              [--monitoring-sli-type <Availability|Latency>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4439,7 +4444,12 @@ azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
                               [--subscription <subscription> --region <region>] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recoveryplan <recoveryplan>]
+                              [--recoveryplan <recoveryplan>] \
+                              [--monitoring-source-type <HealthModel|Sli> \
+                               --monitoring-source-id <monitoring-source-arm-id> \
+                               --monitoring-identity-type <SystemAssigned|UserAssigned> \
+                               --monitoring-user-assigned-identity-id <identity-arm-id> \
+                               --monitoring-sli-type <Availability|Latency>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

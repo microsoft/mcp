@@ -3,6 +3,7 @@
 
 using System.ClientModel.Primitives;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
@@ -2021,13 +2022,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
         Response<ResilienceManagementDrillResource> response = await drills.GetAsync(drill, cancellationToken);
 
-        return MapDrill(response.Value.Data);
-    }
-
-    private static DrillInfo MapDrill(ResilienceManagementDrillData data)
-    {
-        BinaryData serializedData = ((IPersistableModel<ResilienceManagementDrillData>)data).Write(new ModelReaderWriterOptions("J"));
-        using JsonDocument document = JsonDocument.Parse(serializedData.ToMemory());
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
         return MapDrill(document.RootElement);
     }
 
@@ -2041,8 +2036,20 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Properties: root.TryGetProperty("properties", out JsonElement propertiesElement) ? propertiesElement.Clone() : default,
             SystemData: root.TryGetProperty("systemData", out JsonElement systemDataElement) ? systemDataElement.Clone() : default);
 
-    public async Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, string? recoveryPlan = null, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<DrillInfo> CreateDrillAsync(
+        string serviceGroup,
+        string drill,
+        string subscription,
+        string region,
+        string? resourceGroup,
+        DrillKind drillType,
+        DrillRbacSetupMode rbacSetupMode,
+        string? recoveryPlan = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default,
+        DrillMonitoringSource? monitoringSource = null)
     {
+        ArgumentNullException.ThrowIfNull(monitoringSource);
         var subscriptionId = AzureService.IsSubscriptionId(subscription)
             ? subscription
             : (await AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)).Data.SubscriptionId;
@@ -2087,6 +2094,16 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             .Write(new ModelReaderWriterOptions("J"));
         ArmClient armClient = await CreateArmClientAsync(
             tenantIdOrName: tenant,
+            armClientOptions: CreateResilienceManagementArmClientOptions(),
+            cancellationToken: cancellationToken);
+        await ValidateMonitoringSourceAsync(
+            armClient,
+            serviceGroupId,
+            monitoringSource,
+            cancellationToken);
+        payload = AddMonitoringSource(payload, monitoringSource);
+        armClient = await CreateArmClientAsync(
+            tenantIdOrName: tenant,
             armClientOptions: CreateDrillContractArmClientOptions(payload),
             cancellationToken: cancellationToken);
         ResilienceManagementDrillCollection drills =
@@ -2095,10 +2112,23 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         await WaitForLroCompletionAsync(operation, cancellationToken);
         Response<ResilienceManagementDrillResource> completedDrill = await drills.GetAsync(drill, cancellationToken);
 
-        return MapDrill(completedDrill.Value.Data);
+        using JsonDocument document = JsonDocument.Parse(
+            completedDrill.GetRawResponse().Content.ToMemory());
+        DrillInfo result = MapDrill(document.RootElement);
+        ValidateMonitoringSourceReadBack(result.Properties, monitoringSource);
+        return result;
     }
 
-    public async Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, string? recoveryPlan = null, string? tenant = null, CancellationToken cancellationToken = default)
+    public async Task<DrillInfo> UpdateDrillAsync(
+        string serviceGroup,
+        string drill,
+        string? subscription = null,
+        string? region = null,
+        DrillRbacSetupMode? rbacSetupMode = null,
+        string? recoveryPlan = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default,
+        DrillMonitoringSource? monitoringSource = null)
     {
         var subscriptionId = subscription is null || AzureService.IsSubscriptionId(subscription)
             ? subscription
@@ -2107,7 +2137,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
 
         var drillId = ResilienceManagementDrillResource.CreateResourceIdentifier(serviceGroup, drill);
-        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
         var properties = new DrillUpdateProperties();
         var associatedIdentity = new ResilienceManagementAssociatedIdentity(ManagedServiceIdentityType.SystemAssigned);
 
@@ -2134,12 +2163,241 @@ public sealed class ResilienceManagementService(IAzureService azureService)
             Properties = properties
         };
 
+        BinaryData payload =
+            ((IPersistableModel<ResilienceManagementDrillPatch>)patch)
+            .Write(new ModelReaderWriterOptions("J"));
+        if (monitoringSource is not null)
+        {
+            await ValidateMonitoringSourceAsync(
+                armClient,
+                CreateServiceGroupResourceIdentifier(serviceGroup),
+                monitoringSource,
+                cancellationToken);
+            payload = AddMonitoringSource(payload, monitoringSource);
+        }
+
+        ArmClientOptions options = CreateResilienceManagementArmClientOptions();
+        options.AddPolicy(new DrillContractRequestPolicy(payload), HttpPipelinePosition.PerCall);
+        armClient = await CreateArmClientAsync(
+            tenantIdOrName: tenant,
+            armClientOptions: options,
+            cancellationToken: cancellationToken);
+        ResilienceManagementDrillResource drillResource = armClient.GetResilienceManagementDrillResource(drillId);
         ArmOperation operation = await drillResource.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
         Response<ResilienceManagementDrillResource> response = await drillResource.GetAsync(cancellationToken);
 
-        return MapDrill(response.Value.Data);
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content.ToMemory());
+        DrillInfo result = MapDrill(document.RootElement);
+        if (monitoringSource is not null)
+        {
+            ValidateMonitoringSourceReadBack(result.Properties, monitoringSource);
+        }
+
+        return result;
+    }
+
+    private static BinaryData AddMonitoringSource(
+        BinaryData payload,
+        DrillMonitoringSource monitoringSource)
+    {
+        JsonObject root = JsonNode.Parse(payload.ToString())?.AsObject() ??
+            throw new InvalidOperationException("The drill request payload is not a JSON object.");
+        JsonObject properties = root["properties"]?.AsObject() ??
+            throw new InvalidOperationException("The drill request payload has no properties object.");
+        var identity = new JsonObject
+        {
+            ["type"] = monitoringSource.IdentityKind.ToString(),
+        };
+        if (monitoringSource.IdentityKind == DrillMonitoringIdentityKind.UserAssigned)
+        {
+            identity["userAssignedIdentity"] = monitoringSource.UserAssignedIdentityId;
+        }
+
+        if (monitoringSource.Kind == DrillMonitoringSourceKind.HealthModel)
+        {
+            properties["healthModelMonitoringProperties"] = new JsonObject
+            {
+                ["identity"] = identity,
+                ["healthModelId"] = monitoringSource.ResourceId,
+            };
+        }
+        else
+        {
+            properties["sliMonitoringProperties"] = new JsonObject
+            {
+                ["identity"] = identity,
+                ["slis"] = new JsonArray(
+                    new JsonObject
+                    {
+                        ["sliId"] = monitoringSource.ResourceId,
+                        ["type"] = monitoringSource.SliKind!.Value.ToString(),
+                    }),
+            };
+        }
+
+        return BinaryData.FromString(root.ToJsonString());
+    }
+
+    private static async Task ValidateMonitoringSourceAsync(
+        ArmClient armClient,
+        ResourceIdentifier serviceGroupId,
+        DrillMonitoringSource monitoringSource,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(monitoringSource);
+        var sourceId = new ResourceIdentifier(monitoringSource.ResourceId);
+        string expectedType = monitoringSource.Kind == DrillMonitoringSourceKind.HealthModel
+            ? "Microsoft.CloudHealth/healthModels"
+            : "Microsoft.Monitor/slis";
+        if (!string.Equals(sourceId.ResourceType.ToString(), expectedType, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Monitoring source '{monitoringSource.ResourceId}' must have exact resource type '{expectedType}'.",
+                nameof(monitoringSource));
+        }
+
+        if (monitoringSource.Kind == DrillMonitoringSourceKind.Sli)
+        {
+            string expectedPrefix =
+                $"{serviceGroupId.ToString().TrimEnd('/')}/providers/Microsoft.Monitor/slis/";
+            if (!monitoringSource.ResourceId.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    $"SLI monitoring source '{monitoringSource.ResourceId}' is not attached to service group '{serviceGroupId}'.",
+                    nameof(monitoringSource));
+            }
+        }
+
+        if (monitoringSource.IdentityKind == DrillMonitoringIdentityKind.UserAssigned)
+        {
+            if (string.IsNullOrWhiteSpace(monitoringSource.UserAssignedIdentityId))
+            {
+                throw new ArgumentException(
+                    "A user-assigned monitoring identity ID is required.",
+                    nameof(monitoringSource));
+            }
+
+            var identityId = new ResourceIdentifier(monitoringSource.UserAssignedIdentityId);
+            if (!string.Equals(
+                    identityId.ResourceType.ToString(),
+                    "Microsoft.ManagedIdentity/userAssignedIdentities",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    $"Monitoring identity '{monitoringSource.UserAssignedIdentityId}' must be a Microsoft.ManagedIdentity/userAssignedIdentities resource.",
+                    nameof(monitoringSource));
+            }
+
+            await ValidateExactResourceAsync(armClient, identityId, cancellationToken);
+        }
+        else if (!string.IsNullOrWhiteSpace(monitoringSource.UserAssignedIdentityId))
+        {
+            throw new ArgumentException(
+                "A user-assigned monitoring identity ID cannot be supplied for SystemAssigned identity.",
+                nameof(monitoringSource));
+        }
+
+        if (monitoringSource.Kind == DrillMonitoringSourceKind.Sli && monitoringSource.SliKind is null)
+        {
+            throw new ArgumentException("An SLI category is required for an SLI monitoring source.", nameof(monitoringSource));
+        }
+        if (monitoringSource.Kind == DrillMonitoringSourceKind.HealthModel && monitoringSource.SliKind is not null)
+        {
+            throw new ArgumentException("An SLI category cannot be supplied for a Health Model monitoring source.", nameof(monitoringSource));
+        }
+
+        await ValidateExactResourceAsync(armClient, sourceId, cancellationToken);
+    }
+
+    private static async Task ValidateExactResourceAsync(
+        ArmClient armClient,
+        ResourceIdentifier resourceId,
+        CancellationToken cancellationToken)
+    {
+        var response = await armClient
+            .GetGenericResource(resourceId)
+            .GetAsync(cancellationToken);
+        if (!string.Equals(
+                response.Value.Data.Id.ToString(),
+                resourceId.ToString(),
+                StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(
+                response.Value.Data.ResourceType.ToString(),
+                resourceId.ResourceType.ToString(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Resource read-back did not match exact approved resource '{resourceId}'.");
+        }
+    }
+
+    private static void ValidateMonitoringSourceReadBack(
+        JsonElement properties,
+        DrillMonitoringSource monitoringSource)
+    {
+        string propertyName = monitoringSource.Kind == DrillMonitoringSourceKind.HealthModel
+            ? "healthModelMonitoringProperties"
+            : "sliMonitoringProperties";
+        if (!properties.TryGetProperty(propertyName, out JsonElement configured) ||
+            configured.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidOperationException(
+                $"Drill read-back omitted approved monitoring source property '{propertyName}'.");
+        }
+
+        string? readBackId;
+        if (monitoringSource.Kind == DrillMonitoringSourceKind.HealthModel)
+        {
+            readBackId = configured.GetProperty("healthModelId").GetString();
+        }
+        else
+        {
+            if (!configured.TryGetProperty("slis", out JsonElement slis) ||
+                slis.ValueKind != JsonValueKind.Array ||
+                slis.GetArrayLength() != 1)
+            {
+                throw new InvalidOperationException(
+                    "Drill read-back must contain exactly one approved SLI monitoring selection.");
+            }
+
+            JsonElement selection = slis[0];
+            readBackId = selection.GetProperty("sliId").GetString();
+            if (!string.Equals(
+                    selection.GetProperty("type").GetString(),
+                    monitoringSource.SliKind!.Value.ToString(),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Drill read-back SLI category does not match the approved selection.");
+            }
+        }
+
+        if (!string.Equals(readBackId, monitoringSource.ResourceId, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Drill read-back monitoring source '{readBackId}' does not match approved source '{monitoringSource.ResourceId}'.");
+        }
+
+        JsonElement identity = configured.GetProperty("identity");
+        if (!string.Equals(
+                identity.GetProperty("type").GetString(),
+                monitoringSource.IdentityKind.ToString(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Drill read-back monitoring identity type does not match the approved identity.");
+        }
+
+        if (monitoringSource.IdentityKind == DrillMonitoringIdentityKind.UserAssigned &&
+            (!identity.TryGetProperty("userAssignedIdentity", out JsonElement identityId) ||
+             !string.Equals(
+                 identityId.GetString(),
+                 monitoringSource.UserAssignedIdentityId,
+                 StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("Drill read-back monitoring identity does not match the approved identity.");
+        }
     }
 
     public async Task<DrillResyncReadinessResult> CheckDrillResyncReadinessAsync(

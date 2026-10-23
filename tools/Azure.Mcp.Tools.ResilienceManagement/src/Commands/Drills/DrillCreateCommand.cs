@@ -19,7 +19,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         Creates, configures, or updates a resilience drill in an Azure service group. Use this tool when asked
         to create or provision a resilience drill, including when required drill details must first be clarified.
         Supports zonal and regional drills, system-assigned managed identity, RBAC setup, and an optional recovery
-        plan in the same service group. Returns the created drill definition and provisioning state.
+        plan in the same service group. Requires an explicit existing Azure Health Model or service-group-scoped
+        Microsoft.Monitor SLI plus its read identity, validates the exact resources before mutation, and verifies
+        the selected monitoring source in Drill read-back. Returns the created drill definition and provisioning state.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -58,6 +60,15 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
         {
             validationResult.Errors.Add("The recoveryplan name must be a single path segment.");
         }
+
+        ValidateMonitoringOptions(
+            options.MonitoringSourceType,
+            options.MonitoringSourceId,
+            options.MonitoringIdentityType,
+            options.MonitoringUserAssignedIdentityId,
+            options.MonitoringSliType,
+            validationResult,
+            required: true);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillCreateOptions options, CancellationToken cancellationToken)
@@ -74,7 +85,8 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
                 options.RbacSetupMode,
                 options.RecoveryPlan,
                 options.Tenant,
-                cancellationToken);
+                cancellationToken,
+                monitoringSource: CreateMonitoringSource(options));
 
             context.Response.Results = ResponseResult.Create(
                 new DrillCreateCommandResult(drill),
@@ -103,6 +115,63 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
             "The drill request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)
     };
+
+    internal static void ValidateMonitoringOptions(
+        DrillMonitoringSourceKind? sourceType,
+        string? sourceId,
+        DrillMonitoringIdentityKind? identityType,
+        string? userAssignedIdentityId,
+        DrillSliKind? sliType,
+        ValidationResult validationResult,
+        bool required)
+    {
+        bool anySpecified = sourceType is not null ||
+            !string.IsNullOrWhiteSpace(sourceId) ||
+            identityType is not null ||
+            !string.IsNullOrWhiteSpace(userAssignedIdentityId) ||
+            sliType is not null;
+        if (!anySpecified && !required)
+        {
+            return;
+        }
+
+        if (sourceType is null || string.IsNullOrWhiteSpace(sourceId) || identityType is null)
+        {
+            validationResult.Errors.Add(
+                "Monitoring source type, source ID, and identity type must be specified together.");
+            return;
+        }
+
+        if (identityType == DrillMonitoringIdentityKind.UserAssigned &&
+            string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        {
+            validationResult.Errors.Add(
+                "A monitoring user-assigned identity ID is required for UserAssigned monitoring identity.");
+        }
+        else if (identityType == DrillMonitoringIdentityKind.SystemAssigned &&
+            !string.IsNullOrWhiteSpace(userAssignedIdentityId))
+        {
+            validationResult.Errors.Add(
+                "A monitoring user-assigned identity ID is not valid for SystemAssigned monitoring identity.");
+        }
+
+        if (sourceType == DrillMonitoringSourceKind.Sli && sliType is null)
+        {
+            validationResult.Errors.Add("A monitoring SLI type is required for an Sli monitoring source.");
+        }
+        else if (sourceType == DrillMonitoringSourceKind.HealthModel && sliType is not null)
+        {
+            validationResult.Errors.Add("A monitoring SLI type is not valid for a HealthModel monitoring source.");
+        }
+    }
+
+    internal static DrillMonitoringSource CreateMonitoringSource(DrillCreateOptions options) =>
+        new(
+            options.MonitoringSourceType!.Value,
+            options.MonitoringSourceId!,
+            options.MonitoringIdentityType!.Value,
+            options.MonitoringUserAssignedIdentityId,
+            options.MonitoringSliType);
 
     public sealed record DrillCreateCommandResult(DrillInfo Drill);
 }

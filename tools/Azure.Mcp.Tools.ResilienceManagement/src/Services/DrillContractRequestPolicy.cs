@@ -26,7 +26,9 @@ internal sealed class DrillContractRequestPolicy(BinaryData? content = null)
         var query = System.Web.HttpUtility.ParseQueryString(message.Request.Uri.Query);
         query["api-version"] = ResilienceManagementApiVersions.Current;
         message.Request.Uri.Query = query.ToString() ?? string.Empty;
-        if (content is not null && message.Request.Method == RequestMethod.Put)
+        if (content is not null &&
+            (message.Request.Method == RequestMethod.Put ||
+             message.Request.Method == RequestMethod.Patch))
         {
             message.Request.Content = RequestContent.Create(content);
             message.Request.Headers.SetValue("Content-Type", "application/json");

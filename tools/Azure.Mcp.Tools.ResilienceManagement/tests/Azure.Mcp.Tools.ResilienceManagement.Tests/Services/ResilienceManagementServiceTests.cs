@@ -138,9 +138,12 @@ public sealed class ResilienceManagementServiceTests
     {
         const string recoveryPlanId =
             "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1";
+        const string healthModelId =
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.CloudHealth/healthModels/qcs";
         var handler = new OperationIdRecordingHandler(
             HttpStatusCode.OK,
-            DrillContent(recoveryPlanId));
+            DrillContent(recoveryPlanId, healthModelId),
+            monitoringResourceId: healthModelId);
         var service = CreateService(handler);
 
         DrillInfo result = await service.CreateDrillAsync(
@@ -152,7 +155,11 @@ public sealed class ResilienceManagementServiceTests
             DrillKind.Regional,
             DrillRbacSetupMode.AutomatedBuiltinRoles,
             "plan1",
-            cancellationToken: TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken,
+            monitoringSource: new DrillMonitoringSource(
+                DrillMonitoringSourceKind.HealthModel,
+                healthModelId,
+                DrillMonitoringIdentityKind.SystemAssigned));
 
         Assert.Equal("drill1", result.Name);
         Assert.Contains(
@@ -166,12 +173,45 @@ public sealed class ResilienceManagementServiceTests
                 .GetProperty("properties")
                 .TryGetProperty("monitoringProperties", out _));
         Assert.Equal(
+            healthModelId,
+            document.RootElement
+                .GetProperty("properties")
+                .GetProperty("healthModelMonitoringProperties")
+                .GetProperty("healthModelId")
+                .GetString());
+        Assert.Equal(
             recoveryPlanId,
             document.RootElement
                 .GetProperty("properties")
                 .GetProperty("recoveryPlanProperties")
                 .GetProperty("recoveryPlanId")
                 .GetString());
+    }
+
+    [Fact]
+    public async Task CreateDrillAsync_RejectsMismatchedMonitoringResourceTypeBeforeMutation()
+    {
+        var handler = new OperationIdRecordingHandler();
+        var service = CreateService(handler);
+        var source = new DrillMonitoringSource(
+            DrillMonitoringSourceKind.HealthModel,
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Monitor/accounts/not-a-health-model",
+            DrillMonitoringIdentityKind.SystemAssigned);
+
+        ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.CreateDrillAsync(
+                "sg1",
+                "drill1",
+                "00000000-0000-0000-0000-000000000000",
+                "westus2",
+                "rg",
+                DrillKind.Regional,
+                DrillRbacSetupMode.AutomatedBuiltinRoles,
+                cancellationToken: TestContext.Current.CancellationToken,
+                monitoringSource: source));
+
+        Assert.Contains("Microsoft.CloudHealth/healthModels", exception.Message);
+        Assert.Equal(0, handler.RequestCount);
     }
 
     [Fact]
@@ -284,7 +324,7 @@ public sealed class ResilienceManagementServiceTests
             },
         });
 
-    private static string DrillContent(string recoveryPlanId) =>
+    private static string DrillContent(string recoveryPlanId, string healthModelId) =>
         JsonSerializer.Serialize(new
         {
             id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1",
@@ -320,6 +360,14 @@ public sealed class ResilienceManagementServiceTests
                 },
                 rbacSetupMode = "AutomatedBuiltinRoles",
                 drillType = "Regional",
+                healthModelMonitoringProperties = new
+                {
+                    identity = new
+                    {
+                        type = "SystemAssigned"
+                    },
+                    healthModelId
+                },
                 monitoringProperties = new
                 {
                     identity = new
@@ -1959,19 +2007,22 @@ public sealed class ResilienceManagementServiceTests
         private readonly string _drillRunContent;
         private readonly string? _locationUri;
         private readonly string? _azureAsyncOperationUri;
+        private readonly string? _monitoringResourceId;
 
         public OperationIdRecordingHandler(
             HttpStatusCode statusCode = HttpStatusCode.Accepted,
             string content = "{}",
             string? drillRunContent = null,
             string? locationUri = null,
-            string? azureAsyncOperationUri = null)
+            string? azureAsyncOperationUri = null,
+            string? monitoringResourceId = null)
         {
             _statusCode = statusCode;
             _content = content;
             _drillRunContent = drillRunContent ?? DrillRunContent("Reprotect", "Start");
             _locationUri = locationUri;
             _azureAsyncOperationUri = azureAsyncOperationUri;
+            _monitoringResourceId = monitoringResourceId;
         }
 
         public string? OperationId { get; private set; }
@@ -2010,11 +2061,55 @@ public sealed class ResilienceManagementServiceTests
             bool isDrillRunGet =
                 request.Method == HttpMethod.Get &&
                 request.RequestUri.AbsolutePath.Contains("/drillRuns/", StringComparison.OrdinalIgnoreCase);
+            bool isMonitoringResourceGet =
+                request.Method == HttpMethod.Get &&
+                _monitoringResourceId is not null &&
+                string.Equals(
+                    request.RequestUri.AbsolutePath,
+                    _monitoringResourceId,
+                    StringComparison.OrdinalIgnoreCase);
+            bool isMonitoringProviderGet =
+                request.Method == HttpMethod.Get &&
+                _monitoringResourceId is not null &&
+                request.RequestUri.AbsolutePath.EndsWith(
+                    "/providers/Microsoft.CloudHealth",
+                    StringComparison.OrdinalIgnoreCase);
             var response = new HttpResponseMessage(
-                isDrillRunGet ? HttpStatusCode.OK : _statusCode)
+                isDrillRunGet || isMonitoringResourceGet || isMonitoringProviderGet
+                    ? HttpStatusCode.OK
+                    : _statusCode)
             {
                 Content = new StringContent(
-                    isDrillRunGet ? _drillRunContent : _content,
+                    isDrillRunGet
+                        ? _drillRunContent
+                        : isMonitoringProviderGet
+                            ? JsonSerializer.Serialize(new
+                            {
+                                id = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.CloudHealth",
+                                name = "Microsoft.CloudHealth",
+                                type = "Microsoft.Resources/providers",
+                                @namespace = "Microsoft.CloudHealth",
+                                registrationState = "Registered",
+                                resourceTypes = new[]
+                                {
+                                    new
+                                    {
+                                        resourceType = "healthModels",
+                                        apiVersions = new[] { "2025-05-01-preview" },
+                                        locations = new[] { "eastus2" },
+                                    },
+                                },
+                            })
+                        : isMonitoringResourceGet
+                            ? JsonSerializer.Serialize(new
+                            {
+                                id = _monitoringResourceId,
+                                name = "qcs",
+                                type = "Microsoft.CloudHealth/healthModels",
+                                location = "eastus2",
+                                properties = new { },
+                            })
+                            : _content,
                     Encoding.UTF8,
                     "application/json")
             };
