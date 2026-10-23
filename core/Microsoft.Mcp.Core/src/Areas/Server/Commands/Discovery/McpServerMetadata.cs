@@ -39,6 +39,12 @@ public sealed class McpServerMetadata(string id = "", string name = "", string d
     public string? ToolPrefix { get; set; }
 
     /// <summary>
+    /// Gets or sets whether this server authenticates with Azure access tokens and therefore
+    /// accepts a per-call <c>tenant</c> argument on the tools proxied from it.
+    /// </summary>
+    public bool SupportsTenantScope { get; set; }
+
+    /// <summary>
     /// Gets or sets the tool metadata for this server, containing tool-specific information.
     /// </summary>
     public ToolMetadata? ToolMetadata { get; set; }
