@@ -4,7 +4,7 @@ The Azure Migrate toolset provides Platform Landing Zone generation and configur
 
 ## Recorded tests
 
-For the shared test infrastructure and recording workflow, see the [recorded-test guide](../../docs/recorded-tests.md).
+For the shared test infrastructure and recording workflow, see the [recorded-test guide](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 
 ### Platform Landing Zone downloads
 
