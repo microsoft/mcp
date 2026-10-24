@@ -20,7 +20,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Services;
 
-public sealed class ResilienceManagementServiceTests
+public sealed partial class ResilienceManagementServiceTests
 {
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";

@@ -2024,7 +2024,7 @@ public sealed class ResilienceManagementService(IAzureService azureService)
 
     public async Task<DrillInfo> GetDrillAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateDrillContractArmClientOptions(), cancellationToken: cancellationToken);
 
         var serviceGroupId = CreateServiceGroupResourceIdentifier(serviceGroup);
         ResilienceManagementDrillCollection drills = armClient.GetResilienceManagementDrills(serviceGroupId);
