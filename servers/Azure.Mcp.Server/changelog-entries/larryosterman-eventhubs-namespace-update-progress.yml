@@ -1,0 +1,3 @@
+changes:
+  - section: "Bug Fixes"
+    description: "Event Hubs `namespace update` now sends MCP progress notifications while waiting for the ARM operation to complete, preventing long-running namespace updates (e.g. SKU/capacity changes) from appearing idle to the client."
