@@ -103,7 +103,8 @@ public sealed partial class EndpointValidator
         ["arm"] = new AllowedSuffixManager(
             // Raw ARM requests in Quota, Resource Health, and Service Fabric use ArmEnvironment.Endpoint to construct these hosts.
             Public: [
-                "management.azure.com"
+                "management.azure.com",
+                "eastus2euap.management.azure.com"
 #if DEBUG
                 // 3.0 GA hack: playback tests sometimes use this. @vukelich will remove in 2026-10.
                 // We wrap in a `#if DEBUG` since the playback/recording does the same for the

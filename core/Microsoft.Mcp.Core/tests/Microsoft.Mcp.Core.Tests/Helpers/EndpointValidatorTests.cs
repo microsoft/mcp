@@ -133,6 +133,7 @@ public class EndpointValidatorTests
     [InlineData("https://my-instance.oep.ppe.azure-int.net", "adme")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
     [InlineData("https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
+    [InlineData("https://eastus2euap.management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://my-foundry.services.ai.azure.com", "foundry")]
     [InlineData("https://my-foundry.services.ai.azure.com/api/projects/my-project", "foundry")]

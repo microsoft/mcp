@@ -126,6 +126,31 @@ public sealed class ArmEndpointValidationTests
         Assert.Empty(handler.RequestUris);
     }
 
+    [Fact]
+    public async Task Policy_AllowsKnownPublicCanaryArmHost()
+    {
+        var accessor = new CommandContextAccessor();
+        using var handler = new ArmTestHttpMessageHandler(_ => JsonResponse("{}"));
+        AzureService service = CreateService(accessor, handler, ArmEnvironment.AzurePublicCloud);
+        var options = new ArmClientOptions();
+        service.ConfigureArmClientOptions(options);
+        HttpPipeline pipeline = HttpPipelineBuilder.Build(options);
+
+        using (accessor.BeginScope(new CommandContext { ToolNamespaceName = "resiliency" }))
+        {
+            using Request request = pipeline.CreateRequest();
+            request.Uri.Reset(new Uri("https://eastus2euap.management.azure.com/subscriptions"));
+            using Response response = await pipeline.SendRequestAsync(
+                request,
+                TestContext.Current.CancellationToken);
+            Assert.Equal(HttpStatusCode.OK, (HttpStatusCode)response.Status);
+        }
+
+        Assert.Equal(
+            "eastus2euap.management.azure.com",
+            Assert.Single(handler.RequestUris).Host);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
