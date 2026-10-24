@@ -147,7 +147,6 @@ public sealed class ResilienceManagementService(IAzureService azureService)
         }
         return operationId;
     }
-    }
 
     public async Task<IEnumerable<ResourceSummary>> ListGoalAssignmentsAsync(string serviceGroup, string? tenant = null, CancellationToken cancellationToken = default)
     {

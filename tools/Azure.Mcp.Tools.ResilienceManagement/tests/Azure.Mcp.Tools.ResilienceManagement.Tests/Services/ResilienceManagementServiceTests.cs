@@ -9,6 +9,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.Mcp.Tests.Helpers;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
@@ -2082,7 +2083,12 @@ public sealed class ResilienceManagementServiceTests
             .Returns((string?)null);
         azureService.IsSubscriptionId(Arg.Any<string>())
             .Returns(call => Guid.TryParse(call.Arg<string>(), out _));
-        azureService.GetClient(Arg.Any<string?>()).Returns(new HttpClient(handler));
+        var httpClient = new HttpClient(handler, disposeHandler: false);
+        azureService.GetClient(Arg.Any<string?>()).Returns(httpClient);
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService,
+            httpClient,
+            cloudConfiguration.ArmEnvironment);
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new FakeTokenCredential());
         return new ResilienceManagementService(azureService);

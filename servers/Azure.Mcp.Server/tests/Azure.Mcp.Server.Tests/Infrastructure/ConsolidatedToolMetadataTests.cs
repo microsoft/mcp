@@ -24,7 +24,7 @@ public sealed class ConsolidatedToolMetadataTests()
         var definitions = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
         var definition = Assert.Single(definitions.GetToolDefinitions(), tool => tool.MappedToolList.Contains(commandName));
         Assert.Equal(consolidatedName, definition.Name);
-        Assert.True(MetadataMatches(commands.AllCommands[commandName].Metadata, definition.ToolMetadata));
+        Assert.True(MetadataMatches(commands.AllCommands[commandName].Command.Metadata, definition.ToolMetadata));
     }
 
     [Fact]
