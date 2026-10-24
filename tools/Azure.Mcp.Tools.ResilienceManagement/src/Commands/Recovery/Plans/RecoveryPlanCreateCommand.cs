@@ -20,18 +20,18 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Name = "create",
     Title = "Create or Update Resilience Recoveryplan",
     Description = """
-        Creates a new Zonal resilience recoveryplan in an Azure service group or updates an existing plan's identity,
+        Creates a new Zonal or Regional resilience recoveryplan in an Azure service group or updates an existing plan's identity,
         recovery group structure, and recovery group pre/post actions. Use this command to split a plan into additional
         recovery groups or add manual and Azure Automation runbook actions; use recoveryplan resource update instead for
         recovery resource membership and protection settings.
         Creation requires a plan description and a customer-selected SystemAssigned, UserAssigned, or SystemAndUserAssigned
-        managed identity. Do not assume an identity type; ask the user to choose one when omitted. Updates can switch identity
-        types, but cannot replace an existing user-assigned identity with a different one. Additional recovery groups can be
-        replaced with a JSON array containing sequential order IDs, descriptions, optional group GUIDs, and optional pre/post
-        actions; they are preserved when omitted. Default group pre/post actions can also be replaced. Actions support manual
-        steps and Azure Automation runbook scripts. Updates preserve the default recovery group ID and omitted plan, group,
-        and action settings. Plan descriptions must be 5 to 50 characters. A user-assigned identity update must include the
-        existing identity's full resource ID; ask for it when omitted.
+        managed identity. Do not assume a plan or identity type; ask the user to choose each one when omitted. Updates can switch
+        identity types, but cannot replace an existing user-assigned identity with a different one. Additional recovery groups
+        can be replaced with a JSON array containing sequential order IDs, descriptions, optional group GUIDs, and optional
+        pre/post actions; they are preserved when omitted. Default group pre/post actions can also be replaced. Actions support
+        manual steps and Azure Automation runbook scripts. Updates preserve the default recovery group ID and omitted plan,
+        group, and action settings. Plan descriptions must be 5 to 50 characters. A user-assigned identity update must include
+        the existing identity's full resource ID; ask for it when omitted.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -51,9 +51,9 @@ public sealed class RecoveryPlanCreateCommand(ILogger<RecoveryPlanCreateCommand>
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.PlanType != Models.RecoveryPlanKind.Zonal)
+        if (options.PlanType is not (Models.RecoveryPlanKind.Zonal or Models.RecoveryPlanKind.Regional))
         {
-            validationResult.Errors.Add("Only Zonal recovery plans are currently supported.");
+            validationResult.Errors.Add("The recoveryplan type must be Zonal or Regional.");
         }
 
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);

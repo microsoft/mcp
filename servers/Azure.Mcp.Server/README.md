@@ -94,7 +94,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{       ```json}} -->
+<!-- insert-section: vsix {{       ```
+
+Reprotect is rejected until the authoritative DrillRun exposes `Start` or `Retry` for the
+Reprotect stage. The result includes the initial HTTP/completion status and the exact `Location`
+and `Azure-AsyncOperation` response URIs. Poll only a returned URI; `operation-id` is the
+caller-owned idempotency identity and must not be used to construct an operation-status URL.json}} -->
 <!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
 <!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
 <!-- insert-section: vsix {{    }} -->
@@ -1359,6 +1364,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 ### 🛡️ Azure Resilience Management
 
 * "List all resilience goal assignments in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' from goal template 'my-template' in service group 'my-service-group'"
+* "Delete resilience goal assignment 'my-assignment' from service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
@@ -1367,6 +1374,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Create a Zonal recovery plan 'my-recovery-plan' in service group 'my-service-group' with a system-assigned identity"
 * "Update recovery plan 'my-recovery-plan' in service group 'my-service-group' to use user-assigned identity '/subscriptions/my-subscription/resourceGroups/my-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/my-identity'"
 * "Include recovery resource 'my-resource' in recovery plan 'my-recovery-plan' in service group 'my-service-group' and configure its protection settings"
+
+Recovery resource inclusion validates that the selected protection solution type matches its
+solution-specific setting and the detected protected resource. Azure Service Bus namespaces use
+`AzureServiceBus` for both values and require a detected protected Service Bus solution.
+
 * "Exclude recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
@@ -1395,7 +1407,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
-* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group', selecting drill resource IDs from the approved failover request"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 

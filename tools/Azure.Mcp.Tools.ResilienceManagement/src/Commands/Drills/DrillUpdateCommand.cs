@@ -20,7 +20,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
         drill's supporting resources by changing their subscription and region together, change its RBAC setup
         mode, or associate a recoveryplan. Supporting-resource relocation is a drill configuration update; do
         not use drill resource add-or-update, Azure Resource Mover, or generic resource commands for it. This
-        tool changes only the supplied drill properties.
+        tool changes only the supplied drill properties. Monitoring updates require an explicit existing Azure
+        Health Model or service-group-scoped Microsoft.Monitor SLI and exact read identity; the tool validates
+        those resources before mutation and verifies the selection in Drill read-back.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -69,9 +71,21 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("Subscription and region must be specified together.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null && string.IsNullOrWhiteSpace(options.RecoveryPlan))
+        DrillCreateCommand.ValidateMonitoringOptions(
+            options.MonitoringSourceType,
+            options.MonitoringSourceId,
+            options.MonitoringIdentityType,
+            options.MonitoringUserAssignedIdentityId,
+            options.MonitoringSliType,
+            validationResult,
+            required: false);
+
+        if (string.IsNullOrWhiteSpace(options.Subscription) &&
+            options.RbacSetupMode is null &&
+            string.IsNullOrWhiteSpace(options.RecoveryPlan) &&
+            options.MonitoringSourceType is null)
         {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, or recoveryplan.");
+            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, recoveryplan, or monitoring source.");
         }
     }
 
@@ -87,7 +101,15 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
                 options.RbacSetupMode,
                 options.RecoveryPlan,
                 options.Tenant,
-                cancellationToken);
+                cancellationToken,
+                monitoringSource: options.MonitoringSourceType is null
+                    ? null
+                    : new DrillMonitoringSource(
+                        options.MonitoringSourceType.Value,
+                        options.MonitoringSourceId!,
+                        options.MonitoringIdentityType!.Value,
+                        options.MonitoringUserAssignedIdentityId,
+                        options.MonitoringSliType));
 
             context.Response.Results = ResponseResult.Create(
                 new DrillUpdateCommandResult(drill),

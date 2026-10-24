@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -55,36 +56,80 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("not-an-arm-id")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/not-a-guid")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/virtualMachines/22222222-2222-2222-2222-222222222222")]
+    public async Task ExecuteAsync_RejectsInvalidSelectedResourceId(string selectedResourceId)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup,
+            "--drill", Drill,
+            "--drill-run", DrillRun,
+            "--selected-resource-ids",
+            selectedResourceId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().ReprotectDrillRunAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ReprotectsDrillRunAndReturnsAcceptedResult()
+    [Theory]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222")]
+    public async Task ExecuteAsync_ReprotectsDrillRunAndReturnsAcceptedResult(string selectedResourceId)
     {
         Service.ReprotectDrillRunAsync(
             ServiceGroup,
             Drill,
             DrillRun,
+            Arg.Any<IEnumerable<string>?>(),
             null,
-            Arg.Any<CancellationToken>())
-            .Returns(OperationId);
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new DrillRunReprotectResult(
+                OperationId,
+                "Accepted",
+                false,
+                202,
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operationStatuses/provider-operation",
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/provider-operation"));
 
         var response = await ExecuteCommandAsync(
             "--service-group", ServiceGroup,
             "--drill", Drill,
-            "--drill-run", DrillRun);
+            "--drill-run", DrillRun,
+            "--selected-resource-ids", selectedResourceId);
 
         var result = ValidateAndDeserializeResponse(response, ResilienceManagementJsonContext.Default.DrillRunReprotectCommandResult);
         Assert.True(result.Accepted);
         Assert.Equal(DrillRun, result.DrillRun);
         Assert.Equal(OperationId, result.OperationId);
+        Assert.Equal("Accepted", result.Status);
+        Assert.False(result.HasCompleted);
+        Assert.Equal(202, result.HttpStatus);
+        Assert.Contains("operationStatuses/provider-operation", result.LocationUri);
+        Assert.Contains("operations/provider-operation", result.AzureAsyncOperationUri);
         await Service.Received(1).ReprotectDrillRunAsync(
             ServiceGroup,
             Drill,
             DrillRun,
+            Arg.Is<IEnumerable<string>?>(ids => ids != null && ids.SequenceEqual(new[] { selectedResourceId })),
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -99,8 +144,9 @@ public sealed class DrillRunReprotectCommandTests : CommandUnitTestsBase<DrillRu
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(

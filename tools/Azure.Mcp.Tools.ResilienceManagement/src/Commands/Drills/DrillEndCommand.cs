@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "d0c5ad0f-e4e8-423a-92cb-faa0af84a599",
     Name = "end",
     Title = "End Resilience Drill",
-    Description = "Ends or stops a running resilience drill in a service group. Attests the drill as Success or Failed and records attestation notes.",
+    Description = "Ends or stops a running resilience drill in a service group. Attests the drill as Success or Failed and records attestation notes. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -31,6 +31,7 @@ public sealed class DrillEndCommand(ILogger<DrillEndCommand> logger, IResilience
     public override void ValidateOptions(DrillEndOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         DrillActionValidation.ValidateResourceNames(options.ServiceGroup, options.Drill, validationResult);
         DrillActionValidation.ValidateAttestation(options.Attestation, validationResult);
     }
@@ -45,6 +46,7 @@ public sealed class DrillEndCommand(ILogger<DrillEndCommand> logger, IResilience
                 DrillActionValidation.NormalizeAttestation(options.Attestation),
                 options.AttestationNotes,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

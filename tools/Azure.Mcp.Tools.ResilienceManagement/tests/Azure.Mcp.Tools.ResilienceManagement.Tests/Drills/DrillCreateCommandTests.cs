@@ -15,7 +15,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.Drills;
 
 public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCommand, IResilienceManagementService>
 {
-    private const string ValidArgs = "--service-group sg1 --drill drill1 --subscription sub --region westus2 --resource-group rg --drill-type Zonal --rbac-setup-mode AutomatedBuiltinRoles";
+    private const string HealthModelId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.CloudHealth/healthModels/qcs";
+    private const string MonitoringArgs = " --monitoring-source-type HealthModel --monitoring-source-id " + HealthModelId + " --monitoring-identity-type SystemAssigned";
+    private const string ValidArgs = "--service-group sg1 --drill drill1 --subscription sub --region westus2 --resource-group rg --drill-type Zonal --rbac-setup-mode AutomatedBuiltinRoles" + MonitoringArgs;
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -28,7 +30,7 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
 
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--drill drill1 --subscription sub --region westus2 --drill-type Zonal --rbac-setup-mode Manual", false)]
+    [InlineData("--drill drill1 --subscription sub --region westus2 --drill-type Zonal --rbac-setup-mode Manual" + MonitoringArgs, false)]
     [InlineData("--service-group sg1 --subscription sub --region westus2 --drill-type Zonal --rbac-setup-mode Manual", false)]
     [InlineData("--service-group sg1 --drill drill1 --region westus2 --drill-type Zonal --rbac-setup-mode Manual", false)]
     [InlineData("--service-group sg1 --drill drill1 --subscription sub --drill-type Zonal --rbac-setup-mode Manual", false)]
@@ -60,6 +62,29 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
         Assert.Contains("single path segment", response.Message);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsMissingMonitoringSource()
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group sg1 --drill drill1 --subscription sub --region westus2 " +
+            "--drill-type Zonal --rbac-setup-mode Manual");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Monitoring source type", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().CreateDrillAsync(
+            default!,
+            default!,
+            default!,
+            default!,
+            default,
+            default,
+            default,
+            default,
+            default,
+            TestContext.Current.CancellationToken,
+            default);
+    }
+
     [Theory]
     [InlineData("rg(prod)")]
     [InlineData("资源组")]
@@ -74,7 +99,10 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             "--region", "westus2",
             "--resource-group", resourceGroup,
             "--drill-type", "Zonal",
-            "--rbac-setup-mode", "Manual");
+            "--rbac-setup-mode", "Manual",
+            "--monitoring-source-type", "HealthModel",
+            "--monitoring-source-id", HealthModelId,
+            "--monitoring-identity-type", "SystemAssigned");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).CreateDrillAsync(
@@ -87,7 +115,11 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             DrillRbacSetupMode.Manual,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            Arg.Is<DrillMonitoringSource>(source =>
+                source.Kind == DrillMonitoringSourceKind.HealthModel &&
+                source.ResourceId == HealthModelId &&
+                source.IdentityKind == DrillMonitoringIdentityKind.SystemAssigned));
     }
 
     [Fact]
@@ -125,7 +157,10 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             DrillRbacSetupMode.AutomatedBuiltinRoles,
             null,
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            Arg.Is<DrillMonitoringSource>(source =>
+                source.Kind == DrillMonitoringSourceKind.HealthModel &&
+                source.ResourceId == HealthModelId));
     }
 
     [Theory]
@@ -145,7 +180,8 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             Arg.Any<DrillRbacSetupMode>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<DrillMonitoringSource?>())
             .ThrowsAsync(new RequestFailedException((int)status, "Sensitive provider details"));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -167,7 +203,8 @@ public sealed class DrillCreateCommandTests : CommandUnitTestsBase<DrillCreateCo
             Arg.Any<DrillRbacSetupMode>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<DrillMonitoringSource?>())
             .Returns(new DrillInfo("id1", "drill1"));
     }
 }

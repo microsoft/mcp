@@ -33,6 +33,21 @@ public sealed class DrillCreateOptions
     [Option(Name = "recoveryplan", Description = "The optional recoveryplan name in the same service group to associate with the drill.")]
     public string? RecoveryPlan { get; set; }
 
+    [Option(Description = "The approved monitoring source type. Supported values: HealthModel, Sli.")]
+    public DrillMonitoringSourceKind? MonitoringSourceType { get; set; }
+
+    [Option(Description = "The exact ARM ID of the approved Microsoft.CloudHealth/healthModels or service-group-scoped Microsoft.Monitor/slis resource.")]
+    public string? MonitoringSourceId { get; set; }
+
+    [Option(Description = "The identity used by the drill to read the monitoring source. Supported values: SystemAssigned, UserAssigned.")]
+    public DrillMonitoringIdentityKind? MonitoringIdentityType { get; set; }
+
+    [Option(Description = "The exact user-assigned managed identity ARM ID. Required only when monitoring-identity-type is UserAssigned.")]
+    public string? MonitoringUserAssignedIdentityId { get; set; }
+
+    [Option(Description = "The selected SLI category. Supported values: Availability, Latency. Required only for an Sli monitoring source.")]
+    public DrillSliKind? MonitoringSliType { get; set; }
+
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 

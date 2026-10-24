@@ -1,5 +1,15 @@
 # Resilience Operation Workflow Recipes
 
+## Goal assignment resource operations
+
+1. Resolve the exact service group and assignment with goal assignment get. Do not reuse an ambiguous assignment.
+2. For rediscovery, call `resiliency_goal_assignment_refresh-resources` with `service-group` and `goal-assignment`. This reconciles goal resources with existing service group membership, including removal of stale goal resources; it does not modify underlying Azure resources.
+3. List goal resources, then get each selected member's details before changing participation.
+4. Call `resiliency_goal_assignment_update-resources` with a `resources` array following [payloads.md](./payloads.md#goal-assignment-resource-updates). Use the discovered goal resource ID as `id`, and its underlying Azure resource ID as `properties.resourceArmId`. Preserve desired attestation and other values. Exclusion does not delete the Azure resource; inclusion does not enroll a resource in a service group.
+5. Re-read changed goal resources to prove persistence. `Accepted` is not a completed update.
+6. To assess zonal capacity, call `resiliency_goal_assignment_recommend-capacity`; optionally supply underlying Azure `resource-ids`. Omission assesses all eligible resources. This starts asynchronous assessment, not completed recommendations.
+7. Retain the actual service operation ID when present. No polling/get-operation tool is currently exposed for these actions; do not invent completion, polling URLs, or capacity results. Report state, entitlement, or authorization blockers rather than switching execution surfaces.
+
 <!-- cspell:words reprotect reprotection -->
 
 Use these recipes after resolving the exact service group and target names. The [tool reference](./tools.md) remains authoritative for parameter spelling.
@@ -35,7 +45,27 @@ The mention of a service group supplies context for resolving a usage plan; it d
 2. For an assignment, list members with `mcp_azure_mcp_ser_resiliency_goal_resource_get`.
 3. Get individual members when full HA/DR attestation, participation, or exclusion details are needed.
 
-These tools do not create or mutate goals.
+## Create or Update a Goal Assignment
+
+1. Resolve the exact service group and plan type.
+2. For a Regional plan, call `mcp_azure_mcp_ser_resiliency_goal_assignment_create` with
+   `require-zonal-resiliency=false`, `require-regional-resiliency=true`, and both regional
+   recovery objectives.
+3. For a Zonal plan, send `require-zonal-resiliency=true` and
+   `require-regional-resiliency=false`; omit regional objectives.
+4. Get the assignment and verify the returned flags match the requested plan type before
+   refreshing or updating Goal Resources.
+
+Never use a service group ID as a goal-template placeholder. Goal Templates are legacy; current
+Goal Assignments carry explicit zonal or regional intent.
+
+## Delete a Goal Assignment
+
+1. Get the assignment with `mcp_azure_mcp_ser_resiliency_goal_assignment_get` and confirm the exact service group and assignment name.
+2. Check the assignment members with `mcp_azure_mcp_ser_resiliency_goal_resource_get` when deletion impact must be understood.
+3. Call `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` only for an explicit, unambiguous request; deletion permanently removes the assignment from the service group.
+4. Get the exact assignment again. Treat `ResourceNotFound` as confirmation that it is gone.
+5. Report `deleted: true` when the assignment was removed and `deleted: false` when it was already absent.
 
 ## Create and Configure a Drill
 
@@ -50,11 +80,11 @@ These tools do not create or mutate goals.
 ## Execute a Drill
 
 1. Get the drill and confirm it is not already running.
-2. Run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
-3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` using the intended physical source locations.
+2. Choose a canonical operation GUID and run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` with that operation ID when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
+3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` using source regions for Regional drills or physical zones for Zonal drills.
 4. Stop and report blockers when validation does not qualify the drill for execution.
 5. Ask for `Failover` versus `TestFailover` if not explicit.
-6. Start with `mcp_azure_mcp_ser_resiliency_drill_start` and retain the operation ID.
+6. Start with `mcp_azure_mcp_ser_resiliency_drill_start`, supplying a canonical operation GUID for the logical request, and retain the operation ID.
 7. Inspect runs with `mcp_azure_mcp_ser_resiliency_drill_run_get` when status is requested.
 8. Inspect run targets with `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` when per-resource results are needed.
 9. Use `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` only when the user explicitly wants to stop retries for the named active stage and allow the run to proceed.
@@ -62,7 +92,7 @@ These tools do not create or mutate goals.
 
 ## Create a Recovery Plan
 
-1. Require plan name, `Zonal` plan type, description, and identity choice.
+1. Require plan name, `Zonal` or `Regional` plan type, description, and identity choice.
 2. For `UserAssigned` or `SystemAndUserAssigned`, require the full identity ARM ID.
 3. Build group/action JSON using [payload reference](./payloads.md).
 4. Create the plan with `mcp_azure_mcp_ser_resiliency_recoveryplan_create`.

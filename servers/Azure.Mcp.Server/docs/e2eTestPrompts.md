@@ -1165,8 +1165,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, and recovery plan <recovery_plan_name> | none |
-| resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, recovery plan <recovery_plan_name>, and existing Azure Health Model <health_model_id> with the system-assigned Drill identity | none |
+| resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, manual RBAC setup, and Availability SLI <sli_id> with the system-assigned Drill identity | none |
 | resiliency_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
 | resiliency_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resiliency_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
@@ -1177,6 +1177,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
 | resiliency_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription \<subscription> and region \<region> | none |
+| resiliency_drill_update | Configure resilience drill <drill_name> in service group <service_group> to use existing Azure Health Model <health_model_id> with user-assigned identity <identity_id> | none |
 | resiliency_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | Show the resources targeted by resilience drill <drill_name> in service group <service_group> | none |
@@ -1202,7 +1203,15 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resiliency_goal_assignment_delete | Delete resilience goal assignment <goal_assignment_name> from service group <service_group> | none |
+| resiliency_goal_assignment_delete | Remove the goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
+| resiliency_goal_assignment_recommend-capacity | Recommend zonal resiliency capacity for resources in goal assignment <goal_assignment> in service group <service_group> | none |
+| resiliency_goal_assignment_recommend-capacity | Start a capacity recommendation assessment for selected Azure resource IDs under resilience goal assignment <goal_assignment> | none |
+| resiliency_goal_assignment_refresh-resources | Rediscover resources for resilience goal assignment <goal_assignment> in service group <service_group> | none |
+| resiliency_goal_assignment_refresh-resources | Refresh the resources tracked by my resilience goal assignment to pick up new service group members and remove stale members | none |
+| resiliency_goal_assignment_update-resources | Exclude a discovered resource from high availability goals in resilience goal assignment <goal_assignment> | none |
+| resiliency_goal_assignment_update-resources | Update goal resource participation and attestation for selected resources in my resilience goal assignment | none |
 | resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
@@ -1214,7 +1223,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryjob_resume | Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to rerun failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryplan_create | Create a Zonal recoveryplan named <recoveryplan_name> in service group <service_group> | clarification-required |
+| resiliency_recoveryplan_create | Create a recoveryplan named <recoveryplan_name> in service group <service_group> | clarification-required |
+| resiliency_recoveryplan_create | Create a Regional recoveryplan named <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and description <plan_description> | none |
 | resiliency_recoveryplan_create | Set up a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
 | resiliency_recoveryplan_create | Use Azure Resiliency Management recovery-plan create or update to set recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>; retain its stored Zonal plan type and recovery groups | none |

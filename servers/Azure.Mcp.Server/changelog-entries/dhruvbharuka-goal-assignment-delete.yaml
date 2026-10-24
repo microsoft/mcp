@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added a tool to delete Azure Resilience Management goal assignments from service groups.

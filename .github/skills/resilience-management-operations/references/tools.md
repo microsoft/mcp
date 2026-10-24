@@ -23,8 +23,13 @@ Usage-plan and enrollment names are 3–24 characters containing letters, number
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_goal_assignment_get` | List goal assignments or get one | **`service-group`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_goal_resource_get` | List assignment members or get one | **`service-group`**, **`goal-assignment`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_create` | Create/update an assignment with explicit plan-type intent | **`service-group`**, **`goal-assignment`**, **`require-zonal-resiliency`**, **`require-regional-resiliency`**, `regional-recovery-point-objective?`, `regional-recovery-time-objective?`, `tenant?`. Exactly one resiliency flag must be true; Regional requires both objectives. |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_delete` | Delete an assignment and wait for completion | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_refresh-resources` | Refresh assignment members | **`service-group`**, **`goal-assignment`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_goal_assignment_update-resources` | Update Goal Resource participation | **`service-group`**, **`goal-assignment`**, **`resources`**, `tenant?` |
 
-These tools are read-only. Omit `name` to list IDs and names; provide it for full details.
+Omit `name` on get to list IDs and names; provide it for full details. Current Goal Assignment
+create uses direct intent and does not accept a legacy Goal Template ID.
 
 ## Drills
 
@@ -37,10 +42,13 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | `mcp_azure_mcp_ser_resiliency_drill_start` | Start a drill execution | **`service-group`**, **`drill`**, **`mode`** (`Failover` or `TestFailover`), `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_end` | End a running drill and attest outcome | **`service-group`**, **`drill`**, **`attestation`** (`Success` or `Failed`), **`attestation-notes`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` | Resync drill configuration and start a readiness check | **`service-group`**, **`drill`**, `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` | Validate drill execution from physical source locations | **`service-group`**, **`drill`**, **`source-locations`**, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution` | Validate drill execution from source regions or physical zones | **`service-group`**, **`drill`**, **`source-locations`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_resource_get` | List drill targets or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_resource_add-or-update` | Include, update, or exclude drill resources and fault settings | **`service-group`**, **`drill`**, **`fault-duration-minutes`**, `include-resources?`, `update-resources?`, `exclude-resources?`, `force-inclusion-and-update?` (`Enable` or `Disable`), `tenant?`. Supply at least one include, update, or exclude payload. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_get` | List drill runs or get one | **`service-group`**, **`drill`**, `name?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_failover` | Start drill-run failover | **`service-group`**, **`drill`**, **`drill-run`**, **`source-locations`**, `selected-resource-ids?`, `auto-failover?`, `operation-id?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_resume` | Resume a paused drill run | **`service-group`**, **`drill`**, **`drill-run`**, `operation-id?`, `tenant?` |
+| `mcp_azure_mcp_ser_resiliency_drill_run_reprotect` | Reprotect failed-over drill resources using the `2026-10-31-preview` request-body contract | **`service-group`**, **`drill`**, **`drill-run`**, `selected-resource-ids?`, `operation-id?`, `tenant?`. The command first requires the Reprotect stage to expose `Start` or `Retry`, always sends `reprotectProperties`, and returns the exact provider `Location` and `Azure-AsyncOperation` URIs with the HTTP/completion status. Omit selected IDs only when intentionally reprotecting every eligible resource. Never synthesize an operation-status URI from `operation-id`. |
 | `mcp_azure_mcp_ser_resiliency_drill_run_mark-complete` | Mark a drill-run stage complete and disable further retries | **`service-group`**, **`drill`**, **`drill-run`**, **`stage`** (`FaultInjection`, `Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`), `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` | List run targets or get one | **`service-group`**, **`drill`**, **`drill-run`**, `name?`, `tenant?` |
 
@@ -49,7 +57,7 @@ These tools are read-only. Omit `name` to list IDs and names; provide it for ful
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_get` | List plans or get one | **`service-group`**, `name?`, `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_recoveryplan_create` | Create/update plan identity, groups, and actions | **`service-group`**, **`recoveryplan`**, **`plan-type`** (`Zonal`), **`identity-type`**, `plan-description?`, `user-assigned-identity?`, `default-group-description?`, `default-group-pre-actions?`, `default-group-post-actions?`, `additional-groups?`, `tenant?`. Creation requires a 5–50 character `plan-description`; update preserves it when omitted. |
+| `mcp_azure_mcp_ser_resiliency_recoveryplan_create` | Create/update plan identity, groups, and actions | **`service-group`**, **`recoveryplan`**, **`plan-type`** (`Zonal` or `Regional`), **`identity-type`**, `plan-description?`, `user-assigned-identity?`, `default-group-description?`, `default-group-pre-actions?`, `default-group-post-actions?`, `additional-groups?`, `tenant?`. Creation requires a 5–50 character `plan-description`; update preserves it when omitted. |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_delete` | Permanently delete a plan | **`service-group`**, **`recoveryplan`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_checkreadiness` | Check plan/resource readiness | **`service-group`**, **`recoveryplan`**, `tenant?` |
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_validateforoperation` | Run operation-level plan state/readiness/permission validation; distinct from per-resource failover qualification | **`service-group`**, **`recoveryplan`**, **`operation-name`**, `tenant?` |

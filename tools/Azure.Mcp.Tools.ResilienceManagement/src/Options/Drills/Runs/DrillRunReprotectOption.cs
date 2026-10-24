@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 
-public sealed class DrillRunReprotectOptions
+public sealed class DrillRunReprotectOptions : ResilienceManagementOperationOptions
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
@@ -16,6 +16,9 @@ public sealed class DrillRunReprotectOptions
 
     [Option(Description = "The name of the drill run whose failed-over resources will be reprotected.")]
     public required string DrillRun { get; set; }
+
+    [Option(Description = "The full ARM IDs selected for reprotection: drill resources for forward Drill stages or recovery resources for reverse stages. Omit this option to reprotect all eligible resources in the drill run.")]
+    public string[]? SelectedResourceIds { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

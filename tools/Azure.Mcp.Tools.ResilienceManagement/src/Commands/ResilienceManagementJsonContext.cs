@@ -20,9 +20,13 @@ using Azure.Mcp.Tools.ResilienceManagement.Models;
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 
 [JsonSerializable(typeof(GoalAssignmentGetCommand.GoalAssignmentGetCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentCreateCommand.GoalAssignmentCreateCommandResult))]
+[JsonSerializable(typeof(GoalAssignmentDeleteCommand.GoalAssignmentDeleteCommandResult))]
 [JsonSerializable(typeof(GoalAssignmentInfo))]
 [JsonSerializable(typeof(GoalAssignmentInfoProperties))]
+[JsonSerializable(typeof(GoalAssignmentRegionalObjectives))]
 [JsonSerializable(typeof(GoalAssignmentInfoSystemData))]
+[JsonSerializable(typeof(GoalAssignmentOperationResult))]
 [JsonSerializable(typeof(GoalResourceGetCommand.GoalResourceGetCommandResult))]
 [JsonSerializable(typeof(GoalResourceInfo))]
 [JsonSerializable(typeof(GoalResourceInfoProperties))]
@@ -59,6 +63,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands;
 [JsonSerializable(typeof(DrillRunMarkCompleteCommand.DrillRunMarkCompleteCommandResult))]
 [JsonSerializable(typeof(DrillRunMarkCompleteResult))]
 [JsonSerializable(typeof(DrillRunReprotectCommand.DrillRunReprotectCommandResult))]
+[JsonSerializable(typeof(DrillRunReprotectResult))]
 [JsonSerializable(typeof(DrillRunResourceGetCommand.DrillRunResourceGetCommandResult))]
 [JsonSerializable(typeof(DrillCheckResyncReadinessCommand.DrillCheckResyncReadinessCommandResult))]
 [JsonSerializable(typeof(DrillResyncReadinessResult))]
