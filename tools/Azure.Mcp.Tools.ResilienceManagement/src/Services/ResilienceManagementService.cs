@@ -1188,9 +1188,19 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
             {
                 while (true)
                 {
-                    Response<RecoveryPlanResource> response = await recoveryPlans.GetAsync(
-                        recoveryPlan,
-                        token);
+                    Response<RecoveryPlanResource> response;
+                    try
+                    {
+                        response = await recoveryPlans.GetAsync(
+                            recoveryPlan,
+                            token);
+                    }
+                    catch (RequestFailedException ex) when (ex.Status == 404)
+                    {
+                        await DelayRecoveryPlanPollingAsync(token);
+                        continue;
+                    }
+
                     string provisioningState = GetRecoveryPlanProvisioningState(
                         response.GetRawResponse().Content);
 
@@ -1216,12 +1226,24 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
                             $"'{provisioningState}'.");
                     }
 
-                    await Task.Delay(RecoveryPlanPollingInterval, token);
+                    await DelayRecoveryPlanPollingAsync(token);
                 }
             },
             "recoveryplan create operation",
             RecoveryPlanOperationTimeout,
             cancellationToken);
+    }
+
+    private static async Task DelayRecoveryPlanPollingAsync(CancellationToken cancellationToken)
+    {
+#if DEBUG
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            return;
+        }
+#endif
+
+        await Task.Delay(RecoveryPlanPollingInterval, cancellationToken);
     }
 
     internal static string GetRecoveryPlanProvisioningState(BinaryData responseContent)

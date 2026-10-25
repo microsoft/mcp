@@ -596,6 +596,54 @@ public sealed partial class ResilienceManagementServiceTests
         Assert.Equal(0, options.Retry.MaxRetries);
     }
 
+    [Fact]
+    public async Task CreateRecoveryPlanAsync_RetriesTemporary404WithoutResubmittingPut()
+    {
+        string? originalTestMode = Environment.GetEnvironmentVariable("TEST_MODE");
+        try
+        {
+            Environment.SetEnvironmentVariable("TEST_MODE", "Playback");
+            var handler = new RecoveryPlanProvisioningHandler();
+            var service = CreateService(handler);
+
+            RecoveryPlanInfo result = await service.CreateRecoveryPlanAsync(
+                "sg1",
+                "plan1",
+                RecoveryPlanKind.Regional,
+                "description",
+                RecoveryPlanIdentityKind.SystemAssigned,
+                cancellationToken: TestContext.Current.CancellationToken);
+
+            Assert.Equal("plan1", result.Name);
+            Assert.Equal(1, handler.PutCount);
+            Assert.Equal(2, handler.ProvisioningGetCount);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("TEST_MODE", originalTestMode);
+        }
+    }
+
+    [Fact]
+    public async Task CreateRecoveryPlanAsync_DoesNotSuppressNon404PollingFailure()
+    {
+        var handler = new RecoveryPlanProvisioningHandler(HttpStatusCode.Forbidden);
+        var service = CreateService(handler);
+
+        RequestFailedException exception = await Assert.ThrowsAsync<RequestFailedException>(
+            () => service.CreateRecoveryPlanAsync(
+                "sg1",
+                "plan1",
+                RecoveryPlanKind.Regional,
+                "description",
+                RecoveryPlanIdentityKind.SystemAssigned,
+                cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(403, exception.Status);
+        Assert.Equal(1, handler.PutCount);
+        Assert.Equal(1, handler.ProvisioningGetCount);
+    }
+
     [Theory]
     [InlineData("Creating")]
     [InlineData("Succeeded")]
@@ -2095,6 +2143,75 @@ public sealed partial class ResilienceManagementServiceTests
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new FakeTokenCredential());
         return new ResilienceManagementService(azureService);
+    }
+
+    private sealed class RecoveryPlanProvisioningHandler(
+        HttpStatusCode firstProvisioningStatus = HttpStatusCode.NotFound) : HttpMessageHandler
+    {
+        private int _getCount;
+
+        public int PutCount { get; private set; }
+        public int ProvisioningGetCount => Math.Max(0, _getCount - 1);
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                _getCount++;
+                if (_getCount == 1)
+                {
+                    return Task.FromResult(CreateResponse(HttpStatusCode.NotFound));
+                }
+
+                if (_getCount == 2)
+                {
+                    return Task.FromResult(CreateResponse(firstProvisioningStatus));
+                }
+
+                return Task.FromResult(CreateResponse(
+                    HttpStatusCode.OK,
+                    RecoveryPlanContent("Succeeded")));
+            }
+
+            Assert.Equal(HttpMethod.Put, request.Method);
+            PutCount++;
+            HttpResponseMessage response = CreateResponse(
+                HttpStatusCode.Accepted,
+                RecoveryPlanContent("Creating"));
+            response.Headers.TryAddWithoutValidation(
+                "Location",
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operationStatuses/test?api-version=2025-08-01");
+            response.Headers.TryAddWithoutValidation(
+                "Azure-AsyncOperation",
+                "https://management.azure.com/providers/Microsoft.AzureResilienceManagement/locations/westus2/operations/test?api-version=2025-08-01");
+            return Task.FromResult(response);
+        }
+
+        private static HttpResponseMessage CreateResponse(
+            HttpStatusCode statusCode,
+            string content = "{}")
+            => new(statusCode)
+            {
+                Content = new StringContent(content, Encoding.UTF8, "application/json")
+            };
+
+        private static string RecoveryPlanContent(string provisioningState)
+            => JsonSerializer.Serialize(new
+            {
+                id = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1",
+                name = "plan1",
+                type = "Microsoft.AzureResilienceManagement/recoveryPlans",
+                identity = new
+                {
+                    type = "SystemAssigned"
+                },
+                properties = new
+                {
+                    provisioningState
+                }
+            });
     }
 
     private sealed class OperationIdRecordingHandler : HttpMessageHandler
