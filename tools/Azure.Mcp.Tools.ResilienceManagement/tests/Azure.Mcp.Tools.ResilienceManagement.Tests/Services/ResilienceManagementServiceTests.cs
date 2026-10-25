@@ -753,10 +753,10 @@ public sealed partial class ResilienceManagementServiceTests
     {
         ResilienceManagementJobErrorInfo error =
             ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
-        {
-            errorCode = "NotReady",
-            errorMessage = "Resource requires attention."
-        }))!;
+            {
+                errorCode = "NotReady",
+                errorMessage = "Resource requires attention."
+            }))!;
 
         RecoveryPlanReadinessError result = Assert.IsType<RecoveryPlanReadinessError>(
             ResilienceManagementService.CreateReadinessError(error));
@@ -1106,10 +1106,10 @@ public sealed partial class ResilienceManagementServiceTests
     {
         ResilienceManagementJobErrorInfo providerError =
             ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
-        {
-            errorCode = "NotReady",
-            errorMessage = "The recoveryplan is not ready."
-        }))!;
+            {
+                errorCode = "NotReady",
+                errorMessage = "The recoveryplan is not ready."
+            }))!;
 
         RecoveryPlanReadinessError? result = ResilienceManagementService.CreateReadinessError(providerError);
 
