@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore centraluseuap privatestamp
 
 using System.ClientModel.Primitives;
 using System.Net;
@@ -136,7 +137,7 @@ public sealed partial class ResilienceManagementServiceTests
     }
 
     [Theory]
-    [InlineData("abcdefabcdefabcdefabcdefabcdefab")]
+    [InlineData("12345678901234567890123456789012")]
     [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
     [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
     [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]

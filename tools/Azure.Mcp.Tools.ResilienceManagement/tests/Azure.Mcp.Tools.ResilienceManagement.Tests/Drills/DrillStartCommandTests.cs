@@ -109,7 +109,7 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
     }
 
     [Theory]
-    [InlineData("abcdefabcdefabcdefabcdefabcdefab")]
+    [InlineData("12345678901234567890123456789012")]
     [InlineData("{abcdefab-cdef-abcd-efab-cdefabcdefab}")]
     [InlineData(" abcdefab-cdef-abcd-efab-cdefabcdefab")]
     [InlineData("abcdefab-cdef-abcd-efab-cdefabcdefab ")]

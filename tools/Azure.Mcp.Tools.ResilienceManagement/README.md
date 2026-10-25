@@ -1,6 +1,6 @@
 # Resilience Management tools
 
-## Individual Drill readback
+## Individual Drill read-back
 
 `resiliency drill get --service-group <group> --name <drill>` uses the same
 `2026-10-31-preview` parent Drill contract as creation and update. The older SDK
