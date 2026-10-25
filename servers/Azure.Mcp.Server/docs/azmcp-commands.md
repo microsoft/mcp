@@ -4559,6 +4559,10 @@ azmcp resiliency goal resource get --service-group <service-group> \
                                    [--name <name>] [--tenant <tenant>]
 ```
 
+Individual resource reads preserve provider-returned `regionalResiliency` as well as
+zonal participation. Reads and resource updates use the Regional-capable
+`2026-10-31-preview` contract; an absent Regional field is not treated as `Included`.
+
 `update-resources` accepts a non-empty JSON array of at most 1 MB. Each entry
 requires a unique underlying resource ARM ID and at least one zonal change:
 

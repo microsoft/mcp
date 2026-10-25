@@ -53,7 +53,7 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
         }
         var payload = BinaryData.FromBytes(stream.ToArray());
         var content = ModelReaderWriter.Read<UpdateGoalResourceContent>(payload, ModelReaderWriterOptions.Json, AzureResourceManagerResilienceManagementContext.Default)!;
-        var options = CreateResilienceManagementArmClientOptions();
+        var options = CreateGoalAssignmentContractArmClientOptions();
         options.AddPolicy(new GoalResourceUpdateRequestPolicy(payload), HttpPipelinePosition.PerCall);
         var client = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: options, cancellationToken: cancellationToken);
         var resource = client.GetGoalAssignmentResource(GoalAssignmentResource.CreateResourceIdentifier(serviceGroup, goalAssignment));
@@ -426,16 +426,22 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
 
     public async Task<GoalResourceInfo> GetGoalResourceAsync(string serviceGroup, string goalAssignment, string goalResource, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateResilienceManagementArmClientOptions(), cancellationToken: cancellationToken);
+        ArmClient armClient = await CreateArmClientAsync(tenantIdOrName: tenant, armClientOptions: CreateGoalAssignmentContractArmClientOptions(), cancellationToken: cancellationToken);
 
         var goalMemberId = GoalMembersResource.CreateResourceIdentifier(serviceGroup, goalAssignment, goalResource);
         Response<GoalMembersResource> response =
             await armClient.GetGoalMembersResource(goalMemberId).GetAsync(cancellationToken);
 
-        return MapGoalResource(response.Value.Data);
+        using JsonDocument document = JsonDocument.Parse(response.GetRawResponse().Content);
+        JsonElement? regionalResiliency = document.RootElement.TryGetProperty("properties", out JsonElement properties) &&
+            properties.TryGetProperty("regionalResiliency", out JsonElement regional) &&
+            regional.ValueKind == JsonValueKind.Object
+                ? regional.Clone()
+                : null;
+        return MapGoalResource(response.Value.Data, regionalResiliency);
     }
 
-    private static GoalResourceInfo MapGoalResource(GoalMembersData data)
+    private static GoalResourceInfo MapGoalResource(GoalMembersData data, JsonElement? regionalResiliency)
     {
         var props = data.Properties;
         var systemData = data.SystemData;
@@ -456,7 +462,8 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
                                 confirmation.SolutionDisplayName.ToString(),
                                 confirmation.ConfirmationStatus.ToString(),
                                 confirmation.ReasonForRequestingConfirmation?.ToString()))
-                            .ToList()));
+                            .ToList()),
+                RegionalResiliency: regionalResiliency);
 
         var mappedSystemData = systemData is null
             ? null

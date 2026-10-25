@@ -17,7 +17,8 @@ internal sealed class GoalAssignmentContractRequestPolicy(BinaryData? content = 
         if (!path.Contains(
                 "/providers/Microsoft.AzureResilienceManagement/goalAssignments/",
                 StringComparison.OrdinalIgnoreCase) ||
-            path.Contains("/goalResources", StringComparison.OrdinalIgnoreCase))
+            (path.Contains("/goalResources", StringComparison.OrdinalIgnoreCase) &&
+             message.Request.Method != RequestMethod.Get))
         {
             return;
         }

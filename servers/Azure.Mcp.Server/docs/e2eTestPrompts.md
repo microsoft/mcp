@@ -1237,11 +1237,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
+| resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_generate-report | Generate the report for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_generate-report | Regenerate the resilience drill run report for run <drill_run_name> of drill <drill_name> in service group <service_group> and show its generation status | none |
 | resiliency_drill_run_get-report-download-url | Get the download URL for the generated report of drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_get-report-download-url | Give me a link to download the HTML report for resilience drill run <drill_run_name> of drill <drill_name> in service group <service_group> | none |
-| resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
 | resiliency_goal_assignment_get | Get goal assignment <goal_assignment_name> in service group <service_group>, including its zonal resiliency requirement, service-level indicator targets, and provisioning state | none |
@@ -1259,7 +1259,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_goal_assignment_update-resources | Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience | none |
 | resiliency_goal_assignment_update-resources | In resilience goal assignment <goal_assignment_name> in service group <service_group>, confirm that I approve the ZonePinnedVmWithZrsDisk zonal resilience solution for goal resource <resource_arm_id> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
-| resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation | none |
+| resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId, zonalResiliency, and provider-returned regionalResiliency participation; do not invent Regional participation if absent | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
