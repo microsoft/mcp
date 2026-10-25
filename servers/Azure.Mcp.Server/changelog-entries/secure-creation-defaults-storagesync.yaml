@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added support for configuring the incoming traffic policy when creating Storage Sync services with `--incoming-traffic-policy`. Supported values are `AllowAllTraffic` (default) and `AllowVirtualNetworksOnly`.
