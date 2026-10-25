@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Initiates failover for a run of a resilience drill from specified Azure regions or physical Azure zones in an Azure service group. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
+    Description = "Fails over an existing resilience drill run from Azure regions or physical zones. Optional selected drill or recovery resources limit failover; auto-failover and user consent control continuation. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -54,6 +54,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         {
             validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested drill or a recovery-resource ID under a recovery plan in the requested service group, with a GUID resource name.");
         }
+
+        if (options.UserConsent is not null &&
+            !string.Equals(options.UserConsent, "Unspecified", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(options.UserConsent, "Allowed", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--user-consent must be Unspecified or Allowed.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillRunFailoverOptions options, CancellationToken cancellationToken)
@@ -67,6 +74,7 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SourceLocations,
                 options.SelectedResourceIds,
                 options.AutoFailover,
+                options.UserConsent,
                 options.Tenant,
                 ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);

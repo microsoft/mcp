@@ -1126,6 +1126,44 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 
 ### Azure Backup Operations
 
+#### Operation Status (RSV only)
+
+```bash
+# Read one asynchronous operation without polling or modifying backup.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azurebackup operation get --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --vault <vault> \
+                                --operation <operation> \
+                                [--container <container>] \
+                                [--protected-item <protected-item>] \
+                                [--fabric <fabric>] \
+                                [--tenant <tenant>]
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--operation` | Yes | Decoded opaque operation ID from an asynchronous status response header; not a job ID, URL or ARM resource ID. GUID format is not required. |
+| `--vault` | Yes | Recovery Services vault name. DPP Backup vaults are not supported; there is no `--vault-type` option. |
+| `--resource-group` | Yes | Resource group containing the vault. |
+| `--subscription` | Yes | Subscription ID or display name. |
+| `--container` | No | Decoded protection container name; requires `--protected-item`. Semicolon-delimited RSV names are supported. |
+| `--protected-item` | No | Decoded protected item name; requires `--container`. |
+| `--fabric` | No | Item-scope fabric, default `Azure`; requires both item-scope options. |
+| `--tenant` | No | Tenant ID or display name for authentication. |
+
+With neither item option, reads `vaults/{vault}/backupOperations/{operation}`. With both,
+reads `vaults/{vault}/backupFabrics/{fabric}/protectionContainers/{container}/protectedItems/{item}/operationsStatus/{operation}`.
+No arbitrary URL is accepted, and path separators, percent encoding, query/fragment delimiters and control characters are rejected in identifiers.
+
+Returns an `operation` object with `operationId`, `resourceId`, `scope` (`vault` or `protectedItem`),
+`vaultType` (`rsv`), `status`, optional `startTime`/`endTime`, safe `error` code and explanatory message,
+optional `jobId`, `jobIds`, and `failedJobsError` codes. Backend error messages and unrelated extended
+properties (including recovery scripts) are intentionally omitted. Only job IDs explicitly returned by
+Azure are exposed; missing jobs is a valid result, including after success. Operation success is not
+backup job success. Use `azurebackup job get --job <jobId>` only with an actual returned job ID.
+A missing or expired operation returns not found; it does not fall back to a vault-wide job search.
+
 #### Vault
 
 ```bash
@@ -2925,6 +2963,17 @@ azmcp deploy plan get --project-name <project-name> \
                       [--subscription <subscription>]
 ```
 
+### Azure Device Provisioning Service Operations
+
+```bash
+# Get Azure Device Provisioning Service details by service name in a specific resource group.
+# The response excludes linked-hub connection strings, authorization policies, and keys.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceprovisioning service get --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --service <device-provisioning-service-name>
+```
+
 ### Azure Device Registry Operations
 
 ```bash
@@ -3273,17 +3322,6 @@ azmcp insights get [--scope <subscription|tenant>] \
 azmcp insights get --scope tenant \
                    --query "Prioritise cost and reliability patterns" \
                    --nocache
-```
-
-### Azure Device Provisioning Service Operations
-
-```bash
-# Get Azure Device Provisioning Service details by service name in a specific resource group.
-# The response excludes linked-hub connection strings, authorization policies, and keys.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deviceprovisioning service get --subscription <subscription> \
-                                        --resource-group <resource-group> \
-                                        --service <device-provisioning-service-name>
 ```
 
 ### Azure IoT Hub Operations
@@ -3726,6 +3764,32 @@ azmcp monitor workspace log search --subscription <subscription> \
                                    --limit 50
 ```
 
+#### Ingestion
+
+```bash
+# Upload custom log data through the Logs Ingestion API using a data collection rule.
+# --data-collection-rule is the rule's immutable ID (dcr-...), --stream is the declared stream
+# (for example Custom-MyTable_CL) and --log-data is a JSON array of objects, up to 1 MB.
+# --ingestion-endpoint must be an Azure Monitor data collection endpoint (*.ingest.monitor.azure.com).
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion upload --ingestion-endpoint <ingestion-endpoint> \
+                               --data-collection-rule <data-collection-rule-id> \
+                               --stream <stream> \
+                               --log-data <log-data-json> \
+                               [--tenant <tenant>]
+
+# Validate log data before ingestion. Checks payload shape and, using the stream declared in the
+# data collection rule (looked up by --data-collection-rule NAME), column types. --stream is optional
+# when the rule declares exactly one stream. Returns errors and warnings as JSON.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion validate --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --data-collection-rule <data-collection-rule-name> \
+                                 --log-data <log-data-json> \
+                                 [--stream <stream>] \
+                                 [--tenant <tenant>]
+```
+
 #### Health Models
 
 ```bash
@@ -3861,6 +3925,76 @@ azmcp monitor webtests createorupdate --subscription <subscription> \
 azmcp monitor webtests get --subscription <subscription> \
                           [--resource-group <resource-group>] \
                           [--webtest-resource <webtest-resource-name>]
+
+```
+
+#### Traces
+
+> [!NOTE]
+> Azure Monitor Trace Store is in **private preview**. These commands only work against an Azure
+> Monitor Workspace that has been onboarded to Trace Store — `monitor traces account list` lists
+> only onboarded workspaces, and the other commands fail if the workspace publishes no trace query
+> endpoint. Reach out to the Azure Monitor team for the onboarding guide.
+> These commands support Azure public cloud only; Azure China and Azure US Government are not supported.
+
+Account list returns `accounts` and `areResultsTruncated`. If the workspace discovery query is
+truncated, the trace-enabled accounts may be incomplete; narrow the scope with `--resource-group`.
+The field, query, and cancel commands require
+`--resource-group` and `--workspace` (the Azure Monitor Workspace resource name). Names are scoped
+to a resource group; these commands look up that workspace directly rather than searching the
+subscription or accepting a Log Analytics customer-ID GUID or full ARM resource ID.
+Like `monitor workspace list`, account listing uses an optional `--resource-group` filter.
+All commands use the shared `--subscription` ID/name resolver, including its default CLI-profile
+and environment fallback behavior.
+
+`query run` requires `--query` and submits a new query. `query resume` requires `--operation-id`
+and only polls the existing operation. Both require `--resource-group` and `--workspace`.
+Run's `--max-results` and resume's `--page-size` default to 100 and are clamped to 1–1000.
+Resuming does not change the query or its submitted time range and row limit.
+Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
+If the status is `Running`, use `query resume` with the returned operation ID.
+Requested row limits are approximate; responses preserve truncation and partial-result indicators.
+Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
+
+```bash
+# List distributed-trace accounts (Azure Monitor Workspaces with Trace Store enabled) in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces account list --subscription <subscription> \
+                                  [--resource-group <resource-group>]
+
+# List the trace and span schema field names for a distributed-trace account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces field list --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --workspace <workspace>
+
+# Resume polling an existing query without submitting a new one
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query resume --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id> \
+                                  [--page-size <n>] \
+                                  [--include-spans <true|false>]
+
+# Run a KQL query; polls up to 180s, then returns `status: "Running"` and an operationId
+# Use `monitor traces query resume` with that operationId to continue polling
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query run --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --workspace <workspace> \
+                               --query <kql-query> \
+                               [--start-time <iso-8601>] \
+                               [--end-time <iso-8601>] \
+                               [--max-results <n>] \
+                               [--include-spans <true|false>]
+
+# Cancel an in-flight distributed-trace query operation
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query cancel --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --workspace <workspace> \
+                                  --operation-id <operation-id>
 
 ```
 
@@ -4323,22 +4457,144 @@ azmcp redis list --subscription <subscription>
 
 ### Azure Resilience Management Operations
 
+#### Goals: GA API contract
+
+Goals use API version `2026-10-01` through `Azure.ResourceManager.ResilienceManagement`
+`1.0.0`, requiring `Azure.Core` `1.63.0` and `System.ClientModel` `1.16.0`.
+The released SDK is available from the repository's configured `azure-sdk-for-net`
+feed; no local package or additional feed is required.
+
+Assignment names must match `^[a-zA-Z0-9-]{3,24}$`: 3-24 ASCII letters, digits, or
+hyphens. The six mutation commands reject invalid names before calling Azure.
+
+All Goals commands are service-group-scoped: use `--service-group`, the assignment
+selector, and optional `--tenant`, not `--subscription`. Assignment GET uses
+`--name`; the six mutation commands use `--goal-assignment`. Tool names join
+command groups with underscores and retain verb hyphens, for example
+`resiliency_goal_assignment_recommend-capacity`.
+
+- Assignment GET returns ID/name summaries without `--name`. Detailed GET and
+  create/update results expose `properties.requireZonalResiliency`,
+  `properties.serviceLevelResources[].serviceLevelIndicatorResourceId`, and
+  provisioning state. No goal template is required or selectable.
+- Resource GET returns ID/name summaries without `--name`. Detailed results expose
+  `properties.resourceArmId` and `properties.zonalResiliency` (participation,
+  attestation, exclusion reason, and user confirmations). Do not use legacy flat
+  HA/DR fields as the GA contract; retained compatibility fields may be null.
+- All six SDK mutation methods return untyped `ArmOperation`. Create, update, and
+  delete wait for completion with a ten-minute bound and caller cancellation.
+  Create/update then GET the hydrated assignment. Delete returns `deleted: true`
+  when removed or `false` when already absent; underlying Azure resources and the
+  service group are not deleted.
+- Create cannot replace an existing assignment; omitted service-level targets become an empty
+  list. GA PATCH cannot change `requireZonalResiliency`. Update requires exactly
+  one of a non-empty `--service-level-resource-ids` array or
+  `--clear-service-level-resources true`. It GETs the assignment and preserves its
+  zonal requirement through the SDK's real `UpdateAsync`. Clear removes only SLI
+  associations, not the SLI resources.
+- Service-level IDs must identify existing `Microsoft.Monitor/slis` resources in
+  the **same service group**, with caller read access. Service-source validation
+  permits at most one SLI per category; do not invent IDs or fixtures. Resource ID
+  lists must contain unique, complete ARM IDs and are ordinary arrays, not JSON
+  strings.
+- Recommend-capacity, refresh-resources, and update-resources return an `operation`
+  containing `serviceGroup`, `goalAssignment`, the service `operationId`, `status`
+  (`Accepted` or already-completed `Succeeded`), and `hasCompleted`. Acceptance
+  does not prove completion. A synchronously completed operation may have no ID.
+  Re-read assignment/member state when appropriate; there is no Goals operation
+  status tool. On timeout, completion is unknown; inspect state before retrying.
+
 ```bash
 # Get a resilience goal assignment, or list all goal assignments in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment get --service-group <service-group> \
-                                     [--name <name>]
+                                     [--name <name>] [--tenant <tenant>]
 
-# Delete a resilience goal assignment. Returns deleted=false when the assignment does not exist.
+# Create a goal assignment; the service requires zonal resiliency
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment create --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --require-zonal-resiliency true \
+                                        [--service-level-resource-ids <existing-sli-arm-id> ...] [--tenant <tenant>]
+
+# Replace SLI associations on an existing assignment; preserve the zonal requirement
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --service-level-resource-ids <existing-sli-arm-id> ... [--tenant <tenant>]
+
+# Alternatively clear associations, not SLI resources; never combine the two update options
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update --service-group <service-group> \
+                                        --goal-assignment <goal-assignment> \
+                                        --clear-service-level-resources true [--tenant <tenant>]
+
+# Delete only the assignment and its tracked goal members, not underlying resources
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal assignment delete --service-group <service-group> \
-                                        --goal-assignment <goal-assignment>
+                                        --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Start a capacity assessment; omit IDs to discover non-resilient resources automatically
+# Up to 50 unique underlying Azure resource ARM IDs; does not provision or resize resources
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment recommend-capacity --service-group <service-group> \
+                                                    --goal-assignment <goal-assignment> \
+                                                    [--resource-ids <arm-id> ...] [--tenant <tenant>]
+
+# Rediscover tracked members after service-group membership changes
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment refresh-resources --service-group <service-group> \
+                                                   --goal-assignment <goal-assignment> [--tenant <tenant>]
+
+# Change zonal participation, attestation, or user confirmation using a GA JSON array
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency goal assignment update-resources --service-group <service-group> \
+                                                  --goal-assignment <goal-assignment> \
+                                                  --resources '<resources-json>' [--tenant <tenant>]
 
 # Get a resource (member) of a goal assignment, or list all resources of the assignment (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency goal resource get --service-group <service-group> \
                                    --goal-assignment <goal-assignment> \
-                                   [--name <name>]
+                                   [--name <name>] [--tenant <tenant>]
+```
+
+`update-resources` accepts a non-empty JSON array of at most 1 MB. Each entry
+requires a unique underlying resource ARM ID and at least one zonal change:
+
+```json
+[
+  {
+    "properties": {
+      "resourceArmId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vm}",
+      "zonalResiliency": {
+        "goalParticipation": "Excluded",
+        "attestationStatus": "NotAttested"
+      }
+    }
+  }
+]
+```
+
+Allowed case-sensitive values:
+
+| Field inside `zonalResiliency` | Values |
+|---|---|
+| `goalParticipation` | `Included`, `Excluded` |
+| `attestationStatus` | `NotAttested`, `ManuallyAttested` |
+| `userConfirmation[].solutionDisplayName` | `ZonePinnedVmWithZrsDisk`, `VmInMultiZoneVmss` |
+| `userConfirmation[].confirmationStatus` | `ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser` |
+| `userConfirmation[].reasonForRequestingConfirmation` (optional) | `ZonePinnedZrsDataDisksConditional`, `VmInMultiZoneScaleSetStatelessOnly` |
+
+When supplied, `userConfirmation` must be non-empty; each entry requires a unique
+solution name and confirmation status. Attest manually only after verifying actual
+resilience. Unknown or duplicate fields, flat HA/DR payloads, and empty zonal
+changes are rejected. See the [payload reference](https://github.com/microsoft/mcp/blob/main/.github/skills/resilience-management-operations/references/payloads.md#goal-resource-updates-ga)
+for a user-confirmation example.
+
+#### Usage plans, drills, and recovery
+
+```bash
 
 # Get a resilience usage plan, or list usage plans (omit --name; omit --resource-group to list across the subscription)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4351,7 +4607,8 @@ azmcp resiliency usageplan get --subscription <subscription> \
 azmcp resiliency usageplan create --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --usage-plan <usage-plan> \
-                                  --plan-type <plan-type>
+                                  --plan-type <plan-type> \
+                                  [--tags '<json-object>']
 
 # Delete a resilience usage plan from a resource group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4386,20 +4643,23 @@ azmcp resiliency usageplan enrollment delete --subscription <subscription> \
 azmcp resiliency recoveryplan get --service-group <service-group> \
                                    [--name <name>]
 
-# Create or update a Zonal or Regional resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select a plan type and identity type; do not assume defaults. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
+# Create or update a Zonal resilience recoveryplan's identity, recovery group structure, and recovery group pre/post actions. Use recoveryplan resource update instead for recovery resource membership and protection settings. Ask the customer to select an identity type; do not assume SystemAssigned or another default. Identity types can switch on update, but an existing user-assigned identity cannot be replaced with a different user-assigned identity. The plan description must be 5 to 50 characters and is required on create; it is preserved when omitted on update. Additional groups and group actions are preserved when omitted and replaced when supplied.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan create --service-group <service-group> \
                                       --recoveryplan <recoveryplan> \
-                                      --plan-type <Zonal|Regional> \
+                                      --plan-type Zonal \
                                       [--plan-description <plan-description>] \
-                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned> \
+                                      --identity-type <SystemAssigned|UserAssigned|SystemAndUserAssigned|None> \
                                       [--user-assigned-identity <user-assigned-identity-resource-id>] \
                                       [--default-group-description <default-group-description>] \
+                                      [--default-group-unique-id <guid>] \
                                       [--default-group-pre-actions '<json-array>'] \
                                       [--default-group-post-actions '<json-array>'] \
                                       [--additional-groups '<json-array>']
 
-# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned.
+# Provide --user-assigned-identity when --identity-type is UserAssigned or SystemAndUserAssigned; the service supports one user-assigned identity per plan.
+# --default-group-unique-id applies only when the plan is created; the default group's orderId is always 0.
+# CustomRunbook actions accept an optional associatedIdentity object: {"type":"...","userAssignedIdentity":"<ARM ID>"}.
 # Directly replacing one user-assigned identity with another is not currently supported.
 # Additional group orderId values must be unique and sequential starting at 1. groupUniqueId is optional.
 # Additional group objects may contain preActions and postActions arrays. Default group actions use the dedicated options above.
@@ -4419,27 +4679,21 @@ azmcp resiliency recoveryplan create --service-group <service-group> \
 azmcp resiliency recoveryplan delete --service-group <service-group> \
                                       --recoveryplan <recoveryplan>
 
-# Lifecycle action examples below that show --operation-id accept a canonical caller-owned GUID.
-# Reuse that ID for the same logical request; omit it to generate a new GUID.
-
 # Start failover for qualified recoveryplan resources. Provide source locations, selected full recovery-resource IDs, or both.
-# Returns after the request is accepted with the caller operation ID, recovery job ID when
-# available, HTTP completion state, provider LRO tracking URIs, and ARM request identifiers.
+# Returns after the request is accepted with an operation ID and a recovery job ID when available.
 # Use recoveryjob get to find and monitor the job. Validate qualification and readiness first when unknown.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan failover --service-group <service-group> \
                                         --recoveryplan <recoveryplan> \
                                         [--source-locations <source-location> [<source-location> ...]] \
                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                        [--user-consent <Unspecified|Allowed>] \
-                                        [--operation-id <canonical-guid>]
+                                        [--user-consent <Unspecified|Allowed>]
 
 # Complete or finalize the current recoveryplan operation by validating resource permissions and updating plan state.
 # Returns an operation ID for tracking. This does not commit a completed failover.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan finalize --service-group <service-group> \
-                                        --recoveryplan <recoveryplan> \
-                                        [--operation-id <canonical-guid>]
+                                        --recoveryplan <recoveryplan>
 
 # Start reprotection after failover for all qualified resources, or limit it to selected full recovery-resource IDs.
 # Returns after the request is accepted with an operation ID and a recovery job ID when available.
@@ -4447,8 +4701,7 @@ azmcp resiliency recoveryplan finalize --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan reprotect --service-group <service-group> \
                                          --recoveryplan <recoveryplan> \
-                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                         [--operation-id <canonical-guid>]
+                                         [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
 
 # Validate which recoveryplan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
@@ -4457,16 +4710,14 @@ azmcp resiliency recoveryplan validateforfailover --service-group <service-group
                                                    --recoveryplan <recoveryplan> \
                                                    --source-locations <source-location> [<source-location> ...] \
                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                                   [--user-consent <Unspecified|Allowed>] \
-                                                   [--operation-id <canonical-guid>]
+                                                   [--user-consent <Unspecified|Allowed>]
 
 # Validate which recoveryplan resources are qualified for reprotect after failover.
 # Optionally limit validation to selected full recovery-resource IDs; omit them to validate all qualified resources in the plan.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan validateforreprotect --service-group <service-group> \
                                                     --recoveryplan <recoveryplan> \
-                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]] \
-                                                    [--operation-id <canonical-guid>]
+                                                    [--selected-resource-ids <recovery-resource-id> [<recovery-resource-id> ...]]
 
 # Validate whether a recoveryplan is eligible to start a specified operation based on plan support, current state, readiness, and permissions.
 # Supported operations are Failover, FailoverCommit, Reprotect, TestFailover, and TestFailoverCleanup.
@@ -4474,8 +4725,7 @@ azmcp resiliency recoveryplan validateforreprotect --service-group <service-grou
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan validateforoperation --service-group <service-group> \
                                                     --recoveryplan <recoveryplan> \
-                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup> \
-                                                    [--operation-id <canonical-guid>]
+                                                    --operation-name <Failover|FailoverCommit|Reprotect|TestFailover|TestFailoverCleanup>
 
 # Configure recoveryplan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
@@ -4484,14 +4734,12 @@ azmcp resiliency recoveryplan validateforoperation --service-group <service-grou
 azmcp resiliency recoveryplan resource update --service-group <service-group> \
                                                 --recoveryplan <recoveryplan> \
                                                 [--resources-to-update '<json-array>'] \
-                                                [--resources-to-remove '<json-array>'] \
-                                                [--operation-id <canonical-guid>]
+                                                [--resources-to-remove '<json-array>']
 
 # Discover and assess whether a recoveryplan and its protected resources are ready for recovery operations. Waits for the readiness job to finish and returns its status, errors, failed tasks, and failed resources.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan checkreadiness --service-group <service-group> \
-                                              --recoveryplan <recoveryplan> \
-                                              [--operation-id <canonical-guid>]
+                                              --recoveryplan <recoveryplan>
 
 # Get a resource (member) of a recoveryplan, or list all resources of the plan (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4509,8 +4757,7 @@ azmcp resiliency recoveryjob get --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryjob retry --service-group <service-group> \
                                    --recoveryplan <recoveryplan> \
-                                   --recoveryjob <recoveryjob> \
-                                   [--operation-id <canonical-guid>]
+                                   --recoveryjob <recoveryjob>
 
 # Resume an existing recoveryjob in the Paused state, optionally providing input for the paused action.
 # Returns after acceptance; use recoveryjob get to monitor the job.
@@ -4518,8 +4765,7 @@ azmcp resiliency recoveryjob retry --service-group <service-group> \
 azmcp resiliency recoveryjob resume --service-group <service-group> \
                                     --recoveryplan <recoveryplan> \
                                     --recoveryjob <recoveryjob> \
-                                    [--description <description>] \
-                                    [--operation-id <canonical-guid>]
+                                    [--description <description>]
 
 # Get a resource (target) of a recoveryjob, or list all resources of the job (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4529,6 +4775,8 @@ azmcp resiliency recoveryjob resource get --service-group <service-group> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
+# Parent Drill create/update and GET use the 2026-10-31-preview contract.
+# Explicit monitoring sources are validated before mutation and verified by read-back.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill create --service-group <service-group> \
                               --drill <drill> \
@@ -4536,12 +4784,18 @@ azmcp resiliency drill create --service-group <service-group> \
                               --region <region> \
                               --drill-type <drill-type> \
                               --rbac-setup-mode <rbac-setup-mode> \
-                              --monitoring-source-type <HealthModel|Sli> \
-                              --monitoring-source-id <monitoring-source-arm-id> \
-                              --monitoring-identity-type <SystemAssigned|UserAssigned> \
                               [--resource-group <resource-group>] \
-                              [--recoveryplan <recoveryplan>] \
-                              [--monitoring-user-assigned-identity-id <identity-arm-id>] \
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json>] \
+                              [--sli-monitoring-properties <json>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>] \
+                              [--monitoring-source-type <HealthModel|Sli>] \
+                              [--monitoring-source-id <arm-id>] \
+                              [--monitoring-identity-type <SystemAssigned|UserAssigned>] \
+                              [--monitoring-user-assigned-identity-id <arm-id>] \
                               [--monitoring-sli-type <Availability|Latency>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
@@ -4554,7 +4808,7 @@ azmcp resiliency drill get --service-group <service-group> \
 azmcp resiliency drill start --service-group <service-group> \
                              --drill <drill> \
                              --mode <Failover|TestFailover> \
-                             [--operation-id <canonical-guid>]
+                             [--operation-id <guid>]
 
 # End the running execution of a resilience drill and attest its outcome
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4562,20 +4816,28 @@ azmcp resiliency drill end --service-group <service-group> \
                            --drill <drill> \
                            --attestation <Success|Failed> \
                            --attestation-notes <attestation-notes> \
-                           [--operation-id <canonical-guid>]
+                           [--operation-id <guid>]
 
 # Update mutable properties of a resilience drill
+# Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
+# --resource-group must match the drill's creation-time resource group; the service rejects changes.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill update --service-group <service-group> \
                               --drill <drill> \
-                              [--subscription <subscription> --region <region>] \
+                              [--subscription <subscription> --region <region> [--resource-group <resource-group>]] \
                               [--rbac-setup-mode <AutomatedCustomRole|AutomatedBuiltinRoles|Manual>] \
-                              [--recoveryplan <recoveryplan>] \
-                              [--monitoring-source-type <HealthModel|Sli> \
-                               --monitoring-source-id <monitoring-source-arm-id> \
-                               --monitoring-identity-type <SystemAssigned|UserAssigned> \
-                               --monitoring-user-assigned-identity-id <identity-arm-id> \
-                               --monitoring-sli-type <Availability|Latency>]
+                              [--goal-assignment-properties <json>] \
+                              [--health-model-monitoring-properties <json-or-null>] \
+                              [--sli-monitoring-properties <json-or-null>] \
+                              [--identity <json>] \
+                              [--chaos-resource-properties <json>] \
+                              [--recovery-plan-properties <json>] \
+                              [--monitoring-properties <json>] \
+                              [--monitoring-source-type <HealthModel|Sli>] \
+                              [--monitoring-source-id <arm-id>] \
+                              [--monitoring-identity-type <SystemAssigned|UserAssigned>] \
+                              [--monitoring-user-assigned-identity-id <arm-id>] \
+                              [--monitoring-sli-type <Availability|Latency>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4585,15 +4847,15 @@ azmcp resiliency drill delete --service-group <service-group> \
 # Start a resync and readiness check to confirm a resilience drill is ready to run
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill check-resync-readiness --service-group <service-group> \
-                                              --drill <drill> \
-                                              [--operation-id <canonical-guid>]
+                                              --drill <drill>
 
-# Validate whether a resilience drill is eligible for execution from the specified source locations
+# Validate a resilience drill; sources may be omitted only for explicit Reprotect
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill validate-for-execution --service-group <service-group> \
                                               --drill <drill> \
-                                              --source-locations <source-locations> \
-                                              [--operation-id <canonical-guid>]
+                                              [--source-locations <source-locations>] \
+                                              [--operation-name <Failover|Reprotect|FailoverReverse|ReprotectReverse>] \
+                                              [--operation-id <guid>]
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4602,6 +4864,7 @@ azmcp resiliency drill resource get --service-group <service-group> \
                                     [--name <name>]
 
 # Add, update, or exclude the resources (targets) of a drill
+# Use drill-resource IDs under .../drills/{drill}/drillResources/{name}, not underlying VM IDs.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill resource add-or-update --service-group <service-group> \
                                               --drill <drill> \
@@ -4609,8 +4872,7 @@ azmcp resiliency drill resource add-or-update --service-group <service-group> \
                                               [--include-resources <include-resources>] \
                                               [--update-resources <update-resources>] \
                                               [--exclude-resources <exclude-resources>] \
-                                              [--force-inclusion-and-update <force-inclusion-and-update>] \
-                                              [--operation-id <canonical-guid>]
+                                              [--force-inclusion-and-update <force-inclusion-and-update>]
 
 # Get a run of a drill, or list all runs of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4623,40 +4885,50 @@ azmcp resiliency drill run get --service-group <service-group> \
 azmcp resiliency drill run add-notes --service-group <service-group> \
                                      --drill <drill> \
                                      --drill-run <drill-run> \
-                                     --notes <notes> \
-                                     [--operation-id <canonical-guid>]
+                                     --notes <notes>
 
-# Start failover for a drill run. Repeat source locations and selected resource IDs as needed.
+# Start failover for a drill run from physical source zones. Selected IDs must be full drill-resource IDs under this service group and drill.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run failover --service-group <service-group> \
                                     --drill <drill> \
                                     --drill-run <drill-run> \
                                     --source-locations <source-location> \
-                                    [--selected-resource-ids <selected-resource-id>] \
+                                    [--selected-resource-ids <drill-resource-id>] \
                                     [--auto-failover <true|false>] \
-                                    [--operation-id <canonical-guid>]
+                                    [--user-consent <Unspecified|Allowed>]
 
 # Resume a failover drill run paused after fault injection
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run resume --service-group <service-group> \
                                   --drill <drill> \
-                                  --drill-run <drill-run> \
-                                  [--operation-id <canonical-guid>]
+                                  --drill-run <drill-run>
 
 # Mark a drill run stage complete, disabling further retries on that stage
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run mark-complete --service-group <service-group> \
                                          --drill <drill> \
                                          --drill-run <drill-run> \
-                                         --stage <stage> \
-                                         [--operation-id <canonical-guid>]
+                                         --stage <stage>
 
-# Reprotect failed-over resources in a drill run
+# Reprotect all qualified failed-over resources in a drill run, or only selected recovery-resource IDs
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill run reprotect --service-group <service-group> \
                                      --drill <drill> \
                                      --drill-run <drill-run> \
-                                     [--operation-id <canonical-guid>]
+                                     [--selected-resource-ids <selected-resource-id>]
+
+# Generate or refresh the report for a drill run; a finalized report is left unchanged. Starts the operation and returns the operation ID, whether it completed, and the report summary when available; use `drill run get` to check progress.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp resiliency drill run generate-report --service-group <service-group> \
+                                           --drill <drill> \
+                                           --drill-run <drill-run>
+
+# Get a short-lived, read-only download URL for the generated report of a drill run (the URL grants access to the report)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+azmcp resiliency drill run get-report-download-url --service-group <service-group> \
+                                                   --drill <drill> \
+                                                   --drill-run <drill-run> \
+                                                   [--format <Html>]
 
 # Get a resource (target) of a drill run, or list all resources of the run (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4664,6 +4936,48 @@ azmcp resiliency drill run resource get --service-group <service-group> \
                                         --drill <drill> \
                                         --drill-run <drill-run> \
                                         [--name <name>]
+```
+
+### Azure Resiliency Agent Operations
+
+```bash
+# Get general guidance about Azure resiliency and availability zones
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent guidance get --request <request> \
+                                        [--conversation-id <conversation-id>]
+
+# Prepare one user-approved local file and return an opaque attachment ID
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent file attach --file-path <file-path>
+
+# Assess an application architecture for availability-zone resilience
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent architecture assess --request <request> \
+                                           [--attachment-ids <attachment-id>] \
+                                           [--conversation-id <conversation-id>]
+
+# Generate new resilient Bicep, ARM JSON, or Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent iac generate --request <request> \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing Bicep
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent bicep review --request <request> \
+                                    [--attachment-ids <attachment-id>] \
+                                    [--conversation-id <conversation-id>]
+
+# Review and correct existing ARM JSON
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent arm review --request <request> \
+                                  [--attachment-ids <attachment-id>] \
+                                  [--conversation-id <conversation-id>]
+
+# Review and correct existing Terraform
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent terraform review --request <request> \
+                                        [--attachment-ids <attachment-id>] \
+                                        [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations
@@ -5297,6 +5611,59 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+#### Disk Diagnostics
+
+Disk diagnostics use an Azure public cloud Storage Intelligence endpoint and application scope by
+default.
+Server operators can override them with `AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT` and
+`AZURE_MCP_STORAGE_INTELLIGENCE_SCOPE`. Each value defaults independently; operators should set the
+endpoint and application scope supplied for their Storage Intelligence deployment. Endpoint overrides
+must use HTTPS and the production host `https://storageintelligenceweb.production.portalrp.azure.com`.
+Non-production hosts are not allowlisted.
+
+No sovereign-cloud endpoint mappings are built in. Other hosts require the explicit server-start option
+`--dangerously-disable-ssrf-protections-by-namespace storage`. This disables SSRF protection for the
+entire Storage namespace; use it only for trusted operator-managed endpoints. HTTPS remains required
+for disk diagnostics even with this bypass.
+
+The optional `--tenant` accepts a Microsoft Entra tenant GUID or display name. It takes precedence over
+`AZURE_MCP_STORAGE_INTELLIGENCE_TENANT_ID` and applies consistently to attached-disk ARM lookups
+and Storage Intelligence authentication. If neither is configured, the existing credential or
+authenticated remote-caller context is used. In remote HTTP on-behalf-of mode, an explicitly selected
+tenant must match the authenticated caller's tenant; it cannot switch caller identity.
+
+Direct VM scale set selection requires the canonical nested instance resource ID:
+`/subscriptions/{subscription}/resourceGroups/{resource-group}/providers/Microsoft.Compute/virtualMachineScaleSets/{scale-set}/virtualMachines/{instance}`.
+The optional `--disk` argument accepts at most 64 attached disk names. Timestamps must use ISO 8601
+with an explicit `Z` or UTC offset, such as `2026-07-19T00:00:00Z` or
+`2026-07-19T00:00:00.1234567+05:30`. Provide `--start-time` and `--end-time` together, or omit both
+to analyze the previous 24 hours. A provisional 10 MiB client safety cap rejects larger successful
+responses with a sanitized upstream-service error. High-cardinality responses may require this cap to
+be revised after Storage Intelligence publishes or measures its maximum response size.
+Host-side latency metrics depend on Storage Intelligence telemetry support. The recorded test uses a
+`Standard_D2ds_v6` VM in `westus2` to exercise the V6 host-telemetry path.
+
+```bash
+# Diagnose VM or managed disk performance using Storage Intelligence
+# Requires the caller to be authorized for the Storage Intelligence Disk.Read scope and have Reader and Monitoring Reader access to the target resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --resource-id <vm-or-managed-disk-resource-id> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
+
+# Diagnose a VM by friendly name, optionally selecting attached disks by name
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage disk diagnose --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --vm <virtual-machine-name> \
+                            [--tenant <tenant>] \
+                            [--disk <attached-disk-name>...] \
+                            [--start-time <iso-8601-timestamp>] \
+                            [--end-time <iso-8601-timestamp>]
 ```
 
 #### Table Storage

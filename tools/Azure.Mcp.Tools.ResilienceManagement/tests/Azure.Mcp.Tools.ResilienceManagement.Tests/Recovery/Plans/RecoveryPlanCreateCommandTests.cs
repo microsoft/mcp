@@ -418,6 +418,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 groups[0].Description == "Second recovery group"),
             null,
             null,
+            null,
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -440,6 +441,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups => groups != null && groups.Count == 1),
+            null,
             null,
             null,
             Arg.Any<CancellationToken>());
@@ -488,6 +490,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 actions[0].Type == RecoveryPlanGroupActionKind.ManualAction &&
                 actions[0].TimeoutInMinutes == 30),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -542,6 +545,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Description == string.Empty),
             null,
+            null,
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -571,6 +575,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Parameters == null),
+            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));

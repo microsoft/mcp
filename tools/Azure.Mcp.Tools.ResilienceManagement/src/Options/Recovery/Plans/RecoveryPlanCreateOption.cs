@@ -25,7 +25,7 @@ public sealed class RecoveryPlanCreateOptions
 
     [Option(Description =
         "The customer-selected managed identity type for the recoveryplan. " +
-        "Supported values: SystemAssigned, UserAssigned, and SystemAndUserAssigned. " +
+        "Supported values: SystemAssigned, UserAssigned, SystemAndUserAssigned, and None. " +
         "Do not assume a default; ask the customer when they have not specified an identity type. " +
         "Specify this on every create or update; updates can switch identity types, but cannot replace an existing " +
         "user-assigned identity with a different user-assigned identity.")]
@@ -33,13 +33,17 @@ public sealed class RecoveryPlanCreateOptions
 
     [Option(Description =
         "The full resource ID of the user-assigned managed identity. " +
-        "Required when --identity-type is UserAssigned or SystemAndUserAssigned and not allowed when it is SystemAssigned. " +
+        "Required when --identity-type is UserAssigned or SystemAndUserAssigned and not allowed when it is SystemAssigned or None. " +
+        "The service supports one user-assigned identity per recoveryplan. " +
         "On update, specify the existing user-assigned identity because changing it to a different user-assigned identity " +
         "is not supported.")]
     public string? UserAssignedIdentity { get; set; }
 
     [Option(Description = "The default recovery group description, from 5 to 50 characters. On update, the existing description is preserved when omitted.")]
     public string? DefaultGroupDescription { get; set; }
+
+    [Option(Description = "Optional GUID for the default recovery group, used only when the recoveryplan is created; a GUID is generated when omitted. It cannot be changed afterward. The default group's orderId is always 0.")]
+    public string? DefaultGroupUniqueId { get; set; }
 
     [Option(Description =
         "A JSON array that replaces the default recovery group's pre-actions. " +
@@ -50,7 +54,8 @@ public sealed class RecoveryPlanCreateOptions
         "(4) timeoutInMinutes: a positive whole number defining how long the action may run; " +
         "(5) actionResourceId: required only for CustomRunbook and must be the full resource ID of a " +
         "Microsoft.Automation/automationAccounts/runbooks resource; " +
-        "(6) parameters: optional or null for CustomRunbook; when provided, it must be a JSON object whose values are strings. " +
+        "(6) parameters: optional or null for CustomRunbook; when provided, it must be a JSON object whose values are strings; " +
+        "(7) associatedIdentity: optional for CustomRunbook, the identity the runbook runs as, as {\"type\":\"None|SystemAssigned|UserAssigned|SystemAssigned, UserAssigned\",\"userAssignedIdentity\":\"<user-assigned identity ARM ID>\"}; userAssignedIdentity is required exactly when type includes UserAssigned. " +
         "ManualAction example: [{\"type\":\"ManualAction\",\"name\":\"Confirm-dependencies\",\"description\":\"Verify dependencies are ready\",\"timeoutInMinutes\":30}]. " +
         "CustomRunbook example: [{\"type\":\"CustomRunbook\",\"name\":\"Start-dependencies\",\"description\":\"Start application dependencies\",\"timeoutInMinutes\":30,\"actionResourceId\":\"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}\",\"parameters\":{\"environment\":\"production\"}}]. " +
         "Omit this option to preserve existing pre-actions; use an empty array to clear them.")]
@@ -65,7 +70,8 @@ public sealed class RecoveryPlanCreateOptions
         "(4) timeoutInMinutes: a positive whole number defining how long the action may run; " +
         "(5) actionResourceId: required only for CustomRunbook and must be the full resource ID of a " +
         "Microsoft.Automation/automationAccounts/runbooks resource; " +
-        "(6) parameters: optional or null for CustomRunbook; when provided, it must be a JSON object whose values are strings. " +
+        "(6) parameters: optional or null for CustomRunbook; when provided, it must be a JSON object whose values are strings; " +
+        "(7) associatedIdentity: optional for CustomRunbook, the identity the runbook runs as, as {\"type\":\"None|SystemAssigned|UserAssigned|SystemAssigned, UserAssigned\",\"userAssignedIdentity\":\"<user-assigned identity ARM ID>\"}; userAssignedIdentity is required exactly when type includes UserAssigned. " +
         "ManualAction example: [{\"type\":\"ManualAction\",\"name\":\"Confirm-recovery\",\"description\":\"Verify recovery completed successfully\",\"timeoutInMinutes\":30}]. " +
         "CustomRunbook example: [{\"type\":\"CustomRunbook\",\"name\":\"Validate-recovery\",\"description\":\"Run post-recovery validation\",\"timeoutInMinutes\":30,\"actionResourceId\":\"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{account}/runbooks/{runbook}\",\"parameters\":{\"environment\":\"production\"}}]. " +
         "Omit this option to preserve existing post-actions; use an empty array to clear them.")]
@@ -79,7 +85,7 @@ public sealed class RecoveryPlanCreateOptions
         "(3) groupUniqueId: optional group GUID; omit it to preserve the existing group ID at that order or generate a GUID for a new group; " +
         "(4) preActions and postActions: optional action arrays. For each action, collect type, a 3 to 24 character name " +
         "containing only letters, numbers, or hyphens, optional action instructions up to 100 characters (empty is allowed), " +
-        "positive timeoutInMinutes, and, for CustomRunbook, the Automation runbook actionResourceId and optional or null string-valued parameters. " +
+        "positive timeoutInMinutes, and, for CustomRunbook, the Automation runbook actionResourceId, optional or null string-valued parameters, and optional associatedIdentity. " +
         "ManualAction pauses for a person to complete a step; CustomRunbook runs an Azure Automation runbook. " +
         "Example: [{\"orderId\":1,\"description\":\"Application recovery group\",\"preActions\":[{\"type\":\"ManualAction\",\"name\":\"Confirm-dependencies\",\"description\":\"Verify dependencies are ready\",\"timeoutInMinutes\":30}]}]. " +
         "Omit preActions or postActions to preserve that action list; use an empty array to clear it. " +

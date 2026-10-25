@@ -44,7 +44,7 @@ public sealed class GoalAssignmentCreateService(IAzureService azureService)
         GoalAssignmentCollection goalAssignments = armClient.GetGoalAssignments(serviceGroupId);
         var data = new GoalAssignmentData
         {
-            Properties = new GoalAssignmentProperties(serviceGroupId, GoalAssignmentType.Resiliency)
+            Properties = new GoalAssignmentProperties(requireZonalResiliency)
         };
 
         ArmOperation operation = await goalAssignments.CreateOrUpdateAsync(WaitUntil.Started, goalAssignment, data, cancellationToken);

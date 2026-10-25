@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added `monitor ingestion upload` to send custom log data to Azure Monitor through the Logs Ingestion API using a data collection rule, and `monitor ingestion validate` to check log data against payload requirements and the stream schema declared by a data collection rule before ingestion.

@@ -26,6 +26,9 @@ public sealed class DrillRunFailoverOptions : ResilienceManagementOperationOptio
     [Option(Description = "Whether to proceed automatically from fault injection to failover without pausing for manual input.")]
     public bool AutoFailover { get; set; }
 
+    [Option(Description = "Optional user consent for failover: Unspecified or Allowed.")]
+    public string? UserConsent { get; set; }
+
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 }

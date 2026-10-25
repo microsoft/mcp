@@ -19,7 +19,8 @@ param healthModelsLocation string = 'swedencentral'
 var logSearchBasicTableName = 'McpBasic_CL'
 var logSearchAuxiliaryTableName = 'McpAuxiliary_CL'
 var logSearchAnalyticsTableName = 'McpAnalytics_CL'
-var logSearchDcrName = '${baseName}-log-search-dcr'
+// Direct DCR names are limited to 30 characters, so reserve 15 characters for the descriptive suffix.
+var logSearchDcrName = '${take(baseName, 15)}-log-search-dcr'
 var logSearchDestinationName = 'log-search-workspace'
 var logSearchColumns = [
   {
@@ -388,6 +389,15 @@ module healthModelsModule 'test-resources.healthmodels.module.bicep' = {
   }
 }
 
+// Trace Store uses a separate preview-supported region; keep it independent of the logs/metrics location.
+module tracesModule 'test-resources.traces.module.bicep' = {
+  name: 'traces-module'
+  params: {
+    baseName: baseName
+    testApplicationOid: testApplicationOid
+  }
+}
+
 output healthModelParentName string = healthModelsModule.outputs.healthModelAName
 output healthModelChildName string = healthModelsModule.outputs.healthModelBName
 output logSearchWorkspaceName string = workspace.name
@@ -396,5 +406,8 @@ output logSearchBasicTableName string = logSearchBasicTable.name
 output logSearchAuxiliaryTableName string = logSearchAuxiliaryTable.name
 output logSearchAnalyticsTableName string = logSearchAnalyticsTable.name
 output logSearchAuxiliaryLastPlanModifiedDate string = logSearchAuxiliaryTable.properties.lastPlanModifiedDate
+output logSearchDcrName string = logSearchDataCollectionRule.name
 output logSearchDcrImmutableId string = logSearchDataCollectionRule.properties.immutableId
 output logSearchIngestionEndpoint string = logSearchDataCollectionRule.properties.endpoints.logsIngestion
+output traceAccountName string = tracesModule.outputs.traceAccountName
+output traceAccountResourceId string = tracesModule.outputs.traceAccountResourceId

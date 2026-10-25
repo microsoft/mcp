@@ -750,7 +750,8 @@ public sealed partial class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_UsesEmptyRecommendationsWhenProviderOmitsThem()
     {
-        JobErrorInfo error = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo error =
+            ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "Resource requires attention."
@@ -1102,7 +1103,8 @@ public sealed partial class ResilienceManagementServiceTests
     [Fact]
     public void CreateReadinessError_DefaultsMissingRecommendationsToEmptyList()
     {
-        JobErrorInfo providerError = ModelReaderWriter.Read<JobErrorInfo>(BinaryData.FromObjectAsJson(new
+        ResilienceManagementJobErrorInfo providerError =
+            ModelReaderWriter.Read<ResilienceManagementJobErrorInfo>(BinaryData.FromObjectAsJson(new
         {
             errorCode = "NotReady",
             errorMessage = "The recoveryplan is not ready."
@@ -1124,7 +1126,7 @@ public sealed partial class ResilienceManagementServiceTests
             [resourceId],
             "Allowed");
 
-        Assert.Equal(FailoverDirectionTypes.FromSpecificLocations, result.FailoverDirection);
+        Assert.Equal(ResilienceManagementFailoverDirection.FromSpecificLocations, result.FailoverDirection);
         Assert.NotNull(result.FailoverRequestProperties);
         Assert.Equal(["eastus", "westus2-az3"], result.FailoverRequestProperties.SourceLocations);
         Assert.Equal(resourceId, Assert.Single(result.FailoverRequestProperties.SelectedResourceIds).ToString());

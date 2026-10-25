@@ -1,35 +1,115 @@
 # Resilience Payload Reference
 
-## Goal assignment resource updates
+<!-- cspell:words reprotect reprotection runbook slis -->
 
-`resiliency_goal_assignment_update-resources` accepts `resources` as a non-empty JSON **array**, limited to 1 MiB. It targets already discovered resources, not arbitrary additions or service group membership.
+Use JSON strings only for parameters whose tool schema requires JSON. Do not serialize ordinary scalar or array parameters manually.
+
+## Drill GA Configuration
+
+`drill create` and `drill update` accept these optional JSON-string inputs:
+
+| Option | Writable fields |
+|---|---|
+| `goal-assignment-properties` | `identity`. `goalAssignmentId` is read-only and is rejected. |
+| `health-model-monitoring-properties` | `identity`, `healthModelId` (a full `Microsoft.CloudHealth/healthmodels` ARM ID). |
+| `sli-monitoring-properties` | `identity`, `slis` (one or two selections with unique `sliId` and `type`). |
+
+Example goal identity:
+
+```json
+{"identity":{"type":"SystemAssigned"}}
+```
+
+Example Health Model selection:
+
+```json
+{
+  "identity": {"type":"SystemAssigned"},
+  "healthModelId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.CloudHealth/healthmodels/{healthModel}"
+}
+```
+
+Example SLI selection:
+
+```json
+{
+  "identity": {"type":"SystemAssigned"},
+  "slis": [
+    {
+      "sliId": "/providers/Microsoft.Management/serviceGroups/{serviceGroup}/providers/Microsoft.Monitor/slis/{sli}",
+      "type": "Availability"
+    }
+  ]
+}
+```
+
+On create, identity is required in each supplied configuration; Health Model and SLI configurations also require their selection. Identity includes `type` and optionally `userAssignedIdentity`; a user-assigned identity on create requires its full `Microsoft.ManagedIdentity/userAssignedIdentities` ARM ID. Supported identity types follow the ARM contract: `None`, `SystemAssigned`, `UserAssigned`, and `SystemAssigned, UserAssigned`.
+
+On update, omitted configurations and nested fields are preserved. Supplying `slis` replaces the entire selection; allow at most one `Availability` and one `Latency` entry, with no duplicate IDs. An empty array does not clear monitoring. To clear Health Model or SLI monitoring, use the string `"null"` as that tool option's payload (CLI: `--sli-monitoring-properties null`); the resulting ARM PATCH contains JSON null. A missing/null tool parameter is omission, not a clear operation. Goal configuration cannot be cleared using null.
+
+Each JSON option is limited to 1 MB. Unknown, duplicate, and read-only properties are rejected rather than silently discarded.
+
+## Goal Resource Updates (GA)
+
+`resiliency_goal_assignment_update-resources` takes `resources` as a JSON string
+containing a non-empty array (maximum 1 MB). Each item requires
+`properties.resourceArmId`, a unique complete underlying Azure resource ARM ID,
+and `properties.zonalResiliency` with at least one change:
 
 ```json
 [
   {
-    "id": "/providers/Microsoft.Management/serviceGroups/my-group/providers/Microsoft.AzureResilienceManagement/goalAssignments/my-assignment/goalResources/11111111-1111-1111-1111-111111111111",
     "properties": {
-      "resourceArmId": "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm",
-      "highAvailabilityGoalParticipation": "Excluded",
-      "highAvailabilityAttestationStatus": "NotAttested"
+      "resourceArmId": "/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/virtualMachines/{vm}",
+      "zonalResiliency": {
+        "goalParticipation": "Included",
+        "attestationStatus": "NotAttested",
+        "userConfirmation": [
+          {
+            "solutionDisplayName": "ZonePinnedVmWithZrsDisk",
+            "confirmationStatus": "ApprovedByUser",
+            "reasonForRequestingConfirmation": "ZonePinnedZrsDataDisksConditional"
+          }
+        ]
+      }
     }
   }
 ]
 ```
 
-Each entry requires `id`, `properties.resourceArmId`, `highAvailabilityGoalParticipation` (`Included` or `Excluded`), and `highAvailabilityAttestationStatus` (`NotAttested` or `ManuallyAttested`). IDs must be unique; goal resource IDs must belong to the selected assignment and have a GUID leaf. Copy both IDs from goal resource get; do not calculate them or substitute one for the other.
+The example's confirmation must reflect the user's actual decision; do not copy it
+as a default approval. Omit fields that are not being changed.
 
-Optional properties:
+| Field | Exact case-sensitive values |
+|---|---|
+| `goalParticipation` | `Included`, `Excluded` |
+| `attestationStatus` | `NotAttested`, `ManuallyAttested` |
+| `userConfirmation[].solutionDisplayName` | `ZonePinnedVmWithZrsDisk`, `VmInMultiZoneVmss` |
+| `userConfirmation[].confirmationStatus` | `ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser` |
+| `userConfirmation[].reasonForRequestingConfirmation` (optional) | `ZonePinnedZrsDataDisksConditional`, `VmInMultiZoneScaleSetStatelessOnly` |
 
-- `disasterRecoveryGoalParticipation`: `Included` or `Excluded`.
-- `disasterRecoveryAttestationStatus`: `NotAttested` or `ManuallyAttested`.
-- `userConfirmationForHighAvailability`: array of objects requiring `solutionDisplayName` (`ZonePinnedVmWithZrsDisk` or `VmInMultiZoneVmss`) and `confirmationStatus` (`ApprovedByUser`, `ApprovalPending`, `ApprovalNotNeeded`, `RejectedByUser`); optional `reasonForRequestingConfirmation` is `ZonePinnedZrsDataDisksConditional` or `VmInMultiZoneScaleSetStatelessOnly`. An empty array clears confirmations; omission preserves them.
+When present, `userConfirmation` must be non-empty and each entry requires a
+solution name and status; solution names cannot repeat. Unknown or duplicate
+properties, empty changes, duplicate resource IDs, and legacy flat HA/DR fields
+are rejected. Manual attestation requires verified resilience.
 
-This is **per-resource replacement, not PATCH**. Read current properties first and include all desired disaster recovery fields; omitted DR fields can be cleared. High-availability participation and attestation are explicit required choices. Only the listed writable fields are accepted, with exact casing. Exclusion reasons and memberships are system-managed by the Goals workflow, even though the older SDK exposes reason setters. Do not send them, or read-only `name`, `type`, `systemData`, and `provisioningState`. This tool uses the installed `2026-04-01-preview` SDK's flat HA/DR contract, not the newer nested `zonalResiliency` contract. Do not send `includeResources`/`excludeResources` or boolean exclusion flags from other resource APIs.
+## Goal Assignment SLI Associations
 
-<!-- cspell:words reprotect reprotection runbook -->
+Assignment create/update `service-level-resource-ids` is an ordinary string array,
+not a JSON string or the member-update payload above. Each unique complete ID must
+refer to an existing `Microsoft.Monitor/slis` resource in the same service group,
+with caller read access. Service-source validation permits at most one SLI per
+category; resolve actual resources rather than inventing IDs or fixtures.
 
-Use JSON strings only for parameters whose tool schema requires JSON. Do not serialize ordinary scalar or array parameters manually.
+Create requires `require-zonal-resiliency=true`; it cannot replace an existing assignment.
+Update takes exactly one of a non-empty `service-level-resource-ids` array or
+`clear-service-level-resources: true`. The latter removes associations only, not
+the indicators. Update GETs the assignment and preserves its zonal requirement
+through SDK `UpdateAsync`; GA PATCH cannot change `requireZonalResiliency`.
+
+Recommend-capacity `resource-ids` is also an ordinary ARM ID array, but identifies
+underlying Azure resources, not SLIs. Resource IDs may contain subscription
+segments, but Goals tools have no `subscription` option.
 
 ## Recovery Plan Actions
 
@@ -71,6 +151,7 @@ Rules:
 - `timeoutInMinutes`: positive whole number.
 - `actionResourceId`: required only for `CustomRunbook`; use a full Automation runbook resource ID.
 - `parameters`: optional or `null` for `CustomRunbook`; every value must be a string.
+- `associatedIdentity`: optional for `CustomRunbook` only; `{"type":"None|SystemAssigned|UserAssigned|SystemAssigned, UserAssigned","userAssignedIdentity":"<user-assigned identity ARM ID>"}`. `userAssignedIdentity` is required exactly when `type` includes `UserAssigned`.
 - Omit an action-list option to preserve it during update. Pass `[]` only to clear it intentionally.
 
 ### Group action behavior
@@ -159,26 +240,28 @@ Use only for `Microsoft.Compute/virtualMachines` resources with healthy Azure Si
 
 The VM must already have a discovered `AzureSiteRecovery` solution in `Protected` state. `selectedProtectionSolutionSetting` requires at least one `diskReprotectInputDetails` entry containing a `Microsoft.Compute/disks` ID and a `Microsoft.Storage/storageAccounts` staging ID, plus `testFailoverParams.networkResourceId` for a `Microsoft.Network/virtualNetworks` resource. Do not use this protection type for non-VM resources.
 
-### Azure Cosmos DB protection
-
-Use `AzureCosmosDB` only for a `Microsoft.DocumentDB/databaseAccounts` Recovery Resource that already advertises a protected `AzureCosmosDB` solution. The selected type and setting discriminators must both be `AzureCosmosDB`:
-
-```json
-{
-  "selectedProtectionSolutionType": "AzureCosmosDB",
-  "selectedProtectionSolutionSetting": {
-    "protectionSolutionType": "AzureCosmosDB"
-  }
-}
-```
-
 ### Protection choice
 
 | Protection type | Use when | Do not use when |
 |---|---|---|
 | `CustomRunbook` | Runbooks implement resource-level failover and reprotect | Only a group-level pre/post action is needed |
 | `AzureSiteRecovery` | The resource is a VM with healthy ASR protection and complete reprotect/test-failover inputs | The resource is not a VM or ASR is not `Protected` |
-| `AzureNative` | Never for an included resource in the current tool | Adding or re-including any resource |
+| `CrossZoneVMRecovery` | The resource is a zone-pinned VM with zone movement enabled (`resiliencyProfile.zoneMovement.isEnabled`, all disks ZRS) so the service detects zone-movement protection; optionally set `targetZone` and `capacityReservationGroupId` (`Microsoft.Compute/capacityReservationGroups`) | The resource is not a VM, or zone-movement protection is not detected (the service rejects the update as not protected) |
+| `AzureNative` | Never for an included resource; Recovery Orchestration rejects it | Adding or re-including any resource |
+
+## Drill Resource Inclusion and Updates
+
+`include-resources` and `update-resources` contain objects whose `id` is the full **drill-resource ID**, not the underlying VM's ARM ID:
+
+```json
+[
+  {
+    "id": "/providers/Microsoft.Management/serviceGroups/{group}/providers/Microsoft.AzureResilienceManagement/drills/{drill}/drillResources/{resource-name}"
+  }
+]
+```
+
+Use the drill-resource response's top-level `id`, not `properties.resourceId`. The resource must belong to the requested service group and drill. Optional `faultProperties` configures the fault. `exclude-resources` is an array of drill-resource ID strings, not objects, and each must also belong to the requested service group and drill. After an asynchronous update, refresh readiness before relying on the drill-level inclusion summary.
 
 ## Live-Test Scenario Checklist
 
@@ -209,4 +292,4 @@ Removal is different from exclusion. Use removal only when the user wants member
 Pass source locations and selected resource IDs as tool arrays, not JSON strings:
 
 - `source-locations`: values such as `westus2` or `westus2-az3`, supplied by the user.
-- `selected-resource-ids`: full recovery-resource IDs supplied or explicitly selected by the user.
+- `selected-resource-ids`: full drill-resource IDs under the requested service group and drill for drill-run failover; full recovery-resource IDs for drill-run reprotect and recovery-plan operations. Use IDs supplied or explicitly selected by the user.

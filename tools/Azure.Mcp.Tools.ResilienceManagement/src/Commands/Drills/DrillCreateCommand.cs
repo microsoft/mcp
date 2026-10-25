@@ -16,12 +16,11 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Name = "create",
     Title = "Create or Update Resilience Drill",
     Description = """
-        Creates, configures, or updates a resilience drill in an Azure service group. Use this tool when asked
-        to create or provision a resilience drill, including when required drill details must first be clarified.
-        Supports zonal and regional drills, system-assigned managed identity, RBAC setup, and an optional recovery
-        plan in the same service group. Requires an explicit existing Azure Health Model or service-group-scoped
-        Microsoft.Monitor SLI plus its read identity, validates the exact resources before mutation, and verifies
-        the selected monitoring source in Drill read-back. Returns the created drill definition and provisioning state.
+        Creates or updates a resilience drill in an Azure service group. Supports zonal and regional drills,
+        managed identity, RBAC setup, and the drill configuration properties supported by the service. Requires
+        an explicit existing Azure Health Model or service-group-scoped Microsoft.Monitor SLI plus its read
+        identity, validates the exact resources before mutation, and verifies the selected monitoring source
+        in Drill read-back. Clarify missing creation details first. Returns the drill definition and provisioning state.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -56,9 +55,16 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
             validationResult.Errors.Add("The resource group name must be a single path segment.");
         }
 
-        if (options.RecoveryPlan is { } recoveryPlan && recoveryPlan.Contains('/'))
+        try
         {
-            validationResult.Errors.Add("The recoveryplan name must be a single path segment.");
+            _ = DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
+                options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties);
+            _ = DrillConfiguration.ParseManagedIdentity(options.Identity);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add(ex.Message);
         }
 
         ValidateMonitoringOptions(
@@ -83,7 +89,10 @@ public sealed class DrillCreateCommand(ILogger<DrillCreateCommand> logger, IResi
                 options.ResourceGroup,
                 options.DrillType,
                 options.RbacSetupMode,
-                options.RecoveryPlan,
+                DrillConfiguration.Create(options.DrillType, options.GoalAssignmentProperties,
+                    options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
+                    options.ChaosResourceProperties, options.RecoveryPlanProperties, options.MonitoringProperties),
+                DrillConfiguration.ParseManagedIdentity(options.Identity),
                 options.Tenant,
                 cancellationToken,
                 monitoringSource: CreateMonitoringSource(options));

@@ -1,7 +1,42 @@
 # Release History
 
+## 4.0.3 (2026-10-22) (pre-release)
 
-## 4.0.1 (2026-10-15) (pre-release)
+### Added
+
+- Added the storage disk diagnose tool for Storage Intelligence disk performance and throttling analysis, with optional tenant selection and validated endpoint overrides. [[#3580](https://github.com/microsoft/mcp/pull/3580)]
+- Added the resiliency drill run generate-report tool to generate or refresh the report for a drill run and return the operation, completion state, and report summary, and the drill run get-report-download-url tool to get a short-lived, read-only download URL for the generated report. [[#4018](https://github.com/microsoft/mcp/pull/4018)]
+- Added resilience goal assignment create, update, delete, recommend-capacity, refresh-resources, and update-resources tools for service-group-scoped zonal resiliency, service-level targets, participation, attestation, and user confirmation. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
+- Exposed the remaining GA SDK request fields on existing resiliency tools: drill create/update `--identity`, `--chaos-resource-properties`, `--recovery-plan-properties`, and `--monitoring-properties` (plus `--resource-group` on update, which must match the creation-time resource group); drill run failover `--user-consent`; recoveryplan create `None` identity, `--default-group-unique-id`, and CustomRunbook action `associatedIdentity`; recoveryplan resource update `CrossZoneVMRecovery` protection; and usage plan create `--tags`. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
+- Added the `resiliencyagent` tool area with commands for general Azure resiliency guidance, application architecture assessment, resilient Bicep, ARM JSON, or Terraform generation, review of existing infrastructure-as-code, and consent-based local file attachment. The agent's clarifying questions use MCP elicitation, and generated templates and reports are returned as native MCP file resources. [[#3845](https://github.com/microsoft/mcp/pull/3845)]
+
+### Fixed
+
+- Resiliency recoveryplan resource update now reports a rejected long-running operation as a bad request with the service error code instead of surfacing the successful status of its final poll. [[#4014](https://github.com/microsoft/mcp/pull/4014)]
+
+## 4.0.2 (2026-10-20) (pre-release)
+
+### Added
+
+- Added GA goal-assignment identity, Health Model and SLI configuration to resiliency drill create/update, including sparse PATCH and explicit clearing. Drill validation accepts an optional operation selector and requires source locations except for explicit Reprotect. Reprotect supports selected recovery resources. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+### Changed
+
+- **Breaking:** Resiliency usage-plan create now accepts only the GA Standard plan type; the preview-only Basic plan type has been removed. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- **Breaking:** Removed the `--recoveryplan` option from resiliency drill create and update. The GA API treats `recoveryPlanId` as read-only, so the value was never sent; the service links the service group's recovery plan automatically. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- **Breaking:** Resiliency goal assignment get responses now return the GA requireZonalResiliency, serviceLevelResources, and errorDetails fields, and goal resource get responses return resourceArmId and zonalResiliency. The preview-only goalAssignmentType, goalTemplateId, high-availability and disaster-recovery participation/attestation/exclusion fields, and serviceGroupMemberships have been removed. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+#### Dependency Updates
+- Updated Azure.ResourceManager.ResilienceManagement to 1.0.0 and migrated existing resiliency drill, usage-plan, recovery-plan, and recovery-job operations to the GA 2026-10-01 API. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+### Fixed
+
+- Corrected drill resource include, update, and exclude inputs and examples to require drill-resource IDs rather than underlying VM IDs, and reject identifiers belonging to another drill. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Corrected drill-run failover selections to accept full drill-resource IDs under the requested service group and drill rather than recovery-resource IDs. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Drill-run reprotect now always sends a request body; without selected resources it sends empty reprotect properties, because the service does not process a reprotect request without a body. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Forward drill action operation IDs in the query as well as the header for resync readiness, validation, resource add/update, start, and end, matching the existing run-action routing. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+- Resiliency drill get, create, and update responses now include the drill's managed identity, and drill resync, validation, resource add-or-update, and run mark-complete responses always include `hasCompleted`. [[#3968](https://github.com/microsoft/mcp/pull/3968)]
+
+## 4.0.1 (2026-10-19) (pre-release)
 
 ### Added
 
@@ -12,6 +47,8 @@
 - Extended the Azure Advisor recommendation list tool to support the Azure Service Group scope (--service-group) as an alternative to the subscription scope, and added a --prioritized option that surfaces and ranks recommendations by contextual criticality score. Recommendation results now include contextual fields (criticality, criticalityScore, scoreChangedAt, savings) and the serviceGroupId identifier when present. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
 - Added Azure service-group scope to `advisor recommendation summary` while preserving existing subscription and configured-default subscription behavior. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
 - Extended the advisor recommendation update tool to update service-group-scoped recommendations. [[#3942](https://github.com/microsoft/mcp/pull/3942)]
+- Added private-preview `monitor traces` commands to query distributed traces from Azure Monitor Workspaces enabled for Trace Store: `account list`, `field list`, `query run`, `query resume`, and `query cancel`. Query calls collect results pages within bounded time and row budgets, preserving received data when resumption is needed. Consolidated mode exposes query resumption separately with non-idempotent metadata. [[#3922](https://github.com/microsoft/mcp/pull/3922)]
+- Added a read-only Azure Device Provisioning Service tool for retrieving service configuration and linked IoT Hub metadata without exposing connection strings or keys. [[#3898](https://github.com/microsoft/mcp/pull/3898)]
 
 ### Changed
 
@@ -24,6 +61,7 @@
 
 ### Fixed
 
+- Fixed PyPI wheel packaging failing with an invalid `System.Object[]` version after a shared engineering-script update. [[#3985](https://github.com/microsoft/mcp/pull/3985)]
 - Fixed Azure Backup protect, update-protection, and undelete tools returning an async operation id in the `jobId` field. The operation id is not a backup job id, so `azurebackup job get` returned 404 and the tool wasted its full job-polling budget on a non-existent job. The operation id is now surfaced in a dedicated `operationId` field, `jobId` is populated only when a real ConfigureBackup job is found, and guidance points to `azurebackup protecteditem get` for verification. [[#3838](https://github.com/microsoft/mcp/pull/3838)]
 - Prioritized and ordinary listing share the existing scope and 64-character recommendation name filters. Service Group scope matches the full canonical ARM serviceGroupId. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
 - Prioritized Advisor listing requires a recommendation type ID and uses that type's metadata category to select one instance metric in ARG. Cost types convert daily potential savings to an annual value using 12 times 30.4, fall back to annual savings, and round the selected annual score to two decimal places before sorting; missing or invalid savings sort last and zero remains valid. Other types sort by criticalityScore descending, treating missing scores as zero. Ties use effective retirement date ascending with unknown dates last, then case-insensitive resource name and recommendation ID. Both listing modes retain the same matching records, including Security and tracked recommendations. Non-prioritized ordering is unchanged. [[#3946](https://github.com/microsoft/mcp/pull/3946)]
@@ -32,6 +70,8 @@
 - Merge RSV VM policy updates into the existing policy, preserving unmentioned settings modeled by the SDK, including unmodified retention tiers, unmentioned tags, and instant recovery resource-group suffixes, subject to schedule reconciliation. Unknown wire field preservation is not guaranteed. Preserve retention times on unrelated updates and reconcile them on explicit schedule changes. Validate Daily/Hourly daily-retention and Weekly weekly-retention prerequisites, requiring explicit weekly retention before removing positive daily retention when switching to Weekly. Require effective instant recovery retention of 5 days for Standard Weekly schedule, retention, or instant recovery updates, preserving omission and allowing unrelated tags-only or time-zone-only updates. Convert explicitly supplied hourly window starts from the effective local time zone (request, existing policy, then UTC) to UTC using the deterministic 2000-01-01 baseline. Reject unknown zones and invalid or ambiguous baseline local times. Preserve omitted hourly timestamps and existing UTC behavior; Daily/Weekly time parsing is unchanged. Future seasonal DST adjustments are not calculated. Preserve comma-separated Daily/Weekly schedule times and reconcile every retention time on explicit schedule updates. Retain exception diagnostics in policy-update logs while preserving sanitized top-level Azure error messages. [[#3791](https://github.com/microsoft/mcp/pull/3791)]
 - Made Azure Backup recovery point listing resilient to malformed Azure Files recovery points. The RecoveryServicesBackup SDK could throw a UriFormatException while deserializing a single file-share recovery point, failing the entire 'azurebackup recoverypoint get' call; the service now skips the offending item and returns the remaining valid recovery points. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
 - Replaced the opaque NullReferenceException surfaced by 'azurebackup policy update' with an actionable error. The SDK can fail to materialize the updated policy from the service response for some IaaS VM policy shapes even though the change was submitted; the tool now returns a clear message directing the user to verify the policy with 'azurebackup policy get'. [[#3861](https://github.com/microsoft/mcp/pull/3861)]
+- ManagedLustre: Fix issue where defaults were not applied which would return 400 during job creation. [[#3833](https://github.com/microsoft/mcp/pull/3833)]
+- Fixed PyPI packages to launch each MCP server's configured executable instead of always using azmcp. [[#3984](https://github.com/microsoft/mcp/pull/3984)]
 
 ## 3.0.51 (2026-10-12)
 

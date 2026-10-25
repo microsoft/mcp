@@ -315,6 +315,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_operation_get | Get asynchronous operation <operation_id> at vault scope for Recovery Services vault <vault_name> in resource group <resource_group> and subscription <subscription> | none |
+| azurebackup_operation_get | Check operation <operation_id> for protected item <protected_item> in container <container> and Azure fabric of RSV vault <vault_name>, resource group <resource_group>, subscription <subscription> and tenant <tenant> | none |
+| azurebackup_operation_get | Show the status and actual job IDs, if any, for RSV operation <operation_id> in vault <vault_name>, resource group <resource_group> and subscription <subscription>; do not treat the operation ID as a job | none |
 | azurebackup_policy_create | Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_create | Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -688,6 +691,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
 
+## Azure Device Provisioning Service
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
+| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
+| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+
 ## Azure Device Registry
 
 | Tool Name | Test Prompt | Interaction |
@@ -839,14 +850,6 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | insights_get | Analyze my Azure infrastructure and surface patterns to help me plan my next project | none |
 | insights_get | Generate insights about my Azure environment to help me plan a new data analytics platform | none |
 | insights_get | What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS? | none |
-
-## Azure Device Provisioning Service
-
-| Tool Name | Test Prompt | Interaction |
-|:----------|:------------|:------------|
-| deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
-| deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
-| deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
 
 ## Azure IoT Hub
 
@@ -1087,6 +1090,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | investigation-required |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
+| monitor_ingestion_upload | Upload these log records to Azure Monitor using data collection endpoint <ingestion_endpoint>, data collection rule <dcr_immutable_id> and stream <stream_name>: <log_data_json> | none |
+| monitor_ingestion_upload | Send custom log data <log_data_json> to the Log Analytics table behind stream <stream_name> using data collection rule <dcr_immutable_id> | none |
+| monitor_ingestion_validate | Validate this log data against the schema of data collection rule <dcr_name> in resource group <resource_group> before uploading: <log_data_json> | none |
+| monitor_ingestion_validate | Check whether <log_data_json> is compliant with stream <stream_name> of data collection rule <dcr_name> in resource group <resource_group> | none |
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Use one Azure Monitor batch metrics query to compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period>; do not issue a single-resource metrics query | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |
@@ -1104,6 +1111,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
+| monitor_traces_account_list | List the distributed trace accounts in my subscription | none |
+| monitor_traces_account_list | Show me the Azure Monitor Workspaces enabled for Trace Store | none |
+| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
+| monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
+| monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
+| monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
+| monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_webtests_createorupdate | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_createorupdate | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component> | none |
 | monitor_webtests_get | Get details for the web test named <webtest_resource_name> in resource group <resource_group> | none |
@@ -1165,9 +1185,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:----------|:----------|
-| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, automated built-in roles, recovery plan <recovery_plan_name>, and existing Azure Health Model <health_model_id> with the system-assigned Drill identity | none |
-| resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, manual RBAC setup, and Availability SLI <sli_id> with the system-assigned Drill identity | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, and automated built-in roles | none |
+| resiliency_drill_create | Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup | none |
 | resiliency_drill_create | Create a resilience drill for service group <service_group> | clarification-required |
+| resiliency_drill_create | Create a zonal resilience drill in service group <service_group> with Health Model monitoring for <health_model_id> using a system-assigned identity | clarification-required |
+| resiliency_drill_create | Configure a new resilience drill with goal-assignment identity and Availability and Latency SLI monitoring | clarification-required |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and user-assigned identity <user_assigned_identity_id> for its monitoring | none |
+| resiliency_drill_create | Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and a drill-level managed identity of type user-assigned with identity <user_assigned_identity_id> | none |
 | resiliency_drill_delete | Delete resilience drill <drill_name> from service group <service_group> | none |
 | resiliency_drill_delete | Permanently remove drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_end | End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes "Validation completed" | none |
@@ -1175,9 +1199,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_get | List all resilience drills in service group <service_group> | none |
 | resiliency_drill_get | Get the details of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_update | Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup | none |
-| resiliency_drill_update | Associate recovery plan <recovery_plan_name> with resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_update | Switch resilience drill <drill_name> in service group <service_group> to the AutomatedCustomRole RBAC setup mode | none |
+| resiliency_drill_update | Change the Health Model monitored by resilience drill <drill_name> in service group <service_group> to <health_model_id> without changing its identity | none |
+| resiliency_drill_update | Clear SLI monitoring on resilience drill <drill_name> in service group <service_group> while preserving its other configuration | none |
 | resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription \<subscription> and region \<region> | none |
-| resiliency_drill_update | Configure resilience drill <drill_name> in service group <service_group> to use existing Azure Health Model <health_model_id> with user-assigned identity <identity_id> | none |
+| resiliency_drill_update | Change the Chaos resource identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Change the managed identity of resilience drill <drill_name> in service group <service_group> to system-assigned plus user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Change the monitoring identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id> | none |
+| resiliency_drill_update | Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region>, keeping its existing resource group <resource_group> | none |
 | resiliency_drill_resource_get | List all drill resources for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | List all drill targets for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_resource_get | Show the resources targeted by resilience drill <drill_name> in service group <service_group> | none |
@@ -1188,6 +1217,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
+| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | none |
+| resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> using default validation from source location <source_location> | none |
 | resiliency_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
 | resiliency_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_start | Start resilience drill <drill_name> in service group <service_group> in Failover mode | none |
@@ -1196,25 +1227,39 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_get | Get drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_add-notes | Add the note \<notes> to drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location> | none |
-| resiliency_drill_run_failover | Fail over selected resources <resource_ids> in drill run <drill_run_name> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resiliency_drill_run_failover | Start failover for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> from physical zone <source_location> and continue automatically to failover after fault injection | none |
+| resiliency_drill_run_failover | Fail over drill run <drill_run_name> from physical zone <source_location> and pause for manual input instead of automatic failover | none |
+| resiliency_drill_run_failover | Fail over selected drill-resource ARM IDs <drill_resource_ids> in drill run <drill_run_name> of drill <drill_name> in service group <service_group> from physical zones <source_locations>, and automatically continue after fault injection | none |
+| resiliency_drill_run_failover | Fail over drill run <drill_run_name> of drill <drill_name> in service group <service_group> from <source_location> with user consent allowed even though the recovery plan is not Ready | none |
 | resiliency_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resiliency_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
 | resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
+| resiliency_drill_run_generate-report | Generate the report for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_generate-report | Regenerate the resilience drill run report for run <drill_run_name> of drill <drill_name> in service group <service_group> and show its generation status | none |
+| resiliency_drill_run_get-report-download-url | Get the download URL for the generated report of drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
+| resiliency_drill_run_get-report-download-url | Give me a link to download the HTML report for resilience drill run <drill_run_name> of drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_resource_get | Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
-| resiliency_goal_assignment_delete | Delete resilience goal assignment <goal_assignment_name> from service group <service_group> | none |
-| resiliency_goal_assignment_delete | Remove the goal assignment <goal_assignment_name> in service group <service_group> | none |
 | resiliency_goal_assignment_get | List all resilience goal assignments in service group <service_group> | none |
-| resiliency_goal_assignment_recommend-capacity | Recommend zonal resiliency capacity for resources in goal assignment <goal_assignment> in service group <service_group> | none |
-| resiliency_goal_assignment_recommend-capacity | Start a capacity recommendation assessment for selected Azure resource IDs under resilience goal assignment <goal_assignment> | none |
-| resiliency_goal_assignment_refresh-resources | Rediscover resources for resilience goal assignment <goal_assignment> in service group <service_group> | none |
-| resiliency_goal_assignment_refresh-resources | Refresh the resources tracked by my resilience goal assignment to pick up new service group members and remove stale members | none |
-| resiliency_goal_assignment_update-resources | Exclude a discovered resource from high availability goals in resilience goal assignment <goal_assignment> | none |
-| resiliency_goal_assignment_update-resources | Update goal resource participation and attestation for selected resources in my resilience goal assignment | none |
-| resiliency_goal_assignment_get | Get the details of goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_assignment_get | Get goal assignment <goal_assignment_name> in service group <service_group>, including its zonal resiliency requirement, service-level indicator targets, and provisioning state | none |
+| resiliency_goal_assignment_create | Create resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and no service-level targets | none |
+| resiliency_goal_assignment_create | Create a new resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group; I have read access to it | none |
+| resiliency_goal_assignment_update | Clear all service-level indicator associations of existing goal assignment <goal_assignment_name> in service group <service_group>, preserving its zonal requirement and not deleting the indicators | none |
+| resiliency_goal_assignment_update | Replace only the service-level indicator associations of goal assignment <goal_assignment_name> in service group <service_group> with existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group, retaining its zonal requirement; I have read access to the indicator | none |
+| resiliency_goal_assignment_delete | Delete goal assignment <goal_assignment_name> from service group <service_group>, leaving its underlying Azure resources intact | none |
+| resiliency_goal_assignment_delete | Remove resilience goal assignment <goal_assignment_name> in service group <service_group> and report whether it existed or was already absent | none |
+| resiliency_goal_assignment_recommend-capacity | Recommend zonal resiliency capacity for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>, without provisioning capacity | none |
+| resiliency_goal_assignment_recommend-capacity | Start a capacity assessment for automatically discovered non-resilient resources in goal assignment <goal_assignment_name> in service group <service_group> and return the operation ID | none |
+| resiliency_goal_assignment_refresh-resources | Refresh the tracked resources of goal assignment <goal_assignment_name> in service group <service_group> after new members were added to the service group | none |
+| resiliency_goal_assignment_refresh-resources | Rediscover resources for resilience goal assignment <goal_assignment_name> in service group <service_group> after membership removals, without changing manual attestations | none |
+| resiliency_goal_assignment_update-resources | Exclude resource <resource_arm_id> from zonal goal participation in assignment <goal_assignment_name> in service group <service_group> without deleting the resource | none |
+| resiliency_goal_assignment_update-resources | Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience | none |
+| resiliency_goal_assignment_update-resources | In resilience goal assignment <goal_assignment_name> in service group <service_group>, confirm that I approve the ZonePinnedVmWithZrsDisk zonal resilience solution for goal resource <resource_arm_id> | none |
 | resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
-| resiliency_goal_resource_get | Get the goal resource <resource_name> for goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
@@ -1223,22 +1268,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryjob_resume | Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to rerun failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryplan_create | Create a recoveryplan named <recoveryplan_name> in service group <service_group> | clarification-required |
-| resiliency_recoveryplan_create | Create a Regional recoveryplan named <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and description <plan_description> | none |
+| resiliency_recoveryplan_create | Create a Zonal recoveryplan named <recoveryplan_name> in service group <service_group> | clarification-required |
 | resiliency_recoveryplan_create | Set up a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group | none |
 | resiliency_recoveryplan_create | Use Azure Resiliency Management recovery-plan create or update to set recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>; retain its stored Zonal plan type and recovery groups | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, default recovery group description <default_group_description>, and one additional recovery group described as <additional_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and plan description <plan_description>. Add manual pre-action <manual_action_name> with timeout <timeout_minutes> to the default group, and add CustomRunbook post-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> to an additional group described as <additional_group_description> | none |
 | resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default group description <default_group_description>. Add a ManualAction pre-action named <manual_action_name>, description <manual_action_description>, and timeout <timeout_minutes> to the default group | none |
-| resiliency_recoveryplan_create | Change a system-assigned recoveryplan <recoveryplan_name> in service group <service_group> to use a user-assigned managed identity | clarification-required |
+| resiliency_recoveryplan_create | Update the identity of zonal resilience recoveryplan <recoveryplan_name> in service group <service_group> from system-assigned to a user-assigned managed identity | clarification-required |
 | resiliency_recoveryplan_create | Update recoveryplan <recoveryplan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings | none |
+| resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with no managed identity and description <plan_description> | none |
+| resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default recovery group unique ID <default_group_unique_id> | none |
+| resiliency_recoveryplan_create | Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with user-assigned managed identity <user_assigned_identity_resource_id> and plan description <plan_description>. Add CustomRunbook pre-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> that runs as associated user-assigned identity <runbook_identity_resource_id> | none |
 | resiliency_recoveryplan_checkreadiness | Check whether recoveryplan <recoveryplan_name> and its protected resources are ready for recovery operations in service group <service_group> | none |
 | resiliency_recoveryplan_checkreadiness | Discover readiness issues for the resources in recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_delete | Delete the entire recoveryplan <recoveryplan_name> from service group <service_group> | none |
 | resiliency_recoveryplan_delete | Recoveryplan <recoveryplan_name> is no longer needed. Delete it from resilience service group <service_group> | none |
 | resiliency_recoveryplan_failover | Start Azure Resiliency Management recovery-plan failover for qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group>; I authorize this failover | none |
-| resiliency_recoveryplan_failover | Start qualified failover for recoveryplan <recoveryplan_name> from <source_location> in service group <service_group>, and return the HTTP status, Location, Azure-AsyncOperation, and ARM request identifiers needed to reconcile the accepted operation | none |
 | resiliency_recoveryplan_failover | Fail over recoveryplan <recoveryplan_name> in service group <service_group> without specifying source locations or recovery resources | clarification-required |
 | resiliency_recoveryplan_finalize | Complete or finalize the current recoveryplan operation for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_finalize | Finish finalizing recoveryplan <recoveryplan_name> in service group <service_group> and return the operation ID | none |
@@ -1264,11 +1310,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_resource_update | Include recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings | clarification-required |
 | resiliency_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but exclude it from recovery operations | none |
 | resiliency_recoveryplan_resource_update | Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources | none |
+| resiliency_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> using CrossZoneVMRecovery with target zone <target_zone> | none |
 | resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryplan_resource_get | Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Basic in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Set up a Basic resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
-| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Basic plan type | none |
+| resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
+| resiliency_usageplan_create | Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Standard plan type | none |
+| resiliency_usageplan_create | Create a Standard resilience usage plan <usage_plan_name> in resource group <resource_group_name> tagged env=prod | none |
 | resiliency_usageplan_delete | Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name> | none |
 | resiliency_usageplan_delete | Use Azure Resiliency Management usage-plan delete to permanently remove the entire usage plan <usage_plan_name> from resource group <resource_group_name>, not an enrollment | none |
 | resiliency_usageplan_delete | Remove the usage plan of service group <service_group> | clarification-required |
@@ -1298,6 +1346,31 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | group_resource_list | List all resources in my resource group | none |
 | group_resource_list | Show me what resources are in the resource group myRG | none |
 | group_resource_list | What resources exist in resource group myRG? | none |
+
+## Azure Resiliency Agent
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| resiliencyagent_guidance_get | What does zone resilience mean for an Azure workload? | none |
+| resiliencyagent_guidance_get | Explain the difference between resiliency, high availability, and zone redundancy in Azure | none |
+| resiliencyagent_guidance_get | How should I begin improving the resiliency of a new Azure application? | none |
+| resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` as a local attachment and return an attachment ID; do not assess the architecture yet | context-required |
+| resiliencyagent_file_attach | Prepare `C:\workspace\infra\main.bicep` for review | context-required |
+| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | none |
+| resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
+| resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
+| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | none |
+| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | none |
+| resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
+| resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
+| resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
+| resiliencyagent_bicep_review | Correct the attached Bicep without changing existing resource names, parameters, or module relationships | context-required |
+| resiliencyagent_arm_review | Review this ARM JSON for availability-zone resiliency while preserving its resource name: `{"type":"Microsoft.Web/serverfarms","apiVersion":"2024-11-01","name":"contoso-plan","location":"eastus2","sku":{"name":"P1v3"},"properties":{"zoneRedundant":false}}` | none |
+| resiliencyagent_arm_review | Review the attached ARM template and parameter file for resiliency gaps | context-required |
+| resiliencyagent_arm_review | Correct the attached ARM JSON while preserving resource names, API versions, and parameter names | context-required |
+| resiliencyagent_terraform_review | Review this Terraform for availability-zone resiliency while preserving the resource address: `resource "azurerm_service_plan" "api" { name = "contoso-plan" location = "East US 2" resource_group_name = "contoso-rg" os_type = "Linux" sku_name = "P1v3" zone_balancing_enabled = false }` | none |
+| resiliencyagent_terraform_review | Review the attached Terraform root module and local child modules for zone resiliency | context-required |
+| resiliencyagent_terraform_review | Correct the attached Terraform while preserving resource addresses, variables, and provider constraints | context-required |
 
 ## Azure Resource Health
 
@@ -1504,6 +1577,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
+| storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
+| storage_disk_diagnose | Diagnose disks attached to VM \<vm-name> in resource group \<resource-group> and subscription \<subscription> using tenant \<tenant> | none |
+| storage_disk_diagnose | Analyze managed disk \<disk-resource-id> for IOPS or throughput throttling during the last 24 hours | none |
+| storage_disk_diagnose | Diagnose disks \<disk-name-1> and \<disk-name-2> attached to VM \<vm-name> in resource group \<resource-group> | none |
+| storage_disk_diagnose | Diagnose managed disk \<disk-resource-id> and include host-side 1-second and 5-second latency signals | none |
+| storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
 

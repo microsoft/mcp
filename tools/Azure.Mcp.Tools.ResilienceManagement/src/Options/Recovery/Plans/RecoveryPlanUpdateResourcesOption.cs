@@ -22,6 +22,8 @@ public sealed class RecoveryPlanUpdateResourcesOptions : ResilienceManagementOpe
         "AzureStorageAccount requires a Microsoft.Storage/storageAccounts resource and an AzureStorageAccount protection setting. " +
         "AzureSiteRecovery requires a Microsoft.Compute/virtualMachines resource with healthy Azure Site Recovery protection and Microsoft.Compute/disks and Microsoft.Storage/storageAccounts IDs in diskReprotectInputDetails; " +
         "AzureSiteRecovery also requires testFailoverParams.networkResourceId identifying a Microsoft.Network/virtualNetworks resource. " +
+        "CrossZoneVMRecovery applies only to Microsoft.Compute/virtualMachines resources whose zone-movement protection the service has detected, and accepts optional targetZone and capacityReservationGroupId (Microsoft.Compute/capacityReservationGroups). " +
+        "AzureNative cannot be selected for an included resource. " +
         "The service preserves existing settings on sparse updates and permits only inclusionState changes while the resource is excluded. " +
         "recoveryGroupId and associatedIdentity are optional.")]
     public string? ResourcesToUpdate { get; set; }

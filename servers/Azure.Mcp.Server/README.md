@@ -94,12 +94,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{       ```
-
-Reprotect is rejected until the authoritative DrillRun exposes `Start` or `Retry` for the
-Reprotect stage. The result includes the initial HTTP/completion status and the exact `Location`
-and `Azure-AsyncOperation` response URIs. Poll only a returned URI; `operation-id` is the
-caller-owned idempotency identity and must not be used to construct an operation-status URL.json}} -->
+<!-- insert-section: vsix {{       ```json}} -->
 <!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
 <!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
 <!-- insert-section: vsix {{    }} -->
@@ -1025,6 +1020,13 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Read asynchronous operation status with `azurebackup_operation_get` (Recovery Services vaults only).
+Query vault scope, or supply both container and protected item for item scope. Operation IDs are not
+job IDs: only actual job IDs returned by Azure can be used with `azurebackup_job_get`; no job is valid.
+
+* "Get asynchronous operation 'operation-id' in RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+* "Check operation 'operation-id' for protected item 'item' in container 'container' of RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+
 Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
 
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
@@ -1153,6 +1155,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
 
+### 🔧 Azure Device Provisioning Service
+
+* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
+* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
+
 ### 📣 Azure Event Grid
 
 * "List all Event Grid topics in subscription 'my-subscription'"
@@ -1203,12 +1211,6 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Analyze my Azure infrastructure and surface patterns to help me plan my next project"
 * "Generate insights about my Azure environment to help me plan a new data analytics platform"
 * "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
-
-### 🔧 Azure Device Provisioning Service
-
-* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
-* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
-* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
 
 ### 🌐 Azure IoT Hub
 
@@ -1264,8 +1266,17 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 
 * "Query an Analytics table in my Log Analytics workspace"
 * "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
+* "Validate this log data against the schema of data collection rule 'my-dcr' in resource group 'my-rg' before uploading it"
+* "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "List the distributed trace accounts in my subscription"
+* "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+
+_Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
@@ -1353,6 +1364,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 
 ### 🔄 Azure Migrate
@@ -1363,10 +1375,24 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 
 ### 🛡️ Azure Resilience Management
 
+Goals support the GA `2026-10-01` API with nested zonal resiliency settings, not
+goal templates or flat HA/DR payloads. Commands are service-group-scoped and do
+not take a subscription option. Assignment names use 3-24 ASCII letters, digits,
+or hyphens. Assignment PATCH only replaces or clears SLI
+associations; it cannot change the zonal requirement. See the
+[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract)
+for payloads and completion semantics. The tools use the released
+`Azure.ResourceManager.ResilienceManagement` SDK `1.0.0`.
+
 * "List all resilience goal assignments in service group 'my-service-group'"
-* "Create goal assignment 'my-assignment' from goal template 'my-template' in service group 'my-service-group'"
-* "Delete resilience goal assignment 'my-assignment' from service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' in service group 'my-service-group' requiring zonal resiliency"
+* "Replace the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group' with existing Microsoft.Monitor/slis resources from that same service group, preserving its zonal requirement"
+* "Clear the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group', without deleting the indicators or changing its zonal requirement"
+* "Delete goal assignment 'my-assignment' from service group 'my-service-group' without deleting the underlying Azure resources"
+* "Recommend zonal capacity for non-resilient resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Refresh tracked resources of goal assignment 'my-assignment' in service group 'my-service-group' after membership changes"
+* "Exclude a selected resource from zonal participation in goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
 * "List all resilience recovery plans in service group 'my-service-group'"
@@ -1374,11 +1400,6 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Create a Zonal recovery plan 'my-recovery-plan' in service group 'my-service-group' with a system-assigned identity"
 * "Update recovery plan 'my-recovery-plan' in service group 'my-service-group' to use user-assigned identity '/subscriptions/my-subscription/resourceGroups/my-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/my-identity'"
 * "Include recovery resource 'my-resource' in recovery plan 'my-recovery-plan' in service group 'my-service-group' and configure its protection settings"
-
-Recovery resource inclusion validates that the selected protection solution type matches its
-solution-specific setting and the detected protected resource. Azure Service Bus namespaces use
-`AzureServiceBus` for both values and require a detected protected Service Bus solution.
-
 * "Exclude recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Remove recovery resource 'my-resource' from recovery plan 'my-recovery-plan' in service group 'my-service-group'"
 * "Delete recovery plan 'my-recovery-plan' from service group 'my-service-group' and report whether it existed"
@@ -1407,7 +1428,9 @@ solution-specific setting and the detected protected resource. Azure Service Bus
 * "Add the note 'Failover validation completed' to drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
-* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group', selecting drill resource IDs from the approved failover request"
+* "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Generate the report for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
+* "Get a download link for the report of drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1485,7 +1508,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
@@ -1493,7 +1516,8 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignment lifecycle, zonal capacity recommendations, goal resource rediscovery, participation and attestation, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🧭 **Azure Resiliency Agent** - General Azure resiliency guidance, application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
@@ -1503,7 +1527,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
-- 💾 **Azure Storage** - Blob storage
+- 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation

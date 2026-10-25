@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
+using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "90da933a-bbf3-48ec-a03b-5db38e0c0a3b",
     Name = "validate-for-execution",
     Title = "Validate Resilience Drill For Execution",
-    Description = "Validates a named resilience drill for execution from specified Azure regions or physical zones. Use this command to validate, preflight, or check drill execution readiness before running the drill. It starts validation and returns the operation ID; it does not get or list drill definitions or resources. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
+    Description = "Validates a resilience drill for execution from Azure regions or physical zones. Preflight readiness without fault injection, or validate Reprotect without sources; otherwise sources are required. Optionally select Failover, Reprotect, FailoverReverse, or ReprotectReverse. Accepts an optional caller-owned operation ID in canonical GUID format and returns the operation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -39,7 +40,17 @@ public sealed class DrillValidateForExecutionCommand(
         ValidatePathSegment(options.ServiceGroup, "--service-group", validationResult);
         ValidatePathSegment(options.Drill, "--drill", validationResult);
 
-        if (options.SourceLocations.Length == 0 || options.SourceLocations.Any(string.IsNullOrWhiteSpace))
+        if (options.OperationName is { } operation && !Enum.IsDefined(operation))
+        {
+            validationResult.Errors.Add("--operation-name must be Failover, Reprotect, FailoverReverse, or ReprotectReverse.");
+        }
+
+        if (options.OperationName != DrillExecutionOperation.Reprotect && options.SourceLocations is not { Length: > 0 })
+        {
+            validationResult.Errors.Add("--source-locations is required unless --operation-name is Reprotect.");
+        }
+        else if (options.SourceLocations is { } locations &&
+            (locations.Length == 0 || locations.Any(string.IsNullOrWhiteSpace)))
         {
             validationResult.Errors.Add("--source-locations must contain at least one non-empty location.");
         }
@@ -52,10 +63,14 @@ public sealed class DrillValidateForExecutionCommand(
     {
         try
         {
+            DrillRunTask? operationName = options.OperationName is { } operation
+                ? new DrillRunTask(operation.ToString())
+                : (DrillRunTask?)null;
             DrillValidateForExecutionResult validation = await _resilienceManagementService.ValidateDrillForExecutionAsync(
                 options.ServiceGroup,
                 options.Drill,
                 options.SourceLocations,
+                operationName,
                 options.Tenant,
                 ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);

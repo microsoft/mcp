@@ -33,6 +33,7 @@ public class ResilienceManagementSetup : IAreaSetup
 
         services.AddSingleton<GoalAssignmentGetCommand>();
         services.AddSingleton<GoalAssignmentCreateCommand>();
+        services.AddSingleton<GoalAssignmentUpdateCommand>();
         services.AddSingleton<GoalAssignmentDeleteCommand>();
         services.AddSingleton<GoalAssignmentRecommendCapacityCommand>();
         services.AddSingleton<GoalAssignmentRefreshResourcesCommand>();
@@ -91,7 +92,7 @@ public class ResilienceManagementSetup : IAreaSetup
         resilienceManagement.AddSubGroup(goals);
 
         // Create assignment subgroup under goal
-        var assignments = new CommandGroup("assignment", "Resilience goal assignment operations - Get assignments, recommend capacity, rediscover resources, and update goal resource participation.");
+        var assignments = new CommandGroup("assignment", "Resilience goal assignments - Get, create, update, delete, recommend capacity, rediscover resources, and update resource participation for Azure service groups.");
         goals.AddSubGroup(assignments);
 
         // Create resource subgroup under goal
@@ -101,6 +102,7 @@ public class ResilienceManagementSetup : IAreaSetup
         // Register commands
         assignments.AddCommand<GoalAssignmentGetCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentCreateCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentUpdateCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentDeleteCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentRecommendCapacityCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentRefreshResourcesCommand>(serviceProvider);
