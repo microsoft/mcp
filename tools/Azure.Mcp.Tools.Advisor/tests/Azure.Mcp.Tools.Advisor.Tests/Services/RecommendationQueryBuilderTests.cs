@@ -10,6 +10,36 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class RecommendationQueryBuilderTests
 {
     [Fact]
+    public void BuildInstancePredicates_SubscriptionRetainsPivotAndNameLengthRestriction()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null, includeStatus: true, useRequestedStatus: true,
+            includeCategoryAndImpact: true, resourceTypeUsesImpactedField: false,
+            scope: RecommendationQueryScope.ForSubscription("sub1", null));
+
+        Assert.Equal(
+            $"{RecommendationQueryBuilder.CurrentRecommendationNameClause} and " +
+            $"{RecommendationQueryBuilder.ServiceGroupExclusionClause} and {RecommendationQueryBuilder.ActiveRecommendationClause}",
+            result);
+        Assert.Contains("strlen(name) == 64", result);
+    }
+
+    [Fact]
+    public void BuildInstancePredicates_ServiceGroupRetainsCanonicalPivotAndNameLengthRestriction()
+    {
+        var result = RecommendationQueryBuilder.BuildInstancePredicates(
+            null, includeStatus: true, useRequestedStatus: true,
+            includeCategoryAndImpact: true, resourceTypeUsesImpactedField: false,
+            scope: RecommendationQueryScope.ForServiceGroup("sg1"));
+
+        Assert.Contains(
+            "tostring(properties.serviceGroupId) =~ '/providers/Microsoft.Management/serviceGroups/sg1'",
+            result);
+        Assert.Contains("strlen(name) == 64", result);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
+    }
+
+    [Fact]
     public void BuildInstancePredicates_NullFilters_ReturnsEngineAndActiveFilters()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(

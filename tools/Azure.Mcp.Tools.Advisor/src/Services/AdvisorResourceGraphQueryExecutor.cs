@@ -101,42 +101,39 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
                 $"No accessible tenant found for tenant ID '{tenantId}'.");
     }
 
-    internal static ResourceQueryContent CreateQueryContent(
-        RecommendationQueryScope scope,
-        string query,
-        bool useSubscriptionRequestScope)
-    {
-        ArgumentNullException.ThrowIfNull(scope);
-        ArgumentException.ThrowIfNullOrWhiteSpace(query);
-
-        var queryContent = new ResourceQueryContent(query);
-        if (useSubscriptionRequestScope)
-        {
-            if (scope.SubscriptionId is null)
-            {
-                throw new ArgumentException(
-                    "Subscription request scope cannot be used for a service-group query.",
-                    nameof(useSubscriptionRequestScope));
-            }
-
-            queryContent.Subscriptions.Add(scope.SubscriptionId);
-        }
-
-        return queryContent;
-    }
-
+    /// <summary>Runs <paramref name="query"/> at tenant scope; the query's own predicates select the subscription or service group.</summary>
     internal static async Task<ResourceQueryResult> ExecuteAsync(
         TenantResource tenantResource,
-        RecommendationQueryScope scope,
         string query,
-        bool useSubscriptionRequestScope,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tenantResource);
+        ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
-        var response = await tenantResource.GetResourcesAsync(
-            CreateQueryContent(scope, query, useSubscriptionRequestScope),
-            cancellationToken);
+        var response = await tenantResource.GetResourcesAsync(new ResourceQueryContent(query), cancellationToken);
+        var limitHit = response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
+            ? value
+            : null;
+        EnsureFullTenantCoverage(limitHit);
         return response.Value;
+    }
+
+    /// <summary>
+    /// Response header Azure Resource Graph sets to <c>true</c> when a tenant-scope query covered only the first 10,000
+    /// accessible subscriptions.
+    /// </summary>
+    internal const string TenantSubscriptionLimitHitHeader = "x-ms-tenant-subscription-limit-hit";
+
+    /// <summary>
+    /// Rejects a tenant-scope result that did not cover every accessible subscription. The KQL predicates cannot recover a
+    /// subscription that was left out of the query scope, so a partial result would be reported as a complete total.
+    /// </summary>
+    internal static void EnsureFullTenantCoverage(string? tenantSubscriptionLimitHit)
+    {
+        if (bool.TryParse(tenantSubscriptionLimitHit, out var limitHit) && limitHit)
+        {
+            throw new InvalidOperationException(
+                "Azure Resource Graph evaluated only the first 10,000 accessible subscriptions in the tenant, so the summary would be incomplete. Retry with an identity that has access to fewer subscriptions.");
+        }
     }
 }

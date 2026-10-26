@@ -20,14 +20,9 @@ namespace Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
                   "Provide --service-group (name only, not an ARM ID) for one Service Group; when omitted, all accessible Service Groups are returned. " +
                   "Filter by --criticality (MissionCritical = Tier 0, BusinessCritical = Tier 1, BusinessOperational = Tier 2, Administrative = Tier 3) and by --status (On Track, Attention Needed, At Risk, Critical, Unavailable); map any status or tier named in the question to these filters. " +
                   "Cap results with --top (default 50, max 500). " +
-                  "Each result returns the Service Group name and ID, criticality, status, status description, a description of where to focus, and last updated time. " +
-                  "Present the status description and focus description exactly as returned, without rewording. " +
-                  "If asked how status is calculated, answer: Azure Advisor considers the proportion of applicable resources affected by active recommendations across Zonal Resiliency, Cost Optimization, and Service Retirement, not just the number of recommendations. " +
-                  "Higher-priority recommendation types have greater influence, and the results are combined into the overall Status. " +
-                  "Only applicable areas with available data contribute. " +
-                  "The Description, when available, identifies where to focus. " +
-                  "Supporting Insight counts do not by themselves determine Status or predict how much it will improve. " +
-                  "For aggregated KPIs such as idle resources or zonal resiliency use advisor insight list instead.",
+                  "Each result returns the Service Group name and ID, criticality, status, status description, focus description, and last updated time. " +
+                  "Present the status and focus descriptions exactly as returned, without rewording. " +
+                  "For questions about how status is calculated, use the statusCalculationExplanation field returned by this tool; do not infer a formula from the results. ",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -43,6 +38,11 @@ public sealed class ServiceGroupIntelligenceGetCommand(
     private const int MinTop = 1;
     private const int MaxTop = 500;
     private const int DefaultTop = 50;
+    private const string StatusCalculationExplanation =
+        "Azure Advisor considers the proportion of applicable resources affected by active recommendations " +
+        "across Zonal Resiliency, Cost Optimization, and Service Retirement, weighted by recommendation-type priority. " +
+        "Only applicable areas with available data contribute. " +
+        "Insight counts alone do not determine the overall status or predict improvement.";
 
     private readonly ILogger<ServiceGroupIntelligenceGetCommand> _logger = logger;
     private readonly IAdvisorServiceGroupIntelligenceService _service = service;
@@ -113,7 +113,7 @@ public sealed class ServiceGroupIntelligenceGetCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(results.Results, results.AreResultsTruncated),
+                new(results.Results, results.AreResultsTruncated, StatusCalculationExplanation),
                 AdvisorJsonContext.Default.ServiceGroupIntelligenceGetResult);
         }
         catch (Exception ex)
@@ -150,5 +150,8 @@ public sealed class ServiceGroupIntelligenceGetCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record ServiceGroupIntelligenceGetResult(List<AdvisorServiceGroupStatus> ServiceGroups, bool AreResultsTruncated);
+    public sealed record ServiceGroupIntelligenceGetResult(
+        List<AdvisorServiceGroupStatus> ServiceGroups,
+        bool AreResultsTruncated,
+        string StatusCalculationExplanation);
 }

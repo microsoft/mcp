@@ -107,10 +107,10 @@
 # ServiceOwners:                       @conniey
 
 # PRLabel: %tools-Advisor
-/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @ravigupta99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Advisor
-# ServiceOwners:                       @ankiga-MSFT
+# ServiceOwners:                       @ankiga-MSFT @ravigupta99
 
 # PRLabel: %tools-ADME
 /tools/Azure.Mcp.Tools.Adme/           @aysriva @microsoft/azure-mcp
@@ -240,6 +240,12 @@
 
 # ServiceLabel: %tools-Deploy
 # ServiceOwners:                       @qianwens @xfz11 @wchigit
+
+# PRLabel: %tools-DeviceProvisioning
+/tools/Azure.Mcp.Tools.DeviceProvisioning/ @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceProvisioning
+# ServiceOwners:                           @microsoft/azure-mcp
 
 # PRLabel: %tools-DeviceRegistry
 /tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
@@ -400,6 +406,12 @@
 
 # ServiceLabel: %tools-ResilienceManagement
 # ServiceOwners:                                @g2vinay @gautam714
+
+# PRLabel: %tools-ResiliencyAgent
+/tools/Azure.Mcp.Tools.ResiliencyAgent/    @psaswata @viveksheelsingh @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResiliencyAgent
+# ServiceOwners:                           @psaswata @viveksheelsingh
 
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp

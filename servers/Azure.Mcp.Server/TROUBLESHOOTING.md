@@ -1188,6 +1188,22 @@ export AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS=true
 
 ### Common Issues
 
+#### 401 Unauthorized - Missing incoming authentication configuration
+
+**Causes:** Missing incoming authentication settings, resulting in `IDX10204` errors or an empty tenant in OAuth metadata (`https://login.microsoftonline.com//v2.0`).
+
+**Resolution:** Set these environment variables on the server container, then restart:
+
+| Environment variable | Value |
+|---|---|
+| `AzureAd__Instance` | `https://login.microsoftonline.com/` (use your cloud's login endpoint for sovereign clouds). |
+| `AzureAd__TenantId` | The MCP server app registration's tenant ID. |
+| `AzureAd__ClientId` | The MCP server app registration's client ID, not the managed identity's client ID. |
+
+**Important:** `AZURE_TENANT_ID` and `AZURE_CLIENT_ID` do not configure incoming authentication. Keep incoming authentication enabled.
+
+**Setup reference:** [Container configuration](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/infra/modules/aca-infrastructure.bicep#L98) and [app registration](https://github.com/Azure-Samples/azmcp-foundry-aca-mi/blob/main/infra/modules/entra-app.bicep). The incoming-auth settings also apply to AKS.
+
 #### 401 Unauthorized - Invalid Token
 
 **Causes:** Token expired, wrong audience, or missing bearer token.

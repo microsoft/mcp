@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
 using Azure.Mcp.Tools.Advisor.Models;
@@ -66,6 +67,12 @@ public class ServiceGroupIntelligenceGetCommandTests
         var response = await ExecuteCommandAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(response.Results));
+        var result = document.RootElement;
+        Assert.Empty(result.GetProperty("serviceGroups").EnumerateArray());
+        Assert.False(result.GetProperty("areResultsTruncated").GetBoolean());
+        Assert.Contains("weighted by recommendation-type priority",
+            result.GetProperty("statusCalculationExplanation").GetString());
         await Service.Received(1).GetStatusAsync(
             null, null, null, 50, null, Arg.Any<CancellationToken>());
     }

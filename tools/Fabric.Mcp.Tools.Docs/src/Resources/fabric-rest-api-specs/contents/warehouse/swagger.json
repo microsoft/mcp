@@ -381,14 +381,14 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/warehouses/sqlPoolsConfiguration?beta=true": {
+    "/workspaces/{workspaceId}/warehouses/sqlPoolsConfiguration": {
       "get": {
-        "summary": "Gets the SQL Pools configuration in the specified workspace (beta).",
-        "description": "> [!NOTE]\n> SQL Pools configuration is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. **When calling this API, callers must specify `true` as the value for the query parameter `beta`\n\n## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Gets the SQL Pools configuration in the specified workspace.",
+        "description": "## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "SQLPools"
         ],
-        "operationId": "SQLPools_Get_Sql_Pools_Configuration_(beta)",
+        "operationId": "SQLPools_GetSQLPoolsConfiguration",
         "produces": [
           "application/json"
         ],
@@ -400,13 +400,6 @@
             "required": true,
             "type": "string",
             "format": "uuid"
-          },
-          {
-            "in": "query",
-            "name": "beta",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
-            "type": "boolean",
-            "required": true
           }
         ],
         "responses": {
@@ -437,18 +430,18 @@
           }
         },
         "x-ms-examples": {
-          "Get SQL Pools (Beta) example": {
+          "Get SQL Pools example": {
             "$ref": "./examples/GetSqlPools.json"
           }
         }
       },
       "patch": {
-        "summary": "Updates the SQL Pools configuration in the specified workspace (beta).",
-        "description": "> [!NOTE]\n> SQL Pools configuration is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. **When calling this API, callers must specify `true` as the value for the query parameter `beta`.\n\n## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Updates the SQL Pools configuration in the specified workspace.",
+        "description": "## Permissions\n\nThe caller must have admin workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "SQLPools"
         ],
-        "operationId": "SQLPools_Update_Sql_Pools_Configuration_(beta)",
+        "operationId": "SQLPools_UpdateSQLPoolsConfiguration",
         "consumes": [
           "application/json"
         ],
@@ -472,13 +465,6 @@
             "schema": {
               "$ref": "./definitions.json#/definitions/UpdateSQLPoolsConfigurationRequest"
             }
-          },
-          {
-            "in": "query",
-            "name": "beta",
-            "description": "This required parameter must be set to `true` to access this API, which is currently in beta.",
-            "type": "boolean",
-            "required": true
           }
         ],
         "responses": {
@@ -506,13 +492,13 @@
           }
         },
         "x-ms-examples": {
-          "Enable SQL Pools and setup pools' configuration (beta) example": {
+          "Enable SQL Pools and setup pools' configuration example": {
             "$ref": "./examples/CreateSqlPools.json"
           },
-          "Update SQL Pools (beta) example": {
+          "Update SQL Pools example": {
             "$ref": "./examples/UpdateSqlPools.json"
           },
-          "Disable SQL Pools and delete all existing pools (beta) example": {
+          "Disable SQL Pools and delete all existing pools example": {
             "$ref": "./examples/DeleteSqlPools.json"
           }
         }
