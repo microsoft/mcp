@@ -69,11 +69,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             }
             catch (RequestFailedException ex)
             {
-                throw new RequestFailedException(
+                var tenantArgument = string.IsNullOrEmpty(tenant) ? string.Empty : $" --tenant \"{tenant}\"";
+                throw new VaultStorageRedundancyException(
                     ex.Status,
                     $"Vault '{vaultName}' was created, but setting storage redundancy to '{requestedStorageType}' failed. " +
-                    $"The vault currently uses the default storage redundancy. Retry with 'azurebackup vault update --vault {vaultName} " +
-                    $"--resource-group {resourceGroup} --vault-type rsv --redundancy {requestedStorageType}' before configuring backup. " +
+                    $"The vault currently uses the default storage redundancy. Before configuring backup, retry with " +
+                    $"'azurebackup vault update --subscription \"{subscription}\"{tenantArgument} --resource-group \"{resourceGroup}\" " +
+                    $"--vault \"{vaultName}\" --vault-type rsv --redundancy {requestedStorageType}'. " +
                     $"Details: {ex.Message}",
                     ex.ErrorCode,
                     ex);

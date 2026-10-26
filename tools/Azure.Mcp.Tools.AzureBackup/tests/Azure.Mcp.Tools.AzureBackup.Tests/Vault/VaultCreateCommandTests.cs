@@ -55,6 +55,32 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         Assert.Contains("azurebackup_vault_update", response.Message);
     }
 
+    [Theory]
+    [InlineData(409, HttpStatusCode.Conflict)]
+    [InlineData(403, HttpStatusCode.Forbidden)]
+    [InlineData(400, HttpStatusCode.BadRequest)]
+    public async Task ExecuteAsync_StorageRedundancyFailsAfterCreate_PreservesPartialSuccessGuidance(int status, HttpStatusCode expectedStatus)
+    {
+        const string serviceMessage =
+            "Vault 'v' was created, but setting storage redundancy to 'LocallyRedundant' failed. " +
+            "Before configuring backup, retry with 'azurebackup vault update --subscription \"sub\" --resource-group \"rg\" " +
+            "--vault \"v\" --vault-type rsv --redundancy LocallyRedundant'. Details: Storage config update failed.";
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", "rsv", "eastus",
+            Arg.Any<string?>(), "LocallyRedundant", Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new VaultStorageRedundancyException(status, serviceMessage, "BMSUserErrorStorageConfig", null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription sub --vault v --resource-group rg --vault-type rsv --location eastus --storage-type LocallyRedundant");
+
+        Assert.Equal(expectedStatus, response.Status);
+        Assert.Contains("Vault 'v' was created", response.Message);
+        Assert.Contains("--redundancy LocallyRedundant", response.Message);
+        Assert.DoesNotContain("Vault creation conflicted", response.Message);
+        Assert.DoesNotContain("choose a different name", response.Message);
+        Assert.DoesNotContain("Authorization failed creating the vault", response.Message);
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {

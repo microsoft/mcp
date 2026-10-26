@@ -87,23 +87,36 @@ public class RsvVaultCreateStorageTypeTests
         Assert.Empty(requests);
     }
 
-    [Fact]
-    public async Task CreateVaultAsync_StorageConfigFails_ReportsVaultCreatedAndRemediation()
+    [Theory]
+    [InlineData(400, null)]
+    [InlineData(409, null)]
+    [InlineData(403, "33333333-3333-3333-3333-333333333333")]
+    public async Task CreateVaultAsync_StorageConfigFails_ReportsVaultCreatedAndScopedRemediation(int status, string? tenant)
     {
         var requests = new List<(HttpMethod Method, string Path, string? Body)>();
-        using var handler = CreateHandler(requests, storageConfigPutStatus: 400);
+        using var handler = CreateHandler(requests, storageConfigPutStatus: status);
         using var client = new HttpClient(handler);
 
-        var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
+        var exception = await Assert.ThrowsAsync<VaultStorageRedundancyException>(() =>
             new RsvBackupOperations(CreateAzureService(client)).CreateVaultAsync(
-                "vault", "rg", Subscription, "eastus", null, "LocallyRedundant", null,
+                "vault", "rg", Subscription, "eastus", null, "LocallyRedundant", tenant,
                 cancellationToken: TestContext.Current.CancellationToken));
 
-        Assert.Equal(400, exception.Status);
+        Assert.Equal(status, exception.Status);
         Assert.Equal("BMSUserErrorStorageConfig", exception.ErrorCode);
         Assert.Contains("'vault' was created", exception.Message);
-        Assert.Contains("azurebackup vault update", exception.Message);
-        Assert.Contains("--redundancy LocallyRedundant", exception.Message);
+        Assert.Contains(
+            $"azurebackup vault update --subscription \"{Subscription}\"",
+            exception.Message);
+        Assert.Contains("--resource-group \"rg\" --vault \"vault\" --vault-type rsv --redundancy LocallyRedundant", exception.Message);
+        if (tenant is null)
+        {
+            Assert.DoesNotContain("--tenant", exception.Message);
+        }
+        else
+        {
+            Assert.Contains($"--tenant \"{tenant}\"", exception.Message);
+        }
         Assert.IsType<RequestFailedException>(exception.InnerException);
         Assert.Equal((HttpMethod.Put, StorageConfigPath), (requests[^1].Method, requests[^1].Path));
     }

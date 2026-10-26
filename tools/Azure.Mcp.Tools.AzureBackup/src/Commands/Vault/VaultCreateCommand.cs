@@ -99,6 +99,9 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ArgumentException argEx => argEx.Message,
+        // The vault was created; keep the partial-success guidance instead of the generic
+        // creation-conflict or authorization messages below.
+        VaultStorageRedundancyException storageEx => storageEx.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Vault creation conflicted. If the vault already exists, use 'azurebackup_vault_update' " +
             "('azurebackup vault update') to modify it, or choose a different name for a new vault.",
