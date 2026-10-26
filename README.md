@@ -75,7 +75,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [![Install AKS MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-kubernetes-tools.vscode-aks-tools) [![Install AKS MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://github.com/Azure/aks-mcp)
 
 ### 🎭 Playwright Cloud Browsers
-- **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp)
+- **REPOSITORY**: [Azure/playwright-workspaces](https://github.com/Azure/playwright-workspaces)
 - **DOCUMENTATION**: [Playwright Workspaces remote MCP server](https://learn.microsoft.com/en-gb/azure/app-testing/playwright-cloud-browsers/how-to-playwright-workspaces-remote-mcp)
 - **DESCRIPTION**: A managed remote browser and browser automation tools for AI agents. Open a browser session, navigate pages, find and interact with elements, inspect browser activity, take screenshots, and close the session.
 - **CATEGORY**: `PRODUCTIVITY`
