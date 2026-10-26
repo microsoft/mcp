@@ -17,6 +17,7 @@ jobs:
     os: linux
   steps:
   - checkout: self
+    fetchDepth: 1
 
   - download: current
     displayName: "Download build_info"
