@@ -24,6 +24,11 @@ jobs:
     inputs:
       versionSpec: '3.12'
 
+  - pwsh: |
+      python -m unittest discover -s "$(Build.SourcesDirectory)/eng/pypi" -p test_azure_launcher.py
+      if ($LASTEXITCODE -ne 0) { throw "Azure PyPI launcher tests failed." }
+    displayName: Test Azure PyPI launcher
+
   - download: current
     displayName: Download build_info
     artifact: build_info
@@ -31,6 +36,10 @@ jobs:
   - download: current
     displayName: Download binaries_signed
     artifact: binaries_signed
+
+  - download: current
+    displayName: Download signed release ZIPs for launcher integrity manifests
+    artifact: binaries_signed_zipped
 
   - task: Powershell@2
     displayName: "Pack modules for PyPI"
@@ -40,6 +49,7 @@ jobs:
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -ReleaseArtifactsPath '$(Pipeline.Workspace)/binaries_signed_zipped'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml

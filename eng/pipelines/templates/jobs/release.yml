@@ -68,7 +68,9 @@ jobs:
       } else {
         gh release create $tag --target $targetCommit --title "$serverName $version"
       }
+      if ($serverName -eq 'Azure.Mcp.Server' -and $LASTEXITCODE -ne 0) { throw "GitHub Release creation failed." }
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
+      if ($serverName -eq 'Azure.Mcp.Server' -and $LASTEXITCODE -ne 0) { throw "GitHub Release asset upload failed; dependent packages must not be published." }
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(GH_TOKEN)
