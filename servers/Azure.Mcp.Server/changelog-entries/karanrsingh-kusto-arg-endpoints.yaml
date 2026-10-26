@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Kusto tools rejecting Azure Resource Graph Kusto endpoints (`*.arg.core.windows.net`), which the Kusto SDKs already trust."
