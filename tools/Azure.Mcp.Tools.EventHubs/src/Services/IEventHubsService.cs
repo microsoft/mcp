@@ -35,6 +35,7 @@ public interface IEventHubsService
         Dictionary<string, string>? tags = null,
         string? tenant = null,
         bool? disableLocalAuth = null,
+        IProgress<string>? progress = null,
         CancellationToken cancellationToken = default);
 
     Task<bool> DeleteNamespaceAsync(

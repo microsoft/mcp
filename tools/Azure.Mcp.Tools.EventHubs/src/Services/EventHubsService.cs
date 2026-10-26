@@ -166,6 +166,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
         Dictionary<string, string>? tags = null,
         string? tenant = null,
         bool? disableLocalAuth = null,
+        IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
@@ -258,7 +259,15 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
 
         var operation = await namespaceCollection
             .CreateOrUpdateAsync(WaitUntil.Started, namespaceName, namespaceData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        if (progress != null)
+        {
+            await WaitForLroCompletionAsync(operation, progress, cancellationToken);
+        }
+        else
+        {
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
 
         if (operation?.Value == null)
         {
@@ -489,6 +498,7 @@ public sealed class EventHubsService(IAzureService azureService, ILogger<EventHu
 
         if (status is not null)
         {
+            // cspell:ignore SENDDISABLED RECEIVEDISABLED
             eventHubData.Status = status.ToUpperInvariant() switch
             {
                 "ACTIVE" => EventHubEntityStatus.Active,
