@@ -48,9 +48,9 @@ public sealed class KustoClientTests
     }
 
     [Fact]
-    public async Task ExecuteQueryCommandAsync_ResourceGraphEndpoint_KeepsPathAndUsesKustoScope()
+    public async Task ExecuteQueryCommandAsync_KeepsPathAndUsesKustoScope()
     {
-        // Arrange - Azure Resource Graph serves the Kusto REST API under a path on *.arg.core.windows.net
+        // Arrange - any cluster URI that passes the allow-list works here; this one includes a path to show it's preserved
         const string clusterUri = "https://mycluster.arg.core.windows.net/providers/Microsoft.ResourceGraph/connector/kusto/sample";
         var handler = new MockHttpMessageHandler();
         using var httpClient = new HttpClient(handler);
@@ -58,7 +58,7 @@ public sealed class KustoClientTests
         var kustoClient = new KustoClient(clusterUri, _tokenCredential, "azmcp", _azureService);
 
         // Act
-        await kustoClient.ExecuteQueryCommandAsync("AzureResourceGraph", "Resources | take 1", TestContext.Current.CancellationToken);
+        await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(new Uri($"{clusterUri}/v1/rest/query"), handler.LastRequestUri);
