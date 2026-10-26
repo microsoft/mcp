@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
   </ItemGroup>
 
 </Project>
