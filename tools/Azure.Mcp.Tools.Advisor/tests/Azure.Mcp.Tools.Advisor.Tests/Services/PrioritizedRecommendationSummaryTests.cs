@@ -62,7 +62,7 @@ public class PrioritizedRecommendationSummaryTests
         Assert.DoesNotContain("subscriptionId =~", query);
         Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
         Assert.Contains(
-            $"tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
+            $"isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
             query);
     }
 

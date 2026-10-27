@@ -23,9 +23,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "If a request has broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent and does not identify a specific recommendation type, do not use this tool; route to recommendation summary with --group-by recommendation-type and --prioritized true. " +
         "If the request identifies a specific recommendation type, use this tool directly with --recommendation-type-id and --prioritized true to order its individual recommendations. " +
         "For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters; a prior summary call is not required. " +
+        "For the Azure Advisor idle-resource cost workflow, pass --category Cost and --sub-category IdleResources; category Cost alone can include other Cost recommendation subcategories. " +
         "Use summary for counts, totals, rankings, distributions, or grouped analysis rather than aggregating this tool's limited results. " +
         "After a summary, use this tool to retrieve individual recommendations or affected resources for a selected group by passing its key as --recommendation-type-id and preserving the applicable filters. " +
-        "Choose either subscription scope, optionally narrowed by resource group, or Service Group scope; the configured default subscription is used when neither is supplied. " +
+        "Choose subscription scope, optionally narrowed by resource group, or choose Service Group scope; the configured default subscription is used when neither is supplied. " +
         "Returns recommendations in ARM resource shape and a truncation indicator. Each recommendation's name is its recommendation ID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -34,7 +35,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IAdvisorService advisorService, ISubscriptionResolver subscriptionResolver)
+public sealed class RecommendationListCommand(
+    ILogger<RecommendationListCommand> logger,
+    IAdvisorService advisorService,
+    ISubscriptionResolver subscriptionResolver)
     : RecommendationScopeCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListResult>(subscriptionResolver)
 {
     private const int MinTop = 1;
@@ -48,13 +52,26 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     {
         base.ValidateOptions(options, validationResult);
 
-        if (options.ServiceGroup is not null && options.ResourceGroup is not null)
+        if ((options.ServiceGroup is not null || options.ServiceGroups is { Length: > 0 }) && options.ResourceGroup is not null)
         {
             validationResult.Errors.Add(
                 "--resource-group can only be used with subscription scope and cannot be combined with --service-group.");
         }
 
+        if (options.Prioritized == true && RecommendationScopeValidator.HasMultipleScopes(options))
+        {
+            validationResult.Errors.Add(
+                "--prioritized true supports only one subscription or one Service Group scope.");
+        }
+
         RecommendationFilterValidator.Validate(options, validationResult);
+        RecommendationFilterValidator.ValidateCostOnlyFilters(
+            options.Category,
+            options.MinimumSavings,
+            asOf: null,
+            from: null,
+            to: null,
+            validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationListOptions options, CancellationToken cancellationToken)
@@ -78,31 +95,57 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 out var retirementDate,
                 out _);
 
+            var recommendationTypeIds = RecommendationFilterValidator.NormalizeRecommendationTypeIds(options.RecommendationTypeId);
             var filters = new Models.RecommendationFilters(
                 Category: options.Category?.Trim(),
                 Impact: options.Impact?.Trim(),
                 Status: options.Status,
-                RecommendationTypeId: RecommendationFilterValidator.NormalizeRecommendationTypeId(options.RecommendationTypeId),
-                ResourceType: options.ResourceType?.Trim(),
+                RecommendationTypeId: recommendationTypeIds.Count == 1 ? recommendationTypeIds[0] : null,
+                RecommendationTypeIds: recommendationTypeIds,
+                ResourceType: options.ResourceType is { Length: 1 }
+                    ? options.ResourceType[0]?.Trim()
+                    : null,
+                ResourceTypes: NormalizeOptionalFilters(options.ResourceType),
+                ProductFamily: ProductFamilyFilter.Normalize(options.ProductFamily),
                 Resource: options.Resource?.Trim(),
                 Search: options.Search?.Trim(),
                 SubCategory: options.SubCategory,
                 TrackingIds: options.TrackingIds,
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate,
+                MinimumSavings: options.MinimumSavings,
                 ServiceGroup: options.ServiceGroup?.Trim(),
+                ServiceGroups: options.ServiceGroups,
                 Prioritized: options.Prioritized,
                 ShowPrioritizationSignals: options.ShowPrioritizationSignals);
 
-            var recommendations = await _advisorService.ListRecommendationsAsync(
-                options.Subscription,
-                options.ResourceGroup,
-                filters,
-                top,
-                options.Tenant,
-                cancellationToken);
+            var hasServiceGroupScope = options.ServiceGroup is not null || options.ServiceGroups is { Length: > 0 };
+            var recommendations = !hasServiceGroupScope
+                ? options.Subscriptions is { Length: > 0 }
+                    ? await _advisorService.ListRecommendationsAsync(
+                        ResolveSubscriptions(options),
+                        options.ResourceGroup,
+                        filters,
+                        top,
+                        options.Tenant,
+                        cancellationToken)
+                    : await _advisorService.ListRecommendationsAsync(
+                        options.Subscription!,
+                        options.ResourceGroup,
+                        filters,
+                        top,
+                        options.Tenant,
+                        cancellationToken)
+                : await _advisorService.ListRecommendationsAsync(
+                    options.Subscription,
+                    options.ResourceGroup,
+                    filters,
+                    top,
+                    options.Tenant,
+                    cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
+            context.Response.Results = ResponseResult.Create(
+                new(recommendations?.Results ?? [], recommendations?.AreResultsTruncated ?? false),
                 AdvisorJsonContext.Default.RecommendationListResult);
         }
         catch (Exception ex)
@@ -119,7 +162,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Category,
                 options.Impact,
                 options.Status,
-                options.RecommendationTypeId,
+                options.RecommendationTypeId is { Length: > 0 } ? string.Join(",", options.RecommendationTypeId) : null,
                 options.ResourceType,
                 options.Resource,
                 options.SubCategory,
@@ -142,6 +185,29 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
+
+    private static IReadOnlyCollection<string> ResolveSubscriptions(RecommendationListOptions options)
+    {
+        var subscriptions = options.Subscriptions?
+            .Concat(string.IsNullOrWhiteSpace(options.Subscription) ? [] : [options.Subscription])
+            .Where(static subscription => !string.IsNullOrWhiteSpace(subscription))
+            .Select(static subscription => subscription.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return subscriptions is { Length: > 0 }
+            ? subscriptions
+            : string.IsNullOrWhiteSpace(options.Subscription)
+                ? throw new InvalidOperationException("No subscription scope was provided.")
+                : [options.Subscription];
+    }
+
+    private static IReadOnlyList<string> NormalizeOptionalFilters(IEnumerable<string>? values) =>
+        (values ?? [])
+            .Where(static value => !string.IsNullOrWhiteSpace(value))
+            .Select(static value => value.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
     /// <summary> Response containing Advisor recommendations and the truncation indicator. </summary>
     public sealed record RecommendationListResult(List<Models.Recommendation> Recommendations, bool AreResultsTruncated);

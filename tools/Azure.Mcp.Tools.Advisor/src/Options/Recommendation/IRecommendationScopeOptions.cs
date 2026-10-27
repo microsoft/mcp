@@ -7,5 +7,9 @@ namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 public interface IRecommendationScopeOptions : ISubscriptionOption
 {
+    string[]? Subscriptions { get; set; }
+
     string? ServiceGroup { get; set; }
+
+    string[]? ServiceGroups { get; set; }
 }

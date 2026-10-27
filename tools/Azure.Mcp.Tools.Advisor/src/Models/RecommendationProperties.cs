@@ -16,6 +16,8 @@ public sealed record RecommendationProperties(
     [property: JsonPropertyName("completionType")] string? CompletionType = null,
     [property: JsonPropertyName("recommendationDismissReason")] string? RecommendationDismissReason = null,
     [property: JsonPropertyName("postponedUntilDateTime")] DateTimeOffset? PostponedUntilDateTime = null,
+    [property: JsonPropertyName("customerStateUpdatedAt")] DateTimeOffset? CustomerStateUpdatedAt = null,
+    [property: JsonPropertyName("platformStateUpdatedAt")] DateTimeOffset? PlatformStateUpdatedAt = null,
     [property: JsonPropertyName("lastRefreshed")] DateTimeOffset? LastRefreshed = null,
     [property: JsonPropertyName("lastUpdated")] DateTimeOffset? LastUpdated = null,
     [property: JsonPropertyName("createdTime")] DateTimeOffset? CreatedTime = null,
