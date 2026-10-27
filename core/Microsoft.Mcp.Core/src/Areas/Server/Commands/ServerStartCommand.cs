@@ -882,8 +882,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         // loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
         bool isLoopback = uri.IsLoopback;
 
-        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in.
-        bool isWildcard = uri.Host is "*" or "+" or "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
+        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in. A "*" or "+" host
+        // was substituted with 0.0.0.0 above.
+        bool isWildcard = uri.Host is "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
 
         if (!isLoopback && !isWildcard)
         {
