@@ -561,6 +561,37 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 - `--product-family` filters list results and both normal and prioritized summaries. Metadata service family takes precedence, with resource-provider fallback only when it is missing. Filtering happens before counts, savings totals, ranking, and `--top`.
 
 ```bash
+# Prevalidate one Advisor Cost/IdleResources recommendation type before considering deletion.
+# Uses current New recommendations, existing Advisor discovery and Azure Monitor metrics, and
+# compiled ResourceInsights checks selected by resource type with a recommendation-type-ID guard.
+# No deletion, script execution, or recommendation-state updates are performed.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor recommendation prevalidate --recommendation-type-id <guid> \
+                                        [--subscription <subscription>] \
+                                        [--subscriptions <subscription1> <subscription2> ...] \
+                                        [--service-group <service-group>] \
+                                        [--resource-group <resource-group>] \
+                                        [--resources <resource-id-or-name1> <resource-id-or-name2> ...] \
+                                        [--resource <resource-id-substring>] \
+                                        [--top <1-25>] \
+                                        [--minimum-unused-days <1-365>] \
+                                        [--tenant <tenant>]
+```
+
+#### Recommendation prevalidation behavior
+
+- `--recommendation-type-id` is required. Cost, IdleResources, and New are enforced internally, not additional inputs.
+- Scope reuses list/summary behavior: one or more subscriptions, or one Service Group; never combine those scope families. Resource groups apply only to subscription scope.
+- `--resources` selects exact affected-resource ARM IDs or names before the existing list limit. Ambiguous names require full IDs. `--resource` is an optional additional substring filter. Missing selections are returned as `unmatchedResources`.
+- `--top` defaults to 25, with a maximum of 25 distinct affected resources. All explicit selections must fit. Unselected matches beyond the cap and incomplete source queries set `areResultsTruncated`; they never establish complete-scope safety.
+- The single compiled catalog contains the 16 onboarded ResourceInsights definitions. Checks are selected by actual resource type, then guarded by recommendation type ID. Unsupported pairs require review; pending-onboarding definitions are not loaded.
+- Rechecks current detection, effective resource/parent/resource-group/subscription management locks, visible dependencies, resource-specific risks, and minimum unused age. `--minimum-unused-days` defaults to 30. The latest declared ARM, Resource Graph, or Azure Monitor activity signal is used. Monitor requests align to UTC minute precision while still requiring complete numeric daily coverage. Missing telemetry is not zero usage, and insufficient history requires review. Recent activity never overrides an existing blocker.
+- Returns `safe`, `needsReview`, and `blocked` resource arrays, every check's evidence, manual confirmations, bucket counts, known savings/cost totals and missing-value counts. Monetary amounts reuse Advisor's existing normalized values and are labeled Retail USD, not contractual savings.
+- Only resources blocked by a failed scope/detection check are probed for a confirmed Delete event in Resource Graph's last 14 days of change history. Confirmed-deleted resources remain in `blocked`, with `resourceDeletedOn`, a no-action-needed `reason`, `canPostponeDismiss=false`, no outstanding manual confirmations, and a separate `deletedCount` in the bucket summary. Their explanation states automatic recommendation removal within 72 hours once Advisor refreshes. Missing, unreadable, malformed, or truncated deletion evidence never proves deletion or changes a bucket; the probe outcome is included in `checks`. A published savings timestamp alone is not confirmation of current deletion.
+- `safe` means the automated checks passed at the evaluation time, not deletion authorization or completion of manual checks. Advisory CLI/PowerShell guidance is returned but never executed. Dependency scans cannot prove the absence of RBAC-hidden, external, data-plane, or recently changed consumers.
+- The executing identity needs resource and Advisor read access, `Microsoft.Authorization/locks/read`, `Microsoft.Resources/changes/read` for change-history evidence, and Monitor metric read access where declared. OBO uses the caller's permissions; hosting-identity mode uses the server identity. Inaccessible gating evidence requires review rather than a pass.
+
+```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a Service Group name, ID, or full ARM ID,
 # or omit both to use the configured default subscription. Do not specify both. --recommendation-id

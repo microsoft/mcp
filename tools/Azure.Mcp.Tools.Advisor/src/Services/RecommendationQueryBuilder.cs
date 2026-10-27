@@ -170,6 +170,14 @@ internal static class RecommendationQueryBuilder
                     $"tostring(properties.resourceMetadata.resourceId) contains '{SanitizeForKql(filters.Resource)}'");
             }
 
+            if (filters.Resources is { Count: > 0 })
+            {
+                var resources = FormatKqlStringList(filters.Resources);
+                clauses.Add(
+                    $"(tostring(properties.resourceMetadata.resourceId) in~ ({resources}) or " +
+                    $"tostring(properties.impactedValue) in~ ({resources}))");
+            }
+
             if (!string.IsNullOrWhiteSpace(filters.Search))
             {
                 clauses.Add(

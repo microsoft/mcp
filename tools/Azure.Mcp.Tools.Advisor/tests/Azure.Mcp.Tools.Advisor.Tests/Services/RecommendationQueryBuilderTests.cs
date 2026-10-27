@@ -9,6 +9,19 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 
 public class RecommendationQueryBuilderTests
 {
+    [Fact]
+    public void BuildInstancePredicates_ExactSelectionsReuseEscapingInTheSharedFilter()
+    {
+        var predicate = RecommendationQueryBuilder.BuildInstancePredicates(
+            new RecommendationFilters(Resources: ["Owner's-disk", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/disks/disk"]),
+            includeStatus: true, useRequestedStatus: true, includeCategoryAndImpact: true, resourceTypeUsesImpactedField: false);
+
+        Assert.Contains("tostring(properties.resourceMetadata.resourceId) in~", predicate);
+        Assert.Contains("tostring(properties.impactedValue) in~", predicate);
+        Assert.Contains(RecommendationQueryBuilder.EscapeKqlString("Owner's-disk"), predicate);
+        Assert.DoesNotContain("top ", predicate);
+    }
+
     [Theory]
     [InlineData("Cost", "IdleResources", true)]
     [InlineData(" cost ", " idleresources ", true)]

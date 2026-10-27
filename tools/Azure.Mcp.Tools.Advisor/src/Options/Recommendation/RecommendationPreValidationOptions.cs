@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Options;
+
+namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
+
+public sealed class RecommendationPreValidationOptions : IRecommendationReadScopeOptions
+{
+    [Option(Description = "The exact Advisor recommendation type ID GUID selected from existing recommendations. Only onboarded Cost/IdleResources deletion recommendations support prevalidation.")]
+    public required string RecommendationTypeId { get; set; }
+
+    [Option(Description = "Selected affected resources, as full ARM resource IDs or exact resource names. Selection is applied before the result limit. Use full IDs when names are ambiguous. Missing selections are reported, not treated as safe.")]
+    public string[]? Resources { get; set; }
+
+    [Option(Description = "Narrow affected resources by a case-insensitive substring of their full ARM resource ID. Prefer --resources for an exact selection.")]
+    public string? Resource { get; set; }
+
+    [Option(Description = "Maximum number of affected resources to validate, from 1 through 25. Defaults to 25. All explicitly selected resources must fit within this limit.")]
+    public int? Top { get; set; }
+
+    [Option(Description = "Minimum unused age in days, from 1 through 365. Defaults to 30. Recent activity, missing signals, or insufficient history require review; this check never overrides a confirmed blocker.")]
+    public int? MinimumUnusedDays { get; set; }
+
+    [Option(Description = "An Azure Service Group name, ID, or full ARM resource ID. Specify either a single Service Group or subscription scope, not both. Resource groups apply only to subscription scope.")]
+    public string? ServiceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Subscription)]
+    public string? Subscription { get; set; }
+
+    [Option(Description = "One or more subscription IDs or names. May be combined with --subscription. Cannot be combined with --service-group.")]
+    public string[]? Subscriptions { get; set; }
+
+    [Option(Description = OptionDescriptions.ResourceGroup)]
+    public string? ResourceGroup { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
+}

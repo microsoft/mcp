@@ -11,6 +11,29 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 public sealed class ConsolidatedToolMetadataTests()
 {
     [Theory]
+    [InlineData("advisor_recommendation_list")]
+    [InlineData("advisor_recommendation_summary")]
+    [InlineData("advisor_recommendation_prevalidate")]
+    public async Task AdvisorReads_ShareOneExistingConsolidatedTool(string commandName)
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+
+        var command = services.GetRequiredService<ICommandFactory>().FindCommandByName(commandName);
+        Assert.NotNull(command);
+        var definition = Assert.Single(
+            services.GetRequiredService<IConsolidatedToolDefinitionProvider>().GetToolDefinitions(),
+            tool => tool.MappedToolList.Contains(commandName));
+
+        Assert.Equal("list_azure_advisor_recommendations", definition.Name);
+        Assert.Single(definition.MappedToolList, name => name == commandName);
+        Assert.True(command.Metadata.ReadOnly);
+        Assert.False(command.Metadata.Destructive);
+        Assert.True(MetadataMatches(command.Metadata, definition.ToolMetadata));
+    }
+
+    [Theory]
     [InlineData("resiliency_goal_assignment_create", "create_azure_resilience_management_resources", true, true)]
     [InlineData("resiliency_goal_assignment_update", "create_azure_resilience_management_resources", true, true)]
     [InlineData("resiliency_goal_assignment_delete", "create_azure_resilience_management_resources", true, true)]

@@ -91,6 +91,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_list | Show completed Cost IdleResources recommendations in subscription \<subscription>, highest realized savings first | none |
 | advisor_recommendation_list | Show postponed Cost IdleResources recommendations in service group \<service-group>, highest yearly potential savings first | none |
+| advisor_recommendation_prevalidate | Check whether resources for Advisor Cost IdleResources recommendation type \<recommendation-type-id> in subscription \<subscription> pass read-only deletion prevalidation; do not delete or update anything | none |
+| advisor_recommendation_prevalidate | Prevalidate affected resource \<resource-id> for Advisor recommendation type \<recommendation-type-id> in Service Group \<service-group>, checking locks, dependencies, and a minimum unused age of 45 days | none |
+| advisor_recommendation_prevalidate | Are the idle resources I selected safe to delete? Reuse their exact recommendation type, resource IDs, and scope; show every check and manual confirmation without executing remediation | context-required |
+| advisor_recommendation_prevalidate | Explain which selected idle resources are confirmed already deleted using change history; show their deletion dates and no-action guidance separately from active blockers without changing recommendation state | context-required |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |

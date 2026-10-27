@@ -24,4 +24,5 @@ public sealed record RecommendationFilters(
     DateTimeOffset? SavingsTo = null,
     string? ServiceGroup = null,
     bool? Prioritized = null,
-    bool? ShowPrioritizationSignals = null);
+    bool? ShowPrioritizationSignals = null,
+    IReadOnlyList<string>? Resources = null);
