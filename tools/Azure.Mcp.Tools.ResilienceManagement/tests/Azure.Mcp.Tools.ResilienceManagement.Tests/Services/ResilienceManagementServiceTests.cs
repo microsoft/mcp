@@ -20,6 +20,18 @@ public sealed class ResilienceManagementServiceTests
     private const string UserAssignedIdentityResourceId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/testIdentity";
     private const string RecoveryJobName = "11111111-1111-1111-1111-111111111111";
 
+    [Fact]
+    public void CreateUsagePlanTagsPatch_CarriesEveryTag()
+    {
+        var tags = new Dictionary<string, string> { ["mcp-test"] = "usage-plan", ["env"] = "prod" };
+
+        UsagePlanPatch patch = ResilienceManagementService.CreateUsagePlanTagsPatch(tags);
+
+        Assert.Equal(2, patch.Tags.Count);
+        Assert.Equal("usage-plan", patch.Tags["mcp-test"]);
+        Assert.Equal("prod", patch.Tags["env"]);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -62,8 +74,8 @@ public sealed class ResilienceManagementServiceTests
 
         Assert.NotNull(result.Properties);
         Assert.NotNull(result.Properties.ServiceLevelResources);
-        JsonElement serviceLevelResource = Assert.Single(result.Properties.ServiceLevelResources.Value.EnumerateArray());
-        Assert.Equal(sliId, serviceLevelResource.GetProperty("serviceLevelIndicatorResourceId").GetString());
+        GoalServiceLevelTargetInfo serviceLevelResource = Assert.Single(result.Properties.ServiceLevelResources);
+        Assert.Equal(sliId, serviceLevelResource.ServiceLevelIndicatorResourceId);
         Assert.NotNull(result.Properties.ErrorDetails);
         Assert.Equal("GoalAssignmentFailed", result.Properties.ErrorDetails.Value.GetProperty("code").GetString());
         Assert.Equal("Failed", result.Properties.ProvisioningState);
@@ -97,8 +109,15 @@ public sealed class ResilienceManagementServiceTests
             {
                 resourceArmId = UserAssignedIdentityResourceId,
                 provisioningState = "NeedsAttention",
-                zonalResiliency = new { goalParticipation = "Excluded", attestationStatus = "NotAttested", exclusionReason = "UnsupportedResource" },
-                disasterRecoveryAttestationStatus = "Attested"
+                zonalResiliency = new
+                {
+                    goalParticipation = "Excluded",
+                    attestationStatus = "NotAttested",
+                    exclusionReason = "UnsupportedResource",
+                    userConfirmation = new[] { new { solutionDisplayName = "ZoneRedundantStorage", confirmationStatus = "Pending" } }
+                },
+                disasterRecoveryAttestationStatus = "Attested",
+                serviceGroupMemberships = new[] { new { membershipType = "Direct", serviceGroupId = "/providers/Microsoft.Management/serviceGroups/sg1" } }
             }
         });
         GoalMembersData data = ModelReaderWriter.Read<GoalMembersData>(response)!;
@@ -109,11 +128,45 @@ public sealed class ResilienceManagementServiceTests
         Assert.Equal("NeedsAttention", result.Properties.ProvisioningState);
         Assert.Equal(UserAssignedIdentityResourceId, result.Properties.ResourceArmId);
         Assert.NotNull(result.Properties.ZonalResiliency);
-        Assert.Equal("Excluded", result.Properties.ZonalResiliency.Value.GetProperty("goalParticipation").GetString());
-        Assert.Equal("UnsupportedResource", result.Properties.ZonalResiliency.Value.GetProperty("exclusionReason").GetString());
+        Assert.Equal("Excluded", result.Properties.ZonalResiliency.GoalParticipation);
+        Assert.Equal("NotAttested", result.Properties.ZonalResiliency.AttestationStatus);
+        Assert.Equal("UnsupportedResource", result.Properties.ZonalResiliency.ExclusionReason);
+        GoalResourceConfirmationInfo confirmation = Assert.Single(result.Properties.ZonalResiliency.UserConfirmation);
+        Assert.Equal("ZoneRedundantStorage", confirmation.SolutionDisplayName);
+        Assert.Equal("Pending", confirmation.ConfirmationStatus);
         string json = JsonSerializer.Serialize(result.Properties, ResilienceManagementJsonContext.Default.GoalResourceInfoProperties);
         Assert.DoesNotContain("disasterRecoveryAttestationStatus", json, StringComparison.Ordinal);
         Assert.DoesNotContain("serviceGroupMemberships", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MapDrillResource_PreservesLegacyFieldsWithoutInventingSdkDiscriminator()
+    {
+        var content = BinaryData.FromString("""
+            {
+              "id":"/providers/Microsoft.Management/serviceGroups/group/providers/Microsoft.AzureResilienceManagement/drills/drill/drillResources/member",
+              "name":"member",
+              "properties":{
+                "haStatus":"NotResilient",
+                "activePhysicalZones":["zone1"],
+                "recoveryPhysicalZones":["zone2"]
+              }
+            }
+            """);
+        var data = ModelReaderWriter.Read<DrillTargetData>(content, new ModelReaderWriterOptions("W"));
+        Assert.NotNull(data);
+        using var sdkJson = JsonDocument.Parse(ModelReaderWriter.Write(data, new ModelReaderWriterOptions("J")));
+        var sdkProperties = sdkJson.RootElement.GetProperty("properties");
+        Assert.False(sdkProperties.TryGetProperty("haStatus", out _));
+        Assert.Equal("unknown", sdkProperties.GetProperty("drillType").GetString());
+
+        DrillResourceInfo mapped = ResilienceManagementService.MapDrillResource(content);
+
+        Assert.Equal("member", mapped.Name);
+        Assert.Equal("NotResilient", mapped.Properties.GetProperty("haStatus").GetString());
+        Assert.Equal("zone1", mapped.Properties.GetProperty("activePhysicalZones")[0].GetString());
+        Assert.Equal("zone2", mapped.Properties.GetProperty("recoveryPhysicalZones")[0].GetString());
+        Assert.False(mapped.Properties.TryGetProperty("drillType", out _));
     }
 
     [Theory]
@@ -1095,6 +1148,43 @@ public sealed class ResilienceManagementServiceTests
     }
 
     [Fact]
+    public void ValidateRecoveryResourceUpdate_AllowsCrossZoneVmRecoveryForVirtualMachine()
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CrossZoneVMRecovery,
+            new ResourceCrossZoneVmRecoveryProtectionSetting
+            {
+                TargetZone = "2",
+                CapacityReservationGroupId = new ResourceIdentifier("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/capacityReservationGroups/crg")
+            });
+        RecoveryMembersData existing = CreateRecoveryResource(
+            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+    }
+
+    [Theory]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account", null, "only for a Microsoft.Compute/virtualMachines resource")]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/net", "capacityReservationGroupId")]
+    public void ValidateRecoveryResourceUpdate_RejectsInvalidCrossZoneVmRecovery(string azureResourceId, string? capacityReservationGroupId, string expectedMessage)
+    {
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.CrossZoneVMRecovery,
+            new ResourceCrossZoneVmRecoveryProtectionSetting
+            {
+                CapacityReservationGroupId = capacityReservationGroupId is null ? null : new ResourceIdentifier(capacityReservationGroupId)
+            });
+        RecoveryMembersData existing = CreateRecoveryResource(azureResourceId: azureResourceId);
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(
+            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+
+        Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryForNonVirtualMachine()
     {
         RecoveryMembersData requested = CreateRecoveryResource(
@@ -1208,6 +1298,104 @@ public sealed class ResilienceManagementServiceTests
             () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
 
         Assert.Contains("healthy Azure Site Recovery protection was not detected", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CreateRecoveryPlanIdentity_UsesNoneIdentity()
+    {
+        ManagedServiceIdentity result = ResilienceManagementService.CreateRecoveryPlanIdentity(RecoveryPlanIdentityKind.None, null);
+
+        Assert.Equal(ManagedServiceIdentityType.None, result.ManagedServiceIdentityType);
+        Assert.Empty(result.UserAssignedIdentities);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_UsesRequestedDefaultGroupIdForNewPlan()
+    {
+        const string groupId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
+        RecoveryGroupsSetting result = ResilienceManagementService.CreateRecoveryGroupsSetting(null, "Default group", defaultGroupUniqueId: groupId);
+
+        Assert.Equal(groupId, result.DefaultGroup.Properties!.GroupUniqueId);
+        Assert.Equal(0, result.DefaultGroup.Properties.OrderId);
+    }
+
+    [Fact]
+    public void CreateRecoveryGroupsSetting_RejectsChangingExistingDefaultGroupId()
+    {
+        RecoveryGroupsSetting existing = ResilienceManagementService.CreateRecoveryGroupsSetting(null, "Default group", defaultGroupUniqueId: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            ResilienceManagementService.CreateRecoveryGroupsSetting(existing, null, defaultGroupUniqueId: "11111111-2222-3333-4444-555555555555"));
+
+        Assert.Contains("cannot be changed", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DrillConfiguration_CreateAppliesSuppliedIdentities()
+    {
+        string chaos = $"{{\"identity\":{{\"type\":\"UserAssigned\",\"userAssignedIdentity\":\"{UserAssignedIdentityResourceId}\"}},\"chaosResourceIdentityForFaults\":{{\"type\":\"SystemAssigned\"}}}}";
+        string recoveryPlan = $"{{\"identity\":{{\"type\":\"UserAssigned\",\"userAssignedIdentity\":\"{UserAssignedIdentityResourceId}\"}}}}";
+        string monitoring = "{\"identity\":{\"type\":\"SystemAssigned\"}}";
+
+        DrillProperties properties = Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.DrillConfiguration.Create(
+            DrillKind.Zonal, null, null, null, chaos, recoveryPlan, monitoring);
+
+        Assert.Equal(ManagedServiceIdentityType.UserAssigned, properties.ChaosResourceProperties.Identity.Type);
+        Assert.Equal(UserAssignedIdentityResourceId, properties.ChaosResourceProperties.Identity.UserAssignedIdentity.ToString(), ignoreCase: true);
+        Assert.Equal(ManagedServiceIdentityType.SystemAssigned, properties.ChaosResourceProperties.ChaosResourceIdentityForFaults.Type);
+        Assert.Equal(ManagedServiceIdentityType.UserAssigned, properties.RecoveryPlanProperties.Identity.Type);
+        Assert.Equal(ManagedServiceIdentityType.SystemAssigned, properties.MonitoringProperties.Identity.Type);
+    }
+
+    [Theory]
+    [InlineData("{\"identity\":{\"type\":\"SystemAssigned\"}}", "requires chaosResourceIdentityForFaults")]
+    [InlineData("{\"identity\":{\"type\":\"SystemAssigned\"},\"chaosResourceIdentityForFaults\":{\"type\":\"Bogus\"}}", "identity type must be")]
+    [InlineData("{\"identity\":{\"type\":\"SystemAssigned\"},\"chaosResourceIdentityForFaults\":{\"type\":\"SystemAssigned\"},\"extra\":{}}", "unsupported, read-only, or duplicate")]
+    public void DrillConfiguration_CreateRejectsInvalidChaosIdentities(string chaos, string expectedMessage)
+    {
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.DrillConfiguration.Create(DrillKind.Zonal, null, null, null, chaos));
+
+        Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DrillConfiguration_UpdateWritesOnlySuppliedIdentitySections()
+    {
+        DrillUpdateProperties properties = Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.DrillConfiguration.Update(
+            null, null, null, chaos: "{\"chaosResourceIdentityForFaults\":{\"type\":\"SystemAssigned\"}}", monitoring: "{\"identity\":{\"type\":\"SystemAssigned\"}}");
+
+        using JsonDocument json = JsonDocument.Parse(ModelReaderWriter.Write(properties, ModelReaderWriterOptions.Json).ToString());
+        JsonElement chaos = json.RootElement.GetProperty("chaosResourceProperties");
+        Assert.False(chaos.TryGetProperty("identity", out _));
+        Assert.Equal("SystemAssigned", chaos.GetProperty("chaosResourceIdentityForFaults").GetProperty("type").GetString());
+        Assert.True(json.RootElement.TryGetProperty("monitoringProperties", out _));
+        Assert.False(json.RootElement.TryGetProperty("recoveryPlanProperties", out _));
+    }
+
+    [Fact]
+    public void DrillConfiguration_ParseManagedIdentityBuildsUserAssignedIdentity()
+    {
+        ManagedServiceIdentity? identity = Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.DrillConfiguration.ParseManagedIdentity(
+            $"{{\"type\":\"SystemAssigned, UserAssigned\",\"userAssignedIdentities\":[\"{UserAssignedIdentityResourceId}\"]}}");
+
+        Assert.NotNull(identity);
+        Assert.Equal(ManagedServiceIdentityType.SystemAssignedUserAssigned, identity.ManagedServiceIdentityType);
+        Assert.Contains(identity.UserAssignedIdentities.Keys, key => string.Equals(key.ToString(), UserAssignedIdentityResourceId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("{\"type\":\"UserAssigned\"}", "exactly when type includes UserAssigned")]
+    [InlineData("{\"type\":\"SystemAssigned\",\"userAssignedIdentities\":[\"/subscriptions/x\"]}", "userAssignedIdentities")]
+    [InlineData("{\"userAssignedIdentities\":[]}", "requires type")]
+    [InlineData("{\"type\":\"Bogus\"}", "type must be")]
+    public void DrillConfiguration_ParseManagedIdentityRejectsInvalidInput(string json, string expectedMessage)
+    {
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.DrillConfiguration.ParseManagedIdentity(json));
+
+        Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]

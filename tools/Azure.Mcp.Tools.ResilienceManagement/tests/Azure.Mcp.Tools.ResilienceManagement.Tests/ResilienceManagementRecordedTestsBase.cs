@@ -14,6 +14,24 @@ public abstract class ResilienceManagementRecordedTestsBase(
     LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    public override ValueTask InitializeAsync()
+    {
+        if (Environment.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") == "true")
+        {
+            // Opt-in Goals canary recording rewrites ARM requests to eastus2euap, which endpoint validation rejects.
+            SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching",
+                "--disable-proxy-tools", "--dangerously-disable-ssrf-protections-by-namespace", "resiliency");
+        }
+
+        return base.InitializeAsync();
+    }
+
+    // Canary Goals recordings carry a routing header that playback without MCP_GOALS_TEST_ECY does not send.
+    public override CustomDefaultMatcher? TestMatcher { get; set; } = new()
+    {
+        ExcludedHeaders = "x-ms-rhub-routing-location"
+    };
+
     // Preserve LRO Location paths during recording; replacing the entire header breaks polling playback.
     public override List<string> DisabledDefaultSanitizers =>
     [
@@ -43,6 +61,17 @@ public abstract class ResilienceManagementRecordedTestsBase(
             Regex = "([?&](?:t|c|s|h)=)(?<value>[^&]+)",
             GroupForReplace = "value",
             Value = "sanitized"
+        }),
+        // Canary Goals LRO polling must replay through the default ARM host that endpoint validation allows.
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Location")
+        {
+            Regex = @"(?i)eastus2euap\.management\.azure\.com",
+            Value = "management.azure.com"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Azure-AsyncOperation")
+        {
+            Regex = @"(?i)eastus2euap\.management\.azure\.com",
+            Value = "management.azure.com"
         })
     ];
 
@@ -142,6 +171,12 @@ public abstract class ResilienceManagementRecordedTestsBase(
         {
             Regex = "&operationId=[^&]+",
             Value = string.Empty
+        }),
+        // Goals canary recordings (MCP_GOALS_TEST_ECY) must replay against the default ARM host.
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = @"(?i)(?:eastus2euap|sanitized)\.management\.azure\.com",
+            Value = "Sanitized.azure.com"
         })
     ];
 
@@ -156,6 +191,15 @@ public abstract class ResilienceManagementRecordedTestsBase(
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")
         {
             Value = "Sanitized"
+        }),
+        // The report download URL carries a signed token that grants read access to the report.
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..downloadUri")
+        {
+            Value = "https://sanitized.blob.core.windows.net/reports/report.html"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..downloadUrl")
+        {
+            Value = "https://sanitized.blob.core.windows.net/reports/report.html"
         }),
         // Recovery plan creation generates a new default-group GUID on each run.
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.properties.recoveryGroupsSetting.defaultGroup.properties.groupUniqueId")

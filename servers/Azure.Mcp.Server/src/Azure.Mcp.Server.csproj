@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>4.0.0-beta.2</Version>
+    <Version>4.0.0-beta.4</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
@@ -69,8 +69,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)\tools\Azure.*\src\*.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)tools\Azure.*\src\*.csproj" />
   </ItemGroup>
 
   <ItemGroup>

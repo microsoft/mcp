@@ -52,7 +52,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
         {
             throw new RequestFailedException(409,
-                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+                "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, or choose a different name for a new vault.");
         }
 
         var storageSettings = new List<DataProtectionBackupStorageSetting>

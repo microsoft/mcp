@@ -127,6 +127,47 @@ public class EndpointValidatorTests
 
     #region ValidateAzureServiceEndpoint Tests
 
+    [Fact]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_ApprovesProductionHost()
+    {
+        s_validator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com/api/Disk/analyze",
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud);
+    }
+
+    [Theory]
+    [InlineData("https://storageintelligenceweb.canary.production.portalrp.azure.com/api/Disk/analyze")]
+    [InlineData("https://storageintelligenceweb.sg.dogfood.portalrp.azure-test.net/api/Disk/analyze")]
+    [InlineData("https://portalrp.azure.com")]
+    [InlineData("https://evil.portalrp.azure.com")]
+    [InlineData("https://evil.storageintelligenceweb.production.portalrp.azure.com")]
+    [InlineData("https://storageintelligenceweb.production.portalrp.azure.com.evil.example")]
+    [InlineData("https://unapproved.example.com")]
+    [InlineData("https://localhost")]
+    [InlineData("https://127.0.0.1")]
+    [InlineData("https://10.0.0.1")]
+    [InlineData("http://storageintelligenceweb.production.portalrp.azure.com")]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsOtherHostsAndSchemes(string endpoint)
+    {
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
+            endpoint: endpoint,
+            serviceType: "storage-intelligence",
+            armEnvironment: ArmEnvironment.AzurePublicCloud));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ValidateAzureServiceEndpoint_StorageIntelligence_RejectsUnsupportedClouds(bool isChina)
+    {
+        ArmEnvironment environment = isChina ? ArmEnvironment.AzureChina : ArmEnvironment.AzureGovernment;
+        Assert.Throws<SecurityException>(() => s_validator.ValidateAzureServiceEndpoint(
+            endpoint: "https://storageintelligenceweb.production.portalrp.azure.com",
+            serviceType: "storage-intelligence",
+            armEnvironment: environment));
+    }
+
     [Theory]
     [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://my-instance.energy.azure.com", "adme")]
@@ -144,6 +185,7 @@ public class EndpointValidatorTests
     [InlineData("https://00000000-0000-0000-0000-000000000000.eastus.cnt-prod.loadtesting.azure.com", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net/settings", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com", "monitor-metrics")]
+    [InlineData("https://eastus.ingest.monitor.azure.com", "monitor-ingestion")]
     [InlineData("https://workspace.data.monitor.azure.com", "monitor-traces")]
     [InlineData("https://data.monitor.azure.com", "monitor-traces")]
     [InlineData("https://server.mysql.database.azure.com", "mysql")]
@@ -175,6 +217,7 @@ public class EndpointValidatorTests
     [InlineData("loadtesting")]
     [InlineData("managedhsm")]
     [InlineData("monitor-metrics")]
+    [InlineData("monitor-ingestion")]
     [InlineData("mysql")]
     [InlineData("sreagent")]
     [InlineData("storage-table")]
@@ -195,6 +238,7 @@ public class EndpointValidatorTests
     [InlineData("https://resource.eastus.cnt-prod.loadtesting.azure.com.evil.example", "loadtesting")]
     [InlineData("https://hsm.managedhsm.azure.net.evil.example", "managedhsm")]
     [InlineData("https://eastus.metrics.monitor.azure.com.evil.example", "monitor-metrics")]
+    [InlineData("https://eastus.ingest.monitor.azure.com.evil.example", "monitor-ingestion")]
     [InlineData("https://workspace.data.monitor.azure.com.evil.example", "monitor-traces")]
     [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
     [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
@@ -347,6 +391,7 @@ public class EndpointValidatorTests
     [InlineData("https://vault.vault.azure.cn", "keyvault")]
     [InlineData("https://hsm.managedhsm.azure.cn", "managedhsm")]
     [InlineData("https://chinanorth3.metrics.monitor.azure.cn", "monitor-metrics")]
+    [InlineData("https://chinanorth3.ingest.monitor.azure.cn", "monitor-ingestion")]
     [InlineData("https://server.mysql.database.chinacloudapi.cn", "mysql")]
     [InlineData("https://myserver.postgres.database.chinacloudapi.cn", "postgres")]
     [InlineData("https://prices.azure.cn", "pricing")]
@@ -381,6 +426,7 @@ public class EndpointValidatorTests
     [InlineData("https://00000000-0000-0000-0000-000000000000.usgovvirginia.cnt-prod.loadtesting.azure.us", "loadtesting")]
     [InlineData("https://hsm.managedhsm.usgovcloudapi.net", "managedhsm")]
     [InlineData("https://usgovvirginia.metrics.monitor.azure.us", "monitor-metrics")]
+    [InlineData("https://usgovvirginia.ingest.monitor.azure.us", "monitor-ingestion")]
     [InlineData("https://server.mysql.database.usgovcloudapi.net", "mysql")]
     [InlineData("https://myserver.postgres.database.usgovcloudapi.net", "postgres")]
     [InlineData("https://prices.azure.us", "pricing")]

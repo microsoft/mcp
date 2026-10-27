@@ -406,6 +406,7 @@ output logSearchBasicTableName string = logSearchBasicTable.name
 output logSearchAuxiliaryTableName string = logSearchAuxiliaryTable.name
 output logSearchAnalyticsTableName string = logSearchAnalyticsTable.name
 output logSearchAuxiliaryLastPlanModifiedDate string = logSearchAuxiliaryTable.properties.lastPlanModifiedDate
+output logSearchDcrName string = logSearchDataCollectionRule.name
 output logSearchDcrImmutableId string = logSearchDataCollectionRule.properties.immutableId
 output logSearchIngestionEndpoint string = logSearchDataCollectionRule.properties.endpoints.logsIngestion
 output traceAccountName string = tracesModule.outputs.traceAccountName
