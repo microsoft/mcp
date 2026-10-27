@@ -14,7 +14,7 @@ public sealed class InsightListOptions : ISubscriptionOption
         "Omit both --service-group and --subscription to return insights across all accessible Service Groups and subscriptions.")]
     public string? ServiceGroup { get; set; }
 
-    [Option(Description = "Filter by insight name (for example 'IdleResources', 'ZonalResiliency', 'ServiceRetirement'). " +
+    [Option(Description = "Filter by insight name: IdleResources, ZonalResiliency, or ServiceRetirement. " +
         "Case-insensitive exact match. Omit to return all insights for the scope.")]
     public string? InsightName { get; set; }
 

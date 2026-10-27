@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Insight;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -33,7 +32,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Insight;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed partial class InsightListCommand(
+public sealed class InsightListCommand(
     ILogger<InsightListCommand> logger,
     IAdvisorInsightService insightService)
     : AuthenticatedCommand<InsightListOptions, InsightListCommand.InsightListResult>()
@@ -44,9 +43,6 @@ public sealed partial class InsightListCommand(
 
     private readonly ILogger<InsightListCommand> _logger = logger;
     private readonly IAdvisorInsightService _insightService = insightService;
-
-    [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9_.\-]{0,99}$")]
-    private static partial Regex InsightNamePattern();
 
     // With no scope the command lists insights across all Service Groups and subscriptions, so no default subscription is
     // resolved. An explicit (even blank) value is preserved so that it is validated rather than ignored.
@@ -91,10 +87,11 @@ public sealed partial class InsightListCommand(
             validationResult.AddError("--subscription must not be empty.", "Invalid subscription.");
         }
 
-        if (options.InsightName is not null && !InsightNamePattern().IsMatch(options.InsightName.Trim()))
+        if (options.InsightName is not null &&
+            !Enum.GetNames<AdvisorInsightName>().Contains(options.InsightName.Trim(), StringComparer.OrdinalIgnoreCase))
         {
             validationResult.AddError(
-                "--insight-name must be 1-100 characters: letters, digits, '_', '-' or '.', starting with a letter or digit.",
+                $"--insight-name must be one of: {string.Join(", ", Enum.GetNames<AdvisorInsightName>())}.",
                 "Invalid Advisor insight name.");
         }
 

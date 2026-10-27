@@ -44,6 +44,14 @@ public class InsightListCommandTests
     [InlineData("--service-group commerce --insight-name IdleResources --tenant t1", true)]
     [InlineData("", true)]
     [InlineData("--insight-name IdleResources", true)]
+    [InlineData("--insight-name ZonalResiliency", true)]
+    [InlineData("--insight-name serviceretirement", true)]
+    [InlineData("--insight-name iDlErEsOuRcEs", true)]
+    [InlineData("--insight-name UnknownInsight", false)]
+    [InlineData("--insight-name 0", false)]
+    [InlineData("--insight-name 999", false)]
+    [InlineData("--insight-name \"IdleResources, ZonalResiliency\"", false)]
+    [InlineData("--insight-name \"\"", false)]
     [InlineData("--subscription \" \"", false)]
     [InlineData("--service-group commerce --subscription sub1", false)]
     [InlineData("--service-group commerce --subscription \"\"", false)]
@@ -61,6 +69,18 @@ public class InsightListCommandTests
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UnknownInsightName_ListsSupportedNamesWithoutCallingService()
+    {
+        var response = await ExecuteCommandAsync("--insight-name", "UnknownInsight");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("IdleResources, ZonalResiliency, ServiceRetirement", response.Message);
+        await Service.DidNotReceive().ListInsightsAsync(
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

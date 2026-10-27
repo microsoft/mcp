@@ -1807,7 +1807,7 @@
     },
     {
       "name": "list_azure_advisor_insights",
-      "description": "List Azure Advisor insights, which are aggregated KPIs rather than individual recommendations: idle resources and potential savings, zonal resiliency coverage, and service retirement impact. Scope to one Service Group with the service group name, or one subscription (only service retirement insights apply to subscriptions); when neither is given, insights across all accessible Service Groups and subscriptions are returned. Optionally filter by insight name (IdleResources, ZonalResiliency, ServiceRetirement) and cap results with top. Returns each insight with its name, domain, scope type and ID, last updated time, and typed KPIs. For individual recommendation records use the recommendations tool instead.",
+      "description": "List Azure Advisor insights, which are aggregated KPIs rather than individual recommendations: idle resources and potential savings, zonal resiliency coverage, and service retirement impact. Scope to one Service Group with the service group name, or one subscription (only service retirement insights apply to subscriptions); when neither is given, insights across all accessible Service Groups and subscriptions are returned. Optionally filter by insight name (IdleResources, ZonalResiliency, ServiceRetirement) and cap results with top. Returns each insight with its name, domain, scope type and ID, last updated time, and typed KPIs. For recommendation insights use advisor_recommendation_summary; for individual recommendation records use advisor_recommendation_list.",
       "toolMetadata": {
         "destructive": {
           "value": false,
