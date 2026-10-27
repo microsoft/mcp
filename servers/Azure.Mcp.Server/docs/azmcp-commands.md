@@ -594,16 +594,26 @@ azmcp advisor recommendation prevalidate --recommendation-type-id <guid> \
 ```bash
 # Update the customer-provided state of an Advisor recommendation in a subscription or service group.
 # Use --subscription with an Azure subscription ID or name, use --service-group with a Service Group name, ID, or full ARM ID,
-# or omit both to use the configured default subscription. Do not specify both. --recommendation-id
-# is the stable ID, also called recommendation ID. Set the state to New, Postponed,
+# or omit both to use the configured default subscription. Do not specify both. Supply exactly one of
+# --recommendation-id (one stable recommendation ID) or --recommendation-ids (an explicit batch of distinct IDs).
+# Do not use affected-resource ARM IDs or recommendation-type GUIDs as update IDs.
+# A batch shares one scope, tenant, status, and date/reason, and uses one server destructive-consent request.
+# Set the state to New, Postponed,
 # Dismissed, or Completed. Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed,
 # an omitted reason or natural-language intent that cannot be mapped to a supported reason defaults to Other. New reactivates
 # a postponed, dismissed, or completed recommendation. Security and platform-resolved recommendations cannot
-# be updated. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.
+# be updated. A single-ID request preserves the existing recommendation result with id, name, type, and properties.
+# Batch requests return results with recommendationId, outcome (Succeeded, Failed, Unverified, NotAttempted),
+# the updated recommendation when successful, and statusCode/error when available. They are not atomic:
+# lost or malformed responses are Unverified, not confirmed failures;
+# failures retain earlier successes and do not trigger retries. Cancellation stops further writes, retains
+# completed results, and marks an interrupted write Unverified and remaining IDs NotAttempted.
+# All-success batches return 200; mixed successes return 207; no-success batches return a failure status.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor recommendation update [--subscription <subscription>] \
                                     [--service-group <service-group>] \
-                                    --recommendation-id <recommendation-id> \
+                                    [--recommendation-id <recommendation-id>] \
+                                    [--recommendation-ids <id1> <id2> ...] \
                                     --recommendation-status <New|Postponed|Dismissed|Completed> \
                                     [--postponed-until-date-time <date-time-with-offset>] \
                                     [--recommendation-dismiss-reason <ExcessiveCostInvestmentRequired|ImplementationStepsAreUnclear|IncompatibleWithTheCurrentConfiguration|RiskIsAcceptable|TooComplexOrImpracticalToImplement|AnAlternativeSolutionIsAlreadyInPlace|Other>] \

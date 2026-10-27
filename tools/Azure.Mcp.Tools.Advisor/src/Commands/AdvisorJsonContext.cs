@@ -14,6 +14,8 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationMetadataListCommand.RecommendationMetadataListResult))]
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationUpdateCommand.RecommendationUpdateResult))]
+[JsonSerializable(typeof(RecommendationUpdateItemResult))]
+[JsonSerializable(typeof(RecommendationUpdateOutcome))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
 [JsonSerializable(typeof(PreValidationResult))]
 [JsonSerializable(typeof(PreValidationResourceResult))]

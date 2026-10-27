@@ -971,6 +971,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Dismiss an Advisor recommendation because the risk is acceptable"
 * "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
+* "Postpone these selected Advisor recommendation IDs together in my service group until \<future-date-time-with-offset>, with one batch approval"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "Get Advisor metadata for a recommendation type id"

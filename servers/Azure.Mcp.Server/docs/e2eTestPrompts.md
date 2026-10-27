@@ -163,6 +163,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Postpone these selected Advisor recommendation IDs \<id1>, \<id2> together in subscription \<subscription> until \<future-date-time-with-offset>, with one batch approval | context-required |
+| advisor_recommendation_update | Dismiss selected Advisor recommendation IDs \<id1>, \<id2> in service group \<service-group> because the risk is acceptable, and report each result | context-required |
 | advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |

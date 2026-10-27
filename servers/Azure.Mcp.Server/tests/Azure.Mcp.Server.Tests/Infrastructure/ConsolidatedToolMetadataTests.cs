@@ -10,6 +10,27 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public sealed class ConsolidatedToolMetadataTests()
 {
+    [Fact]
+    public async Task AdvisorBatchUpdate_UsesTheExistingDestructiveConsolidatedTool()
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+
+        var command = services.GetRequiredService<ICommandFactory>().FindCommandByName("advisor_recommendation_update");
+        Assert.NotNull(command);
+        var definition = Assert.Single(
+            services.GetRequiredService<IConsolidatedToolDefinitionProvider>().GetToolDefinitions(),
+            tool => tool.MappedToolList.Contains("advisor_recommendation_update"));
+
+        Assert.Equal("update_azure_advisor_recommendation_state", definition.Name);
+        Assert.Single(definition.MappedToolList);
+        Assert.True(command.Metadata.Destructive);
+        Assert.False(command.Metadata.ReadOnly);
+        Assert.True(MetadataMatches(command.Metadata, definition.ToolMetadata));
+        Assert.Contains(command.GetCommand().Options, option => option.Name == "--recommendation-ids");
+    }
+
     [Theory]
     [InlineData("advisor_recommendation_list")]
     [InlineData("advisor_recommendation_summary")]

@@ -13,7 +13,10 @@ public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "The stable ID of the Advisor recommendation to update. The REST API and this command also call this value the recommendation ID.")]
-    public required string RecommendationId { get; set; }
+    public string? RecommendationId { get; set; }
+
+    [Option(Description = "The explicit stable recommendation IDs to update together in one destructive tool call. All IDs share the subscription or Service Group, tenant, status, and date or reason. Specify either this batch or --recommendation-id, not both. Each recommendation is updated independently and returns its own outcome; the batch is not atomic.")]
+    public string[]? RecommendationIds { get; set; }
 
     [Option(Description = "The new recommendation state: New, Postponed, Dismissed, or Completed. Use New to reactivate a postponed, dismissed, or completed recommendation.")]
     public required RecommendationStatus RecommendationStatus { get; set; }
