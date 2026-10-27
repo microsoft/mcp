@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;
@@ -95,18 +94,6 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => argEx.Message,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "Vault creation conflicted. If the vault already exists, use 'azurebackup_vault_update' " +
-            "('azurebackup vault update') to modify it, or choose a different name for a new vault.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed creating the vault. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
 
     public sealed record VaultCreateCommandResult(VaultCreateResult Vault);
 }

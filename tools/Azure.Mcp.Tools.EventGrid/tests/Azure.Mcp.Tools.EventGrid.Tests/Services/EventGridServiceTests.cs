@@ -4,6 +4,7 @@
 using System.Runtime.CompilerServices;
 using System.Security;
 using Azure.Core;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Azure.ResourceManager;
 using NSubstitute;
@@ -86,7 +87,7 @@ public class EventGridServiceTests()
             _ => ArmEnvironment.AzurePublicCloud
         };
 
-        Assert.Same(uri, EventGridService.ValidateEventGridEndpoint(uri, armEnvironment));
+        Assert.Same(uri, EventGridService.ValidateEventGridEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), uri));
     }
 
     [Theory]
@@ -98,7 +99,7 @@ public class EventGridServiceTests()
     public void ValidateTopicEndpoint_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            EventGridService.ValidateEventGridEndpoint(new Uri(endpoint), ArmEnvironment.AzurePublicCloud));
+            EventGridService.ValidateEventGridEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), new Uri(endpoint)));
     }
 
     [Theory]
@@ -110,7 +111,7 @@ public class EventGridServiceTests()
     public void ValidateTopicEndpoint_InvalidUsGovCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            EventGridService.ValidateEventGridEndpoint(new Uri(endpoint), ArmEnvironment.AzureGovernment));
+            EventGridService.ValidateEventGridEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureGovernment), new Uri(endpoint)));
     }
 
     [Theory]
@@ -122,13 +123,13 @@ public class EventGridServiceTests()
     public void ValidateTopicEndpoint_InvalidChinaCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            EventGridService.ValidateEventGridEndpoint(new Uri(endpoint), ArmEnvironment.AzureChina));
+            EventGridService.ValidateEventGridEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureChina), new Uri(endpoint)));
     }
 
     [Fact]
     public void ValidateTopicEndpoint_NullUri_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            EventGridService.ValidateEventGridEndpoint(null, ArmEnvironment.AzureChina));
+            EventGridService.ValidateEventGridEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureChina), null));
     }
 }

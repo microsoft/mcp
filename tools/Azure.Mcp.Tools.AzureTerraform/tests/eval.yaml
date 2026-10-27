@@ -1,0 +1,115 @@
+name: Azure Terraform evaluations
+description: Tool selection prompts for Azure Terraform, covering aztfexport export discovery and the documentation and policy validation tools that compete for similar prompts
+type: capability
+stimuli:
+  # Prompts reported in https://github.com/microsoft/mcp/issues/3553, which failed
+  # to trigger the aztfexport tools in namespace mode.
+  - name: Export a single resource by resource ID
+    prompt: Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_aztfexport_resource
+  - name: Export all resources in a resource group
+    prompt: Export all resources in resource group my-rg to Terraform
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_aztfexport_resourcegroup
+  - name: Export a resource group with the azapi provider
+    prompt: Export resource group my-rg to Terraform using the azapi provider
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_aztfexport_resourcegroup
+
+  # A resource ID must select the single resource tool rather than the resource group tool.
+  - name: Export by resource ID with the azapi provider
+    prompt: Generate an aztfexport command for /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> using the azapi provider without running the export
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_aztfexport_resource
+  - name: Export a named resource group without running the export
+    prompt: Generate an aztfexport command to export all resources in my-rg with the azapi provider without running the export
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_aztfexport_resourcegroup
+
+  # Documentation lookups must select the Terraform documentation tools rather than
+  # the tools that read live Azure resources, and must distinguish azurerm_ from AzAPI.
+  - name: AzureRM resource arguments
+    prompt: Show me the Terraform provider arguments for azurerm_storage_account
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_azurerm_get
+  - name: AzureRM data source documentation
+    prompt: Get the data source documentation for azurerm_subscription
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_azurerm_get
+  - name: AzAPI documentation by ARM type
+    prompt: Get AzAPI Terraform provider documentation for Microsoft.Storage/storageAccounts
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_azapi_get
+
+  # Policy validation must distinguish a Terraform source folder from a generated plan file.
+  # These prompts are marked context-required in e2eTestPrompts.md, so they are only
+  # covered by this checked-in specification.
+  - name: Validate Terraform source files in a workspace
+    prompt: Validate the Terraform files in the ./my-terraform-folder workspace folder against Azure security policies
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_conftest_workspace
+  - name: Validate a generated Terraform plan file
+    prompt: Validate the Terraform plan file tfplan.json in ./plan-output against Azure-Proactive-Resiliency-Library-v2 policies
+    environment: ${ENVIRONMENT}
+    graders:
+      - type: tool-calls
+        config:
+          required:
+            - name: azureterraform
+              args:
+                command: azureterraform_conftest_plan

@@ -93,11 +93,9 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
 
         // We prefix with `https://` even though it's not used for a connection string.
         // The method has some helpful error messages and other logic that we won't re-implement here.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: $"https://{host}",
-            serviceType: "postgres",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "postgres");
+            serviceType: "postgres");
 
         // EndpointValidator permits the allow-listed suffix root, but PostgreSQL connection endpoints
         // require a resource-specific serverNameOrFullHostname label before that suffix.

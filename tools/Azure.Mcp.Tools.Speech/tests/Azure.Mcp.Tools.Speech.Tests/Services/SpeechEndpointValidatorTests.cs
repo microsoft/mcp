@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -19,9 +20,8 @@ public sealed class SpeechEndpointValidatorTests
         string cloud,
         string endpoint)
     {
-        Uri validatedEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(
-            endpoint,
-            GetArmEnvironment(cloud));
+        Uri validatedEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+            endpoint);
 
         Assert.Equal(endpoint, validatedEndpoint.AbsoluteUri);
     }
@@ -38,9 +38,8 @@ public sealed class SpeechEndpointValidatorTests
     public void CreateAndValidateRealtimeTranscriptionEndpoint_InvalidEndpoint_Throws(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(
-                endpoint,
-                ArmEnvironment.AzurePublicCloud));
+            SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                endpoint));
     }
 
     [Theory]
@@ -52,9 +51,8 @@ public sealed class SpeechEndpointValidatorTests
         string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(
-                endpoint,
-                GetArmEnvironment(cloud)));
+            SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+                endpoint));
     }
 
     [Theory]
@@ -65,9 +63,8 @@ public sealed class SpeechEndpointValidatorTests
         string cloud,
         string host)
     {
-        Uri transcriptionEndpoint = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(
-            $"https://{host}/",
-            GetArmEnvironment(cloud));
+        Uri transcriptionEndpoint = SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+            $"https://{host}/");
 
         Assert.Equal(Uri.UriSchemeHttps, transcriptionEndpoint.Scheme);
         Assert.Equal(host, transcriptionEndpoint.Host);
@@ -84,9 +81,8 @@ public sealed class SpeechEndpointValidatorTests
         string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(
-                endpoint,
-                GetArmEnvironment(cloud)));
+            SpeechEndpointValidator.CreateAndValidateFastTranscriptionEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+                endpoint));
     }
 
     [Theory]
@@ -97,9 +93,8 @@ public sealed class SpeechEndpointValidatorTests
         string cloud,
         string host)
     {
-        Uri websocketEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(
-            $"https://{host}/",
-            GetArmEnvironment(cloud));
+        Uri websocketEndpoint = SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+            $"https://{host}/");
 
         Assert.Equal("wss", websocketEndpoint.Scheme);
         Assert.Equal(host, websocketEndpoint.Host);
@@ -116,9 +111,8 @@ public sealed class SpeechEndpointValidatorTests
         string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(
-                endpoint,
-                GetArmEnvironment(cloud)));
+            SpeechEndpointValidator.CreateAndValidateWebSocketEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+                endpoint));
     }
 
     private static ArmEnvironment GetArmEnvironment(string cloud) => cloud switch

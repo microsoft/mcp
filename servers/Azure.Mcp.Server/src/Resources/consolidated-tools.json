@@ -46,7 +46,7 @@
     },
     {
       "name": "create_azure_resilience_management_resources",
-      "description": "Create, update, or delete Azure Resilience Management resources, including usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
+      "description": "Create, update, or delete Azure Resilience Management resources, including goal assignments and zonal goal resource participation or attestation, usage plans, usage plan enrollments, drills, drill resources and runs, and recovery plans for Azure service groups.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -74,6 +74,10 @@
         }
       },
       "mappedToolList": [
+        "resiliency_goal_assignment_create",
+        "resiliency_goal_assignment_update",
+        "resiliency_goal_assignment_delete",
+        "resiliency_goal_assignment_update-resources",
         "resiliency_drill_update",
         "resiliency_drill_create",
         "resiliency_usageplan_create",
@@ -85,6 +89,40 @@
         "resiliency_recoveryplan_resource_update",
         "resiliency_drill_resource_add-or-update",
         "resiliency_drill_run_mark-complete"
+      ]
+    },
+    {
+      "name": "assess_azure_resilience_goal_resources",
+      "description": "Start zonal capacity recommendations or refresh tracked resources for an Azure resilience goal assignment in a service group. Recommend capacity for up to 50 selected Azure resource ARM IDs or discover non-resilient resources automatically; refresh resources after service-group membership changes. Does not provision capacity or change inclusion and attestation settings.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not delete underlying Azure resources or change their inclusion or attestation settings."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation starts a new capacity assessment or resource rediscovery operation."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to the specified service group and goal assignment."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts asynchronous work that updates assessment or tracked membership state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_goal_assignment_recommend-capacity",
+        "resiliency_goal_assignment_refresh-resources"
       ]
     },
     {
@@ -217,6 +255,72 @@
       },
       "mappedToolList": [
         "resiliency_drill_run_reprotect"
+      ]
+    },
+    {
+      "name": "generate_azure_resilience_drill_run_report",
+      "description": "Generate or regenerate the report for an Azure Resilience Management drill run and return the generation operation and report summary.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only creates or refreshes the report for a drill run and does not change drill execution or delete resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Regenerating the report for the same drill run produces the same report content without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool starts report generation, which writes the generated report for the drill run."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_drill_run_generate-report"
+      ]
+    },
+    {
+      "name": "get_azure_resilience_drill_run_report_download_url",
+      "description": "Get a short-lived, read-only download URL for the generated report of an Azure Resilience Management drill run.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only returns a download URL and does not modify or delete any resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times returns a valid download URL for the same report without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and limited to the specified drill run report."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only provides access to an existing report without modifying any state or data."
+        },
+        "secret": {
+          "value": true,
+          "description": "The returned URL grants time-limited access to the report and must be treated as a secret."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "resiliency_drill_run_get-report-download-url"
       ]
     },
     {
@@ -942,7 +1046,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
+      "description": "Query Analytics logs or search Basic and Auxiliary tables in a Log Analytics workspace. Find matching records in a named table over a time range, with a result limit. Run distributed-trace queries. Get Azure resource and application health, metrics, availability, and service health events. List Log Analytics workspaces, tables, activity logs, Grafana instances, and Datadog monitored resources. Diagnose applications with App Lens, get Application Insights recommendations, manage web tests, and inspect Azure Monitor health models.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -978,17 +1082,54 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_ingestion_validate",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_metrics_batchquery",
         "monitor_resource_log_query",
         "monitor_table_list",
         "monitor_table_type_list",
+        "monitor_traces_account_list",
+        "monitor_traces_field_list",
+        "monitor_traces_query_run",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
         "monitor_workspace_log_search",
         "resourcehealth_availability-status_get",
         "resourcehealth_health-events_list"
+      ]
+    },
+    {
+      "name": "resume_azure_monitor_trace_query",
+      "description": "Resume an existing distributed-trace query in an Azure Monitor Workspace without submitting a new query. Collect further results within time and row budgets. Repeated calls advance the result stream rather than replaying the same rows.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each invocation consumes further results from the existing query."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool operates on a specified trace query."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool reads query results without modifying Azure resources."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not return credentials or secret values."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "monitor_traces_query_resume"
       ]
     },
     {
@@ -1022,6 +1163,73 @@
       },
       "mappedToolList": [
         "monitor_webtests_createorupdate"
+      ]
+    },
+    {
+      "name": "cancel_azure_monitor_trace_query",
+      "description": "Cancel an in-flight distributed trace query operation on an Azure Monitor Workspace Trace Store account.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+
+      "mappedToolList": [
+        "monitor_traces_query_cancel"
+      ]
+    },
+    {
+      "name": "upload_custom_logs_to_azure_monitor",
+      "description": "Upload custom log data to Azure Monitor through the Logs Ingestion API using a data collection endpoint and data collection rule.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "monitor_ingestion_upload"
       ]
     },
     {
@@ -1466,7 +1674,7 @@
     },
     {
       "name": "list_azure_advisor_recommendations",
-      "description": "List actual Azure Advisor recommendation records in a subscription or summarize that subscription's recommendation population with server-side counts, totals, rankings, and distributions. Summary groupings include recommendation type IDs with labels, category, impact, impacted resource type, lifecycle status, metadata subcategory, and service-retirement date. Supports filters for category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem text, subcategory, and one-sided retirement-date comparisons. Use this for current recommendation instances, affected-resource details, or subscription aggregates. For the global recommendation metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID, use the metadata tool instead. le:<end-date> includes overdue active retirements and is not a bounded next-N window.",
+      "description": "List, show, or search individual Azure Advisor recommendation records and affected-resource details, or summarize recommendation populations in a subscription or Azure service group. List supports filters for category, subcategory, impact, lifecycle status, recommendation type ID, affected resource, resource type, problem text, tracking ID, retirement date, and scope. Summary provides server-side counts, totals, rankings, and distributions grouped by recommendation type ID with label, category, impact, impacted resource type, lifecycle status, metadata subcategory, or service-retirement date. For broad or unscoped top, critical, important, prioritized, priority, top-action, or what-should-I-fix-first requests that do not identify a specific recommendation type, use summary with --group-by recommendation-type and --prioritized true, and pass --top when the user specifies a result count. If the request identifies a specific recommendation type, use list directly with --recommendation-type-id and --prioritized true to order its individual records; metadata category selects savings ordering for Cost types and criticality ordering for other types. For non-prioritized individual-record requests, use list directly without a prior summary. Use summary for aggregate questions, including active service-retirement recommendations with retirement dates on, before, or after a specified date; le:<end-date> includes overdue active retirements and is not a bounded next-N window. After a summary, use list with the selected --recommendation-type-id and preserved filters to retrieve individual recommendations or affected resources. For the global metadata catalog, recommendation types, or service-retirement metadata by Service Health tracking ID, use the metadata tool instead. List returns ARM-shaped recommendations and a truncation indicator; each recommendation's name is its recommendation ID.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1500,7 +1708,7 @@
     },
     {
       "name": "update_azure_advisor_recommendation_state",
-      "description": "Update the customer-provided status of one Azure Advisor recommendation in a subscription. Mark an Advisor recommendation as Completed. Dismiss it because the risk is acceptable by using RiskIsAcceptable, or select another explicit reason. Postpone it until a future date and time, or reactivate it by setting it to New. Requires subscription context from a subscription ID, subscription name, or configured default, plus the recommendation stable ID, also called recommendation ID. If no dismissal reason is supplied or the user's intent cannot be mapped to a supported reason, use Other. State changes are rejected for Security category and platform-resolved recommendations. Returns the updated recommendation in the standard ARM resource shape with id, name, type, and properties.",
+      "description": "Mark one Azure Advisor recommendation as completed, dismiss it because the risk is acceptable, postpone it until a requested future date and time, or reactivate it by setting New. When a user asks to ignore a recommendation because the risk is acceptable, dismiss it with the RiskIsAcceptable reason. Snooze an Advisor recommendation in a subscription or Azure service group until a future date and time; snooze is the same operation as postpone and sets Postponed. Update, change, or set the customer-provided recommendation status or state to New, Postponed, Dismissed, or Completed. Common user requests may say mark done, reopen, or reset to New. Requires the stable recommendation ID and either subscription or service-group context, but not both; the configured default subscription is used when neither is supplied. Postponed requires a future date and time. For Dismissed, provide a supported reason when known; if no reason is supplied or the user's intent cannot be mapped to one, Other is used. State changes are rejected for Security category and platform-resolved recommendations. Returns the updated ARM recommendation resource. Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -1628,39 +1836,6 @@
       },
       "mappedToolList": [
         "advisor_remediation_get"
-      ]
-    },
-    {
-      "name": "apply_azure_advisor_recommendations",
-      "description": "Get rules that can help apply Advisor recommendation to create or modify IaaC files (like ARM, Bicep) for Azure resources.",
-      "toolMetadata": {
-        "destructive": {
-          "value": false,
-          "description": "This tool performs only additive updates without deleting or modifying existing resources."
-        },
-        "idempotent": {
-          "value": true,
-          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
-        },
-        "openWorld": {
-          "value": false,
-          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
-        },
-        "readOnly": {
-          "value": true,
-          "description": "This tool only performs read operations without modifying any state or data."
-        },
-        "secret": {
-          "value": false,
-          "description": "This tool does not handle sensitive or secret information."
-        },
-        "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
-        }
-      },
-      "mappedToolList": [
-        "advisor_recommendation_apply"
       ]
     },
     {
@@ -2414,7 +2589,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and tables. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and tables. Diagnose Azure VM and managed disk performance through Storage Intelligence, including configuration, throttling, per-LUN analysis, and recommendations. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2451,6 +2626,7 @@
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
+        "storage_disk_diagnose",
         "managedlustre_fs_subnetsize_ask",
         "managedlustre_fs_subnetsize_validate",
         "storage_table_list"
@@ -2975,6 +3151,39 @@
         "eventhubs_namespace_get",
         "eventhubs_eventhub_get",
         "eventhubs_eventhub_consumergroup_get"
+      ]
+    },
+    {
+      "name": "get_azure_device_provisioning_service",
+      "description": "Get details about an Azure Device Provisioning Service instance, including service state, endpoints, ID scope, allocation policy, network access, data residency, and linked IoT Hub metadata. Connection strings, authorization policies, and keys are not returned.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about an Azure Device Provisioning Service instance without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Calling this tool multiple times with the same parameters returns the current resource details without causing side effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool interacts only with Azure Resource Manager."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only reads Azure Device Provisioning Service resource information."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool excludes connection strings, authorization policies, and keys from its response."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "deviceprovisioning_service_get"
       ]
     },
     {
@@ -4961,7 +5170,7 @@
     },
     {
       "name": "get_azure_backup_details",
-      "description": "Get information about Azure Backup resources including vault details, backup policies, protected items, protectable items, backup status, jobs, recovery points, and unprotected resources.",
+      "description": "Get information about Azure Backup resources including vault details, backup policies, protected items, protectable items, backup status, jobs, RSV asynchronous operation status, recovery points, and unprotected resources.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -4997,6 +5206,7 @@
         "azurebackup_backup_status",
         "azurebackup_container_get",
         "azurebackup_job_get",
+        "azurebackup_operation_get",
         "azurebackup_recoverypoint_get",
         "azurebackup_governance_find-unprotected",
         "azurebackup_resourceguard_get",
@@ -5568,6 +5778,77 @@
       },
       "mappedToolList": [
         "insights_get"
+      ]
+    },
+    {
+      "name": "prepare_azure_resiliency_file",
+      "description": "Prepare one user-approved local architecture or infrastructure-as-code file for a later Azure Resiliency Agent scenario call. Returns an opaque attachment ID without returning file content.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call creates a new short-lived attachment ID."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool only reads the exact local file approved by the user."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates a short-lived process-local attachment snapshot and opaque ID."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it asks the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_file_attach"
+      ]
+    },
+    {
+      "name": "use_azure_resiliency_agent",
+      "description": "Use the Azure Resiliency Agent for general Azure resiliency guidance, application architecture assessment, new resilient Bicep, ARM JSON, or Terraform generation, and review of existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may materialize generated or corrected artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_guidance_get",
+        "resiliencyagent_architecture_assess",
+        "resiliencyagent_iac_generate",
+        "resiliencyagent_bicep_review",
+        "resiliencyagent_arm_review",
+        "resiliencyagent_terraform_review"
       ]
     }
   ]

@@ -141,6 +141,144 @@
                     "readOnly": false
                 }
             }
+        },
+        "QueryActivationsRequest": {
+            "description": "Query activations request payload.",
+            "type": "object",
+            "required": ["query"],
+            "properties": {
+                "query": {
+                    "description": "The KQL query string to execute against the activation records. Supports standard KQL data queries (e.g., table queries, `union`, filtering, aggregation) and limited management commands (`.show tables`, `.show table {tableName} cslschema`). Wildcard `union` (e.g. `union *`) is not supported.",
+                    "type": "string",
+                    "maxLength": 1048576,
+                    "readOnly": false
+                }
+            }
+        },
+        "QueryActivationsResponse": {
+            "description": "Query activations response. Contains one result table per statement in the query, in source-text order.",
+            "type": "object",
+            "required": ["tables"],
+            "properties": {
+                "tables": {
+                    "description": "An array of result tables. A single-statement query returns one table; a multi-statement query (for example a `.show table {tableName} cslschema` command chained with a data query) returns one table per statement, in source-text order.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActivationsTable"
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "ActivationsTable": {
+            "description": "A single result table returned by an activations query.",
+            "type": "object",
+            "required": ["tableName", "columns", "rows"],
+            "properties": {
+                "tableName": {
+                    "description": "The name of the result table. For a standard query, the primary result table is named `PrimaryResult`.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "columns": {
+                    "description": "An array describing the columns of the result table.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ActivationsColumn"
+                    },
+                    "readOnly": true
+                },
+                "rows": {
+                    "description": "An array of row arrays. Each inner array contains values positionally aligned with the columns array.",
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "description": "A single cell value, positionally aligned with the corresponding column. The JSON type of the value reflects the column's KustoScalarDataType (for example string, number, boolean, or null)."
+                        }
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "ActivationsColumn": {
+            "description": "Describes a column in the activations query result table.",
+            "type": "object",
+            "required": ["columnName", "columnType"],
+            "properties": {
+                "columnName": {
+                    "description": "The name of the column.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "columnType": {
+                    "description": "The KQL scalar data type of the column.",
+                    "$ref": "#/definitions/KustoScalarDataType",
+                    "readOnly": true
+                }
+            }
+        },
+        "KustoScalarDataType": {
+            "description": "The KQL scalar data type of a column in the activations query result table. Additional KustoScalarDataType values may be added over time.",
+            "type": "string",
+            "enum": [
+                "Bool",
+                "DateTime",
+                "Decimal",
+                "Dynamic",
+                "Guid",
+                "Int",
+                "Long",
+                "Real",
+                "String",
+                "TimeSpan"
+            ],
+            "x-ms-enum": {
+                "name": "KustoScalarDataType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Bool",
+                        "description": "A boolean value (true or false)."
+                    },
+                    {
+                        "value": "DateTime",
+                        "description": "A date and time value."
+                    },
+                    {
+                        "value": "Decimal",
+                        "description": "A 128-bit decimal number."
+                    },
+                    {
+                        "value": "Dynamic",
+                        "description": "A dynamic value (JSON-like structure)."
+                    },
+                    {
+                        "value": "Guid",
+                        "description": "A globally unique identifier."
+                    },
+                    {
+                        "value": "Int",
+                        "description": "A 32-bit signed integer."
+                    },
+                    {
+                        "value": "Long",
+                        "description": "A 64-bit signed integer."
+                    },
+                    {
+                        "value": "Real",
+                        "description": "A 64-bit floating point number."
+                    },
+                    {
+                        "value": "String",
+                        "description": "A UTF-8 string value."
+                    },
+                    {
+                        "value": "TimeSpan",
+                        "description": "A time interval value."
+                    }
+                ]
+            }
         }
     }
 }

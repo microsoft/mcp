@@ -498,11 +498,9 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
         // Service-name validation restricts the interpolated host label, while the shared validator independently
         // authorizes the completed SDK endpoint against the configured Azure cloud immediately before use.
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        AzureService.ValidateAzureServiceEndpoint(
             endpoint: endpointUri.AbsoluteUri,
-            serviceType: "search",
-            armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-            executingToolNamespaceName: "search");
+            serviceType: "search");
 
         return endpointUri;
     }

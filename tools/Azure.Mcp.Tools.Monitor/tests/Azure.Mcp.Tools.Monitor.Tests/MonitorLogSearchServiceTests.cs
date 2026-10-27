@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Models.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager;
@@ -739,7 +740,7 @@ public sealed class MonitorLogSearchServiceTests
         var resourceGroup = armClient.GetResourceGroupResource(
             ResourceGroupResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup));
 
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
         var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
         cloudConfiguration.CloudType.Returns(cloud);
         cloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);

@@ -97,8 +97,9 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 #endif
 
             // Validate metadata for each command
-            foreach (var (commandName, command) in matchingCommands)
+            foreach ((string commandName, CommandRegistration registration) in matchingCommands)
             {
+                IBaseCommand command = registration.Command;
                 if (!AreMetadataEqual(command.Metadata, consolidatedTool.ToolMetadata))
                 {
                     var errorMessage = $"Command '{commandName}' has mismatched ToolMetadata for consolidated tool '{consolidatedTool.Name}'. " +
@@ -161,7 +162,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
         return _consolidatedCommandFactory;
     }
 
-    private Dictionary<string, IBaseCommand> FilterCommands(IReadOnlyDictionary<string, IBaseCommand> allCommands)
+    private Dictionary<string, CommandRegistration> FilterCommands(IReadOnlyDictionary<string, CommandRegistration> allCommands)
     {
         return allCommands
             .Where(kvp =>
@@ -169,8 +170,8 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
                 var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
-            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Metadata.ReadOnly == true)
-            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Metadata.LocalRequired)
+            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly == true)
+            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
             .Where(kvp =>
             {
                 // Filter by namespace if specified
@@ -222,12 +223,18 @@ public sealed class ConsolidatedToolDiscoveryStrategy(
 /// Each instance creates a top-level namespace for one consolidated tool in the CommandFactory.
 /// This allows NamespaceToolLoader to see each consolidated tool as a separate top-level namespace.
 /// </summary>
+/// <param name="consolidatedTool">The exposed consolidated tool's description, name, and metadata.</param>
+/// <param name="matchingCommands">Original registrations keyed by their unconsolidated routing names.</param>
+/// <remarks>
+/// Reuses registrations without changing their original tool namespaces. The consolidated
+/// area's name identifies presentation and routing, not ownership of the executable commands.
+/// </remarks>
 internal sealed class SingleConsolidatedToolAreaSetup(
     ConsolidatedToolDefinition consolidatedTool,
-    Dictionary<string, IBaseCommand> matchingCommands) : IAreaSetup
+    Dictionary<string, CommandRegistration> matchingCommands) : IAreaSetup
 {
     private readonly ConsolidatedToolDefinition _consolidatedTool = consolidatedTool;
-    private readonly Dictionary<string, IBaseCommand> _matchingCommands = matchingCommands;
+    private readonly Dictionary<string, CommandRegistration> _matchingCommands = matchingCommands;
 
     public string Name => _consolidatedTool.Name ?? string.Empty;
     public string Title => Name;

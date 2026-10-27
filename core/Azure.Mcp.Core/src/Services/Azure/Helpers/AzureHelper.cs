@@ -185,9 +185,8 @@ public static class AzureHelper
         try
         {
             var credential = await azureService.GetTokenCredentialAsync(tenantId, cancellationToken);
-            var options = armClientOptions ?? new();
-            options.Transport = new HttpClientTransport(azureService.GetClient());
-            options.Environment = azureService.CloudConfiguration.ArmEnvironment;
+            ArmClientOptions options = armClientOptions ?? new();
+            azureService.ConfigureArmClientOptions(options);
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
             // Give the playback SDK timeout time to expire before the HTTP client times out.
             // Playback tests expect an exact sequence of requests and returns recorded responses.

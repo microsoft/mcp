@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -25,7 +26,7 @@ public class ManagedLustreServiceEndpointValidationTests
 
         Assert.Equal(
             endpoint,
-            ManagedLustreService.CreateValidatedKeyUri(endpoint, armEnvironment).AbsoluteUri);
+            ManagedLustreService.CreateValidatedKeyUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), endpoint).AbsoluteUri);
     }
 
     [Theory]
@@ -36,8 +37,7 @@ public class ManagedLustreServiceEndpointValidationTests
     public void CreateValidatedKeyUri_InvalidPublicCloudEndpoint_ThrowsSecurityException(string endpoint)
     {
         Assert.Throws<SecurityException>(() =>
-            ManagedLustreService.CreateValidatedKeyUri(
-                endpoint,
-                ArmEnvironment.AzurePublicCloud));
+            ManagedLustreService.CreateValidatedKeyUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                endpoint));
     }
 }

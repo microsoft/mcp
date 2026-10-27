@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -80,7 +81,7 @@ public sealed class SearchServiceEndpointValidationTests
         cloudConfiguration.CloudType.Returns(cloudType);
         cloudConfiguration.ArmEnvironment.Returns(armEnvironment);
 
-        IAzureService azureService = Substitute.For<IAzureService>();
+        IAzureService azureService = AzureServiceTestHelpers.CreateAzureService();
         azureService.CloudConfiguration.Returns(cloudConfiguration);
         return azureService;
     }

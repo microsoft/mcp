@@ -26,6 +26,7 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Azure.Mcp.Server
+    NetworkIsolationPolicy: Preferred,CFSClean
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     RunVSCodeIntegrationTests: ${{ parameters.RunVSCodeIntegrationTests }}

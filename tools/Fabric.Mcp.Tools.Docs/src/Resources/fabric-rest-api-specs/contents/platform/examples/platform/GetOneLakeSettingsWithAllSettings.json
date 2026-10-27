@@ -24,7 +24,8 @@
         ],
         "lifecycle": {
           "defaultTier": "Cool",
-          "policy": "Active"
+          "policy": "Active",
+          "accessTimeTracking": "Enabled"
         }
       }
     }

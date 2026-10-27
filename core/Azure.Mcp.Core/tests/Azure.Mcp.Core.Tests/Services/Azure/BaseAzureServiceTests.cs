@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Helpers;
+using Azure.Mcp.Tests.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Options;
@@ -36,6 +38,8 @@ public class BaseAzureServiceTests
             Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
         _azureService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            _azureService, _azureService.GetClient(), cloudConfig.ArmEnvironment);
     }
 
     [Fact]

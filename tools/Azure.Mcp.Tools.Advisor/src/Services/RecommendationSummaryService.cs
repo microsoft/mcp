@@ -7,12 +7,15 @@ using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Validation;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 public class RecommendationSummaryService(IAzureService azureService)
     : BaseAzureResourceService(azureService), IRecommendationSummaryService
 {
+    private readonly AdvisorResourceGraphQueryExecutor _queryExecutor = new(azureService);
+
     internal const string GroupByRecommendationType = "recommendation-type";
     internal const string GroupByCategory = "category";
     internal const string GroupByImpact = "impact";
@@ -41,8 +44,45 @@ public class RecommendationSummaryService(IAzureService azureService)
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
+        var (scope, tenantResource) = await _queryExecutor.ResolveSubscriptionScopeAsync(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken);
 
+        return await SummarizeRecommendationsCoreAsync(
+            scope,
+            tenantResource,
+            normalizedGroupBy,
+            filters,
+            cancellationToken);
+    }
+
+    public async Task<RecommendationSummary> SummarizeServiceGroupRecommendationsAsync(
+        string serviceGroup,
+        string groupBy,
+        RecommendationFilters? filters = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
+        var (scope, tenantResource) = await _queryExecutor.ResolveServiceGroupScopeAsync(
+            serviceGroup,
+            tenant,
+            cancellationToken);
+
+        return await SummarizeRecommendationsCoreAsync(
+            scope,
+            tenantResource,
+            normalizedGroupBy,
+            filters,
+            cancellationToken);
+    }
+
+    private static string NormalizeGroupBy(string groupBy)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
         var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
         if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
         {
@@ -51,46 +91,25 @@ public class RecommendationSummaryService(IAzureService azureService)
                 nameof(groupBy));
         }
 
-        var subscriptionResource = await AzureService.GetSubscription(
-            subscription,
-            tenant,
+        return normalizedGroupBy;
+    }
+
+    private static async Task<RecommendationSummary> SummarizeRecommendationsCoreAsync(
+        RecommendationQueryScope scope,
+        TenantResource tenantResource,
+        string normalizedGroupBy,
+        RecommendationFilters? filters,
+        CancellationToken cancellationToken)
+    {
+        var prioritized = IsPrioritized(filters);
+        var query = BuildSummaryQuery(scope, normalizedGroupBy, filters);
+
+        // Every summary joins tenant-wide recommendation-type metadata, so the query always runs at tenant scope; the
+        // subscription or service group is selected by the KQL predicates.
+        var result = await AdvisorResourceGraphQueryExecutor.ExecuteAsync(
+            tenantResource,
+            query,
             cancellationToken);
-        var subscriptionId = subscriptionResource.Data.SubscriptionId
-            ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
-
-        if (!string.IsNullOrWhiteSpace(resourceGroup))
-        {
-            var exists = await subscriptionResource
-                .GetResourceGroups()
-                .ExistsAsync(resourceGroup.Trim(), cancellationToken);
-            if (!exists.Value)
-            {
-                throw new KeyNotFoundException(
-                    $"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionId}'.");
-            }
-        }
-
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = tenants.FirstOrDefault(
-            candidate => candidate.Data.TenantId == subscriptionResource.Data.TenantId)
-            ?? throw new InvalidOperationException(
-                $"No accessible tenant was found for subscription '{subscription}'.");
-
-        var usesMetadata = RequiresMetadata(normalizedGroupBy, filters);
-        var query = BuildSummaryQuery(
-            subscriptionId,
-            resourceGroup,
-            normalizedGroupBy,
-            filters,
-            usesMetadata);
-        var queryContent = new ResourceQueryContent(query);
-        if (!usesMetadata)
-        {
-            queryContent.Subscriptions.Add(subscriptionId);
-        }
-
-        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var result = response.Value;
         EnsureCompleteResult(
             result.ResultTruncated == ResultTruncated.True,
             result.SkipToken);
@@ -101,43 +120,58 @@ public class RecommendationSummaryService(IAzureService azureService)
         }
 
         using var document = JsonDocument.Parse(result.Data);
-        return ParseSummary(normalizedGroupBy, document.RootElement);
+        return prioritized
+            ? ParsePrioritizedSummary(document.RootElement)
+            : ParseSummary(normalizedGroupBy, document.RootElement);
     }
 
-    internal static bool RequiresMetadata(string groupBy, RecommendationFilters? filters) =>
-        groupBy is GroupByRecommendationType
-            or GroupByCategory
-            or GroupByImpact
-            or GroupBySubCategory
-            or GroupByRetirementDate ||
-        !string.IsNullOrWhiteSpace(filters?.Category) ||
-        !string.IsNullOrWhiteSpace(filters?.Impact) ||
-        !string.IsNullOrWhiteSpace(filters?.SubCategory) ||
-        filters?.RetirementDate is not null;
+    internal static bool IsPrioritized(RecommendationFilters? filters) =>
+        filters?.Prioritized == true;
 
     internal static string BuildSummaryQuery(
         string subscriptionId,
         string? resourceGroup,
         string groupBy,
-        RecommendationFilters? filters,
-        bool? useMetadata = null)
+        RecommendationFilters? filters)
+        => BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription(subscriptionId, resourceGroup),
+            groupBy,
+            filters);
+
+    internal static string BuildServiceGroupSummaryQuery(
+        string serviceGroup,
+        string groupBy,
+        RecommendationFilters? filters)
+        => BuildSummaryQuery(
+            RecommendationQueryScope.ForServiceGroup(serviceGroup),
+            groupBy,
+            filters);
+
+    internal static string BuildSummaryQuery(
+        RecommendationQueryScope scope,
+        string groupBy,
+        RecommendationFilters? filters)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscriptionId);
+        ArgumentNullException.ThrowIfNull(scope);
         ArgumentException.ThrowIfNullOrWhiteSpace(groupBy);
 
-        var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
-        if (!AllowedGroupBy.Contains(normalizedGroupBy, StringComparer.Ordinal))
-        {
-            throw new ArgumentException(
-                $"Unsupported group-by value '{groupBy}'. Allowed values: {string.Join(", ", AllowedGroupBy)}.",
-                nameof(groupBy));
-        }
+        var normalizedGroupBy = NormalizeGroupBy(groupBy);
 
         ValidateFilters(filters, normalizedGroupBy);
 
-        return useMetadata ?? RequiresMetadata(normalizedGroupBy, filters)
-            ? BuildMetadataSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters)
-            : BuildInstanceSummaryQuery(subscriptionId, resourceGroup, normalizedGroupBy, filters);
+        if (IsPrioritized(filters))
+        {
+            if (normalizedGroupBy != GroupByRecommendationType)
+            {
+                throw new ArgumentException(
+                    $"Prioritized summaries are grouped by '{GroupByRecommendationType}' only.",
+                    nameof(groupBy));
+            }
+
+            return PrioritizedRecommendationSummaryQuery.Build(scope, filters);
+        }
+
+        return BuildMetadataSummaryQuery(scope, normalizedGroupBy, filters);
     }
 
     internal static void EnsureCompleteResult(bool isTruncated, string? skipToken)
@@ -161,15 +195,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         {
             var key = ReadRequiredString(item, "key");
             var label = ReadRequiredString(item, "label");
-            if (!item.TryGetProperty("count_", out var countProperty) ||
-                countProperty.ValueKind != JsonValueKind.Number ||
-                !countProperty.TryGetInt64(out var count64) ||
-                count64 < 0)
-            {
-                throw new JsonException("Recommendation summary row has an invalid count.");
-            }
-
-            var count = checked((int)count64);
+            var count = ReadCount(item);
             if (key.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
             {
                 key = "Unknown";
@@ -200,56 +226,108 @@ public class RecommendationSummaryService(IAzureService azureService)
         return new(groupBy, total, groups);
     }
 
-    private static string BuildInstanceSummaryQuery(
-        string subscriptionId,
-        string? resourceGroup,
-        string groupBy,
-        RecommendationFilters? filters)
+    /// <summary>
+    /// Reads prioritized summary rows. The rows arrive already ranked by
+    /// <see cref="PrioritizedRecommendationSummaryQuery"/>, and that order is kept unchanged.
+    /// </summary>
+    /// <remarks>
+    /// Each recommendation type occurs once because the query aggregates per type and the English metadata has one row
+    /// per type. If a key were ever repeated, the first, higher-ranked row would be kept and later rows ignored, so a
+    /// type is never counted twice.
+    /// </remarks>
+    internal static RecommendationSummary ParsePrioritizedSummary(JsonElement data)
     {
-        var query = BuildRecommendationScope(subscriptionId, resourceGroup);
-        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
-            filters,
-            includeStatus: groupBy != GroupByStatus,
-            useRequestedStatus: false,
-            includeCategoryAndImpact: true,
-            resourceTypeUsesImpactedField: true);
-        if (predicates.Length > 0)
+        if (data.ValueKind != JsonValueKind.Array)
         {
-            query += $" | where {predicates}";
+            throw new JsonException("Azure Resource Graph returned an invalid recommendation summary payload.");
         }
 
-        query += groupBy switch
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var groups = new List<RecommendationGroup>();
+        var total = 0;
+        foreach (var item in data.EnumerateArray())
         {
-            GroupByStatus =>
-                " | extend groupValue = tostring(properties.recommendationStatus)",
-            GroupByResourceType =>
-                " | extend impactedResourceType = tolower(tostring(properties.impactedField))" +
-                " | extend resourceIdType = tolower(extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId)))" +
-                " | extend groupValue = iff(isnotempty(impactedResourceType), impactedResourceType, resourceIdType)",
-            _ => throw new ArgumentException(
-                $"Group-by value '{groupBy}' requires recommendation metadata.",
-                nameof(groupBy)),
-        };
+            var key = ReadRequiredString(item, "key");
+            if (!seenKeys.Add(key))
+            {
+                continue;
+            }
 
-        return query +
-            " | extend key = iff(isempty(groupValue), 'Unknown', groupValue)" +
-            " | extend label = key" +
-            " | summarize count() by key, label";
+            var count = ReadCount(item);
+            total = checked(total + count);
+            groups.Add(new(
+                key,
+                ReadRequiredString(item, "label"),
+                count,
+                ReadPrioritizationSignals(item)));
+        }
+
+        return new(GroupByRecommendationType, total, groups);
+    }
+
+    /// <summary>
+    /// Combines the type's metadata fields, annual savings, and filtered published signals into one object. Absent
+    /// values are left unset so they are omitted from the response.
+    /// </summary>
+    private static RecommendationPrioritizationSignals ReadPrioritizationSignals(JsonElement item)
+    {
+        var signals = item.TryGetProperty("signalValues", out var signalValues)
+            ? PrioritizationSignalFilter.Filter(signalValues)
+            : new();
+        var annualSavings = ReadOptionalFiniteNumber(item, "annualSavings");
+
+        return signals with
+        {
+            Category = ReadOptionalString(item, "category"),
+            Impact = ReadOptionalString(item, "impact"),
+            SubCategory = ReadOptionalString(item, "subCategory"),
+            RetirementDate = ReadOptionalString(item, "retirementDate"),
+            AnnualSavings = annualSavings,
+            AnnualSavingsCurrency = annualSavings is null ? null : PrioritizedRecommendationSummaryQuery.SavingsCurrency,
+        };
+    }
+
+    private static string? ReadOptionalString(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out var property) &&
+        property.ValueKind == JsonValueKind.String &&
+        !PrioritizationSignalFilter.IsAbsent(property.GetString())
+            ? property.GetString()
+            : null;
+
+    private static double? ReadOptionalFiniteNumber(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out var property) &&
+        property.ValueKind == JsonValueKind.Number &&
+        property.TryGetDouble(out var value) &&
+        double.IsFinite(value)
+            ? value
+            : null;
+
+    private static int ReadCount(JsonElement item)
+    {
+        if (!item.TryGetProperty("count_", out var countProperty) ||
+            countProperty.ValueKind != JsonValueKind.Number ||
+            !countProperty.TryGetInt64(out var count64) ||
+            count64 < 0)
+        {
+            throw new JsonException("Recommendation summary row has an invalid count.");
+        }
+
+        return checked((int)count64);
     }
 
     private static string BuildMetadataSummaryQuery(
-        string subscriptionId,
-        string? resourceGroup,
+        RecommendationQueryScope scope,
         string groupBy,
         RecommendationFilters? filters)
     {
-        var query = BuildRecommendationScope(subscriptionId, resourceGroup);
+        var query = BuildRecommendationScope(scope);
         var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
             filters,
             includeStatus: groupBy != GroupByStatus,
             useRequestedStatus: false,
             includeCategoryAndImpact: false,
-            resourceTypeUsesImpactedField: true);
+            resourceTypeUsesImpactedField: true,
+            scope: scope);
         if (predicates.Length > 0)
         {
             query += $" | where {predicates}";
@@ -258,31 +336,14 @@ public class RecommendationSummaryService(IAzureService azureService)
         query +=
             " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))" +
             " | project recommendationTypeId," +
-            " instanceCategory=tostring(properties.category)," +
-            " instanceImpact=tostring(properties.impact)," +
-            " instanceSubCategory=tostring(properties.extendedProperties.recommendationSubCategory)," +
-            " instanceRetirementDate=tostring(properties.extendedProperties.retirementDate)," +
             " impactedField=tostring(properties.impactedField)," +
             " resourceId=tostring(properties.resourceMetadata.resourceId)," +
             " recommendationStatus=tostring(properties.recommendationStatus)" +
-            " | join kind=leftouter (" +
-            " advisorresources" +
-            " | where type =~ 'microsoft.advisor/metadata'" +
-            " | where tostring(properties.language) =~ 'en'" +
-            " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))" +
-            " | project recommendationTypeId," +
-            " metadataCategory=tostring(properties.recommendationCategory)," +
-            " metadataImpact=tostring(properties.recommendationImpact)," +
-            " metadataSubCategory=tostring(properties.recommendationSubCategory)," +
-            " metadataRetirementDate=tostring(properties.sourceProperties.serviceRetirement.retirementDate)," +
-            " metadataDisplayName=tostring(properties.displayName)," +
-            " metadataLabel=tostring(properties.label)" +
-            " ) on recommendationTypeId" +
-            " | extend category = iff(isnotempty(metadataCategory), metadataCategory, instanceCategory)," +
-            " impact = iff(isnotempty(metadataImpact), metadataImpact, instanceImpact)," +
-            " subCategory = iff(isnotempty(metadataSubCategory), metadataSubCategory, instanceSubCategory)," +
-            " retirementDateRaw = iff(isnotempty(metadataRetirementDate), metadataRetirementDate, instanceRetirementDate)" +
-            " | extend retirementDate = format_datetime(startofday(todatetime(retirementDateRaw)), 'yyyy-MM-dd')" +
+            JoinRecommendationTypeMetadata +
+            " | extend category = metadataCategory," +
+            " impact = metadataImpact," +
+            " subCategory = metadataSubCategory" +
+            " | extend retirementDate = format_datetime(startofday(todatetime(metadataRetirementDate)), 'yyyy-MM-dd')" +
             " | extend impactedResourceType = tolower(impactedField)" +
             " | extend resourceIdType = tolower(extract(@'/providers/([^/]+/[^/]+)', 1, resourceId))" +
             " | extend resourceType = iff(isnotempty(impactedResourceType), impactedResourceType, resourceIdType)" +
@@ -294,22 +355,58 @@ public class RecommendationSummaryService(IAzureService azureService)
         return query + " | summarize count() by key, label";
     }
 
-    private static string BuildRecommendationScope(string subscriptionId, string? resourceGroup)
+    /// <summary>
+    /// Inner join to English recommendation-type metadata, shared by every summary query.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Category, impact, subcategory, retirement date, priority score, and published signals are taken only from this
+    /// metadata. Recommendation records are not used as a fallback: metadata is the catalog of record for type-level
+    /// properties, and where the two disagree the metadata is authoritative.
+    /// </para>
+    /// <para>
+    /// The join is inner, as in the Azure portal Advisor experience: recommendations whose type has no English
+    /// metadata row are excluded from every summary, so all groupings and prioritized summaries share one population
+    /// and their totals agree. A type can still have an empty metadata field, which normal summaries group under
+    /// <c>Unknown</c>.
+    /// </para>
+    /// </remarks>
+    internal const string JoinRecommendationTypeMetadata =
+        " | join kind=inner (" +
+        " advisorresources" +
+        " | where type =~ 'microsoft.advisor/metadata'" +
+        " | where tostring(properties.language) =~ 'en'" +
+        " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))" +
+        " | project recommendationTypeId," +
+        " metadataCategory=tostring(properties.recommendationCategory)," +
+        " metadataImpact=tostring(properties.recommendationImpact)," +
+        " metadataSubCategory=tostring(properties.recommendationSubCategory)," +
+        " metadataRetirementDate=tostring(properties.sourceProperties.serviceRetirement.retirementDate)," +
+        " metadataDisplayName=tostring(properties.displayName)," +
+        " metadataLabel=tostring(properties.label)," +
+        " metadataPriorityScore=todouble(properties.priorityScore)," +
+        " metadataSignalValues=properties.signalValues" +
+        " ) on recommendationTypeId";
+
+    internal static string BuildRecommendationScope(RecommendationQueryScope scope)
     {
-        var query =
-            "advisorresources" +
-            " | where type =~ 'microsoft.advisor/recommendations'" +
-            $" | where subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId.Trim())}'";
-        if (!string.IsNullOrWhiteSpace(resourceGroup))
+        var query = "advisorresources | where type =~ 'microsoft.advisor/recommendations'";
+        if (scope.SubscriptionId is { } subscriptionId)
         {
             query +=
-                $" | where resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup.Trim())}'";
+                $" | where subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId)}'";
+        }
+
+        if (scope.ResourceGroup is { } resourceGroup)
+        {
+            query +=
+                $" | where resourceGroup =~ '{RecommendationQueryBuilder.EscapeKqlString(resourceGroup)}'";
         }
 
         return query;
     }
 
-    private static string AddMetadataFilters(
+    internal static string AddMetadataFilters(
         string query,
         string groupBy,
         RecommendationFilters? filters)

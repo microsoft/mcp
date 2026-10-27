@@ -85,24 +85,20 @@ public class IoTHubDeviceService(
     /// <summary>
     /// Validates that the given IoT Hub data-plane host name, path, and query satisfies the expected Azure service endpoint pattern.
     /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
     /// <param name="hostname">The host name of the Iot Hub to validate.</param>
     /// <param name="pathAndQuery">The path and query portion of the IoT Hub endpoint to validate.</param>
-    /// <param name="armEnvironment">The Azure Resource Manager environment to use for validation.</param>
     /// <returns>The validated URI of the IoT Hub endpoint.</returns>
-    internal static Uri CreateValidatedDataPlaneUri(
-        string hostname,
-        string pathAndQuery,
-        ArmEnvironment armEnvironment)
+    internal static Uri CreateValidatedDataPlaneUri(IAzureService azureService, string hostname,
+        string pathAndQuery)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(hostname);
         ArgumentException.ThrowIfNullOrWhiteSpace(pathAndQuery);
 
         var endpoint = new Uri($"https://{hostname}{pathAndQuery}", UriKind.Absolute);
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        azureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint.AbsoluteUri,
-            serviceType: "iothub",
-            armEnvironment: armEnvironment,
-            executingToolNamespaceName: "iothub");
+            serviceType: "iothub");
         return endpoint;
     }
 
@@ -147,10 +143,9 @@ public class IoTHubDeviceService(
             // beyond the page; otherwise a full page simply means the hub holds exactly maxCount
             // devices. This avoids a false "truncated" flag when the count equals the max.
             var maxCountParam = maxCount.HasValue ? $"&top={maxCount.Value + 1}" : string.Empty;
-            var requestUri = CreateValidatedDataPlaneUri(
+            Uri requestUri = CreateValidatedDataPlaneUri(AzureService,
                 hostname,
-                $"/devices?api-version={RegistryApiVersion}{maxCountParam}",
-                AzureService.CloudConfiguration.ArmEnvironment);
+                $"/devices?api-version={RegistryApiVersion}{maxCountParam}");
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
@@ -199,10 +194,9 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = CreateValidatedDataPlaneUri(
+            Uri requestUri = CreateValidatedDataPlaneUri(AzureService,
                 hostname,
-                $"/devices/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}",
-                AzureService.CloudConfiguration.ArmEnvironment);
+                $"/devices/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}");
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
@@ -237,10 +231,9 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = CreateValidatedDataPlaneUri(
+            Uri requestUri = CreateValidatedDataPlaneUri(AzureService,
                 hostname,
-                $"/twins/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}",
-                AzureService.CloudConfiguration.ArmEnvironment);
+                $"/twins/{Uri.EscapeDataString(deviceId)}?api-version={RegistryApiVersion}");
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
@@ -286,10 +279,9 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = CreateValidatedDataPlaneUri(
+            Uri requestUri = CreateValidatedDataPlaneUri(AzureService,
                 hostname,
-                $"/devices/query?api-version={RegistryApiVersion}",
-                AzureService.CloudConfiguration.ArmEnvironment);
+                $"/devices/query?api-version={RegistryApiVersion}");
 
             var queryObject = new IoTHubQueryRequest(query);
             var queryJson = JsonSerializer.Serialize(queryObject, IoTHubJsonContext.Default.IoTHubQueryRequest);
@@ -361,10 +353,9 @@ public class IoTHubDeviceService(
 
             using var httpClient = _httpClientFactory.CreateClient();
             var pipeline = BuildDataPlanePipeline(httpClient);
-            var requestUri = CreateValidatedDataPlaneUri(
+            Uri requestUri = CreateValidatedDataPlaneUri(AzureService,
                 hostname,
-                $"/statistics/devices?api-version={RegistryApiVersion}",
-                AzureService.CloudConfiguration.ArmEnvironment);
+                $"/statistics/devices?api-version={RegistryApiVersion}");
 
             using var request = pipeline.CreateRequest();
             request.Method = RequestMethod.Get;

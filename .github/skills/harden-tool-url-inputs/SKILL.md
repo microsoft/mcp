@@ -1,6 +1,6 @@
 ---
 name: harden-tool-url-inputs
-description: 'Audit and harden one or more tool directories against URL hijacking and SSRF by tracing MCP inputs to URL construction and applying EndpointValidator with cloud-specific Azure endpoint allow-lists. Use when: validate URL inputs, secure endpoints, prevent URL hijacking, SSRF hardening, audit tool directories, apply EndpointValidator.'
+description: 'Audit and harden one or more tool directories against URL hijacking and SSRF by tracing MCP inputs to URL construction and using IAzureService or injectable IEndpointValidator with cloud-specific Azure endpoint allow-lists. Use when: validate URL inputs, secure endpoints, prevent URL hijacking, SSRF hardening, audit tool directories, apply EndpointValidator.'
 argument-hint: 'Provide one or more repo-relative directories under tools/ (for example: tools/Azure.Mcp.Tools.Acr tools/Azure.Mcp.Tools.Compute)'
 user-invocable: true
 disable-model-invocation: false
@@ -8,7 +8,7 @@ disable-model-invocation: false
 
 # Harden Tool URL Inputs
 
-Audit and update every requested directory so MCP-influenced values cannot hijack a URL, URI, host, or client endpoint. Use `EndpointValidator` at the final URL boundary, with the configured Azure cloud and the narrowest appropriate allow-list.
+Audit and update every requested directory so MCP-influenced values cannot hijack a URL, URI, host, or client endpoint. Use `IAzureService` forwarding methods or the host's injectable `IEndpointValidator` at the final URL boundary, with the configured Azure cloud and the narrowest appropriate allow-list.
 
 This is a scoped implementation skill, not a report-only audit. Make the fixes and add tests unless the user explicitly requests analysis only.
 
@@ -25,14 +25,24 @@ This is a scoped implementation skill, not a report-only audit. Make the fixes a
 
 Before implementing, inspect the current versions of:
 
+- `core/Microsoft.Mcp.Core/src/Helpers/IEndpointValidator.cs`
 - `core/Microsoft.Mcp.Core/src/Helpers/EndpointValidator.cs`
 - `core/Microsoft.Mcp.Core/src/Helpers/EndpointValidator.AllowLists.cs`
+- `core/Azure.Mcp.Core/src/Services/Azure/IAzureService.cs`
 - `core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Core.Tests/Helpers/EndpointValidatorTests.cs`
-- Commit `54e99bf`
+- `core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Helpers/AzureServiceTestHelpers.cs`
 
-Use the current API as the source of truth and `54e99bf` as the pattern anchor. Its representative cases include:
+When wiring dependencies or testing namespace overrides, also inspect `SsrfProtectionPolicy.cs`,
+`EndpointValidationServiceCollectionExtensions.cs`, `ICommandContextAccessor.cs`, and
+`EndpointValidationRegistrationTests.cs` in their corresponding core projects. Read the
+executing-command-context guidance in `CONTRIBUTING.md` and transport boundaries in
+`docs/design/HttpClientFactory.md`.
 
-- ACR: validate the exact `Uri` passed to the data-plane SDK and expose a small pure helper for focused tests.
+Use current implementations as the API and pattern source of truth. Do not copy obsolete static
+policy-dependent calls or explicit namespace arguments from historical examples. Representative
+current cases include:
+
+- ACR: validate the exact `Uri` passed to the data-plane SDK through a small static helper that receives `IAzureService` for focused tests.
 - App Configuration and Communication: validate a discovered or user-supplied endpoint immediately before client construction.
 - Compute: distinguish URL input from a resource ID and validate only the URL branch with the `storage-blob` allow-list.
 - Cosmos and Foundry Extensions: try a small explicit set of acceptable Azure service types, then fail closed; an early any-cloud option check never replaces the authoritative configured-cloud service check.
@@ -58,6 +68,7 @@ Use the current API as the source of truth and `54e99bf` as the pattern anchor. 
 2. Read command registration, options, commands, services, helpers, and tests in every supplied directory.
 3. Identify the top-level MCP tool namespace from registration code. Do not infer it only from the directory name.
 4. Check whether each Azure service endpoint already has a key in `EndpointValidator.AllowLists.cs`.
+5. Identify the existing `IAzureService` dependency or, where unavailable, the `IEndpointValidator` dependency and its DI registration. Do not create a separate validator or policy at the tool boundary.
 
 ### 2. Inventory input-to-URL flows
 
@@ -78,14 +89,21 @@ For every candidate, determine one disposition:
 
 | URL flow | Required disposition |
 | --- | --- |
-| Azure data-plane endpoint | `ValidateAzureServiceEndpoint` |
-| Known non-Azure service with an exact host set | `ValidateExternalUrl` |
-| Deliberately arbitrary public HTTP(S) target | `ValidatePublicTargetUrl` |
+| Azure data-plane endpoint | `IAzureService.ValidateAzureServiceEndpoint` or injected `IEndpointValidator.ValidateAzureServiceEndpoint` |
+| Known non-Azure service with an exact host set | Static `EndpointValidator.ValidateExternalUrl` |
+| Deliberately arbitrary public HTTP(S) target | `IAzureService.ValidatePublicTargetUrl` or injected `IEndpointValidator.ValidatePublicTargetUrl` |
 | Input-derived path or query on an allowed base | Reject absolute/network-path replacement, construct or escape the component with an appropriate API, then validate the final absolute URL |
-| Typed Azure control-plane operation | No endpoint validation; use the typed ARM SDK and `ResourceIdentifier` rather than a raw interpolated ARM URL |
+| Typed Azure control-plane operation | Use the typed ARM SDK and `ResourceIdentifier` through shared ARM client creation; its pipeline validates each final request URI rather than requiring a redundant tool-level check |
 | Compile-time fixed URL with no influenced component | Document as not input-derived; no runtime validation needed |
 
 Do not classify an Azure endpoint as an arbitrary public target merely to avoid defining a service allow-list.
+
+Shared ARM clients created through `AzureHelper.CreateArmClientAsync` call
+`IAzureService.ConfigureArmClientOptions` and retain a configured-cloud `arm` validation policy
+before transport. It validates every attempt, including retries, paging, and long-running-operation
+polling, even without an active command context. Do not assume raw ARM HTTP calls or independently
+constructed SDK clients have this policy. Trace those paths and validate their final URLs against
+the configured-cloud `arm` allow-list before sending, including subsequent request URLs.
 
 ### 3. Implement Azure service validation
 
@@ -94,21 +112,19 @@ For an Azure data-plane endpoint, validate the exact absolute URL before the SDK
 ```csharp
 Uri uri = new Uri($"https://{resource}.{serviceDomain}");
 
-EndpointValidator.ValidateAzureServiceEndpoint(
+AzureService.ValidateAzureServiceEndpoint(
     endpoint: uri.AbsoluteUri,
-    serviceType: "service-key",
-    armEnvironment: AzureService.CloudConfiguration.ArmEnvironment,
-    executingToolNamespaceName: "toolNamespace");
+    serviceType: "service-key");
 
 var client = new ServiceClient(uri, credential, options);
 ```
 
 Apply these rules:
 
-1. Use named arguments. `serviceType` and `executingToolNamespaceName` have different security meanings.
+1. Use named arguments to distinguish the endpoint and service allow-list key. Direct `IEndpointValidator` calls also supply the Azure cloud.
 2. `serviceType` is the exact key for the endpoint domain in `EndpointValidator.AllowLists.cs`.
-3. `executingToolNamespaceName` is the command's registered top-level tool namespace. It may differ from `serviceType`; for example, `compute` may consume `storage-blob`, and `foundryextensions` may consume `foundry` or `azure-openai`.
-4. Pass `AzureService.CloudConfiguration.ArmEnvironment` at the authoritative service boundary. Do not hardcode public cloud when configured cloud context is available.
+3. The executing tool namespace is resolved by the validator through `ICommandContextAccessor.CurrentContext.ToolNamespaceName`, not supplied by the caller. It is the original registered `IAreaSetup.Name`, even in consolidated or single-tool mode, and is independent of `serviceType`; for example, `compute` may consume `storage-blob`, and `foundryextensions` may consume `foundry` or `azure-openai`. Never infer it from request arguments, an endpoint, a routing name, or telemetry.
+4. `IAzureService.ValidateAzureServiceEndpoint` always uses its own `CloudConfiguration.ArmEnvironment`; callers supply only the endpoint and service key. Direct `IEndpointValidator` calls must pass the configured cloud at an authoritative service boundary. Do not hardcode public cloud when configured cloud context is available.
 5. If option validation cannot access the configured cloud, it may accept endpoints valid in any explicitly supported cloud for early feedback, but the service must validate again against the configured cloud before use.
 6. When several Azure service endpoint families are intentionally accepted, try only a small explicit service-type set in the configured cloud. Catch only the expected validation exceptions and fail closed when none match.
 7. Validate every endpoint-producing branch. A safe default branch does not protect an alternate branch.
@@ -116,13 +132,38 @@ Apply these rules:
 9. When combining a trusted base URI with user input, do not pass the input directly to base-plus-relative URI resolution. Prove it is relative, reject `//`, `\\`, schemes, rooted paths, fragments, and other authority-changing forms as appropriate, then add escaped path segments or query parameters with a purpose-built API.
 10. Validate the final absolute URL after combining its components so alternate-authority behavior cannot bypass the allow-list.
 11. Constructing a `Uri` solely to canonicalize and then validating its `AbsoluteUri` is acceptable. Do not perform credential acquisition, client creation, DNS access, or a network call before validation.
-12. Do not configure or bypass SSRF protections from tool code. Namespace-aware validators receive the namespace only so the server's explicit emergency override can be applied.
+12. Do not configure or bypass SSRF protections, open command scopes, or assign namespaces from tool code. Command loaders establish the scope around the complete awaited command execution, including option validation. Discovery, learn/sampling callbacks, direct CLI execution, and external proxy forwarding do not populate the accessor; a real command selected through sampling receives its own scope.
+
+#### Dependency and policy ownership
+
+- Services derived from `BaseAzureService` should use its existing `AzureService` property. Other code with an `IAzureService` dependency should use that dependency's forwarding methods. The Azure-service facade obtains its cloud internally; do not add a cloud argument to it or to helpers that merely forward validation.
+- Commands performing early option validation and services without Azure-service access should inject `IEndpointValidator` through their primary constructor. Static validation helpers must receive `IAzureService` or `IEndpointValidator` explicitly rather than resolving services or constructing a validator themselves.
+- When a toolset directly injects `IEndpointValidator`, ensure its `ConfigureServices` calls `services.AddEndpointValidation()` using `Microsoft.Mcp.Core.Extensions`. That registration supplies logging, the shared singleton accessor, and a default validator and policy without replacing existing host registrations.
+- One immutable `SsrfProtectionPolicy` belongs to each host and is shared by endpoint validation, HTTP transports, and startup telemetry. Only host composition configures emergency namespace overrides. Toolsets must not register an overriding policy, initialize process-global state, or add mutation/reset APIs.
+- `EndpointValidator` reads the accessor on every validation call. Cached clients and pipeline policies retain the validator or accessor, never an invocation's context, namespace, or bypass decision.
+- `SsrfProtectionPolicy.AreSsrfProtectionsEnabled` is affirmative: `true` means protection remains enabled. Missing context and null, empty, or whitespace namespaces remain protected, even with `SsrfProtectionPolicy.AllNamespaces`. Overrides match case-insensitively without trimming; `" ALL "` is not the all-namespace marker.
+- `EndpointValidator` owns the injected `ILogger<EndpointValidator>` for diagnostics. Do not pass a logger or an executing namespace as a validation argument. `ValidateExternalUrl` and `IsPrivateOrReservedIP` remain static, policy-independent helpers, not interface methods.
+- Shared HTTP transports separately enforce external-only HTTPS and DNS-to-IP restrictions, disable automatic redirects, and select isolated protected, namespace-override, and proxied pools on each send. Those checks do not replace endpoint allow-lists or public-target validation. The factory selects one explicit proxy in `ALL_PROXY`, `HTTPS_PROXY`, then `HTTP_PROXY` order for both HTTP and HTTPS. Requests routed through an explicit, system, or PAC proxy omit transport protection because the trusted proxy is the network boundary. `NO_PROXY`, operating-system bypass, and PAC `DIRECT` routes use the protected direct transport and retain filtering unless the executing namespace has an emergency override. DEBUG recording proxies remain a handler-wide exception. Proxy routing never disables endpoint validation, including public-target DNS/IP checks of the original URL. Validate the original endpoint before recording rewrites it; never add proxy or arbitrary playback hosts to an allow-list to make tests pass.
+
+When injecting the validator directly, the corresponding call shape is:
+
+```csharp
+endpointValidator.ValidateAzureServiceEndpoint(
+    endpoint: uri.AbsoluteUri,
+    serviceType: "service-key",
+    armEnvironment: armEnvironment);
+```
+
+Here `endpointValidator` is the injected `IEndpointValidator` and `armEnvironment` is the
+configured cloud supplied by the caller. Unlike the Azure-service facade, the lower-level validator
+retains this argument for explicit-cloud checks. An early any-cloud check remains only preliminary feedback.
 
 #### Document bespoke validation-boundary logic
 
-Code immediately before or after an `EndpointValidator` invocation is security-sensitive when it transforms,
+Code immediately before or after a validation invocation is security-sensitive when it transforms,
 projects, or further restricts untrusted input. Add concise comments that preserve the reasoning for maintainers;
-do not merely restate what an expression does. This requirement applies to every `EndpointValidator` API.
+do not merely restate what an expression does. This requirement applies to Azure-service forwarding,
+injected validator calls, and static `EndpointValidator` helpers.
 
 1. At a non-HTTP network boundary, explain the downstream representation and how it differs from the URL
    representation accepted by `EndpointValidator`. For example, document when a raw database hostname is
@@ -144,7 +185,9 @@ do not merely restate what an expression does. This requirement applies to every
    endpoint requires an additional server label.
 6. Add or update XML `<exception>` documentation on extracted validation helpers so callers can distinguish
    malformed input, unsupported configuration, endpoint authorization failures, and other deliberately separate
-   failure modes.
+   failure modes. Prefer multiline `<summary>` and `<returns>` sections, `<see cref="..."/>` for API references,
+   `<paramref name="..."/>` for parameters, and `<see langword="null"/>` or other keyword links.
+   Refer to `<see cref="SsrfProtectionPolicy.AllNamespaces"/>` instead of a magic all-namespace string in XML documentation.
 7. Treat these comments as part of the security implementation. Authors who change the normalization, validation
    projection, downstream representation, or extra invariants must update the associated comments and exception
    documentation in the same change.
@@ -193,18 +236,18 @@ Use exact hosts and HTTPS. Do not pass broad parent domains when only one host i
 Arbitrary public target:
 
 ```csharp
-EndpointValidator.ValidatePublicTargetUrl(
-    url: targetUrl,
-    logger: logger,
-    executingToolNamespaceName: "toolNamespace");
+AzureService.ValidatePublicTargetUrl(url: targetUrl);
 ```
 
-Use this only when contacting user-selected public hosts is the feature. Preserve its DNS and private/reserved-address checks; do not add success-shaped fallbacks when validation or DNS resolution fails.
+Without Azure-service access, call the injected `IEndpointValidator` with
+`endpointValidator.ValidatePublicTargetUrl(url: targetUrl)`. Neither form takes a logger or namespace.
+
+Use this only when contacting user-selected public hosts is the feature. Preserve its DNS and private/reserved-address checks; do not add success-shaped fallbacks when validation or DNS resolution fails. Its preflight DNS check does not replace send-time transport protection against DNS changes.
 
 ### 6. Preserve error handling and architecture
 
 - Keep commands transport-agnostic, stateless, and thread-safe.
-- Reuse `EndpointValidator`; do not create local domain-matching implementations.
+- Reuse the host's `IEndpointValidator` through the established dependency; do not create local domain-matching implementations or a production validator with its own policy/accessor.
 - Make extracted validation helpers static when they do not need instance state.
 - Allow validation exceptions to reach the established command error path. Command catch blocks must continue to call `HandleException(context, ex)`.
 - If translating a `SecurityException` into an argument/validation error, retain it as the inner exception and avoid echoing an unbounded or sensitive raw endpoint.
@@ -221,7 +264,47 @@ Use this only when contacting user-selected public hosts is the feature. Preserv
 
 ## Required Tests
 
-Test the production validation boundary in every scoped tool that changes. Calling `EndpointValidator` directly from a tool test does not by itself prove the service invokes it.
+Test the production validation boundary in every scoped tool that changes. Calling a validator directly from a tool test does not by itself prove the service invokes it. Security tests must run as ordinary `[Fact]` or `[Theory]` tests; do not use `Explicit = true`, disable parallel execution, or require a special isolated process to test namespace overrides.
+
+Use a real `EndpointValidator` with an independent immutable policy and `CommandContextAccessor`,
+or resolve `IEndpointValidator` from an independently built test provider. For an `IAzureService`
+substitute, prefer `AzureServiceTestHelpers.CreateAzureService` so its validation methods delegate
+to a real validator. A no-op substitute is not evidence of endpoint rejection.
+
+Default strict tests need no active command context. To exercise an override, share the same
+accessor with the validator or Azure-service test helper and open a real test scope:
+
+```csharp
+var accessor = new CommandContextAccessor();
+IEndpointValidator validator = new EndpointValidator(
+    new SsrfProtectionPolicy(["compute"]),
+    NullLogger<EndpointValidator>.Instance,
+    accessor);
+
+using (accessor.BeginScope(new CommandContext { ToolNamespaceName = "compute" }))
+{
+    validator.ValidateAzureServiceEndpoint(
+        endpoint: "http://127.0.0.1",
+        serviceType: "storage-blob",
+        armEnvironment: ArmEnvironment.AzurePublicCloud);
+}
+
+Assert.Throws<SecurityException>(() => validator.ValidateAzureServiceEndpoint(
+    endpoint: "http://127.0.0.1",
+    serviceType: "storage-blob",
+    armEnvironment: ArmEnvironment.AzurePublicCloud));
+```
+
+This example deliberately exercises the emergency override, not a valid Azure endpoint.
+Use scoped service/helper tests to prove production wiring as well. Create scopes synchronously
+in the tested asynchronous flow and dispose them in that flow. Only one scope may be active per
+flow; use sequential scopes or independent asynchronous flows, not nested scopes. Do not create
+process-wide setters, test-only reset hooks, or a separate accessor inside the validation boundary.
+
+When namespace or cached-client behavior changes, verify selected namespaces independently of
+service keys, absent and blank contexts under `SsrfProtectionPolicy.AllNamespaces`, strict behavior
+after scope disposal, and concurrent providers/flows with different policies. Reuse one validator
+or client across scopes to detect accidentally captured bypass decisions.
 
 Prefer a focused helper or service test that proves:
 
