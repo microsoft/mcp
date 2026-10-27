@@ -105,6 +105,33 @@ Follow this checklist any time you need to update recordings:
 | Restore recordings referenced by an assets file | `./.proxy/Azure.Sdk.Tools.TestProxy.exe restore -a path/to/assets.json` |
 | Reset local clone to the current tag | `./.proxy/Azure.Sdk.Tools.TestProxy.exe reset -a path/to/assets.json` |
 
+### Authorization PIM approval lifecycle
+
+`AuthorizationApprovalCommandTests.Should_discover_and_approve_controlled_role_request` exercises
+both approval tools through the recorded test harness. It is explicit because it grants Azure access.
+Never select an arbitrary pending request for this test.
+
+Create a dedicated, short-lived activation request for a test-only identity and role at a controlled
+scope, with the recording identity assigned as its approver. Before recording, add these full resource
+IDs to `DeploymentOutputs` in the Authorization test project's local `.testsettings.json`:
+
+- `PIM_APPROVAL_SCOPE`: the scope of the controlled activation request.
+- `PIM_APPROVAL_ID`: the full approval resource ID of that request.
+- `PIM_APPROVAL_STAGE_ID`: the full stage resource ID assigned to the recording identity.
+
+Set `TestMode` to `Record` and run:
+
+```powershell
+dotnet test --project tools\Azure.Mcp.Tools.Authorization\tests\Azure.Mcp.Tools.Authorization.Tests -- --filter-class '*AuthorizationApprovalCommandTests' --explicit on
+```
+
+The test discovers only the configured approval and stage before approving it, and verifies the returned
+decision, status, justification, and review timestamp. The service obtains its HTTP client through
+`IAzureService.GetClient`, which delegates to the shared `IHttpClientFactory` and recording transport.
+Follow the recording workflow above to inspect and sanitize the recording, rerun the same command in
+`Playback`, publish the assets, and commit the updated `assets.json`. Each new live or recording run
+requires a fresh pending request. A successful mocked transport test is not a substitute for this recording.
+
 
 ## Working With Sanitizers and Matchers
 

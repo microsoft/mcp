@@ -15,6 +15,7 @@ public class AuthorizationService(IAzureService azureService)
     private const string ApproveReviewResult = "Approve";
     private const string InProgressStatus = "InProgress";
     private const string NotStartedStatus = "NotStarted";
+    private const string NotReviewedResult = "NotReviewed";
     private const string PendingStatus = "Pending";
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
     private const string RoleAssignmentsTable = "authorizationresources";
@@ -101,25 +102,31 @@ public class AuthorizationService(IAzureService azureService)
         var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, cancellationToken);
 
         var approvalsPath = $"{NormalizeScope(scope)}/providers/Microsoft.Authorization/roleAssignmentApprovals";
-        var requestUri = CreateArmUri($"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()");
-
-        using var responseDocument = await SendArmRequestAsync(
-            HttpMethod.Get,
-            requestUri,
-            resolvedTenantId,
-            cancellationToken: cancellationToken);
+        Uri? requestUri = CreateArmUri($"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()");
 
         var approvals = new List<RoleAssignmentApproval>();
-        if (responseDocument.RootElement.TryGetProperty("value", out var values) && values.ValueKind == JsonValueKind.Array)
+        while (requestUri is not null)
         {
-            foreach (var value in values.EnumerateArray())
+            using JsonDocument responseDocument = await SendArmRequestAsync(
+                HttpMethod.Get,
+                requestUri,
+                resolvedTenantId,
+                cancellationToken: cancellationToken);
+
+            if (responseDocument.RootElement.TryGetProperty("value", out JsonElement values) && values.ValueKind == JsonValueKind.Array)
             {
-                var approval = ConvertToRoleAssignmentApproval(value);
-                if (approval.Stages.Any(IsPendingApprovalStage))
+                foreach (JsonElement value in values.EnumerateArray())
                 {
-                    approvals.Add(approval);
+                    RoleAssignmentApproval approval = ConvertToRoleAssignmentApproval(value);
+                    if (approval.Stages.Any(IsPendingApprovalStage))
+                    {
+                        approvals.Add(approval);
+                    }
                 }
             }
+
+            string? nextLink = GetStringProperty(responseDocument.RootElement, "nextLink");
+            requestUri = string.IsNullOrEmpty(nextLink) ? null : new Uri(nextLink, UriKind.Absolute);
         }
 
         return approvals;
@@ -163,6 +170,10 @@ public class AuthorizationService(IAzureService azureService)
         HttpContent? content = null,
         CancellationToken cancellationToken = default)
     {
+        // Raw ARM HTTP bypasses the SDK pipeline, so authorize every page and PATCH before
+        // creating a client or acquiring credentials, including server-provided continuation URLs.
+        AzureService.ValidateAzureServiceEndpoint(endpoint: requestUri.AbsoluteUri, serviceType: "arm");
+
         using var httpClient = AzureService.GetClient();
         using var request = new HttpRequestMessage(method, requestUri)
         {
@@ -202,11 +213,8 @@ public class AuthorizationService(IAzureService azureService)
         using (var writer = new Utf8JsonWriter(buffer))
         {
             writer.WriteStartObject();
-            writer.WritePropertyName("properties");
-            writer.WriteStartObject();
             writer.WriteString("reviewResult", ApproveReviewResult);
             writer.WriteString("justification", justification);
-            writer.WriteEndObject();
             writer.WriteEndObject();
             writer.Flush();
         }
@@ -300,7 +308,9 @@ public class AuthorizationService(IAzureService azureService)
 
     private static bool IsPendingApprovalStage(RoleAssignmentApprovalStage stage)
     {
-        return IsPendingStatus(stage.Status) && string.IsNullOrEmpty(stage.ReviewResult);
+        return IsPendingStatus(stage.Status)
+            && (string.IsNullOrEmpty(stage.ReviewResult)
+                || stage.ReviewResult.Equals(NotReviewedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool IsPendingStatus(string? status)

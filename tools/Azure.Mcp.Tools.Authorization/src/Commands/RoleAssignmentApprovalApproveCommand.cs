@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
@@ -20,6 +21,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
         Use role approval list first to discover the approval and stage identifiers for requests
         assigned to the current approver.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
     OpenWorld = false,

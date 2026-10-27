@@ -2,14 +2,52 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public sealed class ConsolidatedToolMetadataTests()
 {
+    [Theory]
+    [InlineData(false, 3)]
+    [InlineData(true, 2)]
+    public async Task ConsolidatedTools_RoleNamespace_PreservesCommandsAndReadOnlyFiltering(bool readOnly, int expectedCount)
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using ServiceProvider services = serviceCollection.BuildServiceProvider();
+        ICommandFactory commandFactory = services.GetRequiredService<ICommandFactory>();
+        var strategy = new ConsolidatedToolDiscoveryStrategy(
+            commandFactory,
+            services,
+            services.GetRequiredService<IConsolidatedToolDefinitionProvider>(),
+            Options.Create(new ServerRuntimeConfiguration { Namespace = ["role"], ReadOnly = readOnly }),
+            services.GetRequiredService<IOptions<McpServerConfiguration>>(),
+            NullLogger<ConsolidatedToolDiscoveryStrategy>.Instance);
+
+        ICommandFactory consolidatedFactory = strategy.CreateConsolidatedCommandFactory();
+
+        Assert.Equal(expectedCount, consolidatedFactory.AllCommands.Count);
+        foreach (string commandName in new[] { "role_assignment_list", "role_approval_list", "role_approval_approve" })
+        {
+            IBaseCommand command = commandFactory.AllCommands[commandName].Command;
+            if (readOnly && !command.Metadata.ReadOnly)
+            {
+                Assert.DoesNotContain(consolidatedFactory.AllCommands.Values, registration => ReferenceEquals(registration.Command, command));
+            }
+            else
+            {
+                Assert.Contains(consolidatedFactory.AllCommands.Values, registration => ReferenceEquals(registration.Command, command));
+            }
+        }
+    }
+
     [Fact]
     public async Task ConsolidatedTools_MappedCommands_HaveMatchingMetadata()
     {

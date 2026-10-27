@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Authorization.Commands;
@@ -20,6 +21,7 @@ namespace Azure.Mcp.Tools.Authorization.Commands;
         for the current approver at the specified scope. Results include approval and stage identifiers
         that can be passed to the approve command.
         """,
+    OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,

@@ -1798,6 +1798,72 @@
       ]
     },
     {
+      "name": "get_azure_role_approvals",
+      "description": "List pending Azure RBAC Privileged Identity Management (PIM) role assignment approvals assigned to the current approver at a scope, including the approval and stage identifiers needed to approve a request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not modify role assignment approvals."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Repeated reads do not change approval state."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to Azure RBAC PIM approvals."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only reads pending approvals."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle secrets."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "role_approval_list"
+      ]
+    },
+    {
+      "name": "approve_azure_role_requests",
+      "description": "Approve a pending Azure RBAC Privileged Identity Management (PIM) role assignment request using its approval and stage identifiers, recording the approver's business justification.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "Approving a request can grant access to Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Approval changes the pending request state and cannot be repeated."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool is limited to Azure RBAC PIM approvals."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool updates an approval stage."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle secrets."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "role_approval_approve"
+      ]
+    },
+    {
       "name": "get_azure_policy_assignments",
       "description": "List and view Azure Policy assignments in subscriptions or scopes. Retrieve policy assignments including their definitions, enforcement modes, parameters, and metadata for governance and compliance management.",
       "toolMetadata": {

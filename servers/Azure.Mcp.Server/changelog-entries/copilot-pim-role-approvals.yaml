@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added Azure RBAC PIM role approval tools for listing pending approvals and approving role assignment requests."
+    description: "Added Azure RBAC PIM role approval tools for listing pending approvals across all result pages and approving role assignment requests, including consolidated server mode."
