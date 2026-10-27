@@ -43,7 +43,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
         {
             throw new RequestFailedException(409,
-                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+                "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, or choose a different name for a new vault.");
         }
 
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
@@ -70,7 +70,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             catch (RequestFailedException ex)
             {
                 var tenantArgument = string.IsNullOrEmpty(tenant) ? string.Empty : $" --tenant \"{tenant}\"";
-                throw new VaultStorageRedundancyException(
+                throw new RequestFailedException(
                     ex.Status,
                     $"Vault '{vaultName}' was created, but setting storage redundancy to '{requestedStorageType}' failed. " +
                     $"The vault currently uses the default storage redundancy. Before configuring backup, retry with " +

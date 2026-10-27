@@ -97,7 +97,7 @@ public class RsvVaultCreateStorageTypeTests
         using var handler = CreateHandler(requests, storageConfigPutStatus: status);
         using var client = new HttpClient(handler);
 
-        var exception = await Assert.ThrowsAsync<VaultStorageRedundancyException>(() =>
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
             new RsvBackupOperations(CreateAzureService(client)).CreateVaultAsync(
                 "vault", "rg", Subscription, "eastus", null, "LocallyRedundant", tenant,
                 cancellationToken: TestContext.Current.CancellationToken));
