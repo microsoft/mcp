@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Change"
+    description: "Re-enabled ADME tools after GA release."
