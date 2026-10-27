@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\McpToolEvaluator.Core\src\McpToolEvaluator.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)eng\tools\McpToolEvaluator.Core\src\McpToolEvaluator.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

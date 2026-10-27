@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Models.Command;
 
@@ -32,6 +33,13 @@ public class CommandResponse
 
     [JsonPropertyName("duration")]
     public long Duration { get; set; }
+
+    /// <summary>
+    /// Gets or sets protocol-native MCP content blocks to append to the tool result.
+    /// These blocks are not included in the command's JSON response or structured content.
+    /// </summary>
+    [JsonIgnore]
+    public IList<ContentBlock>? McpContent { get; set; }
 }
 
 [JsonConverter(typeof(ResultConverter))]

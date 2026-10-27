@@ -3,17 +3,20 @@
 
 using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels;
+using Azure.Mcp.Tools.Monitor.Commands.Ingestion;
 using Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.Traces;
 using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Mcp.Tools.Monitor.Services.Traces;
 using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -34,6 +37,8 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
+        services.AddSingleton<IMonitorIngestionService, MonitorIngestionService>();
+        services.AddSingleton<IMonitorTracesService, MonitorTracesService>();
 
         services.AddSingleton<ILanguageDetector, DotNetLanguageDetector>();
         services.AddSingleton<ILanguageDetector, NodeJsLanguageDetector>();
@@ -89,6 +94,9 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<ActivityLogListCommand>();
 
+        services.AddSingleton<IngestionUploadCommand>();
+        services.AddSingleton<IngestionValidateCommand>();
+
         services.AddSingleton<WebTestsGetCommand>();
         services.AddSingleton<WebTestsCreateOrUpdateCommand>();
 
@@ -97,6 +105,12 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<OrchestratorNextCommand>();
         services.AddSingleton<SendBrownfieldAnalysisCommand>();
         services.AddSingleton<SendEnhancementSelectCommand>();
+
+        services.AddSingleton<TraceAccountListCommand>();
+        services.AddSingleton<TraceFieldListCommand>();
+        services.AddSingleton<TraceQueryRunCommand>();
+        services.AddSingleton<TraceQueryResumeCommand>();
+        services.AddSingleton<TraceQueryCancelCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -162,6 +176,12 @@ public class MonitorSetup : IAreaSetup
 
         activityLog.AddCommand<ActivityLogListCommand>(serviceProvider);
 
+        var ingestion = new CommandGroup("ingestion", "Azure Monitor log ingestion operations - Commands for uploading custom log data through data collection rules and validating it beforehand.");
+        monitor.AddSubGroup(ingestion);
+
+        ingestion.AddCommand<IngestionUploadCommand>(serviceProvider);
+        ingestion.AddCommand<IngestionValidateCommand>(serviceProvider);
+
         // Register Monitor.WebTest sub-group commands
         var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
         monitor.AddSubGroup(webTests);
@@ -177,6 +197,25 @@ public class MonitorSetup : IAreaSetup
         instrumentation.AddCommand<OrchestratorNextCommand>(serviceProvider);
         instrumentation.AddCommand<SendBrownfieldAnalysisCommand>(serviceProvider);
         instrumentation.AddCommand<SendEnhancementSelectCommand>(serviceProvider);
+
+        // Distributed tracing - a Monitor sub-feature backed by
+        // Microsoft.Monitor/accounts/traceContainers on an Azure Monitor Workspace.
+        var traces = new CommandGroup("traces", "Azure Monitor distributed-trace operations - Commands for listing distributed-trace accounts (Azure Monitor Workspaces enabled for Trace Store) and querying trace data using the caller's Azure identity.");
+        monitor.AddSubGroup(traces);
+
+        var traceAccounts = new CommandGroup("account", "Distributed-trace account operations - Commands for listing Azure Monitor Workspaces enabled for Trace Store.");
+        traces.AddSubGroup(traceAccounts);
+        traceAccounts.AddCommand<TraceAccountListCommand>(serviceProvider);
+
+        var traceFields = new CommandGroup("field", "Distributed-trace field-name operations - Commands for discovering the trace + span schema exposed by a trace account.");
+        traces.AddSubGroup(traceFields);
+        traceFields.AddCommand<TraceFieldListCommand>(serviceProvider);
+
+        var traceQuery = new CommandGroup("query", "Distributed-trace query operations - Commands for running, resuming, and cancelling queries against Trace Store.");
+        traces.AddSubGroup(traceQuery);
+        traceQuery.AddCommand<TraceQueryRunCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceQueryResumeCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceQueryCancelCommand>(serviceProvider);
 
         return monitor;
     }

@@ -13,4 +13,5 @@ public sealed record DrillInfo(
     [property: JsonPropertyName("location")] string? Location = null,
     [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags = null,
     [property: JsonPropertyName("properties")] JsonElement Properties = default,
-    [property: JsonPropertyName("systemData")] JsonElement SystemData = default);
+    [property: JsonPropertyName("systemData")] JsonElement SystemData = default,
+    [property: JsonPropertyName("identity")] JsonElement Identity = default);

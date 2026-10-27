@@ -21,7 +21,68 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
 {
     private const string ServiceGroup = "sg1";
     private const string Drill = "drill1";
-    private const string IncludeJson = "[{\"id\":\"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1\"}]";
+    private const string DrillResourceId = "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222";
+    private const string IncludeJson = "[{\"id\":\"" + DrillResourceId + "\"}]";
+
+    [Theory]
+    [InlineData("--include-resources", "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    [InlineData("--update-resources", "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1")]
+    [InlineData("--include-resources", "/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("--update-resources", "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222")]
+    [InlineData("--include-resources", "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1")]
+    [InlineData("--include-resources", "not-an-arm-id")]
+    public async Task ExecuteAsync_RejectsWrongResourceIdentifiers(string option, string id)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup, "--drill", Drill, "--fault-duration-minutes", "1",
+            option, $"[{{\"id\":\"{id}\"}}]");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("drill-resource IDs", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData("[\"/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1\"]")]
+    [InlineData("[\"/providers/Microsoft.Management/serviceGroups/other/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/22222222-2222-2222-2222-222222222222\"]")]
+    [InlineData("[\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/other/drillResources/22222222-2222-2222-2222-222222222222\"]")]
+    [InlineData("[\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/drills/drill1/drillResources/resource1\"]")]
+    [InlineData("[\"/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.AzureResilienceManagement/recoveryPlans/plan1/recoveryResources/22222222-2222-2222-2222-222222222222\"]")]
+    [InlineData("[\"not-an-arm-id\"]")]
+    [InlineData("[\"\"]")]
+    [InlineData("[42]")]
+    public async Task ExecuteAsync_RejectsWrongExcludeIdentifiers(string excludeJson)
+    {
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup, "--drill", Drill, "--fault-duration-minutes", "1",
+            "--exclude-resources", excludeJson);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("drill-resource ID", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsExcludedDrillResourceIdsAndPreservesThem()
+    {
+        const string excludedId = "/providers/Microsoft.Management/serviceGroups/SG1/providers/Microsoft.AzureResilienceManagement/drills/DRILL1/drillResources/33333333-3333-3333-3333-333333333333";
+        Service.AddOrUpdateDrillResourcesAsync(ServiceGroup, Drill, Arg.Any<AddOrUpdateResourcesContent>(), null, Arg.Any<CancellationToken>())
+            .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", ServiceGroup, "--drill", Drill, "--fault-duration-minutes", "1",
+            "--exclude-resources", $"[\"{excludedId}\"]");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).AddOrUpdateDrillResourcesAsync(
+            ServiceGroup,
+            Drill,
+            Arg.Is<AddOrUpdateResourcesContent>(content =>
+                content.ResourceLists.ExcludeResources.Count == 1 &&
+                content.ResourceLists.ExcludeResources[0].ToString() == excludedId),
+            null,
+            Arg.Any<CancellationToken>());
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
