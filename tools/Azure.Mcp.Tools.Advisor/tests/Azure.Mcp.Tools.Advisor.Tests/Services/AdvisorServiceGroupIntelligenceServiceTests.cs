@@ -13,7 +13,7 @@ public class AdvisorServiceGroupIntelligenceServiceTests
     private const string Row = """
         {"id":"/providers/microsoft.management/servicegroups/commerce/providers/Microsoft.Advisor/serviceGroupIntelligence/Health",
          "name":"Health","type":"microsoft.advisor/servicegroupintelligence",
-         "properties":{"intelligenceName":"Health","serviceGroupName":"commerce",
+         "properties":{"intelligenceName":"Status","serviceGroupName":"commerce",
            "serviceGroupId":"/providers/microsoft.management/servicegroups/commerce",
            "lastUpdatedTime":"2026-10-12T03:14:06.625414Z","criticality":"2","isDeleted":false,
            "intelligenceDetail":[
@@ -32,7 +32,7 @@ public class AdvisorServiceGroupIntelligenceServiceTests
 
         Assert.Contains("type =~ 'microsoft.advisor/servicegroupintelligence'", query);
         Assert.Contains("startswith '/providers/microsoft.management/servicegroups/'", query);
-        Assert.Contains("properties.intelligenceName) =~ 'Health'", query);
+        Assert.Contains("properties.intelligenceName) =~ 'Status'", query);
         Assert.Contains("tobool(properties.isDeleted) != true", query);
         Assert.DoesNotContain("properties.criticality", query);
         Assert.DoesNotContain("mv-expand", query);

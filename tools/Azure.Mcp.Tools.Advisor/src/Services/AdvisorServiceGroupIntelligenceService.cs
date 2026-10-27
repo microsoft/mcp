@@ -136,7 +136,7 @@ public class AdvisorServiceGroupIntelligenceService(IAzureService azureService)
             "advisorresources " +
             "| where type =~ 'microsoft.advisor/servicegroupintelligence' " +
             $"| where tolower(id) startswith '{RecommendationQueryBuilder.SanitizeForKql(scopePrefix)}' " +
-            "| where tostring(properties.intelligenceName) =~ 'Health' " +
+            "| where tostring(properties.intelligenceName) =~ 'Status' " +
             "| where tobool(properties.isDeleted) != true ";
 
         if (!string.IsNullOrWhiteSpace(criticality))
