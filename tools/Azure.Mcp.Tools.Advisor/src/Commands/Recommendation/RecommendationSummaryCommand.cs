@@ -24,12 +24,23 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-id set to its key and --prioritized true, adding --category Cost for a Cost type. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +
+        "For --category Cost --sub-category IdleResources, summary.cost returns full-population retail savings, recommendation-type totals, lifecycle-status counts, " +
+        "and counts of bill-reducing opportunities, zero savings, and unavailable pricing, with or without --prioritized true. " +
+        "These Cost totals reuse the normal or prioritized summary calculation and are not limited by --top. " +
+        "Potential savings are annualized as dailyPotentialSavings × 30.4 × 12, with the legacy annual amount as fallback; " +
+        "accumulated open cost uses elapsed whole days plus estimatedAccumulatedSavings, and completed recommendations use " +
+        "resourceDeletedOn and realizedAccumulatedSavings for realized savings. Missing figures remain null, not zero. " +
+        "Calculated totals and rankings use the retail values supplied by Advisor; resource details preserve the original savings data. " +
+        "For historical Cost reporting, --as-of evaluates Advisor formulas " +
+        "at a supplied UTC timestamp, while --from and --to bound completed recommendations by resourceDeletedOn within the selected lifecycle states. " +
+        "Historical inputs default to Completed unless --status is explicitly supplied. summary.cost includes the supplied calculation timestamps. These are Advisor estimates, not billing history. " +
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
         "Use explicit exact, on-or-before, or on-or-after retirement-date questions; recommendation list is capped and must not be counted client-side. " +
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
         "All groups return canonical key, label, and count values. Recommendation-type keys are recommendation type ID GUIDs with English metadata labels. " +
-        "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
-        "Use either --subscription or --service-group, not both. A configured default subscription is used when neither is supplied. --resource-group applies only with subscription scope. " +
+        "Explicit --status applies to every grouping. Without --status, historical inputs default to Completed; " +
+        "otherwise status grouping includes all lifecycle states and other groupings default to New. " +
+        "Use --subscription or --subscriptions for subscription scope, or --service-group for Service Group scope. A configured default subscription is used when none is supplied. --resource-group applies only with subscription scope. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
         "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets; with --prioritized true it is the sum of affected resources per type, so a resource is counted once for each recommendation type that affects it.",
@@ -97,8 +108,9 @@ public sealed class RecommendationSummaryCommand(
             validationResult,
             options.Category,
             options.Impact,
-            options.RecommendationTypeId,
-            options.ResourceType,
+            RecommendationFilterValidator.CombineValues(options.RecommendationTypeId, options.RecommendationTypeIds),
+            RecommendationFilterValidator.CombineValues(options.ResourceType, options.ResourceTypes),
+            options.ProductFamily,
             options.Resource,
             options.Search,
             options.SubCategory,
@@ -106,6 +118,28 @@ public sealed class RecommendationSummaryCommand(
             serviceRetirementOnly: normalizedGroupBy?.Equals(
                 RecommendationSummaryService.GroupByRetirementDate,
                 StringComparison.OrdinalIgnoreCase) == true);
+        RecommendationFilterValidator.ValidateCostOnlyFilters(
+            options.Category,
+            options.MinimumSavings,
+            options.AsOf,
+            options.From,
+            options.To,
+            validationResult);
+
+        if (options.From is DateTimeOffset from &&
+            (options.To ?? options.AsOf) is DateTimeOffset to &&
+            from > to)
+        {
+            validationResult.Errors.Add(
+                $"--from must be earlier than or equal to {(options.To is null ? "--as-of" : "--to")}.");
+        }
+
+        if (options.AsOf is DateTimeOffset asOf &&
+            asOf > DateTimeOffset.UtcNow)
+        {
+            validationResult.Errors.Add("--as-of cannot be in the future.");
+        }
+
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, RecommendationSummaryOptions options, CancellationToken cancellationToken)
@@ -126,6 +160,10 @@ public sealed class RecommendationSummaryCommand(
                 out var retirementDate,
                 out _);
 
+            var recommendationTypeIds = RecommendationFilterValidator.NormalizeRecommendationTypeIds(
+                RecommendationFilterValidator.CombineValues(options.RecommendationTypeId, options.RecommendationTypeIds));
+            var resourceTypes = RecommendationFilterValidator.NormalizeFilterValues(
+                RecommendationFilterValidator.CombineValues(options.ResourceType, options.ResourceTypes));
             var filters = new Models.RecommendationFilters(
                 Category: RecommendationFilterValidator.NormalizeAllowedValue(
                     options.Category,
@@ -133,34 +171,61 @@ public sealed class RecommendationSummaryCommand(
                 Impact: RecommendationFilterValidator.NormalizeAllowedValue(
                     options.Impact,
                     RecommendationFilterValidator.AllowedImpacts),
-                RecommendationTypeId: RecommendationFilterValidator.NormalizeRecommendationTypeId(
-                    options.RecommendationTypeId),
-                ResourceType: NormalizeOptionalFilter(options.ResourceType),
+                Status: options.Status,
+                RecommendationTypeId: recommendationTypeIds.Count == 1 ? recommendationTypeIds[0] : null,
+                RecommendationTypeIds: recommendationTypeIds,
+                ResourceType: resourceTypes.Length == 1 ? resourceTypes[0] : null,
+                ResourceTypes: resourceTypes,
+                ProductFamily: ProductFamilyFilter.Normalize(options.ProductFamily),
                 Resource: NormalizeOptionalFilter(options.Resource),
                 Search: NormalizeOptionalFilter(options.Search),
                 SubCategory: NormalizeOptionalFilter(options.SubCategory),
                 RetirementDateOperator: retirementDateOperator,
                 RetirementDate: retirementDate,
+                MinimumSavings: options.MinimumSavings,
+                SavingsAsOf: options.AsOf,
+                SavingsFrom: options.From,
+                SavingsTo: options.To,
                 Prioritized: prioritized ? true : null);
 
-            var summary = !string.IsNullOrEmpty(options.ServiceGroup)
+            var summary = options.ServiceGroup is not null
                 ? await _recommendationSummaryService.SummarizeServiceGroupRecommendationsAsync(
                     options.ServiceGroup,
                     groupBy,
                     filters,
                     options.Tenant,
                     cancellationToken)
-                : await _recommendationSummaryService.SummarizeRecommendationsAsync(
-                    options.Subscription!,
-                    options.ResourceGroup,
-                    groupBy,
-                    filters,
-                    options.Tenant,
-                    cancellationToken);
+                : options.Subscriptions is { Length: > 0 }
+                    ? await _recommendationSummaryService.SummarizeRecommendationsAsync(
+                        RecommendationScopeValidator.GetSubscriptions(options),
+                        options.ResourceGroup,
+                        groupBy,
+                        filters,
+                        options.Tenant,
+                        cancellationToken)
+                    : await _recommendationSummaryService.SummarizeRecommendationsAsync(
+                        options.Subscription!,
+                        options.ResourceGroup,
+                        groupBy,
+                        filters,
+                        options.Tenant,
+                        cancellationToken);
+
+            var totalGroups = summary.Groups.Count;
+            if (summary.TotalRecommendationGroupCount == 0)
+            {
+                summary = summary with { TotalRecommendationGroupCount = totalGroups };
+            }
 
             if (top is int limit && summary.Groups.Count > limit)
             {
-                summary = summary with { Groups = SliceGroups(summary.Groups, limit, prioritized) };
+                var groups = SliceGroups(summary.Groups, limit, prioritized);
+                summary = summary with
+                {
+                    Groups = groups,
+                    TotalRecommendationGroupCount = totalGroups,
+                    RemainingRecommendationGroupCount = totalGroups - groups.Count,
+                };
             }
 
             context.Response.Results = ResponseResult.Create(
@@ -172,8 +237,8 @@ public sealed class RecommendationSummaryCommand(
             _logger.LogError(ex,
                 "Error summarizing Advisor recommendations. Subscription: {Subscription}, ServiceGroup: {ServiceGroup}, ResourceGroup: {ResourceGroup}, " +
                 "GroupBy: {GroupBy}, Prioritized: {Prioritized}, Top: {Top}, Category: {Category}, Impact: {Impact}, " +
-                "RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
-                "SubCategory: {SubCategory}, RetirementDate: {RetirementDate}, HasSearch: {HasSearch}.",
+                "Status: {Status}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
+                "SubCategory: {SubCategory}, RetirementDate: {RetirementDate}, AsOf: {AsOf}, From: {From}, To: {To}, HasSearch: {HasSearch}.",
                 options.Subscription,
                 options.ServiceGroup,
                 options.ResourceGroup,
@@ -182,11 +247,15 @@ public sealed class RecommendationSummaryCommand(
                 top,
                 options.Category,
                 options.Impact,
+                options.Status,
                 options.RecommendationTypeId,
                 options.ResourceType,
                 options.Resource,
                 options.SubCategory,
                 options.RetirementDate,
+                options.AsOf,
+                options.From,
+                options.To,
                 !string.IsNullOrEmpty(options.Search));
             HandleException(context, ex);
         }

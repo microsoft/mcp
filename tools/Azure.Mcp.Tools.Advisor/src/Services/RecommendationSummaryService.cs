@@ -43,10 +43,27 @@ public class RecommendationSummaryService(IAzureService azureService)
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        return await SummarizeRecommendationsAsync(
+            [subscription],
+            resourceGroup,
+            groupBy,
+            filters,
+            tenant,
+            cancellationToken);
+    }
+
+    public async Task<RecommendationSummary> SummarizeRecommendationsAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        string groupBy,
+        RecommendationFilters? filters = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(subscriptions);
         var normalizedGroupBy = NormalizeGroupBy(groupBy);
-        var (scope, tenantResource) = await _queryExecutor.ResolveSubscriptionScopeAsync(
-            subscription,
+        var (scope, tenantResource, _) = await _queryExecutor.ResolveSubscriptionsScopeAsync(
+            subscriptions,
             resourceGroup,
             tenant,
             cancellationToken);
@@ -101,28 +118,219 @@ public class RecommendationSummaryService(IAzureService azureService)
         RecommendationFilters? filters,
         CancellationToken cancellationToken)
     {
+        filters = RecommendationQueryBuilder.ApplySummaryStatusDefault(filters);
         var prioritized = IsPrioritized(filters);
-        var query = BuildSummaryQuery(scope, normalizedGroupBy, filters);
-
-        // Every summary joins tenant-wide recommendation-type metadata, so the query always runs at tenant scope; the
-        // subscription or service group is selected by the KQL predicates.
-        var result = await AdvisorResourceGraphQueryExecutor.ExecuteAsync(
+        var rows = await ExecuteSummaryRowsAsync(
             tenantResource,
-            query,
+            BuildSummaryQuery(scope, normalizedGroupBy, filters),
             cancellationToken);
-        EnsureCompleteResult(
-            result.ResultTruncated == ResultTruncated.True,
-            result.SkipToken);
 
-        if (result.Count == 0)
+        var summary = prioritized
+            ? ParsePrioritizedSummaryRows(rows)
+            : ParseSummaryRows(normalizedGroupBy, rows);
+
+        if (RecommendationQueryBuilder.IsIdleResourceCost(filters))
         {
-            return new(normalizedGroupBy, 0, []);
+            var sortByRealizedSavings = filters!.Status == RecommendationStatus.Completed;
+            var costSummary = ParseCostSummaryRows(rows, sortByRealizedSavings) with
+            {
+                AsOfUtc = filters.SavingsAsOf,
+                FromUtc = filters.SavingsFrom,
+                ToUtc = filters.SavingsTo,
+            };
+            if (costSummary.RecommendationCount != summary.TotalRecommendations)
+            {
+                throw new JsonException("Azure Resource Graph returned inconsistent recommendation and cost summary counts.");
+            }
+            summary = summary with { Cost = costSummary };
         }
 
-        using var document = JsonDocument.Parse(result.Data);
-        return prioritized
-            ? ParsePrioritizedSummary(document.RootElement)
-            : ParseSummary(normalizedGroupBy, document.RootElement);
+        return summary;
+    }
+
+    private static async Task<IReadOnlyList<JsonElement>> ExecuteSummaryRowsAsync(
+        TenantResource tenantResource,
+        string query,
+        CancellationToken cancellationToken)
+    {
+        var result = await AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(tenantResource, query, cancellationToken);
+        if (result.IsTruncated)
+        {
+            throw new InvalidOperationException(
+                "Azure Resource Graph returned a truncated summary result; the complete summary cannot be calculated.");
+        }
+        return result.Rows;
+    }
+
+    internal static string BuildFilteredRecommendationQuery(
+        RecommendationQueryScope scope,
+        RecommendationFilters? filters,
+        string groupBy)
+    {
+        filters = RecommendationQueryBuilder.ApplySummaryStatusDefault(filters);
+        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
+            filters,
+            includeStatus: RecommendationQueryBuilder.ShouldFilterSummaryStatus(filters, groupBy == GroupByStatus),
+            useRequestedStatus: true,
+            includeCategoryAndImpact: false,
+            resourceTypeUsesImpactedField: true,
+            scope: scope);
+        return BuildRecommendationScope(scope) +
+            $" | where {predicates}" +
+            RecommendationQueryBuilder.BuildHistoricalCompletedFilter(filters) +
+            " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))";
+    }
+
+    internal const string CostReportAggregation =
+        " potentialSavings = sum(potential), potentialCount = countif(isfinite(potential))," +
+        " billReducingOpportunityCount = countif(isfinite(potential) and potential > 0)," +
+        " zeroSavingsCount = countif(isfinite(potential) and potential <= 0)," +
+        " unavailablePricingCount = countif(not(isfinite(potential) or isfinite(cost) or isfinite(realizedSavings)))";
+
+    internal const string RestoreCostReportValues =
+        " | extend potentialSavings = iff(potentialCount > 0, potentialSavings, real(null))," +
+        " accumulatedWaste = iff(costCount > 0, cost, real(null))," +
+        " realizedSavings = iff(realizedSavingsCount > 0, realizedSavings, real(null))," +
+        " realizedCount = realizedSavingsCount";
+
+    internal const string CostReportRow =
+        "bag_pack('recommendationStatus', recommendationStatus, 'recommendationCount', resourceCount," +
+        " 'potentialSavings', potentialSavings, 'potentialCount', potentialCount," +
+        " 'accumulatedWaste', accumulatedWaste, 'costCount', costCount," +
+        " 'realizedSavings', realizedSavings, 'realizedCount', realizedCount," +
+        " 'billReducingOpportunityCount', billReducingOpportunityCount," +
+        " 'zeroSavingsCount', zeroSavingsCount, 'unavailablePricingCount', unavailablePricingCount)";
+
+    internal static RecommendationCostSummary ParseCostSummary(JsonElement data, bool sortByRealizedSavings = false)
+    {
+        if (data.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("Azure Resource Graph returned an invalid cost summary payload.");
+        }
+
+        return ParseCostSummaryRows(data.EnumerateArray(), sortByRealizedSavings);
+    }
+
+    private static RecommendationCostSummary ParseCostSummaryRows(
+        IEnumerable<JsonElement> rows, bool sortByRealizedSavings)
+    {
+        RecommendationCostCurrencySummary? totals = null;
+        var totalsByType = new Dictionary<string, (string Name, RecommendationCostCurrencySummary Totals)>(
+            StringComparer.OrdinalIgnoreCase);
+        var statusCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var recommendationCount = 0;
+        var billReducingCount = 0;
+        var zeroSavingsCount = 0;
+        var unavailableCount = 0;
+        foreach (var (item, typeId, name) in EnumerateCostRows(rows))
+        {
+            var potential = ReadOptionalDecimal(item, "potentialSavings");
+            var cost = ReadOptionalDecimal(item, "accumulatedWaste");
+            var realized = ReadOptionalDecimal(item, "realizedSavings");
+            var status = ReadOptionalString(item, "recommendationStatus") ?? "Unknown";
+            var count = ReadCount(item, "recommendationCount");
+            recommendationCount = checked(recommendationCount + count);
+            billReducingCount = checked(billReducingCount + ReadCount(item, "billReducingOpportunityCount"));
+            zeroSavingsCount = checked(zeroSavingsCount + ReadCount(item, "zeroSavingsCount"));
+            unavailableCount = checked(unavailableCount + ReadCount(item, "unavailablePricingCount"));
+            statusCounts[status] = checked(statusCounts.GetValueOrDefault(status) + count);
+            var rowTotals = new RecommendationCostCurrencySummary(
+                PrioritizedRecommendationSummaryQuery.SavingsCurrency, potential, cost, realized, count,
+                ReadCount(item, "potentialCount"), ReadCount(item, "costCount"), ReadCount(item, "realizedCount"));
+            totals = totals is null ? rowTotals : MergeCostTotals(totals, rowTotals);
+
+            if (typeId is not null)
+            {
+                var key = typeId.ToLowerInvariant();
+                totalsByType[key] = totalsByType.TryGetValue(key, out var existingType)
+                    ? (existingType.Name, MergeCostTotals(existingType.Totals, rowTotals))
+                    : (name ?? typeId, rowTotals);
+            }
+        }
+
+        return new(
+            RecommendationQueryBuilder.RetailPricingBasis, recommendationCount, billReducingCount, zeroSavingsCount, unavailableCount,
+            totals is null ? [] : [totals],
+            StatusTotals: statusCounts
+                .OrderBy(static pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(static pair => new RecommendationCostStatusSummary(pair.Key, pair.Value))
+                .ToList(),
+            TypeTotals: totalsByType
+                .Select(static entry => new RecommendationCostTypeSummary(
+                    entry.Key, entry.Value.Name, PrioritizedRecommendationSummaryQuery.SavingsCurrency, RecommendationQueryBuilder.RetailPricingBasis,
+                    entry.Value.Totals.PotentialSavings, entry.Value.Totals.AccumulatedWaste, entry.Value.Totals.RealizedSavings,
+                    entry.Value.Totals.RecommendationCount, entry.Value.Totals.PotentialValueCount,
+                    entry.Value.Totals.AccumulatedWasteCount, entry.Value.Totals.RealizedSavingsCount))
+                .OrderByDescending(item => GetSavingsSortValue(item, sortByRealizedSavings))
+                .ThenBy(static item => item.RecommendationName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static item => item.RecommendationTypeId, StringComparer.OrdinalIgnoreCase)
+                .ToList());
+    }
+
+    private static IEnumerable<(JsonElement Row, string? TypeId, string? Name)> EnumerateCostRows(
+        IEnumerable<JsonElement> rows)
+    {
+        foreach (var row in rows)
+        {
+            if (row.ValueKind != JsonValueKind.Object)
+            {
+                throw new JsonException("Azure Resource Graph returned an invalid cost summary row.");
+            }
+            if (row.TryGetProperty("costSummaryRows", out var costRows))
+            {
+                if (costRows.ValueKind != JsonValueKind.Array)
+                {
+                    throw new JsonException("Azure Resource Graph returned invalid cost summary rows.");
+                }
+                var typeId = ReadRequiredString(row, "key");
+                var name = ReadRequiredString(row, "label");
+                foreach (var item in costRows.EnumerateArray())
+                {
+                    if (item.ValueKind != JsonValueKind.Object)
+                    {
+                        throw new JsonException("Azure Resource Graph returned an invalid cost summary row.");
+                    }
+                    yield return (item, typeId, name);
+                }
+            }
+            else
+            {
+                yield return (row, ReadOptionalString(row, "recommendationTypeId"),
+                    ReadOptionalString(row, "recommendationName"));
+            }
+        }
+    }
+
+    private static decimal? GetSavingsSortValue(RecommendationCostTypeSummary item, bool sortByRealizedSavings) =>
+        sortByRealizedSavings ? item.RealizedSavings : item.PotentialSavings;
+
+    private static RecommendationCostCurrencySummary MergeCostTotals(
+        RecommendationCostCurrencySummary left, RecommendationCostCurrencySummary right) =>
+        left with
+        {
+            PotentialSavings = AddOptional(left.PotentialSavings, right.PotentialSavings),
+            AccumulatedWaste = AddOptional(left.AccumulatedWaste, right.AccumulatedWaste),
+            RealizedSavings = AddOptional(left.RealizedSavings, right.RealizedSavings),
+            RecommendationCount = checked(left.RecommendationCount + right.RecommendationCount),
+            PotentialValueCount = checked(left.PotentialValueCount + right.PotentialValueCount),
+            AccumulatedWasteCount = checked(left.AccumulatedWasteCount + right.AccumulatedWasteCount),
+            RealizedSavingsCount = checked(left.RealizedSavingsCount + right.RealizedSavingsCount),
+        };
+
+    private static decimal? AddOptional(decimal? left, decimal? right) =>
+        left is decimal leftValue && right is decimal rightValue ? leftValue + rightValue : left ?? right;
+
+    private static decimal? ReadOptionalDecimal(JsonElement item, string propertyName)
+    {
+        if (!item.TryGetProperty(propertyName, out var property) || property.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetDecimal(out var value))
+        {
+            throw new JsonException($"Recommendation cost summary row has an invalid {propertyName} value.");
+        }
+        return value;
     }
 
     internal static bool IsPrioritized(RecommendationFilters? filters) =>
@@ -190,8 +398,13 @@ public class RecommendationSummaryService(IAzureService azureService)
             throw new JsonException("Azure Resource Graph returned an invalid recommendation summary payload.");
         }
 
+        return ParseSummaryRows(groupBy, data.EnumerateArray());
+    }
+
+    private static RecommendationSummary ParseSummaryRows(string groupBy, IEnumerable<JsonElement> rows)
+    {
         var groupsByKey = new Dictionary<string, RecommendationGroup>(StringComparer.OrdinalIgnoreCase);
-        foreach (var item in data.EnumerateArray())
+        foreach (var item in rows)
         {
             var key = ReadRequiredString(item, "key");
             var label = ReadRequiredString(item, "label");
@@ -223,12 +436,11 @@ public class RecommendationSummaryService(IAzureService azureService)
         var total = groups.Aggregate(
             0,
             static (current, group) => checked(current + group.Count));
-        return new(groupBy, total, groups);
+        return new(groupBy, total, groups, TotalRecommendationGroupCount: groups.Count);
     }
 
     /// <summary>
-    /// Reads prioritized summary rows. The rows arrive already ranked by
-    /// <see cref="PrioritizedRecommendationSummaryQuery"/>, and that order is kept unchanged.
+    /// Reads globally aggregated rows, preserving the query's priority ordering.
     /// </summary>
     /// <remarks>
     /// Each recommendation type occurs once because the query aggregates per type and the English metadata has one row
@@ -242,10 +454,15 @@ public class RecommendationSummaryService(IAzureService azureService)
             throw new JsonException("Azure Resource Graph returned an invalid recommendation summary payload.");
         }
 
+        return ParsePrioritizedSummaryRows(data.EnumerateArray());
+    }
+
+    private static RecommendationSummary ParsePrioritizedSummaryRows(IEnumerable<JsonElement> rows)
+    {
         var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var groups = new List<RecommendationGroup>();
         var total = 0;
-        foreach (var item in data.EnumerateArray())
+        foreach (var item in rows)
         {
             var key = ReadRequiredString(item, "key");
             if (!seenKeys.Add(key))
@@ -283,7 +500,15 @@ public class RecommendationSummaryService(IAzureService azureService)
             SubCategory = ReadOptionalString(item, "subCategory"),
             RetirementDate = ReadOptionalString(item, "retirementDate"),
             AnnualSavings = annualSavings,
-            AnnualSavingsCurrency = annualSavings is null ? null : PrioritizedRecommendationSummaryQuery.SavingsCurrency,
+            AnnualSavingsCurrency = annualSavings is null
+                ? null
+                : PrioritizedRecommendationSummaryQuery.SavingsCurrency,
+            YearlyPotentialSavings = ReadOptionalFiniteNumber(item, "yearlyPotentialSavings"),
+            Cost = ReadOptionalFiniteNumber(item, "cost"),
+            RealizedSavings = ReadOptionalFiniteNumber(item, "realizedSavings"),
+            Currency = ReadOptionalString(item, "currency"),
+            PricingBasis = ReadOptionalString(item, "pricingBasis"),
+            Status = ReadOptionalString(item, "recommendationStatus"),
         };
     }
 
@@ -302,9 +527,11 @@ public class RecommendationSummaryService(IAzureService azureService)
             ? value
             : null;
 
-    private static int ReadCount(JsonElement item)
+    private static int ReadCount(JsonElement item) => ReadCount(item, "count_");
+
+    private static int ReadCount(JsonElement item, string propertyName)
     {
-        if (!item.TryGetProperty("count_", out var countProperty) ||
+        if (!item.TryGetProperty(propertyName, out var countProperty) ||
             countProperty.ValueKind != JsonValueKind.Number ||
             !countProperty.TryGetInt64(out var count64) ||
             count64 < 0)
@@ -320,26 +547,18 @@ public class RecommendationSummaryService(IAzureService azureService)
         string groupBy,
         RecommendationFilters? filters)
     {
-        var query = BuildRecommendationScope(scope);
-        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
-            filters,
-            includeStatus: groupBy != GroupByStatus,
-            useRequestedStatus: false,
-            includeCategoryAndImpact: false,
-            resourceTypeUsesImpactedField: true,
-            scope: scope);
-        if (predicates.Length > 0)
-        {
-            query += $" | where {predicates}";
-        }
+        var includeCost = RecommendationQueryBuilder.IsIdleResourceCost(filters);
+        var query = BuildFilteredRecommendationQuery(scope, filters, groupBy);
 
         query +=
-            " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))" +
+            " | extend resourceId = tostring(properties.resourceMetadata.resourceId)" +
             " | project recommendationTypeId," +
             " impactedField=tostring(properties.impactedField)," +
-            " resourceId=tostring(properties.resourceMetadata.resourceId)," +
+            " resourceId," +
             " recommendationStatus=tostring(properties.recommendationStatus)" +
+            (includeCost ? ", properties" : string.Empty) +
             JoinRecommendationTypeMetadata +
+            BuildProductFamilyFilterClause(filters, "impactedField") +
             " | extend category = metadataCategory," +
             " impact = metadataImpact," +
             " subCategory = metadataSubCategory" +
@@ -352,6 +571,18 @@ public class RecommendationSummaryService(IAzureService azureService)
 
         query = AddMetadataFilters(query, groupBy, filters);
         query += BuildMetadataGrouping(groupBy);
+        if (includeCost)
+        {
+            return query +
+                RecommendationQueryBuilder.BuildSavingsValues(filters) +
+                " | extend potential = iff(isOpen, annualSavings, real(null)), recommendationName = typeLabel" +
+                " | summarize count_ = count(), cost = sum(cost), costCount = countif(isfinite(cost))," +
+                " realizedSavings = sum(realizedSavings), realizedSavingsCount = countif(isfinite(realizedSavings))," +
+                CostReportAggregation +
+                " by key, label, recommendationStatus, recommendationTypeId, recommendationName" +
+                RestoreCostReportValues +
+                " | extend recommendationCount = count_";
+        }
         return query + " | summarize count() by key, label";
     }
 
@@ -381,6 +612,7 @@ public class RecommendationSummaryService(IAzureService azureService)
         " metadataCategory=tostring(properties.recommendationCategory)," +
         " metadataImpact=tostring(properties.recommendationImpact)," +
         " metadataSubCategory=tostring(properties.recommendationSubCategory)," +
+        " metadataServiceFamily=tostring(properties.serviceFamily)," +
         " metadataRetirementDate=tostring(properties.sourceProperties.serviceRetirement.retirementDate)," +
         " metadataDisplayName=tostring(properties.displayName)," +
         " metadataLabel=tostring(properties.label)," +
@@ -388,13 +620,19 @@ public class RecommendationSummaryService(IAzureService azureService)
         " metadataSignalValues=properties.signalValues" +
         " ) on recommendationTypeId";
 
+    internal static string BuildProductFamilyFilterClause(
+        RecommendationFilters? filters,
+        string resourceTypeExpression = "properties.impactedField") =>
+        string.IsNullOrWhiteSpace(filters?.ProductFamily)
+            ? string.Empty
+            : $" | where {ProductFamilyFilter.BuildPredicate(filters.ProductFamily, resourceTypeExpression)}";
+
     internal static string BuildRecommendationScope(RecommendationQueryScope scope)
     {
-        var query = "advisorresources | where type =~ 'microsoft.advisor/recommendations'";
-        if (scope.SubscriptionId is { } subscriptionId)
+        var query = "advisorresources | where type =~ 'Microsoft.Advisor/recommendations'";
+        if (scope.Kind == RecommendationQueryScopeKind.Subscription)
         {
-            query +=
-                $" | where subscriptionId =~ '{RecommendationQueryBuilder.EscapeKqlString(subscriptionId)}'";
+            query += $" | where {RecommendationQueryBuilder.BuildSubscriptionClause(scope)}";
         }
 
         if (scope.ResourceGroup is { } resourceGroup)

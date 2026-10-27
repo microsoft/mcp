@@ -63,7 +63,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     {
         var prioritized = Assert.Single(Command.GetCommand().Options, option => option.Name == "--prioritized");
 
-        Assert.Contains("Defaults to false; when false, no explicit ordering is applied", prioritized.Description);
+        Assert.Contains("Defaults to false; when false, only Cost with subcategory IdleResources has explicit savings ordering", prioritized.Description);
+        Assert.Contains("realized savings for Completed; this ordering also applies without --prioritized", prioritized.Description);
         Assert.Contains("both subscription and Service Group scopes", prioritized.Description);
     }
 
@@ -193,6 +194,9 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [Theory]
     [InlineData("--subscription sub1 --resource-group rg1", true)]
     [InlineData("--subscription sub1", true)]  // Missing resource-group
+    [InlineData("--subscriptions sub1 sub2 --prioritized true --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", true)]
+    [InlineData("--service-group sg1", true)]
+    [InlineData("--subscriptions sub1 sub2 --service-group sg1", false)]
     [InlineData("", false)]                    // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -201,6 +205,14 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         {
             Service.ListRecommendationsAsync(
                 Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<Models.RecommendationFilters?>(),
+                Arg.Any<int>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+                .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+            Service.ListRecommendationsAsync(
+                Arg.Any<IReadOnlyCollection<string>>(),
                 Arg.Any<string?>(),
                 Arg.Any<Models.RecommendationFilters?>(),
                 Arg.Any<int>(),
@@ -221,7 +233,10 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         }
         else
         {
-            Assert.Contains("required", response.Message.ToLower());
+            if (string.IsNullOrWhiteSpace(args))
+            {
+                Assert.Contains("required", response.Message.ToLower());
+            }
         }
     }
 
@@ -552,6 +567,63 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured!.RecommendationTypeId);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_MultipleRecommendationTypeIds_PassesAllNormalizedIds()
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(f => captured = f),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--recommendation-type-ids",
+            "1D70919C-1A4A-4F79-8300-BB576C291E9D",
+            "2D70919C-1A4A-4F79-8300-BB576C291E9D");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Null(captured!.RecommendationTypeId);
+        Assert.Equal(
+            [
+                "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+                "2d70919c-1a4a-4f79-8300-bb576c291e9d",
+            ],
+            captured.RecommendationTypeIds);
+    }
+
+    [Fact]
+    public void FilterOptions_PreserveScalarContractsAndAddPluralOptions()
+    {
+        var options = Command.GetCommand().Options;
+
+        Assert.Equal(typeof(string), Assert.Single(options, static option => option.Name == "--recommendation-type-id").ValueType);
+        Assert.Equal(typeof(string), Assert.Single(options, static option => option.Name == "--resource-type").ValueType);
+        Assert.Equal(typeof(string[]), Assert.Single(options, static option => option.Name == "--recommendation-type-ids").ValueType);
+        Assert.Equal(typeof(string[]), Assert.Single(options, static option => option.Name == "--resource-types").ValueType);
+        Assert.Equal(typeof(string), Assert.Single(options, static option => option.Name == "--service-group").ValueType);
+        Assert.Equal(typeof(string[]), Assert.Single(options, static option => option.Name == "--subscriptions").ValueType);
+        Assert.DoesNotContain(options, static option => option.Name == "--service-groups");
+    }
+
+    [Theory]
+    [InlineData("--subscriptions", "")]
+    [InlineData("--subscriptions", "   ")]
+    public async Task ExecuteAsync_RejectsBlankExplicitScopes(string scopeOption, string scope)
+    {
+        var response = await ExecuteCommandAsync(scopeOption, scope);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("must be non-empty", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().ListRecommendationsAsync(
+            default(IReadOnlyCollection<string>)!, default, default, default, default, TestContext.Current.CancellationToken);
+    }
+
     [Theory]
     [InlineData(null, 50)]
     [InlineData(10, 10)]
@@ -856,8 +928,12 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("Move to the replacement SKU", recommendation.Properties.ShortDescription.Solution);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ServiceGroupScope_SucceedsWithoutSubscription()
+    [Theory]
+    [InlineData("sg1")]
+    [InlineData("Trey Research Shared Services")]
+    [InlineData("Owner's Group")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg1")]
+    public async Task ExecuteAsync_ServiceGroupScope_SucceedsWithoutSubscription(string serviceGroup)
     {
         Models.RecommendationFilters? captured = null;
         Service.ListRecommendationsAsync(
@@ -870,11 +946,11 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
             .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
 
         var response = await ExecuteCommandAsync(
-            "--service-group", "  sg1  ");
+            "--service-group", $"  {serviceGroup}  ");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("sg1", captured!.ServiceGroup);
+        Assert.Equal(serviceGroup, captured!.ServiceGroup);
 
         // Service Group scope must not pass a subscription.
         await Service.Received(1).ListRecommendationsAsync(
@@ -928,7 +1004,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         var response = await ExecuteCommandAsync("--service-group", "bad/name");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Service Group name or ID", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().ListRecommendationsAsync(
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -1043,6 +1119,35 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("sg1", captured!.ServiceGroup);
         Assert.True(captured.Prioritized);
         Assert.Equal("Cost", captured.Category);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PrioritizedWithMultipleSubscriptions_ForwardsAllSubscriptions()
+    {
+        Service.ListRecommendationsAsync(
+            Arg.Any<IReadOnlyCollection<string>>(),
+            Arg.Any<string?>(),
+            Arg.Any<Models.RecommendationFilters?>(),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--subscriptions", "sub2", "sub3",
+            "--prioritized", "true",
+            "--recommendation-type-id", "1d70919c-1a4a-4f79-8300-bb576c291e9d");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ListRecommendationsAsync(
+            Arg.Is<IReadOnlyCollection<string>>(subscriptions =>
+                subscriptions.SequenceEqual(new[] { "sub1", "sub2", "sub3" })),
+            Arg.Any<string?>(),
+            Arg.Is<Models.RecommendationFilters?>(filters => filters != null && filters.Prioritized == true),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

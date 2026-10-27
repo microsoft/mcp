@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Globalization;
 using Azure.Mcp.Tools.Advisor.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 /// <summary>
-/// Builds the Azure Resource Graph query behind <c>advisor recommendation summary --prioritized</c>: active
+/// Builds the Azure Resource Graph query behind <c>advisor recommendation summary --prioritized</c>:
 /// recommendations grouped by recommendation type and ranked by priority.
 /// </summary>
 /// <remarks>
@@ -20,14 +19,14 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 /// <item><see cref="ComputePerRecordValues"/>: resource key, criticality score, and annual savings per record.</item>
 /// <item><see cref="CollapseToOneRowPerResource"/>: one row per (recommendation type, resource).</item>
 /// <item><see cref="AggregatePerType"/>: one row per recommendation type.</item>
-/// <item><see cref="JoinTypeMetadata"/>: type-level properties, taken only from recommendation-type metadata.</item>
+/// <item><see cref="JoinTypeMetadata"/>: type-level properties, joined earlier when a family filter needs resource properties.</item>
 /// <item>Metadata filters (category, impact, subcategory, retirement date), shared with normal summaries.</item>
 /// <item><see cref="OrderByPriority"/>: the single ordering that defines the ranking.</item>
 /// <item><see cref="ProjectResultRows"/>: the columns returned to the service.</item>
 /// </list>
 /// <para>
 /// The ranking follows the Azure portal Advisor prioritized view, with the deliberate differences that are
-/// called out on each stage. Ordering happens only in KQL; the service keeps the returned order and applies
+/// called out on each stage. Ordering happens only in KQL; the service keeps the returned order and the command applies
 /// <c>--top</c> afterwards, so <c>totalRecommendations</c> always covers every matching type.
 /// </para>
 /// </remarks>
@@ -37,15 +36,7 @@ internal static class PrioritizedRecommendationSummaryQuery
     internal const string CostCategory = "Cost";
 
     /// <summary>
-    /// Daily savings are annualized as daily × 12 months × 30.4 days per month, the same factor the Azure portal
-    /// Advisor experience uses.
-    /// </summary>
-    internal const double MonthsPerYear = 12;
-    internal const double DaysPerMonth = 30.4;
-
-    /// <summary>
-    /// Savings are reported in US dollars. A missing currency on a record also means US dollars; no currency conversion is
-    /// performed.
+    /// Calculated savings use retail pricing in US dollars; contractual pricing and its currencies are not used.
     /// </summary>
     internal const string SavingsCurrency = "USD";
 
@@ -97,29 +88,33 @@ internal static class PrioritizedRecommendationSummaryQuery
     {
         ArgumentNullException.ThrowIfNull(scope);
 
+        var hasProductFamily = !string.IsNullOrWhiteSpace(filters?.ProductFamily);
         var query = FilterRecords(scope, filters);
         query += KeepOneReservedInstanceScenario();
-        query += ComputePerRecordValues();
-        query += CollapseToOneRowPerResource();
-        query += AggregatePerType();
-        query += JoinTypeMetadata();
+        query += ComputePerRecordValues(filters);
+        var includeCost = RecommendationQueryBuilder.IsIdleResourceCost(filters);
+        query += CollapseToOneRowPerResource(includeCost, hasProductFamily);
+        query += AggregatePerType(includeCost, hasProductFamily);
+        if (!hasProductFamily)
+        {
+            query += JoinTypeMetadata();
+        }
         query = RecommendationSummaryService.AddMetadataFilters(
             query,
             RecommendationSummaryService.GroupByRecommendationType,
             filters);
-        query += OrderByPriority();
-        return query + ProjectResultRows();
+        query += OrderByPriority(filters);
+        return query + ProjectResultRows(includeCost);
     }
 
     /// <summary>
-    /// Stage 1: active recommendation records in the requested scope that match the instance-level filters.
+    /// Stage 1: recommendation records in the requested scope that match the instance-level filters.
     /// </summary>
     /// <remarks>
     /// <list type="bullet">
     /// <item>Scope, current-engine (<c>strlen(name) == 64</c>), and service-group predicates are the same as in every
     /// other summary.</item>
-    /// <item>Only <c>New</c> (active) records are ranked. Suppressed records are never <c>New</c>. Lifecycle questions
-    /// such as "top dismissed" are answered by <c>recommendation list --status</c>.</item>
+    /// <item>Records default to <c>New</c> (active); an explicit lifecycle status overrides that default.</item>
     /// <item>Tracked records are included. The Azure portal prioritized view excludes them, but they are still active
     /// recommendations that need action.</item>
     /// <item>Advisor configuration exclusions (excluded subscriptions or resource groups, low-CPU threshold) are not
@@ -131,17 +126,15 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// </remarks>
     private static string FilterRecords(RecommendationQueryScope scope, RecommendationFilters? filters)
     {
-        var predicates = RecommendationQueryBuilder.BuildInstancePredicates(
-            filters,
-            includeStatus: true,
-            useRequestedStatus: false,
-            includeCategoryAndImpact: false,
-            resourceTypeUsesImpactedField: true,
-            scope: scope);
-
-        return RecommendationSummaryService.BuildRecommendationScope(scope) +
-            $" | where {predicates}" +
-            " | extend recommendationTypeId = tolower(tostring(properties.recommendationTypeId))";
+        var query = RecommendationSummaryService.BuildFilteredRecommendationQuery(
+            scope, filters, RecommendationSummaryService.GroupByRecommendationType);
+        if (!string.IsNullOrWhiteSpace(filters?.ProductFamily))
+        {
+            // Family fallback needs resource properties before per-resource aggregation discards them.
+            query += JoinTypeMetadata() +
+                RecommendationSummaryService.BuildProductFamilyFilterClause(filters);
+        }
+        return query;
     }
 
     /// <summary>
@@ -186,20 +179,19 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// <item><c>annualSavings</c> is <c>savings.retail.dailyPotentialSavings × 12 × 30.4</c> when that value is a finite
     /// number. Otherwise it is the legacy <c>extendedProperties.annualSavingsAmount</c> when that is a finite number.
     /// Otherwise it is missing (null). Missing is never turned into 0, so "no data" cannot be read as "no savings".</item>
+    /// <item>For Cost/IdleResources, completed records have no annual potential; their realized savings remain separate.</item>
     /// </list>
     /// </remarks>
-    private static string ComputePerRecordValues()
+    private static string ComputePerRecordValues(RecommendationFilters? filters)
     {
-        var monthsPerYear = MonthsPerYear.ToString(CultureInfo.InvariantCulture);
-        var daysPerMonth = DaysPerMonth.ToString(CultureInfo.InvariantCulture);
         return
             " | extend resourceKey = tolower(tostring(properties.resourceMetadata.resourceId))" +
             " | extend resourceKey = iff(isempty(resourceKey), tolower(name), resourceKey)" +
             " | extend criticalityScore = todouble(properties.criticalityScore)" +
-            " | extend dailySavings = todouble(properties.savings.retail.dailyPotentialSavings)" +
-            " | extend legacyAnnualSavings = todouble(properties.extendedProperties.annualSavingsAmount)" +
-            $" | extend annualSavings = iff(isfinite(dailySavings), dailySavings * {monthsPerYear} * {daysPerMonth}," +
-            " iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))";
+            RecommendationQueryBuilder.BuildSavingsValues(filters) +
+            (RecommendationQueryBuilder.IsIdleResourceCost(filters)
+                ? " | extend annualSavings = iff(isOpen, annualSavings, real(null)) | extend potential = annualSavings"
+                : string.Empty);
     }
 
     /// <summary>
@@ -219,14 +211,26 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// value stays missing instead of becoming 0.
     /// </para>
     /// </remarks>
-    private static string CollapseToOneRowPerResource() =>
+    private static string CollapseToOneRowPerResource(bool includeCost, bool includeMetadata) =>
         " | summarize criticalityScore = max(criticalityScore)," +
         " criticalityScoreCount = countif(isnotnull(criticalityScore))," +
         " annualSavings = max(annualSavings)," +
-        " annualSavingsCount = countif(isnotnull(annualSavings))" +
+        " annualSavingsCount = countif(isnotnull(annualSavings))," +
+        " cost = max(cost)," +
+        " costCount = countif(isnotnull(cost))," +
+        " realizedSavings = max(realizedSavings)," +
+        " realizedSavingsCount = countif(isnotnull(realizedSavings))," +
+        " statuses = make_set(recommendationStatus)" +
+        (includeMetadata ? "," + TypeMetadataAggregation : string.Empty) +
+        (includeCost ? ", potential = max(potential)" : string.Empty) +
         " by recommendationTypeId, resourceKey" +
         " | extend criticalityScore = iff(criticalityScoreCount > 0, criticalityScore, real(null))," +
-        " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))";
+        " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))," +
+        " cost = iff(costCount > 0, cost, real(null))," +
+        " realizedSavings = iff(realizedSavingsCount > 0, realizedSavings, real(null))" +
+        (includeCost
+            ? " | extend recommendationStatus = iff(array_length(statuses) == 1, tostring(statuses[0]), 'Multiple')"
+            : string.Empty);
 
     /// <summary>
     /// Stage 5: one row per recommendation type.
@@ -240,15 +244,56 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// <item><c>annualSavings</c>: sum of per-resource annual savings. Missing when no resource reports savings.</item>
     /// </list>
     /// </remarks>
-    private static string AggregatePerType() =>
-        " | summarize resourceCount = count()," +
+    private static string AggregatePerType(bool includeCost, bool includeMetadata)
+    {
+        var query = " | summarize resourceCount = count()," +
         " summedCriticality = sum(criticalityScore)," +
         " criticalityScoreCount = countif(isnotnull(criticalityScore))," +
         " annualSavings = sum(annualSavings)," +
-        " annualSavingsCount = countif(isnotnull(annualSavings))" +
+        " annualSavingsCount = countif(isnotnull(annualSavings))," +
+        " cost = sum(cost)," +
+        " costCount = countif(isnotnull(cost))," +
+        " realizedSavings = sum(realizedSavings)," +
+        " realizedSavingsCount = countif(isnotnull(realizedSavings))," +
+        " statuses = make_set(statuses)" +
+        (includeMetadata ? "," + TypeMetadataAggregation : string.Empty) +
+        (includeCost ? "," + RecommendationSummaryService.CostReportAggregation : string.Empty) +
         " by recommendationTypeId" +
+        (includeCost ? ", recommendationStatus" : string.Empty) +
+        RestoreAggregatedValues;
+
+        if (!includeCost)
+        {
+            return query;
+        }
+
+        // Keep at most one report row per lifecycle state, not one dynamic-array entry per resource.
+        return query +
+            RecommendationSummaryService.RestoreCostReportValues +
+            $" | extend costSummaryRow = {RecommendationSummaryService.CostReportRow}" +
+            " | summarize resourceCount = sum(resourceCount)," +
+            " summedCriticality = sum(summedCriticality), criticalityScoreCount = sum(criticalityScoreCount)," +
+            " annualSavings = sum(annualSavings), annualSavingsCount = sum(annualSavingsCount)," +
+            " cost = sum(cost), costCount = sum(costCount)," +
+            " realizedSavings = sum(realizedSavings), realizedSavingsCount = sum(realizedSavingsCount)," +
+            " statuses = make_set(recommendationStatus), costSummaryRows = make_list(costSummaryRow)" +
+            (includeMetadata ? "," + TypeMetadataAggregation : string.Empty) +
+            " by recommendationTypeId" +
+            RestoreAggregatedValues;
+    }
+
+    // A family filter joins metadata early; ARG cannot join the same right-hand table again.
+    private const string TypeMetadataAggregation =
+        " category = take_any(category), impact = take_any(impact), subCategory = take_any(subCategory)," +
+        " retirementDate = take_any(retirementDate), label = take_any(label)," +
+        " metadataPriorityScore = take_any(metadataPriorityScore), metadataSignalValues = take_any(metadataSignalValues)";
+
+    private const string RestoreAggregatedValues =
         " | extend summedCriticality = iff(criticalityScoreCount > 0, summedCriticality, real(null))," +
-        " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))";
+        " annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))," +
+        " cost = iff(costCount > 0, cost, real(null))," +
+        " realizedSavings = iff(realizedSavingsCount > 0, realizedSavings, real(null))," +
+        " recommendationStatus = iff(array_length(statuses) == 1, tostring(statuses[0]), 'Multiple')";
 
     /// <summary>
     /// Stage 6: type-level properties from English recommendation-type metadata.
@@ -276,14 +321,16 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// Stage 8: the ranking. This single <c>order by</c> is the only place the order is defined.
     /// </summary>
     /// <remarks>
+    /// Cost + IdleResources puts lifecycle savings first; metadata priority remains a tie-breaker for that workflow.
+    /// Other workflows keep the priority-first order below.
     /// Keys, in order of precedence:
     /// <list type="number">
     /// <item>Metadata priority score, highest first. This is the primary signal and already combines impact,
     /// subcategory or retirement urgency, resource-type criticality, critical service, effort, actionability, and cost
     /// implication.</item>
-    /// <item>Annual savings, highest first. Only cost recommendations report savings, so this orders cost types among
-    /// themselves. Every cost type has priority score 0, the same as security types; within that band, cost types with
-    /// savings rank above security types. This matches the Azure portal ordering.</item>
+    /// <item>Potential savings, or realized savings for completed Cost recommendations, highest first. Only Cost
+    /// recommendations report savings, so this orders Cost types among themselves. Every Cost type has priority score
+    /// 0, the same as security types; within that band, Cost types with savings rank above security types.</item>
     /// <item>Summed criticality score, highest first. This orders non-cost types that share a priority score.</item>
     /// <item>Retirement date, earliest first, so overdue retirements come before upcoming ones.</item>
     /// <item>Resource count: cost types with fewer affected resources first, all other types with more affected
@@ -292,17 +339,24 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// </list>
     /// Missing values sort after present values for every key.
     /// </remarks>
-    private static string OrderByPriority() =>
-        $" | extend resourceCountSortKey = iff(category =~ '{CostCategory}', resourceCount, -resourceCount)," +
-        " retirementSortKey = todatetime(retirementDate)," +
-        " labelSortKey = tolower(label)" +
-        " | order by metadataPriorityScore desc nulls last," +
-        " annualSavings desc nulls last," +
-        " summedCriticality desc nulls last," +
-        " retirementSortKey asc nulls last," +
-        " resourceCountSortKey asc," +
-        " labelSortKey asc," +
-        " recommendationTypeId asc";
+    private static string OrderByPriority(RecommendationFilters? filters)
+    {
+        var primaryOrder = RecommendationQueryBuilder.IsIdleResourceCost(filters)
+            ? "rankingSavings desc nulls last, metadataPriorityScore desc nulls last,"
+            : "metadataPriorityScore desc nulls last, rankingSavings desc nulls last,";
+
+        return
+            $" | extend resourceCountSortKey = iff(category =~ '{CostCategory}', resourceCount, -resourceCount)," +
+            " rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)," +
+            " retirementSortKey = todatetime(retirementDate)," +
+            " labelSortKey = tolower(label)" +
+            $" | order by {primaryOrder}" +
+            " summedCriticality desc nulls last," +
+            " retirementSortKey asc nulls last," +
+            " resourceCountSortKey asc," +
+            " labelSortKey asc," +
+            " recommendationTypeId asc";
+    }
 
     /// <summary>
     /// Stage 9: result columns. Priority score, summed criticality, and sort keys are deliberately not returned; the
@@ -312,7 +366,7 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// Annual savings are rounded to cents here, after ordering, so the ranking uses the full-precision value while the
     /// response does not show floating-point artifacts such as 1598.5535999999997.
     /// </remarks>
-    private static string ProjectResultRows() =>
+    private static string ProjectResultRows(bool includeCost) =>
         " | project key = recommendationTypeId," +
         " label," +
         " count_ = resourceCount," +
@@ -321,5 +375,12 @@ internal static class PrioritizedRecommendationSummaryQuery
         " subCategory," +
         " retirementDate," +
         $" annualSavings = round(annualSavings, {SavingsDecimals})," +
-        " signalValues = metadataSignalValues";
+        $" yearlyPotentialSavings = round(annualSavings, {SavingsDecimals})," +
+        $" cost = round(cost, {SavingsDecimals})," +
+        $" realizedSavings = round(realizedSavings, {SavingsDecimals})," +
+        $" currency = '{SavingsCurrency}'," +
+        $" pricingBasis = iff(category =~ '{CostCategory}', '{RecommendationQueryBuilder.RetailPricingBasis}', '')," +
+        " recommendationStatus," +
+        " signalValues = metadataSignalValues" +
+        (includeCost ? ", costSummaryRows" : string.Empty);
 }

@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
@@ -32,6 +33,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]
 [JsonSerializable(typeof(Models.RecommendationSummary))]
+[JsonSerializable(typeof(RecommendationCostSummary))]
+[JsonSerializable(typeof(RecommendationCostCurrencySummary))]
+[JsonSerializable(typeof(RecommendationCostStatusSummary))]
+[JsonSerializable(typeof(RecommendationCostTypeSummary))]
 [JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

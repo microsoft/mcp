@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -19,6 +20,7 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class AdvisorRecommendationUpdateServiceTests
 {
     private const string SubscriptionId = "12345678-1234-1234-1234-123456789012";
+    private const string TenantId = "11111111-1111-1111-1111-111111111111";
     private readonly IAzureService _azureService = Substitute.For<IAzureService>();
     private readonly TokenCredential _credential = Substitute.For<TokenCredential>();
 
@@ -163,6 +165,7 @@ public class AdvisorRecommendationUpdateServiceTests
               }
             }
             """);
+        await ConfigureServiceGroupScopeAsync(environment);
         var service = new AdvisorService(_azureService);
 
         var result = await service.UpdateServiceGroupRecommendationAsync(
@@ -186,7 +189,7 @@ public class AdvisorRecommendationUpdateServiceTests
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
         await _azureService.Received(1).GetTokenCredentialAsync(
-            null,
+            TenantId,
             Arg.Any<CancellationToken>());
         await _credential.Received(1).GetTokenAsync(
             Arg.Is<TokenRequestContext>(context =>
@@ -201,7 +204,7 @@ public class AdvisorRecommendationUpdateServiceTests
         _azureService.ResolveTenantIdAsync(
             "tenant-name",
             Arg.Any<CancellationToken>())
-            .Returns("tenant-id");
+            .Returns(TenantId);
         ConfigureService(
             ArmEnvironment.AzurePublicCloud,
             """
@@ -214,6 +217,7 @@ public class AdvisorRecommendationUpdateServiceTests
               }
             }
             """);
+        await ConfigureServiceGroupScopeAsync(ArmEnvironment.AzurePublicCloud);
         var service = new AdvisorService(_azureService);
 
         await service.UpdateServiceGroupRecommendationAsync(
@@ -227,7 +231,7 @@ public class AdvisorRecommendationUpdateServiceTests
             "tenant-name",
             Arg.Any<CancellationToken>());
         await _azureService.Received(1).GetTokenCredentialAsync(
-            "tenant-id",
+            TenantId,
             Arg.Any<CancellationToken>());
         await _azureService.DidNotReceive().GetSubscription(
             Arg.Any<string>(),
@@ -540,6 +544,90 @@ public class AdvisorRecommendationUpdateServiceTests
         Assert.Equal(4, handler.CallCount);
     }
 
+    [Theory]
+    [InlineData("Friendly Service Group")]
+    [InlineData("Finance")]
+    [InlineData("Owner's Service Group")]
+    [InlineData("/providers/Microsoft.Management/serviceGroups/sg-1")]
+    public async Task UpdateServiceGroupRecommendationAsync_ResolvesScopeBeforePatch(string serviceGroup)
+    {
+        var handler = ConfigureService(
+            ArmEnvironment.AzurePublicCloud,
+            """{"name":"rec-1","properties":{"category":"Cost","recommendationStatus":"New"}}""");
+        var lookup = await ConfigureServiceGroupScopeAsync(ArmEnvironment.AzurePublicCloud);
+
+        await new AdvisorService(_azureService).UpdateServiceGroupRecommendationAsync(
+            serviceGroup, "rec-1", RecommendationStatus.New,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Contains("/serviceGroups/sg-1/providers/Microsoft.Advisor/", handler.RequestUri!.AbsoluteUri);
+        Assert.DoesNotContain(Uri.EscapeDataString(serviceGroup), handler.RequestUri.AbsoluteUri);
+        using var body = JsonDocument.Parse(lookup.RequestBody!);
+        Assert.Contains(
+            RecommendationQueryBuilder.EscapeKqlString(serviceGroup),
+            body.RootElement.GetProperty("query").GetString());
+        await _azureService.Received(1).GetTokenCredentialAsync(TenantId, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false, false, typeof(KeyNotFoundException))]
+    [InlineData(true, false, typeof(ArgumentException))]
+    [InlineData(false, true, typeof(InvalidOperationException))]
+    public async Task UpdateServiceGroupRecommendationAsync_ScopeFailureNeverSendsPatch(
+        bool ambiguous, bool truncated, Type expectedException)
+    {
+        var handler = ConfigureService(ArmEnvironment.AzurePublicCloud, "{}");
+        object[] matches = ambiguous
+            ? [
+                new { id = "/providers/Microsoft.Management/serviceGroups/group-a", name = "group-a" },
+                new { id = "/providers/Microsoft.Management/serviceGroups/group-b", name = "group-b" },
+            ]
+            : [];
+        await ConfigureServiceGroupScopeAsync(ArmEnvironment.AzurePublicCloud, matches, truncated);
+
+        await Assert.ThrowsAsync(expectedException, async () =>
+        {
+            await new AdvisorService(_azureService).UpdateServiceGroupRecommendationAsync(
+                "Shared Services", "rec-1", RecommendationStatus.Completed,
+                cancellationToken: TestContext.Current.CancellationToken);
+        });
+
+        Assert.Equal(0, handler.CallCount);
+        _azureService.DidNotReceive().GetClient(Arg.Any<string?>());
+    }
+
+    private async Task<CapturingHttpMessageHandler> ConfigureServiceGroupScopeAsync(
+        ArmEnvironment environment, object[]? matches = null, bool truncated = false)
+    {
+        matches ??= [new { id = "/providers/Microsoft.Management/serviceGroups/sg-1", name = "sg-1" }];
+        var payload = JsonSerializer.Serialize(new
+        {
+            value = new[] { new { id = $"/tenants/{TenantId}", tenantId = TenantId } },
+            totalRecords = matches.Length,
+            count = matches.Length,
+            resultTruncated = truncated ? "true" : "false",
+            data = matches,
+        });
+        var handler = new CapturingHttpMessageHandler(() => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
+        });
+        var credential = Substitute.For<TokenCredential>();
+        credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<AccessToken>(new AccessToken("scope-token", DateTimeOffset.UtcNow.AddHours(1))));
+        var client = new ArmClient(credential, defaultSubscriptionId: null, new ArmClientOptions
+        {
+            Environment = environment,
+            Transport = new HttpClientTransport(new HttpClient(handler)),
+        });
+        await foreach (var tenant in client.GetTenants().GetAllAsync(TestContext.Current.CancellationToken))
+        {
+            _azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+            return handler;
+        }
+        throw new InvalidOperationException("Test tenant was not returned.");
+    }
+
     private CapturingHttpMessageHandler ConfigureService(
         ArmEnvironment environment,
         string responseBody,
@@ -550,6 +638,8 @@ public class AdvisorRecommendationUpdateServiceTests
         var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
         cloudConfiguration.ArmEnvironment.Returns(environment);
         _azureService.CloudConfiguration.Returns(cloudConfiguration);
+        _azureService.ResolveTenantIdAsync(
+            Arg.Is<string>(value => value == TenantId), Arg.Any<CancellationToken>()).Returns(TenantId);
 
         var subscriptionResource = Substitute.For<SubscriptionResource>();
         subscriptionResource.Id.Returns(SubscriptionResource.CreateResourceIdentifier(SubscriptionId));

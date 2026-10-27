@@ -20,11 +20,88 @@ public class AdvisorServiceListQueryTests
         RecommendationQueryScope.ForServiceGroup("commerce");
 
     [Theory]
+    [InlineData(RecommendationStatus.New)]
+    [InlineData(RecommendationStatus.Postponed)]
+    [InlineData(RecommendationStatus.Dismissed)]
+    [InlineData(RecommendationStatus.Completed)]
+    public void BuildListQueries_IdleResourcesSortByLifecycleSavingsBeforeLimiting(RecommendationStatus status)
+    {
+        var filters = new RecommendationFilters(Category: "Cost", SubCategory: "IdleResources", Status: status);
+        const string savings = "iff(recommendationStatus =~ 'Completed', realizedSavings, annualSavings)";
+        foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
+        {
+            var query = AdvisorService.BuildRecommendationListQuery(scope, null, 11, Language, filters);
+            Assert.Contains($"rankingSavings = {savings}", query);
+            Assert.Contains("| order by rankingSavings desc nulls last, id asc", query);
+            Assert.True(query.IndexOf("| order by ", StringComparison.Ordinal) <
+                query.IndexOf("| limit 11", StringComparison.Ordinal));
+
+            var prioritized = AdvisorService.BuildPrioritizedRecommendationListQuery(scope, null, 11, filters);
+            Assert.Contains($"instanceScore = iff(metadataCategory =~ 'Cost', {savings}, criticalityScore)", prioritized);
+            Assert.Contains("| order by instanceScore desc nulls last", prioritized);
+            Assert.True(prioritized.IndexOf("| order by ", StringComparison.Ordinal) <
+                prioritized.IndexOf("| take 11", StringComparison.Ordinal));
+            Assert.DoesNotContain("round(annualSavings, 2)", prioritized);
+        }
+    }
+
+    [Theory]
+    [InlineData("Cost", null)]
+    [InlineData("Cost", "ReservedInstances")]
+    [InlineData("Security", "IdleResources")]
+    public void BuildListQueries_OtherWorkflowsKeepTheirExistingOrdering(string category, string? subCategory)
+    {
+        var filters = new RecommendationFilters(Category: category, SubCategory: subCategory,
+            Status: RecommendationStatus.Completed);
+
+        var query = AdvisorService.BuildRecommendationListQuery(SubscriptionScope(), null, 11, Language, filters);
+        var prioritized = AdvisorService.BuildPrioritizedRecommendationListQuery(SubscriptionScope(), null, 11, filters);
+
+        Assert.DoesNotContain("| order by ", query);
+        Assert.Contains("instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavings, 2), criticalityScore)", prioritized);
+    }
+
+    [Fact]
+    public void BuildListQueries_MultipleSubscriptionsUsesOneScopedPredicate()
+    {
+        var scope = RecommendationQueryScope.ForSubscriptions(["sub-123", "sub-456"], null);
+
+        var query = AdvisorService.BuildRecommendationListQuery(
+            scope,
+            predicates: "strlen(name) == 64",
+            limit: 51,
+            language: Language);
+
+        Assert.Contains("and subscriptionId in~ ('sub-123', 'sub-456')", query);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_ProductFamilyUsesMetadataBeforeProviderFallback()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            SubscriptionScope(),
+            predicates: null,
+            limit: 51,
+            language: Language,
+            filters: new RecommendationFilters(ProductFamily: "Compute"));
+
+        Assert.Contains("metadataServiceFamily = tostring(properties.serviceFamily)", query);
+        Assert.Contains("tolower(tostring(metadataServiceFamily)) =~ 'compute'", query);
+        Assert.Contains("isempty(tostring(metadataServiceFamily))", query);
+        Assert.Contains(
+            "strcat(tolower(tostring(properties.impactedField)), '/') startswith 'microsoft.web/serverfarms/'",
+            query);
+        Assert.DoesNotContain(
+            "strcat(tolower(tostring(properties.impactedField)), '/') startswith 'microsoft.compute/'",
+            query[..query.IndexOf("| join kind=", StringComparison.Ordinal)]);
+    }
+
+    [Theory]
     [InlineData("category", "tostring(properties.recommendationCategory) =~ 'HighAvailability'")]
     [InlineData("impact", "tostring(properties.recommendationImpact) =~ 'High'")]
     [InlineData("resourceType", "tostring(properties.supportedResourceType) =~ 'Microsoft.Storage/storageAccounts'")]
     [InlineData("subCategory", "tostring(properties.recommendationSubCategory) =~ 'ZoneResiliency'")]
-    [InlineData("trackingIds", "tostring(trackingId) in~ ('QNY1-''HB8', '9G0V-_G8')")]
+    [InlineData("trackingIds", @"tostring(trackingId) in~ ('QNY1-\'HB8', '9G0V-_G8')")]
     [InlineData("retirementDate", "startofday(todatetime(properties.sourceProperties.serviceRetirement.retirementDate)) <= datetime(2026-03-31)")]
     public void BuildListQueries_MetadataFiltersUseInnerJoin(string filter, string expectedPredicate)
     {
@@ -48,7 +125,6 @@ public class AdvisorServiceListQueryTests
                     : AdvisorService.BuildRecommendationListQuery(scope, null, 51, Language, filters);
                 var metadataBranch = query[query.IndexOf("| join kind=inner (", StringComparison.Ordinal)..];
                 metadataBranch = metadataBranch[..metadataBranch.IndexOf(") on joinTypeId", StringComparison.Ordinal)];
-
                 Assert.Contains(expectedPredicate, metadataBranch);
                 Assert.Contains("tostring(properties.language) =~ 'en'", metadataBranch);
                 Assert.DoesNotContain("arg_max", metadataBranch);
@@ -120,6 +196,31 @@ public class AdvisorServiceListQueryTests
 
         Assert.DoesNotContain("metadataPriorityScore", query);
         Assert.DoesNotContain("pack('priorityScore'", query);
+    }
+
+    [Fact]
+    public void BuildRecommendationListQuery_ComputesYearlyPotentialAndCumulativeCost()
+    {
+        var query = AdvisorService.BuildRecommendationListQuery(
+            SubscriptionScope(),
+            predicates: null,
+            limit: 25,
+            language: Language);
+
+        Assert.Contains(RecommendationQueryBuilder.BuildSavingsValues(), query);
+        Assert.Contains("isfinite(estimatedAccumulatedSavings)", query);
+        Assert.Contains("isfinite(realizedAccumulatedSavings)", query);
+        Assert.Contains(
+            "max_of(floor((asOf - latestSavingsEffectiveOn) / 1d, 1), 0.0) * dailySavings + estimatedAccumulatedSavings",
+            query);
+        Assert.Contains("yearlyPotentialSavings", query);
+        Assert.Contains("'cost', cost", query);
+        Assert.Contains(
+            "bag_merge(bag_pack('yearlyPotentialSavings', annualSavings, 'cost', cost, 'realizedSavings', realizedSavings), properties.savings.retail)",
+            query);
+        Assert.DoesNotContain(
+            "bag_merge(properties.savings.retail, bag_pack(",
+            query);
     }
 
     [Fact]
@@ -233,10 +334,12 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("strlen(name) == 64", query);
         Assert.Contains("criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
         Assert.Contains(
-            "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavingsScore, 2), criticalityScore)",
+            "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavings, 2), criticalityScore)",
             query);
         Assert.Contains("retirementDate = coalesce(todatetime(properties.extendedProperties.retirementDate), metadataRetirementDate)", query);
         Assert.Contains("resourceNameSort = tolower(tostring(properties.impactedValue))", query);
+        Assert.DoesNotContain("currencySort", query);
+        Assert.DoesNotContain("providerCurrency", query);
         Assert.Contains("| order by instanceScore desc nulls last, retirementDate asc nulls last, resourceNameSort asc, id asc | take", query);
         Assert.DoesNotContain("summarize", query);
         Assert.True(query.IndexOf("bag_merge(metadataOverrides, properties)", StringComparison.Ordinal) <
@@ -288,7 +391,7 @@ public class AdvisorServiceListQueryTests
             AssertFiniteSavingsRanking(query);
             Assert.Contains("criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
             Assert.Contains(
-                "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavingsScore, 2), criticalityScore)",
+                "instanceScore = iff(metadataCategory =~ 'Cost', round(annualSavings, 2), criticalityScore)",
                 query);
             Assert.True(
                 query.IndexOf("metadataCategory = tostring(properties.recommendationCategory)", StringComparison.Ordinal) <
@@ -316,13 +419,10 @@ public class AdvisorServiceListQueryTests
 
     private static void AssertFiniteSavingsRanking(string query)
     {
-        Assert.Contains("dailySavings = todouble(tostring(properties.savings.retail.dailyPotentialSavings))", query);
-        Assert.Contains("annualSavings = todouble(tostring(properties.extendedProperties.annualSavingsAmount))", query);
+        Assert.Contains("dailySavings = todouble(properties.savings.retail.dailyPotentialSavings)", query);
+        Assert.Contains("legacyAnnualSavings = todouble(properties.extendedProperties.annualSavingsAmount)", query);
         Assert.Contains(
-            "annualizedDailySavings = iff(isfinite(dailySavings), dailySavings * 12.0 * 30.4, real(null))",
-            query);
-        Assert.Contains(
-            "annualSavingsScore = coalesce(annualizedDailySavings, iff(isfinite(annualSavings), annualSavings, real(null)))",
+            "annualSavings = iff(isfinite(dailySavings), dailySavings * 12 * 30.4, iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))",
             query);
         Assert.DoesNotContain("dailySavings > 0", query);
     }
@@ -348,7 +448,7 @@ public class AdvisorServiceListQueryTests
             limit: 50,
             language: Language);
 
-        Assert.Contains("resourceGroup =~ 'rg''inject'", query);
+        Assert.Contains(@"resourceGroup =~ 'rg\'inject'", query);
     }
 
     [Fact]

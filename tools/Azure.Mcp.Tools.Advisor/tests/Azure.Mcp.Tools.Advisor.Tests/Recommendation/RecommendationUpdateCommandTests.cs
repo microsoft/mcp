@@ -22,12 +22,16 @@ public class RecommendationUpdateCommandTests
         "service-group-test",
         "AZaz09-_().~",
         "service\u00E9~01",
+        "Trey Research Shared Services",
+        "Owner's Group",
+        "Team #1",
+        "/providers/Microsoft.Management/serviceGroups/service-group-test",
         new string('a', 250),
     };
 
     public static TheoryData<string> InvalidServiceGroupIds => new()
     {
-        "bad#name",
+        "bad\u0000name",
         "../group",
         new string('a', 251),
     };
@@ -299,7 +303,7 @@ public class RecommendationUpdateCommandTests
             "--recommendation-status", "Completed");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Service Group name or ID", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().UpdateServiceGroupRecommendationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

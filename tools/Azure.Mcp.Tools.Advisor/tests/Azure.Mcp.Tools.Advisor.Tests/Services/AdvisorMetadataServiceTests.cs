@@ -184,7 +184,7 @@ public class AdvisorMetadataServiceTests
         Assert.Contains(@"microsoft.test/type\\child", query);
         Assert.Contains("Cost'' or true", query);
         Assert.DoesNotContain("Cost' or true'", query);
-        Assert.Contains("where tostring(trackingId) in~ ('QNY1-''HB8')", trackingQuery);
+        Assert.Contains(@"where tostring(trackingId) in~ ('QNY1-\'HB8')", trackingQuery);
     }
 
     [Fact]

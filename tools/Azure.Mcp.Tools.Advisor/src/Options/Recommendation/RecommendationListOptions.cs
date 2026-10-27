@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 /// <summary> Options for filtering and limiting Advisor recommendation list results. </summary>
-public class RecommendationListOptions : IRecommendationScopeOptions
+public class RecommendationListOptions : IRecommendationReadScopeOptions
 {
     [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match against English recommendation metadata.")]
     public string? Category { get; set; }
@@ -19,14 +19,21 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     [Option(Description = "Filter recommendations by status ('New', 'Postponed', 'Dismissed', or 'Completed'). Defaults to 'New' when omitted.")]
     public RecommendationStatus? Status { get; set; }
 
-    [Option(Description = "Filter recommendations by the recommendation type ID GUID. " +
-        "Uses a case-insensitive exact match and can be combined with other filters.")]
+    [Option(Description = "Filter recommendations by a recommendation type ID GUID. Matching is case-insensitive and can be combined with other filters.")]
     public string? RecommendationTypeId { get; set; }
 
-    [Option(Description = "Filter recommendations by impacted Azure resource type (e.g., 'Microsoft.Storage/storageAccounts'). " +
-        "Requires a case-insensitive exact match against the supported resource type in English recommendation metadata " +
+    [Option(Description = "Filter recommendations by one or more recommendation type ID GUIDs using OR semantics. May be combined with --recommendation-type-id.")]
+    public string[]? RecommendationTypeIds { get; set; }
+
+    [Option(Description = "Filter recommendations by an impacted Azure resource type. Requires a case-insensitive exact match against the supported resource type in English recommendation metadata " +
         "and a case-insensitive substring match in the instance resource ID.")]
     public string? ResourceType { get; set; }
+
+    [Option(Description = "Filter recommendations by one or more impacted Azure resource types using OR semantics. Each value uses the same matching rules as --resource-type and may be combined with it.")]
+    public string[]? ResourceTypes { get; set; }
+
+    [Option(Description = "Filter recommendations by Azure product family. Supported values are Compute (including App Service plans), Containers, Databases, Networking, Storage, and Web. Metadata service family takes precedence, with resource-provider fallback when missing.")]
+    public string? ProductFamily { get; set; }
 
     [Option(Description = "Filter recommendations by a case-insensitive substring of the impacted resource's full ARM resource ID. " +
         "Accepts a resource name or resource ID.")]
@@ -38,7 +45,7 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public string? Search { get; set; }
 
     [Option(Description = "Filter recommendations by recommendation subcategory, matched case-insensitively against the Advisor recommendation metadata. " +
-        "Known values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, MonitoringAndAlerting, NetworkOptimization, Other, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
+        "Known values include ComputeOptimization, DataPerformance, DataProtectionAndRecovery, EfficiencyOptimization, FailureMitigation, GovernanceAndCompliance, IdleResources, MonitoringAndAlerting, NetworkOptimization, Other, RegionalResiliency, Reservations, SafeAndSecureDeployment, SavingsPlan, Scalability, ServiceUpgradeAndRetirement, StorageOptimization, UsageOptimization, and ZoneResiliency. " +
         "Advisor can add values over time, so other subcategories are accepted.")]
     public string? SubCategory { get; set; }
 
@@ -53,6 +60,9 @@ public class RecommendationListOptions : IRecommendationScopeOptions
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
+    [Option(Description = "For Cost recommendations, return only records whose annualized retail potential savings (daily savings × 30.4 × 12) are at least this non-negative amount.")]
+    public decimal? MinimumSavings { get; set; }
+
     [Option(Description = "Maximum number of individual recommendation records to return, not distinct affected resources or recommendation groups. " +
         "For broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent that does not identify a specific recommendation type, use summary --group-by recommendation-type --prioritized true first and pass the requested count to summary --top. " +
         "For a request that identifies a specific recommendation type, this option limits the individual records returned after --prioritized true orders them. " +
@@ -60,8 +70,7 @@ public class RecommendationListOptions : IRecommendationScopeOptions
     public int? Top { get; set; }
 
     [Option(Description = "List recommendations for an Azure Service Group instead of a subscription, " +
-        "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
-        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
+        "provided as its name, ID, or full ARM resource ID. The tool resolves the scope in the selected tenant and reports ambiguous names. " +
         "Specify either --service-group or --subscription, not both. If both are omitted, the configured default subscription is used. " +
         "--resource-group applies only to subscription scope. " +
         "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
@@ -71,12 +80,14 @@ public class RecommendationListOptions : IRecommendationScopeOptions
         "A request that identifies a specific recommendation type can use this option directly; setting it to true requires --recommendation-type-id. " +
         "The selected type's recommendation metadata category determines the instance metric. " +
         "For Cost types, sort by savings; for all other types, sort by criticalityScore descending, treating missing scores as zero. " +
+        "Retail savings are in USD; contractual pricing and billing currency do not affect this ranking. " +
         "savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4, " +
         "with extendedProperties.annualSavingsAmount as fallback; the selected annual savings score is rounded to two decimal places before ordering descending. " +
+        "Cost with subcategory IdleResources instead uses unrounded yearly potential savings for New, Postponed, and Dismissed, or realized savings for Completed; this ordering also applies without --prioritized. " +
         "Missing, invalid, or non-finite savings sort last; zero is valid. " +
         "Ties sort by effective retirement date ascending (instance date with metadata fallback, missing dates last), " +
         "then resource name A-Z (case-insensitive), then recommendation ID A-Z. " +
-        "Defaults to false; when false, no explicit ordering is applied. Applies to both subscription and Service Group scopes.")]
+        "Defaults to false; when false, only Cost with subcategory IdleResources has explicit savings ordering. Applies to both subscription and Service Group scopes.")]
     public bool? Prioritized { get; set; }
 
     [Option(Description = "Include the original properties.signalBreakdown payload from Azure Resource Graph when present, preserving its backend-provided JSON shape. " +
@@ -90,6 +101,9 @@ public class RecommendationListOptions : IRecommendationScopeOptions
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
+
+    [Option(Description = "One or more subscription IDs or names to query. May be combined with --subscription; aliases of the same subscription are queried once. Specify either subscription scope or --service-group.")]
+    public string[]? Subscriptions { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -10,6 +13,12 @@ namespace Azure.Mcp.Tools.Advisor.Services;
 
 internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureService)
 {
+    internal const int ResourceGraphPageSize = 1000;
+    internal const int ResourceGraphMaxPages = 100;
+    internal static readonly TimeSpan ScopeBatchTimeout = TimeSpan.FromSeconds(45);
+
+    internal sealed record PagedQueryResult(IReadOnlyList<JsonElement> Rows, bool IsTruncated);
+
     private readonly IAzureService _azureService = azureService;
 
     internal async Task<(RecommendationQueryScope Scope, TenantResource TenantResource)> ResolveSubscriptionScopeAsync(
@@ -18,12 +27,60 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         string? tenant,
         CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-
-        var subscriptionResource = await _azureService.GetSubscription(
-            subscription,
+        var resolved = await ResolveSubscriptionsScopeAsync(
+            [subscription],
+            resourceGroup,
             tenant,
-            cancellationToken: cancellationToken);
+            cancellationToken);
+        return (resolved.Scope, resolved.TenantResource);
+    }
+
+    internal async Task<(
+        RecommendationQueryScope Scope,
+        TenantResource TenantResource,
+        IReadOnlyList<SubscriptionResource> Subscriptions)> ResolveSubscriptionsScopeAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        string? tenant,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(subscriptions);
+        var normalizedSubscriptions = subscriptions
+            .Where(static subscription => !string.IsNullOrWhiteSpace(subscription))
+            .Select(static subscription => subscription.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        ArgumentOutOfRangeException.ThrowIfZero(normalizedSubscriptions.Length);
+
+        var subscriptionResources = new List<SubscriptionResource>(normalizedSubscriptions.Length);
+        foreach (var subscription in normalizedSubscriptions)
+        {
+            subscriptionResources.Add(await _azureService.GetSubscription(
+                subscription,
+                tenant,
+                cancellationToken: cancellationToken));
+        }
+
+        var subscriptionResource = subscriptionResources[0];
+        var tenantIds = subscriptionResources
+            .Select(resource => resource.Data.TenantId)
+            .Distinct()
+            .ToArray();
+        if (tenantIds.Length != 1)
+        {
+            throw new InvalidOperationException(
+                "All selected subscriptions must belong to the same Azure tenant.");
+        }
+
+        if (subscriptionResources.Any(static resource => string.IsNullOrWhiteSpace(resource.Data.SubscriptionId)))
+        {
+            throw new InvalidOperationException("One or more resolved Azure subscriptions did not have a subscription ID.");
+        }
+        var subscriptionIds = subscriptionResources
+            .Select(static resource => resource.Data.SubscriptionId!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         var subscriptionId = subscriptionResource.Data.SubscriptionId
             ?? throw new InvalidOperationException("The resolved Azure subscription does not have a subscription ID.");
         var normalizedResourceGroup = string.IsNullOrWhiteSpace(resourceGroup)
@@ -32,13 +89,16 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
 
         if (normalizedResourceGroup is not null)
         {
-            var exists = await subscriptionResource
-                .GetResourceGroups()
-                .ExistsAsync(normalizedResourceGroup, cancellationToken);
-            if (!exists.Value)
+            foreach (var resource in subscriptionResources)
             {
-                throw new KeyNotFoundException(
-                    $"Resource group '{normalizedResourceGroup}' does not exist in subscription '{subscriptionId}'.");
+                var exists = await resource
+                    .GetResourceGroups()
+                    .ExistsAsync(normalizedResourceGroup, cancellationToken);
+                if (!exists.Value)
+                {
+                    throw new KeyNotFoundException(
+                        $"Resource group '{normalizedResourceGroup}' does not exist in subscription '{resource.Data.SubscriptionId}'.");
+                }
             }
         }
 
@@ -46,8 +106,11 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
             subscriptionResource.Data.TenantId,
             cancellationToken);
         return (
-            RecommendationQueryScope.ForSubscription(subscriptionId, normalizedResourceGroup),
-            tenantResource);
+            subscriptionIds.Length == 1
+                ? RecommendationQueryScope.ForSubscription(subscriptionId, normalizedResourceGroup)
+                : RecommendationQueryScope.ForSubscriptions(subscriptionIds, normalizedResourceGroup),
+            tenantResource,
+            subscriptionResources);
     }
 
     internal async Task<(RecommendationQueryScope Scope, TenantResource TenantResource)> ResolveServiceGroupScopeAsync(
@@ -55,9 +118,77 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         string? tenant,
         CancellationToken cancellationToken)
     {
-        var scope = RecommendationQueryScope.ForServiceGroup(serviceGroup);
+        RecommendationScopeValidator.ThrowIfInvalidServiceGroupInput(serviceGroup);
         var tenantResource = await ResolveTenantResourceAsync(tenant, cancellationToken);
-        return (scope, tenantResource);
+        var requestedScope = serviceGroup.Trim();
+        var escapedScope = RecommendationQueryBuilder.EscapeKqlString(requestedScope);
+        var query = $"""
+            resourcecontainers
+            | where type =~ 'microsoft.management/servicegroups'
+            | extend
+                serviceGroupId = tostring(id),
+                serviceGroupName = coalesce(tostring(properties.displayName), tostring(name)),
+                parentServiceGroupId = tostring(properties.parent.resourceId),
+                tenantRootServiceGroupId =
+                    strcat('/providers/Microsoft.Management/serviceGroups/', tostring(tenantId))
+            | where isnotempty(serviceGroupId)
+            | where parentServiceGroupId =~ tenantRootServiceGroupId
+            | where serviceGroupId =~ '{escapedScope}' or name =~ '{escapedScope}' or serviceGroupName =~ '{escapedScope}'
+            | project id = serviceGroupId, name = serviceGroupName
+            | order by name asc
+            """;
+        var result = await ExecutePagedAsync(tenantResource, query, cancellationToken);
+        if (result.IsTruncated)
+        {
+            throw new InvalidOperationException(
+                "Service Group lookup was truncated. A unique scope cannot be determined from incomplete results.");
+        }
+
+        var matches = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in result.Rows)
+        {
+            if (row.ValueKind != JsonValueKind.Object ||
+                !row.TryGetProperty("id", out var idProperty) ||
+                idProperty.ValueKind != JsonValueKind.String ||
+                !row.TryGetProperty("name", out var nameProperty) ||
+                nameProperty.ValueKind != JsonValueKind.String)
+            {
+                throw new JsonException("Azure Resource Graph returned a Service Group without a valid ID or name.");
+            }
+
+            var id = idProperty.GetString()!;
+            // The projected name is a display label; the ARM ID supplies the canonical scope identifier.
+            var identifier = id.StartsWith(RecommendationQueryBuilder.ServiceGroupResourceIdPrefix, StringComparison.OrdinalIgnoreCase)
+                ? id[RecommendationQueryBuilder.ServiceGroupResourceIdPrefix.Length..]
+                : string.Empty;
+            if (!RecommendationScopeValidator.IsValidServiceGroupId(identifier))
+            {
+                throw new JsonException("Azure Resource Graph returned an invalid Service Group resource ID.");
+            }
+            matches.TryAdd(id, identifier);
+        }
+
+        // An explicit identifier takes precedence over another group's matching display name.
+        var exactMatch = matches.FirstOrDefault(match =>
+            match.Key.Equals(requestedScope, StringComparison.OrdinalIgnoreCase) ||
+            match.Value.Equals(requestedScope, StringComparison.OrdinalIgnoreCase));
+        if (exactMatch.Key is not null)
+        {
+            return (RecommendationQueryScope.ForServiceGroup(exactMatch.Value), tenantResource);
+        }
+        if (matches.Count == 1)
+        {
+            return (RecommendationQueryScope.ForServiceGroup(matches.Values.Single()), tenantResource);
+        }
+        if (matches.Count == 0)
+        {
+            throw new KeyNotFoundException(
+                $"No accessible Service Group matched '{requestedScope}' in the selected tenant. Verify the name or ID, tenant, and access.");
+        }
+
+        throw new ArgumentException(
+            $"Service Group name '{requestedScope}' is ambiguous in the selected tenant. Specify one full ARM resource ID: {string.Join(", ", matches.Keys.Order(StringComparer.OrdinalIgnoreCase))}.",
+            nameof(serviceGroup));
     }
 
     internal async Task<TenantResource> ResolveTenantResourceAsync(
@@ -116,6 +247,81 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
             : null;
         EnsureFullTenantCoverage(limitHit);
         return response.Value;
+    }
+
+    internal static async Task<PagedQueryResult> ExecutePagedAsync(
+        TenantResource tenantResource,
+        string query,
+        CancellationToken cancellationToken)
+    {
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(ScopeBatchTimeout);
+
+        var rows = new List<JsonElement>();
+        var isTruncated = false;
+        var seenSkipTokens = new HashSet<string>(StringComparer.Ordinal);
+        string? skipToken = null;
+        for (var page = 1; ; page++)
+        {
+            var queryContent = new ResourceQueryContent(query)
+            {
+                Options = new ResourceQueryRequestOptions
+                {
+                    Top = ResourceGraphPageSize,
+                    SkipToken = skipToken,
+                },
+            };
+            try
+            {
+                var response = await tenantResource.GetResourcesAsync(queryContent, timeoutCancellation.Token);
+                var limitHit = response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
+                    ? value
+                    : null;
+                EnsureFullTenantCoverage(limitHit);
+
+                var result = response.Value;
+                isTruncated = result.ResultTruncated == ResultTruncated.True;
+                if (result.Count > 0)
+                {
+                    if (result.Data is null)
+                    {
+                        throw new JsonException("Azure Resource Graph returned non-empty results without data.");
+                    }
+                    using var document = JsonDocument.Parse(result.Data);
+                    if (document.RootElement.ValueKind != JsonValueKind.Array ||
+                        document.RootElement.GetArrayLength() != result.Count)
+                    {
+                        throw new JsonException("Azure Resource Graph returned invalid or incomplete row data.");
+                    }
+                    rows.AddRange(document.RootElement.EnumerateArray().Select(static row => row.Clone()));
+                }
+
+                skipToken = result.SkipToken;
+                if (string.IsNullOrWhiteSpace(skipToken))
+                {
+                    return new(rows, isTruncated);
+                }
+            }
+            catch (OperationCanceledException) when (
+                timeoutCancellation.IsCancellationRequested &&
+                !cancellationToken.IsCancellationRequested)
+            {
+                throw new TimeoutException(
+                    $"Azure Resource Graph Advisor query exceeded the {ScopeBatchTimeout.TotalSeconds:0}-second batch timeout.");
+            }
+
+            if (!seenSkipTokens.Add(skipToken))
+            {
+                throw new InvalidOperationException(
+                    "Azure Resource Graph returned a repeated skip token while paging Advisor recommendations.");
+            }
+
+            if (page >= ResourceGraphMaxPages)
+            {
+                throw new InvalidOperationException(
+                    $"Azure Resource Graph pagination exceeded the {ResourceGraphMaxPages}-page limit; results are incomplete.");
+            }
+        }
     }
 
     /// <summary>

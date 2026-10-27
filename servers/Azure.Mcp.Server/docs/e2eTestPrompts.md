@@ -66,6 +66,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show Cost IdleResources recommendations for Service Group "Trey Research Shared Services" using its display name | none |
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
@@ -88,12 +89,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
 | advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
+| advisor_recommendation_list | Show completed Cost IdleResources recommendations in subscription \<subscription>, highest realized savings first | none |
+| advisor_recommendation_list | Show postponed Cost IdleResources recommendations in service group \<service-group>, highest yearly potential savings first | none |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | For Service Group "Trey Research Shared Services", what unused Azure resources am I paying for? | none |
+| advisor_recommendation_summary | Show Cost IdleResources savings for /providers/Microsoft.Management/serviceGroups/\<service-group-id> in tenant \<tenant> | none |
 | advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Prioritize Compute Cost IdleResources recommendation types in service group \<service-group>, keeping full Compute totals while showing only the top type | none |
+| advisor_recommendation_summary | Prioritize completed Storage Cost IdleResources recommendation types in subscription \<subscription> by realized savings | none |
 | advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
@@ -105,6 +112,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | Summarize Cost IdleResources Advisor recommendations with their potential, accumulated, and realized savings | none |
+| advisor_recommendation_summary | Show completed Cost IdleResources Advisor recommendations and their realized savings | none |
+| advisor_recommendation_summary | Rank completed Cost IdleResources recommendation types in subscription \<subscription> by realized savings, not resource count | none |
+| advisor_recommendation_summary | Show dismissed Cost IdleResources recommendation types in service group \<service-group>, highest yearly potential savings first | none |
+| advisor_recommendation_summary | Summarize Cost IdleResources Advisor recommendations in subscription \<subscription>, including total savings, accumulated waste, zero-savings opportunities, and unavailable pricing, without prioritizing | none |
+| advisor_recommendation_summary | Which Cost IdleResources recommendation types occur most often in subscription \<subscription>? Order by recommendation-record count, not savings | none |
+| advisor_recommendation_summary | How much have we saved after completed cleanup in Service Group \<service-group>? Show current Completed totals and resources, including unavailable pricing, without adding a historical window | none |
+| advisor_recommendation_summary | Show only the top Cost IdleResources recommendation type in subscription \<subscription>, but keep the complete retail USD report totals for every matching type | none |
+| advisor_recommendation_summary | Report Advisor Cost IdleResources savings for service group \<service-group> from September 1 to September 30, 2026 as of September 30, with lifecycle counts and the calculation window | none |
+| advisor_recommendation_summary | Summarize completed Advisor recommendations by category in subscription \<subscription> | none |
+| advisor_recommendation_summary | Summarize active Cost IdleResources recommendations as of September 30, 2026 without including completed or dismissed records | none |
+| advisor_recommendation_summary | Rank Cost recommendations across my selected Service Groups, keeping EUR and USD savings separate | context-required |
+| advisor_recommendation_list | Show Advisor recommendations for resource types Microsoft.Compute/virtualMachines and Microsoft.Web/serverfarms in subscription \<subscription> | none |
 | advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group \<service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
 | advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by impact | none |
@@ -130,6 +150,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | After confirmation, postpone Advisor recommendation \<recommendation-id> in Service Group "Trey Research Shared Services" until \<future-date-time> | none |
 | advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |

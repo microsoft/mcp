@@ -152,6 +152,8 @@ public class AdvisorServiceConversionTests
                     "completionType": "Succeeded",
                     "reason": "Other",
                     "postponedTime": "2027-07-01T00:00:00Z",
+                    "customerStateUpdatedAt": "2026-05-16T03:19:48.0318731Z",
+                    "platformStateUpdatedAt": "2026-05-17T03:19:48.0318731Z",
                     "suppressionId": "suppression-id",
                     "createdTime": "2026-05-13T03:19:48.0318731Z",
                     "lastUpdated": "2026-05-14T03:19:48.0318731Z",
@@ -238,6 +240,12 @@ public class AdvisorServiceConversionTests
         Assert.Equal(
             DateTimeOffset.Parse("2027-07-01T00:00:00Z", CultureInfo.InvariantCulture),
             result.Properties.PostponedUntilDateTime);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-16T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.Properties.CustomerStateUpdatedAt);
+        Assert.Equal(
+            DateTimeOffset.Parse("2026-05-17T03:19:48.0318731Z", CultureInfo.InvariantCulture),
+            result.Properties.PlatformStateUpdatedAt);
         Assert.Equal(
             DateTimeOffset.Parse("2026-05-13T03:19:48.0318731Z", CultureInfo.InvariantCulture),
             result.Properties.CreatedTime);
@@ -332,7 +340,9 @@ public class AdvisorServiceConversionTests
             result.Properties.ScoreChangedAt);
         Assert.NotNull(result.Properties.Savings);
         Assert.Equal("USD", result.Properties.Savings!.Value.GetProperty("providerCurrency").GetString());
+        Assert.Equal("EUR", result.Properties.Savings.Value.GetProperty("billingCurrency").GetString());
         Assert.Equal(40, result.Properties.Savings.Value.GetProperty("retail").GetProperty("estimatedRollupSavings").GetInt32());
+        Assert.Equal(50, result.Properties.Savings.Value.GetProperty("contracted").GetProperty("realizedRollupSavings").GetInt32());
 
         var serialized = JsonSerializer.Serialize(
             result,

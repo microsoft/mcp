@@ -9,7 +9,8 @@
     ],
     "azure-advisor": [
       "azure-advisor",
-      "azure-advisor-actionability"
+      "azure-advisor-actionability",
+      "azure-advisor-cost-optimization"
     ],
     "azure-cost": [
       "cost-analysis",
