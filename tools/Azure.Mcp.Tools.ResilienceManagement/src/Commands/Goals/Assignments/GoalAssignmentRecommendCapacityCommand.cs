@@ -11,52 +11,39 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 
 [CommandMetadata(
-    Id = "f8b190a0-9034-4366-a51e-759243644e32",
+    Id = "a552c452-dccd-4580-b80c-7d1b1e905a22",
     Name = "recommend-capacity",
-    Title = "Recommend Resilience Goal Capacity",
-    Description = """
-        Starts a zonal resiliency capacity assessment for an Azure goal assignment. Specify up to 50
-        underlying resource ARM IDs, or omit them to discover non-resilient resources automatically.
-        This generates resilience capacity recommendations; it does not provision or resize resources.
-        Returns the service operation ID and Accepted status unless already completed.
-        """,
-    OperationPlane = ToolOperationPlane.Control,
-    Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+    Title = "Recommend Resilience Goal Assignment Capacity",
+    Description = "Starts capacity recommendations for a resilience goal assignment in a service group. Assess zonal resiliency eligibility and capacity recommendations for selected Azure resource ARM IDs, or omit resource-ids to assess all eligible service group resources. Returns Accepted and the service operation ID when supplied, not completed recommendations. Does not rediscover resources or change goal participation.",
+    OperationPlane = ToolOperationPlane.Control, Destructive = false, Idempotent = false,
+    OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class GoalAssignmentRecommendCapacityCommand(
     ILogger<GoalAssignmentRecommendCapacityCommand> logger,
     IResilienceManagementService service)
-    : BaseGoalAssignmentCommand<GoalAssignmentRecommendCapacityOptions, GoalAssignmentRecommendCapacityCommand.GoalAssignmentRecommendCapacityCommandResult>
+    : AuthenticatedCommand<GoalAssignmentRecommendCapacityOptions, GoalAssignmentOperationResult>
 {
     public override void ValidateOptions(GoalAssignmentRecommendCapacityOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        if (options.ResourceIds?.Length > 50)
-        {
-            validationResult.Errors.Add("At most 50 resource IDs may be assessed per request.");
-        }
-
-        GoalAssignmentValidation.ValidateResourceIds(options.ResourceIds, validationResult);
+        GoalAssignmentResourceValidation.ValidateNames(options.ServiceGroup, options.GoalAssignment, validationResult);
+        GoalAssignmentResourceValidation.ValidateResourceIds(options.ResourceIds, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GoalAssignmentRecommendCapacityOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var operation = await service.RecommendGoalAssignmentCapacityAsync(
-                options.ServiceGroup, options.GoalAssignment, options.ResourceIds ?? [], options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(
-                new GoalAssignmentRecommendCapacityCommandResult(operation),
-                ResilienceManagementJsonContext.Default.GoalAssignmentRecommendCapacityCommandResult);
+            var result = await service.RecommendGoalAssignmentCapacityAsync(options.ServiceGroup, options.GoalAssignment, options.ResourceIds, options.Tenant, cancellationToken);
+            context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.GoalAssignmentOperationResult);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error recommending goal capacity. ServiceGroup: {ServiceGroup}, GoalAssignment: {GoalAssignment}.",
-                options.ServiceGroup, options.GoalAssignment);
+            logger.LogError(ex, "Goal assignment capacity recommendation failed.");
             HandleException(context, ex);
+            context.Response.Results = null;
         }
-
         return context.Response;
     }
 
-    public sealed record GoalAssignmentRecommendCapacityCommandResult(GoalAssignmentOperationResult Operation);
+    protected override string GetErrorMessage(Exception ex) => GoalAssignmentResourceValidation.GetErrorMessage(ex);
 }

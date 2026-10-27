@@ -4559,6 +4559,10 @@ azmcp resiliency goal resource get --service-group <service-group> \
                                    [--name <name>] [--tenant <tenant>]
 ```
 
+Individual resource reads preserve provider-returned `regionalResiliency` as well as
+zonal participation. Reads and resource updates use the Regional-capable
+`2026-10-31-preview` contract; an absent Regional field is not treated as `Included`.
+
 `update-resources` accepts a non-empty JSON array of at most 1 MB. Each entry
 requires a unique underlying resource ARM ID and at least one zonal change:
 
@@ -4775,7 +4779,8 @@ azmcp resiliency recoveryjob resource get --service-group <service-group> \
                                           [--name <name>]
 
 # Create or update a resilience drill in a service group
-# The service links the service group's recovery plan for the drill type automatically.
+# Parent Drill create/update and GET use the 2026-10-31-preview contract.
+# Explicit monitoring sources are validated before mutation and verified by read-back.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill create --service-group <service-group> \
                               --drill <drill> \
@@ -4790,7 +4795,12 @@ azmcp resiliency drill create --service-group <service-group> \
                               [--identity <json>] \
                               [--chaos-resource-properties <json>] \
                               [--recovery-plan-properties <json>] \
-                              [--monitoring-properties <json>]
+                              [--monitoring-properties <json>] \
+                              [--monitoring-source-type <HealthModel|Sli>] \
+                              [--monitoring-source-id <arm-id>] \
+                              [--monitoring-identity-type <SystemAssigned|UserAssigned>] \
+                              [--monitoring-user-assigned-identity-id <arm-id>] \
+                              [--monitoring-sli-type <Availability|Latency>]
 
 # Get a resilience drill, or list all drills in a service group (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4801,14 +4811,16 @@ azmcp resiliency drill get --service-group <service-group> \
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill start --service-group <service-group> \
                              --drill <drill> \
-                             --mode <Failover|TestFailover>
+                             --mode <Failover|TestFailover> \
+                             [--operation-id <guid>]
 
 # End the running execution of a resilience drill and attest its outcome
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill end --service-group <service-group> \
                            --drill <drill> \
                            --attestation <Success|Failed> \
-                           --attestation-notes <attestation-notes>
+                           --attestation-notes <attestation-notes> \
+                           [--operation-id <guid>]
 
 # Update mutable properties of a resilience drill
 # Omitted fields are preserved. Use JSON "null" to clear monitoring; SLI selections replace previous selections.
@@ -4824,7 +4836,12 @@ azmcp resiliency drill update --service-group <service-group> \
                               [--identity <json>] \
                               [--chaos-resource-properties <json>] \
                               [--recovery-plan-properties <json>] \
-                              [--monitoring-properties <json>]
+                              [--monitoring-properties <json>] \
+                              [--monitoring-source-type <HealthModel|Sli>] \
+                              [--monitoring-source-id <arm-id>] \
+                              [--monitoring-identity-type <SystemAssigned|UserAssigned>] \
+                              [--monitoring-user-assigned-identity-id <arm-id>] \
+                              [--monitoring-sli-type <Availability|Latency>]
 
 # Delete a resilience drill from a service group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4841,7 +4858,8 @@ azmcp resiliency drill check-resync-readiness --service-group <service-group> \
 azmcp resiliency drill validate-for-execution --service-group <service-group> \
                                               --drill <drill> \
                                               [--source-locations <source-locations>] \
-                                              [--operation-name <Failover|Reprotect|FailoverReverse|ReprotectReverse>]
+                                              [--operation-name <Failover|Reprotect|FailoverReverse|ReprotectReverse>] \
+                                              [--operation-id <guid>]
 
 # Get a resource (target) of a drill, or list all resources of the drill (omit --name)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

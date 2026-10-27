@@ -29,6 +29,7 @@ public class ResilienceManagementSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResilienceManagementService, ResilienceManagementService>();
+        services.AddSingleton<IGoalAssignmentCreateService, GoalAssignmentCreateService>();
 
         services.AddSingleton<GoalAssignmentGetCommand>();
         services.AddSingleton<GoalAssignmentCreateCommand>();
@@ -76,9 +77,9 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<DrillRunResumeCommand>();
         services.AddSingleton<DrillRunMarkCompleteCommand>();
         services.AddSingleton<DrillRunReprotectCommand>();
+        services.AddSingleton<DrillRunResourceGetCommand>();
         services.AddSingleton<DrillRunGenerateReportCommand>();
         services.AddSingleton<DrillRunGetReportDownloadUrlCommand>();
-        services.AddSingleton<DrillRunResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -183,7 +184,7 @@ public class ResilienceManagementSetup : IAreaSetup
         drillResources.AddCommand<DrillAddOrUpdateResourcesCommand>(serviceProvider);
 
         // Create run subgroup under drill
-        var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill, generating drill run reports, and getting report download URLs.");
+        var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill.");
         drills.AddSubGroup(drillRuns);
 
         drillRuns.AddCommand<DrillRunGetCommand>(serviceProvider);

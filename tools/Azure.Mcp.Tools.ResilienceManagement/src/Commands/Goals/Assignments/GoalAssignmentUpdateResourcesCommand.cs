@@ -11,56 +11,39 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 
 [CommandMetadata(
-    Id = "8a384d69-274b-40eb-ac91-bb8906041e8a",
+    Id = "f70b3679-dc78-4750-a7fb-2c9107a97eb1",
     Name = "update-resources",
-    Title = "Update Resilience Goal Resource Participation",
-    Description = """
-        Updates goal resources in a resilience goal assignment in a service group: exclude a resource
-        from zonal goal participation without deleting it, or include it again; record ManuallyAttested zonal
-        resiliency or clear it; or confirm that you approve a zonal resilience solution for the resource
-        (ApprovedByUser). Accepts a JSON resources array of resourceArmId with zonalResiliency settings. Returns
-        the operation ID and Accepted status unless already completed. Attest only verified resilience.
-        """,
-    OperationPlane = ToolOperationPlane.Control,
-    Destructive = true, Idempotent = true, OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
+    Title = "Update Resilience Goal Assignment Resources",
+    Description = "Updates discovered resources under a resilience goal assignment: include or exclude resources from high availability or disaster recovery goals, set attestation or user confirmations. Supply a JSON array of existing goal resource IDs and their properties, including underlying Azure resourceArmId. This is per-resource replacement, not PATCH: read current properties first and include all desired disaster recovery fields. Returns Accepted and the service operation ID when supplied. Does not change Azure resources or service group membership, rediscover resources, or recommend capacity.",
+    OperationPlane = ToolOperationPlane.Control, Destructive = true, Idempotent = false,
+    OpenWorld = false, ReadOnly = false, Secret = false, LocalRequired = false)]
 public sealed class GoalAssignmentUpdateResourcesCommand(
     ILogger<GoalAssignmentUpdateResourcesCommand> logger,
     IResilienceManagementService service)
-    : BaseGoalAssignmentCommand<GoalAssignmentUpdateResourcesOptions, GoalAssignmentUpdateResourcesCommand.GoalAssignmentUpdateResourcesCommandResult>
+    : AuthenticatedCommand<GoalAssignmentUpdateResourcesOptions, GoalAssignmentOperationResult>
 {
     public override void ValidateOptions(GoalAssignmentUpdateResourcesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        try
-        {
-            _ = GoalAssignmentValidation.CreateResourcesContent(options.Resources);
-        }
-        catch (ArgumentException ex)
-        {
-            validationResult.AddError(ex.Message, "Invalid goal resource update.");
-        }
+        GoalAssignmentResourceValidation.ValidateNames(options.ServiceGroup, options.GoalAssignment, validationResult);
+        GoalAssignmentResourceValidation.ValidateResources(options.Resources, options.ServiceGroup, options.GoalAssignment, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GoalAssignmentUpdateResourcesOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var content = GoalAssignmentValidation.CreateResourcesContent(options.Resources);
-            var operation = await service.UpdateGoalAssignmentResourcesAsync(
-                options.ServiceGroup, options.GoalAssignment, content, options.Tenant, cancellationToken);
-            context.Response.Results = ResponseResult.Create(
-                new GoalAssignmentUpdateResourcesCommandResult(operation),
-                ResilienceManagementJsonContext.Default.GoalAssignmentUpdateResourcesCommandResult);
+            var result = await service.UpdateGoalAssignmentResourcesAsync(options.ServiceGroup, options.GoalAssignment, options.Resources, options.Tenant, cancellationToken);
+            context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.GoalAssignmentOperationResult);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating goal resources. ServiceGroup: {ServiceGroup}, GoalAssignment: {GoalAssignment}.",
-                options.ServiceGroup, options.GoalAssignment);
+            logger.LogError(ex, "Goal assignment resource update failed.");
             HandleException(context, ex);
+            context.Response.Results = null;
         }
-
         return context.Response;
     }
 
-    public sealed record GoalAssignmentUpdateResourcesCommandResult(GoalAssignmentOperationResult Operation);
+    protected override string GetErrorMessage(Exception ex) => GoalAssignmentResourceValidation.GetErrorMessage(ex);
 }

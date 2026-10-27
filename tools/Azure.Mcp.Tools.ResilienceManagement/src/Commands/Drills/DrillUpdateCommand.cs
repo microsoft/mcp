@@ -15,7 +15,13 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
     Id = "9c4ad84e-7056-46ad-a857-8a81dce0c676",
     Name = "update",
     Title = "Update Resilience Drill",
-    Description = "Updates an existing resilience drill in a service group: change RBAC setup mode, move supporting resources to a new subscription and region, or change Health Model, SLI monitoring, and goal-assignment identity. Also changes the drill, Chaos resource, recovery plan, or monitoring identity. Supports clearing monitoring while preserving all other configuration; omitted properties stay unchanged.",
+    Description = """
+        Updates an existing resilience drill in a service group. Changes only supplied properties, including
+        supporting-resource subscription and region, RBAC setup, managed identity, Chaos, recovery-plan, goal,
+        Health Model, SLI, and monitoring configuration. Monitoring-source updates require an explicit existing
+        Azure Health Model or service-group-scoped Microsoft.Monitor SLI and exact read identity; the tool
+        validates those resources before mutation and verifies the selection in Drill read-back.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -64,12 +70,6 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
             validationResult.Errors.Add("The resource group must be a single non-empty path segment specified together with subscription and region.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.Subscription) && options.RbacSetupMode is null &&
-            options.GoalAssignmentProperties is null && options.HealthModelMonitoringProperties is null && options.SliMonitoringProperties is null &&
-            options.Identity is null && options.ChaosResourceProperties is null && options.RecoveryPlanProperties is null && options.MonitoringProperties is null)
-        {
-            validationResult.Errors.Add("Specify at least one property to update: subscription and region, RBAC setup mode, identity, Chaos resource, recovery-plan, or monitoring identities, goal-assignment properties, Health Model monitoring, or SLI monitoring.");
-        }
         try
         {
             _ = DrillConfiguration.Update(options.GoalAssignmentProperties, options.HealthModelMonitoringProperties, options.SliMonitoringProperties,
@@ -79,6 +79,29 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
         catch (ArgumentException ex)
         {
             validationResult.Errors.Add(ex.Message);
+        }
+
+        DrillCreateCommand.ValidateMonitoringOptions(
+            options.MonitoringSourceType,
+            options.MonitoringSourceId,
+            options.MonitoringIdentityType,
+            options.MonitoringUserAssignedIdentityId,
+            options.MonitoringSliType,
+            validationResult,
+            required: false);
+
+        if (string.IsNullOrWhiteSpace(options.Subscription) &&
+            options.RbacSetupMode is null &&
+            options.GoalAssignmentProperties is null &&
+            options.HealthModelMonitoringProperties is null &&
+            options.SliMonitoringProperties is null &&
+            options.Identity is null &&
+            options.ChaosResourceProperties is null &&
+            options.RecoveryPlanProperties is null &&
+            options.MonitoringProperties is null &&
+            options.MonitoringSourceType is null)
+        {
+            validationResult.Errors.Add("Specify at least one drill property to update.");
         }
     }
 
@@ -97,7 +120,15 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
                 DrillConfiguration.ParseManagedIdentity(options.Identity),
                 options.ResourceGroup,
                 options.Tenant,
-                cancellationToken);
+                cancellationToken,
+                monitoringSource: options.MonitoringSourceType is null
+                    ? null
+                    : new DrillMonitoringSource(
+                        options.MonitoringSourceType.Value,
+                        options.MonitoringSourceId!,
+                        options.MonitoringIdentityType!.Value,
+                        options.MonitoringUserAssignedIdentityId,
+                        options.MonitoringSliType));
 
             context.Response.Results = ResponseResult.Create(
                 new DrillUpdateCommandResult(drill),
@@ -116,13 +147,12 @@ public sealed class DrillUpdateCommand(ILogger<DrillUpdateCommand> logger, IResi
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        ArgumentException => ex.Message,
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "The drill could not be updated because it conflicts with the current resource state.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Authorization failed updating the drill. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "The drill, service group, or subscription was not found.",
+            "The drill, service group, subscription, or recoveryplan was not found.",
         RequestFailedException =>
             "The drill update request failed. Verify the request parameters and try again.",
         _ => base.GetErrorMessage(ex)

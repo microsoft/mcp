@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Recovery-plan creation now tolerates temporary not-found responses while the accepted resource becomes readable, without replaying the create request."

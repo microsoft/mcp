@@ -24,8 +24,10 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         Updates recovery resources in a resilience recoveryplan in an Azure service group: includes and configures a resource
         with protection settings; keeps a resource in the plan but excludes it from recovery operations; or removes a resource
         from membership while retaining the plan and all other resources. Supports CustomRunbook with failover and reprotect
-        runbooks. Supports AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and a test
-        failover virtual network, and CrossZoneVMRecovery for virtual machines with an optional target zone and capacity reservation group.
+        runbooks. Supports AzureStorageAccount for native Storage account recovery, AzureCosmosDB for protected
+        Cosmos DB accounts, AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and
+        a test failover virtual network, and CrossZoneVMRecovery with an optional target zone and capacity reservation group.
+        Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -44,6 +46,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     public override void ValidateOptions(RecoveryPlanUpdateResourcesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
 
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
@@ -68,6 +71,7 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
                 options.RecoveryPlan,
                 content,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -214,8 +218,9 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
     {
         ArgumentException => HttpStatusCode.BadRequest,
         TimeoutException => HttpStatusCode.GatewayTimeout,
-        // A failed long-running operation surfaces the status of its successful status poll; report the rejection instead.
-        RequestFailedException reqEx when reqEx.Status < 400 => HttpStatusCode.BadRequest,
+        RequestFailedException reqEx when
+            reqEx.Status == (int)HttpStatusCode.OK &&
+            !string.IsNullOrWhiteSpace(reqEx.ErrorCode) => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 
@@ -229,8 +234,10 @@ public sealed class RecoveryPlanUpdateResourcesCommand(ILogger<RecoveryPlanUpdat
             "Authorization failed updating recoveryplan resources. Verify you have the required permissions.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Recoveryplan not found. Verify the recoveryplan and service group exist and you have access.",
-        RequestFailedException reqEx when reqEx.Status < 400 && !string.IsNullOrEmpty(reqEx.ErrorCode) =>
-            $"The recoveryplan resource update was rejected ({reqEx.ErrorCode}). Verify each resource's protection solution is detected and supported, then try again.",
+        RequestFailedException reqEx when
+            reqEx.Status == (int)HttpStatusCode.OK &&
+            !string.IsNullOrWhiteSpace(reqEx.ErrorCode) =>
+            $"The recoveryplan resource update was rejected ({reqEx.ErrorCode}). Verify the resource IDs and protection settings, then try again.",
         RequestFailedException =>
             "The recoveryplan resource update failed. Verify the resource IDs and protection settings, then try again.",
         _ => base.GetErrorMessage(ex)

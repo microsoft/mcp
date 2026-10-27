@@ -39,7 +39,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("drill-resource IDs", response.Message);
-        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -59,14 +59,14 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("drill-resource ID", response.Message);
-        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, TestContext.Current.CancellationToken);
+        await Service.DidNotReceiveWithAnyArgs().AddOrUpdateDrillResourcesAsync(default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task ExecuteAsync_AcceptsExcludedDrillResourceIdsAndPreservesThem()
     {
         const string excludedId = "/providers/Microsoft.Management/serviceGroups/SG1/providers/Microsoft.AzureResilienceManagement/drills/DRILL1/drillResources/33333333-3333-3333-3333-333333333333";
-        Service.AddOrUpdateDrillResourcesAsync(ServiceGroup, Drill, Arg.Any<AddOrUpdateResourcesContent>(), null, Arg.Any<CancellationToken>())
+        Service.AddOrUpdateDrillResourcesAsync(ServiceGroup, Drill, Arg.Any<AddOrUpdateResourcesContent>(), null, null, Arg.Any<CancellationToken>())
             .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -80,6 +80,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Arg.Is<AddOrUpdateResourcesContent>(content =>
                 content.ResourceLists.ExcludeResources.Count == 1 &&
                 content.ResourceLists.ExcludeResources[0].ToString() == excludedId),
+            null,
             null,
             Arg.Any<CancellationToken>());
     }
@@ -107,7 +108,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
                 Arg.Any<string>(),
                 Arg.Any<AddOrUpdateResourcesContent>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
         }
 
@@ -124,7 +125,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Drill,
             Arg.Any<AddOrUpdateResourcesContent>(),
             "tenant1",
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new DrillAddOrUpdateResourcesResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -224,7 +225,7 @@ public sealed class DrillAddOrUpdateResourcesCommandTests
             Arg.Any<string>(),
             Arg.Any<AddOrUpdateResourcesContent>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(

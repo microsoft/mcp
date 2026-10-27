@@ -1,0 +1,9 @@
+changes:
+  - section: Bugs Fixed
+    description: "Restored registration of existing Drill report commands so runtime tool discovery, consolidated metadata, and evaluation prompts agree."
+  - section: Features Added
+    description: "Added resiliency goal assignment recommend-capacity, refresh-resources (rediscovery), and update-resources tools with validated goal participation payloads and asynchronous operation results."
+  - section: Bugs Fixed
+    description: "Use the Regional-capable 2026-10-31-preview contract for goal assignment resource refreshes, matching goal assignment creation."
+  - section: Bugs Fixed
+    description: "Preserve Regional Goal Resource participation on read-back and use the Regional-capable contract for resource reads and updates."

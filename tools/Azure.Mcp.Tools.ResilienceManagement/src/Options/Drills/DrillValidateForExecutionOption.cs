@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Drills;
 
-public sealed class DrillValidateForExecutionOptions
+public sealed class DrillValidateForExecutionOptions : ResilienceManagementOperationOptions
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
@@ -15,10 +15,10 @@ public sealed class DrillValidateForExecutionOptions
     [Option(Description = ResilienceManagementOptionDescriptions.Drill)]
     public required string Drill { get; set; }
 
-    [Option(Description = "Physical source locations from which resources will be failed over or faulted, such as 'westus2-az1'. Required unless operation-name is Reprotect, including when operation-name is omitted.")]
+    [Option(Description = "The Azure regions or physical zones from which resources will be failed over or faulted.")]
     public string[]? SourceLocations { get; set; }
 
-    [Option(Description = "Optional operation to validate: Failover, Reprotect, FailoverReverse, or ReprotectReverse. Omit to use the service's default validation.")]
+    [Option(Description = "Optional operation to validate: Failover, Reprotect, FailoverReverse, or ReprotectReverse.")]
     public DrillExecutionOperation? OperationName { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
