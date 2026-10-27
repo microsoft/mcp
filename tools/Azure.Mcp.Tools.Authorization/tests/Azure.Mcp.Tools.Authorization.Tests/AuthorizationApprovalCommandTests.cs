@@ -5,6 +5,8 @@ using System.Text.Json;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Tests.Generated.Models;
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Authorization.Tests;
@@ -13,6 +15,50 @@ public sealed class AuthorizationApprovalCommandTests(
     ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
     : RecordedCommandTestsBase(output, fixture, liveServerFixture)
 {
+    // ARM includes tenant and principal identifiers in this diagnostic response header.
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        .. base.HeaderRegexSanitizers,
+        new(new HeaderRegexSanitizerBody("x-ms-operation-identifier") { Value = "Sanitized" })
+    ];
+
+    [Fact]
+    public async Task Should_list_pending_role_approvals()
+    {
+        JsonElement? result = await CallToolAsync(
+            "role_approval_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
+                { "scope", $"/subscriptions/{Settings.SubscriptionId}" }
+            });
+
+        JsonElement approvals = result.AssertProperty("approvals");
+        Assert.Equal(JsonValueKind.Array, approvals.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_reject_missing_role_approval_stage()
+    {
+        // These nonexistent stage identifiers exercise the ARM error path without granting access.
+        CallToolResult result = await Client.CallToolAsync(
+            "role_approval_approve",
+            new Dictionary<string, object?>
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId },
+                { "scope", $"/subscriptions/{Settings.SubscriptionId}" },
+                { "approval", "00000000-0000-0000-0000-000000000001" },
+                { "stage", "00000000-0000-0000-0000-000000000002" },
+                { "justification", "Verify missing approval stage handling without granting access." }
+            },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("status 404", McpTestUtilities.GetFirstText(result.Content), StringComparison.Ordinal);
+    }
+
     // This grants access. Run explicitly with a controlled request, never an arbitrary pending approval.
     [Fact(Explicit = true)]
     public async Task Should_discover_and_approve_controlled_role_request()

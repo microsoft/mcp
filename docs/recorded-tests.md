@@ -107,8 +107,19 @@ Follow this checklist any time you need to update recordings:
 
 ### Authorization PIM approval lifecycle
 
+The regular `AuthorizationApprovalCommandTests` cover listing approvals and rejecting a nonexistent
+approval stage with HTTP 404. These scenarios do not grant Azure access and run in normal playback
+without additional settings:
+
+```powershell
+dotnet test --project tools\Azure.Mcp.Tools.Authorization\tests\Azure.Mcp.Tools.Authorization.Tests -- --filter-class '*AuthorizationApprovalCommandTests'
+```
+
+The class sanitizes ARM's `x-ms-operation-identifier` diagnostic header because it contains tenant
+and principal identifiers. Retain the base sanitizers when extending this collection.
+
 `AuthorizationApprovalCommandTests.Should_discover_and_approve_controlled_role_request` exercises
-both approval tools through the recorded test harness. It is explicit because it grants Azure access.
+the successful approval lifecycle through the recorded test harness. It is explicit because it grants Azure access.
 Never select an arbitrary pending request for this test.
 
 Create a dedicated, short-lived activation request for a test-only identity and role at a controlled
