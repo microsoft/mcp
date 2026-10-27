@@ -387,12 +387,14 @@ azmcp server info
 
 ```bash
 # Check authentication and connectivity for an ADME endpoint and data partition
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
                          --data-partition <data-partition> \
                          [--tenant <tenant>] \
                          [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get a schema by its fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
                        --kind <authority:source:entity-type:version> \
@@ -400,6 +402,7 @@ azmcp adme schema get --endpoint <endpoint> \
                        [--auth-app-id <application-id-or-app-id-uri>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
                         [--tenant <tenant>] \
@@ -417,6 +420,7 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--limit <limit>]
 
 # Search OSDU records by kind and Lucene criteria; query pagination is the default
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme search --endpoint <endpoint> \
                   --data-partition <data-partition> \
                   --kind <authority:source:entity-type:version> [<kind>...] \
@@ -444,6 +448,7 @@ Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record fetch --endpoint <endpoint> \
                                   --data-partition <data-partition> \
                                   --ids <id> [<id>...] \
@@ -453,6 +458,7 @@ azmcp adme storage record fetch --endpoint <endpoint> \
                                   [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get the latest or a specific version of an OSDU record, optionally projecting attributes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record get --endpoint <endpoint> \
                                 --data-partition <data-partition> \
                                 --id <record-id> \
@@ -462,6 +468,7 @@ azmcp adme storage record get --endpoint <endpoint> \
                                 [--auth-app-id <application-id-or-app-id-uri>]
 
 # List record ids for a fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record list --endpoint <endpoint> \
                                  --data-partition <data-partition> \
                                  --kind <authority:source:entity-type:version> \
@@ -471,6 +478,7 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # List all numeric versions of an OSDU record
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record version list --endpoint <endpoint> \
                                          --data-partition <data-partition> \
                                          --id <record-id> \
