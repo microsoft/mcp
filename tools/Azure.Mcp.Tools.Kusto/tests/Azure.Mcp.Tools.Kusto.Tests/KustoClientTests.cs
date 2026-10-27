@@ -213,6 +213,27 @@ public sealed class KustoClientTests
         await otherCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
     }
 
+    [Fact]
+    public async Task ExecuteQueryCommandAsync_KeepsPathAndUsesKustoScope()
+    {
+        // Arrange - any cluster URI that passes the allow-list works here; this one includes a path to show it's preserved
+        const string clusterUri = "https://mycluster.arg.core.windows.net/providers/Microsoft.ResourceGraph/connector/kusto/sample";
+        var handler = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
+        _azureService.GetClient(Arg.Any<string>()).Returns(httpClient);
+        var kustoClient = new KustoClient(clusterUri, _tokenCredential, "azmcp", _azureService);
+
+        // Act
+        await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(new Uri($"{clusterUri}/v1/rest/query"), handler.LastRequestUri);
+        await _tokenCredential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.Length == 1 && context.Scopes[0] == "https://kusto.kusto.windows.net/.default"),
+            Arg.Any<CancellationToken>());
+    }
+
     #region SSRF Protection Tests
 
     [Theory]
@@ -223,6 +244,8 @@ public sealed class KustoClientTests
     [InlineData("https://test.kusto.windows.net.example.com/path")]
     [InlineData("https://169.254.169.254/metadata/instance")] // Azure IMDS
     [InlineData("https://management.azure.com/subscriptions")]
+    [InlineData("https://arg.core.windows.net")] // Resource Graph suffix without an endpoint name
+    [InlineData("https://mycluster.arg.core.windows.net.example.com")]
     public void Constructor_RejectsInvalidClusterUris(string invalidClusterUri)
     {
         // Act & Assert
@@ -275,6 +298,9 @@ public sealed class KustoClientTests
     [InlineData("https://mycluster.adx.applicationinsights.azure.com")]
     // Germany
     [InlineData("https://mycluster.kusto.sovcloud-api.de")]
+    // Azure Resource Graph
+    [InlineData("https://mycluster.arg.core.windows.net")]
+    [InlineData("https://mycluster.arg.core.windows.net/providers/Microsoft.ResourceGraph/connector/kusto/sample")]
     public void Constructor_AcceptsValidKustoClusterUris(string validClusterUri)
     {
         // Act - should not throw
@@ -364,9 +390,13 @@ public sealed class KustoClientTests
 
     private sealed class MockHttpMessageHandler(Action<HttpRequestMessage>? onRequest = null) : HttpMessageHandler
     {
+        public Uri? LastRequestUri { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             onRequest?.Invoke(request);
+            LastRequestUri = request.RequestUri;
+
             // The caller (HttpClient.SendAsync) takes ownership and is responsible for disposal HttpResponseMessage.
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {

@@ -30,6 +30,9 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(location), location));
 
+        // Validate before any ARM call so an invalid value never leaves a half-configured vault behind.
+        var storageModelType = ParseCreateStorageType(storageType);
+
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
@@ -40,7 +43,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
         {
             throw new RequestFailedException(409,
-                "The vault already exists. Use 'azurebackup vault update' to modify it.");
+                "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, or choose a different name for a new vault.");
         }
 
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
@@ -56,6 +59,29 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
         await WaitForLroCompletionAsync(result, cancellationToken);
 
+        // RSV storage redundancy is not part of the vault PUT payload; it is managed via the
+        // BackupResourceStorageConfig API and can only be changed before any item is protected.
+        if (storageModelType is { } requestedStorageType)
+        {
+            try
+            {
+                await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requestedStorageType, cancellationToken);
+            }
+            catch (RequestFailedException ex)
+            {
+                var tenantArgument = string.IsNullOrEmpty(tenant) ? string.Empty : $" --tenant \"{tenant}\"";
+                throw new RequestFailedException(
+                    ex.Status,
+                    $"Vault '{vaultName}' was created, but setting storage redundancy to '{requestedStorageType}' failed. " +
+                    $"The vault currently uses the default storage redundancy. Before configuring backup, retry with " +
+                    $"'azurebackup vault update --subscription \"{subscription}\"{tenantArgument} --resource-group \"{resourceGroup}\" " +
+                    $"--vault \"{vaultName}\" --vault-type rsv --redundancy {requestedStorageType}'. " +
+                    $"Details: {ex.Message}",
+                    ex.ErrorCode,
+                    ex);
+            }
+        }
+
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
             result.Value.Data.Name,
@@ -64,6 +90,18 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             result.Value.Data.Properties?.ProvisioningState,
             result.Value.Data.Properties?.PublicNetworkAccess?.ToString());
     }
+
+    private static BackupStorageType? ParseCreateStorageType(string? storageType) =>
+        storageType?.ToLowerInvariant() switch
+        {
+            null or "" => (BackupStorageType?)null,
+            "georedundant" => BackupStorageType.GeoRedundant,
+            "locallyredundant" => BackupStorageType.LocallyRedundant,
+            "zoneredundant" => BackupStorageType.ZoneRedundant,
+            _ => throw new ArgumentException(
+                $"Invalid storage type: '{storageType}'. Valid values: GeoRedundant, LocallyRedundant, ZoneRedundant.",
+                nameof(storageType))
+        };
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -648,7 +686,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // not the vault patch endpoint.
         if (!string.IsNullOrEmpty(redundancy))
         {
-            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, redundancy, cancellationToken);
+            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, new BackupStorageType(redundancy), cancellationToken);
         }
 
         // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
@@ -692,14 +730,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
     private static async Task ConfigureStorageRedundancyAsync(
         ArmClient armClient, string vaultName, string resourceGroup,
-        string subscription, string redundancy, CancellationToken cancellationToken)
+        string subscription, BackupStorageType redundancy, CancellationToken cancellationToken)
     {
         var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
         var currentConfig = await configResource.GetAsync(cancellationToken);
 
         var data = currentConfig.Value.Data;
-        data.Properties.StorageModelType = new BackupStorageType(redundancy);
+        data.Properties.StorageModelType = redundancy;
 
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
