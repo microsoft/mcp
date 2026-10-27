@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Advisor.Commands.Insight;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
@@ -14,6 +15,12 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationUpdateCommand.RecommendationUpdateResult))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
+[JsonSerializable(typeof(InsightListCommand.InsightListResult))]
+[JsonSerializable(typeof(Models.AdvisorInsight))]
+[JsonSerializable(typeof(Models.AdvisorInsightKpi))]
+[JsonSerializable(typeof(InsightData))]
+[JsonSerializable(typeof(InsightDataProperties))]
+[JsonSerializable(typeof(InsightKpiData))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(RecommendationMetadataData))]
