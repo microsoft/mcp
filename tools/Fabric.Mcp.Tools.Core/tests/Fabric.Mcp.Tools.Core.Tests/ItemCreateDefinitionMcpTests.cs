@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 // cspell:words ipynb
 
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
@@ -29,6 +30,8 @@ namespace Fabric.Mcp.Tools.Core.Tests;
 public sealed class ItemCreateDefinitionMcpTests()
 {
     private const string ToolName = "core_create-item";
+    private const string FolderId = "bbbbbbbb-1111-2222-3333-cccccccccccc";
+    private const string LabelId = "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f";
     private const string InlineDefinition = """
         {"format":"ipynb","parts":[{"path":"artifact.content.ipynb","payload":"e30=","payloadType":"InlineBase64"}]}
         """;
@@ -68,6 +71,10 @@ public sealed class ItemCreateDefinitionMcpTests()
             var tool = Assert.Single(catalog.Tools, static tool => tool.Name == ToolName);
             var properties = tool.InputSchema.GetProperty("properties");
             Assert.Equal("string", properties.GetProperty("definition").GetProperty("type").GetString());
+            foreach (var option in new[] { "folder-id", "creation-payload", "options", "sensitivity-label-settings" })
+            {
+                Assert.Equal("string", properties.GetProperty(option).GetProperty("type").GetString());
+            }
             foreach (var option in LocalOptions)
             {
                 Assert.Equal(transport == TransportTypes.StdIo, properties.TryGetProperty(option, out _));
@@ -125,7 +132,7 @@ public sealed class ItemCreateDefinitionMcpTests()
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
             using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
-            Assert.False(body.RootElement.TryGetProperty("definition", out _));
+            Assert.Equal(["displayName", "type"], body.RootElement.EnumerateObject().Select(static property => property.Name).Order());
             return FabricOperationTestData.ItemResponse();
         });
         await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.Http);
@@ -166,6 +173,10 @@ public sealed class ItemCreateDefinitionMcpTests()
             Assert.All(parts, static part => Assert.Equal("InlineBase64", part.GetProperty("payloadType").GetString()));
             Assert.DoesNotContain("private-unselected-data", body.RootElement.GetRawText());
             Assert.DoesNotContain(directory.Path, body.RootElement.GetRawText());
+            Assert.Equal(FolderId, body.RootElement.GetProperty("folderId").GetString());
+            Assert.False(body.RootElement.GetProperty("options").GetProperty("futureSetting").GetBoolean());
+            Assert.Empty(body.RootElement.GetProperty("sensitivityLabelSettings").EnumerateObject());
+            Assert.False(body.RootElement.TryGetProperty("creationPayload", out _));
             return FabricOperationTestData.ItemResponse(type: "Notebook");
         });
         await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.StdIo);
@@ -175,6 +186,9 @@ public sealed class ItemCreateDefinitionMcpTests()
             [{"partPath":"artifact.content.ipynb","sourcePath":"notebooks/sales.ipynb"},{"partPath":".platform"},{"partPath":"assets/empty.bin"}]
             """;
         arguments["definition-format"] = "ipynb";
+        arguments["folder-id"] = FolderId;
+        arguments["options"] = """{"futureSetting":false}""";
+        arguments["sensitivity-label-settings"] = "{}";
 
         var result = await Loader(provider, route).CallToolHandler(Request(route, arguments), TestContext.Current.CancellationToken);
 
@@ -264,6 +278,7 @@ public sealed class ItemCreateDefinitionMcpTests()
             var name = body.RootElement.GetProperty("displayName").GetString();
             var part = Assert.Single(body.RootElement.GetProperty("definition").GetProperty("parts").EnumerateArray());
             Assert.Equal(name, Encoding.UTF8.GetString(Convert.FromBase64String(part.GetProperty("payload").GetString()!)));
+            Assert.Equal(name, body.RootElement.GetProperty("options").GetProperty("marker").GetString());
             return FabricOperationTestData.ItemResponse(displayName: name!);
         });
         await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.Http);
@@ -273,6 +288,7 @@ public sealed class ItemCreateDefinitionMcpTests()
         {
             var arguments = Arguments();
             arguments["display-name"] = name;
+            arguments["options"] = $$"""{"marker":"{{name}}"}""";
             arguments["definition"] = JsonSerializer.Serialize(
                 new FabricItemDefinition([new("artifact.content.ipynb", Convert.ToBase64String(Encoding.UTF8.GetBytes(name)), "InlineBase64")], "ipynb"),
                 CoreJsonContext.Default.FabricItemDefinition);
@@ -281,6 +297,245 @@ public sealed class ItemCreateDefinitionMcpTests()
 
         Assert.All(results, static result => Assert.False(result.IsError));
         Assert.Equal(2, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData("all", TransportTypes.StdIo, false)]
+    [InlineData("namespace", TransportTypes.StdIo, false)]
+    [InlineData("single", TransportTypes.StdIo, false)]
+    [InlineData("all", TransportTypes.Http, false)]
+    [InlineData("namespace", TransportTypes.Http, false)]
+    [InlineData("single", TransportTypes.Http, false)]
+    [InlineData("all", TransportTypes.StdIo, true)]
+    [InlineData("namespace", TransportTypes.StdIo, true)]
+    [InlineData("single", TransportTypes.StdIo, true)]
+    [InlineData("all", TransportTypes.Http, true)]
+    [InlineData("namespace", TransportTypes.Http, true)]
+    [InlineData("single", TransportTypes.Http, true)]
+    public async Task RequestProperties_UseOnePostForEitherCreationPathAcrossRoutesAndTransports(
+        string route, string transport, bool withDefinition)
+    {
+        const string workloadJson = """{"futureSetting":{"enabled":false,"values":[1,2.50,null,""]}}""";
+        using var expectedWorkload = JsonDocument.Parse(workloadJson);
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal($"{FabricEndpoints.FabricApiBaseUrl}/workspaces/{FabricOperationTestData.WorkspaceId}/items", request.RequestUri?.AbsoluteUri);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
+            Assert.Equal(withDefinition
+                ? ["definition", "displayName", "folderId", "options", "sensitivityLabelSettings", "type"]
+                : ["creationPayload", "displayName", "folderId", "sensitivityLabelSettings", "type"],
+                body.RootElement.EnumerateObject().Select(static property => property.Name).Order());
+            Assert.Equal(FolderId, body.RootElement.GetProperty("folderId").GetString());
+            Assert.True(JsonElement.DeepEquals(expectedWorkload.RootElement, body.RootElement.GetProperty(withDefinition ? "options" : "creationPayload")));
+            var label = body.RootElement.GetProperty("sensitivityLabelSettings");
+            Assert.Equal(LabelId, label.GetProperty("labelId").GetString());
+            Assert.Equal("ApplyOrFail", label.GetProperty("sensitivityLabelApplyStrategy").GetString());
+            return FabricOperationTestData.ItemResponse();
+        });
+        var credential = FabricOperationTestData.Credential();
+        var files = Substitute.For<IFabricItemDefinitionFileService>();
+        await using var provider = Services(handler, credential, transport, files: files);
+        var arguments = Arguments();
+        arguments["folder-id"] = "{" + FolderId.ToUpperInvariant() + "}";
+        arguments["sensitivity-label-settings"] = $$"""{"labelId":"{{LabelId}}","sensitivityLabelApplyStrategy":"ApplyOrFail"}""";
+        arguments[withDefinition ? "options" : "creation-payload"] = workloadJson;
+        if (withDefinition)
+        {
+            arguments["definition"] = InlineDefinition;
+        }
+
+        var result = await Loader(provider, route).CallToolHandler(Request(route, arguments), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(FabricOperationTestData.ItemId, Payload(result, route).GetProperty("item").GetProperty("id").GetString());
+        Assert.DoesNotContain("futureSetting", Text(result));
+        Assert.DoesNotContain("sensitivityLabelSettings", Payload(result, route).GetRawText());
+        Assert.Equal(1, handler.CallCount);
+        Assert.Empty(files.ReceivedCalls());
+        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("folder-id", "private-folder-name")]
+    [InlineData("folder-id", "00000000-0000-0000-0000-000000000000")]
+    [InlineData("options", "[]")]
+    [InlineData("options", """{"private-setting":1,"private-setting":2}""")]
+    [InlineData("sensitivity-label-settings", """{"labelId":"private-invalid-id"}""")]
+    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":"private-invalid-policy"}""")]
+    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":null}""")]
+    [InlineData("sensitivity-label-settings", """{"private-unknown-property":true}""")]
+    public async Task InvalidProperties_FailBeforeReadingSavedFilesOrAuthenticating(string option, string value)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        var files = Substitute.For<IFabricItemDefinitionFileService>();
+        await using var provider = Services(handler, credential, TransportTypes.StdIo, files: files);
+        var arguments = Arguments();
+        arguments["definition-directory"] = "private-host-path";
+        arguments["definition-files"] = """[{"partPath":"notebook-content.py"}]""";
+        arguments[option] = value;
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.DoesNotContain("private-", Text(result));
+        using var response = JsonDocument.Parse(Text(result));
+        Assert.Equal(400, response.RootElement.GetProperty("status").GetInt32());
+        Assert.Empty(files.ReceivedCalls());
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("private-invalid-json")]
+    [InlineData("""{"private-setting":1,"private-setting":2}""")]
+    public async Task InvalidCreationPayload_DoesNotFallBackToCreationWithoutPayload(string json)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, TransportTypes.Http);
+        var arguments = Arguments();
+        arguments["creation-payload"] = json;
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("--creation-payload", Text(result));
+        Assert.DoesNotContain("private-", Text(result));
+        Assert.Equal(0, handler.CallCount);
+        Assert.Empty(credential.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("definition", InlineDefinition)]
+    [InlineData("definition-directory", "private-host-path")]
+    [InlineData("definition-files", """[{"partPath":"notebook-content.py"}]""")]
+    [InlineData("definition-format", "FabricGitSource")]
+    public async Task CreationPayload_ConflictsWithEveryDefinitionOptionBeforeFileAccess(string option, string value)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        var files = Substitute.For<IFabricItemDefinitionFileService>();
+        await using var provider = Services(handler, credential, TransportTypes.StdIo, files: files);
+        var arguments = Arguments();
+        arguments["creation-payload"] = "{}";
+        arguments[option] = value;
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("--creation-payload cannot be combined", Text(result));
+        Assert.Empty(files.ReceivedCalls());
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WorkloadOptions_RequireADefinitionEvenWhenCreationPayloadIsPresent(bool withPayload)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, TransportTypes.Http);
+        var arguments = Arguments();
+        arguments["options"] = "{}";
+        if (withPayload)
+        {
+            arguments["creation-payload"] = "{}";
+        }
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("--options requires", Text(result));
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task WorkloadOptions_DoNotEnableLroWaiting()
+    {
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
+            Assert.True(body.RootElement.GetProperty("options").GetProperty("sync").GetBoolean());
+            return FabricOperationTestData.Accepted();
+        });
+        await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.Http);
+        var arguments = Arguments();
+        arguments["definition"] = InlineDefinition;
+        arguments["options"] = """{"sync":true}""";
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal("Accepted", Payload(result, "all").GetProperty("operation").GetProperty("status").GetString());
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData(null, HttpStatusCode.BadRequest)]
+    [InlineData("ApplyOrFail", HttpStatusCode.BadRequest)]
+    [InlineData("Ignore", HttpStatusCode.BadRequest)]
+    [InlineData(null, HttpStatusCode.Forbidden)]
+    [InlineData("ApplyOrFail", HttpStatusCode.Forbidden)]
+    [InlineData("Ignore", HttpStatusCode.Forbidden)]
+    public async Task LabelFailures_DoNotDowngradeRequestedPolicyOrResubmit(string? strategy, HttpStatusCode status)
+    {
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
+            var settings = body.RootElement.GetProperty("sensitivityLabelSettings");
+            Assert.Equal(LabelId, settings.GetProperty("labelId").GetString());
+            Assert.Equal(strategy is not null, settings.TryGetProperty("sensitivityLabelApplyStrategy", out var value));
+            if (strategy is not null)
+            {
+                Assert.Equal(strategy, value.GetString());
+            }
+            return FabricOperationTestData.JsonResponse("""{"message":"private-backend-label-failure"}""", status);
+        });
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, TransportTypes.Http);
+        var arguments = Arguments();
+        arguments["sensitivity-label-settings"] = JsonSerializer.Serialize(
+            new FabricSensitivityLabelSettings(Guid.Parse(LabelId), strategy), CoreJsonContext.Default.FabricSensitivityLabelSettings);
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        using var response = JsonDocument.Parse(Text(result));
+        Assert.Equal((int)status, response.RootElement.GetProperty("status").GetInt32());
+        Assert.DoesNotContain("private-", Text(result));
+        Assert.Equal(1, handler.CallCount);
+        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--folder-id", FolderId)]
+    [InlineData("--creation-payload", "{}")]
+    [InlineData("--options", "{}")]
+    [InlineData("--sensitivity-label-settings", "{}")]
+    public async Task RepeatedNewCliOptions_AreRejectedRatherThanSelectingOne(string option, string value)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, TransportTypes.StdIo);
+        var command = provider.GetRequiredService<ItemCreateCommand>();
+        IBaseCommand executable = command;
+
+        var response = await executable.ExecuteAsync(new(), command.GetCommand().Parse(
+            ["--workspace-id", FabricOperationTestData.WorkspaceId, "--display-name", "Created", "--item-type", "Notebook",
+                option, value, option, value]), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(0, handler.CallCount);
+        Assert.Empty(credential.ReceivedCalls());
     }
 
     private static ServiceProvider Services(

@@ -413,7 +413,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
-| `core_create-item` | Creates a Fabric item by workspace UUID, optionally from inline definition content or explicitly selected local files. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
+| `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
@@ -431,7 +431,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 
 **Create Item (`core_create-item`)**
 
-Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and optional `description` and definition. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
+Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and the optional request properties described below. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
 
 Missing required options are identified by their registered names, such as `--display-name` or `--item-type`, before any service call. Other parser failures return sanitized guidance without echoing supplied values or unknown option names.
 
@@ -443,7 +443,33 @@ fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --di
 
 The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
 
-Display names must follow the item's naming rules, and descriptions allow at most 256 characters. Omitting all definition options preserves the existing no-definition request. The tool does not supply creation payloads, folders, or sensitivity-label settings.
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. Omitting the optional properties preserves the existing no-definition request; the tool never invents request fields or defaults.
+
+**Optional creation properties**
+
+All four options below are available locally and over HTTP:
+
+| Argument | Request property | Behavior |
+|----------|------------------|----------|
+| `folder-id` | `folderId` | Nonempty UUID of an existing folder in this workspace. Passed directly and normalized as a UUID, without a lookup or folder creation. Omit to use the workspace root. |
+| `creation-payload` | `creationPayload` | Item-specific properties as a JSON **object string**, not a file path or a full create-request body. Mutually exclusive with **every** inline or saved-file definition option. Consult the item's Create API for supported properties. |
+| `options` | `options` | Item-specific settings as a JSON **object string**. Requires a definition source; cannot accompany creation payload alone. Consult the item's Update Definition API for supported options. This is the request's top-level `options`, **not** LRO wait settings. |
+| `sensitivity-label-settings` | `sensitivityLabelSettings` | Typed JSON object string with optional `labelId` and `sensitivityLabelApplyStrategy`. A supplied ID must be a nonempty UUID. A supplied strategy must be exactly `ApplyOrFail` or `Ignore`. |
+
+`creation-payload` and `options` each allow at most **1 MiB (1,048,576 UTF-8 bytes)** and **32 JSON nesting levels**. `sensitivity-label-settings` allows at most **4,096 UTF-8 bytes**. These are host input limits, not Fabric API quotas. Non-object JSON, malformed input, duplicate properties (including nested properties), and repeated occurrences of these CLI options are rejected before reading definition files or contacting Fabric. Workload property names and values, including explicit nulls, false values, and empty objects, are otherwise passed through unchanged; Fabric validates their per-item meaning. Unknown label-setting fields are errors rather than silently ignored.
+
+When label settings or their fields are omitted, they stay omitted. `{}` is sent as an empty settings object. Fabric's documented default for an omitted strategy is **`ApplyOrFail`**; the tool does not insert a value. Explicit **`Ignore`** permits Fabric to proceed without applying the label if it cannot be applied, so select it only when that policy is intended. Explicit null/invalid IDs or strategies are rejected; omit unused fields instead. A label-related failure never causes a retry without the label, a fallback to `Ignore`, or another creation request.
+
+For example, the documented [Lakehouse creation payload](https://learn.microsoft.com/rest/api/fabric/lakehouse/items/create-lakehouse) can enable schemas. This example creates a real item in an existing folder and requests a label with the strict policy:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse `
+  --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc `
+  --creation-payload '{"enableSchemas":true}' `
+  --sensitivity-label-settings '{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"ApplyOrFail"}'
+```
+
+For definition-based creation, pass supported item-specific settings through `--options` alongside either definition source below. Keep `sync`, `max-wait-seconds`, and `early-poll` as separate tool arguments. Folder IDs, labels, and workload properties do not trigger resource lookups, preflight calls, or metadata read-backs.
 
 [//]: # (cspell:words nbformat pbism pbir TMDL TMSL )
 
@@ -456,7 +482,7 @@ Choose exactly one source when supplying a definition:
 | Inline content | `definition`: a JSON **string** containing `parts` and optional `format`, not a path or a complete create-request body | Local CLI, stdio, and HTTP |
 | Saved files | `definition-directory`: an existing absolute local directory; `definition-files`: a JSON **string** containing an explicit array of `{ "partPath": "...", "sourcePath": "..." }`; optional `definition-format` | Local CLI and stdio only |
 
-Every inline part must supply `path`, Base64 `payload`, and `payloadType: "InlineBase64"`. `definition-format` applies only to saved files; for inline content put `format` inside the JSON. Conflicting sources, incomplete selections, repeated definition options, malformed JSON, unknown JSON fields, and duplicate JSON fields are errors, never silently preferred or dropped. Over HTTP, file options are omitted from discovery and rejected on invocation; the Fabric input service also checks its local-file capability before any filesystem access. The existing remote-capable tool remains available for inline and no-definition creation.
+Every inline part must supply `path`, Base64 `payload`, and `payloadType: "InlineBase64"`. `definition-format` applies only to saved files; for inline content put `format` inside the JSON. Neither source can be combined with `creation-payload`. Conflicting sources, incomplete selections, repeated definition options, malformed JSON, unknown definition-envelope fields, and duplicate JSON fields are errors, never silently preferred or dropped. Over HTTP, file options are omitted from discovery and rejected on invocation; the Fabric input service also checks its local-file capability before any filesystem access. The existing remote-capable tool remains available for inline, creation-payload, and no-definition creation.
 
 For a saved notebook, first save changes in your editor. This example reads only `sales.ipynb` from the selected directory and maps it to the Fabric part path without renaming the source file:
 

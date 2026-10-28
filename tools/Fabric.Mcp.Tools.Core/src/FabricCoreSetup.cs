@@ -106,23 +106,25 @@ public class FabricCoreSetup : IAreaSetup
             serviceProvider.GetRequiredService<IFabricCoreService>(),
             definitionInput);
         var definition = command.GetCommand();
-        var definitionOptions = definition.Options
-            .Where(static option => option.Name is "--definition" or "--definition-directory" or "--definition-files" or "--definition-format")
+        var inputOptions = definition.Options
+            .Where(static option => option.Name is "--definition" or "--definition-directory" or "--definition-files" or "--definition-format" or
+                "--folder-id" or "--creation-payload" or "--options" or "--sensitivity-label-settings")
             .ToArray();
         if (!definitionInput.SupportsLocalFiles)
         {
             // Remove options from this command's collection, not the cached OptionBinder
             // options shared by local and HTTP hosts in the same process.
-            foreach (var option in definitionOptions.Where(static option => option.Name != "--definition"))
+            foreach (var option in inputOptions.Where(static option =>
+                option.Name is "--definition-directory" or "--definition-files" or "--definition-format"))
             {
                 definition.Options.Remove(option);
             }
         }
         definition.Validators.Add(result =>
         {
-            if (definitionOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
-                result.AddError("Specify each definition option at most once.");
+                result.AddError("Specify each item-creation input option at most once.");
             }
         });
         return command;

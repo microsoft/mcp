@@ -308,6 +308,10 @@ public class ServerStartupTests
         var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
         var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
         Assert.Equal("string", creationOptions.GetProperty("definition").GetProperty("type").GetString());
+        foreach (var option in new[] { "folder-id", "creation-payload", "options", "sensitivity-label-settings" })
+        {
+            Assert.Equal("string", creationOptions.GetProperty(option).GetProperty("type").GetString());
+        }
         foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
         {
             Assert.Equal(localFiles, creationOptions.TryGetProperty(option, out _));

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Fabric.Mcp.Tools.Core.Models;
@@ -51,6 +52,18 @@ public class CreateItemRequest
 
     [JsonPropertyName("definition")]
     public FabricItemDefinition? Definition { get; set; }
+
+    [JsonPropertyName("folderId")]
+    public Guid? FolderId { get; set; }
+
+    [JsonPropertyName("creationPayload")]
+    public JsonElement? CreationPayload { get; set; }
+
+    [JsonPropertyName("options")]
+    public JsonElement? Options { get; set; }
+
+    [JsonPropertyName("sensitivityLabelSettings")]
+    public FabricSensitivityLabelSettings? SensitivityLabelSettings { get; set; }
 }
 
 /// <summary>

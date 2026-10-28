@@ -8,7 +8,8 @@ Offline tests for the Fabric Core toolset.
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, curated minimum part/format checks, cancellation, and safe errors
-- **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, unchanged no-definition creation, and concurrent input isolation
+- **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
+- **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -198,10 +199,25 @@ explicitly selected or supplied inline and is sent unchanged, not interpreted or
 The command accepts either inline definition JSON or an absolute selected directory plus explicit
 file-to-part mappings and optional format. Unknown/duplicate JSON properties and conflicting source
 options are rejected, rather than silently discarded or preferred. It does not enumerate folders.
-Only the create-request definition member becomes typed; the existing response model and output modes,
-UUID behavior, no-definition requests, and bounded LRO processing remain unchanged. Registered-handler
-tests verify one POST and no hidden reads, while the LRO service matrix covers both sources of request
-shape (with/without a definition), synchronous completion, submit-only acceptance, and explicit waiting.
+The create-request definition and label-settings members are typed; the existing response model and
+output modes, workspace UUID behavior, no-definition requests, and bounded LRO processing remain unchanged.
+Registered-handler tests verify one POST and no hidden reads, while the LRO service matrix covers
+with/without definitions and the additional creation properties, synchronous completion, submit-only
+acceptance, and explicit waiting.
+
+`ItemCreateRequestInput` prepares optional folder IDs, creation payloads, definition options, and
+sensitivity label settings before definition files can be read. Creation payloads conflict with every
+definition option; the API's top-level options object requires a definition and never controls LRO
+waiting. Workload JSON remains opaque `JsonElement` data with one-MiB UTF-8 input budgets, 32-level
+nesting limits, and duplicate-property rejection, including nested objects. Tests measure the exact
+byte boundary with both ASCII and multibyte text, and the exact nesting boundary through request serialization.
+
+Label settings have a separate four-KiB input budget and a source-generated typed model. Supplied IDs
+must be nonempty UUIDs and the only accepted strategies are `ApplyOrFail` and `Ignore`. Omitted objects
+and members stay omitted, including Fabric's default strategy; empty settings objects stay empty.
+Explicit nulls, unknown fields, and invalid strategies are rejected, not silently discarded. Tests
+verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
+folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
 
 Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
 definition to export. Keep endpoint-specific result sizes separate from these file budgets:
