@@ -159,6 +159,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
+| advisor_servicegroupintelligence_get | How is the Advisor status of service group commerce calculated? | none |
+| advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
+| advisor_servicegroupintelligence_get | Which mission critical service groups need attention? | none |
+| advisor_servicegroupintelligence_get | Which service groups are at risk? | none |
+| advisor_servicegroupintelligence_get | Show me the tier 0 service groups that are in critical status | none |
+| advisor_servicegroupintelligence_get | Use Advisor servicegroupintelligence get to show the status and criticality of service group <Service-group-name> | none |
 
 ## Azure AI Search
 
@@ -883,6 +890,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Run an IoT Hub device query equivalent to "SELECT * FROM devices" against IoT Hub <hub_name> in resource group <resource_group_name>; do not use the device-list operation | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
+| iothub_routing_endpoint-diagnostics | Show routing endpoint diagnostics evidence for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-diagnostics | Get routing endpoint diagnostics metrics for IoT Hub <hub_name> from <start_time> through <end_time> | none |
+| iothub_routing_endpoint-diagnostics | Check whether routing endpoint <endpoint_name> on IoT Hub <hub_name> has a missing target, unavailable metrics, or observed delivery failures in the past six hours | none |
+| iothub_routing_endpoint-diagnostics | Show which routing metrics returned no data for IoT Hub <hub_name> without assuming the hub is idle or healthy | none |
+| iothub_routing_endpoint-health | Show routing endpoint health for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-health | Get the current routing endpoint health for endpoint <endpoint_name> on IoT Hub <hub_name> | none |
 
 ## Azure IoT Operations
 
@@ -1102,6 +1115,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_send-enhancement-select | Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented | investigation-required |
 | monitor_instrumentation_send-enhancement-select | Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id> | none |
 | monitor_instrumentation_send-enhancement-select | Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id> | none |
+| monitor_ingestion_upload | Upload these log records to Azure Monitor using data collection endpoint <ingestion_endpoint>, data collection rule <dcr_immutable_id> and stream <stream_name>: <log_data_json> | none |
+| monitor_ingestion_upload | Send custom log data <log_data_json> to the Log Analytics table behind stream <stream_name> using data collection rule <dcr_immutable_id> | none |
+| monitor_ingestion_validate | Validate this log data against the schema of data collection rule <dcr_name> in resource group <resource_group> before uploading: <log_data_json> | none |
+| monitor_ingestion_validate | Check whether <log_data_json> is compliant with stream <stream_name> of data collection rule <dcr_name> in resource group <resource_group> | none |
 | monitor_metrics_batchquery | Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period> | none |
 | monitor_metrics_batchquery | Use one Azure Monitor batch metrics query to compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period>; do not issue a single-resource metrics query | none |
 | monitor_metrics_batchquery | Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request | none |

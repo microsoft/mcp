@@ -2,15 +2,18 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.4 (Unreleased)
+## 4.0.0-beta.4 (2026-10-28)
 
 ### Features Added
 
-### Breaking Changes
+- Added `azmcp advisor servicegroupintelligence get` command to get the Azure Advisor status (On Track, Attention Needed, At Risk, Critical, Unavailable) and criticality of one Service Group or all Service Groups. Supports `--service-group`, `--criticality`, `--status`, `--top`, and `--tenant`. Includes an explanation of how the overall status is calculated. [[#3952](https://github.com/microsoft/mcp/pull/3952)]
+- Added `monitor ingestion upload` to send custom log data to Azure Monitor through the Logs Ingestion API using a data collection rule, and `monitor ingestion validate` to check log data against payload requirements and the stream schema declared by a data collection rule before ingestion. [[#3954](https://github.com/microsoft/mcp/pull/3954)]
+- Added azurebackup operation get to read asynchronous operation status at Recovery Services vault or protected-item scope, returning timestamps, safe errors, and actual job IDs when present without treating operation IDs as job IDs. [[#3839](https://github.com/microsoft/mcp/pull/3839)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed Kusto tools rejecting Azure Resource Graph Kusto endpoints (`*.arg.core.windows.net`), which the Kusto SDKs already trust. [[#4029](https://github.com/microsoft/mcp/pull/4029)]
+- Apply `--storage-type` when creating Recovery Services vaults with `azurebackup vault create --vault-type rsv`. The requested redundancy is now set through the vault backup storage config, invalid values are rejected before any vault is created, and a storage-config failure reports that the vault was created and how to retry with `azurebackup vault update --redundancy`. [[#4033](https://github.com/microsoft/mcp/pull/4033)]
 
 ## 4.0.0-beta.3 (2026-10-22)
 

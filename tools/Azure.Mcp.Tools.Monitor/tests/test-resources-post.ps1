@@ -136,6 +136,9 @@ $DeploymentOutputs['logSearchBasicTableName'] = $basicTableName
 $DeploymentOutputs['logSearchAuxiliaryTableName'] = $auxiliaryTableName
 $DeploymentOutputs['logSearchAnalyticsTableName'] = $DeploymentOutputs['LOGSEARCHANALYTICSTABLENAME']
 $DeploymentOutputs['logSearchAuxiliaryLastPlanModifiedDate'] = $DeploymentOutputs['LOGSEARCHAUXILIARYLASTPLANMODIFIEDDATE']
+$DeploymentOutputs['logSearchDcrName'] = $DeploymentOutputs['LOGSEARCHDCRNAME']
+$DeploymentOutputs['logSearchDcrImmutableId'] = $dcrImmutableId
+$DeploymentOutputs['logSearchIngestionEndpoint'] = $ingestionEndpoint
 
 $ingestionToken = Get-PlainTextAccessToken -ResourceUrl 'https://monitor.azure.com'
 $basicRecords = @(

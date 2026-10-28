@@ -26,6 +26,7 @@ public sealed class KustoClient(
         ".kustomfa.windows.net",
         ".kusto.data.microsoft.com",
         ".kusto.fabric.microsoft.com",
+        ".arg.core.windows.net", // Azure Resource Graph Kusto endpoints: https://github.com/microsoft/mcp/issues/4028
         ".adx.loganalytics.azure.com",
         ".adx.applicationinsights.azure.com",
         ".adx.monitor.azure.com",

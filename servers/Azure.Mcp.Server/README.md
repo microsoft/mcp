@@ -972,6 +972,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "What is the status of service group 'my-service-group'?"
+* "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
@@ -1223,6 +1225,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
 * "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
+* "Show routing endpoint health for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show routing endpoint diagnostics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 
 ### 🏭 Azure IoT Operations
 
@@ -1266,6 +1270,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 
 * "Query an Analytics table in my Log Analytics workspace"
 * "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
+* "Validate this log data against the schema of data collection rule 'my-dcr' in resource group 'my-rg' before uploading it"
+* "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
 * "List the distributed trace accounts in my subscription"
@@ -1504,7 +1510,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
-- 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🌐 **Azure IoT Hub** - IoT Hub resource discovery, details, routing endpoint health, and routing diagnostics
 - 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -1513,7 +1519,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
 - 💾 **Azure NetApp Files** - Enterprise file storage account management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations

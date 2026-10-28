@@ -634,6 +634,23 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 # confidence, effort, and output type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
+
+# Get the current Azure Advisor status (On Track = no significant risks, Attention Needed = limited and manageable
+# issues, At Risk = material risks, Critical = immediate action required, Unavailable = no active recommendations) and
+# criticality tier (MissionCritical = Tier 0, BusinessCritical = Tier 1, BusinessOperational = Tier 2,
+# Administrative = Tier 3, NotApplicable; Tier0-Tier3 and 0-3 are accepted aliases) of one Service Group
+# (--service-group, the name such as 'commerce') or of ALL Service Groups when none is given. Filter by --criticality
+# and --status, for example --criticality MissionCritical --status "Attention Needed" for mission-critical Service
+# Groups that need attention; results are capped by --top. Each result returns the Service Group name and ID,
+# criticality, status, status description, a description of where to focus, the goal when set, and last updated time.
+# The response also includes statusCalculationExplanation once, explaining how the overall assessment is calculated.
+# If several tenants are accessible, --tenant must be specified.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor servicegroupintelligence get [--service-group <service-group>] \
+                                           [--criticality <MissionCritical|BusinessCritical|BusinessOperational|Administrative|NotApplicable>] \
+                                           [--status <"On Track"|"Attention Needed"|"At Risk"|Critical|Unavailable>] \
+                                           [--top <1-500>] \
+                                           [--tenant <tenant>]
 ```
 
 ### Azure AI Search Operations
@@ -3408,7 +3425,38 @@ azmcp iothub query run --subscription <subscription> \
                        [--from <source>] \
                        [--logical-operator <operator>] \
                        [--max-count <max-count>]
+
+# Get the current IoT Hub-reported health snapshot for message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-health --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --hub-name <iot-hub-name> \
+                                     [--endpoint-name <endpoint-name>]
+
+# Get factual hub and target metric evidence for IoT Hub message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-diagnostics --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --hub-name <iot-hub-name> \
+                                          [--endpoint-name <endpoint-name>] \
+                                          [--start-time <iso8601-datetime> --end-time <iso8601-datetime>] \
+                                          [--interval <iso8601-duration>]
 ```
+
+Diagnostics defaults to the previous 24 hours with `PT1H` buckets. `--start-time` and `--end-time` must
+be supplied together. The maximum observation window is 30 days, and the selected window and interval
+cannot exceed 720 buckets.
+
+Diagnostics distinguishes values returned, no values returned, failed queries, and partial evidence
+through per-metric availability metadata. Missing metric values do not mean zero traffic. Target
+metrics describe the parent resource and can include other clients; they do not prove endpoint
+delivery. Current target existence is separate from historical metrics, with any existence-check
+error under `target.error`. Targets are resolved from each endpoint's `endpointUri`; key-based Event
+Hubs, Service Bus, and Storage endpoints have no endpoint URI, so they report `target.resolutionStatus`
+as `unresolved` with no target evidence. These routing tools do not determine overall hub health or device ingress
+health. Each routing operation has a
+100-second timeout covering all requests and retries. Expiration returns HTTP 408 rather than
+presenting incomplete work as a successful result; caller cancellation is preserved.
 
 ### Azure IoT Operations
 
@@ -3794,6 +3842,32 @@ azmcp monitor workspace log search --subscription <subscription> \
                                    --query "| where LogLevel == 'error' | project TimeGenerated, LogMessage" \
                                    --timespan "P1D" \
                                    --limit 50
+```
+
+#### Ingestion
+
+```bash
+# Upload custom log data through the Logs Ingestion API using a data collection rule.
+# --data-collection-rule is the rule's immutable ID (dcr-...), --stream is the declared stream
+# (for example Custom-MyTable_CL) and --log-data is a JSON array of objects, up to 1 MB.
+# --ingestion-endpoint must be an Azure Monitor data collection endpoint (*.ingest.monitor.azure.com).
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion upload --ingestion-endpoint <ingestion-endpoint> \
+                               --data-collection-rule <data-collection-rule-id> \
+                               --stream <stream> \
+                               --log-data <log-data-json> \
+                               [--tenant <tenant>]
+
+# Validate log data before ingestion. Checks payload shape and, using the stream declared in the
+# data collection rule (looked up by --data-collection-rule NAME), column types. --stream is optional
+# when the rule declares exactly one stream. Returns errors and warnings as JSON.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor ingestion validate --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --data-collection-rule <data-collection-rule-name> \
+                                 --log-data <log-data-json> \
+                                 [--stream <stream>] \
+                                 [--tenant <tenant>]
 ```
 
 #### Health Models

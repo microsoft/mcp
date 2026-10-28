@@ -1082,6 +1082,7 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_ingestion_validate",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_metrics_batchquery",
@@ -1193,8 +1194,42 @@
           "description": "This tool is available in both local and remote server modes."
         }
       },
+
       "mappedToolList": [
         "monitor_traces_query_cancel"
+      ]
+    },
+    {
+      "name": "upload_custom_logs_to_azure_monitor",
+      "description": "Upload custom log data to Azure Monitor through the Logs Ingestion API using a data collection endpoint and data collection rule.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "monitor_ingestion_upload"
       ]
     },
     {
@@ -1768,6 +1803,39 @@
       },
       "mappedToolList": [
         "advisor_metadata_get"
+      ]
+    },
+    {
+      "name": "get_azure_advisor_service_group_status",
+      "description": "Get the current Azure Advisor status and criticality of Service Groups, showing which Service Groups are at risk, need attention, are critical or on track. Use for questions about the status of one Service Group or all Service Groups, and which mission critical (Tier 0) or other tier Service Groups need attention. Provide --service-group (name only, not an ARM ID) for one Service Group; when omitted, all accessible Service Groups are returned. Filter by --criticality (MissionCritical = Tier 0, BusinessCritical = Tier 1, BusinessOperational = Tier 2, Administrative = Tier 3) and by --status (On Track, Attention Needed, At Risk, Critical, Unavailable); map any status or tier named in the question to these filters. Cap results with --top (default 50, max 500). Each result returns the Service Group name and ID, criticality, status, status description, a description of where to focus, and last updated time. Present the status description and focus description exactly as returned, without rewording. If asked how status is calculated, answer: Azure Advisor considers the proportion of applicable resources affected by active recommendations across Zonal Resiliency, Cost Optimization, and Service Retirement, not just the number of recommendations. Higher-priority recommendation types have greater influence, and the results are combined into the overall Status. Only applicable areas with available data contribute. The Description, when available, identifies where to focus. Supporting Insight counts do not by themselves determine Status or predict how much it will improve. For aggregated KPIs such as idle resources or zonal resiliency use the insights tool instead.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "advisor_servicegroupintelligence_get"
       ]
     },
     {
@@ -3249,6 +3317,72 @@
       },
       "mappedToolList": [
         "iothub_hub_get"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_routing_endpoint_health",
+      "description": "Get the current health status that an Azure IoT Hub reports for its message-routing custom endpoints, including the last known error and the last send attempt times.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Hub routing endpoints without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_routing_endpoint-health"
+      ]
+    },
+    {
+      "name": "get_azure_iot_hub_routing_endpoint_diagnostics",
+      "description": "Get time-windowed diagnostic evidence for Azure IoT Hub message-routing custom endpoints: routing delivery and latency metrics, current target resource existence, and Azure Monitor metrics from Event Hubs, Service Bus, Storage, and Cosmos DB targets.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only retrieves information about Azure IoT Hub routing endpoints and their targets without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "iothub_routing_endpoint-diagnostics"
       ]
     },
     {
