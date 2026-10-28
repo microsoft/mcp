@@ -20,6 +20,12 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Description = """
         Creates a Fabric item using a nonempty workspace UUID, display-name, and item-type.
         Supply workspace-id or the backward-compatible workspace UUID alias; workspace names are not resolved.
+        Optionally supply inline definition JSON, or in local execution a definition-directory and explicit
+        definition-files mapping with optional definition-format. Never combine these sources.
+        File input reads saved, explicitly selected files only; HTTP callers must supply inline content.
+        Definitions support InlineBase64 parts, portable paths, and bounded byte/count budgets.
+        Minimum part/format checks cover Notebook, DataPipeline, SemanticModel, and Report;
+        content semantics, dependencies, and other item-type requirements are validated by Fabric.
         Sends one creation request. A 201 response returns item metadata; 202 returns a resumable operation receipt.
         With sync=true, asynchronously wait up to max-wait-seconds (default 120, server maximum 600 seconds)
         after acceptance and retrieve the result if available. Both modes immediately return synchronous completion without polling.
@@ -31,7 +37,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         the item-specific ReadWrite.All scope. Non-Power BI items require a supported Fabric capacity and
         tenant/capacity settings that enable Fabric item creation; Power BI items require the appropriate license.
         Service-principal and managed-identity support depends on item type.
-        Does not supply definitions or creation payloads, cancel Fabric operations, or resubmit creation.
+        Does not supply creation payloads, create dependencies, cancel Fabric operations, or resubmit creation.
         Only JSON/empty operation responses up to 1 MiB are supported; created item metadata is required.
         Acceptance is not completion. Resume using get-operation-state and get-operation-result, not another create.
         """,
@@ -44,10 +50,12 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = false)]
 public sealed class ItemCreateCommand(
     ILogger<ItemCreateCommand> logger,
-    IFabricCoreService fabricCoreService) : FabricCoreCommand<ItemCreateOptions, ItemCreateCommandResult>
+    IFabricCoreService fabricCoreService,
+    IFabricItemDefinitionInputService definitionInputService) : FabricCoreCommand<ItemCreateOptions, ItemCreateCommandResult>
 {
     private readonly ILogger<ItemCreateCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
+    private readonly IFabricItemDefinitionInputService _definitionInputService = definitionInputService ?? throw new ArgumentNullException(nameof(definitionInputService));
 
     public override JsonTypeInfo<ItemCreateCommandResult> ResultTypeInfo => CoreJsonContext.Default.ItemCreateCommandResult;
 
@@ -79,7 +87,9 @@ public sealed class ItemCreateCommand(
             {
                 DisplayName = options.DisplayName,
                 Type = options.ItemType,
-                Description = options.Description
+                Description = options.Description,
+                Definition = await _definitionInputService.ReadAsync(options.ItemType, options.Definition,
+                    options.DefinitionDirectory, options.DefinitionFiles, options.DefinitionFormat, cancellationToken)
             };
 
             var result = await _fabricCoreService.CreateItemAsync(workspaceId!, request,
@@ -122,10 +132,16 @@ public sealed class ItemCreateCommand(
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) =>
-        ex is FabricOperationCanceledException ? HttpStatusCode.RequestTimeout : base.GetStatusCode(ex);
+        ex switch
+        {
+            FabricItemDefinitionInputException => HttpStatusCode.BadRequest,
+            FabricOperationCanceledException => HttpStatusCode.RequestTimeout,
+            _ => base.GetStatusCode(ex)
+        };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        FabricItemDefinitionInputException => ex.Message,
         CredentialUnavailableException =>
             "Fabric credentials are unavailable. Authenticate the configured Fabric identity before creating an item",
         FabricOperationException { StatusCode: HttpStatusCode.BadGateway } => ex.Message,

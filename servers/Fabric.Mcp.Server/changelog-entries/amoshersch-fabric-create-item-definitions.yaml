@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added optional inline definitions and explicitly selected local definition files to Create Item, preserving HTTP creation and bounded operation waiting."

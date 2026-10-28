@@ -50,7 +50,7 @@ public class CreateItemRequest
     public string? Description { get; set; }
 
     [JsonPropertyName("definition")]
-    public object? Definition { get; set; }
+    public FabricItemDefinition? Definition { get; set; }
 }
 
 /// <summary>

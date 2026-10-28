@@ -97,7 +97,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(content);
+                AssertRepresentativeCoreTools(content, localFiles: false);
                 AssertListItemsTool(content);
             }
         }
@@ -171,7 +171,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(response);
+                AssertRepresentativeCoreTools(response, localFiles: true);
                 AssertListItemsTool(response);
             }
         }
@@ -246,7 +246,7 @@ public class ServerStartupTests
         }
     }
 
-    private static void AssertRepresentativeCoreTools(string response)
+    private static void AssertRepresentativeCoreTools(string response, bool localFiles)
     {
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
@@ -307,6 +307,11 @@ public class ServerStartupTests
         }
         var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
         var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("string", creationOptions.GetProperty("definition").GetProperty("type").GetString());
+        foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
+        {
+            Assert.Equal(localFiles, creationOptions.TryGetProperty(option, out _));
+        }
         Assert.Equal("boolean", creationOptions.GetProperty("sync").GetProperty("type").GetString());
         Assert.Equal("boolean", creationOptions.GetProperty("early-poll").GetProperty("type").GetString());
         Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());

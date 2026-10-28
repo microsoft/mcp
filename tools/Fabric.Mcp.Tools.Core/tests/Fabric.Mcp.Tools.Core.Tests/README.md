@@ -7,6 +7,8 @@ Offline tests for the Fabric Core toolset.
 
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
+- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, curated minimum part/format checks, cancellation, and safe errors
+- **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, unchanged no-definition creation, and concurrent input isolation
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -105,7 +107,7 @@ All LRO/Create Item coverage is offline. It does not call real Fabric, validate 
 `IFabricItemDefinitionFileService` is an injectable, stateless file/part converter registered by
 `FabricCoreSetup`. It uses ordinary `System.IO`, following Azure's area-specific file services,
 without depending on or changing Azure tools. It makes no network requests, exposes no MCP commands,
-and does not change existing Create Item models, API behavior, or the Core tool catalog.
+and is reused by Create Item's saved-file input without adding a command to the Core tool catalog.
 
 The wire models are `FabricItemDefinition` (`parts`, optional `format`) and
 `FabricItemDefinitionPart` (`path`, `payload`, `payloadType`), registered in `CoreJsonContext`.
@@ -168,10 +170,13 @@ including ancestors of the selected root. Use actual local paths rather than lin
 These checks are not an OS sandbox against hostile processes concurrently replacing filesystem
 entries; the local filesystem and its permissions must be trusted.
 
-Future MCP commands that expose disk reads or writes must declare `LocalRequired = true`, reusing
-the existing HTTP discovery/invocation restrictions. The service deliberately contains no transport
-checks. Remote-capable commands should take or return definition content without exposing arbitrary
-paths on the server. Local file conversion adds no Fabric requests.
+Tools dedicated to disk reads or writes should declare `LocalRequired = true`, reusing the existing
+whole-tool HTTP restrictions. Create Item remains remote-capable: its registered command omits only
+the saved-file options on HTTP hosts, and `FabricItemDefinitionInputService` separately rejects local
+input before parsing paths or calling the file service unless the configured transport is stdio.
+Command logic and the low-level file converter contain no transport checks. Inline content remains
+available over HTTP and uses the same content-independent validator and budgets, with no disk access.
+Local file conversion adds no Fabric requests.
 
 ### Item-specific Validation Belongs with the Tool Adapters
 
@@ -184,8 +189,19 @@ a JSON Schema; do not infer a universal validator by parsing its tables at runti
 This infrastructure validates the generic envelope and filesystem representation only. It does not
 claim a supplied part list is complete or valid for a particular item type, discover an item from
 its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
-For example, the later adapter must select the required `definition.pbism` plus TMDL parts for a
-semantic model, and apply the documented `.platform` policy for Create versus Update Definition.
+Create Item now applies curated minimum part/format checks for Notebook, DataPipeline, SemanticModel,
+and Report before submission (and before file reads for explicit selections). These checks require the
+documented top-level parts/format alternatives, not all nested files or content semantics. Other item
+types remain forward-compatible and receive generic validation only. `.platform` is included only when
+explicitly selected or supplied inline and is sent unchanged, not interpreted or synthesized.
+
+The command accepts either inline definition JSON or an absolute selected directory plus explicit
+file-to-part mappings and optional format. Unknown/duplicate JSON properties and conflicting source
+options are rejected, rather than silently discarded or preferred. It does not enumerate folders.
+Only the create-request definition member becomes typed; the existing response model and output modes,
+UUID behavior, no-definition requests, and bounded LRO processing remain unchanged. Registered-handler
+tests verify one POST and no hidden reads, while the LRO service matrix covers both sources of request
+shape (with/without a definition), synchronous completion, submit-only acceptance, and explicit waiting.
 
 Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
 definition to export. Keep endpoint-specific result sizes separate from these file budgets:
@@ -254,6 +270,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run specific test
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
+
+# Run definition packaging/input and Create Item coverage
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricItemDefinition*' '*ItemCreate*' '*FabricOperationMcpTests'
 
 # Run LRO service, polling, command/schema, and Create Item integration tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'

@@ -17,11 +17,15 @@ namespace Fabric.Mcp.Tools.Core.Tests.Services;
 public sealed class FabricCoreServiceItemCreateLroTests()
 {
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(true, false)]
-    [InlineData(false, true)]
-    [InlineData(true, true)]
-    public async Task CreateItem_UsesOnePost_ThenOnlyRequestedOperationReads(bool sync, bool accepted)
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, true)]
+    [InlineData(false, true, true)]
+    [InlineData(true, true, true)]
+    public async Task CreateItem_UsesOnePost_ThenOnlyRequestedOperationReads(bool sync, bool accepted, bool withDefinition)
     {
         var clock = new OperationTestTimeProvider();
         var methods = new List<HttpMethod>();
@@ -33,7 +37,14 @@ public sealed class FabricCoreServiceItemCreateLroTests()
             {
                 Assert.Equal($"{FabricEndpoints.FabricApiBaseUrl}/workspaces/{FabricOperationTestData.WorkspaceId}/items", request.RequestUri?.AbsoluteUri);
                 using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
-                Assert.Equal(["displayName", "type"], body.RootElement.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal(withDefinition ? ["definition", "displayName", "type"] : ["displayName", "type"],
+                    body.RootElement.EnumerateObject().Select(property => property.Name).Order());
+                if (withDefinition)
+                {
+                    var definition = body.RootElement.GetProperty("definition");
+                    Assert.Equal("ipynb", definition.GetProperty("format").GetString());
+                    Assert.Equal("e30=", Assert.Single(definition.GetProperty("parts").EnumerateArray()).GetProperty("payload").GetString());
+                }
                 return accepted ? FabricOperationTestData.Accepted() : FabricOperationTestData.ItemResponse();
             }
             if (request.RequestUri!.AbsolutePath.EndsWith("/result", StringComparison.Ordinal))
@@ -50,7 +61,13 @@ public sealed class FabricCoreServiceItemCreateLroTests()
         var credential = FabricOperationTestData.Credential();
         var service = new FabricCoreService(client, credential, clock);
 
-        var task = CreateAsync(service, new(Sync: sync), TestContext.Current.CancellationToken);
+        var task = service.CreateItemAsync(FabricOperationTestData.WorkspaceId,
+            new CreateItemRequest
+            {
+                DisplayName = "Created",
+                Type = "Notebook",
+                Definition = withDefinition ? new([new("artifact.content.ipynb", "e30=", "InlineBase64")], "ipynb") : null
+            }, new(Sync: sync), TestContext.Current.CancellationToken);
         if (sync && accepted)
         {
             await clock.WaitForTimerAsync(3, TestContext.Current.CancellationToken);
