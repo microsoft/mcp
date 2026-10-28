@@ -12,7 +12,7 @@ namespace Fabric.Mcp.Tools.Core.Tests.Services;
 
 public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
 {
-    private readonly string _root = Directory.CreateTempSubdirectory("fabric-definition-tests-").FullName;
+    private readonly string _root = CreateTestDirectory();
     private readonly FabricItemDefinitionFileService _service = new(NullLogger<FabricItemDefinitionFileService>.Instance);
     private CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
@@ -408,6 +408,20 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
 
     private void AssertNoStaging() =>
         Assert.Empty(Directory.EnumerateDirectories(_root, ".fabric-definition-*"));
+
+    private static string CreateTestDirectory()
+    {
+        // macOS commonly exposes its temporary directory through /var -> /private/var.
+        // Resolve the test host's aliases without relaxing the product's link rejection.
+        var temporary = Path.GetFullPath(Path.GetTempPath());
+        var current = Path.GetPathRoot(temporary)!;
+        foreach (var segment in temporary[current.Length..].Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var directory = new DirectoryInfo(Path.Combine(current, segment));
+            current = directory.ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? directory.FullName;
+        }
+        return Directory.CreateDirectory(Path.Combine(current, $"fabric-definition-tests-{Guid.NewGuid():N}")).FullName;
+    }
 
     private static void CreateLink(string path, string target, bool directory)
     {

@@ -191,7 +191,9 @@ Future API adapters also own LRO receipts, waiting and result retrieval. A 202 r
 definition to export. Keep endpoint-specific result sizes separate from these file budgets:
 the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
 
-All file tests use isolated temporary directories with no Azure or Fabric requests. Symbolic-link
+All file tests use isolated temporary directories with no Azure or Fabric requests. The fixture
+resolves system temporary-directory aliases, such as macOS `/var`, before creating its test data;
+the product continues to reject linked paths. Symbolic-link
 tests run when the host permits link creation; on Windows without the necessary privilege they
 report an explicit skip, rather than silently passing.
 
