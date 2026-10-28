@@ -90,6 +90,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("--resource", "substring of the impacted resource's full ARM resource ID")]
     [InlineData("--search", "Prefer a structured filter")]
     [InlineData("--search", "original instance problem text before metadata enrichment")]
+    [InlineData("--product-family", "case-insensitive exact match")]
+    [InlineData("--product-family", "Any non-empty family name is accepted")]
     [InlineData("--retirement-date", "service-retirement date in English recommendation metadata")]
     public void FilterDescriptions_ExplainMatchingBehavior(string optionName, string guidance)
     {
@@ -197,6 +199,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("--subscriptions sub1 sub2 --prioritized true --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", true)]
     [InlineData("--service-group sg1", true)]
     [InlineData("--subscriptions sub1 sub2 --service-group sg1", false)]
+    [InlineData("--subscription sub1 --product-family \"\"", false)]
+    [InlineData("--service-group sg1 --product-family \" \"", false)]
     [InlineData("", false)]                    // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -445,6 +449,32 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("Microsoft.Storage/storageAccounts", captured.ResourceType);
         Assert.Equal("mystorage", captured.Resource);
         Assert.Equal("encryption", captured.Search);
+    }
+
+    [Theory]
+    [InlineData(" Analytics ")]
+    [InlineData(" AI + Machine Learning ")]
+    [InlineData(" cOmPuTe ")]
+    [InlineData("Owner's\\AI")]
+    public async Task ExecuteAsync_ForwardsUnrestrictedProductFamily(string family)
+    {
+        Models.RecommendationFilters? captured = null;
+        Service.ListRecommendationsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Do<Models.RecommendationFilters?>(filters => captured = filters),
+            Arg.Any<int>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ResourceQueryResults<Models.Recommendation>([], false));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--product-family", family);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(captured);
+        Assert.Equal(family.Trim(), captured.ProductFamily);
     }
 
     [Fact]

@@ -349,21 +349,30 @@ public class RecommendationSummaryServiceTests
             RecommendationSummaryService.ParseSummary("category", document.RootElement));
     }
 
-    [Fact]
-    public void BuildMetadataSummaryQuery_ProductFamilyFiltersUsingProjectedResourceTypeFallback()
+    [Theory]
+    [InlineData("Compute")]
+    [InlineData("Storage")]
+    [InlineData("Web")]
+    [InlineData("Analytics")]
+    public void BuildMetadataSummaryQuery_ProductFamilyFiltersUsingOnlyMetadata(string family)
     {
         var query = RecommendationSummaryService.BuildSummaryQuery(
             RecommendationQueryScope.ForSubscription("sub-123", null),
             RecommendationSummaryService.GroupByRecommendationType,
-            new RecommendationFilters(ProductFamily: "Compute"));
+            new RecommendationFilters(ProductFamily: family));
 
         Assert.Contains("metadataServiceFamily=tostring(properties.serviceFamily)", query);
-        Assert.Contains("tolower(tostring(metadataServiceFamily)) =~ 'compute'", query);
-        Assert.Contains("isempty(tostring(metadataServiceFamily))", query);
-        Assert.Contains("strcat(tolower(tostring(impactedField)), '/') startswith 'microsoft.web/serverfarms/'", query);
-        Assert.Contains(
-            "tolower(tostring(resourceId)) contains '/providers/microsoft.web/serverfarms/'",
-            query);
+        Assert.Contains($"| where (tolower(tostring(metadataServiceFamily)) =~ '{family.ToLowerInvariant()}')", query);
+        Assert.DoesNotContain("isempty(tostring(metadataServiceFamily))", query);
+        Assert.DoesNotContain("startswith 'microsoft.", query);
+        Assert.DoesNotContain("contains '/providers/", query);
+    }
+
+    [Fact]
+    public void BuildProductFamilyFilterClause_WithoutFamilyDoesNotRequireMetadata()
+    {
+        Assert.Equal(string.Empty, RecommendationSummaryService.BuildProductFamilyFilterClause(null));
+        Assert.Equal(string.Empty, RecommendationSummaryService.BuildProductFamilyFilterClause(new RecommendationFilters()));
     }
 
     [Fact]

@@ -519,7 +519,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
                                   [--prioritized <true|false>] \
                                   [--top <top>] \
                                   [--category <category>] \
-                                  [--product-family <Compute|Containers|Databases|Networking|Storage|Web>] \
+                                  [--product-family <family>] \
                                   [--impact <impact>] \
                                   [--status <New|Postponed|Dismissed|Completed>] \
                                   [--recommendation-type-id <guid>] \
@@ -558,7 +558,7 @@ azmcp advisor recommendation list [--subscription <subscription>] \
 - Results are individual recommendation records, not distinct resources. Each record's `name` is its recommendation ID.
 - `--prioritized` orders matching list records for an explicitly identified recommendation type, whether supplied directly by the user or selected from a prior summary. Broad or unscoped prioritization intent that does not identify a specific recommendation type must route to summary with `--group-by recommendation-type --prioritized true` first.
 - `--minimum-savings` applies to Cost recommendations and keeps records whose annualized retail potential savings (daily potential savings × 30.4 × 12) meet or exceed the non-negative amount.
-- `--product-family` filters list results and both normal and prioritized summaries. Metadata service family takes precedence, with resource-provider fallback only when it is missing. Filtering happens before counts, savings totals, ranking, and `--top`.
+- `--product-family` filters list results and both normal and prioritized summaries using a case-insensitive exact match against metadata service family. Any non-empty family name is accepted; values are not limited to a fixed list. There is no resource-provider fallback: records with a missing metadata family do not match a family filter but remain eligible when it is omitted. Filtering happens before counts, savings totals, ranking, and `--top`.
 
 ```bash
 # Prevalidate one Advisor Cost/IdleResources recommendation type before considering deletion.
@@ -671,7 +671,7 @@ azmcp advisor recommendation summary [--subscription <subscription>] \
                                      [--group-by <group-by>] \
                                      [--prioritized <true|false>] \
                                      [--category <Cost|HighAvailability|Security|Performance|OperationalExcellence>] \
-                                     [--product-family <Compute|Containers|Databases|Networking|Storage|Web>] \
+                                     [--product-family <family>] \
                                      [--impact <High|Medium|Low>] \
                                      [--recommendation-type-id <recommendation-type-id>] \
                                      [--recommendation-type-ids <recommendation-type-id1> <recommendation-type-id2> ...] \

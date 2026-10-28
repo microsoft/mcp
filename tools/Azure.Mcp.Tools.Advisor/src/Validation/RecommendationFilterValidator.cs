@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
-using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Advisor.Validation;
@@ -51,7 +50,7 @@ internal static class RecommendationFilterValidator
         ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
         ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
         ValidateOptionalValues("--resource-type", CombineValues(options.ResourceType, options.ResourceTypes), validationResult);
-        ValidateAllowedValue("--product-family", options.ProductFamily, ProductFamilyFilter.AllowedProductFamilies, validationResult);
+        ValidateOptionalValue("--product-family", options.ProductFamily, validationResult);
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
         ValidateOptionalValue("--sub-category", options.SubCategory, validationResult);
@@ -85,7 +84,7 @@ internal static class RecommendationFilterValidator
         ValidateAllowedValue("--category", category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", impact, AllowedImpacts, validationResult);
         ValidateOptionalValues("--resource-type", resourceTypes, validationResult);
-        ValidateAllowedValue("--product-family", productFamily, ProductFamilyFilter.AllowedProductFamilies, validationResult);
+        ValidateOptionalValue("--product-family", productFamily, validationResult);
         ValidateOptionalValue("--resource", resource, validationResult);
         ValidateOptionalValue("--search", search, validationResult);
         ValidateOptionalValue("--sub-category", subCategory, validationResult);

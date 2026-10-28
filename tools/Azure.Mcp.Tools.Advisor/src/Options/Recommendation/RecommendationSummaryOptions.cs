@@ -52,7 +52,7 @@ public sealed class RecommendationSummaryOptions : IRecommendationReadScopeOptio
     [Option(Description = "Filter recommendations by one or more impacted Azure resource types using OR semantics. Each value uses the same matching rules as --resource-type and may be combined with it.")]
     public string[]? ResourceTypes { get; set; }
 
-    [Option(Description = "Filter recommendations by Azure product family before aggregation and ranking, with or without prioritization. Supported values are Compute (including App Service plans), Containers, Databases, Networking, Storage, and Web. Metadata service family takes precedence, with resource-provider fallback when missing.")]
+    [Option(Description = "Filter recommendations by Azure product family before aggregation and ranking, with or without prioritization. Uses a case-insensitive exact match against the recommendation metadata service family. Any non-empty family name is accepted; no resource-provider fallback is used.")]
     public string? ProductFamily { get; set; }
 
     [Option(Description = "Filter recommendations by impacted resource name or full ARM resource ID. Uses a case-insensitive substring match.")]

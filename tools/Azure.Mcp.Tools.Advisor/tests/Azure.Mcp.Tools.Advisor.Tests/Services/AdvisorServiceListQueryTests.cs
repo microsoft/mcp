@@ -75,25 +75,33 @@ public class AdvisorServiceListQueryTests
         Assert.Contains("and subscriptionId in~ ('sub-123', 'sub-456')", query);
     }
 
-    [Fact]
-    public void BuildRecommendationListQuery_ProductFamilyUsesMetadataBeforeProviderFallback()
+    [Theory]
+    [InlineData("Compute")]
+    [InlineData("Storage")]
+    [InlineData("Web")]
+    [InlineData("Analytics")]
+    public void BuildListQueries_ProductFamilyUsesOnlyMetadata(string family)
     {
-        var query = AdvisorService.BuildRecommendationListQuery(
-            SubscriptionScope(),
-            predicates: null,
-            limit: 51,
-            language: Language,
-            filters: new RecommendationFilters(ProductFamily: "Compute"));
-
-        Assert.Contains("metadataServiceFamily = tostring(properties.serviceFamily)", query);
-        Assert.Contains("tolower(tostring(metadataServiceFamily)) =~ 'compute'", query);
-        Assert.Contains("isempty(tostring(metadataServiceFamily))", query);
-        Assert.Contains(
-            "strcat(tolower(tostring(properties.impactedField)), '/') startswith 'microsoft.web/serverfarms/'",
-            query);
-        Assert.DoesNotContain(
-            "strcat(tolower(tostring(properties.impactedField)), '/') startswith 'microsoft.compute/'",
-            query[..query.IndexOf("| join kind=", StringComparison.Ordinal)]);
+        var filters = new RecommendationFilters(ProductFamily: family);
+        foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
+        {
+            var queries = new[]
+            {
+                AdvisorService.BuildRecommendationListQuery(scope, null, 51, Language, filters),
+                AdvisorService.BuildPrioritizedRecommendationListQuery(scope, null, 51, filters),
+            };
+            foreach (var query in queries)
+            {
+                var familyFilter = $"| where (tolower(tostring(metadataServiceFamily)) =~ '{family.ToLowerInvariant()}')";
+                Assert.Contains("metadataServiceFamily = tostring(properties.serviceFamily)", query);
+                Assert.Contains(familyFilter, query);
+                Assert.True(query.IndexOf(familyFilter, StringComparison.Ordinal) >
+                    query.IndexOf("| join kind=", StringComparison.Ordinal));
+                Assert.DoesNotContain("isempty(tostring(metadataServiceFamily))", query);
+                Assert.DoesNotContain("startswith 'microsoft.", query);
+                Assert.DoesNotContain("contains '/providers/", query);
+            }
+        }
     }
 
     [Theory]

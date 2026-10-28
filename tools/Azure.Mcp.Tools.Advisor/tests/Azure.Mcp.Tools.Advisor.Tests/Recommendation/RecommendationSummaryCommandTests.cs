@@ -54,6 +54,10 @@ public class RecommendationSummaryCommandTests
     [InlineData("--subscription sub1 --prioritized true --product-family Compute", true)]
     [InlineData("--service-group sg1 --prioritized true --product-family Storage --status Completed", true)]
     [InlineData("--subscriptions sub1 sub2 --prioritized true --product-family Networking", true)]
+    [InlineData("--subscription sub1 --product-family Analytics", true)]
+    [InlineData("--service-group sg1 --product-family \"AI + Machine Learning\"", true)]
+    [InlineData("--subscription sub1 --product-family \"\"", false)]
+    [InlineData("--service-group sg1 --product-family \" \"", false)]
     [InlineData("--service-group sg1 --prioritized true", true)]
     [InlineData("--subscriptions sub1 sub2 --prioritized true", true)]
     [InlineData("--subscription sub1 --prioritized false --group-by impact", true)]
@@ -526,10 +530,10 @@ public class RecommendationSummaryCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub1")]
-    [InlineData("--subscriptions sub1 sub2")]
-    [InlineData("--service-group sg1")]
-    public async Task ExecuteAsync_PrioritizedProductFamilyPreservesStateAndDateFilters(string scope)
+    [InlineData("--subscription sub1", " compute ")]
+    [InlineData("--subscriptions sub1 sub2", " Analytics ")]
+    [InlineData("--service-group sg1", " AI + Machine Learning ")]
+    public async Task ExecuteAsync_PrioritizedProductFamilyPreservesStateAndDateFilters(string scope, string family)
     {
         RecommendationFilters? captured = null;
         Service.SummarizeRecommendationsAsync(
@@ -549,12 +553,13 @@ public class RecommendationSummaryCommandTests
             .Returns(EmptySummary("recommendation-type"));
 
         var response = await ExecuteCommandAsync(
-            $"{scope} --category Cost --sub-category IdleResources --product-family compute " +
+            $"{scope} --category Cost --sub-category IdleResources " +
+            $"--product-family \"{family}\" " +
             "--prioritized true --status Postponed --as-of 2026-09-30T00:00:00Z --top 1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
-        Assert.Equal("Compute", captured.ProductFamily);
+        Assert.Equal(family.Trim(), captured.ProductFamily);
         Assert.True(captured.Prioritized);
         Assert.Equal(RecommendationStatus.Postponed, captured.Status);
         Assert.Equal(new DateTimeOffset(2026, 9, 30, 0, 0, 0, TimeSpan.Zero), captured.SavingsAsOf);

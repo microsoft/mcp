@@ -91,6 +91,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_list | Show completed Cost IdleResources recommendations in subscription \<subscription>, highest realized savings first | none |
 | advisor_recommendation_list | Show postponed Cost IdleResources recommendations in service group \<service-group>, highest yearly potential savings first | none |
+| advisor_recommendation_list | List individual Advisor recommendations in subscription \<subscription> whose metadata service family is Analytics | none |
 | advisor_recommendation_prevalidate | Check whether resources for Advisor Cost IdleResources recommendation type \<recommendation-type-id> in subscription \<subscription> pass read-only deletion prevalidation; do not delete or update anything | none |
 | advisor_recommendation_prevalidate | Prevalidate affected resource \<resource-id> for Advisor recommendation type \<recommendation-type-id> in Service Group \<service-group>, checking locks, dependencies, and a minimum unused age of 45 days | none |
 | advisor_recommendation_prevalidate | Are the idle resources I selected safe to delete? Reuse their exact recommendation type, resource IDs, and scope; show every check and manual confirmation without executing remediation | context-required |
@@ -105,6 +106,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Prioritize Compute Cost IdleResources recommendation types in service group \<service-group>, keeping full Compute totals while showing only the top type | none |
 | advisor_recommendation_summary | Prioritize completed Storage Cost IdleResources recommendation types in subscription \<subscription> by realized savings | none |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription \<subscription> whose metadata service family is AI + Machine Learning | none |
+| advisor_recommendation_summary | Prioritize Advisor recommendation types in service group \<service-group> whose metadata service family is Analytics | none |
 | advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |

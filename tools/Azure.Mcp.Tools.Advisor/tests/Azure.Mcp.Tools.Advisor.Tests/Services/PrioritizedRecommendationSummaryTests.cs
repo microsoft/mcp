@@ -73,12 +73,16 @@ public class PrioritizedRecommendationSummaryTests
     [InlineData("Networking", true)]
     [InlineData("Storage", true)]
     [InlineData("Web", true)]
+    [InlineData("Analytics", true)]
+    [InlineData("AI + Machine Learning", true)]
     [InlineData("Compute", false)]
     [InlineData("Containers", false)]
     [InlineData("Databases", false)]
     [InlineData("Networking", false)]
     [InlineData("Storage", false)]
     [InlineData("Web", false)]
+    [InlineData("Analytics", false)]
+    [InlineData("AI + Machine Learning", false)]
     public void Build_ProductFamilyFiltersResourcesBeforeSavingsAndAggregation(string family, bool includeCost)
     {
         var filters = new RecommendationFilters(
@@ -99,9 +103,10 @@ public class PrioritizedRecommendationSummaryTests
             Assert.True(filterIndex > query.IndexOf("metadataServiceFamily=", StringComparison.Ordinal));
             Assert.True(filterIndex < query.IndexOf("extend resourceKey =", StringComparison.Ordinal));
             Assert.True(filterIndex < query.IndexOf("summarize criticalityScore =", StringComparison.Ordinal));
-            Assert.Contains("isempty(tostring(metadataServiceFamily)) and", query);
-            Assert.Contains("strcat(tolower(tostring(properties.impactedField)), '/') startswith", query);
-            Assert.Contains("tolower(tostring(properties.resourceMetadata.resourceId)) contains", query);
+            Assert.Contains($"{familyFilter})", query);
+            Assert.DoesNotContain("isempty(tostring(metadataServiceFamily))", query);
+            Assert.DoesNotContain("startswith 'microsoft.", query);
+            Assert.DoesNotContain("contains '/providers/", query);
             Assert.Single(System.Text.RegularExpressions.Regex.Matches(query, @"\| join "));
             Assert.Contains("metadataPriorityScore = take_any(metadataPriorityScore)", query);
             Assert.Contains("metadataSignalValues = take_any(metadataSignalValues)", query);

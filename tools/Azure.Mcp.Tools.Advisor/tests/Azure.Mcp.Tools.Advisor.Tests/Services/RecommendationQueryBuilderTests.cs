@@ -331,26 +331,32 @@ public class RecommendationQueryBuilderTests
     }
 
     [Theory]
-    [InlineData("properties.impactedField", "properties.resourceMetadata.resourceId")]
-    [InlineData("impactedField", "resourceId")]
-    public void BuildProductFamilyPredicate_ComputeUsesMetadataThenAppServiceFallback(
-        string resourceTypeExpression,
-        string resourceIdExpression)
+    [InlineData("Compute", "compute")]
+    [InlineData("Storage", "storage")]
+    [InlineData("Web", "web")]
+    [InlineData(" Analytics ", "analytics")]
+    [InlineData("AI + Machine Learning", "ai + machine learning")]
+    [InlineData("Owner's\\AI", @"owner\'s\\ai")]
+    [InlineData("Analytics') | take 1 //", @"analytics\') | take 1 //")]
+    public void BuildProductFamilyPredicate_UsesOnlyAnEscapedMetadataFamily(string family, string escaped)
     {
-        var result = ProductFamilyFilter.BuildPredicate("Compute", resourceTypeExpression);
+        var result = ProductFamilyFilter.BuildPredicate(family);
 
-        Assert.Contains(
-            "tolower(tostring(metadataServiceFamily)) =~ 'compute'",
+        Assert.Equal(
+            $"(tolower(tostring(metadataServiceFamily)) =~ '{escaped}')",
             result);
-        Assert.Contains(
-            $"strcat(tolower(tostring({resourceTypeExpression})), '/') startswith 'microsoft.compute/'",
-            result);
-        Assert.Contains(
-            $"strcat(tolower(tostring({resourceTypeExpression})), '/') startswith 'microsoft.web/serverfarms/'",
-            result);
-        Assert.Contains(
-            $"tolower(tostring({resourceIdExpression})) contains '/providers/microsoft.web/serverfarms/'",
-            result);
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", null)]
+    [InlineData(" \t ", null)]
+    [InlineData(" cOmPuTe ", "cOmPuTe")]
+    [InlineData(" Analytics ", "Analytics")]
+    [InlineData(" AI + Machine Learning ", "AI + Machine Learning")]
+    public void NormalizeProductFamily_TrimsWithoutRestrictingValues(string? family, string? expected)
+    {
+        Assert.Equal(expected, ProductFamilyFilter.Normalize(family));
     }
 
     [Fact]

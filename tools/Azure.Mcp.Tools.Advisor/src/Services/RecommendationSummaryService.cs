@@ -558,7 +558,7 @@ public class RecommendationSummaryService(IAzureService azureService)
             " recommendationStatus=tostring(properties.recommendationStatus)" +
             (includeCost ? ", properties" : string.Empty) +
             JoinRecommendationTypeMetadata +
-            BuildProductFamilyFilterClause(filters, "impactedField") +
+            BuildProductFamilyFilterClause(filters) +
             " | extend category = metadataCategory," +
             " impact = metadataImpact," +
             " subCategory = metadataSubCategory" +
@@ -620,12 +620,10 @@ public class RecommendationSummaryService(IAzureService azureService)
         " metadataSignalValues=properties.signalValues" +
         " ) on recommendationTypeId";
 
-    internal static string BuildProductFamilyFilterClause(
-        RecommendationFilters? filters,
-        string resourceTypeExpression = "properties.impactedField") =>
+    internal static string BuildProductFamilyFilterClause(RecommendationFilters? filters) =>
         string.IsNullOrWhiteSpace(filters?.ProductFamily)
             ? string.Empty
-            : $" | where {ProductFamilyFilter.BuildPredicate(filters.ProductFamily, resourceTypeExpression)}";
+            : $" | where {ProductFamilyFilter.BuildPredicate(filters.ProductFamily)}";
 
     internal static string BuildRecommendationScope(RecommendationQueryScope scope)
     {

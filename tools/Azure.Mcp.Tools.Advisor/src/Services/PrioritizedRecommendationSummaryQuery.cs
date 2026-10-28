@@ -130,7 +130,7 @@ internal static class PrioritizedRecommendationSummaryQuery
             scope, filters, RecommendationSummaryService.GroupByRecommendationType);
         if (!string.IsNullOrWhiteSpace(filters?.ProductFamily))
         {
-            // Family fallback needs resource properties before per-resource aggregation discards them.
+            // Filter by metadata service family before per-resource aggregation.
             query += JoinTypeMetadata() +
                 RecommendationSummaryService.BuildProductFamilyFilterClause(filters);
         }
