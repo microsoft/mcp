@@ -175,7 +175,7 @@ paths on the server. Local file conversion adds no Fabric requests.
 
 ### Item-specific Validation Belongs with the Tool Adapters
 
-The bundled [item-definition articles](../../../Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
+The bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
 and the `docs_item-definitions` tool describe required parts and supported formats for most item
 types. Use those authoritative local resources when implementing folder selection and item-specific
 checks in the definition command PRs, without an extra Fabric request. Markdown prose is not itself
