@@ -199,7 +199,6 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
                 }
             });
             await Task.WhenAll(clientDisposalTasks);
-            await Task.WhenAll(clientDisposalTasks);
         }
         catch (Exception ex)
         {
