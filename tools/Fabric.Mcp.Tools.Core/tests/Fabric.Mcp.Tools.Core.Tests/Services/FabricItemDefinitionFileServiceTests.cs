@@ -130,6 +130,8 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     [InlineData(@"\\server\share\folder")]
     [InlineData(@"\\?\C:\folder")]
     [InlineData(@"\\.\C:\folder")]
+    [InlineData(@"/\server\share\folder")]
+    [InlineData(@"\/server/share/folder")]
     public async Task BothDirections_RejectNonLocalOrRelativeRoots(string directory)
     {
         await Assert.ThrowsAsync<ArgumentException>(() =>

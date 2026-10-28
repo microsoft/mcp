@@ -18,6 +18,12 @@ internal static class FabricItemDefinitionPath
         }
 
         var directory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        // Windows accepts mixed leading separators as fully qualified paths and normalizes
+        // them into UNC/device paths. Reject the normalized form before any filesystem access.
+        if (directory.StartsWith(@"\\", StringComparison.Ordinal) || directory.StartsWith("//", StringComparison.Ordinal))
+        {
+            throw new ArgumentException("The normalized directory must be a local path, not a UNC or device path.", nameof(path));
+        }
         var root = Path.GetPathRoot(directory)!;
         if (directory.Length == root.Length)
         {
