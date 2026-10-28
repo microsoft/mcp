@@ -131,6 +131,8 @@
         "mydb",
         "myop",
         "mystorageaccount",
+        "netappfiles",
+        "mynetappaccount",
         "noninteractive",
         "nugets",
         "pipefail",
