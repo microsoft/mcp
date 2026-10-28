@@ -743,6 +743,154 @@ public sealed class AdvisorServiceListTransportTests
     }
 
     [Fact]
+    public async Task ResolveSubscriptionsScopeAsync_BoundsConcurrencyAndPreservesNormalizedOrder()
+    {
+        var tenantId = Guid.NewGuid();
+        var ids = Enumerable.Range(0, 9).Select(static _ => Guid.NewGuid().ToString()).ToArray();
+        var handler = new CapturingHttpMessageHandler(request =>
+            CreateSubscriptionResponse(tenantId, request.RequestUri!.AbsolutePath.Split('/').Last()));
+        var credential = CreateCredential();
+        var armClient = CreateArmClient(credential, handler);
+        var subscriptions = new Dictionary<string, SubscriptionResource>(StringComparer.OrdinalIgnoreCase);
+        foreach (var id in ids)
+        {
+            subscriptions[id] = (await armClient
+                .GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(id))
+                .GetAsync(TestContext.Current.CancellationToken)).Value;
+        }
+        var tenant = await CreateTenantResourceAsync(tenantId, credential);
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+        var firstWaveStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseOthers = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var othersCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var active = 0;
+        var completed = 0;
+        azureService.GetSubscription(Arg.Any<string>(), "selected-tenant", Arg.Any<CancellationToken>())
+            .Returns(async call =>
+            {
+                var id = call.ArgAt<string>(0);
+                var token = call.ArgAt<CancellationToken>(2);
+                var count = Interlocked.Increment(ref active);
+                try
+                {
+                    Assert.InRange(count, 1, 4);
+                    if (count == 4)
+                    {
+                        firstWaveStarted.TrySetResult();
+                    }
+                    await (id == ids[0] ? releaseFirst.Task : releaseOthers.Task).WaitAsync(token);
+                    if (id != ids[0] && Interlocked.Increment(ref completed) == ids.Length - 1)
+                    {
+                        othersCompleted.TrySetResult();
+                    }
+                    return subscriptions[id];
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref active);
+                }
+            });
+
+        var input = new[] { $" {ids[0]} ", ids[0].ToUpperInvariant(), " " }.Concat(ids.Skip(1)).ToArray();
+        var resolution = new AdvisorResourceGraphQueryExecutor(azureService).ResolveSubscriptionsScopeAsync(
+            input, null, "selected-tenant", TestContext.Current.CancellationToken);
+        try
+        {
+            await firstWaveStarted.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Equal(4, Volatile.Read(ref active));
+            releaseOthers.SetResult();
+            await othersCompleted.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            releaseOthers.TrySetResult();
+            releaseFirst.SetResult();
+            await resolution;
+        }
+
+        var result = await resolution;
+        Assert.Equal(ids, result.Scope.ScopedSubscriptionIds);
+        Assert.Equal(ids.Select(id => subscriptions[id]), result.Subscriptions);
+        Assert.Same(tenant, result.TenantResource);
+        await azureService.Received(ids.Length).GetSubscription(
+            Arg.Any<string>(), "selected-tenant", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResolveSubscriptionsScopeAsync_RejectsMixedTenants()
+    {
+        var ids = new[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
+        var tenantIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            var id = request.RequestUri!.AbsolutePath.Split('/').Last();
+            return CreateSubscriptionResponse(tenantIds[Array.IndexOf(ids, id)], id);
+        });
+        var armClient = CreateArmClient(CreateCredential(), handler);
+        var azureService = Substitute.For<IAzureService>();
+        foreach (var id in ids)
+        {
+            var subscription = (await armClient
+                .GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(id))
+                .GetAsync(TestContext.Current.CancellationToken)).Value;
+            azureService.GetSubscription(id, null, Arg.Any<CancellationToken>()).Returns(subscription);
+        }
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new AdvisorResourceGraphQueryExecutor(azureService).ResolveSubscriptionsScopeAsync(
+                ids, null, null, TestContext.Current.CancellationToken));
+
+        Assert.Contains("same Azure tenant", exception.Message);
+        await azureService.DidNotReceive().GetTenants(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResolveSubscriptionsScopeAsync_PropagatesResolutionFailure()
+    {
+        var azureService = Substitute.For<IAzureService>();
+        var failure = new UnauthorizedAccessException("Subscription access denied.");
+        azureService.GetSubscription(Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<SubscriptionResource>(failure));
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            new AdvisorResourceGraphQueryExecutor(azureService).ResolveSubscriptionsScopeAsync(
+                ["subscription-a", "subscription-b"], null, null, TestContext.Current.CancellationToken));
+
+        Assert.Same(failure, exception);
+        await azureService.DidNotReceive().GetTenants(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ResolveSubscriptionsScopeAsync_CancelsInFlightResolution()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var azureService = Substitute.For<IAzureService>();
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        azureService.GetSubscription(Arg.Any<string>(), null, Arg.Any<CancellationToken>())
+            .Returns(async call =>
+            {
+                started.TrySetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, call.ArgAt<CancellationToken>(2));
+                throw new InvalidOperationException("Subscription resolution should have been canceled.");
+            });
+
+        var resolution = new AdvisorResourceGraphQueryExecutor(azureService).ResolveSubscriptionsScopeAsync(
+            ["subscription-a", "subscription-b"], null, null, cancellation.Token);
+        try
+        {
+            await started.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            await cancellation.CancelAsync();
+        }
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => resolution);
+        await azureService.DidNotReceive().GetTenants(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ListRecommendationsAsync_MultipleSubscriptionsUsesOnePagedQuery()
     {
         var tenantId = Guid.NewGuid();

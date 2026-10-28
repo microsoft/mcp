@@ -1,0 +1,4 @@
+pr: 4045
+changes:
+  - section: "Bugs Fixed"
+    description: "Resolve selected Advisor subscriptions with bounded concurrency while preserving scope order and tenant validation."

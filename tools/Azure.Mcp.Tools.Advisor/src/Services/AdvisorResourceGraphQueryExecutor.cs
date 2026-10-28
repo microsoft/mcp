@@ -52,14 +52,18 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
             .ToArray();
         ArgumentOutOfRangeException.ThrowIfZero(normalizedSubscriptions.Length);
 
-        var subscriptionResources = new List<SubscriptionResource>(normalizedSubscriptions.Length);
-        foreach (var subscription in normalizedSubscriptions)
+        var subscriptionResources = new SubscriptionResource[normalizedSubscriptions.Length];
+        await Parallel.ForEachAsync(Enumerable.Range(0, normalizedSubscriptions.Length), new ParallelOptions
         {
-            subscriptionResources.Add(await _azureService.GetSubscription(
-                subscription,
+            MaxDegreeOfParallelism = 4,
+            CancellationToken = cancellationToken,
+        }, async (index, token) =>
+        {
+            subscriptionResources[index] = await _azureService.GetSubscription(
+                normalizedSubscriptions[index],
                 tenant,
-                cancellationToken: cancellationToken));
-        }
+                cancellationToken: token);
+        });
 
         var subscriptionResource = subscriptionResources[0];
         var tenantIds = subscriptionResources
