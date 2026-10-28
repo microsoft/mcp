@@ -2903,7 +2903,6 @@
         }
       },
       "mappedToolList": [
-        "netappfiles_account_create",
         "netappfiles_account_update"
       ]
     },
