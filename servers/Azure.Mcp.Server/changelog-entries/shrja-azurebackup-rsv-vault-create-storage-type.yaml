@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Apply `--storage-type` when creating Recovery Services vaults with `azurebackup vault create --vault-type rsv`. The requested redundancy is now set through the vault backup storage config, invalid values are rejected before any vault is created, and a storage-config failure reports that the vault was created and how to retry with `azurebackup vault update --redundancy`."

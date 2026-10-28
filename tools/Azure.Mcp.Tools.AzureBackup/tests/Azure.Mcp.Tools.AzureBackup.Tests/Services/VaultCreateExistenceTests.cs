@@ -40,6 +40,7 @@ public class VaultCreateExistenceTests
         if (lookupStatus == 200)
         {
             Assert.Contains("azurebackup vault update", exception.Message);
+            Assert.Contains("azurebackup_vault_update", exception.Message);
         }
     }
 

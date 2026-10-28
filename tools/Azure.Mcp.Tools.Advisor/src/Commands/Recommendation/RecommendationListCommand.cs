@@ -72,6 +72,15 @@ public sealed class RecommendationListCommand(
     {
         var top = Math.Clamp(options.Top ?? DefaultTop, MinTop, MaxTop);
 
+        Models.AdvisorTelemetryTags.AddScopeTags(context.Activity, options);
+        Models.AdvisorTelemetryTags.AddRecommendationTags(
+            context.Activity,
+            options.RecommendationTypeId,
+            options.Category,
+            options.SubCategory,
+            options.Impact);
+        Models.AdvisorTelemetryTags.AddQueryTags(context.Activity, options.Prioritized);
+
         try
         {
             _ = ServiceRetirementFilterValidator.TryParseRetirementDate(
