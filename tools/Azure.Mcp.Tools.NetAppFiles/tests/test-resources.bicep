@@ -33,5 +33,3 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
     description: 'Contributor for Azure NetApp Files live tests'
   }
 }
-
-output NETAPP_ACCOUNT_NAME string = baseName
