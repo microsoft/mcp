@@ -21,7 +21,10 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
     /// </summary>
     protected readonly Dictionary<string, McpClient> _clientCache = new(StringComparer.OrdinalIgnoreCase);
 
-    private bool _disposed = false;
+    private readonly object _clientCacheLock = new();
+    private readonly Dictionary<string, Task<McpClient>> _clientCreations = new(StringComparer.OrdinalIgnoreCase);
+    private readonly CancellationTokenSource _clientCreationCancellation = new();
+    private TaskCompletionSource? _disposeCompletion;
 
     /// <inheritdoc/>
     public abstract Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken);
@@ -57,31 +60,117 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
             throw new ArgumentNullException(nameof(name), "Server name cannot be null or empty.");
         }
 
-        if (_clientCache.TryGetValue(name, out var client))
+        Task<McpClient> creationTask;
+        TaskCompletionSource<McpClient>? creation = null;
+        lock (_clientCacheLock)
         {
-            return client;
+            ObjectDisposedException.ThrowIf(_disposeCompletion != null, this);
+            if (_clientCache.TryGetValue(name, out var client))
+            {
+                return client;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_clientCreations.TryGetValue(name, out creationTask!))
+            {
+                creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+                creationTask = creation.Task;
+                _clientCreations.Add(name, creationTask);
+            }
         }
 
-        var serverProvider = await FindServerProviderAsync(name, cancellationToken);
-        client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions(), cancellationToken);
-        _clientCache[name] = client;
+        if (creation != null)
+        {
+            _ = CreateClientAsync(name, clientOptions, creation);
+        }
 
-        return client;
+        return await creationTask.WaitAsync(cancellationToken);
+    }
+
+    private async Task CreateClientAsync(string name, McpClientOptions? clientOptions, TaskCompletionSource<McpClient> creation)
+    {
+        try
+        {
+            var cancellationToken = _clientCreationCancellation.Token;
+            cancellationToken.ThrowIfCancellationRequested();
+            var serverProvider = await FindServerProviderAsync(name, cancellationToken);
+            var client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions(), cancellationToken);
+            lock (_clientCacheLock)
+            {
+                _clientCache[name] = client;
+                _clientCreations.Remove(name);
+            }
+            creation.SetResult(client);
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogDebug(ex, "Client initialization canceled for MCP server {ServerName}.", name);
+            lock (_clientCacheLock)
+            {
+                _clientCreations.Remove(name);
+            }
+            creation.SetCanceled(ex.CancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize client for MCP server {ServerName}.", name);
+            lock (_clientCacheLock)
+            {
+                _clientCreations.Remove(name);
+            }
+            creation.SetException(ex);
+        }
     }
 
     /// <summary>
-    /// Disposes all cached MCP clients with double disposal protection.
+    /// Cancels pending initialization and disposes cached clients once, sharing completion with concurrent callers.
     /// </summary>
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_disposed)
+        TaskCompletionSource completion;
+        Task<McpClient>[] creations;
+        lock (_clientCacheLock)
         {
-            return;
+            if (_disposeCompletion != null)
+            {
+                return new ValueTask(_disposeCompletion.Task);
+            }
+
+            completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _disposeCompletion = completion;
+            creations = [.. _clientCreations.Values];
         }
 
+        _ = DisposeAsyncOnce(creations, completion);
+        return new ValueTask(completion.Task);
+    }
+
+    private async Task DisposeAsyncOnce(Task<McpClient>[] creations, TaskCompletionSource completion)
+    {
         try
         {
-            // First, let derived classes dispose their resources (isolated from base cleanup)
+            try
+            {
+                await _clientCreationCancellation.CancelAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to cancel pending MCP client initialization.");
+            }
+
+            try
+            {
+                await Task.WhenAll(creations);
+            }
+            catch (OperationCanceledException) when (_clientCreationCancellation.IsCancellationRequested)
+            {
+                _logger.LogDebug("Pending MCP client initialization was canceled during disposal.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "MCP client initialization failed during disposal.");
+            }
+
             try
             {
                 await DisposeAsyncCore();
@@ -91,8 +180,14 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
                 _logger.LogError(ex, "Error occurred while disposing derived resources in discovery strategy {StrategyType}", GetType().Name);
             }
 
-            // Then dispose our own critical resources using best-effort approach
-            var clientDisposalTasks = _clientCache.Values.Select(async client =>
+            McpClient[] clients;
+            lock (_clientCacheLock)
+            {
+                clients = [.. _clientCache.Values];
+                _clientCache.Clear();
+            }
+
+            var clientDisposalTasks = clients.Select(async client =>
             {
                 try
                 {
@@ -103,9 +198,8 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
                     _logger.LogError(ex, "Failed to dispose MCP client in discovery strategy {StrategyType}", GetType().Name);
                 }
             });
-
             await Task.WhenAll(clientDisposalTasks);
-            _clientCache.Clear();
+            await Task.WhenAll(clientDisposalTasks);
         }
         catch (Exception ex)
         {
@@ -115,7 +209,8 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
         }
         finally
         {
-            _disposed = true;
+            _clientCreationCancellation.Dispose();
+            completion.SetResult();
         }
     }
 

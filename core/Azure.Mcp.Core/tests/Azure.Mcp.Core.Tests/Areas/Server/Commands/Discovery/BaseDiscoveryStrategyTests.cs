@@ -232,6 +232,228 @@ public class BaseDiscoveryStrategyTests
     }
 
     [Fact]
+    public async Task GetOrCreateClientAsync_ConcurrentCalls_CreateOneClient()
+    {
+        await using var client = LoopbackMcpClient.Create(_ => null, out var tracker);
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = CreateMockServerProvider("external");
+        provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(creation.Task);
+        await using var strategy = CreateMockStrategy(provider);
+        var tasks = Enumerable.Range(0, 16)
+            .Select(index => strategy.GetOrCreateClientAsync(
+                index % 2 == 0 ? "external" : "EXTERNAL", cancellationToken: TestContext.Current.CancellationToken))
+            .ToArray();
+
+        creation.SetResult(client);
+        var clients = await Task.WhenAll(tasks);
+
+        Assert.All(clients, result => Assert.Same(client, result));
+        await provider.Received(1).CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        await strategy.DisposeAsync();
+        Assert.Equal(1, tracker.DisposeCount);
+    }
+
+    [Fact]
+    public async Task GetOrCreateClientAsync_ConcurrentServers_InitializeIndependently()
+    {
+        const int serverCount = 16;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var starts = new Barrier(serverCount);
+        var clients = Enumerable.Range(0, serverCount).Select(_ => LoopbackMcpClient.Create(_ => null)).ToArray();
+        var providers = Enumerable.Range(0, serverCount).Select(index =>
+        {
+            var provider = CreateMockServerProvider($"external{index}");
+            provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            {
+                Assert.True(starts.SignalAndWait(TimeSpan.FromSeconds(30), cancellationToken));
+                return clients[index];
+            });
+            return provider;
+        }).ToArray();
+        await using var strategy = CreateMockStrategy(providers);
+
+        var tasks = Enumerable.Range(0, serverCount).Select(index => Task.Factory.StartNew(
+            () => strategy.GetOrCreateClientAsync($"external{index}", cancellationToken: cancellationToken),
+            cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap()).ToArray();
+        var results = await Task.WhenAll(tasks);
+
+        for (var index = 0; index < serverCount; index++)
+        {
+            Assert.Same(clients[index], results[index]);
+            Assert.Same(clients[index], await strategy.GetOrCreateClientAsync(
+                $"EXTERNAL{index}", cancellationToken: cancellationToken));
+            await providers[index].Received(1).CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+        }
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetOrCreateClientAsync_CallerCancellation_DoesNotCancelSharedCreation(bool cancelFirstCaller)
+    {
+        await using var client = LoopbackMcpClient.Create(_ => null);
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = CreateMockServerProvider("external");
+        var initializationToken = CancellationToken.None;
+        var creations = 0;
+        provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            var token = call.Arg<CancellationToken>();
+            if (Interlocked.Increment(ref creations) == 1)
+            {
+                initializationToken = token;
+            }
+            return creation.Task.WaitAsync(token);
+        });
+        await using var strategy = CreateMockStrategy(provider);
+        using var callerCancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var firstCall = strategy.GetOrCreateClientAsync("external",
+            cancellationToken: cancelFirstCaller ? callerCancellation.Token : TestContext.Current.CancellationToken);
+        var secondCall = strategy.GetOrCreateClientAsync("EXTERNAL",
+            cancellationToken: cancelFirstCaller ? TestContext.Current.CancellationToken : callerCancellation.Token);
+
+        try
+        {
+            await callerCancellation.CancelAsync();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelFirstCaller ? firstCall : secondCall);
+            Assert.False(initializationToken.IsCancellationRequested);
+        }
+        finally
+        {
+            creation.TrySetResult(client);
+        }
+
+        Assert.Same(client, await (cancelFirstCaller ? secondCall : firstCall));
+        Assert.Same(client, await strategy.GetOrCreateClientAsync("external",
+            cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Equal(1, creations);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetOrCreateClientAsync_FailedCreation_AllowsRetry(bool canceled)
+    {
+        await using var client = LoopbackMcpClient.Create(_ => null);
+        var failure = new InvalidOperationException("Client creation failed.");
+        var provider = CreateMockServerProvider("external");
+        var creations = 0;
+        provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            Interlocked.Increment(ref creations) == 1
+                ? canceled
+                    ? Task.FromCanceled<McpClient>(new CancellationToken(true))
+                    : Task.FromException<McpClient>(failure)
+                : Task.FromResult(client));
+        await using var strategy = CreateMockStrategy(provider);
+
+        if (canceled)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                strategy.GetOrCreateClientAsync("external", cancellationToken: TestContext.Current.CancellationToken));
+        }
+        else
+        {
+            Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                strategy.GetOrCreateClientAsync("external", cancellationToken: TestContext.Current.CancellationToken)));
+        }
+
+        Assert.Same(client, await strategy.GetOrCreateClientAsync("external",
+            cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Equal(2, creations);
+    }
+
+    [Fact]
+    public async Task GetOrCreateClientAsync_ConcurrentFailure_AllowsFreshAttempt()
+    {
+        await using var client = LoopbackMcpClient.Create(_ => null);
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var failure = new InvalidOperationException("Shared initialization failed.");
+        var provider = CreateMockServerProvider("external");
+        var attempts = 0;
+        provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(_ =>
+            Interlocked.Increment(ref attempts) == 1 ? creation.Task : Task.FromResult(client));
+        await using var strategy = CreateMockStrategy(provider);
+        var callers = Enumerable.Range(0, 8).Select(_ => strategy.GetOrCreateClientAsync(
+            "external", cancellationToken: TestContext.Current.CancellationToken)).ToArray();
+
+        creation.SetException(failure);
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => Task.WhenAll(callers)));
+        Assert.All(callers, caller => Assert.True(caller.IsFaulted));
+
+        Assert.Same(client, await strategy.GetOrCreateClientAsync(
+            "external", cancellationToken: TestContext.Current.CancellationToken));
+        Assert.Equal(2, attempts);
+    }
+
+    [Fact]
+    public async Task GetOrCreateClientAsync_CanceledBeforeCreation_DoesNotStartProvider()
+    {
+        var provider = CreateMockServerProvider("external");
+        await using var strategy = CreateMockStrategy(provider);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            strategy.GetOrCreateClientAsync("external", cancellationToken: cancellation.Token));
+
+        await provider.DidNotReceive().CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DisposeAsync_ConcurrentCalls_WaitForInFlightCreation(bool honorsCancellation)
+    {
+        await using var client = LoopbackMcpClient.Create(_ => null, out var tracker);
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var initializationToken = CancellationToken.None;
+        var provider = CreateMockServerProvider("external");
+        provider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(call =>
+        {
+            initializationToken = call.Arg<CancellationToken>();
+            return honorsCancellation ? creation.Task.WaitAsync(initializationToken) : creation.Task;
+        });
+        await using var strategy = CreateMockStrategy(provider);
+        var pendingClient = strategy.GetOrCreateClientAsync("external", cancellationToken: TestContext.Current.CancellationToken);
+        var firstDisposal = strategy.DisposeAsync().AsTask();
+        var secondDisposal = strategy.DisposeAsync().AsTask();
+
+        try
+        {
+            Assert.Same(firstDisposal, secondDisposal);
+            if (!honorsCancellation)
+            {
+                Assert.False(firstDisposal.IsCompleted);
+            }
+            else
+            {
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                    pendingClient.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken));
+            }
+            await Assert.ThrowsAsync<ObjectDisposedException>(() =>
+                strategy.GetOrCreateClientAsync("external", cancellationToken: TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            creation.TrySetResult(client);
+        }
+
+        if (honorsCancellation)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pendingClient);
+        }
+        else
+        {
+            Assert.Same(client, await pendingClient);
+        }
+        await Task.WhenAll(firstDisposal, secondDisposal);
+
+        Assert.True(initializationToken.IsCancellationRequested);
+        Assert.Equal(honorsCancellation ? 0 : 1, tracker.DisposeCount);
+    }
+
+    [Fact]
     public async Task FindServerProvider_WithNullName_ThrowsArgumentNullException()
     {
         // Arrange

@@ -57,7 +57,7 @@ public sealed class SingleProxyToolLoader(
     private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
     private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
 
-    private (List<Tool> Tools, string Json)? _cachedTools;
+    private RootToolsSnapshot? _cachedTools;
     private readonly ConcurrentDictionary<string, (List<ToolCommandInfo> Commands, string Json)> _cachedToolCommands = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedCommandFactoryTools = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
@@ -207,11 +207,12 @@ public sealed class SingleProxyToolLoader(
     /// Gets and caches all of the <see cref="IAreaSetup"/>'s available in the server.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>
-    private async Task InitializeRootToolsCacheAsync(CancellationToken cancellationToken)
+    private async Task<RootToolsSnapshot> GetRootToolsSnapshotAsync(CancellationToken cancellationToken)
     {
-        if (_cachedTools != null)
+        var existing = Volatile.Read(ref _cachedTools);
+        if (existing != null)
         {
-            return;
+            return existing;
         }
 
         var tools = new List<Tool>();
@@ -262,8 +263,8 @@ public sealed class SingleProxyToolLoader(
         }
 
         var json = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
-        _cachedTools = (tools, json);
-        return;
+        var snapshot = new RootToolsSnapshot(tools.AsReadOnly(), json);
+        return Interlocked.CompareExchange(ref _cachedTools, snapshot, null) ?? snapshot;
     }
 
     /// <summary>
@@ -386,22 +387,22 @@ public sealed class SingleProxyToolLoader(
     {
         activity?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
-        await InitializeRootToolsCacheAsync(cancellationToken);
+        var rootTools = await GetRootToolsSnapshotAsync(cancellationToken);
         var contentText = $"""
             Here are the available tools.
             Next, identify the tool you want to learn about and run again with the "learn" argument and the "tool" name to get a list of available commands and their parameters.
 
-            {_cachedTools!.Value.Json}
+            {rootTools.Json}
             """;
         var learnResponse = StructuredOutputHelper.CreateCallToolResult(
             _configuration.Value.StructuredOutputMode,
             () => contentText,
-            () => AggregateStructuredOutput.CreateToolList(_cachedTools!.Value.Json));
+            () => AggregateStructuredOutput.CreateToolList(rootTools.Json));
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var toolName = await GetToolNameFromIntentAsync(request, intent, cancellationToken);
-            var availableTool = _cachedTools!.Value.Tools.FirstOrDefault(candidate =>
+            var toolName = await GetToolNameFromIntentAsync(request, intent, rootTools.Json, cancellationToken);
+            var availableTool = rootTools.Tools.FirstOrDefault(candidate =>
                 string.Equals(candidate.Name, toolName, StringComparison.OrdinalIgnoreCase));
             if (availableTool != null)
             {
@@ -849,7 +850,8 @@ public sealed class SingleProxyToolLoader(
             }, cancellationToken: cancellationToken);
     }
 
-    private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
+    private async Task<string?> GetToolNameFromIntentAsync(
+        RequestContext<CallToolRequestParams> request, string intent, string availableToolsJson, CancellationToken cancellationToken)
     {
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
@@ -872,7 +874,7 @@ public sealed class SingleProxyToolLoader(
                             {intent}
 
                             Available Tools:
-                            {_cachedTools!.Value.Json}
+                            {availableToolsJson}
                             """
                     }]
                 }
@@ -988,7 +990,7 @@ public sealed class SingleProxyToolLoader(
         _cachedCommandFactoryTools.Clear();
         _cachedDiscoveryTools.Clear();
         _cachedToolCommands.Clear();
-        _cachedTools = null;
+        Interlocked.Exchange(ref _cachedTools, null);
 
         await ValueTask.CompletedTask;
     }

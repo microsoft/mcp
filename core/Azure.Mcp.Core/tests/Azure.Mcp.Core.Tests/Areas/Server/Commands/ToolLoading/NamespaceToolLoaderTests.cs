@@ -679,18 +679,22 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         // Arrange
         var loader = new NamespaceToolLoader(new CommandContextAccessor(), _commandFactory, _configuration, _logger);
         var toolName = GetFirstAvailableNamespace();
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var startBarrier = new Barrier(10);
 
         // Act - Simulate concurrent access
-        var tasks = Enumerable.Range(0, 10).Select(async _ =>
-        {
-            var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+        var tasks = Enumerable.Range(0, 10).Select(_ => Task.Factory.StartNew(async () =>
             {
-                ["learn"] = true,
-                ["intent"] = "concurrent test"
-            });
+                var request = McpTestUtilities.CreateToolCallRequest(toolName, new Dictionary<string, object?>
+                {
+                    ["learn"] = true,
+                    ["intent"] = "concurrent test"
+                });
+                Assert.True(startBarrier.SignalAndWait(TimeSpan.FromSeconds(30), cancellationToken));
 
-            return await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
-        });
+                return await loader.CallToolHandler(request, cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap())
+            .ToArray();
 
         var results = await Task.WhenAll(tasks);
 
@@ -710,8 +714,150 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         });
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetChildToolList_ConcurrentColdCalls_PublishStableLists(bool sameNamespace)
+    {
+        const int workerCount = 16;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var namespaceNames = Enumerable.Range(0, sameNamespace ? 1 : workerCount)
+            .Select(index => $"namespace{index}")
+            .ToArray();
+        using var misses = new Barrier(workerCount);
+        var synchronizeMisses = true;
+        var factory = CreateNamespaceCommandFactory(namespaceNames, commands =>
+        {
+            // Hold every cold caller after its cache miss, before any result can be published.
+            if (Volatile.Read(ref synchronizeMisses))
+            {
+                Assert.True(misses.SignalAndWait(TimeSpan.FromSeconds(30), cancellationToken));
+            }
+
+            return commands;
+        });
+        var loader = new NamespaceToolLoader(new CommandContextAccessor(), factory, _configuration, _logger);
+        var tasks = Enumerable.Range(0, workerCount).Select(index => Task.Factory.StartNew(() =>
+            {
+                var namespaceName = namespaceNames[index % namespaceNames.Length];
+                var request = McpTestUtilities.CreateToolCallRequest(namespaceName);
+                IReadOnlyList<Tool> tools = loader.GetChildToolList(request, namespaceName);
+                return (NamespaceName: namespaceName, Tools: tools);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default))
+            .ToArray();
+
+        var results = await Task.WhenAll(tasks);
+        Volatile.Write(ref synchronizeMisses, false);
+
+        foreach (var result in results)
+        {
+            Assert.Equal($"{result.NamespaceName}_get", Assert.Single(result.Tools).Name);
+            for (var pass = 0; pass < 3; pass++)
+            {
+                var namespaceName = result.NamespaceName.ToUpperInvariant();
+                var request = McpTestUtilities.CreateToolCallRequest(namespaceName);
+                Assert.Same(result.Tools, loader.GetChildToolList(request, namespaceName));
+            }
+        }
+
+        factory.Received(workerCount).GroupCommands(Arg.Any<string[]>());
+    }
+
     [Fact]
-    public async Task DisposeAsync_ClearsCaches()
+    public async Task GetChildToolList_LoadsOnlyRequestedNamespaceAndReturnsReadOnlyList()
+    {
+        var factory = CreateNamespaceCommandFactory(["storage", "keyvault"]);
+        var loader = new NamespaceToolLoader(new CommandContextAccessor(), factory, _configuration, _logger);
+
+        var namespaces = await loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["storage", "keyvault"], namespaces.Tools.Select(tool => tool.Name));
+        factory.DidNotReceive().GroupCommands(Arg.Any<string[]>());
+
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+        var tools = loader.GetChildToolList(request, "storage");
+
+        Assert.Equal("storage_get", Assert.Single(tools).Name);
+        Assert.True(Assert.IsAssignableFrom<ICollection<Tool>>(tools).IsReadOnly);
+        Assert.Same(tools, loader.GetChildToolList(request, "STORAGE"));
+        factory.Received(1).GroupCommands(Arg.Any<string[]>());
+        factory.DidNotReceive().GroupCommands(Arg.Is<string[]>(names => names[0] == "keyvault"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GetChildToolList_RetriesAfterCommandLookupFailure(bool returnNull)
+    {
+        var attempts = 0;
+        var failure = new InvalidOperationException("Command lookup failed.");
+        var factory = CreateNamespaceCommandFactory(["storage"], commands =>
+        {
+            if (Interlocked.Increment(ref attempts) == 1)
+            {
+                if (returnNull)
+                {
+                    return null!;
+                }
+
+                throw failure;
+            }
+
+            return commands;
+        });
+        var loader = new NamespaceToolLoader(new CommandContextAccessor(), factory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+
+        if (returnNull)
+        {
+            Assert.Empty(loader.GetChildToolList(request, "storage"));
+        }
+        else
+        {
+            Assert.Same(failure, Assert.Throws<InvalidOperationException>(
+                () => loader.GetChildToolList(request, "storage")));
+        }
+
+        var tools = loader.GetChildToolList(request, "storage");
+
+        Assert.Equal("storage_get", Assert.Single(tools).Name);
+        Assert.Same(tools, loader.GetChildToolList(request, "storage"));
+        Assert.Equal(2, attempts);
+    }
+
+    [Fact]
+    public void GetChildToolList_RetriesAfterSchemaGenerationFailure()
+    {
+        var factory = CreateNamespaceCommandFactory(["storage"]);
+        var command = factory.RootGroup.SubGroup[0].Commands["storage_get"].Command;
+        var underlyingCommand = command.GetCommand();
+        var attempts = 0;
+        var failure = new InvalidOperationException("Schema generation failed.");
+        command.GetCommand().Returns(_ =>
+        {
+            if (Interlocked.Increment(ref attempts) == 1)
+            {
+                throw failure;
+            }
+
+            return underlyingCommand;
+        });
+        var loader = new NamespaceToolLoader(new CommandContextAccessor(), factory, _configuration, _logger);
+        var request = McpTestUtilities.CreateToolCallRequest("storage");
+
+        Assert.Same(failure, Assert.Throws<InvalidOperationException>(
+            () => loader.GetChildToolList(request, "storage")));
+
+        var tools = loader.GetChildToolList(request, "storage");
+
+        Assert.Equal("storage_get", Assert.Single(tools).Name);
+        Assert.Same(tools, loader.GetChildToolList(request, "storage"));
+        factory.Received(2).GroupCommands(Arg.Any<string[]>());
+    }
+
+    [Fact]
+    public async Task DisposeAsync_CanBeCalledRepeatedly()
     {
         // Arrange
         var loader = new NamespaceToolLoader(new CommandContextAccessor(), _commandFactory, _configuration, _logger);
@@ -728,9 +874,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
 
         // Act
         await loader.DisposeAsync();
-
-        // Assert - No exception should be thrown
-        // Cache clearing is internal, but disposal should complete successfully
+        await loader.DisposeAsync();
     }
 
     [Fact]
@@ -1396,6 +1540,31 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     }
 
     // Helper methods
+
+    private static ICommandFactory CreateNamespaceCommandFactory(
+        string[] namespaceNames,
+        Func<IReadOnlyDictionary<string, CommandRegistration>, IReadOnlyDictionary<string, CommandRegistration>>? getCommands = null)
+    {
+        var root = new CommandGroup("root", "Root command group");
+        foreach (var namespaceName in namespaceNames)
+        {
+            var group = new CommandGroup(namespaceName, "Namespace commands");
+            var commandName = $"{namespaceName}_get";
+            group.AddCommand(commandName, new CommandRegistration(CreateRoutingCommand(commandName), namespaceName));
+            root.AddSubGroup(group);
+        }
+
+        var factory = Substitute.For<ICommandFactory>();
+        factory.RootGroup.Returns(root);
+        factory.GroupCommands(Arg.Any<string[]>()).Returns(call =>
+        {
+            var namespaceName = call.Arg<string[]>()[0];
+            var commands = root.SubGroup.Single(group =>
+                string.Equals(group.Name, namespaceName, StringComparison.OrdinalIgnoreCase)).Commands;
+            return getCommands == null ? commands : getCommands(commands);
+        });
+        return factory;
+    }
 
     private NamespaceToolLoader CreateRoutingLoader(
         Dictionary<string, IBaseCommand> commands,

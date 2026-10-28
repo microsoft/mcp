@@ -798,6 +798,49 @@ public class RegistryToolLoaderTests
     }
 
     [Fact]
+    public async Task ListAndCallTools_ConcurrentInitialization_PublishesCompleteMap()
+    {
+        await using var client = new MockMcpClientBuilder()
+            .AddTool("test-tool", "Test tool", "Tool response")
+            .Build();
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = Substitute.For<IMcpServerProvider>();
+        provider.CreateMetadata().Returns(new McpServerMetadata("external", "external", "External server"));
+        var discovery = Substitute.For<IMcpDiscoveryStrategy>();
+        discovery.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns([provider]);
+        discovery.GetOrCreateClientAsync("external", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(creation.Task);
+        await using var loader = CreateToolLoader(discovery);
+        var lists = Enumerable.Range(0, 8).Select(_ => loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken).AsTask()).ToArray();
+        var calls = Enumerable.Range(0, 8).Select(_ => loader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("test-tool"), TestContext.Current.CancellationToken).AsTask()).ToArray();
+
+        try
+        {
+            Assert.All(lists, task => Assert.False(task.IsCompleted));
+            Assert.All(calls, task => Assert.False(task.IsCompleted));
+        }
+        finally
+        {
+            creation.TrySetResult(client);
+        }
+
+        var listResults = await Task.WhenAll(lists);
+        var callResults = await Task.WhenAll(calls);
+
+        Assert.All(listResults, result => Assert.Equal("test-tool", Assert.Single(result.Tools).Name));
+        Assert.All(callResults, result =>
+        {
+            Assert.NotEqual(true, result.IsError);
+            Assert.Equal("Tool response", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        });
+        await discovery.Received(1).DiscoverServersAsync(Arg.Any<CancellationToken>());
+        await discovery.Received(1).GetOrCreateClientAsync(
+            "external", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ListToolsHandler_WhenCancellationOccursDuringInitialization_AllowsRetry()
     {
         // Arrange - Create a server with controlled cancellation
