@@ -18,16 +18,19 @@ public interface ISearchService
     Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
         string serviceName,
         string? knowledgeSourceName = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         string? knowledgeBaseName = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryIndex(
@@ -36,6 +39,7 @@ public interface ISearchService
         string searchText,
         IndexQueryType? queryType = null,
         string? semanticConfiguration = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 
     Task<string> RetrieveFromKnowledgeBase(
@@ -44,5 +48,6 @@ public interface ISearchService
         string? query,
         IEnumerable<(string role, string message)>? messages,
         bool? includeReferenceSourceData = null,
+        string? tenant = null,
         CancellationToken cancellationToken = default);
 }

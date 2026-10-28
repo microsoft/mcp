@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Added optional tenant selection and resource-scoped permission guidance to Azure AI Search data-plane commands, with tenant-isolated client caching."

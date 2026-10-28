@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Search.Options.Index;
@@ -21,4 +22,7 @@ public sealed class IndexQueryOptions
 
     [Option(Description = SearchOptionDescriptions.SemanticConfiguration)]
     public string? SemanticConfiguration { get; set; }
+
+    [Option(Description = OptionDescriptions.Tenant)]
+    public string? Tenant { get; set; }
 }
