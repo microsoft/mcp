@@ -21,19 +21,38 @@ namespace Azure.Mcp.Tools.Search.Tests.Service;
 // cspell:words knowledgebases knowledgesources
 public sealed class KnowledgeBaseRetrievalTests
 {
+    [Fact]
+    public void CreateKnowledgeSourceParams_SupportsAllSdkKnowledgeSourceTypes()
+    {
+        var sourceTypes = typeof(KnowledgeSource).Assembly.GetExportedTypes()
+            .Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(KnowledgeSource)))
+            .ToArray();
+
+        Assert.NotEmpty(sourceTypes);
+        Assert.All(sourceTypes, sourceType =>
+        {
+            var parameters = SearchService.CreateKnowledgeSourceParams("test-source", sourceType.Name, true);
+
+            Assert.Equal($"{sourceType.Name}Params", parameters.GetType().Name);
+            Assert.Equal("test-source", parameters.KnowledgeSourceName);
+            Assert.True(parameters.IncludeReferences);
+            Assert.True(parameters.IncludeReferenceSourceData);
+        });
+    }
+
     [Theory]
-    [InlineData("searchIndex")]
     [InlineData("azureBlob")]
-    [InlineData("indexedSharePoint")]
-    [InlineData("indexedOneLake")]
-    [InlineData("indexedSql")]
-    [InlineData("file")]
-    [InlineData("web")]
-    [InlineData("remoteSharePoint")]
-    [InlineData("workIQ")]
-    [InlineData("mcpServer")]
     [InlineData("fabricDataAgent")]
     [InlineData("fabricOntology")]
+    [InlineData("file")]
+    [InlineData("indexedOneLake")]
+    [InlineData("indexedSharePoint")]
+    [InlineData("indexedSql")]
+    [InlineData("mcpServer")]
+    [InlineData("remoteSharePoint")]
+    [InlineData("searchIndex")]
+    [InlineData("web")]
+    [InlineData("workIQ")]
     public void CreateKnowledgeSourceParams_PreservesSourceKindAndName(string kind)
     {
         var source = ModelReaderWriter.Read<KnowledgeSource>(BinaryData.FromString(

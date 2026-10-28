@@ -332,20 +332,22 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string sourceName, string sourceType, bool includeReferenceSourceData)
     {
         // Cache only source types, never mutable parameters shared across retrievals.
+        // When upgrading Azure.Search.Documents or changing its API version, revalidate this mapping
+        // and the reference options below. New SDK source types require matching parameter mappings.
         KnowledgeSourceParams parameters = sourceType switch
         {
-            nameof(SearchIndexKnowledgeSource) => new SearchIndexKnowledgeSourceParams(sourceName),
             nameof(AzureBlobKnowledgeSource) => new AzureBlobKnowledgeSourceParams(sourceName),
-            nameof(IndexedSharePointKnowledgeSource) => new IndexedSharePointKnowledgeSourceParams(sourceName),
-            nameof(IndexedOneLakeKnowledgeSource) => new IndexedOneLakeKnowledgeSourceParams(sourceName),
-            nameof(IndexedSqlKnowledgeSource) => new IndexedSqlKnowledgeSourceParams(sourceName),
-            nameof(FileKnowledgeSource) => new FileKnowledgeSourceParams(sourceName),
-            nameof(WebKnowledgeSource) => new WebKnowledgeSourceParams(sourceName),
-            nameof(RemoteSharePointKnowledgeSource) => new RemoteSharePointKnowledgeSourceParams(sourceName),
-            nameof(WorkIQKnowledgeSource) => new WorkIQKnowledgeSourceParams(sourceName),
-            nameof(McpServerKnowledgeSource) => new McpServerKnowledgeSourceParams(sourceName),
             nameof(FabricDataAgentKnowledgeSource) => new FabricDataAgentKnowledgeSourceParams(sourceName),
             nameof(FabricOntologyKnowledgeSource) => new FabricOntologyKnowledgeSourceParams(sourceName),
+            nameof(FileKnowledgeSource) => new FileKnowledgeSourceParams(sourceName),
+            nameof(IndexedOneLakeKnowledgeSource) => new IndexedOneLakeKnowledgeSourceParams(sourceName),
+            nameof(IndexedSharePointKnowledgeSource) => new IndexedSharePointKnowledgeSourceParams(sourceName),
+            nameof(IndexedSqlKnowledgeSource) => new IndexedSqlKnowledgeSourceParams(sourceName),
+            nameof(McpServerKnowledgeSource) => new McpServerKnowledgeSourceParams(sourceName),
+            nameof(RemoteSharePointKnowledgeSource) => new RemoteSharePointKnowledgeSourceParams(sourceName),
+            nameof(SearchIndexKnowledgeSource) => new SearchIndexKnowledgeSourceParams(sourceName),
+            nameof(WebKnowledgeSource) => new WebKnowledgeSourceParams(sourceName),
+            nameof(WorkIQKnowledgeSource) => new WorkIQKnowledgeSourceParams(sourceName),
             _ => throw new NotSupportedException("Reference source data options are not supported for this knowledge source type.")
         };
 
