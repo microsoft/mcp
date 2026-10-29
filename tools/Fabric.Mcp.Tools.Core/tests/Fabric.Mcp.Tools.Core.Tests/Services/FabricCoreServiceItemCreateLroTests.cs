@@ -217,7 +217,7 @@ public sealed class FabricCoreServiceItemCreateLroTests()
         var error = await Assert.ThrowsAsync<FabricOperationException>(() => CreateAsync(service, new(), TestContext.Current.CancellationToken));
 
         Assert.Equal(HttpStatusCode.BadGateway, error.StatusCode);
-        Assert.Contains("whether creation occurred", error.Message);
+        Assert.Contains("whether the mutation completed", error.Message);
         Assert.Equal(1, handler.CallCount);
     }
 

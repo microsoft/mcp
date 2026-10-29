@@ -137,14 +137,14 @@ public sealed class ItemCreateCommand(
     protected override HttpStatusCode GetStatusCode(Exception ex) =>
         ex switch
         {
-            FabricItemDefinitionInputException or ItemCreateInputException => HttpStatusCode.BadRequest,
+            FabricItemDefinitionInputException or FabricItemInputException => HttpStatusCode.BadRequest,
             FabricOperationCanceledException => HttpStatusCode.RequestTimeout,
             _ => base.GetStatusCode(ex)
         };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        FabricItemDefinitionInputException or ItemCreateInputException => ex.Message,
+        FabricItemDefinitionInputException or FabricItemInputException => ex.Message,
         CredentialUnavailableException =>
             "Fabric credentials are unavailable. Authenticate the configured Fabric identity before creating an item",
         FabricOperationException { StatusCode: HttpStatusCode.BadGateway } => ex.Message,

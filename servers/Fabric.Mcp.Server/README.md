@@ -427,6 +427,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
+| `core_update-item-definition` | Replaces a known item's complete definition from inline content or explicitly selected saved files. Optionally applies supplied `.platform` metadata and waits for a no-result operation. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
 
 **Create Item (`core_create-item`)**
@@ -549,6 +550,88 @@ Creation is **never automatically resubmitted**. Stopping MCP waiting does not c
 | Caller cancels a post-acceptance wait | HTTP 408 with a receipt when the client can still receive it, distinguishing caller cancellation from budget expiry. Confirmed completion is not downgraded to running. |
 
 Failures suppress raw backend messages, exception details, stack traces, and local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; status-less network failures retain HTTP 503. Before acceptance is known, a timeout, cancellation, network failure, or invalid response can leave the mutation outcome uncertain; check whether creation occurred before retrying.
+
+**Update Item Definition (`core_update-item-definition`)**
+
+Calls [Update Item Definition](https://learn.microsoft.com/rest/api/fabric/core/items/update-item-definition)
+with one `POST /workspaces/{workspaceId}/items/{itemId}/updateDefinition`. Both `workspace-id` and
+`item-id` are required nonempty UUIDs. This is a **complete replacement, not a changed-files patch**:
+provide all required definition parts, not just the files edited since the last upload. The tool
+never fetches the old definition, merges parts, resolves names, downloads schemas, creates dependencies,
+or performs a metadata read-back.
+
+Exactly one definition source is required, reusing Create Item's input and file infrastructure:
+
+| Source | Arguments | Availability |
+|--------|-----------|--------------|
+| Inline | `definition`: JSON object **string** with `parts` and optional `format` | Local CLI, stdio, and HTTP |
+| Saved files | `definition-directory`: existing absolute directory; `definition-files`: explicit JSON array **string** of `partPath` and optional `sourcePath`; optional `definition-format` | Local CLI and stdio only |
+
+The same portable-path, strict JSON, Base64, byte/count, and local-file safeguards described above
+apply. Saved files come from the **MCP hosting machine**, not a remote client's filesystem or unsaved
+editor buffers. Save changes and explicitly list every part; no folder scan, wildcard, automatic
+`.platform` inclusion, or source-file modification occurs. Over HTTP, filesystem options are hidden
+and rejected. The input service independently rechecks local-file capability before any filesystem
+access, while inline updates remain available.
+
+The optional `definition-item-type` is a **local validation hint only**, distinct from `item-id`.
+For `Notebook`, `DataPipeline`, `SemanticModel`, and `Report`, it enables the same curated minimum
+part/format checks as Create Item. Omission and other item types use generic envelope, path, payload,
+and budget checks. The hint is never sent to Fabric, inferred from `.platform`, or confirmed by a
+metadata lookup. It cannot establish the actual item's type or complete content validity. Consult
+`docs_item-definitions` for the bundled reference; Fabric validates actual item-type requirements
+and bindings. Comprehensive article-based validation is not implemented.
+
+`options` supplies the API's optional top-level item-specific JSON **object string**. It is limited
+to **1 MiB of UTF-8 input and 32 nesting levels**, rejects duplicate properties at any depth, and
+is validated before file reads. Omitted options stay omitted; `{}`, false values, null members,
+and future workload properties are preserved. Fabric validates supported properties for the
+actual item type. These options never control polling.
+
+`update-metadata` requires an explicit Boolean value. Omission leaves the query parameter omitted;
+`false` sends `?updateMetadata=false`; **only explicit `true` requests applying metadata from a
+supplied `.platform` part**. The part's bytes are always preserved: the tool does not remove it
+when metadata application is disabled, add it when absent, or rewrite its contents or bindings.
+The flag can be sent without a `.platform` part; it does not cause the tool to invent metadata.
+This API **does not change the sensitivity label**. There are no `sensitivity-label-settings`,
+`folder-id`, `creation-payload`, display-name, or description arguments on this tool.
+
+This example **replaces a real item's definition** when run with authorized credentials. Review
+the complete file selection first. It includes `.platform` without opting into metadata application:
+
+```powershell
+fabmcp core update-item-definition `
+  --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 `
+  --definition-directory 'C:\Fabric\Sales.Notebook' `
+  --definition-files '[{"partPath":"artifact.content.ipynb","sourcePath":"sales.ipynb"},{"partPath":".platform"}]' `
+  --definition-format ipynb --definition-item-type Notebook --sync true --max-wait-seconds 120
+```
+
+For inline content, supply `--definition $definition` instead of all three filesystem options,
+using a complete definition JSON string like the Create Item example above. Add
+`--update-metadata true` only when the supplied `.platform` metadata should also be applied.
+
+A documented **empty HTTP 200** returns `results.operation.status=Succeeded` immediately, in either
+sync mode. A **202** returns an `Accepted` receipt without polling by default. With `sync=true`,
+the shared runner polls **operation state only**; confirmed `Succeeded` finishes without a
+`/result` or Get Item request because this endpoint has no result body. Its result contains only
+the operation receipt, never echoed definitions, options, paths, or fabricated item metadata.
+
+`max-wait-seconds` defaults to 120 and allows positive finite values up to 600 seconds, including
+fractions. `early-poll` defaults to true; the shared initial early-probe and subsequent Retry-After
+rules above apply. Only status GETs may be retried on 429/503; the initiating POST is never retried.
+Budget expiry returns HTTP 202 with `Pending` and last-known state. A reported failure returns a
+safe `Failed` receipt; read failures preserve a `TrackingStopped` receipt. Caller cancellation
+stops only local waiting and preserves a known receipt when the client can still receive it.
+Resume a pending update with `core_get-operation-state` and stop at `Succeeded`: **do not call
+`core_get-operation-result` or resubmit the update to extend a wait**. Missing operation IDs,
+unexpected success codes/bodies, and transport failures are surfaced without assuming success or
+following response URLs.
+
+Read **and write** item permissions are required. Delegated callers need `Item.ReadWrite.All`
+or the appropriate item-specific `ReadWrite.All` scope. Service-principal and managed-identity
+support depends on item type. Development coverage uses substituted HTTP and credentials; it
+does not authorize live updates or establish actual OBO permissions or recorded playback.
 
 **Long-running operation tools**
 
