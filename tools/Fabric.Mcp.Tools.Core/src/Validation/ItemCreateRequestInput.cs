@@ -17,8 +17,7 @@ internal static class ItemCreateRequestInput
     internal static CreateItemRequest CreateRequest(ItemCreateOptions options, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var hasDefinitionInput = options.Definition is not null || options.DefinitionDirectory is not null ||
-            options.DefinitionFiles is not null || options.DefinitionFormat is not null;
+        var hasDefinitionInput = options.DefinitionInput?.HasInput is true;
         if (options.CreationPayload is not null && hasDefinitionInput)
         {
             throw new ItemCreateInputException(
