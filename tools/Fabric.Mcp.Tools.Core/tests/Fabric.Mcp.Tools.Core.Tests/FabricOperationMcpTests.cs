@@ -59,7 +59,8 @@ public sealed class FabricOperationMcpTests()
         {
             var create = Assert.Single(catalog.Tools, tool => tool.Name == "core_create-item");
             var options = create.InputSchema.GetProperty("properties");
-            Assert.Equal(["description", "display-name", "early-poll", "item-type", "max-wait-seconds", "sync", "workspace", "workspace-id"],
+            Assert.Equal(["creation-payload", "definition", "definition-directory", "definition-files", "definition-format", "description", "display-name",
+                "early-poll", "folder-id", "item-type", "max-wait-seconds", "options", "sensitivity-label-settings", "sync", "workspace", "workspace-id"],
                 options.EnumerateObject().Select(property => property.Name).Order());
             Assert.Equal("boolean", options.GetProperty("sync").GetProperty("type").GetString());
             Assert.Equal("boolean", options.GetProperty("early-poll").GetProperty("type").GetString());

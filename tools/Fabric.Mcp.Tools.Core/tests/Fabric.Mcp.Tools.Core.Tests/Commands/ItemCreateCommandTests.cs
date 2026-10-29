@@ -6,6 +6,7 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
@@ -14,9 +15,22 @@ using Xunit;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 
-public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IFabricCoreService>
+public class ItemCreateCommandTests() : CommandUnitTestsBase<ItemCreateCommand, IFabricCoreService>, IAsyncLifetime
 {
     private const string WorkspaceId = "cfafbeb1-8037-4d0c-896e-a46fb27ff229";
+
+    public ValueTask InitializeAsync()
+    {
+        new FabricCoreSetup().ConfigureServices(Services);
+        Services.AddSingleton(Service);
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -46,13 +60,19 @@ public class ItemCreateCommandTests : CommandUnitTestsBase<ItemCreateCommand, IF
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(null!, Service));
+        Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(null!, Service, Substitute.For<IFabricItemDefinitionInputService>()));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenFabricCoreServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(Logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(Logger, null!, Substitute.For<IFabricItemDefinitionInputService>()));
+    }
+
+    [Fact]
+    public void Constructor_ThrowsArgumentNullException_WhenDefinitionInputServiceIsNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => new ItemCreateCommand(Logger, Service, null!));
     }
 
     [Fact]

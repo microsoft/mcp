@@ -1,4 +1,5 @@
 # Fabric MCP Server tool selection prompts
+<!-- cspell:words pbism pbir TMDL -->
 
 These prompts validate tool selection. They do not imply that live Fabric calls, real OBO authorization, or recorded playback have been exercised.
 
@@ -24,6 +25,16 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_create-item | Create a Lakehouse named Sales in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and return its metadata or operation receipt without waiting. | none |
 | core_create-item | Create a Lakehouse named Sales in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and wait up to 120 seconds for it, returning an operation ID if it takes longer. | none |
 | core_create-item | Create a Lakehouse named Planning in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229, waiting up to 60 seconds and honoring the first server wait hint rather than checking early. | none |
+| core_create-item | Create a Notebook named Sales from the saved sales.ipynb in local folder C:\Fabric\Sales.Notebook in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229. Explicitly map just that file to artifact.content.ipynb, use format ipynb, and do not upload other files in the folder. | none |
+| core_create-item | Create a Notebook in workspace \<workspace-id> from the inline definition JSON I supplied, without reading any files on the HTTP server. Return the item or operation receipt without polling. | context-required |
+| core_create-item | Create a SemanticModel in workspace \<workspace-id> using my selected item folder, definition.pbism, and the explicit TMDL file list I supplied. Do not scan for additional files or create dependencies; wait up to 120 seconds after submission. | context-required |
+| core_create-item | Create a Report in workspace \<workspace-id> from my inline PBIR-Legacy definition containing definition.pbir and report.json. Preserve the existing semantic-model binding and do not make a preflight API call. | context-required |
+| core_create-item | Create a Notebook in workspace \<workspace-id> from the inline definition I supplied, preserving its format, content, and safe part names. Leave filename and notebook-language validation to Fabric without a preflight call. | context-required |
+| core_create-item | Create a SemanticModel in workspace \<workspace-id> from my selected local files with the supplied TMDL format. Package only the mapped files and let Fabric validate required parts and format combinations. | context-required |
+| core_create-item | Create a Lakehouse named Sales with schemas enabled using creationPayload enableSchemas=true, in existing folder bbbbbbbb-1111-2222-3333-cccccccccccc in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229. Do not send a definition or look up the folder. | none |
+| core_create-item | Create the item from the inline definition and workload-specific options JSON I supplied in workspace \<workspace-id>. Keep those API options separate from sync and wait up to 120 seconds for creation. | context-required |
+| core_create-item | Create a Lakehouse named Classified in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 with sensitivity label b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f and ApplyOrFail. If the label cannot be applied, do not retry without it or use Ignore. | none |
+| core_create-item | Create a Lakehouse named Draft in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and request label b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f with the explicitly chosen Ignore strategy, allowing Fabric to proceed if the label cannot be applied. | none |
 | core_create-workspace | Create a Microsoft Fabric workspace called Sales Planning. | none |
 | core_create-workspace | Create a new Fabric workspace named Finance Sandbox with description Quarterly planning experiments. | none |
 | core_create-workspace | Create a Fabric workspace called Capacity Analytics and assign it to existing capacity f4031b2e-318f-4a14-9a3e-103e9bcfc953 during creation. | none |
