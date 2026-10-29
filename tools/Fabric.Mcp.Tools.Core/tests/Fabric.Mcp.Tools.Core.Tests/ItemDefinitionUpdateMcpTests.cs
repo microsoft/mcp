@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:words ipynb PBIR
+// cspell:words ipynb PBIR TMDL TMSL
 
 using System.Net;
 using System.Text;
@@ -61,7 +61,7 @@ public sealed class ItemDefinitionUpdateMcpTests()
             var properties = tool.InputSchema.GetProperty("properties");
             Assert.Equal(["item-id", "workspace-id"],
                 tool.InputSchema.GetProperty("required").EnumerateArray().Select(static value => value.GetString()).Order());
-            foreach (var name in new[] { "workspace-id", "item-id", "definition", "definition-item-type", "options" })
+            foreach (var name in new[] { "workspace-id", "item-id", "definition", "options" })
             {
                 Assert.Equal("string", properties.GetProperty(name).GetProperty("type").GetString());
             }
@@ -69,7 +69,7 @@ public sealed class ItemDefinitionUpdateMcpTests()
             {
                 Assert.Equal(transport == TransportTypes.StdIo, properties.TryGetProperty(name, out _));
             }
-            foreach (var name in new[] { "folder-id", "creation-payload", "sensitivity-label-settings", "display-name", "item-type", "definition-input" })
+            foreach (var name in new[] { "folder-id", "creation-payload", "sensitivity-label-settings", "display-name", "item-type", "definition-item-type", "definition-input" })
             {
                 Assert.False(properties.TryGetProperty(name, out _));
             }
@@ -169,7 +169,6 @@ public sealed class ItemDefinitionUpdateMcpTests()
             [{"partPath":"artifact.content.ipynb","sourcePath":"notebooks/sales.ipynb"},{"partPath":".platform"},{"partPath":"assets/empty.bin","sourcePath":"empty.bin"}]
             """;
         arguments["definition-format"] = "ipynb";
-        arguments["definition-item-type"] = "Notebook";
         arguments["options"] = """{"futureSetting":false}""";
         if (metadata is not null)
         {
@@ -402,41 +401,109 @@ public sealed class ItemDefinitionUpdateMcpTests()
     }
 
     [Theory]
-    [InlineData(null, null, true)]
-    [InlineData("FutureType", null, true)]
-    [InlineData("Notebook", null, false)]
-    [InlineData("Notebook", "ipynb", false)]
-    [InlineData("Notebook", "FutureFormat", true)]
-    [InlineData("Report", "PBIR", false)]
-    [InlineData("Report", "FutureFormat", true)]
-    [InlineData("DataPipeline", null, false)]
-    [InlineData("DataPipeline", "FutureFormat", true)]
-    [InlineData(" ", null, false)]
-    public async Task DefinitionType_IsOnlyAnOptionalLocalHint(string? itemType, string? format, bool succeeds)
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    [InlineData("ipynb", false)]
+    [InlineData("ipynb", true)]
+    [InlineData("FabricGitSource", false)]
+    [InlineData("FabricGitSource", true)]
+    [InlineData("TMDL", false)]
+    [InlineData("TMDL", true)]
+    [InlineData("TMSL", false)]
+    [InlineData("TMSL", true)]
+    [InlineData("PBIR", false)]
+    [InlineData("PBIR", true)]
+    [InlineData("PBIR-Legacy", false)]
+    [InlineData("PBIR-Legacy", true)]
+    [InlineData("FutureFormat", false)]
+    [InlineData("FutureFormat", true)]
+    public async Task SafeArbitraryLayouts_PreserveFormatAndBytesWithoutLocalWorkloadRules(string? format, bool savedFiles)
     {
+        using var directory = new FabricDefinitionTestDirectory();
+        byte[] bytes = [0xff, 0x00, 0x42, 0x0d, 0x0a];
+        var platform = Encoding.UTF8.GetBytes("""{"metadata":{"type":"Notebook"}}""");
+        var definition = new FabricItemDefinition(
+            [new("custom/payload.bin", Convert.ToBase64String(bytes), "InlineBase64"),
+                new(".platform", Convert.ToBase64String(platform), "InlineBase64")], format);
+        var json = JsonSerializer.Serialize(definition, CoreJsonContext.Default.FabricItemDefinition);
+        if (savedFiles)
+        {
+            await File.WriteAllBytesAsync(Path.Combine(directory.Path, "saved.bin"), bytes, TestContext.Current.CancellationToken);
+            await File.WriteAllBytesAsync(Path.Combine(directory.Path, ".platform"), platform, TestContext.Current.CancellationToken);
+        }
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal(Url, request.RequestUri?.AbsoluteUri);
             using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
             Assert.Equal(["definition"], body.RootElement.EnumerateObject().Select(static property => property.Name));
+            using var expected = JsonDocument.Parse(json);
+            Assert.True(JsonElement.DeepEquals(expected.RootElement, body.RootElement.GetProperty("definition")));
             return new(HttpStatusCode.OK);
         });
         var credential = FabricOperationTestData.Credential();
-        await using var provider = CreateServices(handler, credential);
-        var arguments = Arguments();
-        arguments["definition-item-type"] = itemType;
-        arguments["definition"] = JsonSerializer.Serialize(new FabricItemDefinition(
-            [new("content", "e30=", "InlineBase64"),
-                new(".platform", Convert.ToBase64String(Encoding.UTF8.GetBytes("""{"metadata":{"type":"Notebook"}}""")), "InlineBase64")], format),
-            CoreJsonContext.Default.FabricItemDefinition);
+        await using var provider = CreateServices(handler, credential, savedFiles ? TransportTypes.StdIo : TransportTypes.Http);
+        var arguments = Arguments(inline: false);
+        if (savedFiles)
+        {
+            arguments["definition-directory"] = directory.Path;
+            arguments["definition-files"] = """[{"partPath":"custom/payload.bin","sourcePath":"saved.bin"},{"partPath":".platform"}]""";
+            if (format is not null)
+            {
+                arguments["definition-format"] = format;
+            }
+        }
+        else
+        {
+            arguments["definition"] = json;
+        }
 
         var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
 
-        Assert.Equal(!succeeds, result.IsError);
-        Assert.Equal(succeeds ? 1 : 0, handler.CallCount);
-        if (!succeeds)
+        Assert.False(result.IsError);
+        Assert.Equal(1, handler.CallCount);
+        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>());
+        if (savedFiles)
         {
-            Assert.Empty(credential.ReceivedCalls());
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(Path.Combine(directory.Path, "saved.bin"), TestContext.Current.CancellationToken));
         }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("ipynb")]
+    [InlineData("FabricGitSource")]
+    [InlineData("TMDL")]
+    [InlineData("TMSL")]
+    [InlineData("PBIR")]
+    [InlineData("PBIR-Legacy")]
+    [InlineData("FutureFormat")]
+    public async Task GenericGuards_RejectUnsafePathsInvalidBase64AndOversizePayloadsRegardlessOfFormat(string? format)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = CreateServices(handler, credential, TransportTypes.Http,
+            limits: new(MaxParts: 2, MaxPartBytes: 2, MaxTotalBytes: 2));
+        FabricItemDefinition[] invalid =
+        [
+            new([new("../private-path", "e30=", "InlineBase64")], format),
+            new([new("content", "???=", "InlineBase64")], format),
+            new([new("content", "e30=", "Uri")], format),
+            new([new("content", Convert.ToBase64String([1, 2, 3]), "InlineBase64")], format),
+            new([], format)
+        ];
+        foreach (var definition in invalid)
+        {
+            var arguments = Arguments();
+            arguments["definition"] = JsonSerializer.Serialize(definition, CoreJsonContext.Default.FabricItemDefinition);
+
+            var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+            Assert.True(result.IsError);
+            Assert.DoesNotContain("private-", Text(result));
+        }
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
     }
 
     [Theory]
@@ -477,6 +544,7 @@ public sealed class ItemDefinitionUpdateMcpTests()
     [InlineData("--creation-payload", "{}")]
     [InlineData("--folder-id", FabricOperationTestData.ItemId)]
     [InlineData("--sensitivity-label-settings", "{}")]
+    [InlineData("--definition-item-type", "Notebook")]
     public async Task Cli_RejectsAmbiguousOrUnsupportedOptions(params string[] extra)
     {
         using var handler = NoHttp();

@@ -330,6 +330,7 @@ public class ServerStartupTests
         var definitionUpdateOptions = definitionUpdate.GetProperty("inputSchema").GetProperty("properties");
         Assert.Equal("string", definitionUpdateOptions.GetProperty("definition").GetProperty("type").GetString());
         Assert.Equal("string", definitionUpdateOptions.GetProperty("options").GetProperty("type").GetString());
+        Assert.False(definitionUpdateOptions.TryGetProperty("definition-item-type", out _));
         Assert.Equal(["boolean", "null"], definitionUpdateOptions.GetProperty("update-metadata").GetProperty("type").EnumerateArray()
             .Select(value => value.GetString()));
         Assert.False(definitionUpdateOptions.GetProperty("update-metadata").TryGetProperty("default", out _));

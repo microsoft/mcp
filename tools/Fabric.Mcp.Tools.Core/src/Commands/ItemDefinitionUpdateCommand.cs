@@ -25,10 +25,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Saved-file input reads only selected saved files on the hosting machine; HTTP callers must use inline content.
         This is not a changed-files patch: it never gets the old definition, merges parts, or resolves names.
         Shared validation checks InlineBase64 payloads, portable paths, and bounded byte/count budgets.
-        Optional definition-item-type is only a local validation hint, never the API identity or a metadata lookup.
-        It enables existing minimum checks for recognized/default formats of Notebook, DataPipeline, SemanticModel, and Report;
-        other types and explicit unrecognized formats receive generic validation rather than guessed format rules.
-        Fabric validates actual item-type requirements, content, dependencies, and item-specific options.
+        Definition format, safe part layout, and payload bytes pass through unchanged, without item-type or format-specific rules.
+        Fabric validates required parts, supported formats, item-type requirements, content, dependencies, and item-specific options.
         Optional top-level options is bounded JSON for the item's Update Definition API, not LRO wait settings.
         update-metadata must be explicitly true to request metadata updates from a supplied .platform part.
         Omission leaves that query parameter omitted. .platform is never added, removed, or rewritten.
@@ -82,10 +80,10 @@ public sealed class ItemDefinitionUpdateCommand(
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateInput(options);
-            // Parse workload options before any file access. They remain opaque to item-specific validation.
+            // Parse workload options before any file access. Their item-specific semantics belong to Fabric.
             var apiOptions = FabricItemJsonInput.ParseObject(options.Options, "--options");
             var input = options.DefinitionInput;
-            var definition = await _definitionInputService.ReadAsync(options.DefinitionItemType, input?.Definition,
+            var definition = await _definitionInputService.ReadAsync(null, input?.Definition,
                 input?.DefinitionDirectory, input?.DefinitionFiles, input?.DefinitionFormat, cancellationToken) ??
                 throw new FabricItemInputException("Provide a complete replacement definition using exactly one inline or saved-file source.");
             var result = await _fabricCoreService.UpdateItemDefinitionAsync(options.WorkspaceId, options.ItemId,
@@ -176,10 +174,6 @@ public sealed class ItemDefinitionUpdateCommand(
         {
             throw new FabricItemInputException(FormattableString.Invariant(
                 $"--max-wait-seconds must be finite, greater than zero, and at most {FabricOperationWaitOptions.MaximumWaitSeconds} seconds."));
-        }
-        if (options.DefinitionItemType is not null && string.IsNullOrWhiteSpace(options.DefinitionItemType))
-        {
-            throw new FabricItemInputException("Omit --definition-item-type for generic checks, or supply a nonempty local validation hint.");
         }
         if (options.DefinitionInput?.HasInput is not true)
         {

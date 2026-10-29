@@ -574,14 +574,12 @@ editor buffers. Save changes and explicitly list every part; no folder scan, wil
 and rejected. The input service independently rechecks local-file capability before any filesystem
 access, while inline updates remain available.
 
-The optional `definition-item-type` is a **local validation hint only**, distinct from `item-id`.
-For `Notebook`, `DataPipeline`, `SemanticModel`, and `Report`, it enables the same verified minimum
-checks for recognized/default formats as Create Item. Unrecognized explicit formats, omitted hints,
-and other item types use generic envelope, path, payload, and budget checks instead of guessed
-format requirements. The hint is never sent to Fabric, inferred from `.platform`, or confirmed by a
-metadata lookup. It cannot establish the actual item's type or complete content validity. Consult
-`docs_item-definitions` for the bundled reference; Fabric validates actual item-type requirements
-and bindings. Comprehensive article-based validation is not implemented.
+Validation is **generic and content-independent**: it does not enforce item-type or format-specific
+filenames, required parts, or layout combinations. The supplied format, portable part paths, and
+payload bytes pass through unchanged for default, known, and future formats. There is no item-type
+hint, `.platform` interpretation, metadata preflight, or local completeness claim. Consult
+`docs_item-definitions` for the bundled reference and supply a complete definition; Fabric validates
+supported formats, required parts, content, and bindings.
 
 `options` supplies the API's optional top-level item-specific JSON **object string**. It is limited
 to **1 MiB of UTF-8 input and 32 nesting levels**, rejects duplicate properties at any depth, and
@@ -605,7 +603,7 @@ fabmcp core update-item-definition `
   --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 `
   --definition-directory 'C:\Fabric\Sales.Notebook' `
   --definition-files '[{"partPath":"artifact.content.ipynb","sourcePath":"sales.ipynb"},{"partPath":".platform"}]' `
-  --definition-format ipynb --definition-item-type Notebook --sync true --max-wait-seconds 120
+  --definition-format ipynb --sync true --max-wait-seconds 120
 ```
 
 For inline content, supply `--definition $definition` instead of all three filesystem options,

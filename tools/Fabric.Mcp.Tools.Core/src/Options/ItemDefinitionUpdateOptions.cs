@@ -17,9 +17,6 @@ public sealed class ItemDefinitionUpdateOptions()
     [OptionContainer<DefinitionInputOptions>(Prefix = "")]
     public DefinitionInputOptions? DefinitionInput { get; set; }
 
-    [Option(Description = "Optional local structure-validation hint, not the API target identity. Notebook, DataPipeline, SemanticModel, and Report enable existing minimum checks for recognized/default formats. Omit for generic checks; other types and explicit unrecognized formats also receive generic checks. Never sent to Fabric, inferred from .platform, or resolved by a metadata lookup. Fabric validates the actual item's requirements.")]
-    public string? DefinitionItemType { get; set; }
-
     [Option(Description = "The API's top-level item-specific options as a JSON object string, up to 1 MiB (1048576 UTF-8 bytes) and 32 nesting levels, with no duplicate properties. Consult the actual item type's Update Definition API for supported options. Not LRO wait settings; use sync, max-wait-seconds, and early-poll for waiting.")]
     public string? Options { get; set; }
 

@@ -13,7 +13,7 @@ Offline tests for the Fabric Core toolset.
 - **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
 - **Commands/ItemDefinitionUpdateCommandTests.cs**: Update definition input validation before file access, wait/metadata/options binding, no-result receipts, sanitized errors, and cancellation receipts
 - **Services/FabricCoreServiceItemDefinitionUpdateTests.cs**: One normalized POST, complete definition/options preservation, metadata query omission/false/true, `.platform` semantics, empty 200 and accepted 202 handling, no-result polling, deadlines, read retries/failures, cancellation/disposal, and concurrent identity isolation
-- **ItemDefinitionUpdateMcpTests.cs**: Real registration across routes, transports, and output modes; inline/saved-file updates, HTTP file rejection and independent invocation-time service guard, exact options limits, source/JSON/file failures, optional type hints, metadata opt-in, read-only exclusion, and destructive consent
+- **ItemDefinitionUpdateMcpTests.cs**: Real registration across routes, transports, and output modes; inline/saved-file updates, unchanged arbitrary safe layouts and bytes for default/known/unknown formats, format-independent generic guards, HTTP file rejection and independent invocation-time service guard, exact options limits, source/JSON/file failures, metadata opt-in, read-only exclusion, and destructive consent
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -315,10 +315,10 @@ service-principal/managed-identity access, or recorded playback.
 source. It reuses `IFabricItemDefinitionInputService`, `IFabricItemDefinitionFileService`, the wire
 models, the shared `DefinitionInputOptions` group through `OptionContainer`, and shared validation
 without fetching or merging the old definition. Public input names stay flat and the absent group
-does not invent a source; Update requires a source while Create permits omission. The optional
-`definition-item-type` is a local minimum-structure hint, not an API field or metadata preflight.
-Omitted and future hints, and explicit unrecognized formats, use generic validation; `.platform`
-never supplies an inferred type. Only verified rules for recognized/default formats are fatal.
+does not invent a source; Update requires a source while Create permits omission. There is no
+item-type hint or format-specific layout policy. Generic validation applies regardless of format;
+safe arbitrary layouts, supplied format strings, and payload bytes reach Fabric unchanged.
+`.platform` never supplies an inferred type, and no metadata preflight is performed.
 IDs, wait settings, and options are checked before file access. The service also validates typed
 definitions/options before authentication. Configured definition budgets are shared with file input.
 
