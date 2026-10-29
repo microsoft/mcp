@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.Resources;
 using NSubstitute;
@@ -22,7 +23,7 @@ public class ResourceResolverServiceTests
 
     public ResourceResolverServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _service = new ResourceResolverService(_azureService);
 
         _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())

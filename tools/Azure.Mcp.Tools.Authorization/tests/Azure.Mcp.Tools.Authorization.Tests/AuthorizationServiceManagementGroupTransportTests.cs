@@ -7,6 +7,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Authorization.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
@@ -247,6 +248,8 @@ public sealed class AuthorizationServiceManagementGroupTransportTests
         azureService.GetTokenCredentialAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(credential);
         azureService.GetClient().Returns(_ => new HttpClient(armHandler, disposeHandler: false));
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            azureService, azureService.GetClient(), cloudConfiguration.ArmEnvironment);
         return azureService;
     }
 

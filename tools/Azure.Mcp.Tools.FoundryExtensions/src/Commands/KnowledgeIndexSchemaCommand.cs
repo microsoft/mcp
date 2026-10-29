@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.FoundryExtensions.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 using Azure.Mcp.Tools.FoundryExtensions.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
@@ -31,7 +32,7 @@ namespace Azure.Mcp.Tools.FoundryExtensions.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundryExtensionsService)
+public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundryExtensionsService, IEndpointValidator endpointValidator)
     : AuthenticatedCommand<KnowledgeIndexSchemaOptions, KnowledgeIndexSchemaCommand.KnowledgeIndexSchemaCommandResult>
 {
     private readonly IFoundryExtensionsService _foundryExtensionsService = foundryExtensionsService;
@@ -40,7 +41,7 @@ public sealed class KnowledgeIndexSchemaCommand(IFoundryExtensionsService foundr
     {
         base.ValidateOptions(options, validationResult);
 
-        FoundryExtensionsHelpers.ValidateFoundryEndpoint(options.Endpoint, validationResult);
+        FoundryExtensionsHelpers.ValidateFoundryEndpoint(endpointValidator, options.Endpoint, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, KnowledgeIndexSchemaOptions options, CancellationToken cancellationToken)

@@ -564,6 +564,90 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/reflexes/{reflexId}/queryActivations": {
+      "post": {
+        "summary": "Executes a KQL query against the activation records of the specified Reflex.",
+        "description": "Executes a KQL query against the activation records of the specified Reflex and returns the results in tabular format. Supports standard KQL data queries (e.g., table queries, `union`, filtering, aggregation) and limited management commands (`.show tables`, `.show table {tableName} cslschema`). Wildcard `union` (e.g. `union *`) is not supported.\n\n## Permissions\n\nThe caller must have *read* permission for the reflex.\n\n## Required Delegated Scopes\n\nReflex.Read.All or Reflex.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n\n- Maximum query text length: 1,048,576 characters.\n- Queries may time out after approximately 30 seconds.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Activations"
+        ],
+        "operationId": "Activations_QueryActivations",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "reflexId",
+            "description": "The Reflex ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "queryActivationsRequest",
+            "description": "Query activations request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/QueryActivationsRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Query executed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/QueryActivationsResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidQuery - The KQL query syntax is invalid.\n\n* MalformedRuleId - The query references a malformed activation table name or rule ID.\n\n* DisallowedQueryConstruct - The query uses a construct or management command that is not permitted. Only the `.show tables` and `.show table {tableName} cslschema` management commands are allowed.\n\n* QueryTooLong - The query text exceeds the maximum length of 1,048,576 characters.\n\n* ItemNotFound - The specified Reflex item was not found.\n\n* RuleNotFound - The query references a rule that was not found.\n\n* QueryTimeout - The query exceeded the maximum duration limit of approximately 30 seconds.\n\n* ResultTooLarge - The query result exceeds the maximum response size.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Query activations example": {
+            "$ref": "./examples/QueryActivations.json"
+          },
+          "Query activations - show tables example": {
+            "$ref": "./examples/QueryActivationsShowTables.json"
+          },
+          "Query activations - show table schema example": {
+            "$ref": "./examples/QueryActivationsShowTableSchema.json"
+          },
+          "Query activations - multiple rules example": {
+            "$ref": "./examples/QueryActivationsMultipleRules.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

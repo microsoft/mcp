@@ -20,7 +20,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
     Id = "3d2ccbae-3d80-4be3-8f48-d951abfb0bb5",
     Name = "update",
     Title = "Update Azure NetApp Files Account",
-    Description = "Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account. Returns the updated account name, resource ID, location, and provisioning state.",
+    Description = "Updates the tags of an Azure NetApp Files account. Returns the updated account name, resource ID, location, and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -53,7 +53,6 @@ public sealed class AccountUpdateCommand(
                 options.ResourceGroup,
                 options.Subscription!,
                 tags,
-                options.NfsV4IdDomain,
                 options.Tenant,
                 cancellationToken);
 
@@ -84,9 +83,9 @@ public sealed class AccountUpdateCommand(
             validationResult.Errors.Add(AccountNameValidator.ErrorMessage);
         }
 
-        if (options.Tags is null && options.NfsV4IdDomain is null)
+        if (options.Tags is null)
         {
-            validationResult.Errors.Add("At least one update property must be provided: --tags or --nfs-v4-id-domain.");
+            validationResult.Errors.Add("The --tags property must be provided.");
         }
 
         if (options.Tags is not null)
@@ -102,11 +101,6 @@ public sealed class AccountUpdateCommand(
             {
                 validationResult.Errors.Add("--tags must be a JSON key-value object with string values.");
             }
-        }
-
-        if (options.NfsV4IdDomain is not null && string.IsNullOrWhiteSpace(options.NfsV4IdDomain))
-        {
-            validationResult.Errors.Add("--nfs-v4-id-domain cannot be empty or whitespace.");
         }
     }
 

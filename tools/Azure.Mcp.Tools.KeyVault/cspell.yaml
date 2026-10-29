@@ -8,4 +8,5 @@ import:
   - ../../.vscode/cspell.json
 words:
   - certificateimport
+  - managedhsm
   - mykeyvault

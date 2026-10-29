@@ -19,6 +19,7 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
         "account1",
         "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.NetApp/netAppAccounts/account1",
         "eastus",
+        null,
         "Succeeded");
 
     [Fact]
@@ -31,34 +32,6 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesTagsAndNfsV4IdDomain()
-    {
-        Service.UpdateAccountAsync(
-            "account1",
-            "rg",
-            "sub",
-            Arg.Is<IReadOnlyDictionary<string, string>>(tags =>
-                tags.Count == 2 && tags["environment"] == "test" && tags["owner"] == "storage"),
-            "contoso.com",
-            "tenant",
-            Arg.Any<CancellationToken>())
-            .Returns(UpdatedAccount);
-
-        var response = await ExecuteCommandAsync(
-            "--account", "account1",
-            "--resource-group", "rg",
-            "--subscription", "sub",
-            "--tenant", "tenant",
-            "--tags", "{\"environment\":\"test\",\"owner\":\"storage\"}",
-            "--nfs-v4-id-domain", "contoso.com");
-
-        var result = ValidateAndDeserializeResponse(
-            response,
-            NetAppFilesJsonContext.Default.AccountUpdateResult);
-        Assert.Equal(UpdatedAccount, result.Account);
-    }
-
-    [Fact]
     public async Task ExecuteAsync_EmptyTags_ClearsTags()
     {
         Service.UpdateAccountAsync(
@@ -66,7 +39,6 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "rg",
             "sub",
             Arg.Is<IReadOnlyDictionary<string, string>>(tags => tags.Count == 0),
-            null,
             null,
             Arg.Any<CancellationToken>())
             .Returns(UpdatedAccount);
@@ -107,7 +79,7 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
             "--subscription", "sub");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("At least one update property", response.Message);
+        Assert.Contains("The --tags property must be provided.", response.Message);
         Assert.Empty(Service.ReceivedCalls());
     }
 
@@ -139,31 +111,5 @@ public class AccountUpdateCommandTests : SubscriptionCommandUnitTestsBase<Accoun
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ServiceConflict_ReturnsSafeMessage()
-    {
-        Service.UpdateAccountAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<IReadOnlyDictionary<string, string>?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException(
-                (int)HttpStatusCode.Conflict,
-                "backend payload containing internal account metadata"));
-
-        var response = await ExecuteCommandAsync(
-            "--account", "account1",
-            "--resource-group", "rg",
-            "--subscription", "sub",
-            "--nfs-v4-id-domain", "contoso.com");
-
-        Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("resource conflict", response.Message);
-        Assert.DoesNotContain("backend payload", response.Message);
     }
 }

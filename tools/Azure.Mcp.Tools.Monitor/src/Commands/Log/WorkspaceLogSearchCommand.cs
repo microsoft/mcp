@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models.Log;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Mcp.Tools.Monitor.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -41,6 +42,20 @@ public sealed class WorkspaceLogSearchCommand(
 
     public override JsonTypeInfo<WorkspaceLogSearchResult>? ResultTypeInfo =>
         MonitorJsonContext.Default.WorkspaceLogSearchResult;
+
+    public override void ValidateOptions(WorkspaceLogSearchOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        try
+        {
+            LogSearchQueryValidator.Validate(options.Table, options.Query);
+        }
+        catch (CommandValidationException ex)
+        {
+            validationResult.AddError(ex.Message, "Invalid log search query.");
+        }
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context,

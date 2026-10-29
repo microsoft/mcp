@@ -3,14 +3,15 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Search;
 using Azure.ResourceManager.Search.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class SearchUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SearchUsageChecker> logger, IAzureService azureService)
-    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
+public class SearchUsageChecker(ArmClient resourceClient, TokenCredential credential, string subscriptionId, ILogger<SearchUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(resourceClient, credential, subscriptionId, logger, azureService)
 {
     public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {

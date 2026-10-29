@@ -926,6 +926,167 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/dataflows/gen1UpgradeReadinessResults": {
+      "get": {
+        "summary": "Lists Gen1 dataflow upgrade readiness results in the specified workspace.",
+        "description": "> [!NOTE]\n> Gen1 dataflow upgrade is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\nEvaluates all Gen1 dataflows in the specified workspace and returns a deterministic readiness verdict with the reasons behind it. Gen2 dataflows are excluded.\n\n## Permissions\n\nThe caller must have a *viewer* or higher workspace role. The operation returns readiness results for all Gen1 dataflows in the workspace without ownership filtering.\n\n## Required Delegated Scopes\n\nDataflow.Read.All or Dataflow.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Limitations\n\n- The operation evaluates all Gen1 dataflows in the workspace and does not support selecting an individual dataflow.\n- Server-side filtering and sorting are not supported.\n- The page size must be between 1 and 30 when specified.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Upgrade"
+        ],
+        "operationId": "Upgrade_ListReadiness",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "description": "The maximum number of results per page. The value must be between 1 and 30. When omitted, the server selects the page size.",
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 30,
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataflowUpgradeReadinessList"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkspaceNotFound - The specified workspace does not exist.\n\n* InsufficientPrivileges - The caller does not have access to the workspace.\n\n* InvalidParameter - The page size is outside the allowed range.\n\n* InvalidContinuationToken - The continuation token is invalid or has been altered.\n\n* FeatureNotAvailable - The operation is not enabled for the caller's tenant.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Gen1 dataflow upgrade readiness results example": {
+            "$ref": "./examples/ListGen1UpgradeReadiness.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/gen1Upgrade": {
+      "post": {
+        "summary": "Upgrades Gen1 dataflows in the specified workspace.",
+        "description": "> [!NOTE]\n> Gen1 dataflow upgrade is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nUpgrades a caller-supplied batch of Gen1 dataflows to Dataflow Gen2 in place. Each successful upgrade preserves the dataflow identifier and workspace. The batch supports partial success. The operation returns the batch result synchronously when processing completes immediately, or returns an accepted response for asynchronous processing and makes the result available through the long-running operation.\n\n## Permissions\n\nThe caller must own each dataflow being upgraded or have the *admin* workspace role. Authorization is evaluated independently for each dataflow; an unauthorized dataflow is returned as a failed result row without failing the batch request.\n\n## Required Delegated Scopes\n\nDataflow.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n\n- Each request must contain between 1 and 50 dataflows from the specified workspace.\n- Upgrades run in place and do not support cross-workspace targets.\n- Cancellation is not supported.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Upgrade"
+        ],
+        "operationId": "Upgrade_UpgradeDataflows",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "upgradeGen1DataflowsRequest",
+            "description": "The Gen1 dataflow upgrade request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpgradeGen1DataflowsRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataflowUpgradeResult"
+            }
+          },
+          "202": {
+            "description": "Request accepted, the Gen1 dataflow upgrade is in progress. After the operation reaches a terminal state, retrieve the `DataflowUpgradeResult` payload by using the long running operations (LRO) APIs.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
+                "type": "integer"
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkspaceNotFound - The specified workspace does not exist.\n\n* InvalidItemsCount - The request contains fewer than 1 or more than 50 dataflows.\n\n* InvalidParameter - A dataflow entry is malformed.\n\n* InsufficientPrivileges - The caller does not have access to the workspace.\n\n* FeatureNotAvailable - The operation is not enabled for the caller's tenant.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upgrade Gen1 dataflows example": {
+            "$ref": "./examples/UpgradeGen1Dataflows.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/dataflows/{dataflowId}/executeQuery": {
       "post": {
         "summary": "Executes a query against a dataflow and returns the result.",

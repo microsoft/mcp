@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResilienceManagement.Commands;
@@ -43,6 +44,44 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
         base.ValidateOptions(options, validationResult);
 
         UsagePlanResourceNameValidator.Validate(options.UsagePlan, "usage plan", validationResult);
+
+        try
+        {
+            _ = ParseTags(options.Tags);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add(ex.Message);
+        }
+    }
+
+    internal static IReadOnlyDictionary<string, string>? ParseTags(string? tags)
+    {
+        if (tags is null)
+        {
+            return null;
+        }
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(tags);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                throw new ArgumentException("--tags must be a JSON object of string values.");
+            }
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (JsonProperty tag in document.RootElement.EnumerateObject())
+            {
+                if (string.IsNullOrWhiteSpace(tag.Name) || tag.Value.ValueKind != JsonValueKind.String || !result.TryAdd(tag.Name, tag.Value.GetString()!))
+                {
+                    throw new ArgumentException("--tags must be a JSON object with unique, non-empty names and string values.");
+                }
+            }
+            return result;
+        }
+        catch (JsonException)
+        {
+            throw new ArgumentException("--tags must be valid JSON.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, UsagePlanCreateOptions options, CancellationToken cancellationToken)
@@ -54,6 +93,7 @@ public sealed class UsagePlanCreateCommand(ILogger<UsagePlanCreateCommand> logge
                 options.UsagePlan,
                 options.PlanType,
                 options.Subscription!,
+                ParseTags(options.Tags),
                 options.Tenant,
                 cancellationToken);
 

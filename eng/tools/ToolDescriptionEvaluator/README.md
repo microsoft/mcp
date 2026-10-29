@@ -189,8 +189,18 @@ This application requires two environment variables to be configured:
 
 #### Required Environment Variables
 
-1. **`AOAI_ENDPOINT`** - Your Azure OpenAI endpoint base URL (without deployment path)
-2. **`TEXT_EMBEDDING_API_KEY`** - Your Azure OpenAI API key
+1. **`AOAI_ENDPOINT`** - The complete Azure OpenAI embeddings URL, including the deployment path, `/embeddings`, and the `api-version` query parameter
+2. **`TEXT_EMBEDDING_API_KEY`** - An Azure OpenAI API key for the same resource
+
+#### Find the Embeddings URL in Microsoft Foundry
+
+To find the complete embeddings URL for your Azure OpenAI resource in Microsoft Foundry:
+
+1. Open your resource and select **Deployments** under **Shared resources**.
+2. Select your `text-embedding-3-large` deployment, not a chat model deployment.
+3. On the deployment details page, find the **Endpoint** section and copy **Target URI**.
+
+Use this **Target URI** as `AOAI_ENDPOINT`. Do not use only the resource's base endpoint (such as `https://<your-resource>.openai.azure.com/`): the evaluator sends requests directly to the configured URL without appending the deployment path or operation.
 
 #### Option 1: Environment Variables (Recommended for Production)
 

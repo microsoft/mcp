@@ -55,7 +55,8 @@ public sealed class ItemTextSearchCommand(ILogger<ItemTextSearchCommand> logger,
 
                 if (invalidProperties.Count > 0)
                 {
-                    validationResult.Errors.Add($"--properties-to-select contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.");
+                    validationResult.AddError($"--properties-to-select contains invalid property name(s) '{string.Join("', '", invalidProperties)}'. Use letters, digits, and underscores only.",
+                        "Invalid Cosmos property selection.");
                 }
             }
         }

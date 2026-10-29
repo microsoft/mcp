@@ -24,8 +24,8 @@ public class CommandOperationPlaneTests
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
 
         var unknown = commandFactory.AllCommands
-            .Where(entry => !Enum.IsDefined(entry.Value.Metadata.OperationPlane))
-            .Select(entry => $"{entry.Key} => {(int)entry.Value.Metadata.OperationPlane}")
+            .Where(entry => !Enum.IsDefined(entry.Value.Command.Metadata.OperationPlane))
+            .Select(entry => $"{entry.Key} => {(int)entry.Value.Command.Metadata.OperationPlane}")
             .Order()
             .ToList();
 
@@ -43,7 +43,7 @@ public class CommandOperationPlaneTests
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
 
-        var planes = commandFactory.AllCommands.Select(entry => entry.Value.Metadata.OperationPlane).ToList();
+        var planes = commandFactory.AllCommands.Select(entry => entry.Value.Command.Metadata.OperationPlane).ToList();
 
         Assert.Contains(ToolOperationPlane.Data, planes);
         Assert.Contains(ToolOperationPlane.Control, planes);

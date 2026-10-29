@@ -273,7 +273,7 @@
     "CustomSqlPoolClassifierType": {
       "description": "Classifier element type. Additional classifier element types may be added over time.",
       "type": "string",
-      "enum": ["Application Name", "Application Name Regex"],
+      "enum": ["Application Name", "Application Name Regex", "Statement Type"],
       "x-ms-enum": {
         "name": "CustomSqlPoolClassifierType",
         "modelAsString": true,
@@ -285,6 +285,10 @@
           {
             "value": "Application Name Regex",
             "description": "Refers to a regular expression pattern used to match the application names applied to the SQL pool."
+          },
+          {
+            "value": "Statement Type",
+            "description": "Refers to SQL statement types applied to the SQL pool."
           }
         ]
       }

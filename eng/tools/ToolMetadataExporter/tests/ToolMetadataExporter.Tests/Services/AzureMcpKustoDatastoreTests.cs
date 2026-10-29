@@ -15,6 +15,8 @@ namespace ToolMetadataExporter.Tests.Services;
 
 public class AzureMcpKustoDatastoreTests : IDisposable
 {
+    private const string ServerName = "test.server";
+
     private readonly ICslQueryProvider _kustoClient;
     private readonly IKustoIngestClient _ingestClient;
     private readonly ILogger<AzureMcpKustoDatastore> _logger;
@@ -141,7 +143,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken));
+            async () => await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken));
         Assert.Contains("Could not find GetAvailableTools.kql", exception.Message);
     }
 
@@ -177,7 +179,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         var datastore = new AzureMcpKustoDatastore(_kustoClient, _ingestClient, _options, _logger);
 
         // Act
-        var result = await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken);
+        var result = await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -185,6 +187,12 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         Assert.Equal("tool-1", result[0].ToolId);
         Assert.Equal("TestTool", result[0].ToolName);
         Assert.Equal("TestArea", result[0].ToolArea);
+        await _kustoClient.Received(1).ExecuteQueryAsync(
+            _appConfiguration.DatabaseName,
+            Arg.Any<string>(),
+            Arg.Is<ClientRequestProperties>(
+                properties => properties.Parameters["serverName"] == ServerName),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -219,7 +227,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         var datastore = new AzureMcpKustoDatastore(_kustoClient, _ingestClient, _options, _logger);
 
         // Act
-        var result = await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken);
+        var result = await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -262,7 +270,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken));
+            async () => await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken));
         Assert.Contains("unsupported event type", exception.Message);
     }
 
@@ -299,7 +307,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken));
+            async () => await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken));
         Assert.Contains("Cannot have an event with no id", exception.Message);
     }
 
@@ -336,7 +344,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken));
+            async () => await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken));
         Assert.Contains("without tool name and/or a tool area", exception.Message);
     }
 
@@ -373,7 +381,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken));
+            async () => await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken));
         Assert.Contains("without tool name and/or a tool area", exception.Message);
     }
 
@@ -420,7 +428,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         var datastore = new AzureMcpKustoDatastore(_kustoClient, _ingestClient, _options, _logger);
 
         // Act
-        var result = await datastore.GetAvailableToolsAsync(TestContext.Current.CancellationToken);
+        var result = await datastore.GetAvailableToolsAsync(ServerName, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -543,7 +551,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<FileNotFoundException>(async () =>
         {
-            await foreach (var _ in datastore.GetLatestToolEventsAsync(nonExistentFile, TestContext.Current.CancellationToken))
+            await foreach (var _ in datastore.GetLatestToolEventsAsync(nonExistentFile, ServerName, TestContext.Current.CancellationToken))
             {
                 // Should not reach here
             }
@@ -583,7 +591,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
 
         // Act
         var results = new List<McpToolEvent>();
-        await foreach (var toolEvent in datastore.GetLatestToolEventsAsync(queryFile, TestContext.Current.CancellationToken))
+        await foreach (var toolEvent in datastore.GetLatestToolEventsAsync(queryFile, ServerName, TestContext.Current.CancellationToken))
         {
             results.Add(toolEvent);
         }
@@ -633,7 +641,7 @@ public class AzureMcpKustoDatastoreTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
-            await foreach (var _ in datastore.GetLatestToolEventsAsync(queryFile, TestContext.Current.CancellationToken))
+            await foreach (var _ in datastore.GetLatestToolEventsAsync(queryFile, ServerName, TestContext.Current.CancellationToken))
             {
                 // Should not reach here
             }

@@ -1,22 +1,381 @@
 # Fabric.Mcp.Tools.Core.Tests
+<!-- cspell:words TMDL pbism -->
 
-Unit tests for the Fabric Core toolset.
+Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
+- **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
+- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
+- **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
+- **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
+- **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
+- **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
+- **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
+- **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
+- **WorkspaceAssignToCapacityToolRegistrationTests.cs**: Assignment schemas, consent, validation, and read-only rejection through real registration with substituted HTTP and credentials
+- **Commands/CapacityListCommandTests.cs**: Tests for the `list-capacities` contract, metadata, option binding, cancellation, and sanitized failures
+- **Services/FabricCoreServiceCapacityListTests.cs**: Offline HTTP tests for single-page requests, opaque continuation tokens, metadata validation, status/Retry-After handling, disposal, concurrent identities, and existing POST regressions
+- **Models/CapacityListSerializationTests.cs**: Source-generated capacity output and unchanged continuation information
+- **CapacityListToolRegistrationTests.cs**: Registered MCP handler tests with substituted HTTP and credentials, including input/output schemas and structured output modes
 - **Commands/ItemCreateCommandTests.cs**: Tests for the `create-item` command
+- **Services/FabricOperationServiceTests.cs**: Single-read state/result contracts, UUID validation, safe failures, exact URLs, progress/timestamps, JSON-null versus empty results, byte limits, and response/stream disposal
+- **Services/FabricOperationRunnerTests.cs**: Hybrid synchronous 200/201 adapters in both modes, explicit result/no-result contracts, early/strict polling, 429/503 backoff, failed/future states, invalid receipts, and bounded pending outcomes
+- **Services/FabricCoreServiceItemCreateLroTests.cs**: Real service with substituted HTTP/credentials, one POST, 201/202 handling, cancellation/deadlines during headers/body reads, completed operations with results not retrieved, and concurrent per-call identity isolation
+- **FabricOperationMcpTests.cs**: Real registration, command binding, discovery, read-only enforcement, typed schemas, and legacy/compact/duplicated operation/Create Item payloads
+- **Commands/ItemGetCommandTests.cs**: Get Item UUID and required-option validation, sanitized parser/service errors, typed metadata, and cancellation forwarding
+- **Services/FabricCoreServiceItemGetTests.cs**: One normalized authenticated GET, metadata whitelisting, required fields and matching IDs, validated throttling guidance, cancellation/disposal, and per-request credentials
+- **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
+- **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
+- **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
+- **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
+- **Commands/ItemUpdateCommandTests.cs**: Update validation, omitted/empty descriptions, annotations, safe failures, and cancellation
 - **Commands/CatalogSearchCommandTests.cs**: Tests for the `search-catalog` command
-- **FabricCoreSetupTests.cs**: Tests for service registration and command setup
+- **Services/FabricCoreServiceItemUpdateTests.cs**: Exact PATCH requests, response validation, status preservation, retry headers, cancellation/disposal, concurrent isolation, and create/search regressions
+- **Models/ItemUpdateSerializationTests.cs**: Narrow request JSON and metadata-only source-generated output
+- **ItemUpdateToolRegistrationTests.cs**: Real Core registration, command factory, and MCP handlers with substituted HTTP/credentials; input/output schemas, output modes, read-only restrictions, and error responses
+- **Commands/CapacityGetCommandTests.cs**: Capacity UUID validation, typed output, cancellation forwarding, and sanitized errors
+- **Services/CapacityGetServiceTests.cs**: Get Capacity requests, required metadata, forward-compatible values, retry headers, cancellation/disposal, per-request credentials, and create/search regressions with substituted HTTP and credentials
+- **CapacityGetMcpTests.cs**: Get Capacity discovery, schemas, read-only filtering, execution, and sanitized errors through the real Core setup, command factory, and MCP handlers
+- **Commands/WorkspaceGetCommandTests.cs**: Workspace UUID and endpoint-preference validation, typed output, cancellation, and sanitized errors
+- **Services/WorkspaceGetServiceTests.cs**: Get Workspace request/response handling, optional metadata, validated retry headers, cancellation/disposal, and create/search regression coverage with substituted HTTP and credentials
+- **WorkspaceGetMcpTests.cs**: Get Workspace discovery/execution through the real Core command factory and MCP handlers
+- **Commands/WorkspaceListCommandTests.cs**: Optional input binding, role normalization, read-only metadata, cancellation forwarding, and sanitized failures for `list-workspaces`
+- **Services/FabricCoreServiceWorkspaceListTests.cs**: Fixed-endpoint HTTP requests, encoded cursors, single-page pagination, optional metadata, response validation/disposal, cancellation, per-request tokens, and existing POST-operation regression coverage
+- **Models/WorkspaceListSerializationTests.cs**: Source-generated result serialization, optional metadata, and independent continuation fields
+- **WorkspaceListToolRegistrationTests.cs**: Registered MCP discovery/call handlers, optional input and typed output schemas, read-only filtering, and legacy/compact/duplicated output
+- **Commands/ItemListCommandTests.cs**: Input binding, UUID validation, recursive defaults, typed results, cancellation mapping, and sanitized failures for `list-items`
+- **Services/ItemListServiceTests.cs**: Substituted-HTTP tests for one-page listing, metadata whitelisting, optional filters, continuation encoding, invalid responses, throttling, cancellation, disposal, and create/search regressions
+- **ItemListMcpTests.cs**: Read-only discovery, input/output schemas, and calls through the real Core command factory, loader, and service with substituted HTTP and credentials
+- **Commands/WorkspaceCreateCommandTests.cs**: Creation options, length/UUID validation, typed results, annotations, and sanitized failures
+- **Services/FabricCoreServiceWorkspaceCreateTests.cs**: Offline request/body omission, capacity/domain assignment, 201/Location handling, response validation, cancellation/disposal, concurrent credentials, no retries, and existing create/search regressions
+- **Models/WorkspaceCreateSerializationTests.cs**: Source-generated request/result contracts, optional metadata, and future type/region strings
+- **WorkspaceCreateToolRegistrationTests.cs**: Real Core DI/command factory/MCP handler registration, schemas, output modes, read-only restrictions, and Retry-After handling with substituted credentials and HTTP
+- **Commands/WorkspaceUpdateCommandTests.cs**: Validation, partial updates, metadata, typed results, and sanitized failures for `update-workspace`
+- **Services/FabricCoreServiceWorkspaceUpdateTests.cs**: Mocked PATCH bodies, field limits, response validation, status and retry guidance, cancellation, disposal, concurrent credentials, and existing create/search regressions
+- **Models/WorkspaceUpdateSerializationTests.cs**: Source-generated request omission and whitelisted workspace output
+- **WorkspaceUpdateToolRegistrationTests.cs**: Real command/service registration and MCP handlers with mocked credentials and HTTP, including output modes, empty-description binding, mutation confirmation, and read-only enforcement
+- **Commands/WorkspaceDeleteCommandTests.cs**: Required UUID validation, destructive metadata, typed deletion acknowledgement, and sanitized failures
+- **Services/FabricCoreServiceWorkspaceDeleteTests.cs**: Substituted HTTP tests for the exact DELETE request, empty 200 response, status and retry guidance, cancellation, disposal, concurrency, and existing create/search regressions
+- **WorkspaceDeleteToolRegistrationTests.cs**: Registered MCP handler tests for consent, read-only discovery/execution restrictions, input/output schemas, and legacy/compact/duplicated output
+- **FabricCoreCatalogTests.cs**: Exact Core catalog and read-only membership, singleton command registration, discovery annotations, and schema consistency
+- **FabricCoreSetupTests.cs**: Setup identity and configured HTTP transport, proxy, timeout, and redirect behavior
+- **Services/FabricCoreServiceBaselineTests.cs**: Direct HTTP tests preserving create/search authentication, JSON bodies, responses, error handling, cancellation, and single-request behavior
+- **Services/FabricCoreHttpHelpersTests.cs**: Validated `Retry-After` parsing and continuation-token encoding checked against constructed HTTP request URIs
+- **Models/FabricCapacityMetadataTests.cs**: Source-generated five-field capacity serialization/schema and required metadata validation
+
+## Catalog Expectations
+
+`FabricCoreCatalogTests.ExpectedTools` is the single test-owned catalog manifest. When adding a Core
+tool, add one entry with its MCP name, command type, and read-only eligibility. The expected normal
+and read-only catalogs are derived only from this manifest, never from production registration or
+command metadata. Exact comparisons reject missing, unexpected, duplicate, or misclassified tools;
+focused regression cases verify those failures in both modes.
+
+Keep each tool's registration tests focused on its own options, input/output schemas, annotations,
+operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
+catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
+representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Shared Core Building Blocks
+
+`FabricCoreCommand` replaces raw parser failures with fixed guidance and reports missing options only when their names exactly match registered required options. Get Workspace, List Items, and List Workspaces tests exercise real option binding with private invalid Boolean values and unknown options, verify sanitized public responses, and assert that the service is not called. Create Item and Catalog Search retain their command-specific validation guidance.
+
+`FabricCoreService.SendFabricHttpRequestAsync` performs one authenticated send and returns the response to its caller. The caller owns disposal, status handling, and deserialization. Its default completion option is `ResponseContentRead`; operations that explicitly need headers first can select `ResponseHeadersRead`. Catalog Search keeps its legacy stream wrapper and error behavior. Create Item uses `ResponseHeadersRead` and the shared LRO dispatcher.
+
+`FabricCoreHttpHelpers.GetRetryAfter` returns a single valid nonnegative delta or HTTP date, or `null` for a missing, malformed, or multiple-valued header. It does not interpret status codes, retry, format messages, or treat backend response text as safe output. Keep tool-specific exception types, integer bounds, date support, and uncertain-mutation outcomes in the owning operation/command.
+
+`FabricCoreHttpHelpers.EncodeContinuationToken` is for request query values only. It preserves existing `%HH` escapes and encodes raw spans, including `+`, query delimiters, and invalid percent sequences. Keep normal .NET URI canonicalization (for example, `%41` becomes `A` and `%7e` becomes `~`). Return API tokens unchanged; never use `continuationUri` or endpoint metadata to choose the next request URL. The tests cover the official continuation examples for [capacities](https://learn.microsoft.com/rest/api/fabric/core/capacities/list-capacities), [workspaces](https://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspaces), and [items](https://learn.microsoft.com/rest/api/fabric/core/items/list-items).
+
+`FabricCapacityMetadata` is the shared capacity contract: required `Guid Id` followed by required string `DisplayName`, `Sku`, `Region`, and `State`. `IsValid` rejects null metadata, an empty ID, and blank strings without closing the string values to enums. A get operation must additionally compare the returned ID with its requested ID. Workspace and item response models remain operation-specific.
+
+`TestSupport/FabricCoreHttpMessageHandler` accepts an asynchronous request/cancellation callback and exposes a thread-safe `CallCount`. Reuse it for offline HTTP tests; inspect or capture request details inside the callback rather than introducing per-tool handler copies. Keep specialized content/cancellation doubles and all operation-specific assertions.
+
+## Long-running Operations
+
+`FabricOperationRunner` dispatches endpoint-specific synchronous success or accepted 202 responses. An adapter supplies its documented success codes and a typed result reader; an explicitly absent reader declares a no-result API. Create Item accepts only 201/202, while generic tests cover both 200 and 201, with and without results, in both sync modes. An absent result URL or 404 never selects the no-result contract.
+
+Public operation commands and the poller share the same low-level methods in `FabricCoreService.Operations.cs`. Requests continue through the existing authenticated sender; the poller cannot submit mutations or follow arbitrary URLs. `FabricOperationHttp` bounds JSON reads to 1 MiB and reuses the existing validated Retry-After parser. Each returned JSON element outlives its disposed response/stream.
+
+`OperationTestTimeProvider` and its BCL `ITimer` double advance virtual time deterministically. Tests do not sleep for the 3-second early probe, 20-second fallback, or 120-second default budget. Request budget timers cancel authentication, headers, and body reads; caller cancellation is distinct and retains a known operation reference. Late confirmed completion remains completed even when the result cannot be retrieved before the deadline.
+
+The shared wait options enforce a 600-second server maximum while keeping the 120-second default and positive fractional budgets. Command and service tests reject invalid and over-limit budgets before authentication or POST in both sync modes. Virtual-clock cases verify that waiting for the allowed 600 seconds returns `Pending` with the last-known state and never sends another GET after the deadline; the limit does not cancel Fabric's operation.
+
+All LRO/Create Item coverage is offline. It does not call real Fabric, validate real OBO permissions, deploy resources, run recorded tests, or establish production latency percentiles. Capacity assignment and Catalog Search retain their pre-existing published contracts and operation-specific tests.
+
+## Local Definition File Infrastructure
+
+`IFabricItemDefinitionFileService` is an injectable, stateless file/part converter registered by
+`FabricCoreSetup`. It uses ordinary `System.IO`, following Azure's area-specific file services,
+without depending on or changing Azure tools. It makes no network requests, exposes no MCP commands,
+and is reused by Create Item's saved-file input without adding a command to the Core tool catalog.
+
+The wire models are `FabricItemDefinition` (`parts`, optional `format`) and
+`FabricItemDefinitionPart` (`path`, `payload`, `payloadType`), registered in `CoreJsonContext`.
+File I/O supports `InlineBase64` only and preserves bytes, including binary assets, text encodings,
+line endings, empty files, nested paths, and `.platform`. Invalid Base64 and unsupported payload
+types are errors, never skipped parts.
+
+### Reading Saved Files
+
+`ReadAsync` takes an existing absolute directory, an explicit list of `FabricItemDefinitionFile`
+entries, and an optional format. `PartPath` is the logical Fabric path; optional `SourcePath` maps
+it to a different relative file under the selected directory. Source paths accept native or `/`
+separators, but logical part paths use `/`. The reader never enumerates the directory implicitly:
+unselected editor files, local caches, and secrets are not included simply because they share a folder.
+It reads saved files, not Git HEAD or unsaved editor buffers, and does not rename or modify them.
+
+```csharp
+var definition = await definitionFiles.ReadAsync(
+    sourceDirectory,
+    [new("artifact.content.ipynb", "notebooks/sales.ipynb")],
+    format: "ipynb",
+    cancellationToken: cancellationToken);
+```
+
+Length and modification-time checks detect changes observed during packaging. This is not an atomic
+snapshot of a concurrently edited directory: callers should save their files and stop editing while
+packaging. The returned parts are a bounded in-memory snapshot for the subsequent API request.
+
+### Writing Completed Definitions
+
+`WriteAsync` takes a completed definition and an explicit new absolute output directory whose parent
+already exists. It validates all part paths and payloads first, writes into a temporary sibling
+directory, then moves that completed directory into place. Existing destinations are never merged,
+overwritten, or deleted. It returns the published absolute directory; the caller already has the
+definition's part list and format for its result. Retain that format when reading the files back.
+
+```csharp
+var outputDirectory = await definitionFiles.WriteAsync(
+    newOutputDirectory, definition, cancellationToken);
+```
+
+Failures and cancellation are propagated rather than returning success for partial output. The writer
+attempts to remove only its temporary directory and logs cleanup failures without masking the original
+error. Unlike Azure Resiliency's general artifact writer, it must not flatten paths, invent replacement
+file names, or fall back silently to an incomplete file set.
+
+### Budgets and Filesystem Boundaries
+
+`FabricItemDefinitionFileLimits` supplies host-level packaging budgets, not MCP options or Fabric API
+quotas. Defaults are 1,024 parts, 16 MiB decoded per part, and 32 MiB decoded in total; hosts and tests
+can supply smaller or different explicit budgets. Encoded input per part is also bounded to the
+Base64 length implied by its decoded budget. Paths are limited to 1,024 characters and 255 characters
+per segment. No content is truncated to meet a budget.
+
+Only local absolute directories are accepted. Relative part/source paths cannot escape the selected
+directory. Logical paths reject traversal, absolute paths, alternate data streams, device names,
+non-portable characters, duplicate names (case-insensitively), and file/directory collisions.
+The implementation checks existing path components for symbolic links, junctions, and device paths,
+including ancestors of the selected root. Use actual local paths rather than linked directories.
+These checks are not an OS sandbox against hostile processes concurrently replacing filesystem
+entries; the local filesystem and its permissions must be trusted.
+
+Tools dedicated to disk reads or writes should declare `LocalRequired = true`, reusing the existing
+whole-tool HTTP restrictions. Create Item remains remote-capable: its registered command omits only
+the saved-file options on HTTP hosts, and `FabricItemDefinitionInputService` separately rejects local
+input before parsing paths or calling the file service unless the configured transport is stdio.
+Command logic and the low-level file converter contain no transport checks. Inline content remains
+available over HTTP and uses the same content-independent validator and budgets, with no disk access.
+Local file conversion adds no Fabric requests.
+
+### Item Layout and Content Validation Belong to Fabric
+
+The bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
+and the `docs_item-definitions` tool describe required parts and supported formats for most item
+types. Callers can consult those resources to prepare explicit file selections without an extra
+Fabric request. They are documentation, not executable schemas or an input-validation policy;
+Markdown tables are not parsed at runtime.
+
+This infrastructure validates the generic envelope and filesystem representation only. It does not
+claim a supplied part list is complete or valid for a particular item type, discover an item from
+its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
+The input service has no item-type argument and applies no required-filename, notebook-language,
+known/default-format, or format-mixing rules. All definitions receive generic JSON/Base64, path,
+count/byte/depth, source-exclusivity, and local-file capability checks. Tests verify that arbitrary
+safe layouts, including combinations formerly rejected locally, reach the single Create POST unchanged
+for omitted, recognized, and unknown formats. Create still sends its actual API item type unchanged.
+Fabric decides whether the supplied layout, format, content, and dependencies are valid.
+`.platform` is included only when explicitly selected or supplied inline and is sent unchanged,
+not interpreted or synthesized.
+
+### Shared Definition Source Options
+
+`DefinitionInputOptions` groups only four optional inputs: `Definition`, `DefinitionDirectory`,
+`DefinitionFiles`, and `DefinitionFormat`. Operations accepting uploaded definitions compose it using
+the existing AOT-aware attribute, without an option inheritance hierarchy or a framework change:
+
+```csharp
+[OptionContainer<DefinitionInputOptions>(Prefix = "")]
+public DefinitionInputOptions? DefinitionInput { get; set; }
+```
+
+The empty prefix preserves the existing flat CLI/MCP names and string shapes: `definition`,
+`definition-directory`, `definition-files`, and `definition-format`. The group stays null when no source
+option was provided. `HasInput` means at least one source option was supplied, including incomplete input
+that still needs validation; it does not claim the source is complete. Shared descriptions do not refer
+to Create-only fields. Creation payloads, folder IDs, sensitivity labels, API options, and LRO settings
+remain owned by Create. An operation that requires a definition must enforce that requirement itself;
+the group does not make its children globally required. Read/export operations have a different
+contract and should not acquire unused upload options.
+
+`IFabricItemDefinitionInputService.ReadAsync` accepts only the four grouped source values and cancellation:
+
+```csharp
+Task<FabricItemDefinition?> ReadAsync(
+    string? definition,
+    string? directory,
+    string? files,
+    string? format,
+    CancellationToken cancellationToken = default);
+```
+
+There is no item-type hint or layout-policy argument. Generic validation and the local-file guard
+are independent of any workload. The current
+Create registration still removes saved-file options from HTTP discovery without mutating shared binder
+options. Registered-handler and actual startup tests verify that composition does not change the schema
+or allow remote filesystem access.
+
+The command accepts either inline definition JSON or an absolute selected directory plus explicit
+file-to-part mappings and optional format. Unknown/duplicate JSON properties and conflicting source
+options are rejected, rather than silently discarded or preferred. It does not enumerate folders.
+The create-request definition and label-settings members are typed; the existing response model and
+output modes, workspace UUID behavior, no-definition requests, and bounded LRO processing remain unchanged.
+Registered-handler tests verify one POST and no hidden reads, while the LRO service matrix covers
+with/without definitions and the additional creation properties, synchronous completion, submit-only
+acceptance, and explicit waiting.
+
+`ItemCreateRequestInput` prepares optional folder IDs, creation payloads, definition options, and
+sensitivity label settings before definition files can be read. Creation payloads conflict with every
+definition option; the API's top-level options object requires a definition and never controls LRO
+waiting. Workload JSON remains opaque `JsonElement` data with one-MiB UTF-8 input budgets, 32-level
+nesting limits, and duplicate-property rejection, including nested objects. Tests measure the exact
+byte boundary with both ASCII and multibyte text, and the exact nesting boundary through request serialization.
+
+Label settings have a separate four-KiB input budget and a source-generated typed model. The entire
+object is optional, but every supplied settings object must have a nonempty `labelId` UUID. The only
+accepted strategies are `ApplyOrFail` and `Ignore`; the optional strategy stays omitted when not supplied,
+preserving Fabric's default. Required-constructor-parameter validation rejects empty and strategy-only
+settings before file access, authentication, or HTTP. Explicit nulls, unknown fields, and invalid
+strategies are rejected, not silently discarded. Tests
+verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
+folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
+
+Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
+definition to export. Keep endpoint-specific result sizes separate from these file budgets:
+the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
+
+All file tests use isolated temporary directories with no Azure or Fabric requests. The fixture
+resolves system temporary-directory aliases, such as macOS `/var`, before creating its test data;
+the product continues to reject linked paths. Symbolic-link
+tests run when the host permits link creation; on Windows without the necessary privilege they
+report an explicit skip, rather than silently passing.
+
+## Item Metadata
+
+Get Item reuses `FabricCoreCommand`, the shared authenticated sender with `ResponseHeadersRead`,
+`FabricCoreHttpHelpers.GetRetryAfter`, and `FabricThrottledException`. It returns only the five-field
+metadata contract, requires both returned IDs to match the request, and retains nonempty future item
+types. Optional descriptions may be absent, null, or explicitly empty. It makes no definition/data
+requests, follows no returned URLs, and does not retry. Tests reuse `FabricCoreHttpMessageHandler`
+and an existing stream cancellation double, without introducing another sender, handler, or exception.
+
+All Get Item coverage here is offline. Registered-handler transport configuration does not establish
+live Fabric behavior, real OBO/RBAC authorization, or recorded playback.
+
+## Item Listing
+
+Pagination cases include Fabric's documented `ABCsMTAwMDAwLDA%3D` token/URI pair, raw and escaped delimiters, invalid percent sequences, normal .NET URI unreserved-character normalization, and query-injection prevention. The documented `%3D` remains intact on the wire; raw `+` is encoded as data, not treated as a space. Empty pages retain continuation information, and each invocation performs only one request.
+
+## Workspace Creation
+
+Creation uses the shared authenticated send with `ResponseHeadersRead` and the shared Retry-After parser without changing its operation-specific status, optional Location, or uncertain-outcome handling. It performs one application-level POST with optional existing capacity/domain assignments, never retries, and does not follow returned URLs. Tests reuse `FabricCoreHttpMessageHandler` while retaining the specialized cancellation stream.
+
+## Workspace Updates
+
+Updates retain the shared authenticated send's buffered `ResponseContentRead` default and reuse the shared Retry-After parser only for HTTP 429. The tool-specific throttling exception, status/messages, uncertain-outcome handling, and four-field response stay unchanged. It performs one application-level PATCH without retries or response-URL following; existing HTTP redirects are unchanged. Tests reuse `FabricCoreHttpMessageHandler`, retain `WorkspaceUpdateCancellationContent`, and verify omitted versus explicitly empty descriptions without widening the request to other workspace properties.
+
+## Item Updates
+
+Update Item uses the shared authenticated send with `ResponseHeadersRead`, preserving validation of both returned item/workspace IDs and the metadata-only response. It projects only nonnegative integer deltas up to `int.MaxValue` from the shared Retry-After parser; HTTP dates and out-of-range values remain ignored. Error wording and uncertain-update outcomes remain operation-specific. Tests reuse `FabricCoreHttpMessageHandler` and retain `ItemUpdateCancellationStream`.
+
+Update Item coverage is offline only. Tests never call real Fabric APIs or mutate resources.
+Registered-handler tests exercise stdio/HTTP configuration, not actual transports, real OBO authorization,
+service-principal/managed-identity access, or recorded playback.
+
+## Item Deletion
+
+Delete Item retains the shared authenticated send's buffered `ResponseContentRead` default and uses `FabricCoreHttpHelpers.GetRetryAfter` without changing its nullable-header fallback, status/error wording, or uncertain-deletion outcomes. Tests reuse `FabricCoreHttpMessageHandler`, capture requests inside callbacks for disposal assertions, and retain `ItemDeleteTrackingContent` and all operation-specific cases.
+
+The optional Boolean safeguard is configured by the `FabricCoreSetup` registration factory before discovery or execution, using one explicit value and command-local validators. It rejects valueless, invalid, repeated, or ambiguous input without changing the shared binder. Missing/null/false never enables hard deletion; the existing MCP coercion boundary is retained.
+
+## Workspace Deletion
+
+Delete Workspace selects `ResponseHeadersRead` on the inherited authenticated sender and reuses `FabricCoreHttpHelpers.GetRetryAfter`, retaining its own throttling exception and unknown-outcome wording. It keeps explicit cancellation checks before authentication and after the response, plus the shared sender's post-credential check before HTTP. Tests reuse `FabricCoreHttpMessageHandler` and retain `WorkspaceDeleteResponseContent` to verify that deletion response bodies are never read.
+
+Workspace deletion tests substitute every credential and HTTP request. They never delete real workspaces. These tests do not establish live Fabric behavior, actual identity permissions, OBO authorization, or recorded playback. Approval to implement or run these offline tests does not authorize a real deletion.
 
 ## Running Tests
 
+Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
+
 ```powershell
 # Run all Core tests
-dotnet test
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj
+
+# Run assignment command, service, and registered-handler tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*WorkspaceAssignToCapacity*' '*WorkspaceCapacityAssignment*'
 
 # Run specific test
-dotnet test --filter "FullyQualifiedName~ItemCreateCommandTests"
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
+
+# Run definition packaging/input and Create Item coverage
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricItemDefinition*' '*ItemCreate*' '*FabricOperationMcpTests'
+
+# Run LRO service, polling, command/schema, and Create Item integration tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'
+
+# Run Get Item command, service, and registered-handler tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemGet*'
+
+# Run only Get Capacity command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"
+
+# Run capacity listing tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*CapacityList*'
+
+# Run only Get Workspace command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceGetCommandTests"
+
+# Run workspace listing tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
+
+# Run only List Items command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "Fabric.Mcp.Tools.Core.Tests.Commands.ItemListCommandTests"
+
+# Run only Create Workspace command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceCreateCommandTests"
+
+# Run only Update Workspace command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceUpdateCommandTests"
+
+# Run only Update Item command tests
+dotnet test --project .\tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemUpdateCommandTests'
+# Run only the Delete Item coverage.
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemDelete*"
+
+# Run the workspace deletion command tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceDeleteCommandTests"
 ```
+
+Run these commands from the repository root. These are offline unit tests, not live Fabric, OBO, or recorded/playback validation.
+
+Workspace creation tests never create a real workspace. Their in-process MCP handler checks do not establish live Fabric behavior, real OBO authorization, or recorded playback. Live creation requires separate authorization; this project does not add live/recording infrastructure.
+
+Workspace-update tests do not call Fabric or modify real workspaces. Transport configuration in
+registered-handler tests is not evidence of real HTTP/OBO authorization, live service behavior, or
+recorded playback. No live-test or recording infrastructure is added by this tool.
 
 ## Test Structure
 
@@ -26,3 +385,21 @@ Tests follow the standard MCP pattern:
 - Option binding tests
 - Service interaction tests
 - Error handling scenarios
+
+## Coverage Boundaries
+
+Get Capacity, List Capacities, Get Workspace, List Workspaces, List Items, Create Workspace, Update Workspace, Update Item, Delete Item, Delete Workspace, and Assign Workspace to Capacity service tests substitute `HttpMessageHandler` and `TokenCredential`. Registered-handler tests exercise the actual Core setup, command factory, service, serialization, and MCP loader, including default/compact/duplicated output modes. Setting the runtime transport to HTTP does not start an HTTP server or exercise OBO authorization. Existing `Fabric.Mcp.Server.Tests` startup tests separately check discovery over local stdio and HTTP transports.
+
+Live Fabric calls, real OBO authorization, service-principal/managed-identity access, and recorded playback were not exercised. Fabric live/recorded infrastructure is outside this scoped tool change; mocked tests are not evidence of live permissions or playback. No shared authentication, host, or recording-proxy changes are required.
+
+Delete Item tests use fake credentials and mocked HTTP handlers; no real Fabric item may be deleted during development or testing. Registration tests use the actual `FabricCoreSetup` factory, not unguarded direct command construction. The optional Boolean requires one explicit CLI value, and repeated/ambiguous occurrences fail before service or authentication. MCP retains the shared argument conversion behavior, including explicitly supplied `"true"` and `["true"]`; tests do not claim strict original JSON-type validation.
+
+Registered MCP checks exercise the in-process tool pipeline with stdio/HTTP runtime settings and text/structured output modes. They are not live transport, real Fabric, real OBO/RBAC, or recorded/playback evidence. The existing host credential bridge is unchanged. ToolDescriptionEvaluator requires separate configuration and remains pending/not run when that configuration is absent. These offline tests do not waive required CI.
+
+## Workspace Capacity Assignment
+
+Assignment uses the shared authenticated sender with `ResponseHeadersRead`, preserving its post-credential cancellation check. Exactly one application-level POST accepts only 202 and returns requested target IDs plus `accepted: true` and `state: "Pending"`. It never requires a response body, claims completion, polls, retries, invents an operation handle, or follows a Location header.
+
+The assignment-specific Retry-After projection remains nullable `long` seconds and ignores dates. Its existing BCL parser accepts deltas up to `int.MaxValue`; returning a `long` does not widen those accepted inputs. The typed header getter can retain the first valid value when multiple values are supplied, whereas the shared helper rejects every multiple-valued header. The local projection preserves that behavior rather than changing the accepted input set. Boundary tests cover raw and typed deltas, dates, and multiple headers.
+
+Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback is unchanged, as are the Item Delete explicit Boolean safeguard and the six-tool read-only Core set.

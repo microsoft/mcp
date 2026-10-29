@@ -9,6 +9,13 @@ namespace Microsoft.Mcp.Core.Extensions;
 /// <summary>
 /// Extension methods for registering HTTP client services.
 /// </summary>
+/// <remarks>
+/// Explicit proxy environment variables take precedence over transport-level AntiSSRF
+/// protection for the whole configured handler. Without those variables, the runtime system
+/// proxy is evaluated per request and becomes the DNS/IP boundary only for destinations it
+/// actually proxies. Configure only trusted proxies. Endpoint validation in tool services
+/// remains independent of transport routing.
+/// </remarks>
 public static class HttpClientServiceCollectionExtensions
 {
     /// <summary>
@@ -38,6 +45,9 @@ public static class HttpClientServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configureOptions);
 
+        // Capture the recording fallback at host composition, not during request-handler creation.
+        string? recordingProxy = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+
         // Configure options with environment variables
         services.Configure<HttpClientOptions>(options =>
         {
@@ -46,6 +56,7 @@ public static class HttpClientServiceCollectionExtensions
             options.HttpProxy = Environment.GetEnvironmentVariable("http_proxy") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
             options.HttpsProxy = Environment.GetEnvironmentVariable("https_proxy") ?? Environment.GetEnvironmentVariable("HTTPS_PROXY");
             options.NoProxy = Environment.GetEnvironmentVariable("no_proxy") ?? Environment.GetEnvironmentVariable("NO_PROXY");
+            options.RecordingProxy = recordingProxy;
 
             // Apply custom configuration
             configureOptions(options);

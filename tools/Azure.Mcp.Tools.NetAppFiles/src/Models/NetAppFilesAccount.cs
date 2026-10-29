@@ -7,4 +7,5 @@ public sealed record NetAppFilesAccount(
     string Name,
     string Id,
     string Location,
+    IDictionary<string, string>? Tags,
     string? ProvisioningState);

@@ -77,6 +77,22 @@ public sealed class WorkspaceLogSearchCommandTests
         await AssertNoSearchReceived();
     }
 
+    [Fact]
+    public async Task ExecuteAsync_InvalidQuery_ReturnsValidationErrorBeforeServiceCall()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", Subscription,
+            "--resource-group", ResourceGroup,
+            "--workspace", Workspace,
+            "--table", Table,
+            "--query", "| join Other on Id",
+            "--timespan", Timespan);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("The 'join' operator is not supported for Basic or Auxiliary table searches.", response.Message);
+        await AssertNoSearchReceived();
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(100)]

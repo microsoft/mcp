@@ -61,13 +61,14 @@ public sealed class RegistryToolLoader(
                 .Where(t => !_configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
                 .Where(t => !_configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
 
-            // Filter by specific tools if provided
+            var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
+
+            // Filter by the exposed tool name, including the optional server prefix.
             if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
             {
-                filteredTools = filteredTools.Where(t => _configuration.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
+                filteredTools = filteredTools.Where(t => _configuration.Value.Tool.Any(tool => string.Equals(tool, prefix + t.Name, StringComparison.OrdinalIgnoreCase)));
             }
 
-            var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
             foreach (var tool in filteredTools)
             {
                 var exposedTool = string.IsNullOrEmpty(prefix)
@@ -111,7 +112,7 @@ public sealed class RegistryToolLoader(
         // Check if tool filtering is enabled and validate the requested tool
         if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_configuration.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => string.Equals(tool, request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
                 activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);

@@ -188,7 +188,7 @@ dotnet build
 - Live tests: Include live tests for all commands that interact with Azure resources
 - Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
-- Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
+- Tool validation (optional for Fabric MCP tools): Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `/docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `/servers/Azure.Mcp.Server/CHANGELOG.md` or `/servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
@@ -298,7 +298,7 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 # AOT compatibility analysis
 ./eng/scripts/Analyze-AOT-Compact.ps1
 
-# Tool description quality validation
+# Tool description quality validation (optional for Fabric MCP tools)
 pushd 'eng/tools/ToolDescriptionEvaluator/src'
 dotnet run -- --validate --tool-description "Your command description" --prompt "user query" --test-single-tool 'your-tool-name'
 popd
@@ -576,7 +576,7 @@ dotnet run -- --validate \
 dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.md
 popd
 
-# Target: Top 3 ranking and confidence score ≥ 0.4
+# Target: Top 3 ranking and confidence score ≥ 0.4 (optional for Fabric MCP tools)
 ```
 
 ## Local Development and Testing
@@ -767,7 +767,7 @@ When working in a linked git worktree (multiple worktrees sharing one repository
 - **Run all tests**: `./eng/scripts/Test-Code.ps1`
 - **Format code**: `dotnet format`
 - **Check spelling**: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- **Validate tool descriptions**: Use ToolDescriptionEvaluator
+- **Validate tool descriptions**: Use ToolDescriptionEvaluator (optional for Fabric MCP tools)
 - **Follow contribution guidelines**: See `CONTRIBUTING.md`
 - **One tool per PR**: Submit single toolsets for faster review
 

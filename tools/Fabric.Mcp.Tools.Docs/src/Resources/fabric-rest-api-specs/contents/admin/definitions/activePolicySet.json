@@ -1,0 +1,45 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Activate policy set data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ActivePolicySetWithRulesResponse": {
+            "description": "The active policy set response.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The policy set ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The policy set display name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The policy set description.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "workspaceId": {
+                    "description": "The workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "policyRules": {
+                    "description": "A list of policy rules.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../policySet/definitions.json#/definitions/PolicyRule"
+                    }
+                }
+            }
+        }
+    }
+}

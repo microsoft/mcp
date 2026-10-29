@@ -3,10 +3,10 @@
 
 <#
 .SYNOPSIS
-    Packs Azure MCP Server binaries into PyPI wheels for distribution.
+    Packs MCP server binaries into PyPI wheels for distribution.
 
 .DESCRIPTION
-    This script creates platform-specific PyPI wheels for the Azure MCP Server.
+    This script creates platform-specific PyPI wheels for configured MCP servers.
     Each wheel contains the binary for a specific platform (OS + architecture).
     
     The wheels are named according to PyPI conventions:
@@ -120,7 +120,9 @@ function ConvertTo-PythonPackageVersion {
         return $null
     }
 
-    $parsedVersion.SetupPythonConventions()
+    # Discard the returned regex: PowerShell otherwise emits it alongside the version,
+    # making this function return an array whose ToString() produces "System.Object[]".
+    $null = $parsedVersion.SetupPythonConventions()
     if ($parsedVersion.PrereleaseLabel -eq 'beta') {
         $parsedVersion.PrereleaseLabel = 'b'
     }
@@ -129,6 +131,31 @@ function ConvertTo-PythonPackageVersion {
     }
 
     return $parsedVersion.ToString()
+}
+
+function Get-DevStatus {
+    param ([string] $version)
+
+    $parsedVersion = [AzureEngSemanticVersion]::ParseVersionString($version)
+    if (!$parsedVersion) {
+        return $null
+    }
+
+    if (!$parsedVersion.IsPrerelease) {
+        return '5 - Production/Stable'
+    }
+
+    # The parser treats unlabeled major-zero versions as prerelease beta versions.
+    if ($parsedVersion.Major -eq 0 -and [string]::IsNullOrEmpty($parsedVersion.PrereleaseLabel)) {
+        return '4 - Beta'
+    }
+
+    switch ($parsedVersion.PrereleaseLabel) {
+        'alpha' { return '3 - Alpha' }
+        'beta'  { return '4 - Beta' }
+        'rc'    { return '4 - Beta' }
+        default { throw "Unknown prerelease label '$($parsedVersion.PrereleaseLabel)' for version '$version'." }
+    }
 }
 
 function Get-PythonCommand {
@@ -188,6 +215,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
     $pythonVersion = $pythonVersion.ToString()
+    $devStatus = Get-DevStatus $server.version
     
     $description = if ([string]::IsNullOrWhiteSpace($server.pypiDescription)) { $server.description } else { $server.pypiDescription }
     $cliName = $server.cliName
@@ -260,16 +288,20 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             -replace '{{OS_CLASSIFIER}}', $osClassifier `
             -replace '{{CLI_NAME}}', $cliName `
             -replace '{{MODULE_NAME}}', $moduleName `
-            -replace '{{HOMEPAGE}}', $server.readmeUrl
+            -replace '{{HOMEPAGE}}', $server.readmeUrl `
+            -replace '{{DEV_STATUS}}', $devStatus
 
         $pyprojectPath = "$tempFolder/pyproject.toml"
         Write-Host "  Writing pyproject.toml"
+        Write-Host $pyprojectContent
         $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
 
-        # Update version in __init__.py
+        # Configure version and CLI name in __init__.py
         $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
         $initPyContent = Get-Content $initPyPath -Raw
-        $initPyContent = $initPyContent -replace '__version__ = "0\.0\.0"', "__version__ = `"$pythonVersion`""
+        $initPyContent = $initPyContent `
+            -replace '{{VERSION}}', $pythonVersion `
+            -replace '{{CLI_NAME}}', $cliName
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows

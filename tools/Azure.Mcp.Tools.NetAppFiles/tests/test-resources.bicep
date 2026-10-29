@@ -43,6 +43,11 @@ resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
   location: location
 }
 
+resource netAppAccount2 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
+  name: '${baseName}-account2'
+  location: location
+}
+
 resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
   parent: netAppAccount
   name: '${baseName}-pool'
@@ -66,8 +71,3 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
     description: 'Contributor for Azure NetApp Files live tests'
   }
 }
-
-output NETAPP_ACCOUNT_NAME string = netAppAccount.name
-output NETAPP_POOL_NAME string = capacityPool.name
-output NETAPP_SUBNET_ID string = virtualNetwork.properties.subnets[0].id
-output LOCATION string = location

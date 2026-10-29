@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Azure MCP Server - PyPI package.
+MCP Server - PyPI package.
 
-This module provides the entry point for the Azure MCP Server CLI.
+This module provides the entry point for the packaged MCP server CLI.
 The binary is bundled directly in the wheel for the target platform.
 """
 
@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-__version__ = "0.0.0"  # Will be replaced during packaging
+__version__ = "{{VERSION}}"  # Will be replaced during packaging
 
 # Debug mode check
 DEBUG = os.environ.get("DEBUG", "").lower() in ("true", "1", "*") or "mcp" in os.environ.get("DEBUG", "")
@@ -32,10 +32,9 @@ def get_executable_path():
 
     # Determine the executable name based on platform
     system = platform.system().lower()
+    executable_name = "{{CLI_NAME}}"
     if system == "windows":
-        executable_name = "azmcp.exe"
-    else:
-        executable_name = "azmcp"
+        executable_name += ".exe"
 
     executable_path = bin_dir / executable_name
 

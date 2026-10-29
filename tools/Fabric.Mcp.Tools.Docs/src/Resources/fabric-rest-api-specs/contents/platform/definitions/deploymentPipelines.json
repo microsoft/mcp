@@ -696,6 +696,14 @@
                     "type": "boolean",
                     "description": "Indicates whether cross region deployment is enabled. True - enabled, False - disabled. Default value is false.",
                     "readOnly": false
+                },
+                "itemOptionsBySourceItemId": {
+                    "description": "Per-item deployment options. Each entry targets its item by source item ID and applies its options to that item.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/ItemOptionsBySourceItemIdEntry"
+                    },
+                    "readOnly": false
                 }
             }
         },

@@ -3,8 +3,11 @@
 
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Advisor.Commands;
+using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -79,11 +82,58 @@ public class RemediationServiceTests
         Assert.Equal("medium", method.Confidence);
         var step = Assert.Single(method.Steps!);
         Assert.Equal("1", step.Number);
-        Assert.Equal("source_doc", step.Source);
         Assert.Equal("https://learn.microsoft.com/azure/app-service/configure-common", step.SourceUrl);
         var check = Assert.Single(method.Checks!);
         Assert.Equal("Confirm the setting was applied.", check.Text);
         Assert.Equal("az webapp config show --name <app-name>", check.Command);
+    }
+
+    [Theory]
+    [InlineData("6", 6d)]
+    [InlineData("13", 13d)]
+    [InlineData("6.0", 6d)]
+    [InlineData("6.5", 6.5d)]
+    public async Task GetRemediationAsync_DeserializesNonIntegerVersion(string versionLiteral, double expected)
+    {
+        // The Advisor API may return properties.version as an integer or a
+        // decimal (e.g. 6.0). Inject the raw JSON literal so an integral value
+        // retains its decimal notation and exercises the production deserializer.
+        var json = MinimalPackageJson.Replace(
+            "\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\"",
+            $"\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\", \"version\": {versionLiteral}");
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, json));
+        var service = CreateService(handler);
+
+        var package = await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
+
+        Assert.NotNull(package.Properties);
+        Assert.Equal(expected, package.Properties!.Version);
+    }
+
+    [Theory]
+    [InlineData("6", "\"version\":6")]
+    [InlineData("13", "\"version\":13")]
+    [InlineData("6.0", "\"version\":6")]
+    [InlineData("6.5", "\"version\":6.5")]
+    public async Task GetRemediationAsync_SerializesVersionInToolOutput(string versionLiteral, string expectedInOutput)
+    {
+        // Verifies the JSON the tool actually returns (RemediationGetCommand line 58).
+        // A whole-number double serializes without a trailing zero (6.0 -> 6), while a
+        // real decimal is preserved (6.5 -> 6.5).
+        var json = MinimalPackageJson.Replace(
+            "\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\"",
+            $"\"recommendationTypeId\": \"18745007-438b-4c68-bfa3-b6576d85a831\", \"version\": {versionLiteral}");
+        var handler = new StubHttpMessageHandler(_ => JsonResponse(HttpStatusCode.OK, json));
+        var service = CreateService(handler);
+
+        var package = await service.GetRemediationAsync(RecommendationTypeId, TestContext.Current.CancellationToken);
+
+        var output = JsonSerializer.Serialize(
+            new RemediationGetCommand.RemediationGetResult(package),
+            AdvisorJsonContext.Default.RemediationGetResult);
+
+        Console.WriteLine($"[VERSION TEST] ARM sent version={versionLiteral} -> tool output={output}");
+        Assert.Contains(expectedInOutput, output);
     }
 
     [Theory]
@@ -177,7 +227,7 @@ public class RemediationServiceTests
                   { "name": "app-name", "description": "The App Service name.", "example": "my-web-app", "required": true }
                 ],
                 "steps": [
-                  { "number": "1", "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set", "source": "source_doc", "sourceUrl": "https://learn.microsoft.com/azure/app-service/configure-common" }
+                  { "number": "1", "text": "Apply the remediation command.", "kind": "command", "command": "az webapp config set", "sourceUrl": "https://learn.microsoft.com/azure/app-service/configure-common" }
                 ],
                 "verification": "az webapp config show --name <app-name> --resource-group <resource-group>",
                 "confidence": "medium",

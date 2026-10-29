@@ -3,10 +3,16 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
+using Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
 using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
 
+[JsonSerializable(typeof(ServiceGroupIntelligenceGetCommand.ServiceGroupIntelligenceGetResult))]
+[JsonSerializable(typeof(Models.AdvisorServiceGroupStatus))]
+[JsonSerializable(typeof(ServiceGroupIntelligenceData))]
+[JsonSerializable(typeof(ServiceGroupIntelligenceDataProperties))]
+[JsonSerializable(typeof(ServiceGroupIntelligenceKpiData))]
 [JsonSerializable(typeof(MetadataGetCommand.MetadataGetResult))]
 [JsonSerializable(typeof(RemediationGetCommand.RemediationGetResult))]
 [JsonSerializable(typeof(Models.RemediationPackage))]
@@ -14,8 +20,6 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationUpdateCommand.RecommendationUpdateResult))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
-[JsonSerializable(typeof(RecommendationApplyCommand.RecommendationApplyCommandResult))]
-[JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(RecommendationMetadataData))]

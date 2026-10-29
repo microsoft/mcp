@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests.UsagePlans;
 
 public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBase<UsagePlanCreateCommand, IResilienceManagementService>
 {
-    private const string ValidArgs = "--resource-group rg --usage-plan up1 --plan-type Basic --subscription sub";
+    private const string ValidArgs = "--resource-group rg --usage-plan up1 --plan-type Standard --subscription sub";
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -26,11 +26,42 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         Assert.NotEmpty(command.Description);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ForwardsTags()
+    {
+        Service.CreateUsagePlanAsync("rg", "up1", UsagePlanKind.Standard, "sub",
+            Arg.Any<IReadOnlyDictionary<string, string>?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new UsagePlanInfo("id1", "up1", "Microsoft.AzureResilienceManagement/usagePlans", "global"));
+
+        var response = await ExecuteCommandAsync("--resource-group", "rg", "--usage-plan", "up1", "--plan-type", "Standard",
+            "--subscription", "sub", "--tags", "{\"env\":\"prod\",\"owner\":\"team\"}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateUsagePlanAsync("rg", "up1", UsagePlanKind.Standard, "sub",
+            Arg.Is<IReadOnlyDictionary<string, string>?>(tags => tags != null && tags.Count == 2 && tags["env"] == "prod" && tags["owner"] == "team"),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("[\"env\"]")]
+    [InlineData("{\"env\":1}")]
+    [InlineData("{\"\":\"value\"}")]
+    [InlineData("not json")]
+    public async Task ExecuteAsync_RejectsInvalidTags(string tags)
+    {
+        var response = await ExecuteCommandAsync("--resource-group", "rg", "--usage-plan", "up1", "--plan-type", "Standard",
+            "--subscription", "sub", "--tags", tags);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--tags", response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
     [Theory]
     [InlineData(ValidArgs, true)]
-    [InlineData("--usage-plan up1 --plan-type Basic --subscription sub", false)] // Missing resource group
-    [InlineData("--resource-group rg --plan-type Basic --subscription sub", false)] // Missing usage plan
-    [InlineData("--resource-group rg --usage-plan up1 --plan-type Basic", false)] // Missing subscription
+    [InlineData("--usage-plan up1 --plan-type Standard --subscription sub", false)] // Missing resource group
+    [InlineData("--resource-group rg --plan-type Standard --subscription sub", false)] // Missing usage plan
+    [InlineData("--resource-group rg --usage-plan up1 --plan-type Standard", false)] // Missing subscription
     [InlineData("", false)] // No parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -42,6 +73,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
                 Arg.Any<string>(),
                 Arg.Any<UsagePlanKind>(),
                 Arg.Any<string>(),
+                Arg.Any<IReadOnlyDictionary<string, string>?>(),
                 Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new UsagePlanInfo("id1", "up1", "Microsoft.ResilienceManagement/usagePlans", "eastus"));
@@ -58,6 +90,27 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         }
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RejectsRemovedBasicPlanType()
+    {
+        var response = await ExecuteCommandAsync(
+            "--resource-group", "rg",
+            "--usage-plan", "up1",
+            "--plan-type", "Basic",
+            "--subscription", "sub");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Standard", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().CreateUsagePlanAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UsagePlanKind>(),
+            Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Theory]
     [InlineData("bad_name")]
     [InlineData("1234567890123456789012345")]
@@ -67,7 +120,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
         var response = await ExecuteCommandAsync(
             "--resource-group", "rg",
             "--usage-plan", usagePlan,
-            "--plan-type", "Basic",
+            "--plan-type", "Standard",
             "--subscription", "sub");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -77,6 +130,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
@@ -90,6 +144,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(new UsagePlanInfo(
@@ -97,7 +152,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
                 "up1",
                 "Microsoft.AzureResilienceManagement/usagePlans",
                 "global",
-                Properties: new("Basic", "Succeeded")));
+                Properties: new("Standard", "Succeeded")));
 
         // Act
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -117,6 +172,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException("The usage plan create or update did not complete within 10 minutes."));
@@ -136,6 +192,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Conflict, "Provider-specific conflict details"));
@@ -161,6 +218,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
@@ -181,6 +239,7 @@ public sealed class UsagePlanCreateCommandTests : SubscriptionCommandUnitTestsBa
             Arg.Any<string>(),
             Arg.Any<UsagePlanKind>(),
             Arg.Any<string>(),
+            Arg.Any<IReadOnlyDictionary<string, string>?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));

@@ -639,6 +639,137 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/copyJobs/{copyJobId}/jobs/execute/instances": {
+      "get": {
+        "summary": "List execute job instances for the specified CopyJob.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have a *viewer* workspace role.\n\n## Required Delegated Scopes\n\nCopyJob.Read.All or CopyJob.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_ListExecuteJobInstances",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "copyJobId",
+            "description": "The CopyJob ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CopyJobExecuteJobInstances"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item.\n\n* ItemNotFound - The requested item ID was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List CopyJob execute job instances example": {
+            "$ref": "./examples/ListCopyJobExecuteJobInstances.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Run an on-demand execute job instance.",
+        "description": "## Permissions\n\nThe caller must have a *member* or higher workspace role.\n\n## Required Delegated Scopes\n\n- Specific scope: CopyJob.Execute.All or Item.Execute.All\n\nFor more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandExecute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "copyJobId",
+            "description": "The CopyJob ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, job execution is in progress.\n\n---\n**Headers:**\n\n**Location** `string` - The URL to the job instance resource.\n\n**Retry-After** `integer` - The number of seconds the client should wait before polling the job status for the first time. Clients must use this value to determine when to check the job status and should wait at least this many seconds before the first status poll."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to run a job instance.\n\n* InvalidJobType - The requested job type is invalid.\n\n* TooManyRequestsForJobs - The caller requests too many on-demand job requests.\n\n* ItemNotFound - The requested item ID was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run CopyJob Execute job instance example": {
+            "$ref": "./examples/RunOnDemandCopyJobExecuteJob.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

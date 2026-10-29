@@ -18,7 +18,7 @@ A Plan definition contains top-level parts plus per-sheet and per-visual parts. 
 | `planProperties.json` | Plan Properties (JSON) | true | Plan-level UI and behavior properties (theme, mode config, filter assignments). |
 | `connectedPlanning/infobridge.json` | InfoBridge Configuration (JSON) | false | InfoBridge data source, query pipeline, and writeback destination configuration. Required when the plan uses Connected Planning. |
 | `cube/cube.json` | Cube Configuration (JSON) | false | Cube partition definitions, measures, and column mappings. Required when the plan uses cube-based writeback. |
-| `.platform` | PlatformDetails (JSON) | true | Fabric Git integration platform metadata (item type, display name, logical ID). |
+| `.platform` | [Platform Properties](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/plan-definition#platform-part) (JSON) | true | Fabric Git integration platform metadata (item type, display name, logical ID). |
 
 ### Per-sheet parts
 

@@ -8,4 +8,6 @@ public class IoTHubProperties
     public string? State { get; set; }
 
     public string? HostName { get; set; }
+
+    public RoutingProperties? Routing { get; set; }
 }

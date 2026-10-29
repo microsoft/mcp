@@ -200,6 +200,7 @@ public class ShortcutCreateCommandVariantsTests
     {
         var service = CreateShortcutService();
         var command = new ShortcutCreateDataverseCommand(Substitute.For<ILogger<ShortcutCreateDataverseCommand>>(), service);
+        Assert.DoesNotContain("--target-table-name", command.GetCommand().Options.Select(option => option.Name));
 
         var response = await ExecuteAsync(command,
             "--workspace-id", "ws1",
@@ -208,8 +209,7 @@ public class ShortcutCreateCommandVariantsTests
             "--shortcut-name", "shortcut1",
             "--target-environment-domain", "https://org.crm.dynamics.com",
             "--target-connection-id", "connection-1",
-            "--target-deltalake-folder", "Tables/account",
-            "--target-table-name", "account");
+            "--target-deltalake-folder", "Tables/account");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var result = DeserializeResponse(response, OneLakeJsonContext.Default.ShortcutCreateDataverseCommandResult);

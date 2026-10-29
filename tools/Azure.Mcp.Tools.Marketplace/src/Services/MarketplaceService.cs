@@ -220,8 +220,21 @@ public class MarketplaceService(IAzureService azureService)
 
         if (!response.IsError)
         {
-            var result = JsonSerializer.Deserialize(response.Content.ToStream(), jsonTypeInfo);
-            return result ?? throw new JsonException("Marketplace response deserialized to null.");
+            if (response.Content.IsEmpty)
+            {
+                throw new JsonException($"Marketplace response to {typeof(T).Name} was empty.");
+            }
+
+            try
+            {
+                var result = JsonSerializer.Deserialize(response.Content.ToStream(), jsonTypeInfo);
+                return result ?? throw new JsonException("Marketplace response deserialized to null.");
+            }
+            catch (JsonException ex)
+            {
+                // BinaryData is buffered, so the content can be re-read for diagnostics.
+                throw new JsonException($"Failed to deserialize marketplace response to {typeof(T).Name}. Response: {response.Content}", ex);
+            }
         }
 
         throw new HttpRequestException($"Request failed with status {response.Status}: {response.ReasonPhrase}");
