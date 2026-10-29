@@ -102,11 +102,11 @@ internal static class ItemCreateRequestInput
         catch (JsonException)
         {
             throw new ItemCreateInputException(
-                "--sensitivity-label-settings accepts only labelId (a UUID) and sensitivityLabelApplyStrategy (a string).");
+                "--sensitivity-label-settings requires labelId (a nonempty UUID) and accepts optional sensitivityLabelApplyStrategy (a string).");
         }
-        if (value.Value.TryGetProperty("labelId", out _) && (settings.LabelId is null || settings.LabelId == Guid.Empty))
+        if (settings.LabelId == Guid.Empty)
         {
-            throw new ItemCreateInputException("A supplied sensitivity labelId must be a nonempty UUID; omit the property instead of using null.");
+            throw new ItemCreateInputException("--sensitivity-label-settings requires a nonempty labelId UUID.");
         }
         if (value.Value.TryGetProperty("sensitivityLabelApplyStrategy", out _) &&
             settings.SensitivityLabelApplyStrategy is not ("ApplyOrFail" or "Ignore"))

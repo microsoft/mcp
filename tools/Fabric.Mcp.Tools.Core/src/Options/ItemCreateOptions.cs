@@ -32,7 +32,7 @@ public class ItemCreateOptions
     [Option(Description = "The API's top-level item-specific options as a JSON object string, up to 1 MiB (1048576 UTF-8 bytes) and 32 nesting levels. Requires an inline or saved-file definition source. Consult the item's Update Definition API for supported options. These are not LRO wait settings; use sync, max-wait-seconds, and early-poll for waiting.")]
     public string? Options { get; set; }
 
-    [Option(Description = "Optional label settings as a JSON object string, up to 4096 UTF-8 bytes: {\"labelId\":\"nonempty UUID\",\"sensitivityLabelApplyStrategy\":\"ApplyOrFail\"}. Both fields are optional; omitted fields stay omitted. A supplied strategy must be ApplyOrFail or Ignore. Fabric defaults an omitted strategy to ApplyOrFail. Ignore explicitly permits creation without the label if it cannot be applied; the tool never downgrades policy or retries without it.")]
+    [Option(Description = "Optional label settings as a JSON object string, up to 4096 UTF-8 bytes: {\"labelId\":\"nonempty UUID\",\"sensitivityLabelApplyStrategy\":\"ApplyOrFail\"}. When supplied, labelId is required and must be a nonempty UUID; the strategy is optional and stays omitted when not supplied. A supplied strategy must be ApplyOrFail or Ignore. Fabric defaults an omitted strategy to ApplyOrFail. Ignore explicitly permits creation without the label if it cannot be applied; the tool never downgrades policy or retries without it.")]
     public string? SensitivityLabelSettings { get; set; }
 
     [OptionContainer<DefinitionInputOptions>(Prefix = "")]

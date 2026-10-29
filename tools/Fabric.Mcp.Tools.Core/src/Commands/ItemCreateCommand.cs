@@ -31,8 +31,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Unrecognized explicit formats and item types are forwarded unchanged after generic validation;
         content semantics, dependencies, and other item-type requirements are validated by Fabric.
         Top-level options JSON requires a definition and contains item-specific settings, not LRO wait settings.
-        Optional sensitivity-label-settings JSON accepts labelId and sensitivityLabelApplyStrategy.
-        Omitted label fields stay omitted; Fabric defaults the strategy to ApplyOrFail.
+        Optional sensitivity-label-settings JSON requires a nonempty labelId UUID and accepts optional sensitivityLabelApplyStrategy.
+        Omitted label settings or strategy stay omitted; Fabric defaults the strategy to ApplyOrFail.
         Ignore is explicit opt-in to proceed without the label if it cannot be applied; no policy downgrade or retry is performed.
         Sends one creation request. A 201 response returns item metadata; 202 returns a resumable operation receipt.
         With sync=true, asynchronously wait up to max-wait-seconds (default 120, server maximum 600 seconds)

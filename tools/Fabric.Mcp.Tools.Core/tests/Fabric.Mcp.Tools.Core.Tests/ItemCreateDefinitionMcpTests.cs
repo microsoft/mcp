@@ -175,7 +175,9 @@ public sealed class ItemCreateDefinitionMcpTests()
             Assert.DoesNotContain(directory.Path, body.RootElement.GetRawText());
             Assert.Equal(FolderId, body.RootElement.GetProperty("folderId").GetString());
             Assert.False(body.RootElement.GetProperty("options").GetProperty("futureSetting").GetBoolean());
-            Assert.Empty(body.RootElement.GetProperty("sensitivityLabelSettings").EnumerateObject());
+            var label = body.RootElement.GetProperty("sensitivityLabelSettings");
+            Assert.Equal(LabelId, label.GetProperty("labelId").GetString());
+            Assert.False(label.TryGetProperty("sensitivityLabelApplyStrategy", out _));
             Assert.False(body.RootElement.TryGetProperty("creationPayload", out _));
             return FabricOperationTestData.ItemResponse(type: "Notebook");
         });
@@ -188,7 +190,7 @@ public sealed class ItemCreateDefinitionMcpTests()
         arguments["definition-format"] = "ipynb";
         arguments["folder-id"] = FolderId;
         arguments["options"] = """{"futureSetting":false}""";
-        arguments["sensitivity-label-settings"] = "{}";
+        arguments["sensitivity-label-settings"] = $$"""{"labelId":"{{LabelId}}"}""";
 
         var result = await Loader(provider, route).CallToolHandler(Request(route, arguments), TestContext.Current.CancellationToken);
 
@@ -361,10 +363,13 @@ public sealed class ItemCreateDefinitionMcpTests()
     [InlineData("folder-id", "00000000-0000-0000-0000-000000000000")]
     [InlineData("options", "[]")]
     [InlineData("options", """{"private-setting":1,"private-setting":2}""")]
+    [InlineData("sensitivity-label-settings", "{}")]
+    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":"ApplyOrFail"}""")]
+    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":"Ignore"}""")]
     [InlineData("sensitivity-label-settings", """{"labelId":"private-invalid-id"}""")]
-    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":"private-invalid-policy"}""")]
-    [InlineData("sensitivity-label-settings", """{"sensitivityLabelApplyStrategy":null}""")]
-    [InlineData("sensitivity-label-settings", """{"private-unknown-property":true}""")]
+    [InlineData("sensitivity-label-settings", """{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"private-invalid-policy"}""")]
+    [InlineData("sensitivity-label-settings", """{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":null}""")]
+    [InlineData("sensitivity-label-settings", """{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","private-unknown-property":true}""")]
     public async Task InvalidProperties_FailBeforeReadingSavedFilesOrAuthenticating(string option, string value)
     {
         using var handler = NoHttp();
@@ -383,6 +388,31 @@ public sealed class ItemCreateDefinitionMcpTests()
         using var response = JsonDocument.Parse(Text(result));
         Assert.Equal(400, response.RootElement.GetProperty("status").GetInt32());
         Assert.Empty(files.ReceivedCalls());
+        Assert.Empty(credential.ReceivedCalls());
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData("{}", TransportTypes.StdIo)]
+    [InlineData("{}", TransportTypes.Http)]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"ApplyOrFail"}""", TransportTypes.StdIo)]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"ApplyOrFail"}""", TransportTypes.Http)]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"Ignore"}""", TransportTypes.StdIo)]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"Ignore"}""", TransportTypes.Http)]
+    public async Task SuppliedLabelSettings_RequireIdBeforeAuthenticationOrPost(string settings, string transport)
+    {
+        using var handler = NoHttp();
+        var credential = FabricOperationTestData.Credential();
+        await using var provider = Services(handler, credential, transport);
+        var arguments = Arguments();
+        arguments["sensitivity-label-settings"] = settings;
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("requires labelId", Text(result));
+        using var response = JsonDocument.Parse(Text(result));
+        Assert.Equal(400, response.RootElement.GetProperty("status").GetInt32());
         Assert.Empty(credential.ReceivedCalls());
         Assert.Equal(0, handler.CallCount);
     }
