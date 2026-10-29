@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added scheduled Azure MCP release-preparation pull requests at noon Pacific on non-holiday Tuesdays and Thursdays, with configurable release-owner mentions."

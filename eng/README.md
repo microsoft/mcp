@@ -218,6 +218,17 @@ For design details, see [docs/design/mcpb-packaging-and-signing-via-esrp.md](htt
 
 We only ship the repo's server projects, with each server stored under `servers/<ServerName>`. The release pipelines are driven by the server-specific `build.yml` files (for example, `servers/Azure.Mcp.Server/build.yml`). Those files opt a server into the artifact types we publish and pass the settings that flow through `/eng/pipelines/templates/common.yml`.
 
+## Scheduled Azure MCP release preparation
+
+[release-prep.yml](https://github.com/microsoft/mcp/blob/main/eng/pipelines/release-prep.yml) opens an Azure MCP Server release-preparation PR every Tuesday and Thursday at **12 PM Pacific**, except on Microsoft US holidays. It does not merge PRs, publish packages, or queue the release pipeline.
+
+- Azure DevOps uses UTC schedules, so the pipeline has 19:00 and 20:00 UTC triggers. A Pacific time-zone check selects exactly one trigger for the current daylight-saving offset, including when agent allocation delays the job within the scheduled Pacific day. The inactive trigger exits without requesting GitHub credentials.
+- The calendar excludes the Microsoft US holidays on both their actual and observed dates. Saturday holidays are observed on Friday and Sunday holidays on Monday, including New Year's Day observed in the previous December. Holiday runs are skipped, not moved to another day.
+- The `ReleaseOwners` parameter is the list of GitHub usernames, without `@`, to mention in the PR description. The description asks them to review, approve and merge the PR after checks pass, then start Azure.Mcp release.
+- Preparation uses the existing version in the Azure MCP Server project and requires a matching `Unreleased` changelog heading. Already-finalized versions and runs without changelog entries are skipped; merge the normal post-release version-increment PR before the next release.
+- The job compiles both changelogs, removes the compiled entry files, and opens a PR from a version-specific branch in `azure-sdk/mcp`. An existing open preparation PR for that version is left unchanged, preserving reviewer edits.
+- The repository PR template is preserved, with a pipeline link and validation results added. Required PR checks still run normally; preparation does not claim that builds or tests have passed.
+
 ## Queuing a release run
 - Manually queue the server pipeline (e.g. [`mcp - Azure.Mcp.Server`](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7866&_a=summary)) with `PublishTarget` set to `none`, `internal`, or `public`.
   - `none` builds and validates only. Outputs are saved as unsigned pipeline artifacts. Servers will be given a prerelease version based on the version in the servers' project file, with a suffix like `-alpha.<buildId>`.
