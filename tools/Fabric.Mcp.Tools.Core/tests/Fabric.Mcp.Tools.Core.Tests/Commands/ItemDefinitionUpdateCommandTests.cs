@@ -61,8 +61,11 @@ public sealed class ItemDefinitionUpdateCommandTests()
             WorkspaceId = option == "workspace-id" ? value : FabricOperationTestData.WorkspaceId,
             ItemId = option == "item-id" ? value : FabricOperationTestData.ItemId,
             MaxWaitSeconds = option == "max-wait-seconds" ? double.Parse(value, System.Globalization.CultureInfo.InvariantCulture) : 120,
-            DefinitionDirectory = "private-directory",
-            DefinitionFiles = "private-invalid-json"
+            DefinitionInput = new()
+            {
+                DefinitionDirectory = "private-directory",
+                DefinitionFiles = "private-invalid-json"
+            }
         };
         var input = Substitute.For<IFabricItemDefinitionInputService>();
         var command = new ItemDefinitionUpdateCommand(Logger, Service, input);

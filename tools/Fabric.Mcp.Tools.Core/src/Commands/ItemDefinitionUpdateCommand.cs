@@ -26,7 +26,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         This is not a changed-files patch: it never gets the old definition, merges parts, or resolves names.
         Shared validation checks InlineBase64 payloads, portable paths, and bounded byte/count budgets.
         Optional definition-item-type is only a local validation hint, never the API identity or a metadata lookup.
-        It enables existing minimum part/format checks for Notebook, DataPipeline, SemanticModel, and Report;
+        It enables existing minimum checks for recognized/default formats of Notebook, DataPipeline, SemanticModel, and Report;
+        other types and explicit unrecognized formats receive generic validation rather than guessed format rules.
         Fabric validates actual item-type requirements, content, dependencies, and item-specific options.
         Optional top-level options is bounded JSON for the item's Update Definition API, not LRO wait settings.
         update-metadata must be explicitly true to request metadata updates from a supplied .platform part.
@@ -83,8 +84,9 @@ public sealed class ItemDefinitionUpdateCommand(
             ValidateInput(options);
             // Parse workload options before any file access. They remain opaque to item-specific validation.
             var apiOptions = FabricItemJsonInput.ParseObject(options.Options, "--options");
-            var definition = await _definitionInputService.ReadAsync(options.DefinitionItemType, options.Definition,
-                options.DefinitionDirectory, options.DefinitionFiles, options.DefinitionFormat, cancellationToken) ??
+            var input = options.DefinitionInput;
+            var definition = await _definitionInputService.ReadAsync(options.DefinitionItemType, input?.Definition,
+                input?.DefinitionDirectory, input?.DefinitionFiles, input?.DefinitionFormat, cancellationToken) ??
                 throw new FabricItemInputException("Provide a complete replacement definition using exactly one inline or saved-file source.");
             var result = await _fabricCoreService.UpdateItemDefinitionAsync(options.WorkspaceId, options.ItemId,
                 new(definition, apiOptions), options.UpdateMetadata,
@@ -179,8 +181,7 @@ public sealed class ItemDefinitionUpdateCommand(
         {
             throw new FabricItemInputException("Omit --definition-item-type for generic checks, or supply a nonempty local validation hint.");
         }
-        if (options.Definition is null && options.DefinitionDirectory is null &&
-            options.DefinitionFiles is null && options.DefinitionFormat is null)
+        if (options.DefinitionInput?.HasInput is not true)
         {
             throw new FabricItemInputException("Provide a complete replacement definition using exactly one inline or saved-file source.");
         }

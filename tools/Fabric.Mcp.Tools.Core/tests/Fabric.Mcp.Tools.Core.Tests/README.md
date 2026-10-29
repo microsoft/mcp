@@ -313,9 +313,12 @@ service-principal/managed-identity access, or recorded playback.
 
 `core_update-item-definition` requires known workspace/item UUIDs and exactly one complete definition
 source. It reuses `IFabricItemDefinitionInputService`, `IFabricItemDefinitionFileService`, the wire
-models, and shared validation without fetching or merging the old definition. The optional
+models, the shared `DefinitionInputOptions` group through `OptionContainer`, and shared validation
+without fetching or merging the old definition. Public input names stay flat and the absent group
+does not invent a source; Update requires a source while Create permits omission. The optional
 `definition-item-type` is a local minimum-structure hint, not an API field or metadata preflight.
-Omitted and future hints use generic validation; `.platform` never supplies an inferred type.
+Omitted and future hints, and explicit unrecognized formats, use generic validation; `.platform`
+never supplies an inferred type. Only verified rules for recognized/default formats are fatal.
 IDs, wait settings, and options are checked before file access. The service also validates typed
 definitions/options before authentication. Configured definition budgets are shared with file input.
 

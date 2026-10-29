@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:words TMDL TMSL PBIR
 
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Mcp.Core.Options;
@@ -15,19 +14,10 @@ public class ItemDefinitionUpdateOptions
     [Option(Description = "The nonempty UUID of the existing Fabric item whose entire definition will be replaced. Item names are not resolved.")]
     public required string ItemId { get; set; }
 
-    [Option(Description = "The complete replacement definition as a JSON object string: {\"parts\":[{\"path\":\"logical/path\",\"payload\":\"base64\",\"payloadType\":\"InlineBase64\"}],\"format\":\"optional format\"}. Supported locally and over HTTP. Mutually exclusive with every definition-directory/files/format option. Not a file path, changed-files patch, or complete request body.")]
-    public string? Definition { get; set; }
+    [OptionContainer<DefinitionInputOptions>(Prefix = "")]
+    public DefinitionInputOptions? DefinitionInput { get; set; }
 
-    [Option(Description = "Existing absolute directory on the hosting machine containing saved replacement definition files. Local execution only; unavailable over HTTP. Requires definition-files and is mutually exclusive with definition. Never scans the folder automatically or reads unsaved editor buffers.")]
-    public string? DefinitionDirectory { get; set; }
-
-    [Option(Description = "Explicit complete file selection as a JSON array string: [{\"partPath\":\"artifact.content.ipynb\",\"sourcePath\":\"sales.ipynb\"}]. Paths are relative to definition-directory; sourcePath defaults to partPath. Logical part paths use '/'. No wildcards, enumeration, or merge with the existing definition. Local execution only.")]
-    public string? DefinitionFiles { get; set; }
-
-    [Option(Description = "Optional Fabric definition format for saved-file input only, for example ipynb, FabricGitSource, TMDL, TMSL, PBIR, or PBIR-Legacy. Requires definition-directory and definition-files. For inline input, put format inside definition JSON.")]
-    public string? DefinitionFormat { get; set; }
-
-    [Option(Description = "Optional local structure-validation hint, not the API target identity. Notebook, DataPipeline, SemanticModel, and Report enable existing minimum part/format checks. Omit for generic checks; other types also receive generic checks. Never sent to Fabric, inferred from .platform, or resolved by a metadata lookup. Fabric validates the actual item's requirements.")]
+    [Option(Description = "Optional local structure-validation hint, not the API target identity. Notebook, DataPipeline, SemanticModel, and Report enable existing minimum checks for recognized/default formats. Omit for generic checks; other types and explicit unrecognized formats also receive generic checks. Never sent to Fabric, inferred from .platform, or resolved by a metadata lookup. Fabric validates the actual item's requirements.")]
     public string? DefinitionItemType { get; set; }
 
     [Option(Description = "The API's top-level item-specific options as a JSON object string, up to 1 MiB (1048576 UTF-8 bytes) and 32 nesting levels, with no duplicate properties. Consult the actual item type's Update Definition API for supported options. Not LRO wait settings; use sync, max-wait-seconds, and early-poll for waiting.")]

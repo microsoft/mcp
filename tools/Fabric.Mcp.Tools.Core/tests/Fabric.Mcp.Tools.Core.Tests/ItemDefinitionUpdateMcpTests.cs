@@ -69,7 +69,7 @@ public sealed class ItemDefinitionUpdateMcpTests()
             {
                 Assert.Equal(transport == TransportTypes.StdIo, properties.TryGetProperty(name, out _));
             }
-            foreach (var name in new[] { "folder-id", "creation-payload", "sensitivity-label-settings", "display-name", "item-type" })
+            foreach (var name in new[] { "folder-id", "creation-payload", "sensitivity-label-settings", "display-name", "item-type", "definition-input" })
             {
                 Assert.False(properties.TryGetProperty(name, out _));
             }
@@ -222,8 +222,11 @@ public sealed class ItemDefinitionUpdateMcpTests()
         {
             WorkspaceId = FabricOperationTestData.WorkspaceId,
             ItemId = FabricOperationTestData.ItemId,
-            DefinitionDirectory = "private-host-directory",
-            DefinitionFiles = "private-invalid-json"
+            DefinitionInput = new()
+            {
+                DefinitionDirectory = "private-host-directory",
+                DefinitionFiles = "private-invalid-json"
+            }
         }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -399,11 +402,17 @@ public sealed class ItemDefinitionUpdateMcpTests()
     }
 
     [Theory]
-    [InlineData(null, true)]
-    [InlineData("FutureType", true)]
-    [InlineData("Notebook", false)]
-    [InlineData(" ", false)]
-    public async Task DefinitionType_IsOnlyAnOptionalLocalHint(string? itemType, bool succeeds)
+    [InlineData(null, null, true)]
+    [InlineData("FutureType", null, true)]
+    [InlineData("Notebook", null, false)]
+    [InlineData("Notebook", "ipynb", false)]
+    [InlineData("Notebook", "FutureFormat", true)]
+    [InlineData("Report", "PBIR", false)]
+    [InlineData("Report", "FutureFormat", true)]
+    [InlineData("DataPipeline", null, false)]
+    [InlineData("DataPipeline", "FutureFormat", true)]
+    [InlineData(" ", null, false)]
+    public async Task DefinitionType_IsOnlyAnOptionalLocalHint(string? itemType, string? format, bool succeeds)
     {
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
@@ -417,7 +426,7 @@ public sealed class ItemDefinitionUpdateMcpTests()
         arguments["definition-item-type"] = itemType;
         arguments["definition"] = JsonSerializer.Serialize(new FabricItemDefinition(
             [new("content", "e30=", "InlineBase64"),
-                new(".platform", Convert.ToBase64String(Encoding.UTF8.GetBytes("""{"metadata":{"type":"Notebook"}}""")), "InlineBase64")]),
+                new(".platform", Convert.ToBase64String(Encoding.UTF8.GetBytes("""{"metadata":{"type":"Notebook"}}""")), "InlineBase64")], format),
             CoreJsonContext.Default.FabricItemDefinition);
 
         var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);

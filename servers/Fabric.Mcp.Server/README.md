@@ -575,9 +575,10 @@ and rejected. The input service independently rechecks local-file capability bef
 access, while inline updates remain available.
 
 The optional `definition-item-type` is a **local validation hint only**, distinct from `item-id`.
-For `Notebook`, `DataPipeline`, `SemanticModel`, and `Report`, it enables the same curated minimum
-part/format checks as Create Item. Omission and other item types use generic envelope, path, payload,
-and budget checks. The hint is never sent to Fabric, inferred from `.platform`, or confirmed by a
+For `Notebook`, `DataPipeline`, `SemanticModel`, and `Report`, it enables the same verified minimum
+checks for recognized/default formats as Create Item. Unrecognized explicit formats, omitted hints,
+and other item types use generic envelope, path, payload, and budget checks instead of guessed
+format requirements. The hint is never sent to Fabric, inferred from `.platform`, or confirmed by a
 metadata lookup. It cannot establish the actual item's type or complete content validity. Consult
 `docs_item-definitions` for the bundled reference; Fabric validates actual item-type requirements
 and bindings. Comprehensive article-based validation is not implemented.
