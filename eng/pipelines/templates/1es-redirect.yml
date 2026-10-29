@@ -28,6 +28,7 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
       networkIsolationPolicy: ${{ parameters.NetworkIsolationPolicy }}
+      networkIsolationAdditionalDomainAllowList: learn.microsoft.com
       # only enable autoBaseline for the internal build of rust-core on main branch
       ${{ if parameters.AutoBaseline }}:
         featureFlags:
