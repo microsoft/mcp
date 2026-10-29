@@ -555,6 +555,45 @@ public sealed class ItemDefinitionUpdateMcpTests()
     }
 
     [Fact]
+    public async Task ConcurrentCalls_KeepDefinitionOptionsAndMetadataOptInIndependent()
+    {
+        var bothStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var arrivals = 0;
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
+            var marker = body.RootElement.GetProperty("options").GetProperty("marker").GetString();
+            var part = Assert.Single(body.RootElement.GetProperty("definition").GetProperty("parts").EnumerateArray());
+            Assert.Equal(marker, Encoding.UTF8.GetString(Convert.FromBase64String(part.GetProperty("payload").GetString()!)));
+            Assert.Equal(marker == "first" ? "?updateMetadata=true" : "", request.RequestUri?.Query);
+            if (Interlocked.Increment(ref arrivals) == 2)
+            {
+                bothStarted.TrySetResult();
+            }
+            await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
+            return new(HttpStatusCode.OK);
+        });
+        await using var provider = CreateServices(handler, FabricOperationTestData.Credential(), TransportTypes.Http);
+        var loader = Loader(provider, "all");
+
+        var results = await Task.WhenAll(new[] { "first", "second" }.Select(marker =>
+        {
+            var arguments = Arguments();
+            arguments["definition"] = JsonSerializer.Serialize(new FabricItemDefinition(
+                [new("content", Convert.ToBase64String(Encoding.UTF8.GetBytes(marker)), "InlineBase64")]), CoreJsonContext.Default.FabricItemDefinition);
+            arguments["options"] = $$"""{"marker":"{{marker}}"}""";
+            if (marker == "first")
+            {
+                arguments["update-metadata"] = true;
+            }
+            return loader.CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken).AsTask();
+        }));
+
+        Assert.All(results, static result => Assert.False(result.IsError));
+        Assert.Equal(2, handler.CallCount);
+    }
+
+    [Fact]
     public async Task ReadOnlyMode_HidesAndRejectsTheTool()
     {
         using var handler = NoHttp();

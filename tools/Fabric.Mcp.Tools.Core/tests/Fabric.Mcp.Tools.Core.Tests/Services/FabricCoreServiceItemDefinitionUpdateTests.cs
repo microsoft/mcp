@@ -242,6 +242,47 @@ public sealed class FabricCoreServiceItemDefinitionUpdateTests()
     }
 
     [Fact]
+    public async Task AcceptedResponse_DisposesContentWithoutReadingIt()
+    {
+        using var content = new UnreadableHttpContent();
+        using var handler = new FabricCoreHttpMessageHandler((_, _) =>
+        {
+            var response = FabricOperationTestData.Accepted();
+            response.Content = content;
+            return Task.FromResult(response);
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential());
+
+        var result = await UpdateAsync(service, new(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(FabricOperationStatus.Accepted, result.Operation.Status);
+        Assert.True(content.IsDisposed);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ThrottledInitiatingPost_DoesNotEnterTheReadRetryLoop()
+    {
+        using var content = new UnreadableHttpContent();
+        using var handler = new FabricCoreHttpMessageHandler((_, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests) { Content = content };
+            response.Headers.RetryAfter = new(TimeSpan.FromSeconds(9));
+            return Task.FromResult(response);
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential());
+
+        var error = await Assert.ThrowsAsync<FabricThrottledException>(() =>
+            UpdateAsync(service, new(Sync: true), TestContext.Current.CancellationToken));
+
+        Assert.Equal(TimeSpan.FromSeconds(9), error.RetryAfter.Delta);
+        Assert.True(content.IsDisposed);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
     public async Task AcceptedWithoutOperationId_DoesNotRecoverFromLocationOrResubmit()
     {
         using var handler = new FabricCoreHttpMessageHandler((_, _) =>
