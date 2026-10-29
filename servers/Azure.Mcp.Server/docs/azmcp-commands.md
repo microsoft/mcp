@@ -715,7 +715,7 @@ default credential context. `search service list` is a management-plane discover
 
 Definition commands require permission to read the corresponding Search object definitions. The query and knowledge-base
 retrieval commands also read definitions before accessing content, so Search Index Data Reader alone is not sufficient for
-their current implementation. See [Search resource-scoped access troubleshooting](../TROUBLESHOOTING.md#azure-ai-search-with-resource-level-access)
+their current implementation. See [Search resource-scoped access troubleshooting](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#azure-ai-search-with-resource-level-access)
 for role and authentication guidance.
 
 ### Azure AI Services Speech Operations
