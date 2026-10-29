@@ -17,6 +17,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
     Name = "summary",
     Title = "Summarize Advisor Recommendations",
     Description = "Summarize the key themes from Azure Advisor recommendation instances in a subscription or Azure service group using server-side counts, totals, rankings, and distributions. " +
+        "For --category Cost --sub-category IdleResources, start here to find unused Azure resources you are paying for and summarize their key themes, potential savings, accumulated waste, and realized savings. " +
+        "Historical savings cover resources deleted during --from/--to as of --as-of. " +
+        "Totals cover all matches; unavailable savings remain null. These are Advisor retail estimates, not billing history. " +
+        "Explicit --status overrides lifecycle defaults; historical Cost reports default to Completed. " +
+        "Also supports --subscriptions, metadata service-family and minimum annual potential-savings filters, and Service Groups in the selected tenant. " +
         "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
         "Use it for an executive summary or main themes, counts by category or business impact, the most common recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
         "This is the starting tool for top recommendations, top actions to take, most critical, most important, prioritized, highest-priority, or what-should-I-fix-first requests: set --prioritized true to rank active recommendation types by priority and explain each rank, instead of starting with recommendation list. " +
@@ -24,23 +29,12 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-id set to its key and --prioritized true, adding --category Cost for a Cost type. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +
-        "For --category Cost --sub-category IdleResources, summary.cost returns full-population retail savings, recommendation-type totals, lifecycle-status counts, " +
-        "and counts of bill-reducing opportunities, zero savings, and unavailable pricing, with or without --prioritized true. " +
-        "These Cost totals reuse the normal or prioritized summary calculation and are not limited by --top. " +
-        "Potential savings are annualized as dailyPotentialSavings × 30.4 × 12, with the legacy annual amount as fallback; " +
-        "accumulated open cost uses elapsed whole days plus estimatedAccumulatedSavings, and completed recommendations use " +
-        "resourceDeletedOn and realizedAccumulatedSavings for realized savings. Missing figures remain null, not zero. " +
-        "Calculated totals and rankings use the retail values supplied by Advisor; resource details preserve the original savings data. " +
-        "For historical Cost reporting, --as-of evaluates Advisor formulas " +
-        "at a supplied UTC timestamp, while --from and --to bound completed recommendations by resourceDeletedOn within the selected lifecycle states. " +
-        "Historical inputs default to Completed unless --status is explicitly supplied. summary.cost includes the supplied calculation timestamps. These are Advisor estimates, not billing history. " +
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
         "Use explicit exact, on-or-before, or on-or-after retirement-date questions; recommendation list is capped and must not be counted client-side. " +
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
         "All groups return canonical key, label, and count values. Recommendation-type keys are recommendation type ID GUIDs with English metadata labels. " +
-        "Explicit --status applies to every grouping. Without --status, historical inputs default to Completed; " +
-        "otherwise status grouping includes all lifecycle states and other groupings default to New. " +
-        "Use --subscription or --subscriptions for subscription scope, or --service-group for Service Group scope. A configured default subscription is used when none is supplied. --resource-group applies only with subscription scope. " +
+        "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
+        "Use either --subscription or --service-group, not both. A configured default subscription is used when neither is supplied. --resource-group applies only with subscription scope. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
         "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets; with --prioritized true it is the sum of affected resources per type, so a resource is counted once for each recommendation type that affects it.",

@@ -23,12 +23,11 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         When a user asks to ignore a recommendation because the risk is acceptable, dismiss it with the RiskIsAcceptable reason.
         Snooze an Advisor recommendation in a subscription or Azure service group until a future date and time. Snooze is the same operation as postpone and sets the recommendation to Postponed.
         Update, change, or set the customer-provided recommendation status or state to New, Postponed, Dismissed, or Completed. Common user requests may say mark done, ignore, reopen, or reset to New.
-        Supply either one stable --recommendation-id or an explicit --recommendation-ids batch, not both. A batch uses one destructive tool call and one server consent request, rather than a separate tool call per resource.
-        All batch IDs share the same scope, tenant, status, and postponement date or dismissal reason. Use either --subscription or --service-group, not both; the configured default subscription is used when neither is supplied.
+        Requires the stable recommendation ID and either --subscription or --service-group, but not both; the configured default subscription is used when neither is supplied.
         Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed, provide an explicit supported reason when known; if no reason is supplied or the user's intent cannot be mapped to one, Other is used.
         Use --tenant when the target subscription or service group is in a non-default tenant. State changes are rejected for Security category and platform-resolved recommendations.
-        A single-ID request returns the updated ARM recommendation resource as before. A batch returns per-ID Succeeded, Failed, Unverified, or NotAttempted outcomes; updates are independent, not atomic, and are not automatically retried.
-        Use this state-changing tool instead of list or summary when the user wants to modify or snooze selected recommendations.
+        Returns the updated ARM recommendation resource. Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.
+        For Cost/IdleResources, postpone, dismiss, complete, or reactivate unused-resource recommendations without changing resources. Use --recommendation-ids for a batch sharing scope, tenant, status, date, and reason; one consent request covers the batch. Returns per-ID Succeeded, Failed, Unverified, or NotAttempted outcomes; updates are not atomic or automatically retried.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,

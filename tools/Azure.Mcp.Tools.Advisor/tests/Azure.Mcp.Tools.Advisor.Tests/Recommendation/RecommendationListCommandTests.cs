@@ -24,6 +24,7 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
         Assert.Equal("list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.StartsWith("List, show, or search individual Azure Advisor recommendations", command.Description);
     }
 
     [Theory]
@@ -33,6 +34,8 @@ public class RecommendationListCommandTests : SubscriptionCommandUnitTestsBase<R
     [InlineData("--group-by recommendation-type and --prioritized true")]
     [InlineData("If the request identifies a specific recommendation type, use this tool directly")]
     [InlineData("For non-prioritized requests to retrieve individual recommendations, use this tool directly with any supported filters")]
+    [InlineData("For --category Cost --sub-category IdleResources")]
+    [InlineData("unused resources and their estimated savings")]
     public void Description_ExplainsIndividualRecommendationListing(string guidance)
     {
         Assert.Contains(guidance, Command.GetCommand().Description);

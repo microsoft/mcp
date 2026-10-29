@@ -11,6 +11,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure Advisor
 
+Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a resolved scope and selection; reuse existing results when they already answer the question. Remediation examples retrieve guidance, not execute cleanup.
+
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | advisor_metadata_get | Get the Advisor metadata for recommendation type id \<recommendation-type-id> | none |
@@ -66,7 +68,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
 | advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_list | Show Cost IdleResources recommendations for Service Group "Trey Research Shared Services" using its display name | none |
+| advisor_recommendation_list | Show Advisor's unused-resource recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
@@ -89,23 +91,25 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
 | advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
-| advisor_recommendation_list | Show completed Cost IdleResources recommendations in subscription \<subscription>, highest realized savings first | none |
-| advisor_recommendation_list | Show postponed Cost IdleResources recommendations in service group \<service-group>, highest yearly potential savings first | none |
+| advisor_recommendation_list | List unused-resource recommendations across subscriptions \<subscription-1> and \<subscription-2> | none |
+| advisor_recommendation_list | List unused-resource recommendations in resource group \<resource-group> in subscription \<subscription> | none |
+| advisor_recommendation_list | Show unused Storage resources in subscription \<subscription> with at least USD 100 in annual potential savings | none |
+| advisor_recommendation_list | Show dismissed unused-resource recommendations in service group \<service-group> | none |
 | advisor_recommendation_list | List individual Advisor recommendations in subscription \<subscription> whose metadata service family is Analytics | none |
-| advisor_recommendation_prevalidate | Check whether resources for Advisor Cost IdleResources recommendation type \<recommendation-type-id> in subscription \<subscription> pass read-only deletion prevalidation; do not delete or update anything | none |
-| advisor_recommendation_prevalidate | Prevalidate affected resource \<resource-id> for Advisor recommendation type \<recommendation-type-id> in Service Group \<service-group>, checking locks, dependencies, and a minimum unused age of 45 days | none |
-| advisor_recommendation_prevalidate | Are the idle resources I selected safe to delete? Reuse their exact recommendation type, resource IDs, and scope; show every check and manual confirmation without executing remediation | context-required |
-| advisor_recommendation_prevalidate | Explain which selected idle resources are confirmed already deleted using change history; show their deletion dates and no-action guidance separately from active blockers without changing recommendation state | context-required |
+| advisor_recommendation_prevalidate | Check whether unused resources for Advisor recommendation type \<recommendation-type-id> in service group \<service-group> are safe to delete | none |
+| advisor_recommendation_prevalidate | Check deletion safety for resource \<resource-id> under Advisor recommendation type \<recommendation-type-id> in subscription \<subscription>, requiring 45 days of inactivity | none |
+| advisor_recommendation_prevalidate | Are these selected unused resources safe to delete? | context-required |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | What Azure resources am I paying for that are no longer being used? | clarification-required |
+| advisor_recommendation_summary | For service group Trey Research Shared Services, what Azure resources am I paying for that are no longer being used? | none |
+| advisor_recommendation_summary | How much could we save by deleting those unused resources? | context-required |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | For Service Group "Trey Research Shared Services", what unused Azure resources am I paying for? | none |
-| advisor_recommendation_summary | Show Cost IdleResources savings for /providers/Microsoft.Management/serviceGroups/\<service-group-id> in tenant \<tenant> | none |
+| advisor_recommendation_summary | Show unused-resource savings for service group /providers/Microsoft.Management/serviceGroups/\<service-group-id> in tenant \<tenant> | none |
 | advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
-| advisor_recommendation_summary | Prioritize Compute Cost IdleResources recommendation types in service group \<service-group>, keeping full Compute totals while showing only the top type | none |
-| advisor_recommendation_summary | Prioritize completed Storage Cost IdleResources recommendation types in subscription \<subscription> by realized savings | none |
+| advisor_recommendation_summary | Show the top 3 unused-resource savings opportunities in service group \<service-group> | none |
 | advisor_recommendation_summary | Summarize Advisor recommendations in subscription \<subscription> whose metadata service family is AI + Machine Learning | none |
 | advisor_recommendation_summary | Prioritize Advisor recommendation types in service group \<service-group> whose metadata service family is Analytics | none |
 | advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
@@ -119,18 +123,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
-| advisor_recommendation_summary | Summarize Cost IdleResources Advisor recommendations with their potential, accumulated, and realized savings | none |
-| advisor_recommendation_summary | Show completed Cost IdleResources Advisor recommendations and their realized savings | none |
-| advisor_recommendation_summary | Rank completed Cost IdleResources recommendation types in subscription \<subscription> by realized savings, not resource count | none |
-| advisor_recommendation_summary | Show dismissed Cost IdleResources recommendation types in service group \<service-group>, highest yearly potential savings first | none |
-| advisor_recommendation_summary | Summarize Cost IdleResources Advisor recommendations in subscription \<subscription>, including total savings, accumulated waste, zero-savings opportunities, and unavailable pricing, without prioritizing | none |
-| advisor_recommendation_summary | Which Cost IdleResources recommendation types occur most often in subscription \<subscription>? Order by recommendation-record count, not savings | none |
-| advisor_recommendation_summary | How much have we saved after completed cleanup in Service Group \<service-group>? Show current Completed totals and resources, including unavailable pricing, without adding a historical window | none |
-| advisor_recommendation_summary | Show only the top Cost IdleResources recommendation type in subscription \<subscription>, but keep the complete retail USD report totals for every matching type | none |
-| advisor_recommendation_summary | Report Advisor Cost IdleResources savings for service group \<service-group> from September 1 to September 30, 2026 as of September 30, with lifecycle counts and the calculation window | none |
+| advisor_recommendation_summary | How much could we save by deleting unused resources in subscription \<subscription>? | none |
+| advisor_recommendation_summary | How much waste has accumulated since unused resources were flagged in subscription \<subscription>? | none |
+| advisor_recommendation_summary | How much have we saved after cleaning up unused resources in service group \<service-group>? | clarification-required |
 | advisor_recommendation_summary | Summarize completed Advisor recommendations by category in subscription \<subscription> | none |
-| advisor_recommendation_summary | Summarize active Cost IdleResources recommendations as of September 30, 2026 without including completed or dismissed records | none |
-| advisor_recommendation_summary | Rank Cost recommendations across my selected Service Groups, keeping EUR and USD savings separate | context-required |
+| advisor_recommendation_summary | Show estimated savings from unused resources across subscriptions \<subscription-1> and \<subscription-2> | none |
+| advisor_recommendation_summary | Report savings from unused resources deleted in July 2026 in subscription \<subscription>, as of August 1, 2026 UTC | none |
 | advisor_recommendation_list | Show Advisor recommendations for resource types Microsoft.Compute/virtualMachines and Microsoft.Web/serverfarms in subscription \<subscription> | none |
 | advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group \<service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
@@ -161,10 +159,16 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss unused-resource recommendation \<recommendation-id> in subscription \<subscription> because we are keeping the resource | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
 | advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
 | advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone unused-resource recommendations \<recommendation-id-1> and \<recommendation-id-2> in service group \<service-group> until \<future-date-time-with-offset> | none |
+| advisor_recommendation_update | Dismiss unused-resource recommendations \<recommendation-id-1> and \<recommendation-id-2> in subscription \<subscription> because we use an alternative solution | none |
+| advisor_recommendation_update | Mark unused-resource recommendation \<recommendation-id> as completed in subscription \<subscription> after cleanup | none |
+| advisor_recommendation_update | Reactivate unused-resource recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Postpone those unused-resource recommendations until \<future-date-time-with-offset> | context-required |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
 | advisor_recommendation_update | Postpone these selected Advisor recommendation IDs \<id1>, \<id2> together in subscription \<subscription> until \<future-date-time-with-offset>, with one batch approval | context-required |
 | advisor_recommendation_update | Dismiss selected Advisor recommendation IDs \<id1>, \<id2> in service group \<service-group> because the risk is acceptable, and report each result | context-required |
@@ -175,6 +179,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
 | advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Show cleanup steps and scripts for unused-resource recommendation type \<recommendation-type-id> | none |
+| advisor_remediation_get | Show cleanup guidance for those unused disks | context-required |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
 | advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Show me the remediation actions for recommendation type id \<recommendation-type-id> | none |

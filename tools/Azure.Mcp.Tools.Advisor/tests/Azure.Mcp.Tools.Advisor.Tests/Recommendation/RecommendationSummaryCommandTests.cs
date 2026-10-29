@@ -27,8 +27,13 @@ public class RecommendationSummaryCommandTests
         Assert.Equal("summary", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
+        Assert.StartsWith("Summarize the key themes from Azure Advisor recommendation instances", command.Description);
         Assert.Contains("--service-group", command.Description);
         Assert.Contains("--category Cost --sub-category IdleResources", command.Description);
+        Assert.Contains("start here to find unused Azure resources you are paying for", command.Description);
+        Assert.Contains("Totals cover all matches", command.Description);
+        Assert.Contains("unavailable savings remain null", command.Description);
+        Assert.Contains("Advisor retail estimates, not billing history", command.Description);
         Assert.DoesNotContain("Preserve the returned Retail pricing basis", command.Description);
         Assert.Equal(typeof(string), Assert.Single(command.Options, static option => option.Name == "--service-group").ValueType);
         Assert.Equal(typeof(string[]), Assert.Single(command.Options, static option => option.Name == "--subscriptions").ValueType);

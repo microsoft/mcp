@@ -61,6 +61,10 @@ public class RecommendationUpdateCommandTests
         Assert.NotEmpty(command.Description);
         Assert.Contains("--subscription", command.Description);
         Assert.Contains("--service-group", command.Description);
+        Assert.Contains("Cost/IdleResources", command.Description);
+        Assert.Contains("--recommendation-ids", command.Description);
+        Assert.Contains("without changing resources", command.Description);
+        Assert.Contains("not atomic or automatically retried", command.Description);
     }
 
     [Fact]

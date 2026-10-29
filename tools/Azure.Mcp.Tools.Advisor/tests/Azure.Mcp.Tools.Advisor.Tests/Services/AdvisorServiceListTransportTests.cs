@@ -869,7 +869,7 @@ public sealed class AdvisorServiceListTransportTests
         var azureService = Substitute.For<IAzureService>();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         azureService.GetSubscription(Arg.Any<string>(), null, Arg.Any<CancellationToken>())
-            .Returns(async call =>
+            .Returns(async Task<SubscriptionResource> (call) =>
             {
                 started.TrySetResult();
                 await Task.Delay(Timeout.InfiniteTimeSpan, call.ArgAt<CancellationToken>(2));
