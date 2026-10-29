@@ -15,16 +15,17 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Insight;
     Id = "21f626b9-a95f-4db0-8dcc-8959e11d8d92",
     Name = "list",
     Title = "List Advisor Insights",
-    Description = "Show Azure Advisor insights for one Service Group, one subscription, or across all accessible Service Groups and subscriptions. " +
-              "Use for questions on insights like idle resources and potential savings, zonal resiliency coverage, or service retirement impact. " +
-              "For Service Groups, answer how many idle resources exist and their potential savings amount in USD. " +
-              "Get ServiceRetirement insights for subscriptions and Service Groups, including Day 1 baseline exposure, current remaining exposure, and burndown percentage. " +
-              "Compare baseline and current counts to measure retirement exposure reduction or increase, and compare scopes by remaining retirement backlog. " +
-              "Identify subscriptions or Service Groups that have reached 100 percent burndown with zero remaining retirement exposure. " +
-              "Show how much a subscription's service retirement exposure has reduced or increased since its Day 1 baseline count. " +
-              "Get ServiceRetirement baseline and current exposure for a subscription; compare subscriptions or Service Groups by remaining retirement exposure. " +
-              "Optionally filter by --insight-name (IdleResources, ZonalResiliency, ServiceRetirement) and cap results with --top (default 50, max 500). " +
-              "Each insight returns name, domain, scope type and ID, last updated time, and KPIs with typed values (USD amounts include a unit). ",
+    Description = "Show Azure Advisor pre-aggregated insights for one Service Group, one subscription, or across all accessible Service Groups and subscriptions. " +
+                "Use for pre-aggregated insight KPIs: idle resource counts and potential savings, zonal resiliency coverage percentages, and service retirement baseline and current exposure counts. " +
+                "For Service Groups, answer how many idle resources exist and their potential savings amount in USD. " +
+                "Get ServiceRetirement insights for subscriptions and Service Groups, including Day 1 baseline exposure, current remaining exposure, and burndown percentage. " +
+                "Compare baseline and current counts to measure retirement exposure reduction or increase, and compare scopes by remaining retirement backlog. " +
+                "Identify subscriptions or Service Groups that have reached 100 percent burndown with zero remaining retirement exposure. " +
+                "Show how much a subscription's service retirement exposure has reduced or increased since its Day 1 baseline count. " +
+                "Get ServiceRetirement baseline and current exposure for a subscription; compare subscriptions or Service Groups by remaining retirement exposure. " +
+                "Optionally filter by --insight-name (IdleResources, ZonalResiliency, ServiceRetirement) and cap results with --top (default 50, max 500). " +
+                "Each insight returns name, domain, scope type and ID, last updated time, and KPIs with typed values (USD amounts include a unit). " +
+                "Returns pre-aggregated insight KPIs, not individual resource or recommendation lists. For recommendation insights, use advisor recommendation summary; for individual recommendations and affected resources, use advisor recommendation list.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
