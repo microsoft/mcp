@@ -5,9 +5,11 @@ targetScope = 'resourceGroup'
 @description('The base resource name.')
 param baseName string = resourceGroup().name
 
-@description('The location of the resource. By default, this is the same as the resource group.')
+@description('The location of the resource. Selected by test-resources-pre.ps1 to be a region with AMLFS availability zone support.')
 param location string = resourceGroup().location
 
+@description('The availability zone for the AMLFS. Selected by test-resources-pre.ps1 from the zones supported in the location.')
+param zone string = '1'
 @description('Virtual network address prefix')
 param vnetAddressPrefix string = '10.20.0.0/16'
 
@@ -234,7 +236,7 @@ resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   name: baseName
   location: location
-  zones: ['1']
+  zones: [zone]
   sku: {
     name: amlfsSku
   }
@@ -260,3 +262,4 @@ output AMLFS_ID string = amlfs.id
 output AMLFS_SUBNET_ID string = filesystemSubnetId
 output AMLFS_SUBNET_SMALL_ID string = filesystemSmallSubnetId
 output LOCATION string = location
+output ZONE string = zone

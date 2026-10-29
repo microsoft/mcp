@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Core.csproj" />
-    <ProjectReference Include="..\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
     <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
   </ItemGroup>
   <ItemGroup>

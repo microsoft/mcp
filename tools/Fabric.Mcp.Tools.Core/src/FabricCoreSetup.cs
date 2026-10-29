@@ -18,6 +18,7 @@ public class FabricCoreSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IFabricItemDefinitionFileService, FabricItemDefinitionFileService>();
         services.AddHttpClient<IFabricCoreService, FabricCoreService>()
             .ConfigurePrimaryHttpMessageHandler(static (handler, _) =>
             {

@@ -1,9 +1,12 @@
 # Fabric.Mcp.Tools.Core.Tests
+<!-- cspell:words TMDL pbism -->
 
 Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
+- **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -96,6 +99,103 @@ Public operation commands and the poller share the same low-level methods in `Fa
 The shared wait options enforce a 600-second server maximum while keeping the 120-second default and positive fractional budgets. Command and service tests reject invalid and over-limit budgets before authentication or POST in both sync modes. Virtual-clock cases verify that waiting for the allowed 600 seconds returns `Pending` with the last-known state and never sends another GET after the deadline; the limit does not cancel Fabric's operation.
 
 All LRO/Create Item coverage is offline. It does not call real Fabric, validate real OBO permissions, deploy resources, run recorded tests, or establish production latency percentiles. Capacity assignment and Catalog Search retain their pre-existing published contracts and operation-specific tests.
+
+## Local Definition File Infrastructure
+
+`IFabricItemDefinitionFileService` is an injectable, stateless file/part converter registered by
+`FabricCoreSetup`. It uses ordinary `System.IO`, following Azure's area-specific file services,
+without depending on or changing Azure tools. It makes no network requests, exposes no MCP commands,
+and does not change existing Create Item models, API behavior, or the Core tool catalog.
+
+The wire models are `FabricItemDefinition` (`parts`, optional `format`) and
+`FabricItemDefinitionPart` (`path`, `payload`, `payloadType`), registered in `CoreJsonContext`.
+File I/O supports `InlineBase64` only and preserves bytes, including binary assets, text encodings,
+line endings, empty files, nested paths, and `.platform`. Invalid Base64 and unsupported payload
+types are errors, never skipped parts.
+
+### Reading Saved Files
+
+`ReadAsync` takes an existing absolute directory, an explicit list of `FabricItemDefinitionFile`
+entries, and an optional format. `PartPath` is the logical Fabric path; optional `SourcePath` maps
+it to a different relative file under the selected directory. Source paths accept native or `/`
+separators, but logical part paths use `/`. The reader never enumerates the directory implicitly:
+unselected editor files, local caches, and secrets are not included simply because they share a folder.
+It reads saved files, not Git HEAD or unsaved editor buffers, and does not rename or modify them.
+
+```csharp
+var definition = await definitionFiles.ReadAsync(
+    sourceDirectory,
+    [new("artifact.content.ipynb", "notebooks/sales.ipynb")],
+    format: "ipynb",
+    cancellationToken: cancellationToken);
+```
+
+Length and modification-time checks detect changes observed during packaging. This is not an atomic
+snapshot of a concurrently edited directory: callers should save their files and stop editing while
+packaging. The returned parts are a bounded in-memory snapshot for the subsequent API request.
+
+### Writing Completed Definitions
+
+`WriteAsync` takes a completed definition and an explicit new absolute output directory whose parent
+already exists. It validates all part paths and payloads first, writes into a temporary sibling
+directory, then moves that completed directory into place. Existing destinations are never merged,
+overwritten, or deleted. It returns the published absolute directory; the caller already has the
+definition's part list and format for its result. Retain that format when reading the files back.
+
+```csharp
+var outputDirectory = await definitionFiles.WriteAsync(
+    newOutputDirectory, definition, cancellationToken);
+```
+
+Failures and cancellation are propagated rather than returning success for partial output. The writer
+attempts to remove only its temporary directory and logs cleanup failures without masking the original
+error. Unlike Azure Resiliency's general artifact writer, it must not flatten paths, invent replacement
+file names, or fall back silently to an incomplete file set.
+
+### Budgets and Filesystem Boundaries
+
+`FabricItemDefinitionFileLimits` supplies host-level packaging budgets, not MCP options or Fabric API
+quotas. Defaults are 1,024 parts, 16 MiB decoded per part, and 32 MiB decoded in total; hosts and tests
+can supply smaller or different explicit budgets. Encoded input per part is also bounded to the
+Base64 length implied by its decoded budget. Paths are limited to 1,024 characters and 255 characters
+per segment. No content is truncated to meet a budget.
+
+Only local absolute directories are accepted. Relative part/source paths cannot escape the selected
+directory. Logical paths reject traversal, absolute paths, alternate data streams, device names,
+non-portable characters, duplicate names (case-insensitively), and file/directory collisions.
+The implementation checks existing path components for symbolic links, junctions, and device paths,
+including ancestors of the selected root. Use actual local paths rather than linked directories.
+These checks are not an OS sandbox against hostile processes concurrently replacing filesystem
+entries; the local filesystem and its permissions must be trusted.
+
+Future MCP commands that expose disk reads or writes must declare `LocalRequired = true`, reusing
+the existing HTTP discovery/invocation restrictions. The service deliberately contains no transport
+checks. Remote-capable commands should take or return definition content without exposing arbitrary
+paths on the server. Local file conversion adds no Fabric requests.
+
+### Item-specific Validation Belongs with the Tool Adapters
+
+The bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
+and the `docs_item-definitions` tool describe required parts and supported formats for most item
+types. Use those authoritative local resources when implementing folder selection and item-specific
+checks in the definition command PRs, without an extra Fabric request. Markdown prose is not itself
+a JSON Schema; do not infer a universal validator by parsing its tables at runtime.
+
+This infrastructure validates the generic envelope and filesystem representation only. It does not
+claim a supplied part list is complete or valid for a particular item type, discover an item from
+its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
+For example, the later adapter must select the required `definition.pbism` plus TMDL parts for a
+semantic model, and apply the documented `.platform` policy for Create versus Update Definition.
+
+Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
+definition to export. Keep endpoint-specific result sizes separate from these file budgets:
+the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
+
+All file tests use isolated temporary directories with no Azure or Fabric requests. The fixture
+resolves system temporary-directory aliases, such as macOS `/var`, before creating its test data;
+the product continues to reject linked paths. Symbolic-link
+tests run when the host permits link creation; on Windows without the necessary privilege they
+report an explicit skip, rather than silently passing.
 
 ## Item Metadata
 

@@ -17,9 +17,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
     Title = "Get or List Resilience Goal Resources",
     Description = """
         Gets the resources (members) of a resilience goal assignment. Provide a goal resource name to get the
-        full details of that resource (id, name, disaster recovery and high availability attestation status and
-        goal participation, exclusion reasons, provisioning state, the resource ARM id, and service group
-        memberships). Omit the name to list all resources of the goal assignment, returning only their id and name.
+        full details of that resource (id, name, resource ARM id, provisioning state, and zonal resiliency
+        participation, attestation, exclusion reason, and user confirmations). Omit the name to list all goal
+        resources, returning id and name.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
