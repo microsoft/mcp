@@ -9,6 +9,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
+Tool names below are the unchanged global registration names. In default namespace mode, invoke the owning service tool with its canonical relative command name. For example, `appservice_webapp_get` is invoked as tool `appservice`, command `webapp_get`. Old prefixed command names remain supported.
+
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
@@ -276,6 +278,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_webapp_get | Show me the web apps in my resource group <resource_group> | investigation-required |
 | appservice_webapp_get | Get the details for web app \<webapp> in resource group <resource_group> | none |
 | appservice_webapp_get | Get app service details for \<app-service-resource-id> | none |
+| appservice_webapp_get | In namespace mode, use the appservice tool with command webapp_get to get web app \<webapp> in resource group \<resource-group> and subscription \<subscription> | none |
 | appservice_webapp_deployment_get | List the deployments for web app \<webapp> in resource group <resource_group> | none |
 | appservice_webapp_deployment_get | Get the deployment \<deployment-id> for web app \<webapp> in resource group <resource_group> | none |
 | appservice_webapp_settings_get-appsettings | List the application settings for web app \<webapp> in resource group <resource_group> | none |
@@ -693,6 +696,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | deploy_app_logs_get | Show me the log of the application deployed by azd | context-required |
+| deploy_app_logs_get | In namespace mode, use deploy with command app_logs_list to list the application logs for my azd project | context-required |
 | deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application | context-required |
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep | none |
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
@@ -867,6 +871,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_device_list | List the registered devices for IoT Hub <hub_name> in subscription <subscription_id> | none |
 | iothub_device_show | Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name> | none |
 | iothub_device_show | Get the device identity for <device_id> in IoT Hub <hub_name> | none |
+| iothub_device_show | In namespace mode, use iothub with command device_get to retrieve device \<device-id> in hub \<hub> in resource group \<resource-group> and subscription \<subscription> | none |
 | iothub_device_stats | Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name> | none |
 | iothub_device_stats | How many devices are registered in IoT Hub <hub_name>? | none |
 | iothub_device_twin_get | Get the device twin for <device_id> in IoT Hub <hub_name> | none |
@@ -1019,6 +1024,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> | none |
 | managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> | none |
 | managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location \<location> | none |
+| managedlustre_fs_sku_get | In namespace mode, use managedlustre with command fs_sku_list to list available SKUs in \<location> for subscription \<subscription> | none |
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU \<sku> | none |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU \<sku> | none |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> | none |
@@ -1411,6 +1417,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | pricing_get | What is the price of Standard_D4s_v5 VMs? | none |
+| pricing_get | In namespace mode, use pricing with command list to list retail prices for SKU Standard_D4s_v5 in eastus | none |
 | pricing_get | What's the price difference between Premium_LRS and Standard_LRS storage? | clarification-required |
 | pricing_get | Get consumption price for Standard_E8s_v5 in brazil | none |
 | pricing_get | What is the price for Virtual Machines? | clarification-required |
@@ -1705,6 +1712,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | workbooks_list | What workbooks do I have in resource group <resource_group_name>? | none |
 | workbooks_show | Get information about the workbook with resource ID <workbook_resource_id> | none |
 | workbooks_show | Show me the workbook with resource ID <workbook_resource_id> | none |
+| workbooks_show | In namespace mode, use workbooks with command get to retrieve the definition of workbook \<workbook-resource-id> | none |
 | workbooks_update | Update the workbook <workbook_resource_id> with a new text step | clarification-required |
 
 ## Bicep

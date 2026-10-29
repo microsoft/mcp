@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.Sku;
 [CommandMetadata(
     Id = "43f679ba-1b6e-4851-9315-f8ad16b789e5",
     Name = "get",
+    NamespaceOperationName = "list",
     Title = "Get AMLFS SKU information",
     Description = "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
     OperationPlane = ToolOperationPlane.Control,

@@ -18,6 +18,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -324,6 +325,7 @@ internal class Program
         var thisAssembly = typeof(Program).Assembly;
 
         services.InitializeConfigurationAndOptions(thisAssembly);
+        services.Configure<McpServerConfiguration>(options => options.UseRelativeNamespaceCommandNames = true);
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();

@@ -3,6 +3,24 @@
 > [!IMPORTANT]
 > The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
+## Namespace command names
+
+In the default namespace mode (`azmcp server start` or `--mode namespace`), each built-in service tool uses command names relative to that service. For example, call the `appservice` tool with `"command": "webapp_get"`, the `sql` tool with `"command": "db_get"`, or the `acr` tool with `"command": "registry_list"`. Put command arguments inside `"parameters"`.
+
+Use `get` for retrieving a specific resource or for a command that supports both retrieval and listing. Use `list` for collection-only operations. A collection-shaped result does not by itself imply `list`: retrieving a configuration, document, or an explicit batch of resource IDs is still `get`.
+
+Namespace discovery (`"learn": true` with an empty `"intent"`) advertises canonical relative names. Existing fully qualified names, such as `appservice_webapp_get`, remain accepted as compatibility aliases. For the following standardized operations, the old relative spelling is also accepted:
+
+| Namespace tool | Canonical command | Previous registered command | Previous relative alias |
+|---|---|---|---|
+| `deploy` | `app_logs_list` | `deploy_app_logs_get` | `app_logs_get` |
+| `iothub` | `device_get` | `iothub_device_show` | `device_show` |
+| `managedlustre` | `fs_sku_list` | `managedlustre_fs_sku_get` | `fs_sku_get` |
+| `pricing` | `list` | `pricing_get` | `get` |
+| `workbooks` | `get` | `workbooks_show` | `show` |
+
+This naming applies only to built-in Azure namespace routing. CLI paths documented below, global tool names in all/single mode, direct utility tools, consolidated mode, and external MCP proxy command names are unchanged. Compatibility aliases use the same parameters, results, consent requirements, and availability restrictions as their canonical commands.
+
 ## Global Options
 
 The following options are available for most commands:

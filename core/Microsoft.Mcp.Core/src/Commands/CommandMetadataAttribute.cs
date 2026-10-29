@@ -22,6 +22,11 @@ public sealed class CommandMetadataAttribute : Attribute
     public required string Name { get; init; }
 
     /// <summary>
+    /// An optional operation name for relative namespace routing, without changing CLI or global tool names.
+    /// </summary>
+    public string? NamespaceOperationName { get; init; }
+
+    /// <summary>
     /// The command description shown to AI agents and in help text.
     /// </summary>
     public required string Description { get; init; }
@@ -55,7 +60,8 @@ public sealed class CommandMetadataAttribute : Attribute
     internal bool IsValid() => !string.IsNullOrWhiteSpace(Id) &&
         !string.IsNullOrWhiteSpace(Name) &&
         !string.IsNullOrWhiteSpace(Description) &&
-        !string.IsNullOrWhiteSpace(Title);
+        !string.IsNullOrWhiteSpace(Title) &&
+        (NamespaceOperationName is null || NamespaceOperationName is "get" or "list");
 
     internal ToolMetadata ToToolMetadata() => new()
     {

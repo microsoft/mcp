@@ -1395,12 +1395,226 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         });
     }
 
+    [Fact]
+    public async Task RelativeNames_AllRegisteredAzureNamespacesAreCollisionFree()
+    {
+        await using var loader = new NamespaceToolLoader(new CommandContextAccessor(), _commandFactory, _configuration, _logger,
+            useRelativeNames: true);
+        var overrides = new Dictionary<string, string>
+        {
+            ["deploy_app_logs_get"] = "app_logs_list",
+            ["managedlustre_fs_sku_get"] = "fs_sku_list",
+            ["pricing_get"] = "list",
+            ["iothub_device_show"] = "device_get",
+            ["workbooks_show"] = "get"
+        };
+        var actualOverrides = _commandFactory.AllCommands
+            .Where(item => item.Value.Command.NamespaceOperationName is not null)
+            .Select(item => item.Key).Order(StringComparer.Ordinal).ToArray();
+        Assert.Equal(overrides.Keys.Order(StringComparer.Ordinal), actualOverrides);
+
+        foreach (var group in _commandFactory.RootGroup.SubGroup
+            .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase)))
+        {
+            var registrations = _commandFactory.GroupCommands([group.Name]);
+            var catalog = NamespaceCommandCatalog.Create(group.Name, registrations, true);
+            Assert.Equal(registrations.Count, catalog.Commands.Count);
+            foreach (var (registeredName, registration) in registrations)
+            {
+                var route = Assert.IsType<NamespaceCommand>(catalog.Resolve(registeredName));
+                Assert.Same(registration.Command, route.Registration.Command);
+                Assert.Equal(registration.ToolNamespaceName, route.Registration.ToolNamespaceName);
+                var expected = overrides.TryGetValue(registeredName, out var overriddenName)
+                    ? overriddenName : registeredName[(group.Name.Length + 1)..];
+                Assert.Equal(expected, route.Name);
+            }
+        }
+
+        var request = BaseToolLoaderTests.CreateCommandRequest(BaseToolLoaderTests.CreateSamplingServer(false), toolName: "appservice");
+        Assert.Contains(loader.GetChildToolList(request, "appservice"), tool => tool.Name == "webapp_get");
+        Assert.Contains(loader.GetChildToolList(request, "sql"), tool => tool.Name == "db_get");
+        Assert.Contains(loader.GetChildToolList(request, "acr"), tool => tool.Name == "registry_list");
+    }
+
+    [Theory]
+    [InlineData("item_list", null)]
+    [InlineData("ITEM_LIST", StructuredOutputMode.Compact)]
+    [InlineData("item_get", StructuredOutputMode.Duplicated)]
+    [InlineData("storage_item_get", StructuredOutputMode.Compact)]
+    public async Task RelativeNames_AllSpellingsExecuteSameRegistrationWithoutSampling(
+        string requestedName, StructuredOutputMode? outputMode)
+    {
+        var command = CreateRoutingCommand("get");
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command },
+            new ServerRuntimeConfiguration { StructuredOutputMode = outputMode }, useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(true);
+        using var activity = new Activity("relative-name").Start();
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server,
+            command: requestedName, parametersJson: """{"subscription":"example","limit":3}"""), cancellation.Token);
+
+        Assert.False(result.IsError);
+        activity.AssertTagEquals(TagName.ToolName, "storage_item_get");
+        await command.Received(1).ExecuteAsync(
+            Arg.Is<CommandContext>(context => context.ToolNamespaceName == "storage"),
+            Arg.Is<ParseResult>(parsed => parsed.GetValue<string>("--subscription") == "example" &&
+                parsed.GetValue<int>("--limit") == 3), cancellation.Token);
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+        if (outputMode is not null)
+        {
+            Assert.True(result.StructuredContent.HasValue);
+            Assert.Equal("item_list", result.StructuredContent.Value.GetProperty("command").GetString());
+        }
+    }
+
+    [Theory]
+    [InlineData("item_list")]
+    [InlineData("item_get")]
+    [InlineData("STORAGE_ITEM_GET")]
+    public async Task RelativeNames_SamplingUsesCanonicalCatalogAndAcceptsLegacyNames(string sampledName)
+    {
+        var command = CreateRoutingCommand("get");
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command }, useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(true,
+            $$$"""{"command":"{{{sampledName}}}","parameters":{"limit":5}}""");
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        await command.Received(1).ExecuteAsync(Arg.Any<CommandContext>(),
+            Arg.Is<ParseResult>(parsed => parsed.GetValue<int>("--limit") == 5), TestContext.Current.CancellationToken);
+        await server.Received(1).SendRequestAsync(Arg.Is<JsonRpcRequest>(request =>
+            request.Method == "sampling/createMessage" &&
+            request.Params!.ToJsonString().Contains("item_list") &&
+            !request.Params.ToJsonString().Contains("storage_item_get")), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true, false, "item_get")]
+    [InlineData(true, false, "storage_item_get")]
+    [InlineData(false, true, "item_list")]
+    [InlineData(false, true, "storage_item_get")]
+    public async Task RelativeNames_AliasesCannotBypassConfigurationFilters(bool readOnly, bool http, string requestedName)
+    {
+        var command = CreateRoutingCommand("get", readOnly: !readOnly, localRequired: http);
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command },
+            new ServerRuntimeConfiguration { ReadOnly = readOnly, Transport = http ? TransportTypes.Http : TransportTypes.StdIo },
+            useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(true);
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server, command: requestedName),
+            TestContext.Current.CancellationToken);
+
+        BaseToolLoaderTests.AssertUnknownCommandResult(result, "storage", requestedName);
+        await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+        await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RelativeNames_LearnAndErrorsAdvertiseCanonicalNamesOnly()
+    {
+        var command = CreateRoutingCommand("get");
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command }, useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+        var request = BaseToolLoaderTests.CreateCommandRequest(server, learn: true, intent: "");
+
+        var learn = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var tool = Assert.Single(loader.GetChildToolList(request, "storage"));
+        Assert.Equal("item_list", tool.Name);
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(learn.Content)).Text;
+        Assert.Contains("item_list", text);
+        Assert.DoesNotContain("item_get", text);
+
+        var error = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server), TestContext.Current.CancellationToken);
+        BaseToolLoaderTests.AssertUnknownCommandResult(error, "storage", "invalid_command", "item_list");
+    }
+
+    [Fact]
+    public async Task RelativeNames_MissingParameterSpecificationUsesCanonicalName()
+    {
+        var command = CreateRoutingCommand("get");
+        command.NamespaceOperationName.Returns("list");
+        command.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(new CommandResponse
+        {
+            Status = System.Net.HttpStatusCode.BadRequest,
+            Message = "Missing required options: subscription"
+        });
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command }, useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server, command: "storage_item_get"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        var text = Assert.IsType<TextContentBlock>(result.Content[0]).Text;
+        Assert.Contains("item_list", text);
+        Assert.DoesNotContain("storage_item_get", text);
+    }
+
+    [Theory]
+    [InlineData(ModeTypes.ConsolidatedProxy, true)]
+    [InlineData(ModeTypes.NamespaceProxy, false)]
+    public async Task RelativeNames_RequireNamespaceModeAndExplicitOptIn(string mode, bool optIn)
+    {
+        var command = CreateRoutingCommand("get");
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command },
+            new ServerRuntimeConfiguration { Mode = mode }, useRelativeNames: optIn);
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server, command: "storage_item_get"),
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var request = BaseToolLoaderTests.CreateCommandRequest(server);
+        Assert.Equal("storage_item_get", Assert.Single(loader.GetChildToolList(request, "storage")).Name);
+    }
+
+    [Fact]
+    public async Task RelativeNames_RejectCollisionsBeforeFiltering()
+    {
+        var command = CreateRoutingCommand("get", readOnly: false);
+        command.NamespaceOperationName.Returns("list");
+        await using var loader = CreateRoutingLoader(new()
+        {
+            ["storage_item_get"] = command,
+            ["storage_item_list"] = CreateRoutingCommand("list")
+        }, new ServerRuntimeConfiguration { ReadOnly = true }, useRelativeNames: true);
+        var request = BaseToolLoaderTests.CreateCommandRequest(BaseToolLoaderTests.CreateSamplingServer(false));
+
+        Assert.Throws<InvalidOperationException>(() => loader.GetChildToolList(request, "storage"));
+    }
+
+    [Theory]
+    [InlineData("item_get")]
+    [InlineData("storage_item_get")]
+    public async Task RelativeNames_AliasesStillRequireConsent(string requestedName)
+    {
+        var command = CreateRoutingCommand("get");
+        command.Metadata.Returns(new ToolMetadata { ReadOnly = true, Secret = true, Destructive = false });
+        await using var loader = CreateRoutingLoader(new() { ["storage_item_get"] = command }, useRelativeNames: true);
+        var server = BaseToolLoaderTests.CreateSamplingServer(false);
+
+        var result = await loader.CallToolHandler(BaseToolLoaderTests.CreateCommandRequest(server, command: requestedName),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Contains("requires user consent", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        await command.DidNotReceiveWithAnyArgs().ExecuteAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
     // Helper methods
 
     private NamespaceToolLoader CreateRoutingLoader(
         Dictionary<string, IBaseCommand> commands,
         ServerRuntimeConfiguration? configuration = null,
-        string namespaceName = "storage")
+        string namespaceName = "storage",
+        bool useRelativeNames = false)
     {
         var group = new CommandGroup(namespaceName, "Namespace commands");
         foreach (var (name, command) in commands)
@@ -1415,7 +1629,7 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             item => item.Key, item => new CommandRegistration(item.Value, namespaceName)));
         configuration ??= new ServerRuntimeConfiguration();
         return new NamespaceToolLoader(new CommandContextAccessor(), factory, Microsoft.Extensions.Options.Options.Create(configuration), _logger,
-            applyFilter: configuration.Mode != ModeTypes.ConsolidatedProxy);
+            applyFilter: configuration.Mode != ModeTypes.ConsolidatedProxy, useRelativeNames: useRelativeNames);
     }
 
     private static IBaseCommand CreateRoutingCommand(
@@ -1426,6 +1640,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         underlyingCommand.Options.Add(new Option<string>("--subscription") { Description = description });
         underlyingCommand.Options.Add(new Option<int>("--limit") { Description = description });
         var command = Substitute.For<IBaseCommand>();
+        command.Name.Returns(name);
+        command.NamespaceOperationName.Returns((string?)null);
         command.Metadata.Returns(new ToolMetadata { ReadOnly = readOnly, LocalRequired = localRequired, Destructive = false });
         command.GetCommand().Returns(underlyingCommand);
         command.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(CreateSuccessfulCommandResponse());

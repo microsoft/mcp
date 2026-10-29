@@ -890,6 +890,8 @@ See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/mai
 
 # Usage
 
+In default namespace mode, built-in Azure tools use service-relative command names: call `appservice` with `"command": "webapp_get"` rather than repeating `appservice_`. Existing prefixed names remain accepted. Retrieval commands use `get` for single-resource or combined retrieval/listing operations and `list` for collection-only operations. CLI paths, global tool names, consolidated mode, and external MCP proxies are unchanged. See [Namespace command names](docs/azmcp-commands.md#namespace-command-names) for compatibility aliases and examples.
+
 ## Getting Started
 
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) <!-- remove-section: start vsix remove_intellij_uri -->or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode)<!-- remove-section: end remove_intellij_uri --> and switch to Agent mode.

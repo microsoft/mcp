@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
 [CommandMetadata(
     Id = "c5a8f7d2-9e3b-4a1c-8d6f-2b5e9c4a7d3e",
     Name = "get",
+    NamespaceOperationName = "list",
     Title = "Get Azure Retail Pricing",
     Description = """
         Get Azure retail pricing information. Do NOT call this tool if the user provides only a broad service name (e.g., "Virtual Machines", "Storage", "SQL Database") without a specific SKU—ask for the exact SKU or tier first. 

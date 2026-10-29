@@ -42,6 +42,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
         Id = attr.Id;
         Name = attr.Name;
+        NamespaceOperationName = attr.NamespaceOperationName;
         Description = attr.Description;
         Title = attr.Title;
         Metadata = attr.ToToolMetadata();
@@ -52,6 +53,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     public string Id { get; }
     public string Name { get; }
+    public string? NamespaceOperationName { get; }
     public string Description { get; }
     public string Title { get; }
     public ToolMetadata Metadata { get; }
