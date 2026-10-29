@@ -66,6 +66,12 @@ public class AdvisorInsightService(IAzureService azureService)
             tenantResource = await ResolveTenantResourceAsync(tenant, cancellationToken);
         }
 
+        var queryTenantId = tenantResource.Data.TenantId
+            ?? throw new InvalidOperationException("The selected Azure tenant does not have a tenant ID.");
+        var client = await CreateArmClientAsync(queryTenantId.ToString(), cancellationToken: cancellationToken);
+        tenantResource = await client.GetTenants().FirstAsync(
+            candidate => candidate.Data.TenantId == queryTenantId, cancellationToken);
+
         var query = BuildInsightsQuery(serviceGroup, subscriptionId, insightName);
 
         async Task<InsightPage> FetchAsync(int pageSize, string? skipToken, CancellationToken ct)
@@ -80,6 +86,14 @@ public class AdvisorInsightService(IAzureService azureService)
             }
 
             var response = await tenantResource.GetResourcesAsync(queryContent, ct);
+            if (response.GetRawResponse().Headers.TryGetValue("x-ms-tenant-subscription-limit-hit", out var limitHit)
+                && string.Equals(limitHit, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Azure Resource Graph omitted subscriptions because the tenant subscription limit was reached. " +
+                    "Specify --subscription to query a single subscription.");
+            }
+
             var result = response.Value;
             var isTruncated = result.ResultTruncated == ResultTruncated.True;
             if (result.Count == 0)

@@ -2,8 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Core;
+using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Services;
 using Azure.Mcp.Tools.Advisor.Services.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Advisor.Tests.Services;
@@ -183,6 +190,76 @@ public class AdvisorInsightServiceTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => AdvisorInsightService.CollectInsightsAsync(Fetch, 100, CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("commerce", false)]
+    [InlineData(null, true)]
+    [InlineData("commerce", true)]
+    public async Task ListInsightsAsync_ExplicitTenant_UsesSelectedTenantCredential(
+        string? serviceGroup, bool subscriptionLimitHit)
+    {
+        var tenantId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var azureService = Substitute.For<IAzureService>();
+        var defaultCredential = Substitute.For<TokenCredential>();
+        var selectedCredential = Substitute.For<TokenCredential>();
+        selectedCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("tenant-b-token", DateTimeOffset.UtcNow.AddHours(1)));
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(defaultCredential);
+        azureService.GetTokenCredentialAsync(tenantId.ToString(), Arg.Any<CancellationToken>())
+            .Returns(selectedCredential);
+        azureService.ResolveTenantIdAsync(tenantId.ToString(), Arg.Any<CancellationToken>())
+            .Returns(tenantId.ToString());
+        var defaultTenant = Substitute.For<TenantResource>();
+        defaultTenant.Data.Returns(ResourceManagerModelFactory.TenantData(tenantId: Guid.NewGuid()));
+        var selectedTenant = Substitute.For<TenantResource>();
+        selectedTenant.Data.Returns(ResourceManagerModelFactory.TenantData(tenantId: tenantId));
+        azureService.GetTenants(Arg.Any<CancellationToken>())
+            .Returns(new List<TenantResource> { defaultTenant, selectedTenant });
+
+        string? authorization = null;
+        using var handler = new AdvisorInsightTestHttpMessageHandler(request =>
+        {
+            var isTenantRequest = request.RequestUri!.AbsolutePath == "/tenants";
+            if (!isTenantRequest)
+            {
+                authorization = request.Headers.Authorization?.ToString();
+                Assert.EndsWith("/providers/Microsoft.ResourceGraph/resources", request.RequestUri.AbsolutePath);
+            }
+            var response = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent(isTenantRequest
+                    ? $$"""{"value":[{"id":"/tenants/{{tenantId}}","tenantId":"{{tenantId}}"}]}"""
+                    : """{"totalRecords":0,"count":0,"data":[],"resultTruncated":"false"}""")
+            };
+            if (!isTenantRequest && subscriptionLimitHit)
+            {
+                response.Headers.Add("x-ms-tenant-subscription-limit-hit", "true");
+            }
+            return response;
+        });
+        using var httpClient = new HttpClient(handler);
+        using var transport = new HttpClientTransport(httpClient);
+        azureService.When(service => service.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(call => call.Arg<ArmClientOptions>().Transport = transport);
+
+        var service = new AdvisorInsightService(azureService);
+        if (subscriptionLimitHit)
+        {
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.ListInsightsAsync(serviceGroup, null, null, tenant: tenantId.ToString(),
+                    cancellationToken: TestContext.Current.CancellationToken));
+            Assert.Contains("Specify --subscription", exception.Message);
+        }
+        else
+        {
+            await service.ListInsightsAsync(serviceGroup, null, null, tenant: tenantId.ToString(),
+                cancellationToken: TestContext.Current.CancellationToken);
+        }
+
+        Assert.Equal("Bearer tenant-b-token", authorization);
     }
 
     [Fact]
