@@ -42,6 +42,7 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Code Style](#code-style)
       - [Spelling Check](#spelling-check)
       - [Requirements](#requirements)
+    - [Token Acquisition for HTTP Clients](#token-acquisition-for-http-clients)
     - [AOT Compatibility Analysis](#aot-compatibility-analysis)
       - [Running the Analysis](#running-the-analysis)
       - [Installing Git Hooks](#installing-git-hooks)
@@ -669,6 +670,13 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - Use proper error handling patterns
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
+
+### Token Acquisition for HTTP Clients
+
+- Obtain credentials through the existing injected authentication providers. Prefer Azure SDK clients or a reusable Azure Core bearer-token authentication pipeline to manage token caching and refresh.
+- For direct HTTP calls, do not assume repeated `GetTokenAsync` calls are inexpensive: credentials such as `AzureCliCredential` can invoke an external process even when a token is cached. Measure token acquisition separately from HTTP execution when investigating latency.
+- If explicit token caching is necessary, bind it to a fixed credential identity and scope; never share tokens across users, tenants, or audiences. Respect expiration and earlier refresh times, synchronize acquisition, and propagate cancellation and failures without preventing subsequent attempts.
+- Keep clients transport-agnostic and respect the configured cache lifetime and user-isolation guarantees. Test token reuse, refresh, concurrent acquisition, cancellation, failure recovery, and identity isolation.
 
 ### AOT Compatibility Analysis
 
