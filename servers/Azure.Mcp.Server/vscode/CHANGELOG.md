@@ -1,17 +1,25 @@
 # Release History
 
-## 4.0.4 (2026-10-28) (pre-release)
+## 4.0.4 (2026-10-29) (pre-release)
 
 ### Added
 
 - Added `azmcp advisor servicegroupintelligence get` command to get the Azure Advisor status (On Track, Attention Needed, At Risk, Critical, Unavailable) and criticality of one Service Group or all Service Groups. Supports `--service-group`, `--criticality`, `--status`, `--top`, and `--tenant`. Includes an explanation of how the overall status is calculated. [[#3952](https://github.com/microsoft/mcp/pull/3952)]
 - Added `monitor ingestion upload` to send custom log data to Azure Monitor through the Logs Ingestion API using a data collection rule, and `monitor ingestion validate` to check log data against payload requirements and the stream schema declared by a data collection rule before ingestion. [[#3954](https://github.com/microsoft/mcp/pull/3954)]
 - Added azurebackup operation get to read asynchronous operation status at Recovery Services vault or protected-item scope, returning timestamps, safe errors, and actual job IDs when present without treating operation IDs as job IDs. [[#3839](https://github.com/microsoft/mcp/pull/3839)]
+- Re-enabled ADME tools after GA release. [[#4044](https://github.com/microsoft/mcp/pull/4044)]
+- Added optional --include-reference-source-data to search_knowledge_base_retrieve to return source document fields for citations while preserving service defaults when omitted. Knowledge source metadata lookups are cached when the cache service is enabled. [[#3871](https://github.com/microsoft/mcp/pull/3871)]
+- Added `netappfiles account create`, `netappfiles account get`, and `netappfiles account update` commands for creating, retrieving, and updating Azure NetApp Files accounts. [[#3708](https://github.com/microsoft/mcp/pull/3708)]
+- Added Azure IoT Hub message-routing troubleshooting tools: [[#3894](https://github.com/microsoft/mcp/pull/3894)]
+  - `iothub_routing_endpoint-health`: Get the current IoT Hub-reported health snapshot for one or all routing custom endpoints
+  - `iothub_routing_endpoint-diagnostics`: Get time-windowed routing evidence for one or all custom endpoints, including IoT Hub routing delivery metrics, current target existence, and target metrics for Event Hubs, Service Bus, Blob Storage, and Cosmos DB
+- `iothub_hub_get` now returns the hub's configured message-routing custom endpoints in `routingEndpoints`. [[#3894](https://github.com/microsoft/mcp/pull/3894)]
 
 ### Fixed
 
 - Fixed Kusto tools rejecting Azure Resource Graph Kusto endpoints (`*.arg.core.windows.net`), which the Kusto SDKs already trust. [[#4029](https://github.com/microsoft/mcp/pull/4029)]
 - Apply `--storage-type` when creating Recovery Services vaults with `azurebackup vault create --vault-type rsv`. The requested redundancy is now set through the vault backup storage config, invalid values are rejected before any vault is created, and a storage-config failure reports that the vault was created and how to retry with `azurebackup vault update --redundancy`. [[#4033](https://github.com/microsoft/mcp/pull/4033)]
+- Azure IoT Hub tools now reject hub and resource group names that don't follow Azure naming rules before calling Azure. Previously, values such as `rg1/../rg2` could send the request to a different resource group or IoT Hub. [[#3894](https://github.com/microsoft/mcp/pull/3894)]
 
 ## 4.0.3 (2026-10-22) (pre-release)
 
