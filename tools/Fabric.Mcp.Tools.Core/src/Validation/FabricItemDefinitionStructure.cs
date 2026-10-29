@@ -10,24 +10,29 @@ internal static class FabricItemDefinitionStructure
 {
     // Curated minimum part/format checks from the corresponding bundled notebook,
     // datapipeline, semantic-model, and report definition articles in Fabric.Mcp.Tools.Docs.
-    // These are not content schemas; Fabric validates content and other/future item types.
+    // Gate every filename/mixing rule on a known format. An explicit unknown format
+    // may define an entirely different layout; generic validation still runs in the caller.
     internal static void Validate(string itemType, IEnumerable<string> partPaths, string? format)
     {
         var paths = partPaths.ToHashSet(StringComparer.Ordinal);
-        if (itemType.Equals("Notebook", StringComparison.OrdinalIgnoreCase))
+        if (itemType.Equals("Notebook", StringComparison.OrdinalIgnoreCase) &&
+            IsKnownFormat(format, "FabricGitSource", "ipynb"))
         {
             ValidateNotebook(paths, format);
         }
-        else if (itemType.Equals("DataPipeline", StringComparison.OrdinalIgnoreCase))
+        else if (itemType.Equals("DataPipeline", StringComparison.OrdinalIgnoreCase) && format is null)
         {
+            // The bundled DataPipeline article describes only the default layout, not named formats.
             Require(paths.Contains("pipeline-content.json"), "DataPipeline definitions require pipeline-content.json.");
         }
-        else if (itemType.Equals("SemanticModel", StringComparison.OrdinalIgnoreCase))
+        else if (itemType.Equals("SemanticModel", StringComparison.OrdinalIgnoreCase) &&
+            IsKnownFormat(format, "TMDL", "TMSL"))
         {
             Require(paths.Contains("definition.pbism"), "SemanticModel definitions require definition.pbism.");
             ValidateAlternativeFormats(paths, format, "TMDL", "TMSL", "model.bim", "SemanticModel");
         }
-        else if (itemType.Equals("Report", StringComparison.OrdinalIgnoreCase))
+        else if (itemType.Equals("Report", StringComparison.OrdinalIgnoreCase) &&
+            IsKnownFormat(format, "PBIR", "PBIR-Legacy"))
         {
             Require(paths.Contains("definition.pbir"), "Report definitions require definition.pbir.");
             ValidateAlternativeFormats(paths, format, "PBIR", "PBIR-Legacy", "report.json", "Report");
@@ -46,8 +51,6 @@ internal static class FabricItemDefinitionStructure
         }
         else
         {
-            Require(format is null || format.Equals("FabricGitSource", StringComparison.OrdinalIgnoreCase),
-                "Notebook format must be ipynb or FabricGitSource (the default).");
             Require(sourceCount == 1 && notebookCount == 0,
                 "Notebook FabricGitSource definitions require one notebook-content.py, .sql, .scala, or .r part. For .ipynb input, specify format ipynb.");
         }
@@ -65,11 +68,13 @@ internal static class FabricItemDefinitionStructure
         }
         else
         {
-            Require(format is null || format.Equals(directoryFormat, StringComparison.OrdinalIgnoreCase),
-                $"{itemType} format must be {directoryFormat} (the default) or {fileFormat}.");
             Require(hasDirectory, $"{itemType} {directoryFormat} definitions require files under definition/. For {filePath}, specify format {fileFormat}.");
         }
     }
+
+    private static bool IsKnownFormat(string? format, string defaultFormat, string alternateFormat) =>
+        format is null || format.Equals(defaultFormat, StringComparison.OrdinalIgnoreCase) ||
+        format.Equals(alternateFormat, StringComparison.OrdinalIgnoreCase);
 
     private static void Require(bool condition, string message)
     {

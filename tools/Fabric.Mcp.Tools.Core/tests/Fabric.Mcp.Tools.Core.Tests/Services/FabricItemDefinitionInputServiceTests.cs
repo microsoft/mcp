@@ -184,23 +184,32 @@ public sealed class FabricItemDefinitionInputServiceTests()
     [InlineData("Notebook", "ipynb", "notebook-content.py", false)]
     [InlineData("Notebook", "ipynb", "one.ipynb|two.ipynb", false)]
     [InlineData("Notebook", "ipynb", "artifact.content.ipynb|notebook-content.py", false)]
-    [InlineData("Notebook", "other", "notebook-content.py", false)]
+    [InlineData("Notebook", "other", "notebook-content.py", true)]
+    [InlineData("Notebook", "FutureFormat", "future.content", true)]
+    [InlineData("Notebook", "FutureFormat", "one.ipynb|two.ipynb|notebook-content.py", true)]
     [InlineData("Notebook", null, ".platform", false)]
     [InlineData("DataPipeline", null, "pipeline-content.json|.platform", true)]
     [InlineData("DataPipeline", null, ".platform", false)]
+    [InlineData("DataPipeline", "FutureFormat", "future.content", true)]
     [InlineData("SemanticModel", null, "definition.pbism|definition/model.tmdl", true)]
     [InlineData("SemanticModel", "TMSL", "definition.pbism|model.bim", true)]
     [InlineData("SemanticModel", "TMSL", "model.bim", false)]
     [InlineData("SemanticModel", null, "definition.pbism|model.bim", false)]
     [InlineData("SemanticModel", "TMDL", "definition.pbism|model.bim|definition/model.tmdl", false)]
-    [InlineData("SemanticModel", "other", "definition.pbism|definition/model.tmdl", false)]
+    [InlineData("SemanticModel", "other", "definition.pbism|definition/model.tmdl", true)]
+    [InlineData("SemanticModel", "FutureFormat", "future.content", true)]
+    [InlineData("SemanticModel", "FutureFormat", "model.bim|definition/model.tmdl", true)]
     [InlineData("Report", null, "definition.pbir|definition/report.json", true)]
     [InlineData("Report", "PBIR-Legacy", "definition.pbir|report.json", true)]
     [InlineData("Report", "PBIR-Legacy", "report.json", false)]
     [InlineData("Report", null, "definition.pbir|report.json", false)]
     [InlineData("Report", "PBIR", "definition.pbir|report.json|definition/report.json", false)]
-    [InlineData("Report", "other", "definition.pbir|definition/report.json", false)]
+    [InlineData("Report", "other", "definition.pbir|definition/report.json", true)]
+    [InlineData("Report", "FutureFormat", "future.content", true)]
+    [InlineData("Report", "FutureFormat", "report.json|definition/report.json", true)]
     [InlineData("FutureItem", "FutureFormat", "content", true)]
+    [InlineData("FutureItem", "PBIR", "content", true)]
+    [InlineData("FutureItem", null, "content", true)]
     public async Task CuratedStructuralChecks_MatchDocumentedMinimumsWithoutClosingOtherItemTypes(
         string itemType, string? format, string paths, bool valid)
     {
@@ -211,6 +220,7 @@ public sealed class FabricItemDefinitionInputServiceTests()
             var result = await ReadAsync(CreateService(), Json(definition), itemType: itemType);
             Assert.NotNull(result);
             Assert.Equal(definition.Parts, result.Parts);
+            Assert.Equal(format, result.Format);
         }
         else
         {
@@ -218,6 +228,61 @@ public sealed class FabricItemDefinitionInputServiceTests()
                 ReadAsync(CreateService(), Json(definition), itemType: itemType));
         }
         Assert.Empty(_files.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("Notebook")]
+    [InlineData("DataPipeline")]
+    [InlineData("SemanticModel")]
+    [InlineData("Report")]
+    public async Task UnknownFormat_StillEnforcesGenericEnvelopePathAndPayloadLimits(string itemType)
+    {
+        var service = CreateService(limits: new(2, 3, 4));
+        FabricItemDefinitionPart[][] invalid =
+        [
+            [],
+            [null!],
+            [new("data", "private-invalid-base64", "InlineBase64")],
+            [new("data", "e30=", "Uri")],
+            [Part("../private-path")],
+            [Part("data"), Part("DATA")],
+            [Part("parent"), Part("parent/child")],
+            [Part("a", [1, 2, 3, 4])],
+            [Part("a", [1, 2, 3]), Part("b", [1, 2])],
+            [Part("a"), Part("b"), Part("c")]
+        ];
+        foreach (var parts in invalid)
+        {
+            var error = await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
+                ReadAsync(service, Json(new(parts, "FutureFormat")), itemType: itemType));
+            Assert.DoesNotContain("private-", error.Message);
+        }
+        Assert.Empty(_files.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("Notebook")]
+    [InlineData("DataPipeline")]
+    [InlineData("SemanticModel")]
+    [InlineData("Report")]
+    public async Task UnknownFormat_LocalSelectionSkipsKnownFilenamesButStillRequiresLocalCapability(string itemType)
+    {
+        var expected = new FabricItemDefinition([Part("future.content")], "FutureFormat-V2");
+        _files.ReadAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<FabricItemDefinitionFile>>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(expected);
+        const string selection = """[{"partPath":"future.content","sourcePath":"saved.content"}]""";
+
+        var error = await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
+            ReadAsync(CreateService(TransportTypes.Http), directory: "directory", files: selection, format: expected.Format, itemType: itemType));
+        Assert.Contains("inline --definition", error.Message);
+        Assert.Empty(_files.ReceivedCalls());
+        var result = await ReadAsync(CreateService(), directory: "directory", files: selection, format: expected.Format, itemType: itemType);
+
+        Assert.Same(expected, result);
+        await _files.Received(1).ReadAsync("directory",
+            Arg.Is<IReadOnlyList<FabricItemDefinitionFile>>(files => files.Count == 1 &&
+                files[0].PartPath == "future.content" && files[0].SourcePath == "saved.content"),
+            expected.Format, CancellationToken);
     }
 
     [Fact]

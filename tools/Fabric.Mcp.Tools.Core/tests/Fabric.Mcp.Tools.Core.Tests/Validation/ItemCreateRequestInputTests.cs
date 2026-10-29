@@ -71,19 +71,20 @@ public sealed class ItemCreateRequestInputTests()
     {
         var options = Options();
         options.CreationPayload = "{}";
+        options.DefinitionInput = new();
         switch (input)
         {
             case "definition":
-                options.Definition = "";
+                options.DefinitionInput.Definition = "";
                 break;
             case "directory":
-                options.DefinitionDirectory = "";
+                options.DefinitionInput.DefinitionDirectory = "";
                 break;
             case "files":
-                options.DefinitionFiles = "[]";
+                options.DefinitionInput.DefinitionFiles = "[]";
                 break;
             case "format":
-                options.DefinitionFormat = "format";
+                options.DefinitionInput.DefinitionFormat = "format";
                 break;
         }
 
@@ -103,6 +104,22 @@ public sealed class ItemCreateRequestInputTests()
 
         var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
 
+        Assert.Contains("--options requires", error.Message);
+    }
+
+    [Fact]
+    public static void EmptySourceGroup_DoesNotBecomeADefinitionOrConflictWithCreationPayload()
+    {
+        var options = Options();
+        options.DefinitionInput = new();
+        options.CreationPayload = "{}";
+
+        var request = CreateRequest(options);
+
+        Assert.Null(request.Definition);
+        Assert.NotNull(request.CreationPayload);
+        options.Options = "{}";
+        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
         Assert.Contains("--options requires", error.Message);
     }
 
@@ -266,7 +283,7 @@ public sealed class ItemCreateRequestInputTests()
                 options.CreationPayload = json;
                 break;
             case "options":
-                options.Definition = "{}";
+                options.DefinitionInput = new() { Definition = "{}" };
                 options.Options = json;
                 break;
             case "sensitivity-label-settings":

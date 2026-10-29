@@ -7,7 +7,8 @@ Offline tests for the Fabric Core toolset.
 
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
-- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, curated minimum part/format checks, cancellation, and safe errors
+- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, known-format minimum part checks, unknown-format forwarding without known-layout assumptions, cancellation, and safe errors
+- **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
 - **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
 - **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
 - **Commands/ItemDefinitionGetCommandTests.cs**: Initial/resume option binding, typed content, conservative file-write metadata, sensitive-content classification, pre-I/O validation, and safe failures
@@ -194,11 +195,41 @@ a JSON Schema; do not infer a universal validator by parsing its tables at runti
 This infrastructure validates the generic envelope and filesystem representation only. It does not
 claim a supplied part list is complete or valid for a particular item type, discover an item from
 its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
-Create Item now applies curated minimum part/format checks for Notebook, DataPipeline, SemanticModel,
-and Report before submission (and before file reads for explicit selections). These checks require the
-documented top-level parts/format alternatives, not all nested files or content semantics. Other item
-types remain forward-compatible and receive generic validation only. `.platform` is included only when
-explicitly selected or supplied inline and is sent unchanged, not interpreted or synthesized.
+Create Item applies curated minimum part checks for known/default Notebook, DataPipeline, SemanticModel,
+and Report formats before submission (and before file reads for explicit selections). These checks
+require documented top-level parts/format alternatives, not all nested files or content semantics.
+Unrecognized item types and explicit formats receive generic validation only and are forwarded unchanged;
+no known-format filename or mixing rule applies to them. DataPipeline's bundled article has no named
+formats, so its local content-part check applies only when format is omitted. Unknown formats still
+must satisfy JSON/Base64, path, count/byte, source-exclusivity, and local-file capability checks.
+`.platform` is included only when explicitly selected or supplied inline and is sent unchanged,
+not interpreted or synthesized.
+
+### Shared Definition Source Options
+
+`DefinitionInputOptions` groups only four optional inputs: `Definition`, `DefinitionDirectory`,
+`DefinitionFiles`, and `DefinitionFormat`. Operations accepting uploaded definitions compose it using
+the existing AOT-aware attribute, without an option inheritance hierarchy or a framework change:
+
+```csharp
+[OptionContainer<DefinitionInputOptions>(Prefix = "")]
+public DefinitionInputOptions? DefinitionInput { get; set; }
+```
+
+The empty prefix preserves the existing flat CLI/MCP names and string shapes: `definition`,
+`definition-directory`, `definition-files`, and `definition-format`. The group stays null when no source
+option was provided. `HasInput` means at least one source option was supplied, including incomplete input
+that still needs validation; it does not claim the source is complete. Shared descriptions do not refer
+to Create-only fields. Creation payloads, folder IDs, sensitivity labels, API options, and LRO settings
+remain owned by Create. An operation that requires a definition must enforce that requirement itself;
+the group does not make its children globally required. Read/export operations have a different
+contract and should not acquire unused upload options.
+
+`IFabricItemDefinitionInputService.ReadAsync` retains its existing argument contract. Callers pass the
+four grouped values to it, retaining the service's generic validation and local-file guard. The current
+Create registration still removes saved-file options from HTTP discovery without mutating shared binder
+options. Registered-handler and actual startup tests verify that composition does not change the schema
+or allow remote filesystem access.
 
 The command accepts either inline definition JSON or an absolute selected directory plus explicit
 file-to-part mappings and optional format. Unknown/duplicate JSON properties and conflicting source

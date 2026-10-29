@@ -538,6 +538,57 @@ public sealed class ItemCreateDefinitionMcpTests()
         Assert.Empty(credential.ReceivedCalls());
     }
 
+    [Theory]
+    [InlineData("Notebook", false)]
+    [InlineData("Notebook", true)]
+    [InlineData("DataPipeline", false)]
+    [InlineData("DataPipeline", true)]
+    [InlineData("SemanticModel", false)]
+    [InlineData("SemanticModel", true)]
+    [InlineData("Report", false)]
+    [InlineData("Report", true)]
+    public async Task UnknownFormat_IsForwardedUnchangedForInlineAndSavedFileInput(string itemType, bool localFiles)
+    {
+        using var directory = new FabricDefinitionTestDirectory();
+        byte[] content = [0, 1, 2, 255];
+        await File.WriteAllBytesAsync(Path.Combine(directory.Path, "saved.content"), content, TestContext.Current.CancellationToken);
+        const string format = "FutureFormat-V2";
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
+            Assert.Equal(itemType, body.RootElement.GetProperty("type").GetString());
+            var definition = body.RootElement.GetProperty("definition");
+            Assert.Equal(format, definition.GetProperty("format").GetString());
+            var part = Assert.Single(definition.GetProperty("parts").EnumerateArray());
+            Assert.Equal("future.content", part.GetProperty("path").GetString());
+            Assert.Equal(content, Convert.FromBase64String(part.GetProperty("payload").GetString()!));
+            return FabricOperationTestData.ItemResponse(type: itemType);
+        });
+        await using var provider = Services(handler, FabricOperationTestData.Credential(),
+            localFiles ? TransportTypes.StdIo : TransportTypes.Http);
+        var arguments = Arguments();
+        arguments["item-type"] = itemType;
+        if (localFiles)
+        {
+            arguments["definition-directory"] = directory.Path;
+            arguments["definition-files"] = """[{"partPath":"future.content","sourcePath":"saved.content"}]""";
+            arguments["definition-format"] = format;
+        }
+        else
+        {
+            arguments["definition"] = JsonSerializer.Serialize(
+                new FabricItemDefinition([new("future.content", Convert.ToBase64String(content), "InlineBase64")], format),
+                CoreJsonContext.Default.FabricItemDefinition);
+        }
+
+        var result = await Loader(provider, "all").CallToolHandler(Request("all", arguments), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        Assert.Equal(1, handler.CallCount);
+        Assert.Equal(content, await File.ReadAllBytesAsync(Path.Combine(directory.Path, "saved.content"), TestContext.Current.CancellationToken));
+    }
+
     private static ServiceProvider Services(
         HttpMessageHandler handler, TokenCredential credential, string transport,
         StructuredOutputMode? output = StructuredOutputMode.Compact, IFabricItemDefinitionFileService? files = null)
