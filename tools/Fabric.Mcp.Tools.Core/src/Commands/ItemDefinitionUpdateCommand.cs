@@ -83,7 +83,7 @@ public sealed class ItemDefinitionUpdateCommand(
             // Parse workload options before any file access. Their item-specific semantics belong to Fabric.
             var apiOptions = FabricItemJsonInput.ParseObject(options.Options, "--options");
             var input = options.DefinitionInput;
-            var definition = await _definitionInputService.ReadAsync(null, input?.Definition,
+            var definition = await _definitionInputService.ReadAsync(input?.Definition,
                 input?.DefinitionDirectory, input?.DefinitionFiles, input?.DefinitionFormat, cancellationToken) ??
                 throw new FabricItemInputException("Provide a complete replacement definition using exactly one inline or saved-file source.");
             var result = await _fabricCoreService.UpdateItemDefinitionAsync(options.WorkspaceId, options.ItemId,
