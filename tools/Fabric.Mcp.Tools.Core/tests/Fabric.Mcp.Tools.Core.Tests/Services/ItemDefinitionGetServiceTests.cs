@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:words TMDL TMSL PBIR
 
 using System.Net;
 using System.Text;
@@ -104,6 +105,50 @@ public sealed class ItemDefinitionGetServiceTests()
 
         Assert.NotNull(result.Definition);
         Assert.Null(result.Definition.Format);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, "ipynb")]
+    [InlineData(true, "ipynb")]
+    [InlineData(false, "FabricGitSource")]
+    [InlineData(true, "FabricGitSource")]
+    [InlineData(false, "TMDL")]
+    [InlineData(true, "TMDL")]
+    [InlineData(false, "TMSL")]
+    [InlineData(true, "TMSL")]
+    [InlineData(false, "PBIR")]
+    [InlineData(true, "PBIR")]
+    [InlineData(false, "PBIR-Legacy")]
+    [InlineData(true, "PBIR-Legacy")]
+    [InlineData(false, "FutureFormat")]
+    [InlineData(true, "FutureFormat")]
+    public async Task DefinitionReads_PreserveArbitrarySafeLayoutsWithoutItemSpecificRules(bool resume, string? format)
+    {
+        var definition = new FabricItemDefinition(
+            [
+                ItemDefinitionTestData.Part("custom-notebook.py", [0, 1, 255]),
+                ItemDefinitionTestData.Part("model.bim", [123, 125]),
+                ItemDefinitionTestData.Part("definition/custom-part", [])
+            ], format);
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(resume ? HttpMethod.Get : HttpMethod.Post, request.Method);
+            return Task.FromResult(ItemDefinitionTestData.Response(definition));
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential());
+
+        var result = resume
+            ? await service.GetItemDefinitionAsync(operationId: FabricOperationTestData.OperationId, cancellationToken: CancellationToken)
+            : await InitialAsync(service, format: format);
+
+        Assert.NotNull(result.Definition);
+        Assert.Equal(definition.Parts, result.Definition.Parts);
+        Assert.Equal(format, result.Definition.Format);
+        Assert.Null(result.OutputDirectory);
         Assert.Equal(1, handler.CallCount);
     }
 

@@ -27,9 +27,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         definition-files mapping with optional definition-format. Never combine these sources.
         File input reads saved, explicitly selected files only; HTTP callers must supply inline content.
         Definitions support InlineBase64 parts, portable paths, and bounded byte/count budgets.
-        Minimum part checks cover known/default formats for Notebook, DataPipeline, SemanticModel, and Report.
-        Unrecognized explicit formats and item types are forwarded unchanged after generic validation;
-        content semantics, dependencies, and other item-type requirements are validated by Fabric.
+        Definition format, safe part names, and content are forwarded unchanged after generic validation.
+        Fabric validates item-specific layouts, required files, supported formats, content semantics, and dependencies.
         Top-level options JSON requires a definition and contains item-specific settings, not LRO wait settings.
         Optional sensitivity-label-settings JSON requires a nonempty labelId UUID and accepts optional sensitivityLabelApplyStrategy.
         Omitted label settings or strategy stay omitted; Fabric defaults the strategy to ApplyOrFail.
@@ -93,7 +92,7 @@ public sealed class ItemCreateCommand(
         {
             var request = ItemCreateRequestInput.CreateRequest(options, cancellationToken);
             var definitionInput = options.DefinitionInput;
-            request.Definition = await _definitionInputService.ReadAsync(options.ItemType, definitionInput?.Definition,
+            request.Definition = await _definitionInputService.ReadAsync(definitionInput?.Definition,
                 definitionInput?.DefinitionDirectory, definitionInput?.DefinitionFiles, definitionInput?.DefinitionFormat, cancellationToken);
 
             var result = await _fabricCoreService.CreateItemAsync(workspaceId!, request,

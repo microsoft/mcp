@@ -4,7 +4,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Fabric.Mcp.Tools.Core.Models;
-using Fabric.Mcp.Tools.Core.Validation;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
@@ -23,7 +22,6 @@ public sealed class FabricItemDefinitionInputService(
     public bool SupportsLocalFiles => _configuration.Value.Transport == TransportTypes.StdIo;
 
     public async Task<FabricItemDefinition?> ReadAsync(
-        string itemType,
         string? definition,
         string? directory,
         string? files,
@@ -64,7 +62,7 @@ public sealed class FabricItemDefinitionInputService(
         {
             var selection = Parse(files!, FabricItemDefinitionInputJsonContext.Default.FabricItemDefinitionFileArray,
                 "--definition-files must be a JSON array of objects with partPath and optional sourcePath.");
-            ValidateSelection(itemType, selection, format);
+            ValidateSelection(selection, format);
             try
             {
                 result = await _fileService.ReadAsync(directory!, selection, format, cancellationToken);
@@ -87,7 +85,6 @@ public sealed class FabricItemDefinitionInputService(
             // Filesystem and JSON parser exceptions are handled separately above.
             throw new FabricItemDefinitionInputException(ex.Message);
         }
-        FabricItemDefinitionStructure.Validate(itemType, result.Parts.Select(static part => part.Path), result.Format);
         return result;
     }
 
@@ -108,7 +105,7 @@ public sealed class FabricItemDefinitionInputService(
         }
     }
 
-    private void ValidateSelection(string itemType, FabricItemDefinitionFile[] selection, string? format)
+    private void ValidateSelection(FabricItemDefinitionFile[] selection, string? format)
     {
         try
         {
@@ -120,6 +117,5 @@ public sealed class FabricItemDefinitionInputService(
         {
             throw new FabricItemDefinitionInputException(ex.Message);
         }
-        FabricItemDefinitionStructure.Validate(itemType, selection.Select(static file => file.PartPath), format);
     }
 }

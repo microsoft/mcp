@@ -37,7 +37,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Because optional export writes files, this tool is excluded by read-only server filtering in every transport.
         Supports JSON responses up to 64 MiB, InlineBase64 parts, and the host's generic path/byte/count limits
         (defaults: 1024 parts, 16 MiB decoded per part, 32 MiB decoded total). Oversized content is rejected, not truncated.
-        No per-part downloads, schema downloads, type-specific creation validation, dependency lookups, or item updates.
+        No per-part downloads, schema downloads, item-specific layout validation, dependency lookups, or item updates.
         Requires read AND write item permissions and Item.ReadWrite.All or item-specific ReadWrite.All delegated scope.
         Service-principal and managed-identity support depends on item type. Sensitivity labels are not in definitions;
         encrypted labels require the caller's applicable usage rights. Treat returned definition content as sensitive.

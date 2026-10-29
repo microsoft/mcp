@@ -514,14 +514,9 @@ These are alternative **real item creation** examples, not validation-only opera
 
 Both sources share host packaging limits: by default **1,024 parts, 16 MiB decoded per part, and 32 MiB decoded total**, plus encoded-payload and input-JSON bounds. These are local safeguards, not Fabric API quotas. Portable logical paths reject traversal, absolute paths, duplicate names (case-insensitively), and file/directory collisions. Saved-file input additionally rejects linked/junction paths and UNC/device paths. Selected bytes, encodings, line endings, and empty files are preserved. Filesystem checks require a trusted local filesystem; they are not an OS sandbox against concurrent hostile file replacement.
 
-Validation uses the bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions) as references, **not executable schemas**. Curated minimum checks apply only to the following known formats, including their documented defaults when `format` is omitted:
+**Fabric validates item-specific layouts and content.** The tool does not require particular filenames, notebook language files, or format-specific part combinations, even for recognized formats or when `format` is omitted. Safe part names, supplied format strings, and payload content are forwarded unchanged; an omitted format stays omitted so Fabric applies its defaults. The generic JSON/Base64/envelope checks, byte/count/depth limits, API/source exclusivity, UUID checks, and filesystem/HTTP safeguards above still apply before submission.
 
-- **Notebook:** one `.ipynb` content part for `ipynb`, or one `notebook-content.py`, `.sql`, `.scala`, or `.r` part for `FabricGitSource` (the default); do not mix the two.
-- **DataPipeline:** `pipeline-content.json` when `format` is omitted. The bundled reference does not identify named formats, so explicit formats are left to Fabric.
-- **SemanticModel:** `definition.pbism` plus files under `definition/` for `TMDL` (the default), or `model.bim` for `TMSL`; do not mix the two.
-- **Report:** `definition.pbir` plus files under `definition/` for `PBIR` (the default), or `report.json` for `PBIR-Legacy`; do not mix the two.
-
-Unrecognized item types and explicit formats are forwarded unchanged after generic envelope, payload, path, and budget validation. The tool does not apply a known format's required filenames or format-mixing rules to an unknown format. This permits newer Fabric formats without weakening JSON/Base64 checks, byte/count limits, source exclusivity, or filesystem/HTTP safeguards. These checks do **not** validate content schemas, every required nested file, item-type/format support in Fabric, or dependency/binding correctness. Use `docs_item-definitions` to inspect the relevant reference and prepare a complete definition; Fabric remains authoritative. The tool does not rewrite report bindings, interpret `.platform`, or create referenced resources.
+Use the bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions) through `docs_item-definitions` to prepare a complete definition. They are documentation for callers, not executable schemas or a local layout-validation policy. Fabric remains authoritative for supported item types/formats, required parts, content schemas, format combinations, and dependency/binding correctness. The tool does not rewrite report bindings, interpret `.platform`, or create referenced resources.
 
 Create Item supports both outcomes documented by its endpoint: **201** returns validated metadata in the existing `results.item` shape; **202** returns an explicit `results.operation` receipt, never an empty/default item. Both modes return a synchronous 201 result immediately, without operation reads or requiring an operation ID. Other success codes, including 200 and 204, are not part of this endpoint's contract: they produce a sanitized unconfirmed-outcome error with guidance to check whether creation occurred. The shared LRO infrastructure also supports synchronous 200 for future adapters whose endpoints document it; it does not accept arbitrary success codes.
 
@@ -652,7 +647,7 @@ fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff
 Only the documented **200** completed definition and **202** accepted receipt are supported.
 Completed output contains a typed `definition` with `parts` (`path`, `payload`, `payloadType`) and
 `format` only when Fabric actually returned one. Payloads remain Base64 for inline use. No item type
-is required and no incomplete type-specific **creation** rules are imposed on returned content.
+is required and no item-specific filename, layout, or format-combination rules are imposed on returned content.
 The bundled item-definition articles remain useful editing references through `docs_item-definitions`,
 not runtime schemas. Sensitivity labels are **not included** in the definition.
 
