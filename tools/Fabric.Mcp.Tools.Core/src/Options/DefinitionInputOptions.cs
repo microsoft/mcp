@@ -18,7 +18,7 @@ public sealed class DefinitionInputOptions()
     [Option(Description = "Explicit file selection as a JSON array string: [{\"partPath\":\"artifact.content.ipynb\",\"sourcePath\":\"sales.ipynb\"}]. Paths are relative to definition-directory; sourcePath defaults to partPath. Logical part paths use '/'. No wildcards or automatic enumeration. Local execution only.")]
     public string? DefinitionFiles { get; set; }
 
-    [Option(Description = "Optional Fabric definition format for saved-file input only, for example ipynb, FabricGitSource, TMDL, TMSL, PBIR, or PBIR-Legacy. Requires definition-directory and definition-files. For inline input, put format inside definition JSON. Unrecognized explicit formats are forwarded unchanged to Fabric after generic validation.")]
+    [Option(Description = "Optional Fabric definition format for saved-file input only, for example ipynb, FabricGitSource, TMDL, TMSL, PBIR, or PBIR-Legacy. Requires definition-directory and definition-files. For inline input, put format inside definition JSON. Format and content are forwarded unchanged after generic validation; Fabric validates format support and item-specific layouts.")]
     public string? DefinitionFormat { get; set; }
 
     /// <summary>Any supplied source option, including incomplete input that still requires validation.</summary>

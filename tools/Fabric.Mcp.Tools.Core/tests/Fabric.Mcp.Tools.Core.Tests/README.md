@@ -7,7 +7,7 @@ Offline tests for the Fabric Core toolset.
 
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
-- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, known-format minimum part checks, unknown-format forwarding without known-layout assumptions, cancellation, and safe errors
+- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
 - **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
 - **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
 - **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
@@ -180,24 +180,23 @@ Command logic and the low-level file converter contain no transport checks. Inli
 available over HTTP and uses the same content-independent validator and budgets, with no disk access.
 Local file conversion adds no Fabric requests.
 
-### Item-specific Validation Belongs with the Tool Adapters
+### Item Layout and Content Validation Belong to Fabric
 
 The bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
 and the `docs_item-definitions` tool describe required parts and supported formats for most item
-types. Use those authoritative local resources when implementing folder selection and item-specific
-checks in the definition command PRs, without an extra Fabric request. Markdown prose is not itself
-a JSON Schema; do not infer a universal validator by parsing its tables at runtime.
+types. Callers can consult those resources to prepare explicit file selections without an extra
+Fabric request. They are documentation, not executable schemas or an input-validation policy;
+Markdown tables are not parsed at runtime.
 
 This infrastructure validates the generic envelope and filesystem representation only. It does not
 claim a supplied part list is complete or valid for a particular item type, discover an item from
 its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
-Create Item applies curated minimum part checks for known/default Notebook, DataPipeline, SemanticModel,
-and Report formats before submission (and before file reads for explicit selections). These checks
-require documented top-level parts/format alternatives, not all nested files or content semantics.
-Unrecognized item types and explicit formats receive generic validation only and are forwarded unchanged;
-no known-format filename or mixing rule applies to them. DataPipeline's bundled article has no named
-formats, so its local content-part check applies only when format is omitted. Unknown formats still
-must satisfy JSON/Base64, path, count/byte, source-exclusivity, and local-file capability checks.
+The input service has no item-type argument and applies no required-filename, notebook-language,
+known/default-format, or format-mixing rules. All definitions receive generic JSON/Base64, path,
+count/byte/depth, source-exclusivity, and local-file capability checks. Tests verify that arbitrary
+safe layouts, including combinations formerly rejected locally, reach the single Create POST unchanged
+for omitted, recognized, and unknown formats. Create still sends its actual API item type unchanged.
+Fabric decides whether the supplied layout, format, content, and dependencies are valid.
 `.platform` is included only when explicitly selected or supplied inline and is sent unchanged,
 not interpreted or synthesized.
 
@@ -221,8 +220,19 @@ remain owned by Create. An operation that requires a definition must enforce tha
 the group does not make its children globally required. Read/export operations have a different
 contract and should not acquire unused upload options.
 
-`IFabricItemDefinitionInputService.ReadAsync` retains its existing argument contract. Callers pass the
-four grouped values to it, retaining the service's generic validation and local-file guard. The current
+`IFabricItemDefinitionInputService.ReadAsync` accepts only the four grouped source values and cancellation:
+
+```csharp
+Task<FabricItemDefinition?> ReadAsync(
+    string? definition,
+    string? directory,
+    string? files,
+    string? format,
+    CancellationToken cancellationToken = default);
+```
+
+There is no item-type hint or layout-policy argument. Generic validation and the local-file guard
+are independent of any workload. The current
 Create registration still removes saved-file options from HTTP discovery without mutating shared binder
 options. Registered-handler and actual startup tests verify that composition does not change the schema
 or allow remote filesystem access.

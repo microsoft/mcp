@@ -10,7 +10,6 @@ public interface IFabricItemDefinitionInputService
     bool SupportsLocalFiles { get; }
 
     Task<FabricItemDefinition?> ReadAsync(
-        string itemType,
         string? definition,
         string? directory,
         string? files,

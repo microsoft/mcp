@@ -54,7 +54,7 @@ public sealed class FabricItemDefinitionInputServiceTests()
 
         var result = await ReadAsync(CreateService(), directory: "selected-directory",
             files: """[{"partPath":"artifact.content.ipynb","sourcePath":"notebooks/sales.ipynb"}]""",
-            format: "ipynb", itemType: "Notebook");
+            format: "ipynb");
 
         Assert.Same(expected, result);
         await _files.Received(1).ReadAsync("selected-directory",
@@ -165,6 +165,9 @@ public sealed class FabricItemDefinitionInputServiceTests()
     [InlineData("""[{"partPath":"data","sourcePath":"a","sourcePath":"b"}]""")]
     [InlineData("""[{"partPath":"data","private-unknown":"value"}]""")]
     [InlineData("""[{"partPath":"data"},{"partPath":"DATA"}]""")]
+    [InlineData("""[{"partPath":"../outside"}]""")]
+    [InlineData("""[{"partPath":"data:stream"}]""")]
+    [InlineData("""[{"partPath":"parent"},{"partPath":"parent/child"}]""")]
     public async Task InvalidFileSelections_FailBeforeFileAccess(string files)
     {
         await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
@@ -174,68 +177,42 @@ public sealed class FabricItemDefinitionInputServiceTests()
     }
 
     [Theory]
-    [InlineData("Notebook", "ipynb", "artifact.content.ipynb|.platform", true)]
-    [InlineData("Notebook", "ipynb", "sales.ipynb", true)]
-    [InlineData("Notebook", null, "notebook-content.py", true)]
-    [InlineData("Notebook", "fabricGitSource", "notebook-content.sql", true)]
-    [InlineData("Notebook", "FabricGitSource", "notebook-content.scala", true)]
-    [InlineData("Notebook", "FabricGitSource", "notebook-content.r", true)]
-    [InlineData("Notebook", null, "artifact.content.ipynb", false)]
-    [InlineData("Notebook", "ipynb", "notebook-content.py", false)]
-    [InlineData("Notebook", "ipynb", "one.ipynb|two.ipynb", false)]
-    [InlineData("Notebook", "ipynb", "artifact.content.ipynb|notebook-content.py", false)]
-    [InlineData("Notebook", "other", "notebook-content.py", true)]
-    [InlineData("Notebook", "FutureFormat", "future.content", true)]
-    [InlineData("Notebook", "FutureFormat", "one.ipynb|two.ipynb|notebook-content.py", true)]
-    [InlineData("Notebook", null, ".platform", false)]
-    [InlineData("DataPipeline", null, "pipeline-content.json|.platform", true)]
-    [InlineData("DataPipeline", null, ".platform", false)]
-    [InlineData("DataPipeline", "FutureFormat", "future.content", true)]
-    [InlineData("SemanticModel", null, "definition.pbism|definition/model.tmdl", true)]
-    [InlineData("SemanticModel", "TMSL", "definition.pbism|model.bim", true)]
-    [InlineData("SemanticModel", "TMSL", "model.bim", false)]
-    [InlineData("SemanticModel", null, "definition.pbism|model.bim", false)]
-    [InlineData("SemanticModel", "TMDL", "definition.pbism|model.bim|definition/model.tmdl", false)]
-    [InlineData("SemanticModel", "other", "definition.pbism|definition/model.tmdl", true)]
-    [InlineData("SemanticModel", "FutureFormat", "future.content", true)]
-    [InlineData("SemanticModel", "FutureFormat", "model.bim|definition/model.tmdl", true)]
-    [InlineData("Report", null, "definition.pbir|definition/report.json", true)]
-    [InlineData("Report", "PBIR-Legacy", "definition.pbir|report.json", true)]
-    [InlineData("Report", "PBIR-Legacy", "report.json", false)]
-    [InlineData("Report", null, "definition.pbir|report.json", false)]
-    [InlineData("Report", "PBIR", "definition.pbir|report.json|definition/report.json", false)]
-    [InlineData("Report", "other", "definition.pbir|definition/report.json", true)]
-    [InlineData("Report", "FutureFormat", "future.content", true)]
-    [InlineData("Report", "FutureFormat", "report.json|definition/report.json", true)]
-    [InlineData("FutureItem", "FutureFormat", "content", true)]
-    [InlineData("FutureItem", "PBIR", "content", true)]
-    [InlineData("FutureItem", null, "content", true)]
-    public async Task CuratedStructuralChecks_MatchDocumentedMinimumsWithoutClosingOtherItemTypes(
-        string itemType, string? format, string paths, bool valid)
+    [InlineData(null, "arbitrary.content")]
+    [InlineData(null, ".platform")]
+    [InlineData(null, "artifact.content.ipynb")]
+    [InlineData("ipynb", "notebook-content.py")]
+    [InlineData("ipynb", "one.ipynb|two.ipynb|notebook-content.py")]
+    [InlineData("FabricGitSource", "notebook-content.py|notebook-content.sql")]
+    [InlineData("FabricGitSource", "artifact.content.ipynb")]
+    [InlineData("TMDL", "arbitrary.content")]
+    [InlineData("TMDL", "model.bim|definition/model.tmdl")]
+    [InlineData("TMSL", "definition/model.tmdl")]
+    [InlineData("PBIR", "arbitrary.content")]
+    [InlineData("PBIR", "report.json|definition/report.json")]
+    [InlineData("PBIR-Legacy", "definition/report.json")]
+    [InlineData("FutureFormat", "arbitrary.content")]
+    public async Task Inline_PreservesAnySafeLayoutForOmittedRecognizedAndUnknownFormats(string? format, string paths)
     {
         var definition = new FabricItemDefinition(paths.Split('|').Select(static path => Part(path)).ToArray(), format);
 
-        if (valid)
-        {
-            var result = await ReadAsync(CreateService(), Json(definition), itemType: itemType);
-            Assert.NotNull(result);
-            Assert.Equal(definition.Parts, result.Parts);
-            Assert.Equal(format, result.Format);
-        }
-        else
-        {
-            await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
-                ReadAsync(CreateService(), Json(definition), itemType: itemType));
-        }
+        var result = await ReadAsync(CreateService(), Json(definition));
+
+        Assert.NotNull(result);
+        Assert.Equal(definition.Parts, result.Parts);
+        Assert.Equal(format, result.Format);
         Assert.Empty(_files.ReceivedCalls());
     }
 
     [Theory]
-    [InlineData("Notebook")]
-    [InlineData("DataPipeline")]
-    [InlineData("SemanticModel")]
-    [InlineData("Report")]
-    public async Task UnknownFormat_StillEnforcesGenericEnvelopePathAndPayloadLimits(string itemType)
+    [InlineData(null)]
+    [InlineData("ipynb")]
+    [InlineData("FabricGitSource")]
+    [InlineData("TMDL")]
+    [InlineData("TMSL")]
+    [InlineData("PBIR")]
+    [InlineData("PBIR-Legacy")]
+    [InlineData("FutureFormat")]
+    public async Task EveryFormat_StillEnforcesGenericEnvelopePathAndPayloadLimits(string? format)
     {
         var service = CreateService(limits: new(2, 3, 4));
         FabricItemDefinitionPart[][] invalid =
@@ -254,45 +231,39 @@ public sealed class FabricItemDefinitionInputServiceTests()
         foreach (var parts in invalid)
         {
             var error = await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
-                ReadAsync(service, Json(new(parts, "FutureFormat")), itemType: itemType));
+                ReadAsync(service, Json(new(parts, format))));
             Assert.DoesNotContain("private-", error.Message);
         }
         Assert.Empty(_files.ReceivedCalls());
     }
 
     [Theory]
-    [InlineData("Notebook")]
-    [InlineData("DataPipeline")]
-    [InlineData("SemanticModel")]
-    [InlineData("Report")]
-    public async Task UnknownFormat_LocalSelectionSkipsKnownFilenamesButStillRequiresLocalCapability(string itemType)
+    [InlineData(null)]
+    [InlineData("ipynb")]
+    [InlineData("FabricGitSource")]
+    [InlineData("TMDL")]
+    [InlineData("TMSL")]
+    [InlineData("PBIR")]
+    [InlineData("PBIR-Legacy")]
+    [InlineData("FutureFormat")]
+    public async Task EveryFormat_LocalSelectionAllowsSafeLayoutsButStillRequiresLocalCapability(string? format)
     {
-        var expected = new FabricItemDefinition([Part("future.content")], "FutureFormat-V2");
+        var expected = new FabricItemDefinition([Part("arbitrary.content")], format);
         _files.ReadAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<FabricItemDefinitionFile>>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
-        const string selection = """[{"partPath":"future.content","sourcePath":"saved.content"}]""";
+        const string selection = """[{"partPath":"arbitrary.content","sourcePath":"saved.content"}]""";
 
         var error = await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
-            ReadAsync(CreateService(TransportTypes.Http), directory: "directory", files: selection, format: expected.Format, itemType: itemType));
+            ReadAsync(CreateService(TransportTypes.Http), directory: "directory", files: selection, format: format));
         Assert.Contains("inline --definition", error.Message);
         Assert.Empty(_files.ReceivedCalls());
-        var result = await ReadAsync(CreateService(), directory: "directory", files: selection, format: expected.Format, itemType: itemType);
+        var result = await ReadAsync(CreateService(), directory: "directory", files: selection, format: format);
 
         Assert.Same(expected, result);
         await _files.Received(1).ReadAsync("directory",
             Arg.Is<IReadOnlyList<FabricItemDefinitionFile>>(files => files.Count == 1 &&
-                files[0].PartPath == "future.content" && files[0].SourcePath == "saved.content"),
-            expected.Format, CancellationToken);
-    }
-
-    [Fact]
-    public async Task LocalStructuralChecks_RunBeforeReadingSelectedFiles()
-    {
-        var error = await Assert.ThrowsAsync<FabricItemDefinitionInputException>(() =>
-            ReadAsync(CreateService(), directory: "directory", files: """[{"partPath":".platform"}]""", itemType: "DataPipeline"));
-
-        Assert.Contains("pipeline-content.json", error.Message);
-        Assert.Empty(_files.ReceivedCalls());
+                files[0].PartPath == "arbitrary.content" && files[0].SourcePath == "saved.content"),
+            format, CancellationToken);
     }
 
     [Fact]
@@ -346,7 +317,7 @@ public sealed class FabricItemDefinitionInputServiceTests()
     {
         var service = CreateService();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            service.ReadAsync("FutureItem", null, "directory", "[]", null, new CancellationToken(canceled: true)));
+            service.ReadAsync(null, "directory", "[]", null, new CancellationToken(canceled: true)));
         Assert.Empty(_files.ReceivedCalls());
         _files.ReadAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<FabricItemDefinitionFile>>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new OperationCanceledException(CancellationToken));
@@ -361,8 +332,8 @@ public sealed class FabricItemDefinitionInputServiceTests()
 
     private Task<FabricItemDefinition?> ReadAsync(
         FabricItemDefinitionInputService service, string? definition = null, string? directory = null,
-        string? files = null, string? format = null, string itemType = "FutureItem") =>
-        service.ReadAsync(itemType, definition, directory, files, format, CancellationToken);
+        string? files = null, string? format = null) =>
+        service.ReadAsync(definition, directory, files, format, CancellationToken);
 
     private static FabricItemDefinitionPart Part(string path, byte[]? bytes = null) =>
         new(path, Convert.ToBase64String(bytes ?? [1]), "InlineBase64");

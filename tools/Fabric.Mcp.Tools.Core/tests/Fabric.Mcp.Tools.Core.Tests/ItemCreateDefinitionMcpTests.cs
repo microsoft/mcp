@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:words ipynb
+// cspell:words ipynb tmdl tmsl pbir
 
 using System.Net;
 using System.Text;
@@ -51,6 +51,42 @@ public sealed class ItemCreateDefinitionMcpTests()
                         data.Add(route, transport, output);
                     }
                 }
+            }
+            return data;
+        }
+    }
+
+    public static TheoryData<string, string?, string, bool> DefinitionLayoutCases
+    {
+        get
+        {
+            var data = new TheoryData<string, string?, string, bool>();
+            (string Type, string? Format, string Paths)[] layouts =
+            [
+                ("Notebook", null, "arbitrary.content"),
+                ("Notebook", null, "artifact.content.ipynb"),
+                ("Notebook", "ipynb", "arbitrary.content"),
+                ("Notebook", "ipynb", "one.ipynb|two.ipynb|notebook-content.py"),
+                ("Notebook", "FabricGitSource", "notebook-content.py|notebook-content.sql|artifact.content.ipynb"),
+                ("Notebook", "FutureFormat", "arbitrary.content"),
+                ("DataPipeline", null, ".platform"),
+                ("DataPipeline", "FutureFormat", "arbitrary.content"),
+                ("SemanticModel", null, "model.bim"),
+                ("SemanticModel", "TMDL", "model.bim|definition/model.tmdl"),
+                ("SemanticModel", "TMSL", "definition/model.tmdl"),
+                ("SemanticModel", "FutureFormat", "arbitrary.content"),
+                ("Report", null, "report.json"),
+                ("Report", "PBIR", "report.json|definition/report.json"),
+                ("Report", "PBIR-Legacy", "definition/report.json"),
+                ("Report", "FutureFormat", "arbitrary.content"),
+                ("FutureItem", null, "arbitrary.content"),
+                ("FutureItem", "PBIR", "arbitrary.content"),
+                ("FutureItem", "FutureFormat", "arbitrary.content")
+            ];
+            foreach (var (type, format, paths) in layouts)
+            {
+                data.Add(type, format, paths, false);
+                data.Add(type, format, paths, true);
             }
             return data;
         }
@@ -226,7 +262,8 @@ public sealed class ItemCreateDefinitionMcpTests()
     [Theory]
     [InlineData("""{"parts":[]}""")]
     [InlineData("""{"parts":[{"path":"data","payload":"private-invalid-base64","payloadType":"InlineBase64"}]}""")]
-    [InlineData("""{"parts":[{"path":"artifact.content.ipynb","payload":"e30=","payloadType":"InlineBase64"}]}""")]
+    [InlineData("""{"parts":[{"path":"artifact.content.ipynb","payload":"e30="}]}""")]
+    [InlineData("""{"parts":[{"path":"../private-file","payload":"e30=","payloadType":"InlineBase64"}]}""")]
     [InlineData("""{"parts":[{"path":"notebook-content.py","payload":"e30=","payloadType":"InlineBase64","private-unknown":true}]}""")]
     public async Task InvalidDefinitions_ReturnSanitizedInputErrorsBeforeAuthenticationOrPost(string definition)
     {
@@ -569,30 +606,26 @@ public sealed class ItemCreateDefinitionMcpTests()
     }
 
     [Theory]
-    [InlineData("Notebook", false)]
-    [InlineData("Notebook", true)]
-    [InlineData("DataPipeline", false)]
-    [InlineData("DataPipeline", true)]
-    [InlineData("SemanticModel", false)]
-    [InlineData("SemanticModel", true)]
-    [InlineData("Report", false)]
-    [InlineData("Report", true)]
-    public async Task UnknownFormat_IsForwardedUnchangedForInlineAndSavedFileInput(string itemType, bool localFiles)
+    [MemberData(nameof(DefinitionLayoutCases))]
+    public async Task SafeLayouts_ReachFabricUnchangedForEveryFormatAndInputSource(
+        string itemType, string? format, string partPaths, bool localFiles)
     {
         using var directory = new FabricDefinitionTestDirectory();
         byte[] content = [0, 1, 2, 255];
         await File.WriteAllBytesAsync(Path.Combine(directory.Path, "saved.content"), content, TestContext.Current.CancellationToken);
-        const string format = "FutureFormat-V2";
+        var paths = partPaths.Split('|');
+        var expectedDefinition = new FabricItemDefinition(
+            paths.Select(path => new FabricItemDefinitionPart(path, Convert.ToBase64String(content), "InlineBase64")).ToArray(), format);
+        var expectedJson = JsonSerializer.SerializeToElement(expectedDefinition, CoreJsonContext.Default.FabricItemDefinition);
         using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal($"{FabricEndpoints.FabricApiBaseUrl}/workspaces/{FabricOperationTestData.WorkspaceId}/items", request.RequestUri?.AbsoluteUri);
             using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(token));
             Assert.Equal(itemType, body.RootElement.GetProperty("type").GetString());
             var definition = body.RootElement.GetProperty("definition");
-            Assert.Equal(format, definition.GetProperty("format").GetString());
-            var part = Assert.Single(definition.GetProperty("parts").EnumerateArray());
-            Assert.Equal("future.content", part.GetProperty("path").GetString());
-            Assert.Equal(content, Convert.FromBase64String(part.GetProperty("payload").GetString()!));
+            Assert.True(JsonElement.DeepEquals(expectedJson, definition));
+            Assert.Equal(format is not null, definition.TryGetProperty("format", out _));
             return FabricOperationTestData.ItemResponse(type: itemType);
         });
         await using var provider = Services(handler, FabricOperationTestData.Credential(),
@@ -602,13 +635,18 @@ public sealed class ItemCreateDefinitionMcpTests()
         if (localFiles)
         {
             arguments["definition-directory"] = directory.Path;
-            arguments["definition-files"] = """[{"partPath":"future.content","sourcePath":"saved.content"}]""";
-            arguments["definition-format"] = format;
+            arguments["definition-files"] = JsonSerializer.Serialize(
+                paths.Select(static path => new FabricItemDefinitionFile(path, "saved.content")).ToArray(),
+                FabricItemDefinitionInputJsonContext.Default.FabricItemDefinitionFileArray);
+            if (format is not null)
+            {
+                arguments["definition-format"] = format;
+            }
         }
         else
         {
             arguments["definition"] = JsonSerializer.Serialize(
-                new FabricItemDefinition([new("future.content", Convert.ToBase64String(content), "InlineBase64")], format),
+                expectedDefinition,
                 CoreJsonContext.Default.FabricItemDefinition);
         }
 
