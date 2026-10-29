@@ -10,6 +10,10 @@ Offline tests for the Fabric Core toolset.
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, curated minimum part/format checks, cancellation, and safe errors
 - **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
 - **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
+- **Commands/ItemDefinitionGetCommandTests.cs**: Initial/resume option binding, typed content, conservative file-write metadata, sensitive-content classification, pre-I/O validation, and safe failures
+- **Services/ItemDefinitionGetServiceTests.cs**: Exact 200/202 contracts, one-POST initiation, one-GET resume, encoded format, generic definition validation, exact JSON and decoded budgets, LRO failure/cancellation, and unchanged 1 MiB defaults
+- **Services/FabricItemDefinitionExportServiceTests.cs**: Capability checks before path inspection, independent write-time checks, unchanged parts and cancellation, and safe export errors
+- **ItemDefinitionGetMcpTests.cs**: Registration, typed schemas, consent, all/namespace/single routing and output modes, HTTP inline retrieval and export rejection, read-only filtering, lossless exports, collisions, and partial-write cleanup
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -95,7 +99,7 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 
 `FabricOperationRunner` dispatches endpoint-specific synchronous success or accepted 202 responses. An adapter supplies its documented success codes and a typed result reader; an explicitly absent reader declares a no-result API. Create Item accepts only 201/202, while generic tests cover both 200 and 201, with and without results, in both sync modes. An absent result URL or 404 never selects the no-result contract.
 
-Public operation commands and the poller share the same low-level methods in `FabricCoreService.Operations.cs`. Requests continue through the existing authenticated sender; the poller cannot submit mutations or follow arbitrary URLs. `FabricOperationHttp` bounds JSON reads to 1 MiB and reuses the existing validated Retry-After parser. Each returned JSON element outlives its disposed response/stream.
+Public operation commands and the poller share the same low-level methods in `FabricCoreService.Operations.cs`. Requests continue through the existing authenticated sender; the poller cannot submit mutations or follow arbitrary URLs. `FabricOperationHttp` defaults to 1 MiB and reuses the existing validated Retry-After parser. Get Item Definition alone selects a 64 MiB bound for typed definition responses, including polled and explicitly resumed results; state reads and existing result contracts stay at 1 MiB. Each returned JSON element outlives its disposed response/stream.
 
 `OperationTestTimeProvider` and its BCL `ITimer` double advance virtual time deterministically. Tests do not sleep for the 3-second early probe, 20-second fallback, or 120-second default budget. Request budget timers cancel authentication, headers, and body reads; caller cancellation is distinct and retains a known operation reference. Late confirmed completion remains completed even when the result cannot be retrieved before the deadline.
 
@@ -108,7 +112,7 @@ All LRO/Create Item coverage is offline. It does not call real Fabric, validate 
 `IFabricItemDefinitionFileService` is an injectable, stateless file/part converter registered by
 `FabricCoreSetup`. It uses ordinary `System.IO`, following Azure's area-specific file services,
 without depending on or changing Azure tools. It makes no network requests, exposes no MCP commands,
-and is reused by Create Item's saved-file input without adding a command to the Core tool catalog.
+and is reused by Create Item's saved-file input and Get Item Definition's explicit completed export.
 
 The wire models are `FabricItemDefinition` (`parts`, optional `format`) and
 `FabricItemDefinitionPart` (`path`, `payload`, `payloadType`), registered in `CoreJsonContext`.
@@ -219,9 +223,37 @@ Explicit nulls, unknown fields, and invalid strategies are rejected, not silentl
 verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
 folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
 
-Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
-definition to export. Keep endpoint-specific result sizes separate from these file budgets:
-the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
+API adapters own LRO receipts, waiting and result retrieval. A 202 receipt is not a definition to
+export. Endpoint-specific wire sizes remain separate from the decoded file budgets.
+
+### Get Item Definition Adapter
+
+The initial mode requires workspace/item UUIDs and optionally encodes a format query value; it makes
+one POST and accepts only 200/202. Explicit sync waiting reuses `FabricOperationRunner`. The mutually
+exclusive resume mode accepts only an operation UUID (plus optional output settings), reads its result
+once, and does not poll, perform a state preflight, or resubmit the POST. Item provenance cannot be
+verified from this result endpoint. Missing response formats are never inferred from request options.
+
+`FabricCoreService.ItemDefinition.cs` parses a typed definition envelope with the existing source
+generation context, rejects duplicate JSON properties, and uses `FabricItemDefinitionValidator`.
+It does not apply the Create Item type-specific minimum-part rules to service-returned definitions.
+Unknown response fields are ignored while all known definition parts must be valid; no invalid parts
+are skipped. The per-result 64 MiB JSON bound is checked both with and without Content-Length, at the
+exact limit and one byte beyond. Tests also exercise decoded/count boundaries and definition bodies
+above the unchanged 1 MiB limit of Create Item and generic operation-result.
+
+`FabricItemDefinitionExportService` checks host capability before filesystem inspection and again
+before calling the existing writer. Registration removes only `output-directory` over HTTP without
+mutating shared cached binder options. Inline content remains available over HTTP after sensitive-data
+consent. Because the tool can write files, its conservative ReadOnly=false metadata excludes it in
+read-only hosts; Secret=true requires the existing elicitation flow. Tests use synthetic accepted
+consent, and verify rejected/unsupported consent never reaches authentication or file access.
+
+No output is attempted for receipts, failed operations, invalid definitions, or absent destinations.
+Successful export returns the published directory and typed definition, including only a format
+actually supplied by Fabric. Existing destinations are preserved and staging is removed on injected
+write failure/cancellation, with no inline-success fallback. All coverage is offline: no deployed
+resources, real Fabric calls, OBO/RBAC validation, or recorded playback.
 
 All file tests use isolated temporary directories with no Azure or Fabric requests. The fixture
 resolves system temporary-directory aliases, such as macOS `/var`, before creating its test data;
@@ -289,6 +321,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run definition packaging/input and Create Item coverage
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricItemDefinition*' '*ItemCreate*' '*FabricOperationMcpTests'
+
+# Run Get Item Definition, export, and existing LRO/creation regression coverage
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemDefinitionGet*' '*FabricItemDefinition*' '*FabricOperation*' '*ItemCreate*'
 
 # Run LRO service, polling, command/schema, and Create Item integration tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'

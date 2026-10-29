@@ -22,6 +22,15 @@ public interface IFabricCoreService
         FabricOperationWaitOptions? waitOptions = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Retrieves a typed item definition, optionally waiting for its operation or reading an earlier completed result.</summary>
+    Task<ItemDefinitionGetCommandResult> GetItemDefinitionAsync(
+        string? workspaceId = null,
+        string? itemId = null,
+        string? format = null,
+        string? operationId = null,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads operation state once, without polling or interpreting HTTP success as operation success.</summary>
     Task<OperationStateResult> GetOperationStateAsync(string operationId, CancellationToken cancellationToken);
 
