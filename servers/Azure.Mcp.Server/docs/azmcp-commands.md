@@ -2821,8 +2821,10 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
-In a long-running stdio server, each cached Kusto client reuses its access token
-until five minutes before expiration or the credential's earlier refresh time.
+Access tokens are reused for the lifetime of a cached Kusto client and refreshed
+five minutes before expiration or at the credential's earlier refresh time.
+With the current cache implementations, cross-call reuse occurs in stdio mode
+when caching is enabled; HTTP mode does not retain clients across calls.
 Tokens remain scoped to the client's credential and cloud; they are not shared
 across tenants.
 

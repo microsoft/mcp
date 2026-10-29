@@ -76,6 +76,9 @@ public sealed class KustoClient(
 
     private readonly string _clusterUri = ValidateAndNormalizeClusterUri(clusterUri);
     private readonly TokenCredential _tokenCredential = tokenCredential;
+    // Tokens are cached only within this client instance. Cross-call reuse depends
+    // on KustoService's ICacheService: stdio retains clients when caching is enabled;
+    // the current HTTP cache is a no-op, so clients are not reused across calls.
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
     private AccessToken _accessToken;
     private readonly string _userAgent = userAgent;
