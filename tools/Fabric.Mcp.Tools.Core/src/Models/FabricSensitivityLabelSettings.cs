@@ -3,5 +3,5 @@
 
 namespace Fabric.Mcp.Tools.Core.Models;
 
-/// <summary>Optional Create Item label settings. Omitted values retain Fabric's defaults.</summary>
-public sealed record FabricSensitivityLabelSettings(Guid? LabelId = null, string? SensitivityLabelApplyStrategy = null);
+/// <summary>Label settings require a label ID; an omitted strategy retains Fabric's default.</summary>
+public sealed record FabricSensitivityLabelSettings(Guid LabelId, string? SensitivityLabelApplyStrategy = null);

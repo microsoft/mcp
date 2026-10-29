@@ -247,10 +247,12 @@ waiting. Workload JSON remains opaque `JsonElement` data with one-MiB UTF-8 inpu
 nesting limits, and duplicate-property rejection, including nested objects. Tests measure the exact
 byte boundary with both ASCII and multibyte text, and the exact nesting boundary through request serialization.
 
-Label settings have a separate four-KiB input budget and a source-generated typed model. Supplied IDs
-must be nonempty UUIDs and the only accepted strategies are `ApplyOrFail` and `Ignore`. Omitted objects
-and members stay omitted, including Fabric's default strategy; empty settings objects stay empty.
-Explicit nulls, unknown fields, and invalid strategies are rejected, not silently discarded. Tests
+Label settings have a separate four-KiB input budget and a source-generated typed model. The entire
+object is optional, but every supplied settings object must have a nonempty `labelId` UUID. The only
+accepted strategies are `ApplyOrFail` and `Ignore`; the optional strategy stays omitted when not supplied,
+preserving Fabric's default. Required-constructor-parameter validation rejects empty and strategy-only
+settings before file access, authentication, or HTTP. Explicit nulls, unknown fields, and invalid
+strategies are rejected, not silently discarded. Tests
 verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
 folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
 

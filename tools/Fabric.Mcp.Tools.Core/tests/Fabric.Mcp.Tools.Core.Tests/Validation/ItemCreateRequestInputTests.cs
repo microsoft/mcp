@@ -207,19 +207,16 @@ public sealed class ItemCreateRequestInputTests()
     }
 
     [Theory]
-    [InlineData("{}")]
     [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":"ApplyOrFail"}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":"Ignore"}""")]
     [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"ApplyOrFail"}""")]
     [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"Ignore"}""")]
-    public static void LabelSettings_AreTypedAndPreserveOmittedMembersWithoutSelectingADefault(string json)
+    public static void LabelSettings_AreTypedAndPreserveOmittedStrategyWithoutSelectingADefault(string json)
     {
         var request = CreateRequest(WithJson("sensitivity-label-settings", json));
 
         var settings = Assert.IsType<FabricSensitivityLabelSettings>(request.SensitivityLabelSettings);
         using var expected = JsonDocument.Parse(json);
-        Assert.Equal(expected.RootElement.TryGetProperty("labelId", out _) ? Guid.Parse(LabelId) : (Guid?)null, settings.LabelId);
+        Assert.Equal(Guid.Parse(LabelId), settings.LabelId);
         Assert.Equal(expected.RootElement.TryGetProperty("sensitivityLabelApplyStrategy", out var strategy) ? strategy.GetString() : null,
             settings.SensitivityLabelApplyStrategy);
         using var body = JsonDocument.Parse(JsonSerializer.Serialize(request, CoreJsonContext.Default.CreateItemRequest));
@@ -227,18 +224,21 @@ public sealed class ItemCreateRequestInputTests()
     }
 
     [Theory]
+    [InlineData("{}")]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"ApplyOrFail"}""")]
+    [InlineData("""{"sensitivityLabelApplyStrategy":"Ignore"}""")]
     [InlineData("""{"labelId":null}""")]
     [InlineData("""{"labelId":12}""")]
     [InlineData("""{"labelId":""}""")]
     [InlineData("""{"labelId":"private-invalid-id"}""")]
     [InlineData("""{"labelId":"00000000-0000-0000-0000-000000000000"}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":null}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":0}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":false}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":""}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":"ignore"}""")]
-    [InlineData("""{"sensitivityLabelApplyStrategy":"private-unknown-strategy"}""")]
-    [InlineData("""{"private-unknown-property":true}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":null}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":0}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":false}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":""}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"ignore"}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"private-unknown-strategy"}""")]
+    [InlineData("""{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","private-unknown-property":true}""")]
     [InlineData("""{"LabelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"}""")]
     public static void InvalidLabelSettings_RejectRatherThanSilentlyDroppingOrWeakeningPolicy(string json)
     {
@@ -250,7 +250,8 @@ public sealed class ItemCreateRequestInputTests()
     [Fact]
     public static void LabelSettings_EnforceExactSmallObjectBudget()
     {
-        var json = "{}" + new string(' ', ItemCreateRequestInput.MaxLabelSettingsBytes - 2);
+        var settings = $$"""{"labelId":"{{LabelId}}"}""";
+        var json = settings + new string(' ', ItemCreateRequestInput.MaxLabelSettingsBytes - settings.Length);
 
         Assert.NotNull(CreateRequest(WithJson("sensitivity-label-settings", json)).SensitivityLabelSettings);
         var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(WithJson("sensitivity-label-settings", json + " ")));
