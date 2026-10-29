@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Fabric.Mcp.Tools.Core.Options;
 
-public class ItemDefinitionUpdateOptions
+public sealed class ItemDefinitionUpdateOptions()
 {
     [Option(Description = "The nonempty UUID of the existing Fabric workspace. Workspace names are not resolved.")]
     public required string WorkspaceId { get; set; }

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:words ipynb
+// cspell:words ipynb PBIR
 
 using System.Net;
 using System.Text;

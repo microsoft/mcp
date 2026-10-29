@@ -119,7 +119,7 @@ public sealed class ItemCreateRequestInputTests()
         Assert.Null(request.Definition);
         Assert.NotNull(request.CreationPayload);
         options.Options = "{}";
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(options));
         Assert.Contains("--options requires", error.Message);
     }
 
