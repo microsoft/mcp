@@ -43,4 +43,10 @@ public class McpServerConfiguration
     /// Indicates whether telemetry is enabled for the MCP server.  By default, it is set to true.
     /// </summary>
     public bool IsTelemetryEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Whether built-in namespace routers advertise relative command names and accept legacy aliases.
+    /// Other server modes retain their registered command names.
+    /// </summary>
+    public bool UseRelativeNamespaceCommandNames { get; set; }
 }

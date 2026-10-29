@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Xunit;
 
@@ -9,6 +11,16 @@ namespace Azure.Mcp.Server.Tests.Infrastructure;
 
 public class ServiceRegistrationTests
 {
+    [Fact]
+    public void ConfigureServices_OptsIntoRelativeNamespaceCommandNames()
+    {
+        var services = new ServiceCollection();
+        Program.ConfigureServices(services);
+        using var provider = services.BuildServiceProvider();
+
+        Assert.True(provider.GetRequiredService<IOptions<McpServerConfiguration>>().Value.UseRelativeNamespaceCommandNames);
+    }
+
     [Fact]
     public void ConfigureServices_ConfiguresServerInstructions()
     {

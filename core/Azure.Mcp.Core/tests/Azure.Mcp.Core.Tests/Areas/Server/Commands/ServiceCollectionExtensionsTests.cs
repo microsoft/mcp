@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -20,7 +21,7 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
 
 public class ServiceCollectionExtensionsTests
 {
-    private IServiceCollection SetupBaseServices()
+    private IServiceCollection SetupBaseServices(bool useRelativeNames = false)
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
         services.AddSingleton(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
@@ -34,12 +35,27 @@ public class ServiceCollectionExtensionsTests
             DisplayName = "Azure MCP Server",
             Version = "1.0.0",
             RootCommandGroupName = "azmcp",
-            Description = "Test description"
+            Description = "Test description",
+            UseRelativeNamespaceCommandNames = useRelativeNames
         };
         services.AddSingleton(serverConfiguration);
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(serverConfiguration));
 
         return services;
+    }
+
+    [Theory]
+    [InlineData(true, "webapp_get")]
+    [InlineData(false, "appservice_webapp_get")]
+    public async Task AddAzureMcpServer_AppliesServerNamespaceNamingPolicy(bool useRelativeNames, string expectedName)
+    {
+        var services = SetupBaseServices(useRelativeNames);
+        services.AddAzureMcpServer(new ServerStartOptions { Mode = "namespace", DisableProxyTools = true });
+        await using var provider = services.BuildServiceProvider();
+        var loader = provider.GetRequiredService<NamespaceToolLoader>();
+        var request = McpTestUtilities.CreateToolCallRequest("appservice");
+
+        Assert.Contains(loader.GetChildToolList(request, "appservice"), tool => tool.Name == expectedName);
     }
 
     [Fact]

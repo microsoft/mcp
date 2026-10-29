@@ -18,6 +18,7 @@ public sealed class BaseCommandMetadataTests
     [CommandMetadata(
         Id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
         Name = "test-attribute",
+        NamespaceOperationName = "get",
         Title = "Test Attribute Command",
         Description = "A command used only in tests.",
         OperationPlane = ToolOperationPlane.Control,
@@ -57,6 +58,8 @@ public sealed class BaseCommandMetadataTests
     {
         var command = new AttributeBasedCommand();
         Assert.Equal("test-attribute", command.Name);
+        Assert.Equal("get", command.NamespaceOperationName);
+        Assert.Equal("test-attribute", command.GetCommand().Name);
     }
 
     [Fact]
