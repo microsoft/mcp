@@ -11,33 +11,69 @@ BeforeAll {
     $script:Pipeline = Get-Content (Join-Path $RepoRoot 'eng\pipelines\release-prep.yml') -Raw | ConvertFrom-Yaml
 }
 
-Describe 'Holiday calendar' {
+Describe 'Microsoft US holiday calendar' {
     It 'recognizes <Name> on <Date>' -ForEach @(
         @{ Date = '2026-01-01'; Name = "New Year's Day" }
         @{ Date = '2026-01-19'; Name = 'Martin Luther King Jr. Day' }
         @{ Date = '2026-02-16'; Name = "Washington's Birthday" }
         @{ Date = '2026-05-25'; Name = 'Memorial Day' }
         @{ Date = '2026-07-04'; Name = 'Independence Day' }
-        @{ Date = '2026-07-03'; Name = 'Independence Day (observed)' }
         @{ Date = '2026-09-07'; Name = 'Labor Day' }
         @{ Date = '2026-11-26'; Name = 'Thanksgiving Day' }
         @{ Date = '2026-11-27'; Name = 'Day after Thanksgiving' }
         @{ Date = '2026-12-24'; Name = 'Christmas Eve' }
         @{ Date = '2026-12-25'; Name = 'Christmas Day' }
-        @{ Date = '2027-07-05'; Name = 'Independence Day (observed)' }
-        @{ Date = '2027-05-31'; Name = 'Memorial Day' }
-        @{ Date = '2023-01-02'; Name = "New Year's Day (observed)" }
-        @{ Date = '2021-12-31'; Name = "New Year's Day (observed)" }
-        @{ Date = '2022-01-01'; Name = "New Year's Day" }
     ) {
         Get-USFederalHoliday -Date ([datetime]$Date) | Should -Be $Name
     }
 
-    It 'does not exclude non-federal holidays or ordinary days' -ForEach @(
-        @{ Date = '2026-04-03' }
-        @{ Date = '2026-11-03' }
-        @{ Date = '2026-11-27' }
-        @{ Date = '2027-05-24' }
+    It 'recognizes exactly 10 distinct Microsoft holidays' {
+        $holidayNames = for ($date = [datetime]::new(2026, 1, 1); $date -lt [datetime]::new(2027, 1, 1); $date = $date.AddDays(1)) {
+            $holiday = Get-USFederalHoliday -Date $date
+            if ($holiday) {
+                $holiday -replace ' \(observed\)$', ''
+            }
+        }
+        @($holidayNames | Sort-Object -Unique).Count | Should -Be 10
+    }
+
+    It 'recognizes the observed date of <Name> on <Date>' -ForEach @(
+        @{ Date = '2026-07-03'; Name = 'Independence Day (observed)' }
+        @{ Date = '2027-07-05'; Name = 'Independence Day (observed)' }
+        @{ Date = '2023-01-02'; Name = "New Year's Day (observed)" }
+        @{ Date = '2021-12-31'; Name = "New Year's Day (observed)" }
+        @{ Date = '2022-12-23'; Name = 'Christmas Eve (observed)' }
+        @{ Date = '2022-12-26'; Name = 'Christmas Day (observed)' }
+    ) {
+        Get-USFederalHoliday -Date ([datetime]$Date) | Should -Be $Name
+    }
+
+    It 'recognizes Memorial Day when the last Monday is the fifth Monday' {
+        Get-USFederalHoliday -Date '2027-05-31' | Should -Be 'Memorial Day'
+    }
+
+    It "recognizes New Year's Day on its actual weekend date" {
+        Get-USFederalHoliday -Date '2022-01-01' | Should -Be "New Year's Day"
+    }
+
+    It 'recognizes the Friday immediately after Thanksgiving on <Date>' -ForEach @(
+        @{ Date = '2018-11-23' }
+        @{ Date = '2024-11-29' }
+        @{ Date = '2030-11-29' }
+    ) {
+        Get-USFederalHoliday -Date ([datetime]$Date) | Should -Be 'Day after Thanksgiving'
+    }
+
+    It 'does not exclude <Name> on <Date>' -ForEach @(
+        @{ Date = '2026-06-19'; Name = 'Juneteenth' }
+        @{ Date = '2026-10-12'; Name = 'Columbus Day' }
+        @{ Date = '2026-11-11'; Name = 'Veterans Day' }
+        @{ Date = '2026-04-03'; Name = 'Good Friday' }
+        @{ Date = '2026-11-03'; Name = 'an ordinary Tuesday' }
+        @{ Date = '2027-05-24'; Name = 'the Monday before Memorial Day' }
+        @{ Date = '2024-11-22'; Name = 'the Friday before Thanksgiving' }
+        @{ Date = '2030-11-22'; Name = 'the Friday before Thanksgiving' }
+        @{ Date = '2018-11-30'; Name = 'the Friday a week after Thanksgiving' }
     ) {
         Get-USFederalHoliday -Date ([datetime]$Date) | Should -BeNullOrEmpty
     }
@@ -45,6 +81,13 @@ Describe 'Holiday calendar' {
 
 Describe 'Pacific release-preparation schedules' {
     It 'selects exactly one noon-Pacific trigger on every eligible day from 2026 through 2030' {
+        $scheduledHolidayDates = @(
+            '2026-01-01', '2026-11-26', '2026-12-24',
+            '2027-11-25',
+            '2028-07-04', '2028-11-23',
+            '2029-11-22', '2029-12-25',
+            '2030-01-01', '2030-07-04', '2030-11-28', '2030-12-24'
+        )
         $zone = [TimeZoneInfo]::FindSystemTimeZoneById('Pacific Standard Time')
         for ($date = [datetime]::new(2026, 1, 1); $date -lt [datetime]::new(2031, 1, 1); $date = $date.AddDays(1)) {
             if ($date.DayOfWeek -notin @([DayOfWeek]::Tuesday, [DayOfWeek]::Thursday)) {
@@ -62,7 +105,7 @@ Describe 'Pacific release-preparation schedules' {
                     }
                 }
             )
-            $expectedCount = if (Get-USFederalHoliday -Date $date) { 0 } else { 1 }
+            $expectedCount = if ($date.ToString('yyyy-MM-dd') -in $scheduledHolidayDates) { 0 } else { 1 }
             $eligibleSchedules.Count | Should -Be $expectedCount -Because "the calendar must allow exactly $expectedCount trigger(s) on $date"
         }
     }

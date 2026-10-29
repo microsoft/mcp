@@ -1,5 +1,3 @@
-# cSpell:ignore Juneteenth
-
 function Get-USFederalHoliday {
     [CmdletBinding()]
     param(
@@ -38,7 +36,7 @@ function Get-USFederalHoliday {
         @{ Name = 'Memorial Day'; Month = 5; Weekday = 1; Week = -1 }
         @{ Name = 'Labor Day'; Month = 9; Weekday = 1; Week = 1 }
         @{ Name = 'Thanksgiving Day'; Month = 11; Weekday = 4; Week = 4 }
-        @{ Name = 'Day after Thanksgiving'; Month = 11; Weekday = 5; Week = 4 }
+        @{ Name = 'Day after Thanksgiving'; Month = 11; Weekday = 4; Week = 4; DayOffset = 1 }
     )
     foreach ($holiday in $floatingHolidays) {
         $firstDay = [datetime]::new($Date.Year, $holiday.Month, 1)
@@ -49,6 +47,9 @@ function Get-USFederalHoliday {
         else {
             $holidayDate = $firstDay.AddDays(
                 (($holiday.Weekday - [int]$firstDay.DayOfWeek + 7) % 7) + 7 * ($holiday.Week - 1))
+        }
+        if ($holiday.ContainsKey('DayOffset')) {
+            $holidayDate = $holidayDate.AddDays($holiday.DayOffset)
         }
         if ($Date.Date -eq $holidayDate) {
             return $holiday.Name
