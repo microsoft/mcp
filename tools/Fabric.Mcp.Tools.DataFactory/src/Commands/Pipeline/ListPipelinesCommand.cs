@@ -42,7 +42,7 @@ public sealed class ListPipelinesCommand(ILogger<ListPipelinesCommand> logger, P
         else
         {
             _logger.LogError("Error listing pipelines in workspace {WorkspaceId}: {Error}", options.WorkspaceId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

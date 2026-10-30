@@ -1,0 +1,4 @@
+pr: 3795
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved exception handling to preserve authentication, cancellation, and service error details, and correctly identify missing resources and malformed AppLens responses."

@@ -51,7 +51,7 @@ public sealed class ExecuteQueryCommand(ILogger<ExecuteQueryCommand> logger, Dat
         {
             _logger.LogError("Error executing query '{QueryName}' on dataflow {DataflowId}: {Error}",
                 options.QueryName, options.DataflowId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

@@ -42,7 +42,7 @@ public sealed class GetPipelineCommand(ILogger<GetPipelineCommand> logger, Pipel
         {
             _logger.LogError("Error getting pipeline {PipelineId} from workspace {WorkspaceId}: {Error}",
                 options.PipelineId, options.WorkspaceId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

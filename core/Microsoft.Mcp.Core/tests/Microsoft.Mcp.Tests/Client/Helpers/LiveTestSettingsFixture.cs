@@ -55,14 +55,14 @@ public class LiveTestSettingsFixture : IAsyncLifetime
         var claims = JsonSerializer.Serialize(jsonToken.Claims.Select(x => x.Type));
 
         var principalType = jsonToken.Claims.FirstOrDefault(c => c.Type == "idtyp")?.Value ??
-            throw new Exception($"Unable to locate 'idtyp' claim in Entra ID token: {claims}");
+            throw new KeyNotFoundException($"Unable to locate 'idtyp' claim in Entra ID token: {claims}");
 
         Settings.IsServicePrincipal = string.Equals(principalType, "app", StringComparison.OrdinalIgnoreCase);
 
         var nameClaim = Settings.IsServicePrincipal ? "app_displayname" : "unique_name";
 
         var principalName = jsonToken.Claims.FirstOrDefault(c => c.Type == nameClaim)?.Value ??
-            throw new Exception($"Unable to locate 'unique_name' claim in Entra ID token: {claims}");
+            throw new KeyNotFoundException($"Unable to locate 'unique_name' claim in Entra ID token: {claims}");
 
         Settings.PrincipalName = principalName;
     }
