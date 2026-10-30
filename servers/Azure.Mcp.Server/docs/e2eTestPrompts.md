@@ -1221,6 +1221,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| role_approval_approve | Approve the pending PIM role assignment request <approval> stage <stage> for scope <scope> because <justification> | context-required |
+| role_approval_list | Show me pending Azure RBAC PIM role assignment approvals for scope <scope> | none |
 | role_assignment_list | List all available role assignments in my subscription | none |
 | role_assignment_list | Show me the available role assignments in my subscription | none |
 | role_assignment_list | List the role assignments at scope /providers/Microsoft.Management/managementGroups/<management-group> | none |

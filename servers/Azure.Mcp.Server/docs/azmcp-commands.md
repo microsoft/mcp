@@ -4522,6 +4522,23 @@ azmcp pricing get [--sku <sku>] \
 ### Azure RBAC Operations
 
 ```bash
+# Approve an Azure RBAC PIM role assignment request
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp role approval approve --subscription <subscription> \
+                            --scope <scope> \
+                            --approval <approval> \
+                            --stage <stage> \
+                            --justification <justification>
+```
+
+```bash
+# List pending Azure RBAC PIM role assignment approvals assigned to the current approver
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp role approval list --subscription <subscription> \
+                         --scope <scope>
+```
+
+```bash
 # List Azure RBAC role assignments at a scope and any scope nested beneath it
 # Assignments inherited from a parent scope are not included.
 # --subscription must not be specified when --scope is a management group.
