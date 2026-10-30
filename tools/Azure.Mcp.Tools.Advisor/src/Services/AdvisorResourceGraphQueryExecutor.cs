@@ -17,7 +17,7 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
     internal const int ResourceGraphMaxPages = 100;
     internal static readonly TimeSpan ScopeBatchTimeout = TimeSpan.FromSeconds(45);
 
-    internal sealed record PagedQueryResult(IReadOnlyList<JsonElement> Rows, bool IsTruncated);
+    internal sealed record PagedQueryResult(IReadOnlyList<JsonElement> Rows, bool IsTruncated, string? SkipToken = null);
 
     private readonly IAzureService _azureService = azureService;
 
@@ -253,6 +253,63 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         return response.Value;
     }
 
+    internal static async Task<PagedQueryResult> ExecutePageAsync(
+        TenantResource tenantResource,
+        string query,
+        int pageSize,
+        string? skipToken,
+        CancellationToken cancellationToken)
+    {
+        AdvisorPagination.Validate(skipToken);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pageSize, ResourceGraphPageSize);
+        using var timeoutCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellation.CancelAfter(ScopeBatchTimeout);
+        try
+        {
+            var content = new ResourceQueryContent(query)
+            {
+                Options = new ResourceQueryRequestOptions { Top = pageSize, SkipToken = skipToken },
+            };
+            var response = await tenantResource.GetResourcesAsync(content, timeoutCancellation.Token);
+            EnsureFullTenantCoverage(response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
+                ? value : null);
+            var result = response.Value;
+            if (result.Count < 0 || result.Count > pageSize)
+            {
+                throw new JsonException("Azure Resource Graph returned an invalid page size.");
+            }
+            var rows = new List<JsonElement>();
+            if (result.Count > 0)
+            {
+                if (result.Data is null)
+                {
+                    throw new JsonException("Azure Resource Graph returned non-empty results without data.");
+                }
+                using var document = JsonDocument.Parse(result.Data);
+                if (document.RootElement.ValueKind != JsonValueKind.Array ||
+                    document.RootElement.GetArrayLength() != result.Count)
+                {
+                    throw new JsonException("Azure Resource Graph returned invalid or incomplete row data.");
+                }
+                rows.AddRange(document.RootElement.EnumerateArray().Select(static row => row.Clone()));
+            }
+            var next = string.IsNullOrWhiteSpace(result.SkipToken) ? null : result.SkipToken;
+            AdvisorPagination.Validate(next);
+            if (next is not null && next.Equals(skipToken, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("Azure Resource Graph returned a repeated skip token.");
+            }
+            return new(rows, result.ResultTruncated == ResultTruncated.True, next);
+        }
+        catch (OperationCanceledException) when (
+            timeoutCancellation.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"Azure Resource Graph Advisor query exceeded the {ScopeBatchTimeout.TotalSeconds:0}-second batch timeout.");
+        }
+    }
+
     internal static async Task<PagedQueryResult> ExecutePagedAsync(
         TenantResource tenantResource,
         string query,
@@ -267,39 +324,12 @@ internal sealed class AdvisorResourceGraphQueryExecutor(IAzureService azureServi
         string? skipToken = null;
         for (var page = 1; ; page++)
         {
-            var queryContent = new ResourceQueryContent(query)
-            {
-                Options = new ResourceQueryRequestOptions
-                {
-                    Top = ResourceGraphPageSize,
-                    SkipToken = skipToken,
-                },
-            };
             try
             {
-                var response = await tenantResource.GetResourcesAsync(queryContent, timeoutCancellation.Token);
-                var limitHit = response.GetRawResponse().Headers.TryGetValue(TenantSubscriptionLimitHitHeader, out var value)
-                    ? value
-                    : null;
-                EnsureFullTenantCoverage(limitHit);
-
-                var result = response.Value;
-                isTruncated = result.ResultTruncated == ResultTruncated.True;
-                if (result.Count > 0)
-                {
-                    if (result.Data is null)
-                    {
-                        throw new JsonException("Azure Resource Graph returned non-empty results without data.");
-                    }
-                    using var document = JsonDocument.Parse(result.Data);
-                    if (document.RootElement.ValueKind != JsonValueKind.Array ||
-                        document.RootElement.GetArrayLength() != result.Count)
-                    {
-                        throw new JsonException("Azure Resource Graph returned invalid or incomplete row data.");
-                    }
-                    rows.AddRange(document.RootElement.EnumerateArray().Select(static row => row.Clone()));
-                }
-
+                var result = await ExecutePageAsync(
+                    tenantResource, query, ResourceGraphPageSize, skipToken, timeoutCancellation.Token);
+                isTruncated = result.IsTruncated;
+                rows.AddRange(result.Rows);
                 skipToken = result.SkipToken;
                 if (string.IsNullOrWhiteSpace(skipToken))
                 {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -22,20 +23,26 @@ internal static class RecommendationScopeValidator
         var readOptions = options as IRecommendationReadScopeOptions;
         var serviceGroupWasProvided = options.ServiceGroup is not null;
         options.ServiceGroup = options.ServiceGroup?.Trim();
-        options.Subscription = options.Subscription?.Trim('"', '\'');
         if (readOptions is not null)
         {
-            readOptions.Subscriptions = NormalizeScopes(readOptions.Subscriptions);
-        }
-
-        if (!serviceGroupWasProvided)
-        {
-            if (readOptions?.Subscriptions is not { Length: > 0 })
+            if (readOptions.Subscriptions is not null)
             {
-                options.Subscription = subscriptionResolver.ResolveSubscription(options.Subscription);
+                readOptions.Subscriptions = NormalizeScopes(readOptions.Subscriptions);
             }
-
-            options.Subscription = options.Subscription?.Trim('"', '\'');
+            if (!serviceGroupWasProvided &&
+                readOptions.Subscriptions is not { Length: > 0 } &&
+                subscriptionResolver.ResolveSubscription(null) is { } defaultSubscription)
+            {
+                readOptions.Subscriptions = NormalizeScopes([defaultSubscription]);
+            }
+        }
+        else if (options is ISubscriptionOption singleScope)
+        {
+            singleScope.Subscription = singleScope.Subscription?.Trim('"', '\'');
+            if (!serviceGroupWasProvided)
+            {
+                singleScope.Subscription = subscriptionResolver.ResolveSubscription(singleScope.Subscription)?.Trim('"', '\'');
+            }
         }
     }
 
@@ -49,26 +56,26 @@ internal static class RecommendationScopeValidator
         var readOptions = options as IRecommendationReadScopeOptions;
         if (readOptions?.Subscriptions?.Any(string.IsNullOrWhiteSpace) == true)
         {
-            validationResult.Errors.Add("Each explicit subscription scope must be non-empty.");
+            validationResult.Errors.Add("--subscriptions must contain at least one non-empty subscription ID or name.");
         }
 
         var subscriptionWasProvided =
-            options.Subscription is not null ||
+            (options as ISubscriptionOption)?.Subscription is not null ||
             readOptions?.Subscriptions is { Length: > 0 };
         var serviceGroupWasProvided = options.ServiceGroup is not null;
         if (subscriptionWasProvided && serviceGroupWasProvided)
         {
-            validationResult.Errors.Add(readOptions?.Subscriptions is { Length: > 0 }
-                ? "Specify either --subscription/--subscriptions or --service-group, not both."
+            validationResult.Errors.Add(readOptions is not null
+                ? "Specify either --subscriptions or --service-group, not both."
                 : "Specify either --subscription or --service-group, not both.");
         }
-        else if (string.IsNullOrWhiteSpace(options.Subscription) &&
+        else if (string.IsNullOrWhiteSpace((options as ISubscriptionOption)?.Subscription) &&
             readOptions?.Subscriptions is not { Length: > 0 } &&
             string.IsNullOrWhiteSpace(options.ServiceGroup))
         {
             validationResult.Errors.Add(readOptions is null
                 ? "Missing Required options: --subscription or --service-group."
-                : "Missing Required options: --subscription, --subscriptions, or --service-group.");
+                : "Missing Required options: --subscriptions or --service-group.");
         }
 
         if (options.ServiceGroup is not null && !IsValidServiceGroupInput(options.ServiceGroup))
@@ -112,9 +119,11 @@ internal static class RecommendationScopeValidator
         serviceGroup.All(IsValidServiceGroupIdCharacter);
 
     internal static string[] GetSubscriptions(IRecommendationScopeOptions options) =>
-        NormalizeScopes(RecommendationFilterValidator.CombineValues(
-            options.Subscription,
-            (options as IRecommendationReadScopeOptions)?.Subscriptions));
+        options is IRecommendationReadScopeOptions readOptions
+            ? NormalizeScopes(readOptions.Subscriptions)
+            : (options as ISubscriptionOption)?.Subscription is { } subscription
+                ? NormalizeScopes([subscription])
+                : [];
 
     private static string[] NormalizeScopes(IEnumerable<string>? values) =>
         (values ?? [])

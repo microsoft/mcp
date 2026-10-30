@@ -22,22 +22,37 @@ internal static class RecommendationQueryBuilder
     internal const string LifecycleSavingsSortExpression =
         "iff(recommendationStatus =~ 'Completed', realizedSavings, annualSavings)";
     internal const string RetailPricingBasis = "Retail";
+    private const int MonthsPerYear = 12;
+    private const decimal AverageDaysPerMonth = 30.4m;
 
     internal static bool IsIdleResourceCost(RecommendationFilters? filters) =>
-        string.Equals(filters?.Category?.Trim(), "Cost", StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(filters?.SubCategory?.Trim(), "IdleResources", StringComparison.OrdinalIgnoreCase);
+        IsIdleResourceCost(filters?.Category, filters?.SubCategory);
+
+    internal static bool IsIdleResourceCost(string? category, string? subCategory) =>
+        string.Equals(category?.Trim(), "Cost", StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(subCategory?.Trim(), "IdleResources", StringComparison.OrdinalIgnoreCase);
 
     internal static string AnnualizeSavings(string dailySavings) =>
-        $"{dailySavings} * 12 * 30.4";
+        $"{dailySavings} * {MonthsPerYear.ToString(CultureInfo.InvariantCulture)} * {AverageDaysPerMonth.ToString(CultureInfo.InvariantCulture)}";
 
     internal static bool ShouldFilterSummaryStatus(RecommendationFilters? filters, bool groupByStatus = false) =>
-        filters?.Status is not null || !groupByStatus;
+        (IsIdleResourceCost(filters) && filters?.Status is not null) || !groupByStatus;
 
-    internal static RecommendationFilters? ApplySummaryStatusDefault(RecommendationFilters? filters) =>
-        filters is { Status: null } &&
-        (filters.SavingsAsOf is not null || filters.SavingsFrom is not null || filters.SavingsTo is not null)
+    internal static RecommendationFilters? ApplySummaryStatusDefault(RecommendationFilters? filters)
+    {
+        ValidateCostOnlyFilters(filters);
+        if (filters?.Status is not null && !IsIdleResourceCost(filters))
+        {
+            throw new ArgumentException(
+                "--status requires --category Cost and --sub-category IdleResources for summaries.",
+                nameof(filters));
+        }
+
+        return IsIdleResourceCost(filters) && filters is { Status: null } &&
+            (filters.SavingsAsOf is not null || filters.SavingsFrom is not null || filters.SavingsTo is not null)
             ? filters with { Status = RecommendationStatus.Completed }
             : filters;
+    }
 
     internal static string BuildSavingsValues(RecommendationFilters? filters = null) =>
         " | extend dailySavings = todouble(properties.savings.retail.dailyPotentialSavings)," +
@@ -48,7 +63,9 @@ internal static class RecommendationQueryBuilder
         " resourceDeletedOn = todatetime(properties.savings.resourceDeletedOn)," +
         " recommendationStatus = tostring(properties.recommendationStatus)" +
         $" | extend annualSavings = iff(isfinite(dailySavings), {AnnualizeSavings("dailySavings")}," +
-        " iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))," +
+        (IsIdleResourceCost(filters)
+            ? " real(null)),"
+            : " iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null))),") +
         " isOpen = recommendationStatus !~ 'Completed'," +
         $" asOf = {(filters?.SavingsAsOf is DateTimeOffset asOf ? $"datetime({FormatUtcTimestamp(asOf)})" : "now()")}" +
         " | extend cost = iff(not(isOpen)," +
@@ -138,17 +155,7 @@ internal static class RecommendationQueryBuilder
                 clauses.Add(
                     $"tostring(properties.recommendationTypeId) in~ ({FormatKqlStringList(filters.RecommendationTypeIds)})");
             }
-            else if (!string.IsNullOrWhiteSpace(filters.RecommendationTypeId))
-            {
-                clauses.Add(
-                    $"tostring(properties.recommendationTypeId) =~ '{SanitizeForKql(filters.RecommendationTypeId)}'");
-            }
-
-            var resourceTypes = filters.ResourceTypes is { Count: > 0 }
-                ? filters.ResourceTypes
-                : string.IsNullOrWhiteSpace(filters.ResourceType)
-                    ? []
-                    : [filters.ResourceType];
+            var resourceTypes = filters.ResourceTypes ?? [];
             if (resourceTypes.Count > 0)
             {
                 var resourceTypeProperty = resourceTypeUsesImpactedField
@@ -173,9 +180,7 @@ internal static class RecommendationQueryBuilder
             if (filters.Resources is { Count: > 0 })
             {
                 var resources = FormatKqlStringList(filters.Resources);
-                clauses.Add(
-                    $"(tostring(properties.resourceMetadata.resourceId) in~ ({resources}) or " +
-                    $"tostring(properties.impactedValue) in~ ({resources}))");
+                clauses.Add($"tostring(properties.resourceMetadata.resourceId) in~ ({resources})");
             }
 
             if (!string.IsNullOrWhiteSpace(filters.Search))
@@ -206,11 +211,10 @@ internal static class RecommendationQueryBuilder
             filters.SavingsAsOf is not null ||
             filters.SavingsFrom is not null ||
             filters.SavingsTo is not null;
-        if (hasCostOnlyFilter &&
-            !string.Equals(filters.Category, "Cost", StringComparison.OrdinalIgnoreCase))
+        if (hasCostOnlyFilter && !IsIdleResourceCost(filters))
         {
             throw new ArgumentException(
-                "--minimum-savings, --as-of, --from, and --to require --category Cost.",
+                "--minimum-savings, --as-of, --from, and --to require --category Cost and --sub-category IdleResources.",
                 nameof(filters));
         }
     }

@@ -56,6 +56,32 @@ public sealed class PreValidationServiceTests
         Assert.Empty(azure.ReceivedCalls());
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ValidateAsync_ProcessesEveryBatchAndPreservesUnknownEvidence(bool truncated)
+    {
+        var azure = Substitute.For<IAzureService>();
+        var typeId = Guid.Empty.ToString();
+        var candidates = Enumerable.Range(0, 126).Select(index =>
+            Candidate(typeId, $"{ResourceId}-{index}")).ToArray();
+        var result = await CreateService(azure).ValidateAsync(typeId,
+            candidates.Concat(candidates.Take(1)).ToArray(), null, truncated, ["missing"], 30,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(126, result.NeedsReview.Count);
+        Assert.Equal(candidates.Select(static candidate => candidate.Properties.ResourceMetadata!.ResourceId),
+            result.NeedsReview.Select(static resource => resource.ResourceId));
+        Assert.Empty(result.Safe);
+        Assert.Equal("needsReview", result.Verdict);
+        Assert.Equal(truncated, result.AreResultsTruncated);
+        Assert.Equal(126, result.CheckedResourceCount);
+        Assert.Equal(truncated ? (int?)null : 0, result.RemainingResourceCount);
+        Assert.Equal(["missing"], result.UnmatchedResources);
+        Assert.Equal(126, result.Summary.Sum(static bucket => bucket.Count));
+        Assert.Empty(azure.ReceivedCalls());
+    }
+
     [Fact]
     public async Task ValidateAsync_CancellationPropagatesBeforeAzureReads()
     {
@@ -67,6 +93,76 @@ public sealed class PreValidationServiceTests
             CreateService(azure).ValidateAsync(TypeId, [Candidate()], null, false, [], 30, cancellation.Token));
 
         Assert.Empty(azure.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ValidateAsync_BoundsCombinedArmArgAndMonitorReadsAndPreservesCheckOrder(bool pauseOnlyArmGroups)
+    {
+        const string planTypeId = "39a8510f-5bbf-4304-9bcd-4106c996473b";
+        const string planId = $"/subscriptions/{Subscription}/resourceGroups/rg/providers/Microsoft.Web/serverfarms/plan";
+        var firstWave = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var enabled = false;
+        var active = 0;
+        async Task PauseRead(CancellationToken token)
+        {
+            var count = Interlocked.Increment(ref active);
+            try
+            {
+                Assert.InRange(count, 1, 4);
+                if (count == 4)
+                {
+                    firstWave.TrySetResult();
+                }
+                await release.Task.WaitAsync(token);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref active);
+            }
+        }
+        using var handler = new PreValidationHttpMessageHandler(
+            (request, body) => Respond(request, body, "complete", planId),
+            (request, token) => enabled && (!pauseOnlyArmGroups ||
+                request.RequestUri!.AbsolutePath.EndsWith("/resources", StringComparison.Ordinal))
+                    ? PauseRead(token) : Task.CompletedTask);
+        var azure = await CreateAzureServiceAsync(handler);
+        var metrics = Substitute.For<IMonitorMetricsService>();
+        metrics.QueryMetricsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<IEnumerable<string>>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>()).Returns(async call =>
+            {
+                if (!pauseOnlyArmGroups)
+                {
+                    await PauseRead(call.Arg<CancellationToken>());
+                }
+                return [];
+            });
+        enabled = true;
+        var candidates = Enumerable.Range(0, 9).Select(index => Candidate(planTypeId,
+            planId.Replace("/resourceGroups/rg/", $"/resourceGroups/rg{index}/", StringComparison.Ordinal))).ToArray();
+        var validation = CreateService(azure, metrics).ValidateAsync(planTypeId, candidates,
+            Tenant, false, [], 30, TestContext.Current.CancellationToken);
+        try
+        {
+            await firstWave.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+            Assert.Equal(4, Volatile.Read(ref active));
+        }
+        finally
+        {
+            release.TrySetResult();
+            await validation;
+        }
+
+        var result = await validation;
+        Assert.Equal(9, result.Safe.Count + result.NeedsReview.Count + result.Blocked.Count);
+        var expectedOrder = ResourceInsightsCatalog.All["microsoft.web/serverfarms"].Checks.Select(static check => check.Id);
+        Assert.All(result.Safe.Concat(result.NeedsReview).Concat(result.Blocked), resource =>
+            Assert.Equal(expectedOrder, resource.Checks.Where(static check => check.Id != "deletion-status").Select(static check => check.Id)));
+        Assert.Equal(0, Volatile.Read(ref active));
     }
 
     [Theory]
@@ -404,6 +500,65 @@ public sealed class PreValidationServiceTests
             Arg.Is<IEnumerable<string>>(names => names.SequenceEqual(new[] { "BytesReceived", "BytesSent" })),
             start.ToString("O"), Now.ToString("O"), "P1D", "Total",
             tenant: Tenant, cancellationToken: Arg.Is<CancellationToken>(token => token.CanBeCanceled));
+    }
+
+    [Theory]
+    [InlineData("complete", "safe")]
+    [InlineData("recent", "needsReview")]
+    [InlineData("gap", "needsReview")]
+    public async Task ValidateAsync_RealMonitorServicePreservesDailyCoverageSemantics(string scenario, string verdict)
+    {
+        const string planId = $"/subscriptions/{Subscription}/resourceGroups/rg/providers/Microsoft.Web/serverfarms/plan";
+        const string planTypeId = "39a8510f-5bbf-4304-9bcd-4106c996473b";
+        var metricReads = 0;
+        using var handler = new PreValidationHttpMessageHandler((request, body) =>
+        {
+            if (!request.RequestUri!.AbsolutePath.EndsWith("/providers/microsoft.insights/metrics", StringComparison.OrdinalIgnoreCase))
+            {
+                return Respond(request, body, "complete", planId);
+            }
+            Interlocked.Increment(ref metricReads);
+            var query = Uri.UnescapeDataString(request.RequestUri.Query);
+            Assert.Contains("metricnames=BytesReceived,BytesSent", query, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("interval=P1D", query, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("aggregation=Total", query, StringComparison.OrdinalIgnoreCase);
+            return Json(new
+            {
+                value = new[] { "BytesReceived", "BytesSent" }.Select(name => new
+                {
+                    name = new { value = name },
+                    unit = "Bytes",
+                    timeseries = new[]
+                    {
+                        new
+                        {
+                            data = Enumerable.Range(0, 32).Select(index => new
+                            {
+                                timeStamp = Now.AddDays(index - 31),
+                                total = scenario == "gap" && index == 5 ? (double?)null :
+                                    scenario == "recent" && index == 30 ? 1d : 0d,
+                            }).ToArray(),
+                        },
+                    },
+                }).ToArray(),
+            });
+        });
+        var azure = await CreateAzureServiceAsync(handler);
+        azure.When(service => service.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(call => call.Arg<ArmClientOptions>().Transport = new HttpClientTransport(
+                new HttpClient(handler, disposeHandler: false)));
+        var resolver = Substitute.For<IResourceResolverService>();
+        resolver.ResolveResourceIdAsync(Subscription, "rg", "Microsoft.Web/serverfarms", planId, Tenant, Arg.Any<CancellationToken>())
+            .Returns(new ResourceIdentifier(planId));
+
+        var result = await CreateService(azure, new MonitorMetricsService(resolver, azure)).ValidateAsync(planTypeId,
+            [Candidate(planTypeId, planId)], Tenant, false, [], 30, TestContext.Current.CancellationToken);
+
+        Assert.Equal(verdict, result.Verdict);
+        Assert.Equal(1, metricReads);
+        var age = Assert.Single(Assert.Single(result.Safe.Concat(result.NeedsReview)).Checks,
+            static check => check.Id == "unused-age");
+        Assert.Equal(scenario == "complete" ? "passed" : scenario == "gap" ? "unverified" : "warning", age.Outcome);
     }
 
     [Theory]

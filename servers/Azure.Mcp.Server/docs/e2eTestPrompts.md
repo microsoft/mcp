@@ -23,6 +23,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | none |
 | advisor_metadata_get | Use Advisor recommendation metadata get to explain what recommendation type \<recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
+| advisor_metadata_list | Retrieve the next page of the Advisor metadata catalog using the returned continuation token, keeping the language and filters unchanged | none |
 | advisor_metadata_list | List Advisor recommendation metadata types applicable to virtual machines before deployment; use the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases | none |
 | advisor_metadata_list | Show the German metadata catalog for Advisor recommendations | none |
@@ -31,6 +32,8 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
+| advisor_recommendation_list | Show the next page of the selected Advisor recommendation type using its continuation token and the same scope, filters, ordering and page size | none |
+| advisor_recommendation_list | List all resources for my selected idle-resource recommendation type, following continuation tokens without treating the 15-row display expansion as data retrieval | none |
 | advisor_recommendation_list | List active Advisor recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records affecting resource named my-web-app in subscription \<subscription> | none |
@@ -47,6 +50,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations using subscriptions ["\<subscription>"], recommendation-type-ids ["1d70919c-1a4a-4f79-8300-bb576c291e9d"], and resource-types ["Microsoft.Compute/virtualMachines"]; do not use singular aliases | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations in the Reservations subcategory in subscription \<subscription> | none |
@@ -99,6 +103,8 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_recommendation_prevalidate | Check whether unused resources for Advisor recommendation type \<recommendation-type-id> in service group \<service-group> are safe to delete | none |
 | advisor_recommendation_prevalidate | Check deletion safety for resource \<resource-id> under Advisor recommendation type \<recommendation-type-id> in subscription \<subscription>, requiring 45 days of inactivity | none |
 | advisor_recommendation_prevalidate | Are these selected unused resources safe to delete? | context-required |
+| advisor_recommendation_prevalidate | Validate all 125 unused resources for Advisor recommendation type \<recommendation-type-id> in subscription \<subscription>; do not stop at 25 or 100 | none |
+| advisor_recommendation_prevalidate | Recheck only the exact affected-resource ARM IDs in the previous result, without matching resource names | context-required |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
 | advisor_recommendation_summary | What Azure resources am I paying for that are no longer being used? | clarification-required |
 | advisor_recommendation_summary | For service group Trey Research Shared Services, what Azure resources am I paying for that are no longer being used? | none |
@@ -198,6 +204,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
 | advisor_servicegroupintelligence_get | How is the Advisor status of service group commerce calculated? | none |
 | advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
+| advisor_servicegroupintelligence_get | Retrieve the next page of Service Group status with the returned continuation token, keeping the tenant, filters and page size unchanged | none |
 | advisor_servicegroupintelligence_get | Which mission critical service groups need attention? | none |
 | advisor_servicegroupintelligence_get | Which service groups are at risk? | none |
 | advisor_servicegroupintelligence_get | Show me the tier 0 service groups that are in critical status | none |

@@ -17,7 +17,7 @@ public class RecommendationQueryBuilderTests
             includeStatus: true, useRequestedStatus: true, includeCategoryAndImpact: true, resourceTypeUsesImpactedField: false);
 
         Assert.Contains("tostring(properties.resourceMetadata.resourceId) in~", predicate);
-        Assert.Contains("tostring(properties.impactedValue) in~", predicate);
+        Assert.DoesNotContain("tostring(properties.impactedValue) in~", predicate);
         Assert.Contains(RecommendationQueryBuilder.EscapeKqlString("Owner's-disk"), predicate);
         Assert.DoesNotContain("top ", predicate);
     }
@@ -230,12 +230,19 @@ public class RecommendationQueryBuilderTests
             result);
     }
 
-    [Fact]
-    public void BuildInstancePredicates_CostOnlyFiltersRequireCostCategory()
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("Cost", null)]
+    [InlineData("Cost", "Other")]
+    [InlineData("Security", "IdleResources")]
+    [InlineData(null, "IdleResources")]
+    public void BuildInstancePredicates_CostOnlyFiltersRequireCostIdleResources(string? category, string? subCategory)
     {
         var exception = Assert.Throws<ArgumentException>(() =>
             RecommendationQueryBuilder.BuildInstancePredicates(
                 new RecommendationFilters(
+                    Category: category,
+                    SubCategory: subCategory,
                     MinimumSavings: 100,
                     SavingsAsOf: DateTimeOffset.UtcNow),
                 includeStatus: true,
@@ -246,12 +253,41 @@ public class RecommendationQueryBuilderTests
         Assert.Contains("require --category Cost", exception.Message);
     }
 
+    [Theory]
+    [InlineData("Cost", "IdleResources", true)]
+    [InlineData(" cost ", " idleresources ", true)]
+    [InlineData("Cost", null, false)]
+    [InlineData(null, "IdleResources", false)]
+    [InlineData("Security", "IdleResources", false)]
+    public void BuildSavingsValues_LegacyFallbackIsExcludedOnlyForCostIdleResources(
+        string? category, string? subCategory, bool structuredOnly)
+    {
+        var query = RecommendationQueryBuilder.BuildSavingsValues(
+            new RecommendationFilters(Category: category, SubCategory: subCategory));
+
+        Assert.Contains("dailySavings * 12 * 30.4", query);
+        Assert.Equal(!structuredOnly, query.Contains("iff(isfinite(legacyAnnualSavings)", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("Cost", null)]
+    [InlineData("Security", "IdleResources")]
+    public void ApplySummaryStatusDefault_RejectsExplicitStatusOutsideCostIdleResources(string? category, string? subCategory)
+    {
+        Assert.Throws<ArgumentException>(() => RecommendationQueryBuilder.ApplySummaryStatusDefault(
+            new RecommendationFilters(Category: category, SubCategory: subCategory, Status: RecommendationStatus.Completed)));
+        Assert.Null(RecommendationQueryBuilder.ApplySummaryStatusDefault(
+            new RecommendationFilters(Category: category, SubCategory: subCategory))!.Status);
+    }
+
     [Fact]
-    public void BuildInstancePredicates_CostOnlyFiltersAllowCostCategory()
+    public void BuildInstancePredicates_CostOnlyFiltersAllowCostIdleResources()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
             new RecommendationFilters(
                 Category: "Cost",
+                SubCategory: "IdleResources",
                 MinimumSavings: 100,
                 SavingsAsOf: DateTimeOffset.UtcNow),
             includeStatus: true,
@@ -425,8 +461,8 @@ public class RecommendationQueryBuilderTests
             new RecommendationFilters(
                 Category: "Security",
                 Impact: "High",
-                RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d",
-                ResourceType: "Microsoft.Web/sites",
+                RecommendationTypeIds: ["1d70919c-1a4a-4f79-8300-bb576c291e9d"],
+                ResourceTypes: ["Microsoft.Web/sites"],
                 Resource: "webapp",
                 Search: "encrypt"),
             includeStatus: true,
@@ -439,7 +475,7 @@ public class RecommendationQueryBuilderTests
         Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, result);
         Assert.Contains("tostring(properties.category) =~ 'Security'", result);
         Assert.Contains("tostring(properties.impact) =~ 'High'", result);
-        Assert.Contains("tostring(properties.recommendationTypeId) =~ '1d70919c-1a4a-4f79-8300-bb576c291e9d'", result);
+        Assert.Contains("tostring(properties.recommendationTypeId) in~ ('1d70919c-1a4a-4f79-8300-bb576c291e9d')", result);
         Assert.Contains("tostring(properties.impactedField) =~ 'Microsoft.Web/sites'", result);
         Assert.Contains("tostring(properties.resourceMetadata.resourceId) contains 'webapp'", result);
         Assert.Contains("tostring(properties.shortDescription.problem) contains 'encrypt'", result);
@@ -449,7 +485,7 @@ public class RecommendationQueryBuilderTests
     public void BuildInstancePredicates_ListResourceType_PreservesResourceIdContains()
     {
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
-            new RecommendationFilters(ResourceType: "Microsoft.Web/sites"),
+            new RecommendationFilters(ResourceTypes: ["Microsoft.Web/sites"]),
             includeStatus: true,
             useRequestedStatus: false,
             includeCategoryAndImpact: true,
@@ -501,7 +537,7 @@ public class RecommendationQueryBuilderTests
     {
         var typeId = "1d70919c-1a4a-4f79-8300-bb576c291e9d";
         var result = RecommendationQueryBuilder.BuildInstancePredicates(
-            new RecommendationFilters(RecommendationTypeId: typeId),
+            new RecommendationFilters(RecommendationTypeIds: [typeId]),
             includeStatus: true,
             useRequestedStatus: true,
             includeCategoryAndImpact: true,
@@ -509,7 +545,7 @@ public class RecommendationQueryBuilderTests
             recommendationTypeIds: ["Type-A", typeId]);
 
         Assert.Contains(
-            $"tostring(properties.recommendationTypeId) =~ '{typeId}'",
+            $"tostring(properties.recommendationTypeId) in~ ('{typeId}')",
             result);
         Assert.Contains(
             $"tostring(properties.recommendationTypeId) in~ ('Type-A', '{typeId}')",

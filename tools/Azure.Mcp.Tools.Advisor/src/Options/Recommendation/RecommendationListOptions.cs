@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -19,17 +20,11 @@ public class RecommendationListOptions : IRecommendationReadScopeOptions
     [Option(Description = "Filter recommendations by status ('New', 'Postponed', 'Dismissed', or 'Completed'). Defaults to 'New' when omitted.")]
     public RecommendationStatus? Status { get; set; }
 
-    [Option(Description = "Filter recommendations by a recommendation type ID GUID. Matching is case-insensitive and can be combined with other filters.")]
-    public string? RecommendationTypeId { get; set; }
-
-    [Option(Description = "Filter recommendations by one or more recommendation type ID GUIDs using OR semantics. May be combined with --recommendation-type-id.")]
+    [Option(Description = "Filter recommendations by one or more recommendation type ID GUIDs using OR semantics. Matching is case-insensitive. Pass a one-element array for one type; prioritization requires exactly one distinct type.")]
     public string[]? RecommendationTypeIds { get; set; }
 
-    [Option(Description = "Filter recommendations by an impacted Azure resource type. Requires a case-insensitive exact match against the supported resource type in English recommendation metadata " +
+    [Option(Description = "Filter recommendations by one or more impacted Azure resource types using OR semantics. Each value requires a case-insensitive exact match against the supported resource type in English recommendation metadata " +
         "and a case-insensitive substring match in the instance resource ID.")]
-    public string? ResourceType { get; set; }
-
-    [Option(Description = "Filter recommendations by one or more impacted Azure resource types using OR semantics. Each value uses the same matching rules as --resource-type and may be combined with it.")]
     public string[]? ResourceTypes { get; set; }
 
     [Option(Description = "Filter recommendations by Azure product family using a case-insensitive exact match against the recommendation metadata service family. Any non-empty family name is accepted; no resource-provider fallback is used.")]
@@ -60,7 +55,7 @@ public class RecommendationListOptions : IRecommendationReadScopeOptions
         "when specified, it must be ServiceUpgradeAndRetirement.")]
     public string? RetirementDate { get; set; }
 
-    [Option(Description = "For Cost recommendations, return only records whose annualized retail potential savings (daily savings × 30.4 × 12) are at least this non-negative amount.")]
+    [Option(Description = "For Cost with subcategory IdleResources, return only records whose structured annualized retail potential savings (daily savings × 12 × 30.4) are at least this non-negative USD amount. Missing pricing does not satisfy the threshold; zero is valid.")]
     public decimal? MinimumSavings { get; set; }
 
     [Option(Description = "Maximum number of individual recommendation records to return, not distinct affected resources or recommendation groups. " +
@@ -69,21 +64,27 @@ public class RecommendationListOptions : IRecommendationReadScopeOptions
         "Defaults to 50 and is clamped to the server-side range of 1 through 100. This is a result limit, not aggregate prioritization.")]
     public int? Top { get; set; }
 
+    [Option(Description = AdvisorPagination.Description)]
+    public string? ContinuationToken { get; set; }
+
     [Option(Description = "List recommendations for an Azure Service Group instead of a subscription, " +
-        "provided as its name, ID, or full ARM resource ID. The tool resolves the scope in the selected tenant and reports ambiguous names. " +
-        "Specify either --service-group or --subscription, not both. If both are omitted, the configured default subscription is used. " +
+        "provided as the name segment of its ARM resource ID (the '{serviceGroupName}' in " +
+        "'/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'). " +
+        "A unique display name or full ARM resource ID is also accepted in the selected tenant; ambiguous display names produce an error listing matching full ARM IDs for explicit selection. " +
+        "Specify either --service-group or --subscriptions, not both. If both are omitted, the configured default subscription is used. " +
         "--resource-group applies only to subscription scope. " +
         "Other filters (category, impact, status, search, etc.) and --prioritized still apply.")]
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "Apply ordering to individual matching records, not recommendation groups. Broad or unscoped top, critical, important, prioritized, priority, or equivalent prioritization intent that does not identify a specific recommendation type must use summary --group-by recommendation-type --prioritized true first. " +
-        "A request that identifies a specific recommendation type can use this option directly; setting it to true requires --recommendation-type-id. " +
+        "A request that identifies a specific recommendation type can use this option directly; setting it to true requires exactly one distinct --recommendation-type-ids value. " +
         "The selected type's recommendation metadata category determines the instance metric. " +
         "For Cost types, sort by savings; for all other types, sort by criticalityScore descending, treating missing scores as zero. " +
         "Retail savings are in USD; contractual pricing and billing currency do not affect this ranking. " +
         "savings.retail.dailyPotentialSavings is converted to an annual value by multiplying by 12 and 30.4, " +
-        "with extendedProperties.annualSavingsAmount as fallback; the selected annual savings score is rounded to two decimal places before ordering descending. " +
-        "Cost with subcategory IdleResources instead uses unrounded yearly potential savings for New, Postponed, and Dismissed, or realized savings for Completed; this ordering also applies without --prioritized. " +
+        "with extendedProperties.annualSavingsAmount as fallback outside Cost/IdleResources. " +
+        "Cost with subcategory IdleResources uses structured yearly potential savings for New, Postponed, and Dismissed, or whole-day, zero-clamped realized savings for Completed, without legacy monetary fallback. " +
+        "The prioritized savings score is rounded to two decimals before ordering descending. Without --prioritized, Cost/IdleResources orders by unrounded lifecycle savings descending, then recommendation ID ascending. " +
         "Missing, invalid, or non-finite savings sort last; zero is valid. " +
         "Ties sort by effective retirement date ascending (instance date with metadata fallback, missing dates last), " +
         "then resource name A-Z (case-insensitive), then recommendation ID A-Z. " +
@@ -99,10 +100,7 @@ public class RecommendationListOptions : IRecommendationReadScopeOptions
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }
 
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Description = "One or more subscription IDs or names to query. May be combined with --subscription; aliases of the same subscription are queried once. Specify either subscription scope or --service-group.")]
+    [Option(Description = "One or more subscription IDs or names to query. Pass a one-element array for one subscription; aliases of the same subscription are queried once. Specify either --subscriptions or --service-group. When both are omitted, the configured default subscription is used.")]
     public string[]? Subscriptions { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

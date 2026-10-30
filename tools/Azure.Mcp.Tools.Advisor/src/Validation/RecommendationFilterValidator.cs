@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
+using Azure.Mcp.Tools.Advisor.Services;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Advisor.Validation;
@@ -12,7 +13,7 @@ internal static class RecommendationFilterValidator
     internal const string PrioritizationSignalsRequiresPrioritized =
         "--show-prioritization-signals true requires --prioritized true.";
     internal const string PrioritizedRequiresRecommendationType =
-        "--prioritized true requires --recommendation-type-id. Use recommendation summary grouped by recommendation-type for initial cross-type prioritization, then list the selected type.";
+        "--prioritized true requires exactly one distinct --recommendation-type-ids value. Use recommendation summary grouped by recommendation-type for initial cross-type prioritization, then list the selected type.";
 
     internal static readonly string[] AllowedCategories =
     [
@@ -40,7 +41,7 @@ internal static class RecommendationFilterValidator
             validationResult.Errors.Add(PrioritizationSignalsRequiresPrioritized);
         }
 
-        var recommendationTypeIds = CombineValues(options.RecommendationTypeId, options.RecommendationTypeIds);
+        var recommendationTypeIds = options.RecommendationTypeIds;
         if (options.Prioritized == true && NormalizeRecommendationTypeIds(recommendationTypeIds).Count != 1)
         {
             validationResult.Errors.Add(PrioritizedRequiresRecommendationType);
@@ -49,7 +50,7 @@ internal static class RecommendationFilterValidator
         ValidateAllowedValue("--category", options.Category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", options.Impact, AllowedImpacts, validationResult);
         ValidateAllowedValue("--status", options.Status?.ToString(), AllowedStatuses, validationResult);
-        ValidateOptionalValues("--resource-type", CombineValues(options.ResourceType, options.ResourceTypes), validationResult);
+        ValidateOptionalValues("--resource-types", options.ResourceTypes, validationResult);
         ValidateOptionalValue("--product-family", options.ProductFamily, validationResult);
         ValidateOptionalValue("--resource", options.Resource, validationResult);
         ValidateOptionalValue("--search", options.Search, validationResult);
@@ -83,7 +84,7 @@ internal static class RecommendationFilterValidator
     {
         ValidateAllowedValue("--category", category, AllowedCategories, validationResult);
         ValidateAllowedValue("--impact", impact, AllowedImpacts, validationResult);
-        ValidateOptionalValues("--resource-type", resourceTypes, validationResult);
+        ValidateOptionalValues("--resource-types", resourceTypes, validationResult);
         ValidateOptionalValue("--product-family", productFamily, validationResult);
         ValidateOptionalValue("--resource", resource, validationResult);
         ValidateOptionalValue("--search", search, validationResult);
@@ -108,6 +109,7 @@ internal static class RecommendationFilterValidator
 
     internal static void ValidateCostOnlyFilters(
         string? category,
+        string? subCategory,
         decimal? minimumSavings,
         DateTimeOffset? asOf,
         DateTimeOffset? from,
@@ -117,10 +119,10 @@ internal static class RecommendationFilterValidator
         ValidateMinimumSavings(minimumSavings, validationResult);
 
         if ((minimumSavings is not null || asOf is not null || from is not null || to is not null) &&
-            !string.Equals(category?.Trim(), "Cost", StringComparison.OrdinalIgnoreCase))
+            !RecommendationQueryBuilder.IsIdleResourceCost(category, subCategory))
         {
             validationResult.Errors.Add(
-                "--minimum-savings, --as-of, --from, and --to require --category Cost.");
+                "--minimum-savings, --as-of, --from, and --to require --category Cost and --sub-category IdleResources.");
         }
     }
 
@@ -168,7 +170,7 @@ internal static class RecommendationFilterValidator
             !Guid.TryParseExact(recommendationTypeId.Trim(), "D", out _))
         {
             validationResult.AddError(
-                $"Invalid --recommendation-type-id value '{recommendationTypeId}'. " +
+                $"Invalid --recommendation-type-ids value '{recommendationTypeId}'. " +
                 "Use a GUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format.",
                 "Invalid Advisor recommendation type ID.");
         }
@@ -185,6 +187,11 @@ internal static class RecommendationFilterValidator
 
         foreach (var recommendationTypeId in recommendationTypeIds)
         {
+            if (recommendationTypeId is null)
+            {
+                validationResult.Errors.Add("--recommendation-type-ids cannot contain null values.");
+                continue;
+            }
             ValidateRecommendationTypeId(recommendationTypeId, validationResult);
         }
     }
@@ -233,7 +240,10 @@ internal static class RecommendationFilterValidator
 
         foreach (var value in values)
         {
-            ValidateOptionalValue(optionName, value, validationResult);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                validationResult.Errors.Add($"{optionName} cannot contain empty values.");
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -38,8 +39,6 @@ public sealed class RecommendationPreValidationCommand(
     ISubscriptionResolver subscriptionResolver)
     : RecommendationScopeCommand<RecommendationPreValidationOptions, PreValidationResult>(subscriptionResolver)
 {
-    internal const int MaximumResources = 25;
-
     public override void ValidateOptions(RecommendationPreValidationOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
@@ -52,67 +51,61 @@ public sealed class RecommendationPreValidationCommand(
         {
             validationResult.Errors.Add("--resource-group cannot be combined with --service-group.");
         }
-        if (options.Top is < 1 or > MaximumResources)
+        if (options.Top is < 1)
         {
-            validationResult.Errors.Add("--top must be between 1 and 25.");
+            validationResult.Errors.Add("--top must be positive.");
         }
         if (options.MinimumUnusedDays is < 1 or > UnusedAgePolicy.MaximumMinimumUnusedDays)
         {
             validationResult.Errors.Add("--minimum-unused-days must be between 1 and 365.");
         }
         if (options.Resources?.Any(static resource => string.IsNullOrWhiteSpace(resource) ||
-            resource.Trim().TrimEnd('/').Length == 0 || resource.Length > 2048) == true)
+            resource.Length > 2048 ||
+            !ResourceIdentifier.TryParse(resource.Trim().TrimEnd('/'), out var identifier) ||
+            identifier is null || !Guid.TryParse(identifier.SubscriptionId, out _) ||
+            string.IsNullOrWhiteSpace(identifier.ResourceGroupName) ||
+            !resource.Contains("/providers/", StringComparison.OrdinalIgnoreCase)) == true)
         {
-            validationResult.Errors.Add("--resources must contain non-empty resource IDs or names of at most 2048 characters.");
-        }
-        if (NormalizeSelections(options.Resources).Length > (options.Top ?? MaximumResources))
-        {
-            validationResult.Errors.Add("All selected resources must fit within --top and the 25-resource limit.");
+            validationResult.Errors.Add("--resources must contain exact full affected-resource ARM IDs of at most 2048 characters, not resource names or scope IDs.");
         }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, RecommendationPreValidationOptions options, CancellationToken cancellationToken)
     {
+        AdvisorTelemetryTags.AddScopeTags(context.Activity, options);
+        AdvisorTelemetryTags.AddRecommendationTags(context.Activity, options.RecommendationTypeId, "Cost", "IdleResources");
         try
         {
             var selections = NormalizeSelections(options.Resources);
             var typeId = Guid.Parse(options.RecommendationTypeId).ToString("D");
             var filters = new RecommendationFilters(
                 Category: "Cost", SubCategory: "IdleResources", Status: RecommendationStatus.New,
-                RecommendationTypeId: typeId, Resource: options.Resource?.Trim(),
-                ServiceGroup: options.ServiceGroup?.Trim(), Resources: selections);
-            var top = options.Top ?? MaximumResources;
-            var result = options.Subscriptions is { Length: > 0 }
-                ? await advisorService.ListRecommendationsAsync(
+                RecommendationTypeIds: [typeId],
+                ServiceGroup: options.ServiceGroup?.Trim(), Resources: selections)
+            {
+                EnumerateAll = true,
+            };
+            var result = await advisorService.ListRecommendationsAsync(
                     RecommendationScopeValidator.GetSubscriptions(options), options.ResourceGroup, filters,
-                    selections.Length == 0 ? top : 100, options.Tenant, cancellationToken)
-                : await advisorService.ListRecommendationsAsync(
-                    options.Subscription, options.ResourceGroup, filters,
-                    selections.Length == 0 ? top : 100, options.Tenant, cancellationToken);
+                    100, options.Tenant, cancellationToken);
 
             var candidates = result.Results ?? [];
-            foreach (var selection in selections.Where(static selection => !selection.StartsWith('/')))
-            {
-                var matches = candidates.Where(candidate => Matches(candidate, selection))
-                    .Select(static candidate => candidate.Properties.ResourceMetadata?.ResourceId)
-                    .Distinct(StringComparer.OrdinalIgnoreCase).Count();
-                if (matches > 1 || result.AreResultsTruncated)
-                {
-                    throw new ArgumentException("Selected resource names could not be resolved uniquely. Use full ARM resource IDs.");
-                }
-            }
-
             var unmatched = selections.Where(selection => !candidates.Any(candidate => Matches(candidate, selection))).ToArray();
             var selected = candidates
                 .Where(candidate => selections.Length == 0 || selections.Any(selection => Matches(candidate, selection)))
                 .GroupBy(static candidate => candidate.Properties.ResourceMetadata?.ResourceId ?? candidate.Id, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+            var top = options.Top ?? int.MaxValue;
             var validatedCandidates = selected.Take(top).SelectMany(static group => group).ToArray();
             var validation = await preValidationService.ValidateAsync(
                 typeId, validatedCandidates, options.Tenant,
                 result.AreResultsTruncated || selected.Length > top, unmatched,
                 options.MinimumUnusedDays ?? UnusedAgePolicy.DefaultMinimumUnusedDays, cancellationToken);
+            validation = validation with
+            {
+                RemainingResourceCount = result.AreResultsTruncated ? null : Math.Max(selected.Length - top, 0),
+            };
             context.Response.Results = ResponseResult.Create(validation, AdvisorJsonContext.Default.PreValidationResult);
         }
         catch (Exception ex)
@@ -130,8 +123,7 @@ public sealed class RecommendationPreValidationCommand(
             .Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? [];
 
     private static bool Matches(Models.Recommendation candidate, string selection) =>
-        string.Equals(candidate.Properties.ResourceMetadata?.ResourceId?.TrimEnd('/'), selection, StringComparison.OrdinalIgnoreCase) ||
-        (!selection.StartsWith('/') && string.Equals(candidate.Properties.ImpactedValue, selection, StringComparison.OrdinalIgnoreCase));
+        string.Equals(candidate.Properties.ResourceMetadata?.ResourceId?.TrimEnd('/'), selection, StringComparison.OrdinalIgnoreCase);
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {

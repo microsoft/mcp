@@ -16,4 +16,8 @@ public sealed record PreValidationResult(
     IReadOnlyList<PreValidationResourceResult> NeedsReview,
     IReadOnlyList<PreValidationResourceResult> Blocked,
     IReadOnlyList<PreValidationBucketSummary> Summary,
-    string Notice);
+    string Notice,
+    int? RemainingResourceCount = null)
+{
+    public int CheckedResourceCount => Safe.Count + NeedsReview.Count + Blocked.Count;
+}

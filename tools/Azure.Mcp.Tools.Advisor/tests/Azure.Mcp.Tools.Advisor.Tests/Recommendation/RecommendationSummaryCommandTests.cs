@@ -43,53 +43,60 @@ public class RecommendationSummaryCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub1", true)]
-    [InlineData("--subscription sub1 --group-by recommendation-type", true)]
-    [InlineData("--subscription sub1 --group-by status", true)]
-    [InlineData("--subscription sub1 --group-by sub-category", true)]
-    [InlineData("--subscription sub1 --group-by retirement-date", true)]
-    [InlineData("--subscription sub1 --category Security --impact High", true)]
-    [InlineData("--subscription sub1 --recommendation-type-id 1d70919c-1a4a-4f79-8300-bb576c291e9d", true)]
-    [InlineData("--subscription sub1 --retirement-date le:2026-12-31", true)]
+    [InlineData("--subscriptions sub1", true)]
+    [InlineData("--subscriptions sub1 --group-by recommendation-type", true)]
+    [InlineData("--subscriptions sub1 --group-by status", true)]
+    [InlineData("--subscriptions sub1 --group-by sub-category", true)]
+    [InlineData("--subscriptions sub1 --group-by retirement-date", true)]
+    [InlineData("--subscriptions sub1 --category Security --impact High", true)]
+    [InlineData("--subscriptions sub1 --recommendation-type-ids 1d70919c-1a4a-4f79-8300-bb576c291e9d", true)]
+    [InlineData("--subscriptions sub1 --retirement-date le:2026-12-31", true)]
     [InlineData("--service-group sg1", true)]
     [InlineData("--service-group sg1 --tenant tenant1 --group-by status", true)]
-    [InlineData("--subscription sub1 --prioritized true", true)]
-    [InlineData("--subscription sub1 --prioritized true --group-by recommendation-type --top 5", true)]
-    [InlineData("--subscription sub1 --prioritized true --category Cost", true)]
-    [InlineData("--subscription sub1 --prioritized true --product-family Compute", true)]
-    [InlineData("--service-group sg1 --prioritized true --product-family Storage --status Completed", true)]
+    [InlineData("--subscriptions sub1 --prioritized true", true)]
+    [InlineData("--subscriptions sub1 --prioritized true --group-by recommendation-type --top 5", true)]
+    [InlineData("--subscriptions sub1 --prioritized true --category Cost", true)]
+    [InlineData("--subscriptions sub1 --prioritized true --product-family Compute", true)]
+    [InlineData("--service-group sg1 --prioritized true --product-family Storage --status Completed", false)]
+    [InlineData("--service-group sg1 --category Cost --sub-category IdleResources --prioritized true --product-family Storage --status Completed", true)]
     [InlineData("--subscriptions sub1 sub2 --prioritized true --product-family Networking", true)]
-    [InlineData("--subscription sub1 --product-family Analytics", true)]
+    [InlineData("--subscriptions sub1 --product-family Analytics", true)]
     [InlineData("--service-group sg1 --product-family \"AI + Machine Learning\"", true)]
-    [InlineData("--subscription sub1 --product-family \"\"", false)]
+    [InlineData("--subscriptions sub1 --product-family \"\"", false)]
     [InlineData("--service-group sg1 --product-family \" \"", false)]
     [InlineData("--service-group sg1 --prioritized true", true)]
     [InlineData("--subscriptions sub1 sub2 --prioritized true", true)]
-    [InlineData("--subscription sub1 --prioritized false --group-by impact", true)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-10T00:00:00Z --as-of 2020-09-01T00:00:00Z", false)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-01T00:00:00Z --as-of 2020-09-01T00:00:00Z", true)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-01T00:00:00Z --as-of 2020-09-10T00:00:00Z", true)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-10T00:00:00Z --to 2020-09-30T00:00:00Z --as-of 2020-09-01T00:00:00Z", true)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-10T00:00:00Z --to 2020-09-01T00:00:00Z --as-of 2020-09-30T00:00:00Z", false)]
-    [InlineData("--subscription sub1 --category Cost --from 2020-09-01T00:00:00Z", true)]
-    [InlineData("--subscription sub1 --category Cost --to 2020-09-30T00:00:00Z", true)]
-    [InlineData("--subscription sub1 --prioritized true --group-by category", false)]
-    [InlineData("--subscription sub1 --prioritized true --group-by status", false)]
-    [InlineData("--subscription sub1 --prioritized true --top 101", false)]
-    [InlineData("--subscription sub1 --group-by nonsense", false)]
-    [InlineData("--subscription sub1 --category nonsense", false)]
-    [InlineData("--subscription sub1 --category \" \"", false)]
-    [InlineData("--subscription sub1 --impact critical", false)]
-    [InlineData("--subscription sub1 --recommendation-type-id not-a-guid", false)]
-    [InlineData("--subscription sub1 --top 0", false)]
-    [InlineData("--subscription sub1 --top 101", false)]
-    [InlineData("--subscription sub1 --retirement-date \" \"", false)]
-    [InlineData("--subscription sub1 --retirement-date before:2026-12-31", false)]
-    [InlineData("--subscription sub1 --retirement-date le:12-31-2026", false)]
-    [InlineData("--subscription sub1 --sub-category \" \"", false)]
-    [InlineData("--subscription sub1 --retirement-date le:2026-12-31 --sub-category ZoneResiliency", false)]
-    [InlineData("--subscription sub1 --group-by retirement-date --sub-category ZoneResiliency", false)]
-    [InlineData("--subscription sub1 --service-group sg1", false)]
+    [InlineData("--subscriptions sub1 --prioritized false --group-by impact", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-10T00:00:00Z --as-of 2020-09-01T00:00:00Z", false)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-01T00:00:00Z --as-of 2020-09-01T00:00:00Z", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-01T00:00:00Z --as-of 2020-09-10T00:00:00Z", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-10T00:00:00Z --to 2020-09-30T00:00:00Z --as-of 2020-09-01T00:00:00Z", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-10T00:00:00Z --to 2020-09-01T00:00:00Z --as-of 2020-09-30T00:00:00Z", false)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --from 2020-09-01T00:00:00Z", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --to 2020-09-30T00:00:00Z", true)]
+    [InlineData("--subscriptions sub1 --category Cost --from 2020-09-01T00:00:00Z", false)]
+    [InlineData("--subscriptions sub1 --category Cost --minimum-savings 0", false)]
+    [InlineData("--subscriptions sub1 --category Cost --status New", false)]
+    [InlineData("--subscriptions sub1 --category Security --sub-category IdleResources --status Completed", false)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --minimum-savings 0", true)]
+    [InlineData("--subscriptions sub1 --category Cost --sub-category IdleResources --minimum-savings -1", false)]
+    [InlineData("--subscriptions sub1 --prioritized true --group-by category", false)]
+    [InlineData("--subscriptions sub1 --prioritized true --group-by status", false)]
+    [InlineData("--subscriptions sub1 --prioritized true --top 101", false)]
+    [InlineData("--subscriptions sub1 --group-by nonsense", false)]
+    [InlineData("--subscriptions sub1 --category nonsense", false)]
+    [InlineData("--subscriptions sub1 --category \" \"", false)]
+    [InlineData("--subscriptions sub1 --impact critical", false)]
+    [InlineData("--subscriptions sub1 --recommendation-type-ids not-a-guid", false)]
+    [InlineData("--subscriptions sub1 --top 0", false)]
+    [InlineData("--subscriptions sub1 --top 101", false)]
+    [InlineData("--subscriptions sub1 --retirement-date \" \"", false)]
+    [InlineData("--subscriptions sub1 --retirement-date before:2026-12-31", false)]
+    [InlineData("--subscriptions sub1 --retirement-date le:12-31-2026", false)]
+    [InlineData("--subscriptions sub1 --sub-category \" \"", false)]
+    [InlineData("--subscriptions sub1 --retirement-date le:2026-12-31 --sub-category ZoneResiliency", false)]
+    [InlineData("--subscriptions sub1 --group-by retirement-date --sub-category ZoneResiliency", false)]
+    [InlineData("--subscriptions sub1 --service-group sg1", false)]
     [InlineData("--subscriptions sub1 sub2 --service-group sg1", false)]
     [InlineData("--service-group sg1 --resource-group rg1", false)]
     [InlineData("--service-group bad/name", false)]
@@ -101,14 +108,6 @@ public class RecommendationSummaryCommandTests
         {
             Service.SummarizeServiceGroupRecommendationsAsync(
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RecommendationFilters?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
-                .Returns(EmptySummary());
-            Service.SummarizeRecommendationsAsync(
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<RecommendationFilters?>(),
                 Arg.Any<string?>(),
@@ -134,7 +133,7 @@ public class RecommendationSummaryCommandTests
     {
         SubscriptionResolver.ResolveSubscription(null).Returns("default-subscription");
         Service.SummarizeRecommendationsAsync(
-            "default-subscription",
+            Arg.Is<IReadOnlyCollection<string>>(subscriptions => subscriptions.SequenceEqual(new[] { "default-subscription" })),
             null,
             "category",
             Arg.Any<RecommendationFilters?>(),
@@ -146,7 +145,7 @@ public class RecommendationSummaryCommandTests
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).SummarizeRecommendationsAsync(
-            "default-subscription",
+            Arg.Is<IReadOnlyCollection<string>>(subscriptions => subscriptions.SequenceEqual(new[] { "default-subscription" })),
             null,
             "category",
             Arg.Any<RecommendationFilters?>(),
@@ -182,7 +181,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>());
         SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -200,7 +199,7 @@ public class RecommendationSummaryCommandTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
         await Service.DidNotReceive().SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -224,11 +223,11 @@ public class RecommendationSummaryCommandTests
         string serviceGroup)
     {
         var response = await ExecuteCommandAsync(
-            "--subscription", subscription,
+            "--subscriptions", subscription,
             "--service-group", serviceGroup);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Specify either --subscription or --service-group, not both", response.Message);
+        Assert.Contains("Specify either --subscriptions or --service-group, not both", response.Message);
         SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
     }
 
@@ -237,7 +236,7 @@ public class RecommendationSummaryCommandTests
     {
         string? captured = null;
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Do<string>(value => captured = value),
             Arg.Any<RecommendationFilters?>(),
@@ -245,7 +244,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("category", captured);
@@ -256,7 +255,7 @@ public class RecommendationSummaryCommandTests
     {
         RecommendationFilters? captured = null;
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(value => captured = value),
@@ -265,12 +264,12 @@ public class RecommendationSummaryCommandTests
             .Returns(EmptySummary("impact"));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
+            "--subscriptions", "sub1",
             "--group-by", " Impact ",
             "--category", " security ",
             "--impact", " high ",
-            "--recommendation-type-id", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
-            "--resource-type", " Microsoft.Web/sites ",
+            "--recommendation-type-ids", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
+            "--resource-types", " Microsoft.Web/sites ",
             "--resource", " webapp ",
             "--search", " encrypt ",
             "--sub-category", " ServiceUpgradeAndRetirement ",
@@ -280,8 +279,8 @@ public class RecommendationSummaryCommandTests
         Assert.NotNull(captured);
         Assert.Equal("Security", captured!.Category);
         Assert.Equal("High", captured.Impact);
-        Assert.Equal("1d70919c-1a4a-4f79-8300-bb576c291e9d", captured.RecommendationTypeId);
-        Assert.Equal("Microsoft.Web/sites", captured.ResourceType);
+        Assert.Equal(["1d70919c-1a4a-4f79-8300-bb576c291e9d"], captured.RecommendationTypeIds);
+        Assert.Equal(["Microsoft.Web/sites"], captured.ResourceTypes);
         Assert.Equal("webapp", captured.Resource);
         Assert.Equal("encrypt", captured.Search);
         Assert.Equal("ServiceUpgradeAndRetirement", captured.SubCategory);
@@ -290,42 +289,40 @@ public class RecommendationSummaryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CombinesScalarAndPluralFiltersAndPreservesStatus()
+    public async Task ExecuteAsync_NormalizesPluralFiltersAndPreservesStatus()
     {
         RecommendationFilters? captured = null;
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<string?>(), Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(value => captured = value),
             Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1", "--status", "Completed",
-            "--recommendation-type-id", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
+            "--subscriptions", "sub1", "--category", "Cost", "--sub-category", "IdleResources", "--status", "Completed",
+            "--recommendation-type-ids", "1D70919C-1A4A-4F79-8300-BB576C291E9D",
             "--recommendation-type-ids", "2D70919C-1A4A-4F79-8300-BB576C291E9D", "1d70919c-1a4a-4f79-8300-bb576c291e9d",
-            "--resource-type", "Microsoft.Compute/virtualMachines",
+            "--resource-types", "Microsoft.Compute/virtualMachines",
             "--resource-types", "Microsoft.Web/sites", "microsoft.compute/virtualmachines");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(captured);
         Assert.Equal(RecommendationStatus.Completed, captured.Status);
-        Assert.Null(captured.RecommendationTypeId);
         Assert.Equal(
             ["1d70919c-1a4a-4f79-8300-bb576c291e9d", "2d70919c-1a4a-4f79-8300-bb576c291e9d"],
             captured.RecommendationTypeIds);
-        Assert.Null(captured.ResourceType);
         Assert.Equal(["Microsoft.Compute/virtualMachines", "Microsoft.Web/sites"], captured.ResourceTypes);
-        Assert.Equal(typeof(string), Assert.Single(Command.GetCommand().Options,
-            static option => option.Name == "--recommendation-type-id").ValueType);
-        Assert.Equal(typeof(string), Assert.Single(Command.GetCommand().Options,
-            static option => option.Name == "--resource-type").ValueType);
+        Assert.Equal(typeof(string[]), Assert.Single(Command.GetCommand().Options,
+            static option => option.Name == "--recommendation-type-ids").ValueType);
+        Assert.Equal(typeof(string[]), Assert.Single(Command.GetCommand().Options,
+            static option => option.Name == "--resource-types").ValueType);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsKeyLabelCountPayload()
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -342,7 +339,7 @@ public class RecommendationSummaryCommandTests
                 ]));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
+            "--subscriptions", "sub1",
             "--group-by", "recommendation-type");
         var result = ValidateAndDeserializeResponse(
             response,
@@ -359,7 +356,7 @@ public class RecommendationSummaryCommandTests
     public async Task ExecuteAsync_TopPreservesUnknownAndTotal()
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -376,7 +373,7 @@ public class RecommendationSummaryCommandTests
                 ]));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1",
+            "--subscriptions", "sub1",
             "--group-by", "resource-type",
             "--top", "2");
         var result = ValidateAndDeserializeResponse(
@@ -394,7 +391,7 @@ public class RecommendationSummaryCommandTests
     public async Task ExecuteAsync_ServiceThrows_ReturnsErrorResponse()
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -402,7 +399,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("boom", response.Message);
@@ -430,7 +427,7 @@ public class RecommendationSummaryCommandTests
                 new("type-c", "C", "EUR", "Retail", 50, null, null, 2, 2, 0, 0),
             ]);
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<string?>(), Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new RecommendationSummary(
                 "recommendation-type", 12,
@@ -438,7 +435,7 @@ public class RecommendationSummaryCommandTests
                 Cost: cost));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1", "--category", "Cost", "--group-by", "recommendation-type",
+            "--subscriptions", "sub1", "--category", "Cost", "--sub-category", "IdleResources", "--group-by", "recommendation-type",
             "--prioritized", prioritized.ToString(), "--top", "1",
             "--as-of", "2026-09-30T23:59:59Z", "--from", "2026-09-01T00:00:00Z", "--to", "2026-09-30T23:59:59Z");
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
@@ -465,14 +462,14 @@ public class RecommendationSummaryCommandTests
         bool prioritized, RecommendationStatus status)
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<string?>(), Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new RecommendationSummary(
                 "recommendation-type", 101,
                 [new("highest-savings", "Highest savings", 1), new("most-records", "Most records", 100)]));
 
         var response = await ExecuteCommandAsync(
-            "--subscription", "sub1", "--category", "Cost", "--sub-category", "IdleResources",
+            "--subscriptions", "sub1", "--category", "Cost", "--sub-category", "IdleResources",
             "--group-by", "recommendation-type", "--status", status.ToString(),
             "--prioritized", prioritized.ToString(), "--top", "1");
         var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationSummaryResult);
@@ -492,7 +489,7 @@ public class RecommendationSummaryCommandTests
             .Select(index => new RecommendationGroup($"type-{index:D2}", $"Type {index}", 1))
             .ToList();
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Do<string>(value => capturedGroupBy = value),
             Arg.Do<RecommendationFilters?>(value => capturedFilters = value),
@@ -500,7 +497,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new RecommendationSummary("recommendation-type", 12, groups));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "true");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1", "--prioritized", "true");
         var result = ValidateAndDeserializeResponse(
             response,
             AdvisorJsonContext.Default.RecommendationSummaryResult);
@@ -519,7 +516,7 @@ public class RecommendationSummaryCommandTests
         string? capturedGroupBy = null;
         RecommendationFilters? capturedFilters = null;
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Do<string>(value => capturedGroupBy = value),
             Arg.Do<RecommendationFilters?>(value => capturedFilters = value),
@@ -527,7 +524,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(EmptySummary());
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "false");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1", "--prioritized", "false");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("category", capturedGroupBy);
@@ -535,17 +532,12 @@ public class RecommendationSummaryCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub1", " compute ")]
+    [InlineData("--subscriptions sub1", " compute ")]
     [InlineData("--subscriptions sub1 sub2", " Analytics ")]
     [InlineData("--service-group sg1", " AI + Machine Learning ")]
     public async Task ExecuteAsync_PrioritizedProductFamilyPreservesStateAndDateFilters(string scope, string family)
     {
         RecommendationFilters? captured = null;
-        Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(),
-            Arg.Do<RecommendationFilters?>(filters => captured = filters),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(EmptySummary("recommendation-type"));
         Service.SummarizeRecommendationsAsync(
             Arg.Any<IReadOnlyCollection<string>>(), Arg.Any<string?>(), Arg.Any<string>(),
             Arg.Do<RecommendationFilters?>(filters => captured = filters),
@@ -604,7 +596,7 @@ public class RecommendationSummaryCommandTests
     public async Task ExecuteAsync_Prioritized_SerializesSignalsAndOmitsAbsentFields()
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -640,7 +632,7 @@ public class RecommendationSummaryCommandTests
                         }),
                 ]));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1", "--prioritized", "true");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1", "--prioritized", "true");
         var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
         var result = ValidateAndDeserializeResponse(
             response,
@@ -661,7 +653,7 @@ public class RecommendationSummaryCommandTests
     public async Task ExecuteAsync_NotPrioritized_OmitsPrioritizationSignals()
     {
         Service.SummarizeRecommendationsAsync(
-            Arg.Any<string>(),
+            Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<RecommendationFilters?>(),
@@ -669,7 +661,7 @@ public class RecommendationSummaryCommandTests
             Arg.Any<CancellationToken>())
             .Returns(new RecommendationSummary("category", 2, [new("Cost", "Cost", 2)]));
 
-        var response = await ExecuteCommandAsync("--subscription", "sub1");
+        var response = await ExecuteCommandAsync("--subscriptions", "sub1");
         var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
 
         Assert.DoesNotContain("prioritizationSignals", json);

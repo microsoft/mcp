@@ -99,6 +99,7 @@ public class RecommendationSummaryServiceTests
                     "subscription-id", null, groupBy,
                     new RecommendationFilters(
                         Category: "Cost",
+                        SubCategory: "IdleResources",
                         Status: status,
                         Prioritized: prioritized,
                         SavingsFrom: historical ? new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero) : null));
@@ -121,6 +122,7 @@ public class RecommendationSummaryServiceTests
             "subscription-id", null, prioritized ? "recommendation-type" : "category",
             new RecommendationFilters(
                 Category: "Cost",
+                SubCategory: "IdleResources",
                 Prioritized: prioritized,
                 SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
                 SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
@@ -191,7 +193,7 @@ public class RecommendationSummaryServiceTests
             "subscription-id",
             null,
             "resource-type",
-            new RecommendationFilters(ResourceType: "Microsoft.Web/sites"));
+            new RecommendationFilters(ResourceTypes: ["Microsoft.Web/sites"]));
 
         Assert.Contains("join kind=inner", query);
         Assert.Contains("tostring(properties.impactedField) =~ 'Microsoft.Web/sites'", query);
@@ -383,6 +385,7 @@ public class RecommendationSummaryServiceTests
             RecommendationSummaryService.GroupByCategory,
             new RecommendationFilters(
                 Category: "Cost",
+                SubCategory: "IdleResources",
                 SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
                 SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
 

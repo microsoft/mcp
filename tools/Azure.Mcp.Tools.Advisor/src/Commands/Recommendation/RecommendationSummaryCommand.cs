@@ -20,13 +20,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "For --category Cost --sub-category IdleResources, start here to find unused Azure resources you are paying for and summarize their key themes, potential savings, accumulated waste, and realized savings. " +
         "Historical savings cover resources deleted during --from/--to as of --as-of. " +
         "Totals cover all matches; unavailable savings remain null. These are Advisor retail estimates, not billing history. " +
-        "Explicit --status overrides lifecycle defaults; historical Cost reports default to Completed. " +
+        "For Cost/IdleResources, explicit --status overrides lifecycle defaults; historical reports default to Completed. " +
         "Also supports --subscriptions, metadata service-family and minimum annual potential-savings filters, and Service Groups in the selected tenant. " +
         "This is the aggregate-only tool for questions such as how many, count, breakdown, distribution, most common, which has the most, or how many overdue service-retirement Advisor recommendations are still active. " +
         "Use it for an executive summary or main themes, counts by category or business impact, the most common recommendation types, ranking resource types by critical or High-impact recommendations, lifecycle counts for New, Completed, Dismissed, and Postponed recommendations, and metadata subcategory breakdowns such as ZoneResiliency. " +
         "This is the starting tool for top recommendations, top actions to take, most critical, most important, prioritized, highest-priority, or what-should-I-fix-first requests: set --prioritized true to rank active recommendation types by priority and explain each rank, instead of starting with recommendation list. " +
         "Explain a ranking in plain business language from the group's prioritizationSignals, without exposing field names, raw values, or scores. " +
-        "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-id set to its key and --prioritized true, adding --category Cost for a Cost type. " +
+        "After a prioritized summary, list the records or affected resources of a selected type with recommendation list --recommendation-type-ids containing only its key and --prioritized true, adding --category Cost for a Cost type. " +
         "Count active service-retirement Advisor recommendations with retirement dates on, before, or after a specified date, including overdue recommendations that are still active, or group them by retirement date. " +
         "Use this tool to answer how many overdue service-retirement Advisor recommendations are still active. " +
         "Retirement filters are one-sided: le:<end-date> includes every active recommendation retiring on or before the end date, including overdue retirements, and is not a bounded next-N window. " +
@@ -34,7 +34,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         "Group by recommendation-type, category, impact, resource-type, status, sub-category, or retirement-date; category is the default. " +
         "All groups return canonical key, label, and count values. Recommendation-type keys are recommendation type ID GUIDs with English metadata labels. " +
         "All groupings except status include only active New recommendations; status includes every backend lifecycle state. " +
-        "Use either --subscription or --service-group, not both. A configured default subscription is used when neither is supplied. --resource-group applies only with subscription scope. " +
+        "Use either --subscriptions or --service-group, not both. A configured default subscription is used when neither is supplied. --resource-group applies only with subscription scope. " +
         "Filters include category, impact, recommendation type ID, impacted resource type, resource name or ARM ID, problem-text search, subcategory, and explicit retirement-date comparisons. " +
         "Use --search with this summary tool for topical aggregate questions such as counts or impact breakdowns for recommendations mentioning encryption or right-size; do not call recommendation list and count its capped results. " +
         "Use recommendation list instead when the user wants individual recommendation records. TotalRecommendations always covers the complete filtered population, even when --top limits displayed buckets; with --prioritized true it is the sum of affected resources per type, so a resource is counted once for each recommendation type that affects it.",
@@ -102,8 +102,8 @@ public sealed class RecommendationSummaryCommand(
             validationResult,
             options.Category,
             options.Impact,
-            RecommendationFilterValidator.CombineValues(options.RecommendationTypeId, options.RecommendationTypeIds),
-            RecommendationFilterValidator.CombineValues(options.ResourceType, options.ResourceTypes),
+            options.RecommendationTypeIds,
+            options.ResourceTypes,
             options.ProductFamily,
             options.Resource,
             options.Search,
@@ -114,11 +114,19 @@ public sealed class RecommendationSummaryCommand(
                 StringComparison.OrdinalIgnoreCase) == true);
         RecommendationFilterValidator.ValidateCostOnlyFilters(
             options.Category,
+            options.SubCategory,
             options.MinimumSavings,
             options.AsOf,
             options.From,
             options.To,
             validationResult);
+
+        if (options.Status is not null &&
+            !RecommendationQueryBuilder.IsIdleResourceCost(options.Category, options.SubCategory))
+        {
+            validationResult.Errors.Add(
+                "--status requires --category Cost and --sub-category IdleResources for summaries.");
+        }
 
         if (options.From is DateTimeOffset from &&
             (options.To ?? options.AsOf) is DateTimeOffset to &&
@@ -149,10 +157,10 @@ public sealed class RecommendationSummaryCommand(
         Models.AdvisorTelemetryTags.AddScopeTags(context.Activity, options);
         Models.AdvisorTelemetryTags.AddRecommendationTags(
             context.Activity,
-            options.RecommendationTypeId,
-            options.Category,
-            options.SubCategory,
-            options.Impact);
+            category: options.Category,
+            subCategory: options.SubCategory,
+            impact: options.Impact,
+            recommendationTypeIds: options.RecommendationTypeIds);
         Models.AdvisorTelemetryTags.AddQueryTags(context.Activity, options.Prioritized, options.GroupBy);
 
         try
@@ -164,9 +172,9 @@ public sealed class RecommendationSummaryCommand(
                 out _);
 
             var recommendationTypeIds = RecommendationFilterValidator.NormalizeRecommendationTypeIds(
-                RecommendationFilterValidator.CombineValues(options.RecommendationTypeId, options.RecommendationTypeIds));
+                options.RecommendationTypeIds);
             var resourceTypes = RecommendationFilterValidator.NormalizeFilterValues(
-                RecommendationFilterValidator.CombineValues(options.ResourceType, options.ResourceTypes));
+                options.ResourceTypes);
             var filters = new Models.RecommendationFilters(
                 Category: RecommendationFilterValidator.NormalizeAllowedValue(
                     options.Category,
@@ -175,9 +183,7 @@ public sealed class RecommendationSummaryCommand(
                     options.Impact,
                     RecommendationFilterValidator.AllowedImpacts),
                 Status: options.Status,
-                RecommendationTypeId: recommendationTypeIds.Count == 1 ? recommendationTypeIds[0] : null,
                 RecommendationTypeIds: recommendationTypeIds,
-                ResourceType: resourceTypes.Length == 1 ? resourceTypes[0] : null,
                 ResourceTypes: resourceTypes,
                 ProductFamily: ProductFamilyFilter.Normalize(options.ProductFamily),
                 Resource: NormalizeOptionalFilter(options.Resource),
@@ -198,16 +204,8 @@ public sealed class RecommendationSummaryCommand(
                     filters,
                     options.Tenant,
                     cancellationToken)
-                : options.Subscriptions is { Length: > 0 }
-                    ? await _recommendationSummaryService.SummarizeRecommendationsAsync(
+                : await _recommendationSummaryService.SummarizeRecommendationsAsync(
                         RecommendationScopeValidator.GetSubscriptions(options),
-                        options.ResourceGroup,
-                        groupBy,
-                        filters,
-                        options.Tenant,
-                        cancellationToken)
-                    : await _recommendationSummaryService.SummarizeRecommendationsAsync(
-                        options.Subscription!,
                         options.ResourceGroup,
                         groupBy,
                         filters,
@@ -238,11 +236,11 @@ public sealed class RecommendationSummaryCommand(
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error summarizing Advisor recommendations. Subscription: {Subscription}, ServiceGroup: {ServiceGroup}, ResourceGroup: {ResourceGroup}, " +
+                "Error summarizing Advisor recommendations. SubscriptionCount: {SubscriptionCount}, ServiceGroup: {ServiceGroup}, ResourceGroup: {ResourceGroup}, " +
                 "GroupBy: {GroupBy}, Prioritized: {Prioritized}, Top: {Top}, Category: {Category}, Impact: {Impact}, " +
-                "Status: {Status}, RecommendationTypeId: {RecommendationTypeId}, ResourceType: {ResourceType}, Resource: {Resource}, " +
+                "Status: {Status}, RecommendationTypeCount: {RecommendationTypeCount}, ResourceTypeCount: {ResourceTypeCount}, Resource: {Resource}, " +
                 "SubCategory: {SubCategory}, RetirementDate: {RetirementDate}, AsOf: {AsOf}, From: {From}, To: {To}, HasSearch: {HasSearch}.",
-                options.Subscription,
+                options.Subscriptions?.Length ?? 0,
                 options.ServiceGroup,
                 options.ResourceGroup,
                 groupBy,
@@ -251,8 +249,8 @@ public sealed class RecommendationSummaryCommand(
                 options.Category,
                 options.Impact,
                 options.Status,
-                options.RecommendationTypeId,
-                options.ResourceType,
+                options.RecommendationTypeIds?.Length ?? 0,
+                options.ResourceTypes?.Length ?? 0,
                 options.Resource,
                 options.SubCategory,
                 options.RetirementDate,

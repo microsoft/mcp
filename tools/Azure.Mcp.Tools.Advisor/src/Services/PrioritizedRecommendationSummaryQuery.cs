@@ -103,7 +103,7 @@ internal static class PrioritizedRecommendationSummaryQuery
             query,
             RecommendationSummaryService.GroupByRecommendationType,
             filters);
-        query += OrderByPriority(filters);
+        query += OrderByPriority();
         return query + ProjectResultRows(includeCost);
     }
 
@@ -177,7 +177,7 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// the resource ID is empty.</item>
     /// <item><c>criticalityScore</c> is the contextual score some recommendations carry; it is missing on others.</item>
     /// <item><c>annualSavings</c> is <c>savings.retail.dailyPotentialSavings × 12 × 30.4</c> when that value is a finite
-    /// number. Otherwise it is the legacy <c>extendedProperties.annualSavingsAmount</c> when that is a finite number.
+    /// number. Outside Cost/IdleResources, it falls back to finite legacy <c>extendedProperties.annualSavingsAmount</c>.
     /// Otherwise it is missing (null). Missing is never turned into 0, so "no data" cannot be read as "no savings".</item>
     /// <item>For Cost/IdleResources, completed records have no annual potential; their realized savings remain separate.</item>
     /// </list>
@@ -321,8 +321,6 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// Stage 8: the ranking. This single <c>order by</c> is the only place the order is defined.
     /// </summary>
     /// <remarks>
-    /// Cost + IdleResources puts lifecycle savings first; metadata priority remains a tie-breaker for that workflow.
-    /// Other workflows keep the priority-first order below.
     /// Keys, in order of precedence:
     /// <list type="number">
     /// <item>Metadata priority score, highest first. This is the primary signal and already combines impact,
@@ -339,18 +337,14 @@ internal static class PrioritizedRecommendationSummaryQuery
     /// </list>
     /// Missing values sort after present values for every key.
     /// </remarks>
-    private static string OrderByPriority(RecommendationFilters? filters)
+    private static string OrderByPriority()
     {
-        var primaryOrder = RecommendationQueryBuilder.IsIdleResourceCost(filters)
-            ? "rankingSavings desc nulls last, metadataPriorityScore desc nulls last,"
-            : "metadataPriorityScore desc nulls last, rankingSavings desc nulls last,";
-
         return
             $" | extend resourceCountSortKey = iff(category =~ '{CostCategory}', resourceCount, -resourceCount)," +
             " rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)," +
             " retirementSortKey = todatetime(retirementDate)," +
             " labelSortKey = tolower(label)" +
-            $" | order by {primaryOrder}" +
+            " | order by metadataPriorityScore desc nulls last, rankingSavings desc nulls last," +
             " summedCriticality desc nulls last," +
             " retirementSortKey asc nulls last," +
             " resourceCountSortKey asc," +

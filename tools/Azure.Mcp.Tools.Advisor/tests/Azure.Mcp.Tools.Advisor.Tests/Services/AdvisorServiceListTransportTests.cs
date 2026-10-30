@@ -23,6 +23,173 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public sealed class AdvisorServiceListTransportTests
 {
     [Theory]
+    [InlineData("recommendations", 100, false)]
+    [InlineData("recommendations", 100, true)]
+    [InlineData("prioritized", 100, false)]
+    [InlineData("prioritized", 100, true)]
+    [InlineData("metadata", 1000, false)]
+    [InlineData("metadata", 1000, true)]
+    [InlineData("servicegroups", 500, false)]
+    [InlineData("servicegroups", 500, true)]
+    public async Task Listings_ReturnBoundedPagesWithoutLosingBoundaryRows(
+        string surface, int pageSize, bool terminalTruncated)
+    {
+        var tenantId = Guid.NewGuid();
+        var calls = 0;
+        object Row(int index)
+        {
+            var name = $"item-{index:D4}";
+            return surface switch
+            {
+                "recommendations" or "prioritized" => CreateRecommendation(name),
+                "metadata" => new
+                {
+                    id = $"/providers/Microsoft.Advisor/metadata/{name}",
+                    properties = new { recommendationTypeId = name, displayName = name, recommendationImpact = "High" },
+                },
+                _ => new
+                {
+                    id = $"/providers/Microsoft.Management/serviceGroups/{name}/providers/Microsoft.Advisor/serviceGroupIntelligence/default",
+                    properties = new { serviceGroupId = $"/providers/Microsoft.Management/serviceGroups/{name}" },
+                },
+            };
+        }
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+            calls++;
+            return calls == 1
+                ? CreateResourceGraphResponseWithSkipToken(
+                    "next-page", true, Enumerable.Range(0, pageSize).Select(Row).ToArray())
+                : CreateResourceGraphResponse(terminalTruncated, Row(pageSize));
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+
+        async Task<(List<string?> Keys, bool Truncated, string? Token)> ReadPage(string? token)
+        {
+            if (surface is "recommendations" or "prioritized")
+            {
+                var result = await new AdvisorService(azureService).ListRecommendationsAsync(
+                    subscription: null, resourceGroup: null,
+                    filters: new RecommendationFilters(ServiceGroup: "commerce", RecommendationTypeIds: ["type-a"], Prioritized: surface == "prioritized")
+                    {
+                        ReturnPage = true,
+                        ContinuationToken = token,
+                    },
+                    top: pageSize, cancellationToken: TestContext.Current.CancellationToken);
+                return (result.Results.Select(static row => row.Name).ToList(), result.AreResultsTruncated, result.ContinuationToken);
+            }
+            if (surface == "metadata")
+            {
+                var result = await new AdvisorService(azureService).ListRecommendationMetadataAsync(
+                    "en", new() { ContinuationToken = token }, TestContext.Current.CancellationToken);
+                return (result.Results.Select(static row => (string?)row.RecommendationTypeId).ToList(), result.AreResultsTruncated, result.ContinuationToken);
+            }
+            var statuses = await new AdvisorServiceGroupIntelligenceService(azureService).GetStatusAsync(
+                null, null, null, pageSize, null, token, TestContext.Current.CancellationToken);
+            return (statuses.Results.Select(static row => (string?)row.ServiceGroupName).ToList(), statuses.AreResultsTruncated, statuses.ContinuationToken);
+        }
+
+        var first = await ReadPage(null);
+        Assert.Equal(1, calls);
+        Assert.Equal(pageSize, first.Keys.Count);
+        Assert.True(first.Truncated);
+        Assert.Equal("next-page", first.Token);
+        var firstQuery = GetResourceGraphQuery(handler.LastRequestBody);
+        Assert.DoesNotContain("| limit", firstQuery);
+        Assert.DoesNotContain("| take", firstQuery);
+        Assert.Contains("order by", firstQuery);
+        using (var body = JsonDocument.Parse(handler.LastRequestBody!))
+        {
+            Assert.Equal(pageSize, body.RootElement.GetProperty("options").GetProperty("$top").GetInt32());
+        }
+
+        var last = await ReadPage(first.Token);
+        Assert.Equal(2, calls);
+        Assert.Equal(terminalTruncated, last.Truncated);
+        Assert.Null(last.Token);
+        Assert.Equal(firstQuery, GetResourceGraphQuery(handler.LastRequestBody));
+        Assert.Equal(Enumerable.Range(0, pageSize + 1).Select(static index => $"item-{index:D4}"), first.Keys.Concat(last.Keys));
+        using var lastBody = JsonDocument.Parse(handler.LastRequestBody!);
+        Assert.Equal("next-page", lastBody.RootElement.GetProperty("options").GetProperty("$skipToken").GetString());
+    }
+
+    [Fact]
+    public async Task ServiceGroupStatus_TenantSubscriptionLimitHit_RejectsIncompleteCoverage()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return CreateTenantListResponse(tenantId);
+            }
+            var response = CreateResourceGraphResponse();
+            response.Headers.Add(AdvisorResourceGraphQueryExecutor.TenantSubscriptionLimitHitHeader, "true");
+            return response;
+        });
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            new AdvisorServiceGroupIntelligenceService(azureService).GetStatusAsync(
+                null, null, null, 50, null, null, TestContext.Current.CancellationToken));
+        Assert.Contains("10,000", exception.Message);
+    }
+
+    [Fact]
+    public async Task ExecutePageAsync_RejectsOversizedResponseInsteadOfDroppingRows()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+            request.Method == HttpMethod.Get
+                ? CreateTenantListResponse(tenantId)
+                : CreateResourceGraphResponse(CreateRecommendation("first"), CreateRecommendation("second")));
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        await Assert.ThrowsAsync<JsonException>(() =>
+            AdvisorResourceGraphQueryExecutor.ExecutePageAsync(
+                tenant, "advisorresources", 1, null, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ServiceGroupStatus_RejectsUnparseableRowsInsteadOfReportingCompleteCoverage()
+    {
+        var tenantId = Guid.NewGuid();
+        var handler = new CapturingHttpMessageHandler(request =>
+            request.Method == HttpMethod.Get
+                ? CreateTenantListResponse(tenantId)
+                : CreateResourceGraphResponse(new { properties = new { } }));
+        var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
+        var azureService = Substitute.For<IAzureService>();
+        azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
+        await Assert.ThrowsAsync<JsonException>(() =>
+            new AdvisorServiceGroupIntelligenceService(azureService).GetStatusAsync(
+                null, null, null, 50, null, null, TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("opaque+/=token", true)]
+    [InlineData("", false)]
+    [InlineData(" ", false)]
+    [InlineData("token\r\n", false)]
+    [InlineData("token\u0000", false)]
+    public void Pagination_ValidatesOpaqueTokensWithoutChangingThem(string? token, bool valid) =>
+        Assert.Equal(valid, AdvisorPagination.IsValid(token));
+
+    [Fact]
+    public void Pagination_EnforcesTokenLengthBound()
+    {
+        Assert.True(AdvisorPagination.IsValid(new string('a', 16384)));
+        Assert.False(AdvisorPagination.IsValid(new string('a', 16385)));
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task ServiceGroupDisplayName_IsResolvedBeforeListOrSummary(bool summary)
@@ -341,7 +508,7 @@ public sealed class AdvisorServiceListTransportTests
         var service = new AdvisorService(azureService);
         var filters = new RecommendationFilters(
             ServiceGroup: serviceGroupScope ? "commerce" : null,
-            RecommendationTypeId: "type-a",
+            RecommendationTypeIds: ["type-a"],
             Prioritized: prioritized,
             Category: "HighAvailability",
             Status: RecommendationStatus.Dismissed,
@@ -388,7 +555,7 @@ public sealed class AdvisorServiceListTransportTests
         var service = new AdvisorService(azureService);
         var filters = new RecommendationFilters(
             ServiceGroup: serviceGroupScope ? "commerce" : null,
-            RecommendationTypeId: "type-a",
+            RecommendationTypeIds: ["type-a"],
             Prioritized: prioritized,
             ShowPrioritizationSignals: true);
 
@@ -446,7 +613,7 @@ public sealed class AdvisorServiceListTransportTests
                 ServiceGroup: serviceGroupScope ? "commerce" : null,
                 Prioritized: prioritized,
                 Category: category,
-                RecommendationTypeId: "type-a"),
+                RecommendationTypeIds: ["type-a"]),
             top: 10,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -458,7 +625,7 @@ public sealed class AdvisorServiceListTransportTests
         Assert.DoesNotContain("isnotnull(properties.criticalityScore)", query);
         Assert.DoesNotContain("metadataPriorityScore", query);
         Assert.Contains("tostring(properties.language) =~ 'en'", query);
-        Assert.Contains("tostring(properties.recommendationTypeId) =~ 'type-a'", query);
+        Assert.Contains("tostring(properties.recommendationTypeId) in~ ('type-a')", query);
         Assert.EndsWith(prioritized ? "| take 11 | project id, name, type, properties" : "| limit 11", query);
         Assert.Equal(prioritized, query.Contains("| order by", StringComparison.Ordinal));
     }
@@ -511,7 +678,7 @@ public sealed class AdvisorServiceListTransportTests
                 Prioritized: prioritized,
                 Category: "Cost",
                 Impact: "High",
-                ResourceType: "Microsoft.Storage/storageAccounts",
+                ResourceTypes: ["Microsoft.Storage/storageAccounts"],
                 SubCategory: "ServiceUpgradeAndRetirement",
                 TrackingIds: ["QNY1-HB8", "9G0V-_G8"],
                 RetirementDateOperator: "le",
@@ -519,7 +686,7 @@ public sealed class AdvisorServiceListTransportTests
                 Status: RecommendationStatus.Completed,
                 Resource: "storage",
                 Search: "encrypt",
-                RecommendationTypeId: "type-a"),
+                RecommendationTypeIds: ["type-a"]),
             top: 1,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -534,9 +701,9 @@ public sealed class AdvisorServiceListTransportTests
         Assert.Contains("tostring(properties.recommendationImpact) =~ 'High'", query);
         Assert.DoesNotContain("tostring(properties.category) =~ 'Cost'", query);
         Assert.DoesNotContain("tostring(properties.impact) =~ 'High'", query);
-        Assert.DoesNotContain("tostring(properties.recommendationTypeId) in~", query);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(query, @"tostring\(properties.recommendationTypeId\) in~"));
         Assert.Contains("tostring(properties.recommendationStatus) =~ 'Completed'", query);
-        Assert.Contains("tostring(properties.recommendationTypeId) =~ 'type-a'", query);
+        Assert.Contains("tostring(properties.recommendationTypeId) in~ ('type-a')", query);
         Assert.Contains("tostring(properties.resourceMetadata.resourceId) contains 'Microsoft.Storage/storageAccounts'", query);
         Assert.Contains("tostring(properties.resourceMetadata.resourceId) contains 'storage'", query);
         Assert.Contains("tostring(properties.shortDescription.problem) contains 'encrypt'", query);
@@ -637,7 +804,7 @@ public sealed class AdvisorServiceListTransportTests
                 resourceGroup: "missing-group",
                 filters: new RecommendationFilters(
                     Category: "Cost",
-                    RecommendationTypeId: "type-a",
+                    RecommendationTypeIds: ["type-a"],
                     Prioritized: prioritized),
                 cancellationToken: TestContext.Current.CancellationToken));
 
@@ -710,7 +877,7 @@ public sealed class AdvisorServiceListTransportTests
             resourceGroup: null,
             filters: new RecommendationFilters(
                 ServiceGroup: "commerce",
-                RecommendationTypeId: "type-a",
+                RecommendationTypeIds: ["type-a"],
                 Prioritized: true,
                 Status: status),
             top: 1,
@@ -934,7 +1101,7 @@ public sealed class AdvisorServiceListTransportTests
         var result = await new AdvisorService(azureService).ListRecommendationsAsync(
             subscriptionIds,
             resourceGroup: null,
-            filters: new RecommendationFilters(RecommendationTypeId: "type-a"),
+            filters: new RecommendationFilters(RecommendationTypeIds: ["type-a"]),
             top: 10,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -1026,7 +1193,7 @@ public sealed class AdvisorServiceListTransportTests
             resourceGroup: null,
             filters: new RecommendationFilters(
                 ServiceGroup: "service-group-a",
-                RecommendationTypeId: "type-a"),
+                RecommendationTypeIds: ["type-a"]),
             top: 10,
             cancellationToken: TestContext.Current.CancellationToken);
 
@@ -1040,8 +1207,10 @@ public sealed class AdvisorServiceListTransportTests
         Assert.DoesNotContain("tostring(properties.serviceGroupId) in~", GetResourceGraphQuery(handler.LastRequestBody));
     }
 
-    [Fact]
-    public async Task ListRecommendationsAsync_FollowsSkipTokenAcrossPages()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ListRecommendationsAsync_FollowsSkipTokenAcrossPages(bool enumerateAll)
     {
         var tenantId = Guid.NewGuid();
         var page = 0;
@@ -1057,8 +1226,12 @@ public sealed class AdvisorServiceListTransportTests
                 ? CreateResourceGraphResponseWithSkipToken(
                     "next-page",
                     resultTruncated: true,
-                    CreateRecommendation("first-page"))
-                : CreateResourceGraphResponse(CreateRecommendation("second-page"));
+                    enumerateAll
+                        ? Enumerable.Range(0, 100).Select(index => CreateRecommendation($"page-one-{index}")).ToArray()
+                        : [CreateRecommendation("first-page")])
+                : CreateResourceGraphResponse(enumerateAll
+                    ? Enumerable.Range(0, 25).Select(index => CreateRecommendation($"page-two-{index}")).ToArray()
+                    : [CreateRecommendation("second-page")]);
         });
         var tenant = await CreateTenantResourceAsync(tenantId, CreateCredential(), handler);
         handler.Reset();
@@ -1068,11 +1241,23 @@ public sealed class AdvisorServiceListTransportTests
         var result = await new AdvisorService(azureService).ListRecommendationsAsync(
             subscription: null,
             resourceGroup: null,
-            filters: new RecommendationFilters(ServiceGroup: "service-group-a", RecommendationTypeId: "type-a"),
+            filters: new RecommendationFilters(ServiceGroup: "service-group-a", RecommendationTypeIds: ["type-a"])
+            {
+                EnumerateAll = enumerateAll,
+            },
             top: 10,
             cancellationToken: TestContext.Current.CancellationToken);
 
-        Assert.Equal(["first-page", "second-page"], result.Results.Select(row => row.Name));
+        if (enumerateAll)
+        {
+            Assert.Equal(125, result.Results.Count);
+            Assert.DoesNotContain("| limit", GetResourceGraphQuery(handler.LastRequestBody));
+        }
+        else
+        {
+            Assert.Equal(["first-page", "second-page"], result.Results.Select(row => row.Name));
+            Assert.Contains("| limit 11", GetResourceGraphQuery(handler.LastRequestBody));
+        }
         Assert.False(result.AreResultsTruncated);
         Assert.Equal(2, page);
     }
@@ -1135,7 +1320,7 @@ public sealed class AdvisorServiceListTransportTests
         var azureService = Substitute.For<IAzureService>();
         azureService.GetTenants(Arg.Any<CancellationToken>()).Returns([tenant]);
         const string serviceGroup = "service-group-test";
-        var filters = new RecommendationFilters(ServiceGroup: serviceGroup, RecommendationTypeId: "type-a", Prioritized: true);
+        var filters = new RecommendationFilters(ServiceGroup: serviceGroup, RecommendationTypeIds: ["type-a"], Prioritized: true);
 
         if (summary)
         {
@@ -1526,7 +1711,7 @@ public sealed class AdvisorServiceListTransportTests
             resourceGroup: null,
             filters: new RecommendationFilters(
                 ServiceGroup: "commerce",
-                RecommendationTypeId: "type-a",
+                RecommendationTypeIds: ["type-a"],
                 Prioritized: true,
                 Category: metadataFilters ? "Cost" : null,
                 ShowPrioritizationSignals: showSignals),
@@ -1570,7 +1755,7 @@ public sealed class AdvisorServiceListTransportTests
             resourceGroup: null,
             filters: new RecommendationFilters(
                 ServiceGroup: "commerce",
-                RecommendationTypeId: "type-a",
+                RecommendationTypeIds: ["type-a"],
                 Prioritized: true),
             top: 1,
             cancellationToken: TestContext.Current.CancellationToken);
@@ -1678,7 +1863,7 @@ public sealed class AdvisorServiceListTransportTests
             cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal("filters", exception.ParamName);
-        Assert.Contains("--prioritized true requires --recommendation-type-id", exception.Message);
+        Assert.Contains("--prioritized true requires exactly one distinct --recommendation-type-ids value", exception.Message);
         Assert.Empty(azureService.ReceivedCalls());
     }
 

@@ -8,7 +8,6 @@ using System.Security;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -24,6 +23,8 @@ public sealed class PreValidationService(
     TimeProvider? timeProvider = null)
     : BaseAzureResourceService(azureService), IPreValidationService
 {
+    private const int ResourceBatchSize = 25;
+    private const int MaximumConcurrentReads = 4;
     private const int MaximumArmPages = 100;
     private const int MaximumMetricsLookbackDays = 93;
     private const int DeletionLookbackDays = 14;
@@ -58,9 +59,37 @@ public sealed class PreValidationService(
             throw new ArgumentException("The recommendation type ID must be a GUID.", nameof(recommendationTypeId));
         }
 
+        var now = _timeProvider.GetUtcNow();
+        var resources = new List<PreValidationResourceResult>();
+        using var readGate = new SemaphoreSlim(MaximumConcurrentReads);
+        foreach (var batch in candidates.GroupBy(
+            static candidate => candidate.Properties.ResourceMetadata?.ResourceId,
+            StringComparer.OrdinalIgnoreCase).Chunk(ResourceBatchSize))
+        {
+            var result = await ValidateBatchAsync(typeId.ToString("D"),
+                batch.SelectMany(static group => group).ToArray(), tenant, now,
+                minimumUnusedDays, readGate, cancellationToken);
+            resources.AddRange(result);
+        }
+        return BuildResult(typeId.ToString("D"), resources, now, minimumUnusedDays,
+            sourceResultsTruncated, unmatchedResources);
+    }
+
+    private async Task<PreValidationResourceResult[]> ValidateBatchAsync(
+        string recommendationTypeId, IReadOnlyList<Recommendation> candidates, string? tenant,
+        DateTimeOffset now, int minimumUnusedDays, SemaphoreSlim readGate, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ArgumentNullException.ThrowIfNull(candidates);
+        ArgumentOutOfRangeException.ThrowIfLessThan(minimumUnusedDays, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(minimumUnusedDays, UnusedAgePolicy.MaximumMinimumUnusedDays);
+        if (!Guid.TryParse(recommendationTypeId, out var typeId))
+        {
+            throw new ArgumentException("The recommendation type ID must be a GUID.", nameof(recommendationTypeId));
+        }
+
         var groups = candidates.GroupBy(static candidate => candidate.Properties.ResourceMetadata?.ResourceId,
             StringComparer.OrdinalIgnoreCase).ToArray();
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(groups.Length, RecommendationPreValidationCommand.MaximumResources);
         var identifiers = new Dictionary<string, ResourceIdentifier>(StringComparer.OrdinalIgnoreCase);
         foreach (var group in groups)
         {
@@ -79,7 +108,6 @@ public sealed class PreValidationService(
             identifiers.Add(group.Key, identifier);
         }
 
-        var now = _timeProvider.GetUtcNow();
         var checksByResource = identifiers.Keys.ToDictionary(
             static id => id, static _ => new List<PreValidationCheckResult>(), StringComparer.OrdinalIgnoreCase);
         var insights = identifiers.ToDictionary(static pair => pair.Key,
@@ -101,30 +129,33 @@ public sealed class PreValidationService(
                 resourceGroup: null, tenant, cancellationToken);
             var tenantId = resolved.TenantResource.Data.TenantId?.ToString()
                 ?? throw new InvalidOperationException("The selected resources did not resolve to an Azure tenant.");
-            foreach (var resourceTypeGroup in supportedIdentifiers.GroupBy(
-                static pair => pair.Value.ResourceType.ToString(), StringComparer.OrdinalIgnoreCase))
+            var groupResults = await Task.WhenAll(supportedIdentifiers.GroupBy(
+                static pair => pair.Value.ResourceType.ToString(), StringComparer.OrdinalIgnoreCase)
+                .Select(async resourceTypeGroup =>
             {
                 var insight = insights[resourceTypeGroup.First().Key]!;
                 var targets = resourceTypeGroup.ToDictionary(
                     static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase);
-                foreach (var check in insight.Checks)
+                return await Task.WhenAll(insight.Checks.Select(async check =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+                    var checkResults = targets.Keys.ToDictionary(
+                        static id => id, static _ => new List<PreValidationCheckResult>(), StringComparer.OrdinalIgnoreCase);
                     if (check.Kind == "unusedAge")
                     {
                         var observations = targets.Keys.ToDictionary(
                             static id => id, static _ => new List<UnusedAgeObservation>(), StringComparer.OrdinalIgnoreCase);
-                        foreach (var signal in check.Signals ?? [])
+                        var signals = await Task.WhenAll((check.Signals ?? []).Select(async signal =>
                         {
                             Dictionary<string, UnusedAgeObservation> evidence;
                             try
                             {
                                 evidence = signal.Source switch
                                 {
-                                    "armChangedTime" => await ReadArmActivityAsync(targets, insight.ResourceType, tenantId, cancellationToken),
-                                    "arg" => await ReadArgActivityAsync(signal, targets.Keys, resolved.TenantResource, cancellationToken),
+                                    "armChangedTime" => await ReadArmActivityAsync(targets, insight.ResourceType, tenantId, readGate, cancellationToken),
+                                    "arg" => await ReadArgActivityAsync(signal, targets.Keys, resolved.TenantResource, readGate, cancellationToken),
                                     "metrics" => await ReadMetricActivityAsync(
-                                        signal, targets, tenantId, now, minimumUnusedDays, cancellationToken),
+                                        signal, targets, tenantId, now, minimumUnusedDays, readGate, cancellationToken),
                                     _ => throw new InvalidOperationException("Unsupported compiled unused-age signal."),
                                 };
                             }
@@ -133,6 +164,10 @@ public sealed class PreValidationService(
                                 logger.LogWarning(ex, "Could not read prevalidation activity signal {SignalSource}.", signal.Source);
                                 evidence = [];
                             }
+                            return evidence;
+                        }));
+                        foreach (var evidence in signals)
+                        {
                             foreach (var id in targets.Keys)
                             {
                                 observations[id].Add(evidence.GetValueOrDefault(id));
@@ -140,22 +175,22 @@ public sealed class PreValidationService(
                         }
                         foreach (var id in targets.Keys)
                         {
-                            checksByResource[id].Add(UnusedAgePolicy.Evaluate(observations[id], now, minimumUnusedDays));
+                            checkResults[id].Add(UnusedAgePolicy.Evaluate(observations[id], now, minimumUnusedDays));
                         }
                     }
                     else if (check.Kind == "locks")
                     {
-                        var outcomes = await ReadLockChecksAsync(check, targets, tenantId, cancellationToken);
+                        var outcomes = await ReadLockChecksAsync(check, targets, tenantId, readGate, cancellationToken);
                         foreach (var id in targets.Keys)
                         {
-                            checksByResource[id].Add(outcomes[id]);
+                            checkResults[id].Add(outcomes[id]);
                         }
                     }
                     else if (check.Kind == "manual")
                     {
                         foreach (var id in targets.Keys)
                         {
-                            checksByResource[id].Add(new(check.Id, check.Name, check.Goal, check.Severity,
+                            checkResults[id].Add(new(check.Id, check.Name, check.Goal, check.Severity,
                                 "manual", check.Interpretation,
                                 Guidance: BindManualGuidance(check.Guidance, targets[id], insight.RecommendationTypeId)));
                         }
@@ -164,10 +199,10 @@ public sealed class PreValidationService(
                     {
                         try
                         {
-                            var rows = await ReadArgRowsAsync(check.Query, targets.Keys, resolved.TenantResource, cancellationToken);
+                            var rows = await ReadArgRowsAsync(check.Query, targets.Keys, resolved.TenantResource, readGate, cancellationToken);
                             foreach (var id in targets.Keys)
                             {
-                                checksByResource[id].Add(EvaluateArgCheck(check, rows.GetValueOrDefault(id) ?? []));
+                                checkResults[id].Add(EvaluateArgCheck(check, rows.GetValueOrDefault(id) ?? []));
                             }
                         }
                         catch (Exception ex) when (IsReadFailure(ex))
@@ -175,7 +210,7 @@ public sealed class PreValidationService(
                             logger.LogWarning(ex, "Could not verify prevalidation check {CheckId}.", check.Id);
                             foreach (var id in targets.Keys)
                             {
-                                checksByResource[id].Add(Unverified(check));
+                                checkResults[id].Add(Unverified(check));
                             }
                         }
                     }
@@ -183,6 +218,14 @@ public sealed class PreValidationService(
                     {
                         throw new InvalidOperationException("Unsupported compiled prevalidation check.");
                     }
+                    return checkResults;
+                }));
+            }));
+            foreach (var results in groupResults.SelectMany(static group => group))
+            {
+                foreach (var (id, checks) in results)
+                {
+                    checksByResource[id].AddRange(checks);
                 }
             }
             // Only failed scope/detection checks can indicate a missing resource. Locks and other risks are not deletion evidence.
@@ -191,7 +234,7 @@ public sealed class PreValidationService(
             if (deletionCandidates.Length > 0)
             {
                 deletedResources = await ReadDeletedResourcesAsync(
-                    deletionCandidates, checksByResource, resolved.TenantResource, now, cancellationToken);
+                    deletionCandidates, checksByResource, resolved.TenantResource, now, readGate, cancellationToken);
             }
         }
 
@@ -215,8 +258,7 @@ public sealed class PreValidationService(
                     : null,
                 isDeleted ? false : null);
         }).ToArray();
-        return BuildResult(typeId.ToString("D"), resources, now, minimumUnusedDays,
-            sourceResultsTruncated, unmatchedResources);
+        return resources;
     }
 
     private static bool IsReadFailure(Exception exception) =>
@@ -225,13 +267,13 @@ public sealed class PreValidationService(
     private async Task<Dictionary<string, DateTimeOffset>> ReadDeletedResourcesAsync(
         IReadOnlyList<string> resourceIds,
         IReadOnlyDictionary<string, List<PreValidationCheckResult>> checksByResource,
-        TenantResource tenant, DateTimeOffset now, CancellationToken cancellationToken)
+        TenantResource tenant, DateTimeOffset now, SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
         Dictionary<string, List<JsonElement>>? rows = null;
         var deleted = new Dictionary<string, DateTimeOffset>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            rows = await ReadArgRowsAsync(DeletionChangeQuery, resourceIds, tenant, cancellationToken);
+            rows = await ReadArgRowsAsync(DeletionChangeQuery, resourceIds, tenant, readGate, cancellationToken);
             foreach (var (id, values) in rows)
             {
                 if (values.Count != 1 || ReadTimestamp(values[0], "deletedOn") is not { } deletedOn ||
@@ -264,12 +306,21 @@ public sealed class PreValidationService(
     }
 
     private static async Task<Dictionary<string, List<JsonElement>>> ReadArgRowsAsync(
-        string? template, IEnumerable<string> resourceIds, TenantResource tenant, CancellationToken cancellationToken)
+        string? template, IEnumerable<string> resourceIds, TenantResource tenant, SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(template);
         var ids = resourceIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
         var query = BindResourceIds(template, ids);
-        var result = await AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(tenant, query, cancellationToken);
+        AdvisorResourceGraphQueryExecutor.PagedQueryResult result;
+        await readGate.WaitAsync(cancellationToken);
+        try
+        {
+            result = await AdvisorResourceGraphQueryExecutor.ExecutePagedAsync(tenant, query, cancellationToken);
+        }
+        finally
+        {
+            readGate.Release();
+        }
         if (result.IsTruncated)
         {
             throw new JsonException("Prevalidation Resource Graph evidence was truncated.");
@@ -362,9 +413,9 @@ public sealed class PreValidationService(
     }
 
     private static async Task<Dictionary<string, UnusedAgeObservation>> ReadArgActivityAsync(
-        UnusedAgeSignal signal, IEnumerable<string> resourceIds, TenantResource tenant, CancellationToken cancellationToken)
+        UnusedAgeSignal signal, IEnumerable<string> resourceIds, TenantResource tenant, SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
-        var rows = await ReadArgRowsAsync(signal.Query, resourceIds, tenant, cancellationToken);
+        var rows = await ReadArgRowsAsync(signal.Query, resourceIds, tenant, readGate, cancellationToken);
         return rows.ToDictionary(static pair => pair.Key, pair =>
         {
             var timestamps = pair.Value.Select(row => ReadTimestamp(row, signal.Field)).ToArray();
@@ -377,17 +428,18 @@ public sealed class PreValidationService(
 
     private async Task<Dictionary<string, UnusedAgeObservation>> ReadArmActivityAsync(
         IReadOnlyDictionary<string, ResourceIdentifier> identifiers, string resourceType, string tenant,
-        CancellationToken cancellationToken)
+        SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
-        var evidence = new Dictionary<string, UnusedAgeObservation>(StringComparer.OrdinalIgnoreCase);
-        foreach (var group in identifiers.GroupBy(static pair =>
+        var groups = await Task.WhenAll(identifiers.GroupBy(static pair =>
             $"/subscriptions/{pair.Value.SubscriptionId}/resourceGroups/{pair.Value.ResourceGroupName}",
-            StringComparer.OrdinalIgnoreCase))
+            StringComparer.OrdinalIgnoreCase).Select(async group =>
         {
+            var evidence = new Dictionary<string, UnusedAgeObservation>(StringComparer.OrdinalIgnoreCase);
             var wanted = group.Select(static pair => pair.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var identifier = group.First().Value;
             var resourceGroupPath = $"/subscriptions/{Uri.EscapeDataString(identifier.SubscriptionId!)}/resourceGroups/{Uri.EscapeDataString(identifier.ResourceGroupName!)}";
             var filter = Uri.EscapeDataString($"resourceType eq '{resourceType}'");
+            await readGate.WaitAsync(cancellationToken);
             try
             {
                 await foreach (var row in ReadArmRowsAsync(
@@ -411,19 +463,27 @@ public sealed class PreValidationService(
             {
                 logger.LogWarning(ex, "Could not complete ARM activity reads for prevalidation.");
             }
-        }
-        return evidence;
+            finally
+            {
+                readGate.Release();
+            }
+            return evidence;
+        }));
+        return groups.SelectMany(static group => group)
+            .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase);
     }
 
     private async Task<Dictionary<string, PreValidationCheckResult>> ReadLockChecksAsync(
         ResourceInsightCheck check, IReadOnlyDictionary<string, ResourceIdentifier> identifiers, string tenant,
-        CancellationToken cancellationToken)
+        SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
-        var outcomes = identifiers.Keys.ToDictionary(static id => id, _ => Unverified(check), StringComparer.OrdinalIgnoreCase);
-        foreach (var group in identifiers.GroupBy(static pair => pair.Value.SubscriptionId!, StringComparer.OrdinalIgnoreCase))
+        var groups = await Task.WhenAll(identifiers.GroupBy(
+            static pair => pair.Value.SubscriptionId!, StringComparer.OrdinalIgnoreCase).Select(async group =>
         {
+            var outcomes = new Dictionary<string, PreValidationCheckResult>(StringComparer.OrdinalIgnoreCase);
             var found = new Dictionary<string, List<JsonElement>>(StringComparer.OrdinalIgnoreCase);
             var complete = false;
+            await readGate.WaitAsync(cancellationToken);
             try
             {
                 await foreach (var row in ReadArmRowsAsync(
@@ -465,6 +525,10 @@ public sealed class PreValidationService(
             {
                 logger.LogWarning(ex, "Could not complete management lock inventory for prevalidation.");
             }
+            finally
+            {
+                readGate.Release();
+            }
             foreach (var resource in group)
             {
                 var locks = found.GetValueOrDefault(resource.Key);
@@ -474,8 +538,10 @@ public sealed class PreValidationService(
                         ? new(check.Id, check.Name, check.Goal, "block", "passed", "No effective resource, parent-resource, resource-group, or subscription management locks were found.")
                         : Unverified(check);
             }
-        }
-        return outcomes;
+            return outcomes;
+        }));
+        return groups.SelectMany(static group => group)
+            .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase);
     }
 
     private async IAsyncEnumerable<JsonElement> ReadArmRowsAsync(
@@ -541,7 +607,7 @@ public sealed class PreValidationService(
 
     private async Task<Dictionary<string, UnusedAgeObservation>> ReadMetricActivityAsync(
         UnusedAgeSignal signal, IReadOnlyDictionary<string, ResourceIdentifier> identifiers, string tenant,
-        DateTimeOffset now, int minimumUnusedDays, CancellationToken cancellationToken)
+        DateTimeOffset now, int minimumUnusedDays, SemaphoreSlim readGate, CancellationToken cancellationToken)
     {
         if (signal.MetricNames is not { Count: > 0 })
         {
@@ -553,10 +619,11 @@ public sealed class PreValidationService(
         var results = new System.Collections.Concurrent.ConcurrentDictionary<string, UnusedAgeObservation>(StringComparer.OrdinalIgnoreCase);
         await Parallel.ForEachAsync(identifiers, new ParallelOptions
         {
-            MaxDegreeOfParallelism = 4,
+            MaxDegreeOfParallelism = MaximumConcurrentReads,
             CancellationToken = cancellationToken,
         }, async (resource, token) =>
         {
+            await readGate.WaitAsync(token);
             try
             {
                 var metrics = await monitorMetricsService.QueryMetricsAsync(
@@ -570,6 +637,10 @@ public sealed class PreValidationService(
             {
                 logger.LogWarning(ex, "Could not read Azure Monitor activity evidence for prevalidation.");
                 results[resource.Key] = new(IsIncomplete: true);
+            }
+            finally
+            {
+                readGate.Release();
             }
         });
         return new(results, StringComparer.OrdinalIgnoreCase);
@@ -668,20 +739,31 @@ public sealed class PreValidationService(
             resources.Count == 0 || review.Length > 0 || truncated || unmatchedResources.Count > 0 ? "needsReview" : "safe";
         var summary = new[] { ("safe", safe), ("needsReview", review), ("blocked", blocked) }
             .Select(static bucket => new PreValidationBucketSummary(bucket.Item1, bucket.Item2.Length,
-                SumKnown(bucket.Item2.Select(static resource => resource.YearlyPotentialSavings)),
-                SumKnown(bucket.Item2.Select(static resource => resource.Cost)),
+                RoundMoney(SumKnown(bucket.Item2.Select(static resource => resource.YearlyPotentialSavings))),
+                RoundMoney(SumKnown(bucket.Item2.Select(static resource => resource.Cost))),
                 bucket.Item2.Count(static resource => resource.YearlyPotentialSavings is null),
                 bucket.Item2.Count(static resource => resource.Cost is null),
                 bucket.Item2.Count(static resource => resource.ResourceDeletedOn is not null))).ToArray();
         return new(typeId, verdict, now, minimumUnusedDays, RecommendationQueryBuilder.RetailPricingBasis, "USD",
-            truncated, unmatchedResources, safe, review, blocked, summary,
+            truncated, unmatchedResources, RoundResourceAmounts(safe), RoundResourceAmounts(review), RoundResourceAmounts(blocked), summary,
             resources.Count == 0
                 ? "No matching current New Cost/IdleResources resources were validated. No deletion safety was established."
                 : "Read-only, point-in-time automated checks only; no deletion or state update is authorized. " +
                     "Complete manual confirmations before any separately approved action. Dependency scans cover visible ARM properties only; " +
                     "RBAC-hidden, external, data-plane, and recently changed dependencies may be absent from Resource Graph. " +
-                    "Missing pricing remains unavailable; amounts are Retail USD, not contractual savings.");
+                    "Missing pricing remains unavailable; amounts are Retail USD, not contractual savings.",
+            RemainingResourceCount: truncated ? null : 0);
     }
+
+    private static PreValidationResourceResult[] RoundResourceAmounts(IEnumerable<PreValidationResourceResult> resources) =>
+        resources.Select(static resource => resource with
+        {
+            YearlyPotentialSavings = RoundMoney(resource.YearlyPotentialSavings),
+            Cost = RoundMoney(resource.Cost),
+        }).ToArray();
+
+    private static decimal? RoundMoney(decimal? amount) =>
+        amount is decimal value ? decimal.Round(value, 2, MidpointRounding.AwayFromZero) : null;
 
     private static decimal? SumKnown(IEnumerable<decimal?> values)
     {

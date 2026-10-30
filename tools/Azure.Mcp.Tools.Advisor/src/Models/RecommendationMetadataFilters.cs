@@ -14,4 +14,5 @@ public sealed record RecommendationMetadataFilters(
     DateOnly? RetirementDate = null)
 {
     internal const string ServiceRetirementSubCategory = "ServiceUpgradeAndRetirement";
+    public string? ContinuationToken { get; init; }
 }

@@ -37,7 +37,9 @@ public class AdvisorServiceListQueryTests
                 query.IndexOf("| limit 11", StringComparison.Ordinal));
 
             var prioritized = AdvisorService.BuildPrioritizedRecommendationListQuery(scope, null, 11, filters);
-            Assert.Contains($"instanceScore = iff(metadataCategory =~ 'Cost', {savings}, criticalityScore)", prioritized);
+            Assert.Contains($"instanceScore = iff(metadataCategory =~ 'Cost', round({savings}, 2), criticalityScore)", prioritized);
+            Assert.Contains("annualSavings = iff(isfinite(dailySavings), dailySavings * 12 * 30.4, real(null))", prioritized);
+            Assert.DoesNotContain("iff(isfinite(legacyAnnualSavings)", prioritized);
             Assert.Contains("| order by instanceScore desc nulls last", prioritized);
             Assert.True(prioritized.IndexOf("| order by ", StringComparison.Ordinal) <
                 prioritized.IndexOf("| take 11", StringComparison.Ordinal));
@@ -117,7 +119,7 @@ public class AdvisorServiceListQueryTests
         {
             "category" => new RecommendationFilters(Category: " HighAvailability "),
             "impact" => new RecommendationFilters(Impact: " High "),
-            "resourceType" => new RecommendationFilters(ResourceType: " Microsoft.Storage/storageAccounts "),
+            "resourceType" => new RecommendationFilters(ResourceTypes: [" Microsoft.Storage/storageAccounts "]),
             "subCategory" => new RecommendationFilters(SubCategory: " ZoneResiliency "),
             "trackingIds" => new RecommendationFilters(TrackingIds: [" QNY1-'HB8 ", "qny1-'hb8", "", "9G0V-_G8"]),
             "retirementDate" => new RecommendationFilters(RetirementDateOperator: "le", RetirementDate: new DateOnly(2026, 3, 31)),
@@ -394,7 +396,7 @@ public class AdvisorServiceListQueryTests
         foreach (var scope in new[] { SubscriptionScope(), ServiceGroupScope() })
         {
             var query = AdvisorService.BuildPrioritizedRecommendationListQuery(
-                scope, null, 101, new RecommendationFilters(Category: category, RecommendationTypeId: "cost-type"));
+                scope, null, 101, new RecommendationFilters(Category: category, RecommendationTypeIds: ["cost-type"]));
 
             AssertFiniteSavingsRanking(query);
             Assert.Contains("criticalityScore = coalesce(todouble(properties.criticalityScore), 0.0)", query);
@@ -415,7 +417,7 @@ public class AdvisorServiceListQueryTests
     public void BuildPrioritizedRecommendationListQuery_OutputOptionsDoNotChangeQuery(int limit)
     {
         var filters = new RecommendationFilters(
-            RecommendationTypeId: "cost-type",
+            RecommendationTypeIds: ["cost-type"],
             Prioritized: true,
             ShowPrioritizationSignals: false);
         var query = AdvisorService.BuildPrioritizedRecommendationListQuery(SubscriptionScope(), null, limit, filters);

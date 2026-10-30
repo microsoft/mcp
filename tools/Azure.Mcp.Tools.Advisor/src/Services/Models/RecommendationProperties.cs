@@ -35,14 +35,6 @@ internal sealed class RecommendationProperties
     /// <summary> The time until which the recommendation is postponed. </summary>
     public DateTimeOffset? PostponedTime { get; set; }
 
-    /// <summary> The time the customer recommendation state was last updated. </summary>
-    [JsonPropertyName("customerStateUpdatedAt")]
-    public DateTimeOffset? CustomerStateUpdatedAt { get; set; }
-
-    /// <summary> The time the Advisor platform state was last updated. </summary>
-    [JsonPropertyName("platformStateUpdatedAt")]
-    public DateTimeOffset? PlatformStateUpdatedAt { get; set; }
-
     /// <summary> The time the recommendation was first generated. </summary>
     public DateTimeOffset? CreatedTime { get; set; }
 

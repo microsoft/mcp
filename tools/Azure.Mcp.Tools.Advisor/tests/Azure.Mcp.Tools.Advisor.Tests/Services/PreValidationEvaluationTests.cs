@@ -250,6 +250,48 @@ public sealed class PreValidationEvaluationTests
         Assert.Contains("no deletion or state update is authorized", restored.Notice);
     }
 
+    [Theory]
+    [InlineData("safe")]
+    [InlineData("needsReview")]
+    [InlineData("blocked")]
+    public void BuildResult_RoundsOutputAfterSummingFullPrecisionAmounts(string verdict)
+    {
+        var first = new PreValidationResourceResult("first", "disk", "microsoft.compute/disks", ["rec1"],
+            verdict, [], [], 1.005m, -1.005m);
+        var second = first with { ResourceId = "second", Cost = 0m };
+        var missing = first with { ResourceId = "missing", YearlyPotentialSavings = null, Cost = null };
+        var result = PreValidationService.BuildResult("type", [first, second, missing], Now, 30, false, []);
+
+        var json = JsonSerializer.Serialize(result, AdvisorJsonContext.Default.PreValidationResult);
+        var restored = JsonSerializer.Deserialize(json, AdvisorJsonContext.Default.PreValidationResult);
+        Assert.NotNull(restored);
+        var resources = verdict switch
+        {
+            "safe" => restored.Safe,
+            "needsReview" => restored.NeedsReview,
+            _ => restored.Blocked,
+        };
+        Assert.Equal(["first", "second", "missing"], resources.Select(static resource => resource.ResourceId));
+        Assert.Equal(1.01m, resources[0].YearlyPotentialSavings);
+        Assert.Equal(-1.01m, resources[0].Cost);
+        Assert.Equal(1.01m, resources[1].YearlyPotentialSavings);
+        Assert.Equal(0m, resources[1].Cost);
+        Assert.Null(resources[2].YearlyPotentialSavings);
+        Assert.Null(resources[2].Cost);
+        var summary = Assert.Single(restored.Summary, bucket => bucket.Verdict == verdict);
+        Assert.Equal(2.01m, summary.YearlyPotentialSavings);
+        Assert.Equal(-1.01m, summary.Cost);
+        Assert.Equal(1, summary.MissingSavingsCount);
+        Assert.Equal(1, summary.MissingCostCount);
+        Assert.All(restored.Summary.Where(bucket => bucket.Verdict != verdict), static bucket =>
+        {
+            Assert.Null(bucket.YearlyPotentialSavings);
+            Assert.Null(bucket.Cost);
+        });
+        Assert.Equal(1.005m, first.YearlyPotentialSavings);
+        Assert.Equal(-1.005m, first.Cost);
+    }
+
     [Fact]
     public void BuildResult_ConfirmedDeletedStateAndCountsRoundTripWithTheExistingJsonContext()
     {

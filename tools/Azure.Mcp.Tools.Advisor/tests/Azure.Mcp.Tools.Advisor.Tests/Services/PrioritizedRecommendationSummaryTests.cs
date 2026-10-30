@@ -25,7 +25,7 @@ public class PrioritizedRecommendationSummaryTests
     [InlineData(RecommendationStatus.Postponed)]
     [InlineData(RecommendationStatus.Dismissed)]
     [InlineData(RecommendationStatus.Completed)]
-    public void Build_IdleResourcesSortBySavingsBeforeMetadataPriority(RecommendationStatus status)
+    public void Build_IdleResourcesSortByMetadataPriorityBeforeLifecycleSavings(RecommendationStatus status)
     {
         var filters = new RecommendationFilters(
             Category: "Cost", SubCategory: "IdleResources", Status: status, Prioritized: true);
@@ -38,7 +38,7 @@ public class PrioritizedRecommendationSummaryTests
             var query = PrioritizedRecommendationSummaryQuery.Build(scope, filters);
 
             Assert.Contains(
-                "| order by rankingSavings desc nulls last, metadataPriorityScore desc nulls last,",
+                "| order by metadataPriorityScore desc nulls last, rankingSavings desc nulls last,",
                 query);
             Assert.Contains(
                 "rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)",
@@ -146,7 +146,7 @@ public class PrioritizedRecommendationSummaryTests
     public void Build_OtherWorkflowsDoNotChangeTheExistingAnnualSavingsPopulation(string? subCategory)
     {
         var query = BuildSubscriptionQuery(new RecommendationFilters(
-            Category: "Cost", SubCategory: subCategory, Status: RecommendationStatus.Completed, Prioritized: true));
+            Category: "Cost", SubCategory: subCategory, Prioritized: true));
 
         Assert.DoesNotContain("annualSavings = iff(isOpen", query);
         Assert.DoesNotContain("potential = annualSavings", query);
@@ -293,6 +293,8 @@ public class PrioritizedRecommendationSummaryTests
     public void Build_CompletedCostStatusRanksByRealizedSavings()
     {
         var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost",
+            SubCategory: "IdleResources",
             Status: RecommendationStatus.Completed,
             Prioritized: true));
 
@@ -400,7 +402,7 @@ public class PrioritizedRecommendationSummaryTests
             Category: "Cost",
             Impact: "High",
             Search: "it's|x",
-            RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d",
+            RecommendationTypeIds: ["1d70919c-1a4a-4f79-8300-bb576c291e9d"],
             Prioritized: true));
 
         var join = query.IndexOf("join kind=inner", StringComparison.Ordinal);

@@ -22,8 +22,9 @@ public class AdvisorMetadataServiceTests
         Assert.DoesNotContain("array_index_of", query);
         Assert.DoesNotContain("todatetime", query);
         Assert.EndsWith(
-            "| project id, recommendationTypeId = tostring(properties.recommendationTypeId), properties | order by id asc, recommendationTypeId asc",
+            "| project id, recommendationTypeId = tostring(properties.recommendationTypeId), properties",
             query);
+        Assert.Contains("| order by impactSort asc, displayNameSort asc, id asc", query);
     }
 
     [Fact]

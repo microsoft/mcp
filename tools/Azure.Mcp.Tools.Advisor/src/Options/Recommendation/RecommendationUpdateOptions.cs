@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
-public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
+public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions, ISubscriptionOption
 {
     [Option(Description = "The name, ID, or full ARM resource ID of the Azure Service Group that contains the recommendation. The tool resolves the scope in the selected tenant and reports ambiguous names. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
     public string? ServiceGroup { get; set; }

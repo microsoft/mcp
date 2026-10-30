@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
 
 public interface IAdvisorService
 {
-    Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
+    Task<AdvisorQueryPage<Recommendation>> ListRecommendationsAsync(
         string? subscription,
         string? resourceGroup,
         RecommendationFilters? filters = null,
@@ -16,7 +15,7 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<ResourceQueryResults<Recommendation>> ListRecommendationsAsync(
+    Task<AdvisorQueryPage<Recommendation>> ListRecommendationsAsync(
         IReadOnlyCollection<string> subscriptions,
         string? resourceGroup,
         RecommendationFilters? filters = null,
@@ -42,7 +41,7 @@ public interface IAdvisorService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<ResourceQueryResults<RecommendationMetadata>> ListRecommendationMetadataAsync(
+    Task<AdvisorQueryPage<RecommendationMetadata>> ListRecommendationMetadataAsync(
         string language,
         RecommendationMetadataFilters? filters,
         CancellationToken cancellationToken = default);

@@ -955,7 +955,13 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 📊 Azure Advisor
 
+Recommendation list and summary use `subscriptions`, `recommendation-type-ids`, and
+`resource-types` arrays, including one-element arrays for single selections. Prevalidation
+also uses `subscriptions` but retains one required `recommendation-type-id`. Single-target
+get operations and recommendation-update inputs are unchanged.
+
 * "List my Advisor recommendations"
+* "Show the next page of my Advisor recommendations using the returned continuation token"
 * "List Advisor recommendations for service group 'my-service-group'"
 * "Show the prioritized Advisor recommendations for service group 'my-service-group'"
 * "What should I fix first? Show my top 10 Advisor recommendations"
