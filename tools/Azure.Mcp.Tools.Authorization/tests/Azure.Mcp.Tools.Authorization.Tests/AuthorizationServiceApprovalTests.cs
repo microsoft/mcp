@@ -43,6 +43,7 @@ public sealed class AuthorizationServiceApprovalTests
             Assert.Equal($"{Scope}/providers/Microsoft.Authorization/roleAssignmentApprovals", request.RequestUri.AbsolutePath);
             Assert.Contains("api-version=2021-01-01-preview", request.RequestUri.Query, StringComparison.Ordinal);
             Assert.Contains("%24filter=asApprover()", request.RequestUri.Query, StringComparison.Ordinal);
+            Assert.Contains("%24top=100", request.RequestUri.Query, StringComparison.Ordinal);
             Assert.Equal("Bearer", request.Headers.Authorization?.Scheme);
             Assert.Equal("test-arm-token", request.Headers.Authorization?.Parameter);
             return Task.FromResult(JsonResponse($$"""
@@ -126,6 +127,24 @@ public sealed class AuthorizationServiceApprovalTests
         Assert.Equal(["pending1", "pending2"], approvals.Select(approval => approval.Name));
     }
 
+    [Fact]
+    public async Task ListPendingApprovals_StopsAtInternalAccessReviewsContinuation()
+    {
+        const string nextLink =
+            "https://api.accessreviews.identitygovernance.azure.com/api/arm/roleAssignmentApprovals?$skiptoken=page2";
+        using var handler = new ApprovalHttpMessageHandler((_, _) => Task.FromResult(JsonResponse($$$"""
+            {"value":[{"name":"pending","properties":{"stages":[{"status":"InProgress","reviewResult":"NotReviewed"}]}}],
+             "nextLink":"{{{nextLink}}}"}
+            """)));
+        var service = new AuthorizationService(CreateAzureService(handler));
+
+        List<RoleAssignmentApproval> approvals = await service.ListPendingRoleAssignmentApprovalsAsync(
+            Subscription, Scope, Tenant, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, handler.CallCount);
+        Assert.Equal("pending", Assert.Single(approvals).Name);
+    }
+
     [Theory]
     [InlineData("https://evil.example/approvals")]
     [InlineData("https://management.azure.com.evil.example/approvals")]
@@ -134,6 +153,7 @@ public sealed class AuthorizationServiceApprovalTests
     [InlineData("http://management.azure.com/approvals")]
     [InlineData("https://management.chinacloudapi.cn/approvals")]
     [InlineData("https://management.usgovcloudapi.net/approvals")]
+    [InlineData("https://api.accessreviews.identitygovernance.azure.com.evil.example/approvals")]
     public async Task ListPendingApprovals_RejectsUnsafeContinuationBeforeNextClientOrToken(string nextLink)
     {
         using var handler = new ApprovalHttpMessageHandler((_, _) =>
@@ -166,9 +186,9 @@ public sealed class AuthorizationServiceApprovalTests
             Assert.Equal("application/json", request.Content!.Headers.ContentType?.MediaType);
             Assert.Equal("test-arm-token", request.Headers.Authorization?.Parameter);
             using JsonDocument body = JsonDocument.Parse(await request.Content.ReadAsStringAsync(cancellationToken));
-            Assert.Equal("Approve", body.RootElement.GetProperty("reviewResult").GetString());
-            Assert.Equal(justification, body.RootElement.GetProperty("justification").GetString());
-            Assert.False(body.RootElement.TryGetProperty("properties", out _));
+            JsonElement properties = body.RootElement.GetProperty("properties");
+            Assert.Equal("Approve", properties.GetProperty("reviewResult").GetString());
+            Assert.Equal(justification, properties.GetProperty("justification").GetString());
             return JsonResponse($$"""
                 {
                   "id": "{{StagePath}}",
@@ -197,6 +217,34 @@ public sealed class AuthorizationServiceApprovalTests
         Assert.Equal(justification, stage.Justification);
         Assert.Equal(Tenant, stage.ReviewedBy);
         Assert.Equal("2026-10-27T00:00:00Z", stage.ReviewedDateTime);
+    }
+
+    [Fact]
+    public async Task ApproveRoleAssignmentApproval_FetchesStageAfterEmptyPatchResponse()
+    {
+        using var handler = new ApprovalHttpMessageHandler((request, _) => Task.FromResult(
+            request.Method == HttpMethod.Patch
+                ? new HttpResponseMessage(HttpStatusCode.OK)
+                : JsonResponse($$"""
+                  {
+                    "id": "{{StagePath}}",
+                    "properties": {
+                      "status": "Completed",
+                      "reviewResult": "Approve",
+                      "justification": "test"
+                    }
+                  }
+                  """)));
+        var service = new AuthorizationService(CreateAzureService(handler));
+
+        RoleAssignmentApprovalStage stage = await service.ApproveRoleAssignmentApprovalAsync(
+            Subscription, Scope, "approval1", "stage1", "test", Tenant,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, handler.CallCount);
+        Assert.Equal(StagePath, stage.Id);
+        Assert.Equal("Completed", stage.Status);
+        Assert.Equal("Approve", stage.ReviewResult);
     }
 
     [Fact]

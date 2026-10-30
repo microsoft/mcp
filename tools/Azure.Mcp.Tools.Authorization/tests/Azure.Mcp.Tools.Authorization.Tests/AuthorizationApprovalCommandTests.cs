@@ -19,7 +19,18 @@ public sealed class AuthorizationApprovalCommandTests(
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
     [
         .. base.HeaderRegexSanitizers,
-        new(new HeaderRegexSanitizerBody("x-ms-operation-identifier") { Value = "Sanitized" })
+        new(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Regex = ".*",
+            Value = "Sanitized"
+        })
+    ];
+
+    public override List<BodyKeySanitizer> BodyKeySanitizers =>
+    [
+        .. base.BodyKeySanitizers,
+        new(new BodyKeySanitizerBody("$..principalName") { Value = "Sanitized" }),
+        new(new BodyKeySanitizerBody("$..userPrincipalName") { Value = "Sanitized" })
     ];
 
     [Fact]
@@ -63,7 +74,9 @@ public sealed class AuthorizationApprovalCommandTests(
     [Fact(Explicit = true)]
     public async Task Should_discover_and_approve_controlled_role_request()
     {
-        string scope = RegisterOrRetrieveDeploymentOutputVariable("scope", "PIM_APPROVAL_SCOPE");
+        string scope = TestMode == Microsoft.Mcp.Tests.Helpers.TestMode.Playback
+            ? $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}"
+            : Settings.DeploymentOutputs["PIM_APPROVAL_SCOPE"];
         string approvalId = RegisterOrRetrieveDeploymentOutputVariable("approvalId", "PIM_APPROVAL_ID");
         string stageId = RegisterOrRetrieveDeploymentOutputVariable("stageId", "PIM_APPROVAL_STAGE_ID");
         const string justification = "Approve controlled Azure MCP PIM integration test request.";

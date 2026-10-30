@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore accessreviews identitygovernance
 
 using System.Buffers;
 using System.Text.Json;
@@ -17,7 +18,9 @@ public class AuthorizationService(IAzureService azureService)
     private const string NotStartedStatus = "NotStarted";
     private const string NotReviewedResult = "NotReviewed";
     private const string PendingStatus = "Pending";
+    private const int RoleAssignmentApprovalsPageSize = 100;
     private const string RoleAssignmentApprovalsApiVersion = "2021-01-01-preview";
+    private const string RoleAssignmentApprovalsInternalHost = "api.accessreviews.identitygovernance.azure.com";
     private const string RoleAssignmentsTable = "authorizationresources";
     private const string RoleAssignmentResourceType = "Microsoft.Authorization/roleAssignments";
 
@@ -102,7 +105,8 @@ public class AuthorizationService(IAzureService azureService)
         var resolvedTenantId = await GetSubscriptionTenantIdAsync(subscription, tenantId, cancellationToken);
 
         var approvalsPath = $"{NormalizeScope(scope)}/providers/Microsoft.Authorization/roleAssignmentApprovals";
-        Uri? requestUri = CreateArmUri($"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()");
+        Uri? requestUri = CreateArmUri(
+            $"{approvalsPath}?api-version={RoleAssignmentApprovalsApiVersion}&%24filter=asApprover()&%24top={RoleAssignmentApprovalsPageSize}");
 
         var approvals = new List<RoleAssignmentApproval>();
         while (requestUri is not null)
@@ -125,8 +129,7 @@ public class AuthorizationService(IAzureService azureService)
                 }
             }
 
-            string? nextLink = GetStringProperty(responseDocument.RootElement, "nextLink");
-            requestUri = string.IsNullOrEmpty(nextLink) ? null : new Uri(nextLink, UriKind.Absolute);
+            requestUri = GetNextApprovalPageUri(responseDocument.RootElement);
         }
 
         return approvals;
@@ -160,6 +163,16 @@ public class AuthorizationService(IAzureService azureService)
             content,
             cancellationToken);
 
+        if (!TryGetProperty(responseDocument.RootElement, "id", out _))
+        {
+            using var refreshedDocument = await SendArmRequestAsync(
+                HttpMethod.Get,
+                requestUri,
+                resolvedTenantId,
+                cancellationToken: cancellationToken);
+            return ConvertToRoleAssignmentApprovalStage(refreshedDocument.RootElement);
+        }
+
         return ConvertToRoleAssignmentApprovalStage(responseDocument.RootElement);
     }
 
@@ -192,8 +205,25 @@ public class AuthorizationService(IAzureService azureService)
                 response.StatusCode);
         }
 
-        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        return await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        return JsonDocument.Parse(string.IsNullOrWhiteSpace(responseContent) ? "{}" : responseContent);
+    }
+
+    private static Uri? GetNextApprovalPageUri(JsonElement response)
+    {
+        string? nextLink = GetStringProperty(response, "nextLink");
+        if (string.IsNullOrEmpty(nextLink))
+        {
+            return null;
+        }
+
+        var nextPageUri = new Uri(nextLink, UriKind.Absolute);
+
+        // ARM can expose an internal Access Reviews continuation endpoint that requires a service
+        // certificate and cannot be called by customers. Keep the results from the requested page.
+        return nextPageUri.Host.Equals(RoleAssignmentApprovalsInternalHost, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : nextPageUri;
     }
 
     private Uri CreateArmUri(string pathAndQuery)
@@ -213,8 +243,11 @@ public class AuthorizationService(IAzureService azureService)
         using (var writer = new Utf8JsonWriter(buffer))
         {
             writer.WriteStartObject();
+            // The live PIM endpoint requires the mutable stage fields under properties.
+            writer.WriteStartObject("properties");
             writer.WriteString("reviewResult", ApproveReviewResult);
             writer.WriteString("justification", justification);
+            writer.WriteEndObject();
             writer.WriteEndObject();
             writer.Flush();
         }
