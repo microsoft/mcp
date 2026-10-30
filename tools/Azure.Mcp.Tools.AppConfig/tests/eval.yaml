@@ -11,7 +11,8 @@ stimuli:
         config:
           required:
             - name: appconfig
-              command: appconfig_account_list
+              args:
+                command: appconfig_account_list
   - name: List key-value settings
     prompt: List all key-value settings in App Configuration store AppConfigStore
     agent_environment: ${AGENT_ENVIRONMENT}
@@ -21,7 +22,8 @@ stimuli:
         config:
           required:
             - name: appconfig
-              command: appconfig_kv_get
+              args:
+                command: appconfig_kv_get
   - name: List key-value settings with key prefix 'prod-'
     prompt: List all key-value settings with key name starting with 'prod-' in App Configuration store AppConfigStore
     agent_environment: ${AGENT_ENVIRONMENT}
@@ -31,7 +33,8 @@ stimuli:
         config:
           required:
             - name: appconfig
-              command: appconfig_kv_get
+              args:
+                command: appconfig_kv_get
   - name: Lock key Foo
     prompt: Lock the key Foo in App Configuration store AppConfigStore
     agent_environment: ${AGENT_ENVIRONMENT}
@@ -41,4 +44,5 @@ stimuli:
         config:
           required:
             - name: appconfig
-              command: appconfig_kv_lock_set
+              args:
+                command: appconfig_kv_lock_set
