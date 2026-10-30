@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Tests.Pool;
 
 public class PoolGetCommandTests : SubscriptionCommandUnitTestsBase<PoolGetCommand, INetAppFilesPoolService>
 {
-    private static readonly NetAppFilesPool ExistingPool = new(
+    private static readonly IReadOnlyList<NetAppFilesPool> ExistingPools = [new(
         "pool1",
         "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.NetApp/netAppAccounts/account1/capacityPools/pool1",
         "eastus",
@@ -26,7 +26,7 @@ public class PoolGetCommandTests : SubscriptionCommandUnitTestsBase<PoolGetComma
         "Single",
         null,
         new Dictionary<string, string> { ["environment"] = "test" },
-        "Succeeded");
+        "Succeeded")];
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -42,12 +42,12 @@ public class PoolGetCommandTests : SubscriptionCommandUnitTestsBase<PoolGetComma
     {
         Service.GetPoolAsync(
             "account1",
-            "pool1",
             "rg",
             "sub",
+            "pool1",
             "tenant",
             Arg.Any<CancellationToken>())
-            .Returns(ExistingPool);
+            .Returns(ExistingPools);
 
         var response = await ExecuteCommandAsync(
             "--account", "account1",
@@ -57,16 +57,16 @@ public class PoolGetCommandTests : SubscriptionCommandUnitTestsBase<PoolGetComma
             "--tenant", "tenant");
 
         var result = ValidateAndDeserializeResponse(response, NetAppFilesJsonContext.Default.PoolGetResult);
-        Assert.Equal(ExistingPool.Name, result.Pool.Name);
-        Assert.Equal(ExistingPool.Id, result.Pool.Id);
-        Assert.Equal(ExistingPool.Location, result.Pool.Location);
-        Assert.Equal(ExistingPool.SizeInBytes, result.Pool.SizeInBytes);
-        Assert.Equal(ExistingPool.ServiceLevel, result.Pool.ServiceLevel);
-        Assert.Equal(ExistingPool.QosType, result.Pool.QosType);
-        Assert.Equal(ExistingPool.CoolAccessEnabled, result.Pool.CoolAccessEnabled);
-        Assert.Equal(ExistingPool.EncryptionType, result.Pool.EncryptionType);
-        Assert.Equal("test", result.Pool.Tags["environment"]);
-        Assert.Equal(ExistingPool.ProvisioningState, result.Pool.ProvisioningState);
+        Assert.Equal(ExistingPools[0].Name, result.Pools[0].Name);
+        Assert.Equal(ExistingPools[0].Id, result.Pools[0].Id);
+        Assert.Equal(ExistingPools[0].Location, result.Pools[0].Location);
+        Assert.Equal(ExistingPools[0].SizeInBytes, result.Pools[0].SizeInBytes);
+        Assert.Equal(ExistingPools[0].ServiceLevel, result.Pools[0].ServiceLevel);
+        Assert.Equal(ExistingPools[0].QosType, result.Pools[0].QosType);
+        Assert.Equal(ExistingPools[0].CoolAccessEnabled, result.Pools[0].CoolAccessEnabled);
+        Assert.Equal(ExistingPools[0].EncryptionType, result.Pools[0].EncryptionType);
+        Assert.Equal("test", result.Pools[0].Tags["environment"]);
+        Assert.Equal(ExistingPools[0].ProvisioningState, result.Pools[0].ProvisioningState);
     }
 
     [Theory]

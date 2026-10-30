@@ -7,11 +7,11 @@ namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public interface INetAppFilesPoolService
 {
-    Task<NetAppFilesPool> GetPoolAsync(
+    Task<IReadOnlyList<NetAppFilesPool>> GetPoolAsync(
         string account,
-        string pool,
         string resourceGroup,
         string subscription,
+        string? pool,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

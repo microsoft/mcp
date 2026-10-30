@@ -11,7 +11,6 @@ using Azure.Mcp.Tools.NetAppFiles.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 
@@ -19,7 +18,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
     Id = "81710f89-6069-45df-9c5d-44a6063330d9",
     Name = "get",
     Title = "Get Azure NetApp Files Capacity Pool",
-    Description = "Gets a capacity pool by name from an Azure NetApp Files account. Returns the pool configuration, resource ID, location, and provisioning state.",
+    Description = "Gets a capacity pool by name from an Azure NetApp Files account. Returns a list of pools with pool configuration, resource ID, location, and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -43,16 +42,16 @@ public sealed class PoolGetCommand(
     {
         try
         {
-            var pool = await _service.GetPoolAsync(
+            var pools = await _service.GetPoolAsync(
                 options.Account,
-                options.Pool,
                 options.ResourceGroup,
                 options.Subscription!,
+                options.Pool,
                 options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new PoolGetResult(pool),
+                new PoolGetResult(pools),
                 NetAppFilesJsonContext.Default.PoolGetResult);
         }
         catch (Exception ex)
@@ -79,9 +78,9 @@ public sealed class PoolGetCommand(
             validationResult.Errors.Add(AccountNameValidator.ErrorMessage);
         }
 
-        if (!Validation.PoolNameValidator.IsValid(options.Pool))
+        if (options.Pool is not null && !PoolNameValidator.IsValid(options.Pool))
         {
-            validationResult.Errors.Add(Validation.PoolNameValidator.ErrorMessage);
+            validationResult.Errors.Add(PoolNameValidator.ErrorMessage);
         }
     }
 
@@ -89,11 +88,19 @@ public sealed class PoolGetCommand(
     {
         KeyNotFoundException => "Resource group not found. Verify the resource group exists and you have access.",
         RequestFailedException requestFailedException when requestFailedException.Status == (int)HttpStatusCode.Forbidden =>
-            "Authorization failed getting the Azure NetApp Files capacity pool. Verify that you have the required RBAC permissions.",
+            "Authorization failed getting the Azure NetApp Files capacity pools. Verify that you have the required RBAC permissions.",
         RequestFailedException requestFailedException when requestFailedException.Status == (int)HttpStatusCode.NotFound =>
             "Azure NetApp Files capacity pool not found. Verify the account, pool, and resource group names.",
         _ => base.GetErrorMessage(ex)
     };
 
-    public record PoolGetResult(NetAppFilesPool Pool);
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        RequestFailedException requestFailedException when requestFailedException.Status == (int)HttpStatusCode.Forbidden => HttpStatusCode.Forbidden,
+        RequestFailedException requestFailedException when requestFailedException.Status == (int)HttpStatusCode.NotFound => HttpStatusCode.NotFound,
+        _ => base.GetStatusCode(ex),
+    };
+
+    public record PoolGetResult(IReadOnlyList<NetAppFilesPool> Pools);
 }

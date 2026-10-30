@@ -13,11 +13,11 @@ namespace Azure.Mcp.Tools.NetAppFiles.Services;
 public class NetAppFilesPoolService(IAzureService azureService)
     : BaseAzureService(azureService), INetAppFilesPoolService
 {
-    public async Task<NetAppFilesPool> GetPoolAsync(
+    public async Task<IReadOnlyList<NetAppFilesPool>> GetPoolAsync(
         string account,
-        string pool,
         string resourceGroup,
         string subscription,
+        string? pool = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -29,9 +29,16 @@ public class NetAppFilesPoolService(IAzureService azureService)
             ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
 
         var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
-        var poolResource = accountResource.GetCapacityPool(pool, cancellationToken);
 
-        return Map(poolResource.Value);
+        if (pool is not null)
+        {
+            var poolResource = accountResource.GetCapacityPool(pool, cancellationToken);
+            return [Map(poolResource.Value)];
+        }
+
+        // todo figure out if we can get GetAllAsync working here
+        var poolResources = accountResource.GetCapacityPools().GetAll(cancellationToken);
+        return [.. poolResources.Select(Map)];
     }
 
     public async Task<NetAppFilesPool> CreatePoolAsync(
