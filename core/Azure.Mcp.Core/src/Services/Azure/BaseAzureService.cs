@@ -3,7 +3,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
-using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
@@ -52,6 +51,11 @@ public abstract class BaseAzureService(IAzureService azureService)
     /// <summary>
     /// Gets the Azure service for interacting with Azure resources and obtaining credentials.
     /// </summary>
+    /// <remarks>
+    /// Obtain HTTP clients through <see cref="IAzureService.GetClient"/>. Shared factory
+    /// transports apply the current command's namespace override at send time, including
+    /// clients used by reusable SDK objects. Do not cache an override decision in a service.
+    /// </remarks>
     protected IAzureService AzureService { get; } = azureService ?? throw new ArgumentNullException(nameof(azureService));
 
     /// <summary>
@@ -75,14 +79,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     {
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
 
-        try
-        {
-            return await AzureService.GetTokenCredentialAsync(tenantId, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new AuthenticationFailedException($"Failed to get credential: {ex.Message}", ex);
-        }
+        return await AzureService.GetTokenCredentialAsync(tenantId, cancellationToken);
     }
 
     /// <summary>

@@ -17,8 +17,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
     Title = "Get or List Resilience Goal Assignments",
     Description = """
         Gets resilience goal assignments in the specified service group. Provide a goal assignment name to get
-        the full details of that assignment (id, name, goal assignment type, goal template id, and provisioning
-        state). Omit the name to list all goal assignments in the service group, returning only their id and name.
+        the full details of that assignment (id, name, zonal resiliency requirement, service-level indicator
+        resources, provisioning state, and error details). Omit the name to list all goal assignments in the
+        service group, returning only their id and name.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,

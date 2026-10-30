@@ -65,7 +65,7 @@ public sealed class AksService(IAzureService azureService, ICacheService cacheSe
         }
         else
         {
-            ValidateRequiredParameters((nameof(clusterName), clusterName));
+            ValidateRequiredParameters((nameof(resourceGroup), resourceGroup), (nameof(clusterName), clusterName));
 
             // Create cache key
             var cacheKey = (string.IsNullOrEmpty(resourceGroup), string.IsNullOrEmpty(tenant)) switch

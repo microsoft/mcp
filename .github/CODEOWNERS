@@ -107,10 +107,10 @@
 # ServiceOwners:                       @conniey
 
 # PRLabel: %tools-Advisor
-/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Advisor/        @ankiga-MSFT @ravigupta99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Advisor
-# ServiceOwners:                       @ankiga-MSFT
+# ServiceOwners:                       @ankiga-MSFT @ravigupta99
 
 # PRLabel: %tools-ADME
 /tools/Azure.Mcp.Tools.Adme/           @aysriva @microsoft/azure-mcp
@@ -125,10 +125,10 @@
 # ServiceOwners:                       @feiskyer @gossion
 
 # PRLabel: %tools-AppConfig
-/tools/Azure.Mcp.Tools.AppConfig/      @conniey @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AppConfig/      @conniey @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AppConfig
-# ServiceOwners:                       @avanigupta @conniey @JonathanCrd @shenmuxiaosen
+# ServiceOwners:                       @avanigupta @conniey @shenmuxiaosen
 
 # PRLabel: %tools-AppLens
 /tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
@@ -241,6 +241,12 @@
 # ServiceLabel: %tools-Deploy
 # ServiceOwners:                       @qianwens @xfz11 @wchigit
 
+# PRLabel: %tools-DeviceProvisioning
+/tools/Azure.Mcp.Tools.DeviceProvisioning/ @microsoft/azure-mcp
+
+# ServiceLabel: %tools-DeviceProvisioning
+# ServiceOwners:                           @microsoft/azure-mcp
+
 # PRLabel: %tools-DeviceRegistry
 /tools/Azure.Mcp.Tools.DeviceRegistry/  @microsoft/azure-mcp
 
@@ -314,10 +320,10 @@
 # ServiceOwners:                       @sarsoma @byronjinmsft @microsoft/azure-mcp
 
 # PRLabel: %tools-KeyVault
-/tools/Azure.Mcp.Tools.KeyVault/       @JonathanCrd @vcolin7 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.KeyVault/       @vcolin7 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-KeyVault
-# ServiceOwners:                       @JonathanCrd @vcolin7
+# ServiceOwners:                       @vcolin7
 
 # PRLabel: %tools-Kusto
 /tools/Azure.Mcp.Tools.Kusto/          @danield137 @prvavill @microsoft/azure-mcp
@@ -357,6 +363,12 @@
 
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @mattkohnms @ramnov
+
+# PRLabel: %tools-NetAppFiles
+/tools/Azure.Mcp.Tools.NetAppFiles/    @stumpc @vkondapa03 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-NetAppFiles
+# ServiceOwners:                       @stumpc @vkondapa03 @microsoft/azure-mcp
 
 # PRLabel: %tools-Optimization
 /tools/Azure.Mcp.Tools.Optimization/   @sanjaytholanim @liangchenmicrosoft
@@ -401,6 +413,12 @@
 # ServiceLabel: %tools-ResilienceManagement
 # ServiceOwners:                                @g2vinay @gautam714
 
+# PRLabel: %tools-ResiliencyAgent
+/tools/Azure.Mcp.Tools.ResiliencyAgent/    @psaswata @viveksheelsingh @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResiliencyAgent
+# ServiceOwners:                           @psaswata @viveksheelsingh
+
 # PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/     @shdesmu @microsoft/azure-mcp
 
@@ -432,10 +450,10 @@
 # ServiceOwners:                       @HaofanLiao @JialinXin @chenkennt
 
 # PRLabel: %tools-Speech
-/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @JonathanCrd @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Speech/         @dilin-MS2 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Speech
-# ServiceOwners:                       @dilin-MS2 @JonathanCrd
+# ServiceOwners:                       @dilin-MS2
 
 # PRLabel: %tools-SQL
 /tools/Azure.Mcp.Tools.Sql/          @akromm @achyuth-ms @AV25242 @ericshape @jeremyfrosti @mitesh-pv @microsoft/azure-mcp

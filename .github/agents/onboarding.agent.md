@@ -284,7 +284,7 @@ You can duplicate an existing configuration to debug your own new command.
 - [ ] `.\eng\common\spelling\Invoke-Cspell.ps1` — no spelling errors
 - [ ] `./eng/scripts/Test-Code.ps1` — unit tests pass
 - [ ] `.\eng\scripts\Update-AzCommandsMetadata.ps1` — metadata up-to-date
-- [ ] Tool descriptions validated with `ToolDescriptionEvaluator` (score ≥ 0.4)
+- [ ] Tool descriptions validated with `ToolDescriptionEvaluator` (score ≥ 0.4) (not required for Fabric MCP tools)
 - [ ] Live tests recorded and passing in playback (Azure commands)
 - [ ] AOT check for new toolsets: `./eng/scripts/Build-Local.ps1 -BuildNative`
 - [ ] Changelog entry created if applicable

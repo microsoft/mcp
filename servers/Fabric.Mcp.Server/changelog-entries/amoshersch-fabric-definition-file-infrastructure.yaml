@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added bounded local definition file packaging and export infrastructure for future Fabric tools, without changing the available commands."

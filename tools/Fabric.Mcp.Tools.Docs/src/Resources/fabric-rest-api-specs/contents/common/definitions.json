@@ -55,6 +55,14 @@
                     "description": "The error related resource details.",
                     "$ref": "#/definitions/ErrorRelatedResource",
                     "readOnly": true
+                },
+                "parameters": {
+                    "description": "Structured parameters providing additional machine-readable context about the error.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ErrorParameter"
+                    },
+                    "readOnly": true
                 }
             }
         },
@@ -260,7 +268,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog", "AppBackend", "OrgApp", "OrgAppAudience", "DataBuildToolJob", "AzureDatabricksStorage", "Plan" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction", "GraphModel", "GraphQuerySet", "SnowflakeDatabase", "OperationsAgent", "CosmosDBDatabase", "Ontology", "EventSchemaSet", "DataAgent", "MirroredCatalog", "PolicySet", "AppBackend", "OrgApp", "OrgAppAudience", "DataBuildToolJob", "AzureDatabricksStorage", "Plan" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -446,6 +454,10 @@
               "description": "A MirroredCatalog."
             },
             {
+              "value": "PolicySet",
+              "description": "A PolicySet."
+            },
+            {
               "value": "AppBackend",
               "description": "An AppBackend."
             },
@@ -587,6 +599,12 @@
             "properties": {
                 "id": {
                     "description": "The item ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "logicalId": {
+                    "description": "The item's logical identifier. Corresponding item instances share the same logical ID. The value is null when no logical ID has been assigned.",
                     "type": "string",
                     "format": "uuid",
                     "readOnly": true
@@ -1146,6 +1164,12 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression that determines whether an audit event is processed. Specify only the `<predicate_expression>` value; don't include the `WHERE` keyword. The expression uses the following syntax from [CREATE SERVER AUDIT (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/create-server-audit-transact-sql?view=sql-server-ver17):\n\n```syntaxsql\n<predicate_expression> ::=\n    { [ NOT ] <predicate_factor>\n    [ { AND | OR } [ NOT ] { <predicate_factor> } ] [ ,... n ] }\n\n<predicate_factor> ::=\n    event_field_name { = | < > | != | > | >= | < | <= | LIKE }\n    { number | 'string' }\n```\n\nEvent field names correspond to the audit record columns documented in [sys.fn_get_audit_file (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-functions/sys-fn-get-audit-file-transact-sql?view=sql-server-ver17&tabs=sqlserver). All documented fields can be used except `file_name`, `audit_file_offset`, and `event_time`. Although `action_id` and `class_type` are returned as strings, they can only be compared with numeric values in a predicate. String comparisons don't perform implicit type conversion. The maximum expression length is 3,000 characters. An empty string means that no predicate is applied.",
+                    "type": "string",
+                    "maxLength": 3000,
+                    "readOnly": true
                 }
             }
         },
@@ -1161,6 +1185,12 @@
                     "description": "Retention days.",
                     "type": "integer",
                     "default": 0
+                },
+                "predicateExpression": {
+                    "description": "The predicate expression that determines whether an audit event is processed. Specify only the `<predicate_expression>` value; don't include the `WHERE` keyword. The expression uses the following syntax from [CREATE SERVER AUDIT (Transact-SQL)](https://learn.microsoft.com/sql/t-sql/statements/create-server-audit-transact-sql?view=sql-server-ver17):\n\n```syntaxsql\n<predicate_expression> ::=\n    { [ NOT ] <predicate_factor>\n    [ { AND | OR } [ NOT ] { <predicate_factor> } ] [ ,... n ] }\n\n<predicate_factor> ::=\n    event_field_name { = | < > | != | > | >= | < | <= | LIKE }\n    { number | 'string' }\n```\n\nEvent field names correspond to the audit record columns documented in [sys.fn_get_audit_file (Transact-SQL)](https://learn.microsoft.com/sql/relational-databases/system-functions/sys-fn-get-audit-file-transact-sql?view=sql-server-ver17&tabs=sqlserver). All documented fields can be used except `file_name`, `audit_file_offset`, and `event_time`. Although `action_id` and `class_type` are returned as strings, they can only be compared with numeric values in a predicate. String comparisons don't perform implicit type conversion. The maximum expression length is 3,000 characters. When SQL auditing is enabled for the first time, omitting this property applies no predicate. On subsequent updates, omitting this property leaves the existing predicate unchanged. Specify an empty string to remove the existing predicate.",
+                    "type": "string",
+                    "maxLength": 3000,
+                    "readOnly": false
                 }
             }
         },
@@ -1233,7 +1263,63 @@
                     }
                 ]
             }
+        },
+        "ErrorParameter": {
+            "description": "A structured parameter providing additional machine-readable context about an error.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The parameter identifier.",
+                    "readOnly": true
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The parameter value.",
+                    "readOnly": true
+                },
+                "message": {
+                    "type": "string",
+                    "description": "A human-readable description of the parameter's meaning.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ItemOptionsByLogicalIdEntry": {
+            "description": "A per-item options entry that targets its item by logical ID. Each targeted item may appear at most once.",
+            "type": "object",
+            "required": ["logicalId", "options"],
+            "properties": {
+                "logicalId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The logical ID of the target item.",
+                    "readOnly": false
+                },
+                "options": {
+                    "description": "The options for the targeted item. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+                    "type": "object",
+                    "readOnly": false
+                }
+            }
+        },
+        "ItemOptionsBySourceItemIdEntry": {
+            "description": "A per-item options entry that targets its item by source item ID. Each targeted item may appear at most once.",
+            "type": "object",
+            "required": ["sourceItemId", "options"],
+            "properties": {
+                "sourceItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The source item ID of the target item.",
+                    "readOnly": false
+                },
+                "options": {
+                    "description": "The options for the targeted item. Property names are option names valid for the item type; values are the option values. For the options supported by a specific item type, see that item type's `Update-Definition` API documentation.",
+                    "type": "object",
+                    "readOnly": false
+                }
+            }
         }
     }
 }
-

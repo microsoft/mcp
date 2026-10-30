@@ -96,6 +96,10 @@
               "myGitCredentials": {
                 "description": "User-specific Git credentials for authentication to the GitProvider. These credentials are not shared with other workspace contributors. For GitHub, this property is required. For AzureDevOps, this property is optional. If not set, the default is AutomaticGitCredentials.",
                 "$ref": "#/definitions/GitCredentials"
+              },
+              "connectionSettings": {
+                "description": "Optional connection settings to apply at connection time. If omitted, defaults apply.",
+                "$ref": "#/definitions/GitConnectionSettings"
               }
             }
         },
@@ -181,6 +185,14 @@
                 "allowOverrideItems": {
                     "type": "boolean",
                     "description": "User consent to override incoming items during the update from Git process.\nWhen incoming items are present and the allow override items is not specified or is provided as false, the update operation will not start.\nDefault value is false."
+                },
+                "itemOptionsByLogicalId": {
+                    "description": "Per-item update options. Each entry targets its item by logical ID and applies its options to that item.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/ItemOptionsByLogicalIdEntry"
+                    },
+                    "readOnly": false
                 }
             }
         },
@@ -300,6 +312,33 @@
                 ]
             }
         },
+        "GitFileChange": {
+            "description": "Contains information about a file-level change within an item.",
+            "type": "object",
+            "required": ["path", "conflictType"],
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "The file path relative to the item root. It uses forward slashes and has no leading slash.",
+                    "readOnly": true
+                },
+                "workspaceChange": {
+                    "$ref": "#/definitions/ChangeType",
+                    "description": "Change on the workspace side.",
+                    "readOnly": true
+                },
+                "remoteChange": {
+                    "$ref": "#/definitions/ChangeType",
+                    "description": "Change on the remote Git side.",
+                    "readOnly": true
+                },
+                "conflictType": {
+                    "$ref": "#/definitions/ConflictType",
+                    "description": "The conflict state for this file.",
+                    "readOnly": true
+                }
+            }
+        },
         "ItemIdentifier": {
             "description": "Contains the item identifier. At least one of the properties must be defined.",
             "type": "object",
@@ -315,6 +354,24 @@
                     "type": "string",
                     "format": "uuid",
                     "description": "The logical ID of the item.\nWhen the logical ID isn't available because the item is not yet added to the workspace, you can use the object ID."
+                }
+            }
+        },
+        "ItemIdentifierWithFileSelection": {
+            "description": "Contains the item identifier with optional file-level selection for commit operations.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ItemIdentifier"
+                }
+            ],
+            "properties": {
+                "selectedFiles": {
+                    "type": "array",
+                    "description": "File paths to commit, relative to the item root. Paths use forward slashes only, no leading slash, full file paths only (no directories or wildcards), no empty or whitespace-only segments, and segments cannot end with a dot or trailing whitespace. If null or empty, all files for this item are committed.",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -364,6 +421,14 @@
                     "$ref": "#/definitions/ConflictType",
                     "description": "When there are changes on both the workspace side and the remote Git side.",
                     "readOnly": true
+                },
+                "fileChanges": {
+                    "type": "array",
+                    "description": "A list of file-level changes within the item. Only populated when the includeFilesDetails query parameter is set to true.",
+                    "readOnly": true,
+                    "items": {
+                        "$ref": "#/definitions/GitFileChange"
+                    }
                 }
             }
         },
@@ -395,7 +460,7 @@
         "CommitMode": {
             "type": "string",
             "description": "Modes for the commit operation. Additional modes may be added over time.",
-            "enum": ["All", "Selective"],
+            "enum": ["All", "Selective", "FileLevelSelective"],
             "x-ms-enum": {
                 "name": "CommitMode",
                 "modelAsString": true,
@@ -406,7 +471,11 @@
                     },
                     {
                         "value": "Selective",
-                        "description": "Commit a specified items list that has uncommitted changes."
+                        "description": "Commit a specified list of items that have uncommitted changes. Use the `items` property to specify items."
+                    },
+                    {
+                        "value": "FileLevelSelective",
+                        "description": "Commit specified files within specified items. Use the `itemsWithFileSelection` property to specify items and files."
                     }
                 ]
             }
@@ -431,9 +500,16 @@
                 },
                 "items": {
                     "type": "array",
-                    "description": "Specific items to commit.\nThis is relevant only for Selective commit mode.\nThe items can be retrieved from the [Git Status](/rest/api/fabric/core/git/get-status) API.",
+                    "description": "Specific items to commit. This is relevant only for the Selective commit mode. Mutually exclusive with itemsWithFileSelection.\nThe items can be retrieved from the [Git Status](/rest/api/fabric/core/git/get-status) API.",
                     "items": {
                         "$ref": "#/definitions/ItemIdentifier"
+                    }
+                },
+                "itemsWithFileSelection": {
+                    "type": "array",
+                    "description": "Items with per-file selection for the FileLevelSelective commit mode. Mutually exclusive with items.\nEach entry specifies an item and optionally a list of file paths to commit. If selectedFiles is null or empty for an item, all files for that item are committed.",
+                    "items": {
+                        "$ref": "#/definitions/ItemIdentifierWithFileSelection"
                     }
                 }
             }
@@ -687,6 +763,45 @@
                     "description": "The type of the related workspace to create in the relation. Only `Base` and `Branch` are valid for creation.",
                     "$ref": "#/definitions/WorkspaceRelationType",
                     "readOnly": false
+                }
+            }
+        },
+        "GitAdditionalBranchChangingRoles": {
+            "type": "string",
+            "description": "The additional workspace roles beyond admin that are allowed to change the connected Git branch. Additional values may be added over time.",
+            "enum": ["None", "MemberAndContributor"],
+            "x-ms-enum": {
+                "name": "GitAdditionalBranchChangingRoles",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "No additional roles beyond admin can change branches. This is the default."
+                    },
+                    {
+                        "value": "MemberAndContributor",
+                        "description": "Members and contributors can also change branches in addition to admins."
+                    }
+                ]
+            }
+        },
+        "GitConnectionSettings": {
+            "description": "Contains the Git connection settings.",
+            "type": "object",
+            "properties": {
+                "additionalRolesAuthorizedToChangeBranch": {
+                    "description": "The additional workspace roles beyond admin that are allowed to change the connected Git branch.",
+                    "$ref": "#/definitions/GitAdditionalBranchChangingRoles"
+                }
+            }
+        },
+        "UpdateGitConnectionSettingsRequest": {
+            "description": "Contains the request data to update the Git connection settings.",
+            "type": "object",
+            "properties": {
+                "additionalRolesAuthorizedToChangeBranch": {
+                    "description": "The additional workspace roles beyond admin that are allowed to change the connected Git branch.",
+                    "$ref": "#/definitions/GitAdditionalBranchChangingRoles"
                 }
             }
         }

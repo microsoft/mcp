@@ -1,0 +1,13 @@
+{
+  "parameters": {
+    "capacityId": "a35f02c0-ae64-4526-b1a8-52af7761426f"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "state": "Enabled",
+        "thresholdCapacityUnitHours": 1000
+      }
+    }
+  }
+}

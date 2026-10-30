@@ -10,4 +10,10 @@ words:
   - brien
   - detag
   - iothub
+  - lookback
+  - metadatavalues
+  - metricnames
+  - metricnamespace
   - notjson
+  - sbqueue
+  - sbtopic

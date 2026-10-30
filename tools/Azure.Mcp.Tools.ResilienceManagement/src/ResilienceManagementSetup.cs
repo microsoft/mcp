@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Assignments;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Resources;
-using Azure.Mcp.Tools.ResilienceManagement.Commands.Goals.Templates;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
@@ -31,8 +30,13 @@ public class ResilienceManagementSetup : IAreaSetup
     {
         services.AddSingleton<IResilienceManagementService, ResilienceManagementService>();
 
-        services.AddSingleton<GoalTemplateGetCommand>();
         services.AddSingleton<GoalAssignmentGetCommand>();
+        services.AddSingleton<GoalAssignmentCreateCommand>();
+        services.AddSingleton<GoalAssignmentUpdateCommand>();
+        services.AddSingleton<GoalAssignmentDeleteCommand>();
+        services.AddSingleton<GoalAssignmentRecommendCapacityCommand>();
+        services.AddSingleton<GoalAssignmentRefreshResourcesCommand>();
+        services.AddSingleton<GoalAssignmentUpdateResourcesCommand>();
         services.AddSingleton<GoalResourceGetCommand>();
         services.AddSingleton<UsagePlanGetCommand>();
         services.AddSingleton<UsagePlanCreateCommand>();
@@ -72,28 +76,24 @@ public class ResilienceManagementSetup : IAreaSetup
         services.AddSingleton<DrillRunResumeCommand>();
         services.AddSingleton<DrillRunMarkCompleteCommand>();
         services.AddSingleton<DrillRunReprotectCommand>();
+        services.AddSingleton<DrillRunGenerateReportCommand>();
+        services.AddSingleton<DrillRunGetReportDownloadUrlCommand>();
         services.AddSingleton<DrillRunResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resilienceManagement = new CommandGroup(Name,
-            "Azure Resilience Management operations - Commands for working with resilience goals and goal " +
-            "templates for Azure service groups. Use this tool to list the resilience goal templates available " +
-            "for a service group, including goal type, provisioning state, recovery point and time objectives, " +
-            "and high availability and disaster recovery requirements.",
+            "Azure Resilience Management operations - Commands for working with resilience goals, usage plans, " +
+            "recovery plans, and drills for Azure service groups.",
             Title);
 
         // Create goal subgroup
-        var goals = new CommandGroup("goal", "Resilience goal operations - Commands for working with resilience goals and goal templates for Azure service groups.");
+        var goals = new CommandGroup("goal", "Resilience goal operations - Commands for working with resilience goal assignments and resources for Azure service groups.");
         resilienceManagement.AddSubGroup(goals);
 
-        // Create template subgroup under goal
-        var templates = new CommandGroup("template", "Resilience goal template operations - Commands for listing resilience goal templates for Azure service groups.");
-        goals.AddSubGroup(templates);
-
         // Create assignment subgroup under goal
-        var assignments = new CommandGroup("assignment", "Resilience goal assignment operations - Commands for listing resilience goal assignments for Azure service groups.");
+        var assignments = new CommandGroup("assignment", "Resilience goal assignments - Get, create, update, delete, recommend capacity, rediscover resources, and update resource participation for Azure service groups.");
         goals.AddSubGroup(assignments);
 
         // Create resource subgroup under goal
@@ -101,8 +101,13 @@ public class ResilienceManagementSetup : IAreaSetup
         goals.AddSubGroup(goalResources);
 
         // Register commands
-        templates.AddCommand<GoalTemplateGetCommand>(serviceProvider);
         assignments.AddCommand<GoalAssignmentGetCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentCreateCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentUpdateCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentDeleteCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentRecommendCapacityCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentRefreshResourcesCommand>(serviceProvider);
+        assignments.AddCommand<GoalAssignmentUpdateResourcesCommand>(serviceProvider);
         goalResources.AddCommand<GoalResourceGetCommand>(serviceProvider);
 
         // Create usageplan subgroup
@@ -178,7 +183,7 @@ public class ResilienceManagementSetup : IAreaSetup
         drillResources.AddCommand<DrillAddOrUpdateResourcesCommand>(serviceProvider);
 
         // Create run subgroup under drill
-        var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill.");
+        var drillRuns = new CommandGroup("run", "Resilience drill run operations - Commands for listing and getting the runs of a resilience drill, generating drill run reports, and getting report download URLs.");
         drills.AddSubGroup(drillRuns);
 
         drillRuns.AddCommand<DrillRunGetCommand>(serviceProvider);
@@ -187,6 +192,8 @@ public class ResilienceManagementSetup : IAreaSetup
         drillRuns.AddCommand<DrillRunResumeCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunMarkCompleteCommand>(serviceProvider);
         drillRuns.AddCommand<DrillRunReprotectCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunGenerateReportCommand>(serviceProvider);
+        drillRuns.AddCommand<DrillRunGetReportDownloadUrlCommand>(serviceProvider);
 
         // Create resource subgroup under drill run
         var drillRunResources = new CommandGroup("resource", "Resilience drill run resource operations - Commands for listing and getting the resources (targets) of a resilience drill run.");

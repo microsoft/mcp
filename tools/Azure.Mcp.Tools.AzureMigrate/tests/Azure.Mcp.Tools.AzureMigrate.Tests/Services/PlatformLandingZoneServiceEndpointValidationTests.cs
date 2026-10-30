@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Xunit;
 
@@ -26,7 +27,7 @@ public class PlatformLandingZoneServiceEndpointValidationTests
     public void TryGetValidatedDownloadUrl_InternalOrUnsafeUrl_ThrowsSecurityException(string response)
     {
         Assert.Throws<SecurityException>(() =>
-            PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+            PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 
     [Theory]
@@ -35,6 +36,6 @@ public class PlatformLandingZoneServiceEndpointValidationTests
     [InlineData("not json")] // parse failure with no URL to fall back to
     public void TryGetValidatedDownloadUrl_NoDownloadUrl_ReturnsNull(string response)
     {
-        Assert.Null(PlatformLandingZoneService.TryGetValidatedDownloadUrl(response, logger: null));
+        Assert.Null(PlatformLandingZoneService.TryGetValidatedDownloadUrl(AzureServiceTestHelpers.CreateAzureService(), response));
     }
 }

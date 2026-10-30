@@ -11,8 +11,10 @@ namespace Azure.Mcp.Tools.Adme;
 internal static class AdmeServiceValidator
 {
     public static void ValidateTarget(
+        IEndpointValidator endpointValidator,
         string endpoint,
         string dataPartition,
+        string? authAppId,
         ValidationResult validationResult)
     {
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
@@ -24,7 +26,7 @@ internal static class AdmeServiceValidator
         {
             try
             {
-                ValidateEndpoint(endpointUri);
+                ValidateEndpoint(endpointValidator, endpointUri);
             }
             catch (Exception)
             {
@@ -36,6 +38,15 @@ internal static class AdmeServiceValidator
         if (string.IsNullOrWhiteSpace(dataPartition))
         {
             validationResult.Errors.Add("--data-partition must not be empty.");
+        }
+
+        try
+        {
+            AdmeServiceHelper.GetAuthScope(authAppId);
+        }
+        catch (ArgumentException ex)
+        {
+            validationResult.Errors.Add($"--auth-app-id is invalid. {ex.Message}");
         }
     }
 
@@ -160,13 +171,12 @@ internal static class AdmeServiceValidator
         }
     }
 
-    public static Uri ValidateEndpoint(Uri endpoint)
+    public static Uri ValidateEndpoint(IEndpointValidator endpointValidator, Uri endpoint)
     {
-        EndpointValidator.ValidateAzureServiceEndpoint(
+        endpointValidator.ValidateAzureServiceEndpoint(
             endpoint.AbsoluteUri,
             serviceType: "adme",
-            ArmEnvironment.AzurePublicCloud,
-            executingToolNamespaceName: "adme");
+            ArmEnvironment.AzurePublicCloud);
         return endpoint;
     }
 }

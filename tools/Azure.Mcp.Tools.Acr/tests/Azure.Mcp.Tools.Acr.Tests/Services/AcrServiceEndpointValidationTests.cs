@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Security;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Acr.Services;
 using Azure.ResourceManager;
 using Xunit;
@@ -14,7 +15,7 @@ public class AcrServiceEndpointValidationTests
     [InlineData("myregistry.azurecr.io", "https://myregistry.azurecr.io/")]
     public void CreateValidatedAcrEndpoint_PublicCloudHost_ReturnsEndpoint(string loginServer, string expectedEndpoint)
     {
-        var endpoint = AcrService.CreateValidatedAcrEndpoint(loginServer, ArmEnvironment.AzurePublicCloud);
+        Uri endpoint = AcrService.CreateValidatedAcrEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), loginServer);
 
         Assert.Equal(expectedEndpoint, endpoint.AbsoluteUri);
     }
@@ -23,7 +24,7 @@ public class AcrServiceEndpointValidationTests
     [InlineData("myregistry.azurecr.cn", "https://myregistry.azurecr.cn/")]
     public void CreateValidatedAcrEndpoint_ChinaCloudHost_ReturnsEndpoint(string loginServer, string expectedEndpoint)
     {
-        var endpoint = AcrService.CreateValidatedAcrEndpoint(loginServer, ArmEnvironment.AzureChina);
+        Uri endpoint = AcrService.CreateValidatedAcrEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzureChina), loginServer);
 
         Assert.Equal(expectedEndpoint, endpoint.AbsoluteUri);
     }
@@ -36,6 +37,6 @@ public class AcrServiceEndpointValidationTests
     public void CreateValidatedAcrEndpoint_InvalidPublicCloudHost_ThrowsSecurityException(string loginServer)
     {
         Assert.Throws<SecurityException>(
-            () => AcrService.CreateValidatedAcrEndpoint(loginServer, ArmEnvironment.AzurePublicCloud));
+            () => AcrService.CreateValidatedAcrEndpoint(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), loginServer));
     }
 }

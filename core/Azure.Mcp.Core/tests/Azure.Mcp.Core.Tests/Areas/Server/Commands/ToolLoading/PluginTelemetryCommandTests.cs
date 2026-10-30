@@ -247,6 +247,7 @@ public class PluginTelemetryCommandTests
         Assert.Equal("session-2", activity.GetTagItem("Plugin_SessionId"));
         Assert.Equal("claude-code", activity.GetTagItem("Plugin_ClientType"));
         Assert.Equal("Claude Code", activity.GetTagItem("Plugin_ClientName"));
+        Assert.Equal("Claude Code", activity.GetTagItem(TagName.ClientName));
         Assert.Equal("azure", activity.GetTagItem("Plugin_PluginName"));
         Assert.Equal("1.0.0", activity.GetTagItem("Plugin_PluginVersion"));
         Assert.Equal("azure-storage", activity.GetTagItem("Plugin_SkillName"));
@@ -255,5 +256,59 @@ public class PluginTelemetryCommandTests
         Assert.Equal("2026-03-31T00:00:00Z", activity.GetTagItem("Plugin_Timestamp"));
         Assert.Equal("azure-ai\\references\\auth-best-practices.md", activity.GetTagItem("Plugin_FileReference"));
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+    }
+
+    [Fact]
+    public void LogPluginTelemetry_UsesClientTypeForCanonicalClientNameWhenClientNameIsMissing()
+    {
+        using var activity = LogPluginTelemetry(new PluginTelemetryOptions
+        {
+            Timestamp = "2026-03-31T00:00:00Z",
+            EventType = "skill_invocation",
+            SessionId = "session-client-type",
+            ClientType = "claude-code"
+        });
+
+        Assert.Equal("claude-code", activity.GetTagItem(TagName.ClientName));
+        Assert.Equal("claude-code", activity.GetTagItem("Plugin_ClientType"));
+        Assert.Null(activity.GetTagItem("Plugin_ClientName"));
+    }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData("", "")]
+    [InlineData(" ", "\t")]
+    public void LogPluginTelemetry_UsesUnknownCanonicalClientNameWhenBothClientValuesAreBlank(
+        string? clientName,
+        string? clientType)
+    {
+        using var activity = LogPluginTelemetry(new PluginTelemetryOptions
+        {
+            Timestamp = "2026-03-31T00:00:00Z",
+            EventType = "skill_invocation",
+            SessionId = "session-blank",
+            ClientName = clientName,
+            ClientType = clientType
+        });
+
+        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientName));
+    }
+
+    private static Activity LogPluginTelemetry(PluginTelemetryOptions options)
+    {
+        var telemetryService = Substitute.For<ITelemetryService>();
+        using var activitySource = new ActivitySource("test");
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "test",
+            Sample = static (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+        };
+        ActivitySource.AddActivityListener(listener);
+        var activity = activitySource.StartActivity("test-activity");
+        telemetryService.StartActivity(Arg.Any<string>()).Returns(activity);
+
+        PluginTelemetryCommand.LogPluginTelemetry(telemetryService, options);
+
+        return Assert.IsType<Activity>(activity);
     }
 }

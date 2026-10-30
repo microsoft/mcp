@@ -16,7 +16,8 @@ public interface IRsvBackupOperations
         string? sku,
         string? storageType,
         string? tenant,
-        CancellationToken cancellationToken);
+        bool enablePublicNetworkAccess = false,
+        CancellationToken cancellationToken = default);
 
     Task<BackupVaultInfo> GetVaultAsync(
         string vaultName,
@@ -315,6 +316,17 @@ public interface IRsvBackupOperations
         string privateEndpointConnectionName,
         PrivateEndpointConnectionStatus targetStatus,
         string? description,
+        string? tenant,
+        CancellationToken cancellationToken);
+
+    Task<BackupOperationInfo> GetOperationAsync(
+        string operation,
+        string vault,
+        string resourceGroup,
+        string? subscription,
+        string? container,
+        string? protectedItem,
+        string? fabric,
         string? tenant,
         CancellationToken cancellationToken);
 }

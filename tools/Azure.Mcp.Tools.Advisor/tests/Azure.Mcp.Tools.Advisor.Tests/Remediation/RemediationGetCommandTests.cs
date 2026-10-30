@@ -183,6 +183,25 @@ public class RemediationGetCommandTests : CommandUnitTestsBase<RemediationGetCom
     }
 
     [Fact]
+    public async Task ExecuteAsync_ExplainsTenantAvailabilityError()
+    {
+        Service.GetRemediationAsync(
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException(
+                "{\"error\":{\"code\":\"RemediationNotAvailableForTenant\",\"message\":\"Remediation is not available for this tenant.\"}}",
+                null,
+                HttpStatusCode.NotFound));
+
+        var response = await ExecuteCommandAsync("--recommendation-type-id", RecommendationTypeId);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
+        Assert.Contains("RemediationNotAvailableForTenant", response.Message);
+        Assert.Contains("Review the recommendation in Azure Advisor", response.Message);
+        Assert.Contains("contact Azure Support", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Handles401Unauthorized()
     {
         Service.GetRemediationAsync(

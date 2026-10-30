@@ -7,6 +7,7 @@ using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure;
 
@@ -181,19 +182,19 @@ public static class AzureHelper
     {
         var tenantId = await azureService.ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
-        try
+        var credential = await azureService.GetTokenCredentialAsync(tenantId, cancellationToken);
+        ArmClientOptions options = armClientOptions ?? new();
+        azureService.ConfigureArmClientOptions(options);
+        ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+        // Give the playback SDK timeout time to expire before the HTTP client times out.
+        // Playback tests expect an exact sequence of requests and returns recorded responses.
+        // The default timeout is not long enough to eliminate the possibility of retries.
+        // When that happens, the playback system returns an error due to request mismatch and will very likely fail the test, leading to transient failures.
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
-            var credential = await azureService.GetTokenCredentialAsync(tenantId, cancellationToken);
-            var options = armClientOptions ?? new();
-            options.Transport = new HttpClientTransport(azureService.GetClient());
-            options.Environment = azureService.CloudConfiguration.ArmEnvironment;
-            ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+            options.Retry.NetworkTimeout = TimeSpan.FromMinutes(10);
+        }
 
-            return new(credential, defaultSubscriptionId: default, options);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to create ARM client: {ex.Message}", ex);
-        }
+        return new(credential, defaultSubscriptionId: default, options);
     }
 }

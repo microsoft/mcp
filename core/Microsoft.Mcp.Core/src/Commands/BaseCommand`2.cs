@@ -114,6 +114,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             var errorMessage = string.Join('\n', validationResult.Errors);
             SetValidationError(context.Response, errorMessage, HttpStatusCode.BadRequest);
+            context.Response.TelemetryFailureMessage = validationResult.TelemetrySafeMessage;
+            CaptureTelemetryFailureMessage(context, context.Response);
             return context.Response!;
         }
 
@@ -174,9 +176,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
                 response.Message = cve.Message;
             }
 
-            // Include the command validation exception message as it should be safe. Requires custom validators to
-            // exclude any sensitive information from their error messages.
-            context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
+            response.TelemetryFailureMessage = cve.TelemetrySafeMessage;
+            context.Activity?.SetTag(TagName.ExceptionMessage, cve.TelemetrySafeMessage);
             response.Results = null;
             return;
         }
@@ -257,6 +258,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = string.Join('\n', result.Errors);
+            commandResponse.TelemetryFailureMessage = result.TelemetrySafeMessage;
         }
 
         return result;

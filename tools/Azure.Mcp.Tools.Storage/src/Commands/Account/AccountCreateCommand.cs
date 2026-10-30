@@ -50,6 +50,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger, I
                 options.AccessTier,
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
+                options.AllowSharedKeyAccess,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new AccountCreateCommandResult(account), StorageJsonContext.Default.AccountCreateCommandResult);
