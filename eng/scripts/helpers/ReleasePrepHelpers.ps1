@@ -237,7 +237,7 @@ function Invoke-ReleasePrepPullRequest {
             -Version $version -ReleaseDate $ReleaseDate -ReleaseOwners $ReleaseOwners -BuildUrl $BuildUrl
         $branch = "prepare-release-Azure.Mcp.Server-$version"
         $existingPullRequests = @(Get-GitHubPullRequests -RepoOwner microsoft -RepoName mcp `
-            -Head "azure-sdk:$branch" -Base main -State open -AuthToken $GitHubToken)
+            -Head "azure-sdk:$branch" -Base main -State open -AuthToken $GitHubToken | ForEach-Object { $_ })
         if ($existingPullRequests.Count -gt 0) {
             LogInfo "Release-preparation PR already exists: $($existingPullRequests[0].html_url). Leaving it unchanged."
             return
