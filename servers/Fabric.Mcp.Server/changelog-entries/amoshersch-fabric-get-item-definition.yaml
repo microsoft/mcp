@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_get-item-definition with typed inline results, bounded LRO waiting and one-GET resumption, and explicit local-only, no-overwrite definition export."

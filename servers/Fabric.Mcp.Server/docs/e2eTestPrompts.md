@@ -51,6 +51,12 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_get-item | Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition. | none |
 | core_get-item | Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'. | none |
 | core_get-item | Inspect the existing Fabric item '<item-id>' in workspace '<workspace-id>' and return only its generic metadata. Do not modify it. | none |
+| core_get-item-definition | Get the definition of item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 as inline parts. Do not write files or wait if accepted. | none |
+| core_get-item-definition | Retrieve that Fabric item's definition in ipynb format, waiting up to 120 seconds; return an operation ID if it is still pending. | context-required |
+| core_get-item-definition | Export the definition for item \<item-id> in workspace \<workspace-id> to the new local directory C:\Fabric\Sales.Notebook. Preserve all bytes, nested paths, binary assets, and .platform; never overwrite existing files. | context-required |
+| core_get-item-definition | The Get Item Definition operation 0acd697c-1550-43cd-b998-91bfbfbd47c6 is already Succeeded. Retrieve its typed definition with one result GET, without another POST or workspace/item lookup. | none |
+| core_get-item-definition | My definition operation has succeeded. Use its saved operation ID to export the result to the new local directory I specified, without restarting retrieval or guessing a format. | context-required |
+| core_get-item-definition | Through the HTTP Fabric MCP server, retrieve my item's definition inline without reading or writing any host files. Request consent for sensitive definition content. | context-required |
 | core_get-operation-result | Get the JSON result of completed Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6. | none |
 | core_get-operation-result | The Fabric item creation operation in the previous receipt succeeded. Retrieve its result using that operation ID. | context-required |
 | core_get-operation-state | Check the current state and progress of Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6 once. | none |

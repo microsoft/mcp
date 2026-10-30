@@ -60,9 +60,14 @@ internal static class FabricOperationHttp
             retryAfter);
     }
 
+    internal static Task<OperationResult> ReadJsonAsync(
+        HttpResponseMessage response, Guid? operationId, CancellationToken cancellationToken) =>
+        ReadJsonAsync(response, operationId, MaxJsonBytes, cancellationToken);
+
     internal static async Task<OperationResult> ReadJsonAsync(
-        HttpResponseMessage response, Guid? operationId, CancellationToken cancellationToken)
+        HttpResponseMessage response, Guid? operationId, int maxJsonBytes, CancellationToken cancellationToken)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxJsonBytes);
         var mediaType = response.Content.Headers.ContentType?.MediaType;
         if (mediaType is not null && !string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
         {
@@ -70,9 +75,9 @@ internal static class FabricOperationHttp
                 "Only JSON and empty Fabric operation results are supported. Binary and other media types are not downloaded.");
         }
 
-        if (response.Content.Headers.ContentLength > MaxJsonBytes)
+        if (response.Content.Headers.ContentLength > maxJsonBytes)
         {
-            throw ResultTooLarge();
+            throw ResultTooLarge(maxJsonBytes);
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -81,15 +86,15 @@ internal static class FabricOperationHttp
         while (true)
         {
             // Read at most one byte beyond the limit, including streams without Content-Length.
-            var count = (int)Math.Min(chunk.Length, MaxJsonBytes + 1 - buffer.Length);
+            var count = (int)Math.Min(chunk.Length, (long)maxJsonBytes + 1 - buffer.Length);
             var read = await stream.ReadAsync(chunk.AsMemory(0, count), cancellationToken);
             if (read == 0)
             {
                 break;
             }
-            if (buffer.Length + read > MaxJsonBytes)
+            if (buffer.Length + read > maxJsonBytes)
             {
-                throw ResultTooLarge();
+                throw ResultTooLarge(maxJsonBytes);
             }
             buffer.Write(chunk, 0, read);
         }
@@ -114,6 +119,8 @@ internal static class FabricOperationHttp
         }
     }
 
-    private static FabricOperationException ResultTooLarge() =>
-        new("ResultTooLarge", "The Fabric operation JSON response exceeds the 1 MiB (1,048,576 byte) limit. No result was truncated.");
+    private static FabricOperationException ResultTooLarge(int maxJsonBytes) =>
+        new("ResultTooLarge", maxJsonBytes == MaxJsonBytes
+            ? "The Fabric operation JSON response exceeds the 1 MiB (1,048,576 byte) limit. No result was truncated."
+            : FormattableString.Invariant($"The Fabric operation JSON response exceeds the {maxJsonBytes:N0} byte limit for this result. No result was truncated."));
 }

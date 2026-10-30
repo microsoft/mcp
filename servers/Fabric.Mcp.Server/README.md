@@ -419,6 +419,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
+| `core_get-item-definition` | Retrieves typed definition parts inline, optionally waits for completion, or resumes a completed definition operation. Can explicitly export to a new local directory without overwriting files. |
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
@@ -577,7 +578,7 @@ fabmcp core get-operation-result --operation-id 0acd697c-1550-43cd-b998-91bfbfbd
 
 A state GET returning HTTP 200 means the **read** succeeded, not necessarily the mutation. The returned `state.status` can be `Undefined`, `NotStarted`, `Running`, `Succeeded`, `Failed`, or a future string. Unknown states are preserved and handled conservatively, never interpreted as successful completion. Progress (0-100) and timestamps are optional. Failed states expose only a safe error code and request UUID, not backend error text or nested details.
 
-The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success.
+The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success. For a completed **Get Item Definition** operation, use `core_get-item-definition` with `operation-id` instead: its typed definition reader has its own larger bound and optional local export.
 
 As described in the [Fabric LRO guidance](https://learn.microsoft.com/rest/api/fabric/articles/long-running-operation), not every operation has a result. For an API explicitly documented as having no result, confirmed `Succeeded` is sufficient; do not fetch `/result`. Neither HTTP 404 nor an absent `Location` proves successful no-result completion. The shared dispatcher/poller supports explicit result-bearing and no-result adapters; **workspace capacity assignment retains its existing submit-only contract** and is not retrofitted with sync waiting in this release.
 
@@ -628,6 +629,97 @@ Command validation uses the shared sanitized handling; service errors do not exp
 bodies. HTTP 429 includes a valid `Retry-After` delay in seconds or retry time in UTC when supplied.
 Missing, malformed, negative, out-of-range, or multiple headers produce generic retry guidance.
 The tool does not retry automatically or follow redirects.
+
+**Get Item Definition (`core_get-item-definition`)**
+
+Calls the [Get Item Definition API](https://learn.microsoft.com/rest/api/fabric/core/items/get-item-definition)
+with one `POST /workspaces/{workspaceId}/items/{itemId}/getDefinition`. For an initial request, supply
+both `workspace-id` and `item-id` as nonempty UUIDs. Optional `format` must not be empty or whitespace
+and allows at most 128 characters without control characters, encoded as one query value. Omit it to use the item's
+default; the tool does not look up item metadata, resolve names, download schemas or individual parts,
+or create/update any item.
+
+```powershell
+# Inline content only; a 202 response returns an operation receipt without polling.
+fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 --format ipynb
+```
+
+Only the documented **200** completed definition and **202** accepted receipt are supported.
+Completed output contains a typed `definition` with `parts` (`path`, `payload`, `payloadType`) and
+`format` only when Fabric actually returned one. Payloads remain Base64 for inline use. No item type
+is required and no item-specific filename, layout, or format-combination rules are imposed on returned content.
+The bundled item-definition articles remain useful editing references through `docs_item-definitions`,
+not runtime schemas. Sensitivity labels are **not included** in the definition.
+
+`sync` defaults to `false`. With `sync=true`, the existing LRO runner polls state and retrieves the
+definition after success. `max-wait-seconds` defaults to **120**, accepts positive finite fractional
+values, and has a **600-second** maximum. `early-poll` defaults to `true`, allowing one initial probe
+after at most three seconds; set it to `false` to honor the initial server hint. Later polls and
+429/503 read retries honor validated hints. There is no automatic resubmission of the initial POST.
+
+**Explicit local export**
+
+Supply `output-directory` only when files are wanted. It must name a **new absolute local directory
+below an existing parent**. The existing definition file service preserves every returned part's
+bytes, encodings, line endings, relative path, binary assets, empty payloads, and `.platform`.
+It writes a temporary sibling directory and publishes only the completed directory; existing files
+and directories are never overwritten, merged, or deleted. Export errors and cancellation do not
+fall back to inline success or claim that a partial definition was saved.
+
+```powershell
+# C:\Fabric already exists; Sales.Notebook must not exist.
+fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 `
+  --format ipynb --sync true --output-directory 'C:\Fabric\Sales.Notebook'
+```
+
+On completed export, the result still includes `definition` and adds the published `outputDirectory`.
+Keep any returned format when packaging edited files later; the tool does not invent a format or
+write an extra manifest. Omission of `output-directory` means **no filesystem access or output**.
+The option is hidden and rejected over HTTP, and a separate service-level capability check rejects
+file access even when command-schema checks are bypassed. File paths are on the local MCP host,
+not the remote client's machine. Linked/junction, UNC/device, and unsafe part paths are rejected.
+These checks assume a trusted local filesystem, not an OS sandbox against concurrent hostile changes.
+
+**Resuming without restarting**
+
+Acceptance, local wait expiry, and failed tracking never imply a saved definition. A receipt retains
+its operation ID and last-known state when available; no background poller or file writer continues
+after the call ends. Caller cancellation stops local waiting, not the Fabric operation.
+Check state using the receipt, respecting its polling guidance. When state is `Succeeded`, select
+the tool's mutually exclusive resume mode:
+
+```powershell
+fabmcp core get-operation-state --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+# Only after Succeeded; omit output-directory to retrieve inline content instead.
+fabmcp core get-item-definition --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6 --output-directory 'C:\Fabric\Sales.Notebook'
+```
+
+Resume sends exactly **one GET** to `/operations/{operationId}/result`, without a state preflight,
+polling, or another POST. Do not combine `operation-id` with workspace/item IDs, `format`, or
+`sync=true`. The result endpoint does not identify its source item; use an operation ID retained
+from the intended Get Item Definition request, rather than assuming item provenance was verified.
+Only returned format information is preserved. A missing, malformed, not-ready, or oversized result
+is an explicit error. If Fabric reports success but result retrieval fails, the receipt preserves
+completion and the operation ID without pretending that the definition was retrieved or exported.
+
+**Bounds, permissions, and metadata**
+
+Definition JSON has a separate **64 MiB (67,108,864 byte)** wire limit, also enforced for streams
+without `Content-Length`. The existing Create Item, state, and generic operation-result limits stay
+at **1 MiB**. Generic definition validation requires a nonempty part list, unique portable paths
+without file/directory collisions, valid `InlineBase64`, and the shared host budgets (defaults:
+**1,024 parts, 16 MiB decoded per part, 32 MiB decoded total**). Invalid or oversized content is
+rejected before export, never truncated or silently skipped. These are host safeguards, not Fabric quotas.
+
+Fabric requires **read AND write item permissions**, plus `Item.ReadWrite.All` or the item-specific
+`ReadWrite.All` delegated scope. Service-principal and managed-identity support depends on item type.
+Encrypted sensitivity labels can require additional usage rights. Returning definition contents can
+expose sensitive code or configuration, so the tool advertises `Secret=true` and uses the existing
+MCP consent flow; clients without elicitation support are rejected by default. It remains remote-capable
+for inline results (`LocalRequired=false`). Because it can optionally write local files, it conservatively
+advertises `ReadOnly=false` and is **excluded from read-only server mode in every transport**, even
+when no export was requested. No-overwrite export is non-destructive and repeated calls cannot replace
+existing files. Errors omit raw backend bodies, definition contents, and filesystem details.
 
 **Get Capacity (`core_get-capacity`)**
 
