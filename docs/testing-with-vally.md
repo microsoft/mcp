@@ -29,7 +29,8 @@ stimuli:
         config:
           required:
             - name: acr
-              command: acr_registry_list
+              args:
+                command: acr_registry_list
 ```
 
 * [Writing Eval Specs](https://microsoft.github.io/vally/guides/writing-eval-specs/) contains comprehensive information on authoring an eval.
