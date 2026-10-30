@@ -4,6 +4,7 @@ using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
+using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services.Models;
 
 namespace Azure.Mcp.Tools.Advisor.Commands;
@@ -19,7 +20,13 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(RecommendationMetadataListCommand.RecommendationMetadataListResult))]
 [JsonSerializable(typeof(RecommendationListCommand.RecommendationListResult))]
 [JsonSerializable(typeof(RecommendationUpdateCommand.RecommendationUpdateResult))]
+[JsonSerializable(typeof(RecommendationUpdateItemResult))]
+[JsonSerializable(typeof(RecommendationUpdateOutcome))]
 [JsonSerializable(typeof(RecommendationSummaryCommand.RecommendationSummaryResult))]
+[JsonSerializable(typeof(PreValidationResult))]
+[JsonSerializable(typeof(PreValidationResourceResult))]
+[JsonSerializable(typeof(PreValidationCheckResult))]
+[JsonSerializable(typeof(PreValidationBucketSummary))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(RecommendationData))]
 [JsonSerializable(typeof(RecommendationMetadataData))]
@@ -38,6 +45,10 @@ namespace Azure.Mcp.Tools.Advisor.Commands;
 [JsonSerializable(typeof(Models.RecommendationMetadata))]
 [JsonSerializable(typeof(Models.RecommendationGroup))]
 [JsonSerializable(typeof(Models.RecommendationSummary))]
+[JsonSerializable(typeof(RecommendationCostSummary))]
+[JsonSerializable(typeof(RecommendationCostCurrencySummary))]
+[JsonSerializable(typeof(RecommendationCostStatusSummary))]
+[JsonSerializable(typeof(RecommendationCostTypeSummary))]
 [JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

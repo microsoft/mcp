@@ -6,7 +6,9 @@ using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
 using Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
 using Azure.Mcp.Tools.Advisor.Services;
+using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 
@@ -22,6 +24,10 @@ public class AdvisorSetup : IAreaSetup
         services.AddSingleton<IAdvisorService, AdvisorService>();
         services.AddSingleton<IRemediationService, RemediationService>();
         services.AddSingleton<IRecommendationSummaryService, RecommendationSummaryService>();
+        services.AddSingleton<IPreValidationService, PreValidationService>();
+        services.TryAddSingleton<IResourceResolverService, ResourceResolverService>();
+        services.TryAddSingleton<IMonitorMetricsService, MonitorMetricsService>();
+        services.AddSingleton<RecommendationPreValidationCommand>();
         services.AddSingleton<IAdvisorServiceGroupIntelligenceService, AdvisorServiceGroupIntelligenceService>();
         services.AddSingleton<ServiceGroupIntelligenceGetCommand>();
         services.AddSingleton<RecommendationListCommand>();
@@ -42,13 +48,14 @@ public class AdvisorSetup : IAreaSetup
             "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
             "use service-group context. For top recommendations, top actions to take, most critical, most important, prioritized, or what-should-I-fix-first " +
             "requests, start with advisor_recommendation_summary with --prioritized true, then use " +
-            "advisor_recommendation_list for the records of a selected recommendation type.",
+            "advisor_recommendation_list for the records of a selected recommendation type. For explicit idle-resource " +
+            "deletion-safety checks, use advisor_recommendation_prevalidate; it only reads evidence and never deletes or changes state.",
             Title);
 
         // Create Advisor subgroups
         var recommendation = new CommandGroup(
             "recommendation",
-            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates, or rank recommendation types by priority; or update subscription- or service-group-scoped customer-provided state.");
+            "Advisor recommendations - List individual recommendations; summarize counts, rankings, lifecycle states, metadata subcategories, and service-retirement dates, or rank recommendation types by priority; prevalidate idle resources before deletion using read-only checks; or update subscription- or service-group-scoped customer-provided state.");
         advisor.AddSubGroup(recommendation);
 
         var metadata = new CommandGroup(
@@ -70,6 +77,7 @@ public class AdvisorSetup : IAreaSetup
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
+        recommendation.AddCommand<RecommendationPreValidationCommand>(serviceProvider);
         metadata.AddCommand<RecommendationMetadataListCommand>(serviceProvider);
         metadata.AddCommand<MetadataGetCommand>(serviceProvider);
         remediation.AddCommand<RemediationGetCommand>(serviceProvider);

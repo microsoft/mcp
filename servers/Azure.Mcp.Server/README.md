@@ -955,13 +955,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 📊 Azure Advisor
 
+Recommendation list and summary use `subscriptions`, `recommendation-type-ids`, and
+`resource-types` arrays, including one-element arrays for single selections. Prevalidation
+also uses `subscriptions` but retains one required `recommendation-type-id`. Single-target
+get operations and recommendation-update inputs are unchanged.
+
 * "List my Advisor recommendations"
+* "Show the next page of my Advisor recommendations using the returned continuation token"
 * "List Advisor recommendations for service group 'my-service-group'"
 * "Show the prioritized Advisor recommendations for service group 'my-service-group'"
 * "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
 * "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Prevalidate the selected idle resources for locks, dependencies, and recent activity without deleting or changing anything"
 * "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
@@ -970,6 +977,7 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Dismiss an Advisor recommendation because the risk is acceptable"
 * "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
+* "Postpone these selected Advisor recommendation IDs together in my service group until \<future-date-time-with-offset>, with one batch approval"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
 * "What is the status of service group 'my-service-group'?"

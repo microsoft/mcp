@@ -7,13 +7,16 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
-public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions
+public sealed class RecommendationUpdateOptions : IRecommendationScopeOptions, ISubscriptionOption
 {
-    [Option(Description = "The ID of the Azure service group that contains the recommendation, provided as the name segment in its ARM resource ID. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
+    [Option(Description = "The name, ID, or full ARM resource ID of the Azure Service Group that contains the recommendation. The tool resolves the scope in the selected tenant and reports ambiguous names. Specify either --service-group or --subscription. If both are omitted, the configured default subscription is used.")]
     public string? ServiceGroup { get; set; }
 
     [Option(Description = "The stable ID of the Advisor recommendation to update. The REST API and this command also call this value the recommendation ID.")]
-    public required string RecommendationId { get; set; }
+    public string? RecommendationId { get; set; }
+
+    [Option(Description = "The explicit stable recommendation IDs to update together in one destructive tool call. All IDs share the subscription or Service Group, tenant, status, and date or reason. Specify either this batch or --recommendation-id, not both. Each recommendation is updated independently and returns its own outcome; the batch is not atomic.")]
+    public string[]? RecommendationIds { get; set; }
 
     [Option(Description = "The new recommendation state: New, Postponed, Dismissed, or Completed. Use New to reactivate a postponed, dismissed, or completed recommendation.")]
     public required RecommendationStatus RecommendationStatus { get; set; }

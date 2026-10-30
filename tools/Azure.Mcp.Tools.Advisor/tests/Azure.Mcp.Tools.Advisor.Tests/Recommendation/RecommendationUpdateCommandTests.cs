@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Options.Recommendation;
 using Azure.Mcp.Tools.Advisor.Services;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,12 +25,16 @@ public class RecommendationUpdateCommandTests
         "service-group-test",
         "AZaz09-_().~",
         "service\u00E9~01",
+        "Trey Research Shared Services",
+        "Owner's Group",
+        "Team #1",
+        "/providers/Microsoft.Management/serviceGroups/service-group-test",
         new string('a', 250),
     };
 
     public static TheoryData<string> InvalidServiceGroupIds => new()
     {
-        "bad#name",
+        "bad\u0000name",
         "../group",
         new string('a', 251),
     };
@@ -54,6 +61,10 @@ public class RecommendationUpdateCommandTests
         Assert.NotEmpty(command.Description);
         Assert.Contains("--subscription", command.Description);
         Assert.Contains("--service-group", command.Description);
+        Assert.Contains("Cost/IdleResources", command.Description);
+        Assert.Contains("--recommendation-ids", command.Description);
+        Assert.Contains("without changing resources", command.Description);
+        Assert.Contains("not atomic or automatically retried", command.Description);
     }
 
     [Fact]
@@ -299,7 +310,7 @@ public class RecommendationUpdateCommandTests
             "--recommendation-status", "Completed");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("service group ID", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Service Group name or ID", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceive().UpdateServiceGroupRecommendationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -484,6 +495,351 @@ public class RecommendationUpdateCommandTests
             AdvisorJsonContext.Default.RecommendationUpdateResult);
 
         Assert.Equal(UpdatedRecommendation, result.Recommendation);
+        Assert.Null(result.Results);
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize(result, AdvisorJsonContext.Default.RecommendationUpdateResult));
+        Assert.True(json.RootElement.TryGetProperty("recommendation", out _));
+        Assert.False(json.RootElement.TryGetProperty("results", out _));
+    }
+
+    [Theory]
+    [InlineData("--recommendation-id rec-1 --recommendation-ids rec-2")]
+    [InlineData("--recommendation-ids rec-1 rec-1")]
+    [InlineData("--recommendation-ids rec-1 REC-1")]
+    [InlineData("--recommendation-ids")]
+    [InlineData("--recommendation-ids rec-1 --postponed-until-date-time 2099-01-01T00:00:00Z")]
+    public async Task ExecuteAsync_InvalidBatch_DoesNotUpdateAnyRecommendation(string selection)
+    {
+        var response = await ExecuteCommandAsync(
+            $"--subscription sub1 --recommendation-status Completed {selection}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlankBatchId_DoesNotUpdateAnyRecommendation()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", "rec-1", " ",
+            "--recommendation-status", "Completed");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("rec-1", " rec-1 ")]
+    [InlineData("rec-1", " REC-1 ")]
+    public async Task ExecuteAsync_DuplicateBatchIdsAfterTrimming_DoesNotUpdateAnyRecommendation(
+        string first, string second)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", first, second,
+            "--recommendation-status", "Completed");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Batch_UpdatesOnlySelectedIdsAndPreservesScopeAndDate()
+    {
+        ConfigureSuccessfulUpdate();
+        var until = new DateTimeOffset(2099, 1, 1, 12, 30, 0, TimeSpan.FromHours(5.5));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--tenant", "tenant1",
+            "--recommendation-ids", " rec-1 ", "rec-2",
+            "--recommendation-status", "Postponed",
+            "--postponed-until-date-time", until.ToString("O"));
+
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationUpdateResult);
+        Assert.Null(result.Recommendation);
+        Assert.NotNull(result.Results);
+        Assert.Equal(["rec-1", "rec-2"], result.Results.Select(item => item.RecommendationId));
+        Assert.All(result.Results, item =>
+        {
+            Assert.Equal(RecommendationUpdateOutcome.Succeeded, item.Outcome);
+            Assert.Equal(UpdatedRecommendation, item.Recommendation);
+            Assert.Null(item.Error);
+        });
+        foreach (var id in new[] { "rec-1", "rec-2" })
+        {
+            await Service.Received(1).UpdateRecommendationAsync(
+                "sub1", id, RecommendationStatus.Postponed, until, null, "tenant1", Arg.Any<CancellationToken>());
+        }
+        Assert.Equal(2, Service.ReceivedCalls().Count());
+    }
+
+    [Theory]
+    [InlineData("New")]
+    [InlineData("Completed")]
+    [InlineData("Dismissed")]
+    public async Task ExecuteAsync_ServiceGroupBatch_ReusesExistingScopedUpdate(string status)
+    {
+        ConfigureSuccessfulUpdate();
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--tenant", "tenant1",
+            "--recommendation-ids", "rec-1", "rec-2",
+            "--recommendation-status", status);
+
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationUpdateResult);
+        Assert.NotNull(result.Results);
+        Assert.Equal(2, result.Results.Count);
+        var parsedStatus = Enum.Parse<RecommendationStatus>(status);
+        foreach (var id in new[] { "rec-1", "rec-2" })
+        {
+            await Service.Received(1).UpdateServiceGroupRecommendationAsync(
+                "sg1", id, parsedStatus, null,
+                parsedStatus == RecommendationStatus.Dismissed ? RecommendationDismissReason.Other : null,
+                "tenant1", Arg.Any<CancellationToken>());
+        }
+        SubscriptionResolver.DidNotReceive().ResolveSubscription(Arg.Any<string?>());
+        Assert.Equal(2, Service.ReceivedCalls().Count());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BatchDismissal_ForwardsSharedReasonToEveryUpdate()
+    {
+        ConfigureSuccessfulUpdate();
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", "rec-1", "rec-2",
+            "--recommendation-status", "Dismissed",
+            "--recommendation-dismiss-reason", "RiskIsAcceptable");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        foreach (var id in new[] { "rec-1", "rec-2" })
+        {
+            await Service.Received(1).UpdateRecommendationAsync(
+                "sub1", id, RecommendationStatus.Dismissed, null,
+                RecommendationDismissReason.RiskIsAcceptable, null, Arg.Any<CancellationToken>());
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BatchFailure_PreservesSuccessesAndContinuesWithoutRetry()
+    {
+        ConfigureSuccessfulUpdate();
+        Service.UpdateRecommendationAsync(
+            "sub1", "rec-2", RecommendationStatus.Completed, null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Sensitive backend explanation"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", "rec-1", "rec-2", "rec-3",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.MultiStatus);
+        Assert.NotNull(result.Results);
+        Assert.Equal(
+            [RecommendationUpdateOutcome.Succeeded, RecommendationUpdateOutcome.Failed, RecommendationUpdateOutcome.Succeeded],
+            result.Results.Select(item => item.Outcome));
+        Assert.Equal(403, result.Results[1].StatusCode);
+        Assert.Null(result.Results[1].Recommendation);
+        Assert.Contains("Authorization failed", result.Results[1].Error);
+        Assert.DoesNotContain("Sensitive backend explanation", result.Results[1].Error);
+        Assert.Equal(3, Service.ReceivedCalls().Count());
+    }
+
+    [Theory]
+    [InlineData("transport")]
+    [InlineData("io")]
+    [InlineData("json")]
+    [InlineData("timeout")]
+    public async Task ExecuteAsync_UncertainBatchResponse_PreservesSuccessfulUpdates(string failure)
+    {
+        ConfigureSuccessfulUpdate();
+        Exception exception = failure switch
+        {
+            "transport" => new HttpRequestException("Sensitive response content"),
+            "io" => new IOException("Sensitive response content"),
+            "json" => new JsonException("Sensitive response content"),
+            _ => new TimeoutException("Sensitive response content"),
+        };
+        Service.UpdateRecommendationAsync(
+            "sub1", "rec-2", RecommendationStatus.Completed, null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1", "--recommendation-ids", "rec-1", "rec-2", "rec-3",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.MultiStatus);
+        Assert.NotNull(result.Results);
+        Assert.Equal(
+            [RecommendationUpdateOutcome.Succeeded, RecommendationUpdateOutcome.Unverified, RecommendationUpdateOutcome.Succeeded],
+            result.Results.Select(item => item.Outcome));
+        Assert.Null(result.Results[1].Recommendation);
+        Assert.Contains("Read its current state", result.Results[1].Error);
+        Assert.DoesNotContain("Sensitive response content", result.Results[1].Error);
+        Assert.Contains("2 succeeded; 0 failed; 1 unverified; 0 not attempted", response.Message);
+        Assert.Equal(3, Service.ReceivedCalls().Count());
+    }
+
+    [Theory]
+    [InlineData(0, HttpStatusCode.BadGateway)]
+    [InlineData(408, HttpStatusCode.RequestTimeout)]
+    [InlineData(500, HttpStatusCode.InternalServerError)]
+    [InlineData(503, HttpStatusCode.ServiceUnavailable)]
+    public async Task ExecuteAsync_UncertainBackendResponse_UsesUnverifiedAndValidHttpStatus(
+        int statusCode, HttpStatusCode expectedStatus)
+    {
+        Service.UpdateRecommendationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(), Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(statusCode, "Sensitive backend content"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1", "--recommendation-ids", "rec-1",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationUpdateResult, expectedStatus);
+        var item = Assert.Single(result.Results!);
+        Assert.Equal(RecommendationUpdateOutcome.Unverified, item.Outcome);
+        Assert.Equal((int)expectedStatus, item.StatusCode);
+        Assert.Contains("Read its current state", item.Error);
+        Assert.DoesNotContain("Sensitive backend content", item.Error);
+        Assert.Single(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BatchAllFailures_ReturnsFailureStatusAndPerItemErrors()
+    {
+        Service.UpdateRecommendationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(), Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Backend explanation"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", "rec-1", "rec-2",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.Forbidden);
+        Assert.NotNull(result.Results);
+        Assert.All(result.Results, item => Assert.Equal(RecommendationUpdateOutcome.Failed, item.Outcome));
+        Assert.Contains("0 succeeded; 2 failed", response.Message);
+        Assert.Equal(2, Service.ReceivedCalls().Count());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BatchCancellation_PreservesSuccessAndMarksRemainingNotAttempted()
+    {
+        ConfigureSuccessfulUpdate();
+        Service.UpdateRecommendationAsync(
+            "sub1", "rec-2", RecommendationStatus.Completed, null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new OperationCanceledException());
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub1",
+            "--recommendation-ids", "rec-1", "rec-2", "rec-3",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.MultiStatus);
+        Assert.NotNull(result.Results);
+        Assert.Equal(
+            [RecommendationUpdateOutcome.Succeeded, RecommendationUpdateOutcome.Unverified, RecommendationUpdateOutcome.NotAttempted],
+            result.Results.Select(item => item.Outcome));
+        Assert.Contains("Read its current state", result.Results[1].Error);
+        Assert.Equal("rec-3", result.Results[2].RecommendationId);
+        Assert.Equal(2, Service.ReceivedCalls().Count());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CanceledBatch_DoesNotStartAnyUpdates()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        await cancellation.CancelAsync();
+        var response = await Command.ExecuteAsync(
+            new CommandContext(),
+            new RecommendationUpdateOptions
+            {
+                Subscription = "sub1",
+                RecommendationIds = ["rec-1", "rec-2"],
+                RecommendationStatus = RecommendationStatus.Completed,
+            },
+            cancellation.Token);
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.RequestTimeout);
+        Assert.NotNull(result.Results);
+        Assert.Equal(2, result.Results.Count);
+        Assert.All(result.Results, item => Assert.Equal(RecommendationUpdateOutcome.NotAttempted, item.Outcome));
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CancellationBetweenUpdates_StopsAndForwardsTheToken()
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        Service.UpdateRecommendationAsync(
+            "sub1", "rec-1", RecommendationStatus.Completed, null, null, null, cancellation.Token)
+            .Returns(_ =>
+            {
+                cancellation.Cancel();
+                return UpdatedRecommendation;
+            });
+        var response = await Command.ExecuteAsync(
+            new CommandContext(),
+            new RecommendationUpdateOptions
+            {
+                Subscription = "sub1",
+                RecommendationIds = ["rec-1", "rec-2"],
+                RecommendationStatus = RecommendationStatus.Completed,
+            },
+            cancellation.Token);
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.MultiStatus);
+        Assert.NotNull(result.Results);
+        Assert.Equal(
+            [RecommendationUpdateOutcome.Succeeded, RecommendationUpdateOutcome.NotAttempted],
+            result.Results.Select(item => item.Outcome));
+        Assert.Single(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_PreWriteBatchFailure_RemainsFailedWithoutExposingExceptionDetails(bool serviceGroup)
+    {
+        Service.UpdateRecommendationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(), Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Sensitive exception content"));
+        Service.UpdateServiceGroupRecommendationAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RecommendationStatus>(),
+            Arg.Any<DateTimeOffset?>(), Arg.Any<RecommendationDismissReason?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("Sensitive exception content"));
+
+        var response = await ExecuteCommandAsync(
+            serviceGroup ? "--service-group" : "--subscription", serviceGroup ? "sg1" : "sub1",
+            "--recommendation-ids", "rec-1",
+            "--recommendation-status", "Completed");
+
+        var result = ValidateAndDeserializeResponse(
+            response, AdvisorJsonContext.Default.RecommendationUpdateResult, HttpStatusCode.UnprocessableEntity);
+        Assert.NotNull(result.Results);
+        var item = Assert.Single(result.Results);
+        Assert.Equal(RecommendationUpdateOutcome.Failed, item.Outcome);
+        Assert.Equal(422, item.StatusCode);
+        Assert.Contains("0 succeeded; 1 failed; 0 unverified", response.Message);
+        Assert.DoesNotContain("Sensitive exception content", item.Error);
+        Assert.DoesNotContain("Sensitive exception content", response.Message);
+        Assert.Single(Service.ReceivedCalls());
     }
 
     [Theory]

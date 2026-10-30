@@ -6,8 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services.Models;
-using Azure.ResourceManager.ResourceGraph;
-using Azure.ResourceManager.ResourceGraph.Models;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Advisor.Services;
@@ -17,7 +16,6 @@ public class AdvisorServiceGroupIntelligenceService(IAzureService azureService)
 {
     private const string ServiceGroupPrefix = "/providers/microsoft.management/servicegroups/";
     private const string IntelligenceSegment = "/providers/microsoft.advisor/servicegroupintelligence/";
-    private const int MaxArgPageSize = 1000;
 
     internal const string NotApplicableLabel = "NotApplicable";
 
@@ -42,47 +40,28 @@ public class AdvisorServiceGroupIntelligenceService(IAzureService azureService)
         "Unavailable",
     ];
 
-    internal delegate Task<StatusPage> FetchStatusPageAsync(
-        int pageSize,
-        string? skipToken,
-        CancellationToken cancellationToken);
-
-    internal sealed record StatusPage(JsonElement Rows, string? SkipToken, bool IsTruncated = false);
-
-    public async Task<ResourceQueryResults<AdvisorServiceGroupStatus>> GetStatusAsync(
+    public async Task<AdvisorQueryPage<AdvisorServiceGroupStatus>> GetStatusAsync(
         string? serviceGroup,
         string? criticality,
         string? status,
-        int top = 50,
-        string? tenant = null,
-        CancellationToken cancellationToken = default)
+        int top,
+        string? tenant,
+        string? continuationToken,
+        CancellationToken cancellationToken)
     {
+        AdvisorPagination.Validate(continuationToken);
         ArgumentOutOfRangeException.ThrowIfLessThan(top, 1);
-
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(top, 500);
         var query = BuildStatusQuery(serviceGroup, criticality, status);
         var tenantResource = await ResolveTenantResourceAsync(tenant, cancellationToken);
-
-        async Task<StatusPage> FetchAsync(int pageSize, string? skipToken, CancellationToken ct)
+        var page = await AdvisorResourceGraphQueryExecutor.ExecutePageAsync(
+            tenantResource, query, top, continuationToken, cancellationToken);
+        var statuses = ParseStatuses(page.Rows);
+        if (statuses.Count != page.Rows.Count)
         {
-            var queryContent = new ResourceQueryContent(query)
-            {
-                Options = new ResourceQueryRequestOptions { Top = pageSize, SkipToken = skipToken },
-            };
-
-            var response = await tenantResource.GetResourcesAsync(queryContent, ct);
-            var result = response.Value;
-            var isTruncated = result.ResultTruncated == ResultTruncated.True;
-            if (result.Count == 0)
-            {
-                return new(default, result.SkipToken, isTruncated);
-            }
-
-            using var document = JsonDocument.Parse(result.Data);
-            return new(document.RootElement.Clone(), result.SkipToken, isTruncated);
+            throw new JsonException("Azure Resource Graph returned invalid Service Group status data.");
         }
-
-        var statuses = await CollectStatusAsync(FetchAsync, top, cancellationToken);
-        return new(statuses.Statuses, statuses.IsTruncated);
+        return new(statuses, page.IsTruncated || page.SkipToken is not null, page.SkipToken);
     }
 
     /// <summary>
@@ -170,49 +149,13 @@ public class AdvisorServiceGroupIntelligenceService(IAzureService azureService)
         return query + "| project id, name, type, properties | order by id asc";
     }
 
-    internal static async Task<(List<AdvisorServiceGroupStatus> Statuses, bool IsTruncated)> CollectStatusAsync(
-        FetchStatusPageAsync fetchPage,
-        int top,
-        CancellationToken cancellationToken)
+    internal static List<AdvisorServiceGroupStatus> ParseStatuses(JsonElement rows) =>
+        rows.ValueKind == JsonValueKind.Array ? ParseStatuses(rows.EnumerateArray()) : [];
+
+    private static List<AdvisorServiceGroupStatus> ParseStatuses(IEnumerable<JsonElement> rows)
     {
         var statuses = new List<AdvisorServiceGroupStatus>();
-        var seenTokens = new HashSet<string>(StringComparer.Ordinal);
-        string? skipToken = null;
-        var sourceTruncated = false;
-
-        // Request one row beyond 'top' so truncation can be reported without a second call.
-        var pageSize = (int)Math.Min((long)top + 1, MaxArgPageSize);
-
-        do
-        {
-            var page = await fetchPage(pageSize, skipToken, cancellationToken);
-            statuses.AddRange(ParseStatuses(page.Rows));
-
-            skipToken = string.IsNullOrWhiteSpace(page.SkipToken) ? null : page.SkipToken;
-
-            // ARG can flag a truncated result without a continuation token; surface it instead of reporting a complete list.
-            sourceTruncated |= page.IsTruncated && skipToken is null;
-            if (skipToken is not null && !seenTokens.Add(skipToken))
-            {
-                throw new InvalidOperationException(
-                    "Azure Resource Graph returned a repeated skip token while getting Advisor Service Group status.");
-            }
-        }
-        while (skipToken is not null && statuses.Count <= top);
-
-        var exceedsTop = statuses.Count > top;
-        return (exceedsTop ? statuses.GetRange(0, top) : statuses, exceedsTop || sourceTruncated);
-    }
-
-    internal static List<AdvisorServiceGroupStatus> ParseStatuses(JsonElement rows)
-    {
-        var statuses = new List<AdvisorServiceGroupStatus>();
-        if (rows.ValueKind != JsonValueKind.Array)
-        {
-            return statuses;
-        }
-
-        foreach (var row in rows.EnumerateArray())
+        foreach (var row in rows)
         {
             if (ServiceGroupIntelligenceData.FromJson(row) is { } data && ToStatus(data) is { } status)
             {

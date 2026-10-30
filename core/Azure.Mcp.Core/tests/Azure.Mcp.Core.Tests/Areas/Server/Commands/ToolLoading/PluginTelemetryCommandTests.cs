@@ -72,6 +72,8 @@ public class PluginTelemetryCommandTests
     [InlineData("azure-storage", true)]
     [InlineData("azure-ai", true)]
     [InlineData("microsoft-foundry", true)]
+    [InlineData("azure-advisor-cost-optimization", true)]
+    [InlineData("azure-advisor-cost-user-context", false)]
     [InlineData("custom-skill", false)]
     [InlineData("azure-mcp-skill", false)]
     public void SkillNameProvider_ValidatesSkillNamesCorrectly(string skillName, bool shouldBeAllowed)
@@ -82,6 +84,18 @@ public class PluginTelemetryCommandTests
 
     [Theory]
     [InlineData("azure-ai\\references\\auth-best-practices.md", true)]
+    [InlineData("azure-advisor\\references\\workflow.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\README.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\examples.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\lifecycle.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\output-and-savings.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\scope-resolution.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\selection-and-handoff.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\state-updates.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\table-format.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\tools-and-recovery.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\workflow.md", true)]
+    [InlineData("azure-advisor-cost-optimization\\references\\not-allowed.md", false)]
     [InlineData("custom/file/path.ts", false)]
     public void FileReferenceProvider_ValidatesFileReferencesCorrectly(string fileReference, bool shouldBeAllowed)
     {

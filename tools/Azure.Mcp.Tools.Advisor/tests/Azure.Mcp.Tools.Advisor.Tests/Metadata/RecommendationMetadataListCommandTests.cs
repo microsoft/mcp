@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Models;
@@ -69,7 +68,7 @@ public class RecommendationMetadataListCommandTests
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([], false));
 
         var response = await ExecuteCommandAsync(args);
 
@@ -84,7 +83,7 @@ public class RecommendationMetadataListCommandTests
             "en",
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([expected], true));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([expected], true));
 
         var response = await ExecuteCommandAsync();
         var result = ValidateAndDeserializeResponse(
@@ -101,13 +100,36 @@ public class RecommendationMetadataListCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ForwardsContinuationAndSerializesNextPage()
+    {
+        Service.ListRecommendationMetadataAsync(
+            "en", Arg.Is<RecommendationMetadataFilters?>(filters => filters != null && filters.ContinuationToken == "previous+/="),
+            Arg.Any<CancellationToken>())
+            .Returns(new AdvisorQueryPage<RecommendationMetadata>([], true, "next+/="));
+        var response = await ExecuteCommandAsync("--continuation-token", "previous+/=");
+        var result = ValidateAndDeserializeResponse(response, AdvisorJsonContext.Default.RecommendationMetadataListResult);
+        Assert.True(result.AreResultsTruncated);
+        Assert.Equal("next+/=", result.ContinuationToken);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("bad\r\n")]
+    public async Task ExecuteAsync_RejectsInvalidContinuation(string token)
+    {
+        var response = await ExecuteCommandAsync("--continuation-token", token);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_NormalizesLanguageAndPassesFilters()
     {
         Service.ListRecommendationMetadataAsync(
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([], false));
 
         await ExecuteCommandAsync(
             "--language", "en-US",
@@ -142,7 +164,7 @@ public class RecommendationMetadataListCommandTests
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([], false));
 
         await ExecuteCommandAsync("--language", input);
 
@@ -159,7 +181,7 @@ public class RecommendationMetadataListCommandTests
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([], false));
 
         await ExecuteCommandAsync("--impact", "medium");
 
@@ -177,7 +199,7 @@ public class RecommendationMetadataListCommandTests
             Arg.Any<string>(),
             Arg.Any<RecommendationMetadataFilters?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<RecommendationMetadata>([], false));
+            .Returns(new Azure.Mcp.Tools.Advisor.Models.AdvisorQueryPage<RecommendationMetadata>([], false));
 
         var response = await ExecuteCommandAsync();
         var result = ValidateAndDeserializeResponse(

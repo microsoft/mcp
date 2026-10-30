@@ -332,7 +332,9 @@ public class AdvisorServiceConversionTests
             result.Properties.ScoreChangedAt);
         Assert.NotNull(result.Properties.Savings);
         Assert.Equal("USD", result.Properties.Savings!.Value.GetProperty("providerCurrency").GetString());
+        Assert.Equal("EUR", result.Properties.Savings.Value.GetProperty("billingCurrency").GetString());
         Assert.Equal(40, result.Properties.Savings.Value.GetProperty("retail").GetProperty("estimatedRollupSavings").GetInt32());
+        Assert.Equal(50, result.Properties.Savings.Value.GetProperty("contracted").GetProperty("realizedRollupSavings").GetInt32());
 
         var serialized = JsonSerializer.Serialize(
             result,

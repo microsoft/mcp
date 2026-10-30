@@ -21,7 +21,7 @@ public class AdvisorServiceMetadataJoinTests
         var filters = new RecommendationFilters(
             Category: "Security",
             Impact: "High",
-            ResourceType: "Microsoft.Storage/storageAccounts",
+            ResourceTypes: ["Microsoft.Storage/storageAccounts"],
             Resource: "mystorage",
             Search: "encryption");
 
@@ -40,7 +40,7 @@ public class AdvisorServiceMetadataJoinTests
     {
         Assert.False(AdvisorService.HasMetadataFilters(
             new RecommendationFilters(
-                RecommendationTypeId: "1d70919c-1a4a-4f79-8300-bb576c291e9d")));
+                RecommendationTypeIds: ["1d70919c-1a4a-4f79-8300-bb576c291e9d"])));
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class AdvisorServiceMetadataJoinTests
             new RecommendationFilters(
                 Category: category,
                 Impact: impact,
-                ResourceType: resourceType)));
+                ResourceTypes: resourceType is null ? [] : [resourceType])));
     }
 
     [Fact]
