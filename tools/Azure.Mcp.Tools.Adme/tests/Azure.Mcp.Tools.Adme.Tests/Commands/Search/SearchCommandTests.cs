@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Commands.Search;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Services;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
@@ -38,7 +40,10 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--returned-fields", "id");
 
         var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
-        Assert.Null(result.Result.Cursor);
+        Assert.Null(result.NextCursor);
+        var payload = JsonSerializer.SerializeToElement(response, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
+        Assert.False(payload.TryGetProperty("nextCursor", out _));
+        Assert.False(payload.GetProperty("result").TryGetProperty("cursor", out _));
         Assert.Equal(42, result.Result.TotalCount);
         Assert.Equal("test-correlation-id", result.CorrelationId);
         Assert.NotNull(captured);
@@ -65,7 +70,10 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--cursor-pagination-mode");
 
         var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
-        Assert.Equal("NEXT", result.Result.Cursor);
+        Assert.Null(result.NextCursor);
+        var payload = JsonSerializer.SerializeToElement(response, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
+        Assert.False(payload.TryGetProperty("nextCursor", out _));
+        Assert.False(payload.GetProperty("result").TryGetProperty("cursor", out _));
         Assert.Equal(42, result.Result.TotalCount);
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, default, TestContext.Current.CancellationToken);
@@ -92,6 +100,83 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             TestConstants.Endpoint, TestConstants.DataPartition,
             Arg.Is<SearchCursorRequest>(request => request.Cursor == "PREV"),
             false, null, null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Execute_ContinuesWithNextCursorWithoutLegacyCursorOutput()
+    {
+        const string firstCursor = " opaque+/=%2F== ";
+        const string secondCursor = "next+/=%3D";
+        using var records = JsonDocument.Parse("""[{"id":"record-1"},{"id":"record-2"}]""");
+        var pages = new[]
+        {
+            new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [records.RootElement[0]], Cursor = firstCursor, TotalCount = 2 },
+                "first-correlation"),
+            new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [records.RootElement[1]], Cursor = secondCursor, TotalCount = 2 },
+                "second-correlation"),
+            new AdmeResponse<SearchCursorResponse>(
+                new SearchCursorResponse { Results = [], Cursor = secondCursor, TotalCount = 2 },
+                "final-correlation"),
+        };
+        var requests = new List<SearchCursorRequest>();
+        Service.QueryWithCursorAsync(
+                TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
+                false, null, null, Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                requests.Add(call.ArgAt<SearchCursorRequest>(2));
+                return pages[requests.Count - 1];
+            });
+        string[] arguments =
+        [
+            "--endpoint", TestConstants.Endpoint,
+            "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind,
+            "--query", "id:*",
+            "--limit", "1",
+            "--returned-fields", "id",
+            "--cursor-pagination-mode",
+        ];
+
+        var firstResponse = await ExecuteCommandAsync(arguments);
+        var first = ValidateAndDeserializeResponse(firstResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Equal(firstCursor, first.NextCursor);
+        Assert.Equal("first-correlation", first.CorrelationId);
+        Assert.Equal("record-1", Assert.Single(first.Result.Results).GetProperty("id").GetString());
+        var firstPayload = JsonSerializer.SerializeToElement(firstResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
+        Assert.Equal(firstCursor, firstPayload.GetProperty("nextCursor").GetString());
+        Assert.False(firstPayload.GetProperty("result").TryGetProperty("cursor", out _));
+
+        var secondResponse = await ExecuteCommandAsync([.. arguments, "--cursor", first.NextCursor!]);
+        var second = ValidateAndDeserializeResponse(secondResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Equal(secondCursor, second.NextCursor);
+        Assert.Equal("record-2", Assert.Single(second.Result.Results).GetProperty("id").GetString());
+        var secondPayload = JsonSerializer.SerializeToElement(secondResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
+        Assert.False(secondPayload.GetProperty("result").TryGetProperty("cursor", out _));
+
+        var finalResponse = await ExecuteCommandAsync([.. arguments, "--cursor", second.NextCursor!]);
+        var final = ValidateAndDeserializeResponse(finalResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        Assert.Empty(final.Result.Results);
+        Assert.Null(final.NextCursor);
+        var finalPayload = JsonSerializer.SerializeToElement(finalResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
+        Assert.False(finalPayload.TryGetProperty("nextCursor", out _));
+        Assert.False(finalPayload.GetProperty("result").TryGetProperty("cursor", out _));
+
+        Assert.Equal(3, requests.Count);
+        Assert.Null(requests[0].Cursor);
+        Assert.Equal(firstCursor, requests[1].Cursor);
+        Assert.Equal(secondCursor, requests[2].Cursor);
+        Assert.All(requests, request =>
+        {
+            Assert.Equal([TestConstants.WellKind], request.Kind);
+            Assert.Equal("id:*", request.Query);
+            Assert.Equal(1, request.Limit);
+            Assert.Equal(["id"], request.ReturnedFields);
+        });
+        await Service.DidNotReceiveWithAnyArgs().QueryAsync(
+            default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]

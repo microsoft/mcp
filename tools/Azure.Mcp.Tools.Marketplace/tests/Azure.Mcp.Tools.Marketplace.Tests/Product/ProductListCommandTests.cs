@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
@@ -22,6 +23,78 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
+    }
+
+    [Fact]
+    public void Constructor_ExposesOptionalCursorAndLegacyParameter()
+    {
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        var legacyCursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--next-cursor");
+
+        Assert.Equal(typeof(string), cursor.ValueType);
+        Assert.False(cursor.Required);
+        Assert.False(legacyCursor.Required);
+    }
+
+    [Theory]
+    [InlineData("--cursor", false)]
+    [InlineData("--cursor", true)]
+    [InlineData("--next-cursor", false)]
+    [InlineData("--next-cursor", true)]
+    public async Task ExecuteAsync_ContinuesPagesWithCanonicalOrLegacyCursor(string cursorOption, bool emptyFirstPage)
+    {
+        const string cursor = " opaque+/=%2F== ";
+        Service.ListProducts(
+                "test-sub", Arg.Any<string?>(), "azure", Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                new ProductListResponseWithNextCursor
+                {
+                    Items = emptyFirstPage ? [] : [new ProductSummary { UniqueProductId = "first-product" }],
+                    NextCursor = cursor,
+                },
+                new ProductListResponseWithNextCursor
+                {
+                    Items = [new ProductSummary { UniqueProductId = "final-product" }],
+                });
+
+        var firstResponse = await ExecuteCommandAsync("--subscription", "test-sub", "--search", "azure");
+        var first = ValidateAndDeserializeResponse(firstResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal(cursor, first.NextCursor);
+        Assert.Equal(emptyFirstPage ? 0 : 1, first.Products.Count);
+        var firstPayload = JsonSerializer.SerializeToElement(first, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal(cursor, firstPayload.GetProperty("nextCursor").GetString());
+
+        var finalResponse = await ExecuteCommandAsync(
+            "--subscription", "test-sub", "--search", "azure", cursorOption, first.NextCursor!);
+        var final = ValidateAndDeserializeResponse(finalResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal("final-product", Assert.Single(final.Products).UniqueProductId);
+        Assert.Null(final.NextCursor);
+        var finalPayload = JsonSerializer.SerializeToElement(final, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.False(finalPayload.TryGetProperty("nextCursor", out _));
+
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, null, null, null,
+            Arg.Any<CancellationToken>());
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, cursor, null, null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("first-cursor", "second-cursor")]
+    [InlineData("same-cursor", "same-cursor")]
+    public async Task ExecuteAsync_WithBothCursorParameters_ReturnsValidationError(string cursor, string legacyCursor)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "test-sub",
+            "--cursor", cursor,
+            "--next-cursor", legacyCursor);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specify either --cursor or --next-cursor, not both.", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
