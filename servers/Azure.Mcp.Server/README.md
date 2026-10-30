@@ -972,6 +972,8 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Postpone an Advisor recommendation until December 31, 2026"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "What is the status of service group 'my-service-group'?"
+* "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
@@ -1223,6 +1225,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
 * "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
+* "Show routing endpoint health for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show routing endpoint diagnostics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 
 ### 🏭 Azure IoT Operations
 
@@ -1285,6 +1289,13 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Start Azure Monitor instrumentation orchestration for my local workspace"
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
+
+### 💾 Azure NetApp Files
+
+* "List my Azure NetApp Files accounts"
+* "Get details about my NetApp account 'mynetappaccount'"
+* "Create a new NetApp account in East US"
+* "Update tags on my NetApp account 'mynetappaccount'"
 
 ### 📊 Azure Quota
 
@@ -1499,7 +1510,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
-- 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🌐 **Azure IoT Hub** - IoT Hub resource discovery, details, routing endpoint health, and routing diagnostics
 - 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -1509,6 +1520,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 💾 **Azure NetApp Files** - Enterprise file storage account management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)

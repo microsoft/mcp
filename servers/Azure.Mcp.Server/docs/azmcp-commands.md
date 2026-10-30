@@ -387,12 +387,14 @@ azmcp server info
 
 ```bash
 # Check authentication and connectivity for an ADME endpoint and data partition
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme health check --endpoint <endpoint> \
                          --data-partition <data-partition> \
                          [--tenant <tenant>] \
                          [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get a schema by its fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema get --endpoint <endpoint> \
                        --data-partition <data-partition> \
                        --kind <authority:source:entity-type:version> \
@@ -400,6 +402,7 @@ azmcp adme schema get --endpoint <endpoint> \
                        [--auth-app-id <application-id-or-app-id-uri>]
 
 # List schemas with optional identity, lifecycle, scope, version, and paging filters
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme schema list --endpoint <endpoint> \
                         --data-partition <data-partition> \
                         [--tenant <tenant>] \
@@ -417,6 +420,7 @@ azmcp adme schema list --endpoint <endpoint> \
                         [--limit <limit>]
 
 # Search OSDU records by kind and Lucene criteria; query pagination is the default
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme search --endpoint <endpoint> \
                   --data-partition <data-partition> \
                   --kind <authority:source:entity-type:version> [<kind>...] \
@@ -444,6 +448,7 @@ Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record fetch --endpoint <endpoint> \
                                   --data-partition <data-partition> \
                                   --ids <id> [<id>...] \
@@ -453,6 +458,7 @@ azmcp adme storage record fetch --endpoint <endpoint> \
                                   [--auth-app-id <application-id-or-app-id-uri>]
 
 # Get the latest or a specific version of an OSDU record, optionally projecting attributes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record get --endpoint <endpoint> \
                                 --data-partition <data-partition> \
                                 --id <record-id> \
@@ -462,6 +468,7 @@ azmcp adme storage record get --endpoint <endpoint> \
                                 [--auth-app-id <application-id-or-app-id-uri>]
 
 # List record ids for a fully-qualified OSDU kind
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record list --endpoint <endpoint> \
                                  --data-partition <data-partition> \
                                  --kind <authority:source:entity-type:version> \
@@ -471,6 +478,7 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # List all numeric versions of an OSDU record
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp adme storage record version list --endpoint <endpoint> \
                                          --data-partition <data-partition> \
                                          --id <record-id> \
@@ -634,6 +642,23 @@ azmcp advisor metadata get --recommendation-type-id <recommendation-type-id> \
 # confidence, effort, and output type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp advisor remediation get --recommendation-type-id <recommendation-type-id>
+
+# Get the current Azure Advisor status (On Track = no significant risks, Attention Needed = limited and manageable
+# issues, At Risk = material risks, Critical = immediate action required, Unavailable = no active recommendations) and
+# criticality tier (MissionCritical = Tier 0, BusinessCritical = Tier 1, BusinessOperational = Tier 2,
+# Administrative = Tier 3, NotApplicable; Tier0-Tier3 and 0-3 are accepted aliases) of one Service Group
+# (--service-group, the name such as 'commerce') or of ALL Service Groups when none is given. Filter by --criticality
+# and --status, for example --criticality MissionCritical --status "Attention Needed" for mission-critical Service
+# Groups that need attention; results are capped by --top. Each result returns the Service Group name and ID,
+# criticality, status, status description, a description of where to focus, the goal when set, and last updated time.
+# The response also includes statusCalculationExplanation once, explaining how the overall assessment is calculated.
+# If several tenants are accessible, --tenant must be specified.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp advisor servicegroupintelligence get [--service-group <service-group>] \
+                                           [--criticality <MissionCritical|BusinessCritical|BusinessOperational|Administrative|NotApplicable>] \
+                                           [--status <"On Track"|"Attention Needed"|"At Risk"|Critical|Unavailable>] \
+                                           [--top <1-500>] \
+                                           [--tenant <tenant>]
 ```
 
 ### Azure AI Search Operations
@@ -663,7 +688,8 @@ azmcp search knowledge base get --service <service>
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
-                                     [--messages <messages>]
+                                     [--messages <messages>] \
+                                     [--include-reference-source-data <true|false>]
 
 # Get AI Search knowledge sources (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2821,6 +2847,13 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
+Access tokens are reused for the lifetime of a cached Kusto client and refreshed
+five minutes before expiration or at the credential's earlier refresh time.
+With the current cache implementations, cross-call reuse occurs in stdio mode
+when caching is enabled; HTTP mode does not retain clients across calls.
+Tokens remain scoped to the client's credential and cloud; they are not shared
+across tenants.
+
 ### Azure Database for MySQL Operations
 
 ```bash
@@ -2870,6 +2903,38 @@ azmcp mysql server param set --subscription <subscription> \
                              --server <server> \
                              --param <parameter> \
                              --value <value>
+```
+
+### Azure NetApp Files Operations
+
+```bash
+# Gets Azure NetApp Files accounts from a specified resource group. Optionally filters by account name
+# Returns a list of accounts with the account name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--account <account>] \
+                              [--tenant <tenant>]
+
+# Creates an Azure NetApp Files account in a specified resource group and region.
+# Returns the account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --account <account> \
+                                 --location <location> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tenant <tenant>]
+
+# Updates the tags of an Azure NetApp Files account.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --account <account> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tags <json-key-value-object>] \
+                                 [--nfs-v4-id-domain <nfs-v4-id-domain>] \
+                                 [--tenant <tenant>]
 ```
 
 ### Azure Database for PostgreSQL Operations
@@ -3376,7 +3441,38 @@ azmcp iothub query run --subscription <subscription> \
                        [--from <source>] \
                        [--logical-operator <operator>] \
                        [--max-count <max-count>]
+
+# Get the current IoT Hub-reported health snapshot for message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-health --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --hub-name <iot-hub-name> \
+                                     [--endpoint-name <endpoint-name>]
+
+# Get factual hub and target metric evidence for IoT Hub message-routing endpoints
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp iothub routing endpoint-diagnostics --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --hub-name <iot-hub-name> \
+                                          [--endpoint-name <endpoint-name>] \
+                                          [--start-time <iso8601-datetime> --end-time <iso8601-datetime>] \
+                                          [--interval <iso8601-duration>]
 ```
+
+Diagnostics defaults to the previous 24 hours with `PT1H` buckets. `--start-time` and `--end-time` must
+be supplied together. The maximum observation window is 30 days, and the selected window and interval
+cannot exceed 720 buckets.
+
+Diagnostics distinguishes values returned, no values returned, failed queries, and partial evidence
+through per-metric availability metadata. Missing metric values do not mean zero traffic. Target
+metrics describe the parent resource and can include other clients; they do not prove endpoint
+delivery. Current target existence is separate from historical metrics, with any existence-check
+error under `target.error`. Targets are resolved from each endpoint's `endpointUri`; key-based Event
+Hubs, Service Bus, and Storage endpoints have no endpoint URI, so they report `target.resolutionStatus`
+as `unresolved` with no target evidence. These routing tools do not determine overall hub health or device ingress
+health. Each routing operation has a
+100-second timeout covering all requests and retries. Expiration returns HTTP 408 rather than
+presenting incomplete work as a successful result; caller cancellation is preserved.
 
 ### Azure IoT Operations
 

@@ -76,9 +76,15 @@ public sealed class KustoClient(
 
     private readonly string _clusterUri = ValidateAndNormalizeClusterUri(clusterUri);
     private readonly TokenCredential _tokenCredential = tokenCredential;
+    // Tokens are cached only within this client instance. Cross-call reuse depends
+    // on KustoService's ICacheService: stdio retains clients when caching is enabled;
+    // the current HTTP cache is a no-op, so clients are not reused across calls.
+    private readonly SemaphoreSlim _tokenLock = new(1, 1);
+    private AccessToken _accessToken;
     private readonly string _userAgent = userAgent;
     private readonly IAzureService _azureService = azureService;
     private static readonly TimeSpan s_httpClientTimeout = TimeSpan.FromSeconds(240);
+    private static readonly TimeSpan s_tokenRefreshBuffer = TimeSpan.FromMinutes(5);
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
 
@@ -234,14 +240,9 @@ public sealed class KustoClient(
 
     private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken)
     {
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
-        var scopes = new string[]
-        {
-            GetKustoScope()
-        };
         var clientRequestId = s_clientRequestIdPrefix + Guid.NewGuid().ToString();
-        var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
-        var accessToken = await _tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        var accessToken = await GetAccessTokenAsync(clientRequestId, cancellationToken).ConfigureAwait(false);
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
         httpRequest.Headers.Authorization = new("bearer", accessToken.Token);
         httpRequest.Headers.Add("User-Agent", _userAgent);
         httpRequest.Headers.Add("x-ms-client-request-id", clientRequestId);
@@ -263,6 +264,27 @@ public sealed class KustoClient(
         httpRequest.Content = new StringContent(bodyStr);
         httpRequest.Content.Headers.ContentType = new("application/json", "utf-8");
         return httpRequest;
+    }
+
+    private async Task<AccessToken> GetAccessTokenAsync(string clientRequestId, CancellationToken cancellationToken)
+    {
+        await _tokenLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var now = DateTimeOffset.UtcNow;
+            if (_accessToken.ExpiresOn <= now + s_tokenRefreshBuffer ||
+                _accessToken.RefreshOn <= now)
+            {
+                var tokenRequestContext = new TokenRequestContext([GetKustoScope()], clientRequestId);
+                _accessToken = await _tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
+            }
+
+            return _accessToken;
+        }
+        finally
+        {
+            _tokenLock.Release();
+        }
     }
 
     private static async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)

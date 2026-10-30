@@ -1,9 +1,16 @@
 # Fabric.Mcp.Tools.Core.Tests
+<!-- cspell:words TMDL pbism -->
 
 Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
+- **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
+- **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
+- **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
+- **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
+- **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -97,6 +104,174 @@ The shared wait options enforce a 600-second server maximum while keeping the 12
 
 All LRO/Create Item coverage is offline. It does not call real Fabric, validate real OBO permissions, deploy resources, run recorded tests, or establish production latency percentiles. Capacity assignment and Catalog Search retain their pre-existing published contracts and operation-specific tests.
 
+## Local Definition File Infrastructure
+
+`IFabricItemDefinitionFileService` is an injectable, stateless file/part converter registered by
+`FabricCoreSetup`. It uses ordinary `System.IO`, following Azure's area-specific file services,
+without depending on or changing Azure tools. It makes no network requests, exposes no MCP commands,
+and is reused by Create Item's saved-file input without adding a command to the Core tool catalog.
+
+The wire models are `FabricItemDefinition` (`parts`, optional `format`) and
+`FabricItemDefinitionPart` (`path`, `payload`, `payloadType`), registered in `CoreJsonContext`.
+File I/O supports `InlineBase64` only and preserves bytes, including binary assets, text encodings,
+line endings, empty files, nested paths, and `.platform`. Invalid Base64 and unsupported payload
+types are errors, never skipped parts.
+
+### Reading Saved Files
+
+`ReadAsync` takes an existing absolute directory, an explicit list of `FabricItemDefinitionFile`
+entries, and an optional format. `PartPath` is the logical Fabric path; optional `SourcePath` maps
+it to a different relative file under the selected directory. Source paths accept native or `/`
+separators, but logical part paths use `/`. The reader never enumerates the directory implicitly:
+unselected editor files, local caches, and secrets are not included simply because they share a folder.
+It reads saved files, not Git HEAD or unsaved editor buffers, and does not rename or modify them.
+
+```csharp
+var definition = await definitionFiles.ReadAsync(
+    sourceDirectory,
+    [new("artifact.content.ipynb", "notebooks/sales.ipynb")],
+    format: "ipynb",
+    cancellationToken: cancellationToken);
+```
+
+Length and modification-time checks detect changes observed during packaging. This is not an atomic
+snapshot of a concurrently edited directory: callers should save their files and stop editing while
+packaging. The returned parts are a bounded in-memory snapshot for the subsequent API request.
+
+### Writing Completed Definitions
+
+`WriteAsync` takes a completed definition and an explicit new absolute output directory whose parent
+already exists. It validates all part paths and payloads first, writes into a temporary sibling
+directory, then moves that completed directory into place. Existing destinations are never merged,
+overwritten, or deleted. It returns the published absolute directory; the caller already has the
+definition's part list and format for its result. Retain that format when reading the files back.
+
+```csharp
+var outputDirectory = await definitionFiles.WriteAsync(
+    newOutputDirectory, definition, cancellationToken);
+```
+
+Failures and cancellation are propagated rather than returning success for partial output. The writer
+attempts to remove only its temporary directory and logs cleanup failures without masking the original
+error. Unlike Azure Resiliency's general artifact writer, it must not flatten paths, invent replacement
+file names, or fall back silently to an incomplete file set.
+
+### Budgets and Filesystem Boundaries
+
+`FabricItemDefinitionFileLimits` supplies host-level packaging budgets, not MCP options or Fabric API
+quotas. Defaults are 1,024 parts, 16 MiB decoded per part, and 32 MiB decoded in total; hosts and tests
+can supply smaller or different explicit budgets. Encoded input per part is also bounded to the
+Base64 length implied by its decoded budget. Paths are limited to 1,024 characters and 255 characters
+per segment. No content is truncated to meet a budget.
+
+Only local absolute directories are accepted. Relative part/source paths cannot escape the selected
+directory. Logical paths reject traversal, absolute paths, alternate data streams, device names,
+non-portable characters, duplicate names (case-insensitively), and file/directory collisions.
+The implementation checks existing path components for symbolic links, junctions, and device paths,
+including ancestors of the selected root. Use actual local paths rather than linked directories.
+These checks are not an OS sandbox against hostile processes concurrently replacing filesystem
+entries; the local filesystem and its permissions must be trusted.
+
+Tools dedicated to disk reads or writes should declare `LocalRequired = true`, reusing the existing
+whole-tool HTTP restrictions. Create Item remains remote-capable: its registered command omits only
+the saved-file options on HTTP hosts, and `FabricItemDefinitionInputService` separately rejects local
+input before parsing paths or calling the file service unless the configured transport is stdio.
+Command logic and the low-level file converter contain no transport checks. Inline content remains
+available over HTTP and uses the same content-independent validator and budgets, with no disk access.
+Local file conversion adds no Fabric requests.
+
+### Item Layout and Content Validation Belong to Fabric
+
+The bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions)
+and the `docs_item-definitions` tool describe required parts and supported formats for most item
+types. Callers can consult those resources to prepare explicit file selections without an extra
+Fabric request. They are documentation, not executable schemas or an input-validation policy;
+Markdown tables are not parsed at runtime.
+
+This infrastructure validates the generic envelope and filesystem representation only. It does not
+claim a supplied part list is complete or valid for a particular item type, discover an item from
+its folder name, convert report bindings, apply `.platform` metadata, or resolve dependencies.
+The input service has no item-type argument and applies no required-filename, notebook-language,
+known/default-format, or format-mixing rules. All definitions receive generic JSON/Base64, path,
+count/byte/depth, source-exclusivity, and local-file capability checks. Tests verify that arbitrary
+safe layouts, including combinations formerly rejected locally, reach the single Create POST unchanged
+for omitted, recognized, and unknown formats. Create still sends its actual API item type unchanged.
+Fabric decides whether the supplied layout, format, content, and dependencies are valid.
+`.platform` is included only when explicitly selected or supplied inline and is sent unchanged,
+not interpreted or synthesized.
+
+### Shared Definition Source Options
+
+`DefinitionInputOptions` groups only four optional inputs: `Definition`, `DefinitionDirectory`,
+`DefinitionFiles`, and `DefinitionFormat`. Operations accepting uploaded definitions compose it using
+the existing AOT-aware attribute, without an option inheritance hierarchy or a framework change:
+
+```csharp
+[OptionContainer<DefinitionInputOptions>(Prefix = "")]
+public DefinitionInputOptions? DefinitionInput { get; set; }
+```
+
+The empty prefix preserves the existing flat CLI/MCP names and string shapes: `definition`,
+`definition-directory`, `definition-files`, and `definition-format`. The group stays null when no source
+option was provided. `HasInput` means at least one source option was supplied, including incomplete input
+that still needs validation; it does not claim the source is complete. Shared descriptions do not refer
+to Create-only fields. Creation payloads, folder IDs, sensitivity labels, API options, and LRO settings
+remain owned by Create. An operation that requires a definition must enforce that requirement itself;
+the group does not make its children globally required. Read/export operations have a different
+contract and should not acquire unused upload options.
+
+`IFabricItemDefinitionInputService.ReadAsync` accepts only the four grouped source values and cancellation:
+
+```csharp
+Task<FabricItemDefinition?> ReadAsync(
+    string? definition,
+    string? directory,
+    string? files,
+    string? format,
+    CancellationToken cancellationToken = default);
+```
+
+There is no item-type hint or layout-policy argument. Generic validation and the local-file guard
+are independent of any workload. The current
+Create registration still removes saved-file options from HTTP discovery without mutating shared binder
+options. Registered-handler and actual startup tests verify that composition does not change the schema
+or allow remote filesystem access.
+
+The command accepts either inline definition JSON or an absolute selected directory plus explicit
+file-to-part mappings and optional format. Unknown/duplicate JSON properties and conflicting source
+options are rejected, rather than silently discarded or preferred. It does not enumerate folders.
+The create-request definition and label-settings members are typed; the existing response model and
+output modes, workspace UUID behavior, no-definition requests, and bounded LRO processing remain unchanged.
+Registered-handler tests verify one POST and no hidden reads, while the LRO service matrix covers
+with/without definitions and the additional creation properties, synchronous completion, submit-only
+acceptance, and explicit waiting.
+
+`ItemCreateRequestInput` prepares optional folder IDs, creation payloads, definition options, and
+sensitivity label settings before definition files can be read. Creation payloads conflict with every
+definition option; the API's top-level options object requires a definition and never controls LRO
+waiting. Workload JSON remains opaque `JsonElement` data with one-MiB UTF-8 input budgets, 32-level
+nesting limits, and duplicate-property rejection, including nested objects. Tests measure the exact
+byte boundary with both ASCII and multibyte text, and the exact nesting boundary through request serialization.
+
+Label settings have a separate four-KiB input budget and a source-generated typed model. The entire
+object is optional, but every supplied settings object must have a nonempty `labelId` UUID. The only
+accepted strategies are `ApplyOrFail` and `Ignore`; the optional strategy stays omitted when not supplied,
+preserving Fabric's default. Required-constructor-parameter validation rejects empty and strategy-only
+settings before file access, authentication, or HTTP. Explicit nulls, unknown fields, and invalid
+strategies are rejected, not silently discarded. Tests
+verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
+folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
+
+Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
+definition to export. Keep endpoint-specific result sizes separate from these file budgets:
+the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
+
+All file tests use isolated temporary directories with no Azure or Fabric requests. The fixture
+resolves system temporary-directory aliases, such as macOS `/var`, before creating its test data;
+the product continues to reject linked paths. Symbolic-link
+tests run when the host permits link creation; on Windows without the necessary privilege they
+report an explicit skip, rather than silently passing.
+
 ## Item Metadata
 
 Get Item reuses `FabricCoreCommand`, the shared authenticated sender with `ResponseHeadersRead`,
@@ -154,6 +329,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run specific test
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*ItemCreateCommandTests"
+
+# Run definition packaging/input and Create Item coverage
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricItemDefinition*' '*ItemCreate*' '*FabricOperationMcpTests'
 
 # Run LRO service, polling, command/schema, and Create Item integration tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'

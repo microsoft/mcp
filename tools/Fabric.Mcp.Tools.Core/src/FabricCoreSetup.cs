@@ -18,6 +18,8 @@ public class FabricCoreSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IFabricItemDefinitionFileService, FabricItemDefinitionFileService>();
+        services.AddSingleton<IFabricItemDefinitionInputService, FabricItemDefinitionInputService>();
         services.AddHttpClient<IFabricCoreService, FabricCoreService>()
             .ConfigurePrimaryHttpMessageHandler(static (handler, _) =>
             {
@@ -38,7 +40,7 @@ public class FabricCoreSetup : IAreaSetup
             });
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
-        services.AddSingleton<ItemCreateCommand>();
+        services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
@@ -66,7 +68,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
-            "- Create new Fabric items (Lakehouse, Notebook, etc.)\n" +
+            "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
@@ -94,6 +96,38 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
+    }
+
+    private static ItemCreateCommand CreateItemCreateCommand(IServiceProvider serviceProvider)
+    {
+        var definitionInput = serviceProvider.GetRequiredService<IFabricItemDefinitionInputService>();
+        var command = new ItemCreateCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemCreateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            definitionInput);
+        var definition = command.GetCommand();
+        var inputOptions = definition.Options
+            .Where(static option => option.Name is "--definition" or "--definition-directory" or "--definition-files" or "--definition-format" or
+                "--folder-id" or "--creation-payload" or "--options" or "--sensitivity-label-settings")
+            .ToArray();
+        if (!definitionInput.SupportsLocalFiles)
+        {
+            // Remove options from this command's collection, not the cached OptionBinder
+            // options shared by local and HTTP hosts in the same process.
+            foreach (var option in inputOptions.Where(static option =>
+                option.Name is "--definition-directory" or "--definition-files" or "--definition-format"))
+            {
+                definition.Options.Remove(option);
+            }
+        }
+        definition.Validators.Add(result =>
+        {
+            if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each item-creation input option at most once.");
+            }
+        });
+        return command;
     }
 
     private static ItemDeleteCommand CreateItemDeleteCommand(IServiceProvider serviceProvider)

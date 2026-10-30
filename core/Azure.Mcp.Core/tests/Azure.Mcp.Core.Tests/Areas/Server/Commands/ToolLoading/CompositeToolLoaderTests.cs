@@ -479,12 +479,13 @@ public class CompositeToolLoaderTests
     public async Task CallToolHandler_ConcurrentCallsWithoutListingFirst_InitializesOnlyOnce()
     {
         var logger = Substitute.For<ILogger<CompositeToolLoader>>();
+        var initialization = new TaskCompletionSource<ListToolsResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         // Setup a loader that has the tool we want to call
         var mockLoader = Substitute.For<IToolLoader>();
         var testTool = CreateTestTool("test-tool");
         mockLoader.ListToolsHandler(Arg.Any<RequestContext<ListToolsRequestParams>>(), Arg.Any<CancellationToken>())
-            .Returns(new ListToolsResult { Tools = [testTool] });
+            .Returns(_ => new ValueTask<ListToolsResult>(initialization.Task));
 
         var expectedResult = new CallToolResult
         {
@@ -507,6 +508,8 @@ public class CompositeToolLoaderTests
             tasks.Add(toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken).AsTask());
         }
 
+        Assert.All(tasks, task => Assert.False(task.IsCompleted));
+        initialization.SetResult(new ListToolsResult { Tools = [testTool] });
         var results = await Task.WhenAll(tasks);
 
         // Verify all calls succeeded
@@ -671,6 +674,43 @@ public class CompositeToolLoaderTests
 
         // Assert - child loader should be disposed only once due to idempotent disposal
         await mockLoader.Received(1).DisposeAsync();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DisposeAsync_ConcurrentCalls_AwaitOneCleanup(bool cleanupFails)
+    {
+        var cleanup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var mockLoader = Substitute.For<IToolLoader>();
+        mockLoader.DisposeAsync().Returns(_ => new ValueTask(cleanup.Task));
+        var logger = Substitute.For<ILogger<CompositeToolLoader>>();
+        var compositeLoader = new CompositeToolLoader([mockLoader], logger);
+        var disposals = Enumerable.Range(0, 16).Select(_ => compositeLoader.DisposeAsync().AsTask()).ToArray();
+
+        try
+        {
+            Assert.All(disposals, disposal =>
+            {
+                Assert.Same(disposals[0], disposal);
+                Assert.False(disposal.IsCompleted);
+            });
+        }
+        finally
+        {
+            if (cleanupFails)
+            {
+                cleanup.TrySetException(new InvalidOperationException("Cleanup failed."));
+            }
+            else
+            {
+                cleanup.TrySetResult();
+            }
+            await Task.WhenAll(disposals);
+        }
+
+        await compositeLoader.DisposeAsync();
+        _ = mockLoader.Received(1).DisposeAsync();
     }
 
     [Fact]

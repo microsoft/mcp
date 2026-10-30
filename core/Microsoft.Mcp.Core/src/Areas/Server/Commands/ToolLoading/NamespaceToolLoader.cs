@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Frozen;
 using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
@@ -45,7 +46,9 @@ public sealed class NamespaceToolLoader(
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-    private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
+    private readonly Lazy<(
+        IReadOnlyList<string> Names,
+        FrozenDictionary<string, Func<IReadOnlyList<Tool>>> ToolLists)> _namespaceCatalog = new(() =>
     {
         IEnumerable<CommandGroup> allSubGroups = commandFactory.RootGroup.SubGroup;
 
@@ -58,10 +61,13 @@ public sealed class NamespaceToolLoader(
                                configuration.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
         }
 
-        return [.. allSubGroups.Select(group => group.Name)];
+        IReadOnlyList<string> names = [.. allSubGroups.Select(group => group.Name)];
+        return (names, names.ToFrozenDictionary(
+            name => name,
+            name => CreateChildToolListAccessor(commandFactory, configuration, logger, name),
+            StringComparer.OrdinalIgnoreCase));
     });
 
-    private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
     private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
 
@@ -118,7 +124,7 @@ public sealed class NamespaceToolLoader(
             return ValueTask.FromResult(_cachedListToolsResult);
         }
 
-        var namespaces = _availableNamespaces.Value;
+        var namespaces = _namespaceCatalog.Value.Names;
         var allToolsResponse = new ListToolsResult
         {
             Tools = []
@@ -176,7 +182,7 @@ public sealed class NamespaceToolLoader(
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        string tool = _availableNamespaces.Value.FirstOrDefault(namespaceName =>
+        string tool = _namespaceCatalog.Value.Names.FirstOrDefault(namespaceName =>
             string.Equals(namespaceName, request.Params.Name, StringComparison.OrdinalIgnoreCase)) ?? request.Params.Name;
         var args = request.Params.Arguments;
         string? intent = null;
@@ -614,48 +620,61 @@ public sealed class NamespaceToolLoader(
     }
 
     /// <summary>
-    /// Gets the available tools from the namespace commands and caches the result for subsequent requests.
+    /// Gets the lazily cached, read-only tools for a namespace.
     /// </summary>
-    internal List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
+    internal IReadOnlyList<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
-        // Check cache first
-        if (_cachedToolLists.TryGetValue(namespaceName, out var cachedList))
-        {
-            return cachedList;
-        }
-
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        var namespaces = _availableNamespaces.Value;
-        if (!namespaces.Any(ns => string.Equals(ns, namespaceName, StringComparison.OrdinalIgnoreCase)))
+        var catalog = _namespaceCatalog.Value;
+        if (!catalog.ToolLists.TryGetValue(namespaceName, out var getTools))
         {
             Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
-            var availableList = string.Join(", ", namespaces);
+            var availableList = string.Join(", ", catalog.Names);
             throw new KeyNotFoundException($"The namespace '{namespaceName}' was not found. Available namespaces: {availableList}");
         }
 
-        var namespaceCommands = _commandFactory.GroupCommands([namespaceName]);
-        if (namespaceCommands == null)
-        {
-            _logger.LogWarning("No commands found for namespace: {Namespace}", namespaceName);
-            return [];
-        }
-
-        var list = namespaceCommands
-            .Where(kvp => !_configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly)
-            .Where(kvp => !_configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
-            .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
-            .ToList();
-
-        // Cache for subsequent requests
-        _cachedToolLists[namespaceName] = list;
-
-        return list;
+        return getTools();
     }
+
+    private static Func<IReadOnlyList<Tool>> CreateChildToolListAccessor(
+        ICommandFactory commandFactory,
+        IOptions<ServerRuntimeConfiguration> configuration,
+        ILogger<NamespaceToolLoader> logger,
+        string namespaceName)
+    {
+        IReadOnlyList<Tool>? cachedList = null;
+        return () =>
+        {
+            var existingList = Volatile.Read(ref cachedList);
+            if (existingList != null)
+            {
+                return existingList;
+            }
+
+            var namespaceCommands = commandFactory.GroupCommands([namespaceName]);
+            if (namespaceCommands == null)
+            {
+                logger.LogWarning("No commands found for namespace: {Namespace}", namespaceName);
+                return [];
+            }
+
+            IReadOnlyList<Tool> list = namespaceCommands
+                .Where(kvp => !configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly)
+                .Where(kvp => !configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
+                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
+                .ToList()
+                .AsReadOnly();
+
+            // Publish only successful metadata so failed lookups and schema generation remain retryable.
+            return Interlocked.CompareExchange(ref cachedList, list, null) ?? list;
+        };
+    }
+
     internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
         if (args == null)
@@ -699,7 +718,7 @@ public sealed class NamespaceToolLoader(
         RequestContext<CallToolRequestParams> request,
         string intent,
         string namespaceName,
-        List<Tool> availableTools,
+        IReadOnlyList<Tool> availableTools,
         CancellationToken cancellationToken)
     {
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
@@ -780,13 +799,4 @@ public sealed class NamespaceToolLoader(
 #pragma warning restore MCP9005
     }
 
-    /// <summary>
-    /// Disposes resources owned by this tool loader.
-    /// Clears the cached tool lists dictionary.
-    /// </summary>
-    protected override ValueTask DisposeAsyncCore()
-    {
-        _cachedToolLists.Clear();
-        return ValueTask.CompletedTask;
-    }
 }

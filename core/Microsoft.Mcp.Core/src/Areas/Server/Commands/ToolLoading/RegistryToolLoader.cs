@@ -30,7 +30,7 @@ public sealed class RegistryToolLoader(
     private readonly List<McpClient> _discoveredClients = [];
     private readonly Dictionary<McpClient, (string ServerName, string? Prefix)> _clientMetadataMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
-    private bool _isInitialized = false;
+    private volatile bool _isInitialized = false;
 
     /// <summary>
     /// Gets or sets the client options used when creating MCP clients.

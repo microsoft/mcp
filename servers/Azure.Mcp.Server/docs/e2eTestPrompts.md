@@ -9,6 +9,37 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
+## Azure Data Manager for Energy
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| adme_health_check | Check health and authentication for ADME endpoint \<endpoint> and data partition \<data-partition> | none |
+| adme_health_check | Check health for customer-hosted ADME endpoint \<endpoint> in tenant \<tenant> and data partition \<data-partition>, using resource application ID \<application-id> as the token audience | none |
+| adme_schema_get | Get ADME schema for kind \<authority:source:entity-type:version> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_schema_get | Show the fields, types, and structure of OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_schema_get | Retrieve the full JSON definition for OSDU schema \<authority:source:entity-type:version> from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_schema_list | List all shared Well schemas from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_schema_list | List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_schema_list | List DEVELOPMENT OSDU schemas from authority \<authority> and source \<source> in ADME endpoint \<endpoint> and data partition \<data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_fetch | Fetch the full content of ADME records <record-id-1>, <record-id-2>, and \<record-id-3> in one batch from endpoint \<endpoint> and data partition \<data-partition> | none |
+| adme_storage_record_fetch | Fetch only attributes data.Name and data.Description for ADME records \<record-id-1> and \<record-id-2> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_fetch | Fetch ADME record \<record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_get | Get a OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_get | Get version \<record-version> of OSDU record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_get | Get only attributes data.WellID and data.Name from OSDU record \<record-id> at endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
+
 ## Azure Advisor
 
 | Tool Name | Test Prompt | Interaction |
@@ -159,6 +190,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
 | advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
+| advisor_servicegroupintelligence_get | How is the Advisor status of service group commerce calculated? | none |
+| advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
+| advisor_servicegroupintelligence_get | Which mission critical service groups need attention? | none |
+| advisor_servicegroupintelligence_get | Which service groups are at risk? | none |
+| advisor_servicegroupintelligence_get | Show me the tier 0 service groups that are in critical status | none |
+| advisor_servicegroupintelligence_get | Use Advisor servicegroupintelligence get to show the status and criticality of service group <Service-group-name> | none |
 
 ## Azure AI Search
 
@@ -178,6 +216,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_knowledge_base_retrieve | Search knowledge base \<agent-name> in Azure AI Search service \<service-name> for \<query> | none |
 | search_knowledge_base_retrieve | What does knowledge base \<agent-name> in search service \<service-name> know about \<query> | none |
 | search_knowledge_base_retrieve | Find information about \<query> using knowledge base \<agent-name> in search service \<service-name> | none |
+| search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> and include source document fields so I can cite the original sources | none |
+| search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> with references but without source document fields | none |
 | search_knowledge_source_get | List all knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | List all knowledge sources in the search service \<service-name> | none |
@@ -641,6 +681,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | kusto_database_list | List all databases in the Data Explorer cluster <cluster_name> | none |
 | kusto_database_list | Show me the databases in the Data Explorer cluster <cluster_name> | none |
 | kusto_query | Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name> | none |
+| kusto_query | Run `print value=1` three times in database <database_name> at cluster URI <cluster_uri> using the same server session and report each call's elapsed time | none |
 | kusto_sample | Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name> | none |
 | kusto_table_list | List all tables in the Data Explorer database <database_name> in cluster <cluster_name> | none |
 | kusto_table_list | Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name> | none |
@@ -662,6 +703,18 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | mysql_server_param_get | Show me the value of connection timeout in seconds in my MySQL server \<server> | none |
 | mysql_server_param_set | Set connection timeout to 20 seconds for my MySQL server \<server> | none |
 | mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> | none |
+
+## Azure NetApp Files
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| netappfiles_account_create | Create an Azure NetApp Files account named \<account> in \<location> in resource group \<resource_group> | none |
+| netappfiles_account_create | Create a NetApp Files account called \<account> in location \<location> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files account named \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_account_get | Get the Azure NetApp Files accounts in resource group \<resource_group> | none |
+| netappfiles_account_get | Show me details for NetApp Files accounts in resource group \<resource_group> | none |
+| netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
 
 ## Azure Database for PostgreSQL
 
@@ -871,6 +924,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | iothub_query_run | Run an IoT Hub device query equivalent to "SELECT * FROM devices" against IoT Hub <hub_name> in resource group <resource_group_name>; do not use the device-list operation | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20 | none |
 | iothub_query_run | Find devices in IoT Hub <hub_name> where tag environment equals 'production' | none |
+| iothub_routing_endpoint-diagnostics | Show routing endpoint diagnostics evidence for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-diagnostics | Get routing endpoint diagnostics metrics for IoT Hub <hub_name> from <start_time> through <end_time> | none |
+| iothub_routing_endpoint-diagnostics | Check whether routing endpoint <endpoint_name> on IoT Hub <hub_name> has a missing target, unavailable metrics, or observed delivery failures in the past six hours | none |
+| iothub_routing_endpoint-diagnostics | Show which routing metrics returned no data for IoT Hub <hub_name> without assuming the hub is idle or healthy | none |
+| iothub_routing_endpoint-health | Show routing endpoint health for IoT Hub <hub_name> in resource group <resource_group_name> | none |
+| iothub_routing_endpoint-health | Get the current routing endpoint health for endpoint <endpoint_name> on IoT Hub <hub_name> | none |
 
 ## Azure IoT Operations
 
