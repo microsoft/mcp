@@ -668,7 +668,8 @@ azmcp advisor servicegroupintelligence get [--service-group <service-group>] \
 # Get detailed properties of AI Search indexes
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search index get --service <service> \
-                       [--index <index>]
+                       [--index <index>] \
+                       [--tenant <tenant>]
 
 # Query AI Search index
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -676,12 +677,14 @@ azmcp search index query --service <service> \
                          --index <index> \
                          --query <query> \
                          [--query-type <simple|full|semantic>] \
-                         [--semantic-configuration <semantic-configuration>]
+                         [--semantic-configuration <semantic-configuration>] \
+                         [--tenant <tenant>]
 
 # Get AI Search knowledge bases (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search knowledge base get --service <service>
-                                [--knowledge-base <knowledge-base>]
+azmcp search knowledge base get --service <service> \
+                                [--knowledge-base <knowledge-base>] \
+                                [--tenant <tenant>]
 
 # Run retrieval against an AI Search knowledge base
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -689,18 +692,31 @@ azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
                                      [--messages <messages>] \
-                                     [--include-reference-source-data <true|false>]
+                                     [--include-reference-source-data <true|false>] \
+                                     [--tenant <tenant>]
 
 # Get AI Search knowledge sources (all or a specific one)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search knowledge source get --service <service>
-                                  [--knowledge-source <knowledge-source>]
+azmcp search knowledge source get --service <service> \
+                                  [--knowledge-source <knowledge-source>] \
+                                  [--tenant <tenant>]
 
 # List AI Search accounts in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search service list --subscription <subscription> \
-                         [--resource-group <resource-group>]
+                         [--resource-group <resource-group>] \
+                         [--tenant <tenant>]
 ```
+
+The five Search data-plane commands above connect directly to the named service and do not require subscription discovery.
+Use `--tenant` to select the service's tenant when it differs from your default credential context. A tenant GUID avoids
+tenant discovery; resolving a tenant display name requires access to enumerate tenants. Omitting `--tenant` preserves the
+default credential context. `search service list` is a management-plane discovery command and still requires subscription access.
+
+Definition commands require permission to read the corresponding Search object definitions. The query and knowledge-base
+retrieval commands also read definitions before accessing content, so Search Index Data Reader alone is not sufficient for
+their current implementation. See [Search resource-scoped access troubleshooting](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#azure-ai-search-with-resource-level-access)
+for role and authentication guidance.
 
 ### Azure AI Services Speech Operations
 

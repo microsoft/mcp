@@ -208,6 +208,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_knowledge_base_get | Show me the knowledge bases in the search service \<service-name> | none |
 | search_knowledge_base_get | Get the details of knowledge base \<agent-name> in the Azure AI Search service \<service-name> | none |
 | search_knowledge_base_get | Show me the knowledge base \<agent-name> in search service \<service-name> | none |
+| search_knowledge_base_get | Get knowledge base \<agent-name> directly from Search service \<service-name> in tenant \<tenant-id>; I have resource-level access but no subscription-wide discovery permissions | none |
 | search_knowledge_base_retrieve | Run a retrieval with knowledge base \<agent-name> in Azure AI Search service \<service-name> for the query \<query> | none |
 | search_knowledge_base_retrieve | Ask knowledge base \<agent-name> in search service \<service-name> to retrieve information about \<query> | none |
 | search_knowledge_base_retrieve | Run a retrieval with knowledge base \<agent-name> in search service \<service-name> for the query \<query> | none |
@@ -218,19 +219,23 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | search_knowledge_base_retrieve | Find information about \<query> using knowledge base \<agent-name> in search service \<service-name> | none |
 | search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> and include source document fields so I can cite the original sources | none |
 | search_knowledge_base_retrieve | Query knowledge base \<agent-name> in search service \<service-name> about \<query> with references but without source document fields | none |
+| search_knowledge_base_retrieve | Retrieve \<query> from knowledge base \<agent-name> in Search service \<service-name> using tenant \<tenant-id>, without listing subscriptions | none |
 | search_knowledge_source_get | List all knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | List all knowledge sources in the search service \<service-name> | none |
 | search_knowledge_source_get | Show me the knowledge sources in the search service \<service-name> | none |
 | search_knowledge_source_get | Get the details of knowledge source \<source-name> in the Azure AI Search service \<service-name> | none |
 | search_knowledge_source_get | Show me the knowledge source \<source-name> in search service \<service-name> | none |
+| search_knowledge_source_get | Get knowledge source \<source-name> directly from Search service \<service-name> in tenant \<tenant-id>; do not discover subscriptions | none |
 | search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> | none |
 | search_index_get | List all indexes in the Cognitive Search service \<service-name> | none |
 | search_index_get | Show me the indexes in the Cognitive Search service \<service-name> | none |
+| search_index_get | Get index \<index-name> directly from Search service \<service-name> in tenant \<tenant-id>; I have resource-level definition-read access but no subscription-wide discovery permissions | none |
 | search_index_query | Search for instances of \<search_term> in the index \<index-name> in Cognitive Search service \<service-name> | none |
 | search_index_query | Search the index \<index-name> in Cognitive Search service \<service-name> for \<search_term> using the simple query syntax | none |
 | search_index_query | Run a semantic query for \<search_term> against the index \<index-name> in Cognitive Search service \<service-name> | none |
 | search_index_query | Run a semantic query for \<search_term> against index \<index-name> in Cognitive Search service \<service-name> using semantic configuration \<semantic-configuration> | none |
+| search_index_query | Query index \<index-name> in Search service \<service-name> for \<search_term> using tenant \<tenant-id>, without listing subscriptions | none |
 | search_service_list | List all Cognitive Search services in my subscription | none |
 | search_service_list | Show me the Cognitive Search services in my subscription | none |
 | search_service_list | Show me my Cognitive Search services | none |

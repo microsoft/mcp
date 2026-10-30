@@ -15,6 +15,43 @@ namespace Azure.Mcp.Tools.Search.Tests.Knowledge;
 
 public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGetCommand, ISearchService>
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("11111111-1111-1111-1111-111111111111")]
+    [InlineData("Target tenant")]
+    public async Task ExecuteAsync_ForwardsTenant(string? tenant)
+    {
+        string[] args = ["--service", "service123", "--knowledge-base", "base1"];
+        var response = await ExecuteCommandAsync(tenant is null ? args : [.. args, "--tenant", tenant]);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Contains(CommandDefinition.Options, option => option.Name == "--tenant");
+        await Service.Received(1).ListKnowledgeBases("service123", "base1", tenant, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(404)]
+    public async Task ExecuteAsync_PreservesServiceStatus(int status)
+    {
+        Service.ListKnowledgeBases("service123", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, "Search request failed"));
+
+        var response = await ExecuteCommandAsync("--service", "service123");
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.Contains("Search request failed", response.Message);
+        if (status is 401 or 403)
+        {
+            Assert.Contains(SearchErrorMessages.Definitions, response.Message);
+        }
+        else
+        {
+            Assert.DoesNotContain(SearchErrorMessages.Definitions, response.Message);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsKnowledgeBases_WhenBasesExist()
     {
@@ -27,6 +64,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Is("service123"),
             Arg.Is((string?)null),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(expectedBases);
 
@@ -51,6 +89,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Is("service123"),
             Arg.Is("base1"),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([expectedBase]);
 
@@ -68,6 +107,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -87,6 +127,7 @@ public class KnowledgeBaseGetCommandTests : CommandUnitTestsBase<KnowledgeBaseGe
         Service.ListKnowledgeBases(
             Arg.Is(serviceName),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

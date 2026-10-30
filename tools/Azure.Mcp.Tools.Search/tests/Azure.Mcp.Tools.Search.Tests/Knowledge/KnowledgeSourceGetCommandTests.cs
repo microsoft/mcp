@@ -15,6 +15,43 @@ namespace Azure.Mcp.Tools.Search.Tests.Knowledge;
 
 public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSourceGetCommand, ISearchService>
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("11111111-1111-1111-1111-111111111111")]
+    [InlineData("Target tenant")]
+    public async Task ExecuteAsync_ForwardsTenant(string? tenant)
+    {
+        string[] args = ["--service", "service123", "--knowledge-source", "source1"];
+        var response = await ExecuteCommandAsync(tenant is null ? args : [.. args, "--tenant", tenant]);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Contains(CommandDefinition.Options, option => option.Name == "--tenant");
+        await Service.Received(1).ListKnowledgeSources("service123", "source1", tenant, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(404)]
+    public async Task ExecuteAsync_PreservesServiceStatus(int status)
+    {
+        Service.ListKnowledgeSources("service123", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, "Search request failed"));
+
+        var response = await ExecuteCommandAsync("--service", "service123");
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.Contains("Search request failed", response.Message);
+        if (status is 401 or 403)
+        {
+            Assert.Contains(SearchErrorMessages.Definitions, response.Message);
+        }
+        else
+        {
+            Assert.DoesNotContain(SearchErrorMessages.Definitions, response.Message);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsKnowledgeSources_WhenSourcesExist()
     {
@@ -27,6 +64,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is((string?)null),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(expectedSources);
 
@@ -45,6 +83,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is("service123"),
             Arg.Is("source1"),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([expectedSource]);
 
@@ -62,6 +101,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Any<string>(),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>()).Returns([]);
 
         var response = await ExecuteCommandAsync("--service", "service123");
@@ -80,6 +120,7 @@ public class KnowledgeSourceGetCommandTests : CommandUnitTestsBase<KnowledgeSour
         Service.ListKnowledgeSources(
             Arg.Is(serviceName),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
