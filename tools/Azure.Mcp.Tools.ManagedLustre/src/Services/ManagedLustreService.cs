@@ -1027,10 +1027,10 @@ public sealed class ManagedLustreService(IAzureService azureService, ILogger<Man
             (nameof(filesystemName), filesystemName),
             (nameof(jobName), jobName));
 
-        var fs = await GetFileSystemAsync(subscription, resourceGroup, filesystemName, tenant, cancellationToken);
-
         try
         {
+            var fs = await GetFileSystemAsync(subscription, resourceGroup, filesystemName, tenant, cancellationToken);
+
             // Delete the import job
             var deleteOperation = await fs.GetStorageCacheImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
                 WaitUntil.Started,
