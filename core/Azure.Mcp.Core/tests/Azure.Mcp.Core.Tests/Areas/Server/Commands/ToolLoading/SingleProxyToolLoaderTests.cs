@@ -864,6 +864,66 @@ public class SingleProxyToolLoaderTests
         Assert.Equal(content1, content2);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData(StructuredOutputMode.Duplicated)]
+    [InlineData(StructuredOutputMode.Compact)]
+    public async Task CallToolHandler_ConcurrentRootLearning_PublishesOneSnapshot(StructuredOutputMode? mode)
+    {
+        var (toolLoader, factory, discovery) = CreateToolLoader(
+            useRealDiscovery: false, new ServerRuntimeConfiguration { StructuredOutputMode = mode });
+        factory.RootGroup.Returns(new CommandGroup("root", "Root command group"));
+        var firstDiscovery = new TaskCompletionSource<IEnumerable<IMcpServerProvider>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondDiscovery = new TaskCompletionSource<IEnumerable<IMcpServerProvider>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var discoveries = 0;
+        discovery.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+            Interlocked.Increment(ref discoveries) == 1 ? firstDiscovery.Task : secondDiscovery.Task);
+        var firstProvider = Substitute.For<IMcpServerProvider>();
+        firstProvider.CreateMetadata().Returns(new McpServerMetadata("first", "first", "First snapshot"));
+        var secondProvider = Substitute.For<IMcpServerProvider>();
+        secondProvider.CreateMetadata().Returns(new McpServerMetadata("second", "second", "Second snapshot"));
+        var firstRequest = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true });
+        var secondRequest = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true });
+
+        var firstCall = toolLoader.CallToolHandler(firstRequest, TestContext.Current.CancellationToken).AsTask();
+        var secondCall = toolLoader.CallToolHandler(secondRequest, TestContext.Current.CancellationToken).AsTask();
+        firstDiscovery.SetResult([firstProvider]);
+        var firstResult = await firstCall;
+        secondDiscovery.SetResult([secondProvider]);
+        var secondResult = await secondCall;
+        var cachedResult = await toolLoader.CallToolHandler(firstRequest, TestContext.Current.CancellationToken);
+
+        var firstText = Assert.IsType<TextContentBlock>(Assert.Single(firstResult.Content)).Text;
+        var firstPayload = firstResult.StructuredContent?.GetRawText() ?? firstText;
+        Assert.Contains("first", firstPayload);
+        Assert.DoesNotContain("second", firstPayload);
+        Assert.Equal(firstText, Assert.IsType<TextContentBlock>(Assert.Single(secondResult.Content)).Text);
+        Assert.Equal(firstText, Assert.IsType<TextContentBlock>(Assert.Single(cachedResult.Content)).Text);
+        Assert.Equal(firstResult.StructuredContent?.GetRawText(), secondResult.StructuredContent?.GetRawText());
+        Assert.Equal(2, discoveries);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_RootDiscoveryFailure_AllowsRetry()
+    {
+        var (toolLoader, factory, discovery) = CreateToolLoader(useRealDiscovery: false);
+        factory.RootGroup.Returns(new CommandGroup("root", "Root command group"));
+        var attempts = 0;
+        var failure = new InvalidOperationException("Discovery failed.");
+        discovery.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns(_ =>
+            Interlocked.Increment(ref attempts) == 1
+                ? Task.FromException<IEnumerable<IMcpServerProvider>>(failure)
+                : Task.FromResult<IEnumerable<IMcpServerProvider>>([]));
+        var request = McpTestUtilities.CreateToolCallRequest("azure", new Dictionary<string, object?> { ["learn"] = true });
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask()));
+
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        Assert.NotEmpty(result.Content);
+        Assert.Equal(2, attempts);
+    }
+
     [Fact]
     public void SingleProxyToolLoader_Constructor_ThrowsOnNullArguments()
     {
