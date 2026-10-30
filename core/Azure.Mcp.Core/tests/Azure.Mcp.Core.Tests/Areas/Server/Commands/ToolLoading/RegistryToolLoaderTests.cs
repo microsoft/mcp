@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -242,11 +243,13 @@ public class RegistryToolLoaderTests
         Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
     }
 
-    [Fact]
-    public async Task ListRemoteToolsAsync_WithMultiplePages_ReturnsToolsFromEveryPage()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task ListRemoteToolsAsync_WithMultiplePages_ReturnsToolsFromEveryPage(string? finalCursor)
     {
         var listRequestCount = 0;
-        var client = LoopbackMcpClient.Create(request =>
+        await using var client = LoopbackMcpClient.Create(request =>
         {
             if (request.Method != RequestMethods.ToolsList)
             {
@@ -264,7 +267,7 @@ public class RegistryToolLoaderTests
                         ["name"] = cursor switch
                         {
                             "next" => "second-tool",
-                            "last" => "third-tool",
+                            "NEXT" => "third-tool",
                             _ => "first-tool"
                         },
                         ["inputSchema"] = new JsonObject { ["type"] = "object" }
@@ -272,14 +275,12 @@ public class RegistryToolLoaderTests
                 },
                 ["ttlMs"] = cursor == "next" ? 300_000 : 1_800_000
             };
-            if (cursor is null)
+            response["nextCursor"] = cursor switch
             {
-                response["nextCursor"] = "next";
-            }
-            else if (cursor == "next")
-            {
-                response["nextCursor"] = "last";
-            }
+                null => "next",
+                "next" => "NEXT",
+                _ => finalCursor
+            };
 
             return new JsonRpcResponse { Result = response };
         });
@@ -292,6 +293,151 @@ public class RegistryToolLoaderTests
             tool => Assert.Equal("third-tool", tool.Name));
         Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
         Assert.Equal(3, listRequestCount);
+    }
+
+    [Theory]
+    [InlineData(new[] { "repeat", "repeat" }, true, false)]
+    [InlineData(new[] { "repeat", "repeat" }, false, false)]
+    [InlineData(new[] { "first", "second", "first" }, true, false)]
+    [InlineData(new[] { "first", "second", "first" }, false, false)]
+    [InlineData(new[] { "first", "second", "third", "second" }, true, false)]
+    [InlineData(new[] { "repeat", "repeat" }, true, true)]
+    [InlineData(new[] { "first", "second", "first" }, true, true)]
+    public async Task ListToolsHandler_WithRepeatedCursor_Throws(string[] nextCursors, bool includeTools, bool initializeFirst)
+    {
+        var requestedCursors = new List<string?>();
+        var repeatCursors = !initializeFirst;
+        await using var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            requestedCursors.Add(request.Params?["cursor"]?.GetValue<string>());
+            var tools = new JsonArray();
+            if (includeTools)
+            {
+                tools.Add(new JsonObject
+                {
+                    ["name"] = "test-tool",
+                    ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                });
+            }
+
+            return new JsonRpcResponse
+            {
+                Result = new JsonObject
+                {
+                    ["tools"] = tools,
+                    ["nextCursor"] = repeatCursors && requestedCursors.Count <= nextCursors.Length
+                        ? nextCursors[requestedCursors.Count - 1]
+                        : null,
+                    ["ttlMs"] = 0
+                }
+            };
+        });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", client)
+            .Build();
+        await using var toolLoader = new CompositeToolLoader(
+            [CreateToolLoader(discoveryStrategy)], Substitute.For<ILogger<CompositeToolLoader>>());
+
+        if (initializeFirst)
+        {
+            var initialResult = await toolLoader.ListToolsHandler(
+                McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+            Assert.Equal(includeTools ? 1 : 0, initialResult.Tools.Count);
+            requestedCursors.Clear();
+            repeatCursors = true;
+        }
+
+        var exception = await Assert.ThrowsAsync<ToolListPaginationException>(
+            () => toolLoader.ListToolsHandler(
+                McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken).AsTask());
+
+        Assert.Equal(
+            "The remote MCP server loopback-test-server returned a repeated pagination cursor while listing tools.",
+            exception.Message);
+        Assert.Equal(McpErrorCode.InternalError, exception.ErrorCode);
+        Assert.Equal(nextCursors.Length, requestedCursors.Count);
+        Assert.Null(requestedCursors[0]);
+        Assert.Equal(nextCursors[..^1], requestedCursors.Skip(1));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ListToolsHandler_WithOtherListingErrors_ContinuesWithHealthyServers(bool protocolError)
+    {
+        await using var failedClient = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            if (protocolError)
+            {
+                throw new McpProtocolException("Tool listing failed.", McpErrorCode.InternalError);
+            }
+
+            throw new InvalidOperationException("Tool listing failed.");
+        });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("failed-server", "failed-server", "Failed server", failedClient)
+            .AddServer("healthy-server", "healthy-server", "Healthy server",
+                new MockMcpClientBuilder().AddTool("healthy-tool", "Healthy tool", "Response"))
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        var result = await toolLoader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal("healthy-tool", Assert.Single(result.Tools).Name);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ListRemoteToolsAsync_WhenCancelled_PropagatesCancellation(bool cancelBeforeListing)
+    {
+        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var listRequestCount = 0;
+        await using var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            listRequestCount++;
+            if (!cancelBeforeListing && listRequestCount == 2)
+            {
+                cancellationSource.Cancel();
+            }
+
+            return new JsonRpcResponse
+            {
+                Result = new JsonObject
+                {
+                    ["tools"] = new JsonArray(),
+                    ["nextCursor"] = $"page-{listRequestCount}"
+                }
+            };
+        });
+
+        if (cancelBeforeListing)
+        {
+            await cancellationSource.CancelAsync();
+        }
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => ToolListCache.ListRemoteToolsAsync(client, cancellationSource.Token));
+
+        Assert.Equal(cancellationSource.Token, exception.CancellationToken);
+        Assert.Equal(cancelBeforeListing ? 0 : 2, listRequestCount);
     }
 
     [Fact]

@@ -305,10 +305,8 @@ public sealed class RegistryToolLoader(
 
                     try
                     {
-                        var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-                        var allTools = toolsResponse
-                            .Select(t => t.ProtocolTool)
-                            .ToArray();
+                        var toolsResponse = await ToolListCache.ListRemoteToolsAsync(mcpClient, cancellationToken);
+                        var allTools = toolsResponse.Tools.ToArray();
 
                         return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)allTools);
                     }
@@ -317,7 +315,7 @@ public sealed class RegistryToolLoader(
                         // Rethrow cancellation to prevent setting _isInitialized
                         throw;
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not ToolListPaginationException)
                     {
                         _logger.LogWarning("Failed to list tools for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
                         return (serverMetadata.Name, serverMetadata.ToolPrefix, (McpClient?)null, (IEnumerable<Tool>?)null);

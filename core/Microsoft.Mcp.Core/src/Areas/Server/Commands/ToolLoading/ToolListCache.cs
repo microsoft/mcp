@@ -16,11 +16,17 @@ internal static class ToolListCache
     internal static async Task<ListToolsResult> ListRemoteToolsAsync(McpClient client, CancellationToken cancellationToken)
     {
         var result = new ListToolsResult { Tools = [] };
+        var seenCursors = new HashSet<string>(StringComparer.Ordinal);
         string? cursor = null;
 
         do
         {
             var page = await client.ListToolsAsync(new ListToolsRequestParams { Cursor = cursor }, cancellationToken);
+            if (!string.IsNullOrEmpty(page.NextCursor) && !seenCursors.Add(page.NextCursor))
+            {
+                throw new ToolListPaginationException(client.ServerInfo.Name);
+            }
+
             foreach (var tool in page.Tools)
             {
                 result.Tools.Add(tool);
