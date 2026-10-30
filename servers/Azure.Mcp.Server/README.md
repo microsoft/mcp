@@ -1144,7 +1144,6 @@ Example prompts that generate Azure CLI commands:
 * "List all versions of an OSDU record in my ADME data partition"
 
 ADME search and record listings return `nextCursor` for continuation. Pass it unchanged as `--cursor` on the next call.
-The pre-GA nested `result.cursor` output has been removed; other result fields and paging options are unchanged.
 
 For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 

@@ -26,9 +26,6 @@ public sealed class ProductListOptions : ISubscriptionOption, ICursorOption
     [Option(Description = "Opaque nextCursor from a previous product listing, copied unchanged. Omit for the first page. Keep the same filters and do not combine with next-cursor.")]
     public string? Cursor { get; set; }
 
-    [Option(Description = "Legacy continuation parameter accepting nextCursor from a previous product listing. Use cursor for new calls; do not combine both parameters.")]
-    public string? NextCursor { get; set; }
-
     [Option(Description = "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).")]
     public string? Expand { get; set; }
 

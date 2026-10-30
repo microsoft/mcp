@@ -25,23 +25,10 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
     }
 
-    [Fact]
-    public void Constructor_ExposesOptionalCursorAndLegacyParameter()
-    {
-        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
-        var legacyCursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--next-cursor");
-
-        Assert.Equal(typeof(string), cursor.ValueType);
-        Assert.False(cursor.Required);
-        Assert.False(legacyCursor.Required);
-    }
-
     [Theory]
-    [InlineData("--cursor", false)]
-    [InlineData("--cursor", true)]
-    [InlineData("--next-cursor", false)]
-    [InlineData("--next-cursor", true)]
-    public async Task ExecuteAsync_ContinuesPagesWithCanonicalOrLegacyCursor(string cursorOption, bool emptyFirstPage)
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_ContinuesPages(bool emptyFirstPage)
     {
         const string cursor = " opaque+/=%2F== ";
         Service.ListProducts(
@@ -67,7 +54,7 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.Equal(cursor, firstPayload.GetProperty("nextCursor").GetString());
 
         var finalResponse = await ExecuteCommandAsync(
-            "--subscription", "test-sub", "--search", "azure", cursorOption, first.NextCursor!);
+            "--subscription", "test-sub", "--search", "azure", "--cursor", first.NextCursor!);
         var final = ValidateAndDeserializeResponse(finalResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
         Assert.Equal("final-product", Assert.Single(final.Products).UniqueProductId);
         Assert.Null(final.NextCursor);
@@ -80,21 +67,6 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         await Service.Received(1).ListProducts(
             "test-sub", null, "azure", null, null, null, cursor, null, null,
             Arg.Any<CancellationToken>());
-    }
-
-    [Theory]
-    [InlineData("first-cursor", "second-cursor")]
-    [InlineData("same-cursor", "same-cursor")]
-    public async Task ExecuteAsync_WithBothCursorParameters_ReturnsValidationError(string cursor, string legacyCursor)
-    {
-        var response = await ExecuteCommandAsync(
-            "--subscription", "test-sub",
-            "--cursor", cursor,
-            "--next-cursor", legacyCursor);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("Specify either --cursor or --next-cursor, not both.", response.Message);
-        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

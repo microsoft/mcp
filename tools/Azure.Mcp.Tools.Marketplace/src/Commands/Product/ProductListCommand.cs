@@ -31,16 +31,6 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
     private readonly ILogger<ProductListCommand> _logger = logger;
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
 
-    public override void ValidateOptions(ProductListOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (options.Cursor is not null && options.NextCursor is not null)
-        {
-            validationResult.Errors.Add("Specify either --cursor or --next-cursor, not both.");
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ProductListOptions options, CancellationToken cancellationToken)
     {
         try
@@ -53,7 +43,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
                 options.Filter,
                 options.OrderBy,
                 options.Select,
-                options.Cursor ?? options.NextCursor,
+                options.Cursor,
                 options.Expand,
                 options.Tenant,
                 cancellationToken);
