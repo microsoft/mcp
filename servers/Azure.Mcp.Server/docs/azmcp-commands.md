@@ -445,6 +445,9 @@ azmcp adme search --endpoint <endpoint> \
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
 Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+Cursor searches return `results.nextCursor`.
+Pass `nextCursor` unchanged as `--cursor` with the original criteria. It is omitted
+when the cursor-search result is empty or the service returns no continuation.
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
@@ -476,6 +479,10 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--cursor <cursor>] \
                                  [--tenant <tenant>] \
                                  [--auth-app-id <application-id-or-app-id-uri>]
+
+# The record listing returns results.nextCursor.
+# Pass nextCursor unchanged as --cursor; omit it for the first page and stop when it is absent.
+# An empty record-ID page can still have a nextCursor.
 
 # List all numeric versions of an OSDU record
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -3684,7 +3691,10 @@ azmcp marketplace product list --subscription <subscription> \
                                [--orderby <odata-orderby>] \
                                [--select <odata-select>] \
                                [--expand <odata-expand>] \
-                               [--next-cursor <pagination-cursor>]
+                               [--cursor <pagination-cursor>]
+
+# Returns one page and nextCursor when more results can be requested.
+# Pass nextCursor unchanged as --cursor with the same filters to continue.
 
 # Get details about an Azure Marketplace product
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

@@ -1,0 +1,7 @@
+changes:
+  - section: "Features Added"
+    description: "Standardized cursor continuation for Marketplace product listing, ADME search, and ADME record listing using a shared ICursorOption interface."
+  - section: "Breaking Changes"
+    description: "Replaced the ADME search and record-list result.cursor output in favor of root nextCursor. Pass nextCursor unchanged as cursor; other result fields and paging controls remain unchanged."
+  - section: "Breaking Changes"
+    description: "Replaced the Marketplace next-cursor with cursor. Pass nextCursor unchanged as cursor; other result fields and paging controls remain unchanged."

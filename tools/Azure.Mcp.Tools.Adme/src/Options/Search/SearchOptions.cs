@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Adme.Options.Search;
 
-public sealed class SearchOptions
+public sealed class SearchOptions : ICursorOption
 {
     [Option(Description = "One or more kind selectors 'authority:source:type:version' with optional '*' wildcards, e.g. ['osdu:wks:master-data--Well:1.0.0']. Several kinds are searched as a union. Use the narrowest kind; each '*' widens the scan and its cost.")]
     public required string[] Kind { get; set; }
@@ -26,7 +26,7 @@ public sealed class SearchOptions
     [Option(Description = "Starting offset for query pagination. Cannot be combined with cursor pagination, and offset + limit must be <= 10000.")]
     public int? Offset { get; set; }
 
-    [Option(Description = "Continuation token from a previous cursor response. Supplying it selects cursor pagination; continue until results is empty. Resend all original cursor criteria unchanged because the service does not reliably retain page settings. If a continuation fails, restart from the first page to avoid missing records. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
+    [Option(Description = "Opaque nextCursor from a previous search response, copied unchanged. Supplying it selects cursor pagination; omit for the first page and stop when nextCursor is absent. Resend all original cursor criteria unchanged because the service does not reliably retain page settings. If a continuation fails, restart from the first page to avoid missing records. Cannot be combined with offset or aggregateBy and expires after about 1 minute.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "Optional field paths to project, e.g. ['id','kind','data.FacilityName']. Omit to return full records.")]

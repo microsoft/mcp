@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// <summary>
 /// Specifies the kind and paging for listing record ids.
 /// </summary>
-public sealed class RecordListOptions
+public sealed class RecordListOptions : ICursorOption
 {
     [Option(Description = "The fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use the schema list operation to discover valid kinds.")]
     public required string Kind { get; set; }
@@ -17,7 +17,7 @@ public sealed class RecordListOptions
     [Option(Description = "The number of record ids to return in one page, from 1 through 100. Defaults to 10.")]
     public int? Limit { get; set; }
 
-    [Option(Description = "The cursor returned by a previous page. Omit for the first page; a null cursor in the response means there are no more pages.")]
+    [Option(Description = "Opaque nextCursor from a previous record listing, copied unchanged. Omit for the first page; an absent nextCursor means there are no more pages.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

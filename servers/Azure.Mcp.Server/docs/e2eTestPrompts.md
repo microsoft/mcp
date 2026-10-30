@@ -31,11 +31,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | Fetch the next page of ADME record IDs using the previous response's nextCursor unchanged as cursor, keeping the same endpoint, data partition, kind, and limit | context-required |
 | adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Continue the previous ADME cursor search using nextCursor unchanged as cursor and resend all original criteria; stop when nextCursor is absent | context-required |
 | adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
@@ -1076,6 +1078,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | marketplace_product_get | Get details about marketplace product <product_name> | none |
 | marketplace_product_list | Search for Microsoft products in the marketplace | none |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> | none |
+| marketplace_product_list | Get the next page of the previous Marketplace product listing using nextCursor unchanged as cursor and the same subscription and filters | context-required |
 
 ## Azure MCP Best Practices
 

@@ -24,6 +24,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
 
         Pagination modes: offset and cursor (point-in-time snapshot, bulk processing, more than 10000 results,
         search_after).
+        Cursor pages return nextCursor when another page can be requested; pass it unchanged as cursor
+        with the original criteria.
         """,
     Destructive = false,
     Idempotent = false,
@@ -33,7 +35,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
     LocalRequired = false,
     Secret = false)]
 public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchService searchService)
-    : AuthenticatedCommand<SearchOptions, SearchResponse>
+    : AuthenticatedCommand<SearchOptions, AdmeResponse<SearchResponse>>
 {
     private readonly ISearchService _searchService = searchService;
 
@@ -136,8 +138,10 @@ public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchS
         {
             Results = response.Result.Results,
             TotalCount = response.Result.TotalCount,
-            Cursor = response.Result.Cursor,
-        }, response.CorrelationId);
+        }, response.CorrelationId)
+        {
+            NextCursor = response.Result.Results.Count > 0 ? response.Result.Cursor : null,
+        };
     }
 
     private static bool UsesCursorPagination(SearchOptions options) =>

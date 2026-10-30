@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Options.Product;
 
-public sealed class ProductListOptions : ISubscriptionOption
+public sealed class ProductListOptions : ISubscriptionOption, ICursorOption
 {
     [Option(Description = MarketplaceOptionDescriptions.Language)]
     public string? Language { get; set; }
@@ -23,8 +23,8 @@ public sealed class ProductListOptions : ISubscriptionOption
     [Option(Description = "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\").")]
     public string? Select { get; set; }
 
-    [Option(Description = "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response.")]
-    public string? NextCursor { get; set; }
+    [Option(Description = "Opaque nextCursor from a previous product listing, copied unchanged. Omit for the first page. Keep the same filters and do not combine with next-cursor.")]
+    public string? Cursor { get; set; }
 
     [Option(Description = "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).")]
     public string? Expand { get; set; }

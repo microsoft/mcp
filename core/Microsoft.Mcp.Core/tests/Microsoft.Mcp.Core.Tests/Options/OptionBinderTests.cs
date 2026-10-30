@@ -321,6 +321,28 @@ public sealed class OptionBinderTests
 
     #region BindOptions Tests
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("opaque+/=%2F==")]
+    [InlineData(" opaque+/=%2F== ")]
+    public void BindOptions_Cursor_IsOptionalAndPreservesOpaqueValue(string? cursor)
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<CursorTestOptions>(command);
+
+        var option = Assert.Single(command.Options);
+        Assert.Equal("--cursor", option.Name);
+        Assert.Equal(typeof(string), option.ValueType);
+        Assert.False(option.Required);
+
+        var parseResult = command.Parse(cursor is null ? [] : ["--cursor", cursor]);
+        ICursorOption options = OptionBinder.BindOptions<CursorTestOptions>(parseResult);
+
+        Assert.Equal(cursor, options.Cursor);
+    }
+
     [Fact]
     public void BindOptions_String_BindsValues()
     {
