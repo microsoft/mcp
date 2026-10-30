@@ -31,7 +31,7 @@
     Optional file path where the Vally process exit code is written before cleanup runs.
 
 .PARAMETER NumberOfRuns
-    The number of times to run each eval spec. Defaults to 3.
+    The number of times to run each eval spec. Defaults to 1.
 
 .PARAMETER IsDebug
     When specified, adds `--verbose` to the `vally eval` invocation for
