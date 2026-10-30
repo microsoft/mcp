@@ -1,0 +1,93 @@
+# cSpell:ignore alzimmermsft g2vinay msalaman CRONSCHEDULE COLLECTIONURI TEAMPROJECT
+trigger: none
+pr: none
+
+parameters:
+- name: ReleaseOwners
+  displayName: GitHub aliases to mention for release follow-up
+  type: object
+  default:
+  - alzimmermsft
+  - g2vinay
+  - msalaman
+
+# Azure DevOps schedules use UTC. The calendar check selects the active Pacific offset.
+schedules:
+- cron: '0 19 * * 2,4'
+  displayName: Release preparation (PDT)
+  branches:
+    include:
+    - main
+  always: true
+- cron: '0 20 * * 2,4'
+  displayName: Release preparation (PST)
+  branches:
+    include:
+    - main
+  always: true
+
+extends:
+  template: /eng/pipelines/templates/1es-redirect.yml
+  parameters:
+    stages:
+    - stage: ReleasePreparation
+      displayName: Prepare Azure MCP release pull request
+      condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.Repository.Name'], 'microsoft/mcp'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      pool:
+        name: $(WINDOWSPOOL)
+        image: $(WINDOWSVMIMAGE)
+        os: windows
+      variables:
+      - template: /eng/pipelines/templates/variables/image.yml
+      - template: /eng/pipelines/templates/variables/globals.yml
+      jobs:
+      - job: CheckSchedule
+        displayName: Check Pacific time and US federal holidays
+        condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+        timeoutInMinutes: 10
+        steps:
+        - checkout: self
+        - pwsh: |
+            $ErrorActionPreference = 'Stop'
+            . .\eng\scripts\helpers\ReleasePrepHelpers.ps1
+
+            $decision = Get-ReleasePrepSchedule -ScheduleName $env:BUILD_CRONSCHEDULE_DISPLAYNAME
+            Write-Host $decision.Reason
+            Write-Host "##vso[task.setvariable variable=ShouldPrepareRelease;isOutput=true]$($decision.ShouldRun.ToString().ToLowerInvariant())"
+            Write-Host "##vso[task.setvariable variable=ReleaseDate;isOutput=true]$($decision.ReleaseDate)"
+          name: schedule
+          displayName: Evaluate release calendar
+          workingDirectory: $(Build.SourcesDirectory)
+
+      - job: PrepareRelease
+        displayName: Create release-preparation pull request
+        dependsOn: CheckSchedule
+        condition: and(succeeded(), eq(dependencies.CheckSchedule.outputs['schedule.ShouldPrepareRelease'], 'true'))
+        timeoutInMinutes: 30
+        variables:
+        - name: ReleaseDate
+          value: $[ dependencies.CheckSchedule.outputs['schedule.ReleaseDate'] ]
+        steps:
+        - checkout: self
+          fetchDepth: 0
+        - template: /eng/common/pipelines/templates/steps/login-to-github.yml
+          parameters:
+            TokenOwners:
+            - azure-sdk
+            - microsoft
+        - pwsh: |
+            $ErrorActionPreference = 'Stop'
+            $releaseOwners = @($env:RELEASE_OWNERS | ConvertFrom-Json)
+            $buildUrl = '{0}{1}/_build/results?buildId={2}' -f `
+              $env:SYSTEM_COLLECTIONURI, [Uri]::EscapeDataString($env:SYSTEM_TEAMPROJECT), $env:BUILD_BUILDID
+            .\eng\scripts\Prepare-ReleasePullRequest.ps1 `
+              -ReleaseOwners $releaseOwners `
+              -ReleaseDate $env:RELEASE_DATE `
+              -BuildUrl $buildUrl
+          displayName: Compile changelogs and open release-preparation PR
+          workingDirectory: $(Build.SourcesDirectory)
+          env:
+            RELEASE_OWNERS: ${{ convertToJson(parameters.ReleaseOwners) }}
+            RELEASE_DATE: $(ReleaseDate)
+            GH_TOKEN: $(GH_TOKEN_microsoft)
+            GH_PUSH_TOKEN: $(GH_TOKEN_azure-sdk)
