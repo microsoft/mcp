@@ -56,7 +56,7 @@ public sealed class FabricItemDefinitionInputService(
         if (definition is not null)
         {
             result = Parse(definition, FabricItemDefinitionInputJsonContext.Default.FabricItemDefinition,
-                "--definition must be a JSON object with parts and optional format, not a file path or a create-request envelope.");
+                "--definition must be a JSON object with parts and optional format, not a file path or a request envelope.");
         }
         else
         {

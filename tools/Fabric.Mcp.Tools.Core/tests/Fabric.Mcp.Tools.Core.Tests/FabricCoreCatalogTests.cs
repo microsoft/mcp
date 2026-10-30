@@ -39,6 +39,7 @@ public sealed class FabricCoreCatalogTests()
         ("core_list-workspaces", typeof(WorkspaceListCommand), true),
         ("core_search-catalog", typeof(CatalogSearchCommand), true),
         ("core_update-item", typeof(ItemUpdateCommand), false),
+        ("core_update-item-definition", typeof(ItemDefinitionUpdateCommand), false),
         ("core_update-workspace", typeof(WorkspaceUpdateCommand), false)
     ];
 

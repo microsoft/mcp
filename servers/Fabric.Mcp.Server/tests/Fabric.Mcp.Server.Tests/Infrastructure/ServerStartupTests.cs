@@ -321,6 +321,23 @@ public class ServerStartupTests
         Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
         Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var definitionUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item-definition");
+        Assert.False(definitionUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], definitionUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var definitionUpdateOptions = definitionUpdate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("definition").GetProperty("type").GetString());
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("options").GetProperty("type").GetString());
+        Assert.False(definitionUpdateOptions.TryGetProperty("definition-item-type", out _));
+        Assert.Equal(["boolean", "null"], definitionUpdateOptions.GetProperty("update-metadata").GetProperty("type").EnumerateArray()
+            .Select(value => value.GetString()));
+        Assert.False(definitionUpdateOptions.GetProperty("update-metadata").TryGetProperty("default", out _));
+        foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
+        {
+            Assert.Equal(localFiles, definitionUpdateOptions.TryGetProperty(option, out _));
+        }
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
