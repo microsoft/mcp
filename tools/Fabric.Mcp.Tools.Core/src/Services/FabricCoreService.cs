@@ -14,7 +14,9 @@ using Microsoft.Mcp.Core.Commands;
 namespace Fabric.Mcp.Tools.Core.Services;
 
 public partial class FabricCoreService(
-    HttpClient httpClient, TokenCredential? credential = null, TimeProvider? timeProvider = null,
+    HttpClient httpClient,
+    TokenCredential? credential = null,
+    TimeProvider? timeProvider = null,
     FabricItemDefinitionFileLimits? definitionLimits = null) : IFabricCoreService
 {
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));

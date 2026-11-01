@@ -56,7 +56,7 @@ public sealed class ItemCreateRequestInputTests()
         var options = Options();
         options.FolderId = value;
 
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(options));
 
         Assert.Contains("--folder-id", error.Message);
         Assert.DoesNotContain("private-", error.Message);
@@ -88,7 +88,7 @@ public sealed class ItemCreateRequestInputTests()
                 break;
         }
 
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(options));
 
         Assert.Contains("--creation-payload cannot be combined", error.Message);
     }
@@ -102,7 +102,7 @@ public sealed class ItemCreateRequestInputTests()
         options.Options = "{}";
         options.CreationPayload = withPayload ? "{}" : null;
 
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(options));
 
         Assert.Contains("--options requires", error.Message);
     }
@@ -119,7 +119,7 @@ public sealed class ItemCreateRequestInputTests()
         Assert.Null(request.Definition);
         Assert.NotNull(request.CreationPayload);
         options.Options = "{}";
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(options));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(options));
         Assert.Contains("--options requires", error.Message);
     }
 
@@ -163,7 +163,7 @@ public sealed class ItemCreateRequestInputTests()
     {
         foreach (var name in new[] { "creation-payload", "options", "sensitivity-label-settings" })
         {
-            var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(WithJson(name, json)));
+            var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(WithJson(name, json)));
 
             Assert.Contains("--" + name, error.Message);
             Assert.DoesNotContain("private-", error.Message);
@@ -180,13 +180,13 @@ public sealed class ItemCreateRequestInputTests()
         const string prefix = "{\"data\":\"";
         const string suffix = "\"}";
         var bytesPerCharacter = Encoding.UTF8.GetByteCount(character.ToString());
-        var contentBytes = ItemCreateRequestInput.MaxObjectBytes - prefix.Length - suffix.Length;
+        var contentBytes = FabricItemJsonInput.MaxObjectBytes - prefix.Length - suffix.Length;
         var json = prefix + new string(character, contentBytes / bytesPerCharacter) +
             new string('x', contentBytes % bytesPerCharacter) + suffix;
-        Assert.Equal(ItemCreateRequestInput.MaxObjectBytes, Encoding.UTF8.GetByteCount(json));
+        Assert.Equal(FabricItemJsonInput.MaxObjectBytes, Encoding.UTF8.GetByteCount(json));
 
         Assert.NotNull(CreateRequest(WithJson(name, json)));
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(WithJson(name, json + " ")));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(WithJson(name, json + " ")));
 
         Assert.Contains("1048576 UTF-8 bytes", error.Message);
     }
@@ -198,10 +198,10 @@ public sealed class ItemCreateRequestInputTests()
     {
         static string Nested(int depth) => "{\"data\":" + new string('[', depth - 1) + "0" + new string(']', depth - 1) + "}";
 
-        var request = CreateRequest(WithJson(name, Nested(ItemCreateRequestInput.MaxObjectDepth)));
+        var request = CreateRequest(WithJson(name, Nested(FabricItemJsonInput.MaxObjectDepth)));
         Assert.NotEmpty(JsonSerializer.Serialize(request, CoreJsonContext.Default.CreateItemRequest));
-        var error = Assert.Throws<ItemCreateInputException>(() =>
-            CreateRequest(WithJson(name, Nested(ItemCreateRequestInput.MaxObjectDepth + 1))));
+        var error = Assert.Throws<FabricItemInputException>(() =>
+            CreateRequest(WithJson(name, Nested(FabricItemJsonInput.MaxObjectDepth + 1))));
 
         Assert.Contains("32 nesting levels", error.Message);
     }
@@ -242,7 +242,7 @@ public sealed class ItemCreateRequestInputTests()
     [InlineData("""{"LabelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"}""")]
     public static void InvalidLabelSettings_RejectRatherThanSilentlyDroppingOrWeakeningPolicy(string json)
     {
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(WithJson("sensitivity-label-settings", json)));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(WithJson("sensitivity-label-settings", json)));
 
         Assert.DoesNotContain("private-", error.Message);
     }
@@ -254,7 +254,7 @@ public sealed class ItemCreateRequestInputTests()
         var json = settings + new string(' ', ItemCreateRequestInput.MaxLabelSettingsBytes - settings.Length);
 
         Assert.NotNull(CreateRequest(WithJson("sensitivity-label-settings", json)).SensitivityLabelSettings);
-        var error = Assert.Throws<ItemCreateInputException>(() => CreateRequest(WithJson("sensitivity-label-settings", json + " ")));
+        var error = Assert.Throws<FabricItemInputException>(() => CreateRequest(WithJson("sensitivity-label-settings", json + " ")));
 
         Assert.Contains("4096 UTF-8 bytes", error.Message);
     }

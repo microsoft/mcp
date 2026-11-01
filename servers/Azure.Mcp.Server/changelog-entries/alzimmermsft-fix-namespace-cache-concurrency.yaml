@@ -1,0 +1,5 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts."
+  - section: "Bugs Fixed"
+    description: "Fixed concurrent external MCP client initialization, single-tool discovery cache publication, and overlapping tool-loader disposal. Canceling a caller no longer cancels shared client initialization."

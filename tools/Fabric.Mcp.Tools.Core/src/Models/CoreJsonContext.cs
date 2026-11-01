@@ -20,6 +20,8 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricSensitivityLabelSettings))]
 [JsonSerializable(typeof(CreateItemRequest))]
 [JsonSerializable(typeof(ItemCreateCommandResult))]
+[JsonSerializable(typeof(ItemDefinitionUpdateCommandResult))]
+[JsonSerializable(typeof(UpdateItemDefinitionRequest))]
 [JsonSerializable(typeof(ItemDeleteCommandResult))]
 [JsonSerializable(typeof(ItemDefinitionGetCommandResult))]
 [JsonSerializable(typeof(FabricItemMetadata))]

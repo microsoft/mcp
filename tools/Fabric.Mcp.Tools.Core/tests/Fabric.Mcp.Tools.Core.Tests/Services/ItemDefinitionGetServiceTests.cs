@@ -234,24 +234,33 @@ public sealed class ItemDefinitionGetServiceTests()
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ExistingOperations_RetainOneMiBDefault(bool create)
+    [InlineData("result")]
+    [InlineData("create")]
+    [InlineData("update")]
+    public async Task ExistingOperations_RetainOneMiBDefault(string operation)
     {
         using var stream = new PaddedJsonTestStream(Encoding.UTF8.GetBytes("{}"), FabricOperationHttp.MaxJsonBytes + 1);
-        using var response = new HttpResponseMessage(create ? HttpStatusCode.Created : HttpStatusCode.OK) { Content = new StreamContent(stream) };
+        using var response = new HttpResponseMessage(operation == "create" ? HttpStatusCode.Created : HttpStatusCode.OK) { Content = new StreamContent(stream) };
         response.Content.Headers.ContentType = new("application/json");
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
         using var client = new HttpClient(handler);
         var service = new FabricCoreService(client, FabricOperationTestData.Credential());
 
-        if (create)
+        if (operation == "create")
         {
             var result = await service.CreateItemAsync(FabricOperationTestData.WorkspaceId,
                 new() { DisplayName = "Created", Type = "Notebook" }, cancellationToken: CancellationToken);
             Assert.Null(result.Item);
             Assert.Equal("ResultTooLarge", result.Operation?.Issue?.Code);
             Assert.Contains("1 MiB", result.Operation?.Issue?.Message);
+        }
+        else if (operation == "update")
+        {
+            var result = await service.UpdateItemDefinitionAsync(FabricOperationTestData.WorkspaceId,
+                FabricOperationTestData.ItemId, new(ItemDefinitionTestData.Definition), cancellationToken: CancellationToken);
+            Assert.Equal(FabricOperationStatus.ResultUnavailable, result.Operation.Status);
+            Assert.Equal("ResultTooLarge", result.Operation.Issue?.Code);
+            Assert.Contains("1 MiB", result.Operation.Issue?.Message);
         }
         else
         {
@@ -262,6 +271,87 @@ public sealed class ItemDefinitionGetServiceTests()
         }
         Assert.Equal(1024 * 1024 + 1, stream.BytesRead);
         Assert.True(stream.Disposed);
+    }
+
+    [Theory]
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task RetrievedDefinition_CanBeUpdatedWithoutChangingPartsOrResultContracts(bool accepted, bool? updateMetadata)
+    {
+        var definition = new FabricItemDefinition(
+            [ItemDefinitionTestData.Part("large.bin", new byte[1024 * 1024]), ItemDefinitionTestData.Part(".platform", [123, 125])],
+            "FutureFormat");
+        var clock = new OperationTestTimeProvider();
+        var posts = 0;
+        var resultReads = 0;
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (request.Method == HttpMethod.Post)
+            {
+                posts++;
+                if (path.EndsWith("/getDefinition", StringComparison.Ordinal))
+                {
+                    Assert.Null(request.Content);
+                    return accepted ? FabricOperationTestData.Accepted() : ItemDefinitionTestData.Response(definition);
+                }
+                Assert.EndsWith("/updateDefinition", path);
+                Assert.Equal(updateMetadata switch { true => "?updateMetadata=true", false => "?updateMetadata=false", _ => "" },
+                    request.RequestUri.Query);
+                var json = await request.Content!.ReadAsStringAsync(token);
+                var update = JsonSerializer.Deserialize(json, CoreJsonContext.Default.UpdateItemDefinitionRequest);
+                Assert.NotNull(update);
+                Assert.Equal(definition.Parts, update.Definition.Parts);
+                Assert.Equal(definition.Format, update.Definition.Format);
+                Assert.Null(update.Options);
+                return accepted
+                    ? FabricOperationTestData.Accepted(operationId: FabricOperationTestData.ItemId)
+                    : new(HttpStatusCode.OK);
+            }
+            Assert.Equal(HttpMethod.Get, request.Method);
+            if (path.EndsWith("/result", StringComparison.Ordinal))
+            {
+                Assert.Equal($"/v1/operations/{FabricOperationTestData.OperationId}/result", path);
+                resultReads++;
+                return ItemDefinitionTestData.Response(definition);
+            }
+            Assert.Contains(path, new[]
+            {
+                $"/v1/operations/{FabricOperationTestData.OperationId}",
+                $"/v1/operations/{FabricOperationTestData.ItemId}"
+            });
+            return FabricOperationTestData.JsonResponse("""{"status":"Succeeded"}""");
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
+
+        var getTask = InitialAsync(service, new(Sync: true));
+        if (accepted)
+        {
+            await clock.WaitForTimerAsync(3, CancellationToken);
+            clock.Advance(3);
+        }
+        var retrieved = await getTask.WaitAsync(CancellationToken);
+        Assert.NotNull(retrieved.Definition);
+        var updateTask = service.UpdateItemDefinitionAsync(FabricOperationTestData.WorkspaceId,
+            FabricOperationTestData.ItemId, new(retrieved.Definition), updateMetadata, new(Sync: true), CancellationToken);
+        if (accepted)
+        {
+            await clock.WaitForTimerAsync(3, CancellationToken);
+            clock.Advance(3);
+        }
+        var updated = await updateTask.WaitAsync(CancellationToken);
+
+        Assert.Equal(definition.Parts, retrieved.Definition.Parts);
+        Assert.Equal(FabricOperationStatus.Succeeded, updated.Operation.Status);
+        Assert.Equal(2, posts);
+        Assert.Equal(accepted ? 1 : 0, resultReads);
+        Assert.Equal(accepted ? 5 : 2, handler.CallCount);
+        Assert.Empty(clock.Timers);
     }
 
     [Theory]

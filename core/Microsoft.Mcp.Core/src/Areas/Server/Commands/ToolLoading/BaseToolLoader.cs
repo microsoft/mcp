@@ -42,7 +42,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         }
     }
 
-    private bool _disposed = false;
+    private TaskCompletionSource? _disposeCompletion;
 
     /// <summary>
     /// Handles requests to list all tools available in the MCP server.
@@ -153,15 +153,29 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     }
 
     /// <summary>
-    /// Disposes resources owned by this tool loader with double disposal protection.
+    /// Disposes owned resources once, sharing cleanup completion with concurrent callers.
     /// </summary>
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        if (_disposed)
+        var existing = Volatile.Read(ref _disposeCompletion);
+        if (existing != null)
         {
-            return;
+            return new ValueTask(existing.Task);
         }
 
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        existing = Interlocked.CompareExchange(ref _disposeCompletion, completion, null);
+        if (existing != null)
+        {
+            return new ValueTask(existing.Task);
+        }
+
+        _ = DisposeAsyncOnce(completion);
+        return new ValueTask(completion.Task);
+    }
+
+    private async Task DisposeAsyncOnce(TaskCompletionSource completion)
+    {
         try
         {
             await DisposeAsyncCore();
@@ -174,7 +188,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         }
         finally
         {
-            _disposed = true;
+            completion.SetResult();
         }
     }
 

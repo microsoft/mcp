@@ -2847,6 +2847,13 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```
 
+Access tokens are reused for the lifetime of a cached Kusto client and refreshed
+five minutes before expiration or at the credential's earlier refresh time.
+With the current cache implementations, cross-call reuse occurs in stdio mode
+when caching is enabled; HTTP mode does not retain clients across calls.
+Tokens remain scoped to the client's credential and cloud; they are not shared
+across tenants.
+
 ### Azure Database for MySQL Operations
 
 ```bash

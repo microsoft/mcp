@@ -61,7 +61,7 @@ internal sealed class FabricOperationRunner(TimeProvider timeProvider)
                 Status = FabricOperationStatus.AcceptedWithoutOperationId,
                 RecommendedPollAfterSeconds = null,
                 Issue = new("MissingOperationId",
-                    "Fabric accepted the mutation but returned no usable operation ID. Completion is unconfirmed. Check whether creation occurred; do not automatically resubmit.")
+                    "Fabric accepted the mutation but returned no usable operation ID. Completion is unconfirmed. Check whether the mutation completed; do not automatically resubmit.")
             });
         }
         if (!options.Sync)
@@ -218,7 +218,7 @@ internal sealed class FabricOperationRunner(TimeProvider timeProvider)
                 ? FabricOperationStatus.ResultUnavailable
                 : FabricOperationStatus.Pending,
             Issue = new("WaitBudgetExpired", receipt.Status == FabricOperationStatus.Succeeded
-                ? "The operation succeeded, but its result was not retrieved within the local wait budget. Resume with get-operation-result; do not recreate the item."
+                ? "The operation succeeded, but its result was not retrieved within the local wait budget. Resume with get-operation-result; do not resubmit the mutation."
                 : "The local wait budget expired. Completion remains unconfirmed. Resume with get-operation-state; stopping this wait did not cancel Fabric's operation.")
         };
 
