@@ -1274,6 +1274,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "Why is my Azure Monitor Health Model 'my-health-model' degraded? Trace it to the signals that drive it"
 * "List the distributed trace accounts in my subscription"
 * "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"

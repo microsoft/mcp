@@ -87,6 +87,7 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<HealthModelListCommand>();
         services.AddSingleton<HealthModelGetCommand>();
+        services.AddSingleton<HealthModelInspectCommand>();
 
         services.AddSingleton<MetricsQueryCommand>();
         services.AddSingleton<MetricsBatchQueryCommand>();
@@ -157,11 +158,12 @@ public class MonitorSetup : IAreaSetup
 
         monitorTableType.AddCommand<TableTypeListCommand>(serviceProvider);
 
-        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for listing and retrieving Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels).");
+        var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for listing and retrieving Azure Monitor Health Models (Microsoft.CloudHealth/healthmodels) and inspecting their entities, signals, dependencies and history.");
         monitor.AddSubGroup(health);
 
         health.AddCommand<HealthModelListCommand>(serviceProvider);
         health.AddCommand<HealthModelGetCommand>(serviceProvider);
+        health.AddCommand<HealthModelInspectCommand>(serviceProvider);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
