@@ -22,6 +22,15 @@ public interface IFabricCoreService
         FabricOperationWaitOptions? waitOptions = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Replaces a known item's complete definition with one POST and optional no-result LRO state polling.</summary>
+    Task<ItemDefinitionUpdateCommandResult> UpdateItemDefinitionAsync(
+        string workspaceId,
+        string itemId,
+        UpdateItemDefinitionRequest request,
+        bool? updateMetadata = null,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads operation state once, without polling or interpreting HTTP success as operation success.</summary>
     Task<OperationStateResult> GetOperationStateAsync(string operationId, CancellationToken cancellationToken);
 

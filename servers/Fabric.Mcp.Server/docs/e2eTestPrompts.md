@@ -13,6 +13,8 @@ For every deletion prompt, explain the scope and request consent before sending 
 
 Workspace capacity assignment changes a live resource. Use only with an explicitly approved workspace, capacity, and identity; do not run these assignments as automated development checks.
 
+Definition updates replace the complete definition of an existing item. Review the full selected parts and obtain authorization before a live update; these prompts are not permission to modify a workspace. Never upload only changed files, merge with a fetched definition, or retrieve an operation result after a no-result update succeeds.
+
 `context-required` means the caller must supply the required resource context and authorization. Sections and tool names are sorted alphabetically.
 
 ## Core
@@ -73,6 +75,13 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_update-item | Rename Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to ProjectNotebook, leaving its description unchanged. | none |
 | core_update-item | Set the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to "Monthly reporting", without changing its name or definition. | none |
 | core_update-item | Clear only the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 by setting it to an empty string. | none |
+| core_update-item-definition | Replace the complete definition of item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 using saved sales.ipynb from C:\Fabric\Sales.Notebook, mapped to artifact.content.ipynb with format ipynb. Preserve the format and bytes, upload no other files, and return without polling. | none |
+| core_update-item-definition | Update item \<item-id> in workspace \<workspace-id> from the complete inline definition JSON I supplied. Do not read any files on the HTTP server or look up the item's type. | context-required |
+| core_update-item-definition | Submit my complete definition with its supplied format and safe custom part layout to item \<item-id> in workspace \<workspace-id>. Keep generic safety checks but leave supported formats, required filenames, and content validation to Fabric. | context-required |
+| core_update-item-definition | Replace the definition of item \<item-id> in workspace \<workspace-id> with the full explicit saved-file mapping I supplied, including .platform. Preserve those bytes but do not request applying its metadata. | context-required |
+| core_update-item-definition | Upload my complete definition to item \<item-id> in workspace \<workspace-id> and explicitly set update-metadata to true to apply metadata from the supplied .platform part. Do not change the sensitivity label or add creation properties. | context-required |
+| core_update-item-definition | Replace item \<item-id>'s definition in workspace \<workspace-id> with my inline content and item-specific options JSON. Wait up to 120 seconds and finish when operation state says Succeeded, without requesting /result or getting the item. | context-required |
+| core_update-item-definition | Submit my complete replacement definition once for item \<item-id> in workspace \<workspace-id>, wait at most 60 seconds, and honor the initial Retry-After rather than polling early. If it remains pending, return the operation ID instead of submitting the update again. | context-required |
 | core_update-workspace | Rename Fabric workspace \<workspace-id> to 'Finance Analytics' without changing its description. | none |
 | core_update-workspace | Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' and leave its name unchanged. | none |
 | core_update-workspace | Clear the description of Fabric workspace \<workspace-id> without renaming it. | none |

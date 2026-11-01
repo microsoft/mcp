@@ -41,6 +41,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
+        services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
@@ -69,6 +70,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
+            "- Replace a known item's complete definition from inline content or explicitly selected saved files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
@@ -81,6 +83,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
@@ -125,6 +128,46 @@ public class FabricCoreSetup : IAreaSetup
             if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each item-creation input option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ItemDefinitionUpdateCommand CreateItemDefinitionUpdateCommand(IServiceProvider serviceProvider)
+    {
+        var definitionInput = serviceProvider.GetRequiredService<IFabricItemDefinitionInputService>();
+        var command = new ItemDefinitionUpdateCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemDefinitionUpdateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            definitionInput);
+        var definition = command.GetCommand();
+        var inputOptions = definition.Options.ToArray();
+        if (!definitionInput.SupportsLocalFiles)
+        {
+            // Only this command's collection changes; cached binder options remain available to local hosts.
+            foreach (var option in inputOptions.Where(static option =>
+                option.Name is "--definition-directory" or "--definition-files" or "--definition-format"))
+            {
+                definition.Options.Remove(option);
+            }
+        }
+        if (definition.Options.SingleOrDefault(static option => option.Name == "--update-metadata") is not Option<bool?> updateMetadata ||
+            updateMetadata.Required || updateMetadata.HasDefaultValue)
+        {
+            throw new InvalidOperationException("The update-item-definition command requires optional Boolean --update-metadata without a default.");
+        }
+        updateMetadata.Arity = ArgumentArity.ExactlyOne;
+        definition.Validators.Add(result =>
+        {
+            if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each definition-update option at most once.");
+            }
+            var metadata = result.GetResult(updateMetadata);
+            if (metadata is { Implicit: false } &&
+                (metadata.Tokens.Count != 1 || !bool.TryParse(metadata.Tokens[0].Value, out _)))
+            {
+                result.AddError("Specify --update-metadata with an explicit true or false value.");
             }
         });
         return command;

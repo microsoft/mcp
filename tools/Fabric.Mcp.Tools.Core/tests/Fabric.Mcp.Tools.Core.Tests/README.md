@@ -11,6 +11,9 @@ Offline tests for the Fabric Core toolset.
 - **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
 - **Validation/ItemCreateRequestInputTests.cs**: Optional folder UUID normalization, creation-payload/definition/options combinations, exact UTF-8 byte/depth limits, opaque workload values, strict typed label settings, source-generated serialization, omission/default preservation, and cancellation
 - **ItemCreateDefinitionMcpTests.cs**: Real registration and substituted HTTP/credentials across all/namespace/single routing, local and HTTP runtime configurations, and output modes; explicit saved-file packaging, HTTP option removal/rejection, creation properties on both input paths, validation before file access, no label-policy fallback, unchanged no-definition creation, and concurrent input isolation
+- **Commands/ItemDefinitionUpdateCommandTests.cs**: Update definition input validation before file access, wait/metadata/options binding, no-result receipts, sanitized errors, and cancellation receipts
+- **Services/FabricCoreServiceItemDefinitionUpdateTests.cs**: One normalized POST, complete definition/options preservation, metadata query omission/false/true, `.platform` semantics, empty 200 and accepted 202 handling, no-result polling, deadlines, read retries/failures, cancellation/disposal, and concurrent identity isolation
+- **ItemDefinitionUpdateMcpTests.cs**: Real registration across routes, transports, and output modes; inline/saved-file updates, unchanged arbitrary safe layouts and bytes for default/known/unknown formats, format-independent generic guards, HTTP file rejection and independent invocation-time service guard, exact options limits, source/JSON/file failures, metadata opt-in, read-only exclusion, and destructive consent
 - **Commands/WorkspaceAssignToCapacityCommandTests.cs**: Required GUID validation, submit-only 202/pending receipts, mutating annotations, sanitized errors, and caller cancellation
 - **Services/WorkspaceCapacityAssignmentServiceTests.cs**: One body-bearing POST, empty 202 responses, no polling or body reads, long-second retry-header compatibility, cancellation/disposal, and per-invocation credentials
 - **Commands/WorkspaceAssignToCapacityMcpTests.cs**: Accepted/pending receipts across all/namespace/single routing and output modes, including the existing single-proxy text fallback
@@ -173,7 +176,7 @@ These checks are not an OS sandbox against hostile processes concurrently replac
 entries; the local filesystem and its permissions must be trusted.
 
 Tools dedicated to disk reads or writes should declare `LocalRequired = true`, reusing the existing
-whole-tool HTTP restrictions. Create Item remains remote-capable: its registered command omits only
+whole-tool HTTP restrictions. Create Item and Update Item Definition remain remote-capable: each registered command omits only
 the saved-file options on HTTP hosts, and `FabricItemDefinitionInputService` separately rejects local
 input before parsing paths or calling the file service unless the configured transport is stdio.
 Command logic and the low-level file converter contain no transport checks. Inline content remains
@@ -246,7 +249,9 @@ Registered-handler tests verify one POST and no hidden reads, while the LRO serv
 with/without definitions and the additional creation properties, synchronous completion, submit-only
 acceptance, and explicit waiting.
 
-`ItemCreateRequestInput` prepares optional folder IDs, creation payloads, definition options, and
+`FabricItemJsonInput` supplies the shared content-independent bounded object parser for Create Item
+and Update Item Definition, with safe `FabricItemInputException` guidance. `ItemCreateRequestInput`
+prepares optional folder IDs, creation payloads, definition options, and
 sensitivity label settings before definition files can be read. Creation payloads conflict with every
 definition option; the API's top-level options object requires a definition and never controls LRO
 waiting. Workload JSON remains opaque `JsonElement` data with one-MiB UTF-8 input budgets, 32-level
@@ -262,7 +267,7 @@ strategies are rejected, not silently discarded. Tests
 verify that errors cause no second POST, label omission, or strategy downgrade. Workload semantics,
 folder existence, and label availability/permissions are left to Fabric; there are no preflight calls.
 
-Future API adapters also own LRO receipts, waiting and result retrieval. A 202 receipt is not a
+API adapters also own LRO receipts, waiting and any documented result retrieval. A 202 receipt is not a
 definition to export. Keep endpoint-specific result sizes separate from these file budgets:
 the existing `FabricOperationHttp` 1 MiB JSON limit is unchanged by this infrastructure.
 
@@ -304,6 +309,35 @@ Update Item coverage is offline only. Tests never call real Fabric APIs or mutat
 Registered-handler tests exercise stdio/HTTP configuration, not actual transports, real OBO authorization,
 service-principal/managed-identity access, or recorded playback.
 
+## Item Definition Updates
+
+`core_update-item-definition` requires known workspace/item UUIDs and exactly one complete definition
+source. It reuses `IFabricItemDefinitionInputService`, `IFabricItemDefinitionFileService`, the wire
+models, the shared `DefinitionInputOptions` group through `OptionContainer`, and shared validation
+without fetching or merging the old definition. Public input names stay flat and the absent group
+does not invent a source; Update requires a source while Create permits omission. There is no
+item-type hint or format-specific layout policy. Generic validation applies regardless of format;
+safe arbitrary layouts, supplied format strings, and payload bytes reach Fabric unchanged.
+`.platform` never supplies an inferred type, and no metadata preflight is performed.
+IDs, wait settings, and options are checked before file access. The service also validates typed
+definitions/options before authentication. Configured definition budgets are shared with file input.
+
+The payload contains only `definition` and optional `options`. Nullable `update-metadata` preserves
+query omission, explicit false, and explicit true. Only true requests applying supplied `.platform`
+metadata; bytes are never rewritten or auto-selected. Sensitivity labels are outside this API.
+
+The endpoint-specific `FabricOperationContract` explicitly has no result reader and accepts only
+empty 200 completion or 202 acceptance. A synchronous completion returns a `Succeeded` receipt;
+sync waiting after 202 reads state only and stops at `Succeeded` without `/result` or Get Item.
+Timeouts, cancellation, and read failures retain resumable receipts and never resubmit the POST.
+Generic LRO result-size limits are unchanged. Shared uncertain-outcome guidance now refers to the
+mutation rather than assuming every caller is creating an item.
+
+Tests use isolated temporary files, substituted HTTP/credentials, and the existing virtual clock.
+Catalog and real server-startup coverage include the new schema without copying full catalogs.
+These checks do not perform live Fabric mutations, test real permissions, or establish recorded
+playback. The Create Item regression suite covers the shared parser extraction.
+
 ## Item Deletion
 
 Delete Item retains the shared authenticated send's buffered `ResponseContentRead` default and uses `FabricCoreHttpHelpers.GetRetryAfter` without changing its nullable-header fallback, status/error wording, or uncertain-deletion outcomes. Tests reuse `FabricCoreHttpMessageHandler`, capture requests inside callbacks for disposal assertions, and retain `ItemDeleteTrackingContent` and all operation-specific cases.
@@ -332,6 +366,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run definition packaging/input and Create Item coverage
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricItemDefinition*' '*ItemCreate*' '*FabricOperationMcpTests'
+
+# Run definition updates and shared definition/Create Item/LRO regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemDefinitionUpdate*' '*ItemCreate*' '*FabricItemDefinition*' '*FabricOperation*' '*FabricCoreCatalogTests'
 
 # Run LRO service, polling, command/schema, and Create Item integration tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*FabricOperation*' '*ItemCreate*'

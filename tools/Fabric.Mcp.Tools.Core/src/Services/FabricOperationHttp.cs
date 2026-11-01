@@ -55,7 +55,7 @@ internal static class FabricOperationHttp
 
         throw new FabricOperationException(
             "UnexpectedResponse",
-            "Fabric did not return the documented response. Check the operation or whether creation occurred before submitting another mutation.",
+            "Fabric did not return the documented response. Check the operation or whether the mutation completed before submitting another mutation.",
             response.IsSuccessStatusCode ? HttpStatusCode.BadGateway : response.StatusCode,
             retryAfter);
     }
