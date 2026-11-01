@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `core_get-item-definition` with typed inline results, bounded LRO waiting and one-GET resumption, and explicit local-only, no-overwrite definition export. [[#4064](https://github.com/microsoft/mcp/pull/4064)]
 - Added `core_update-item-definition` to replace complete item definitions from inline content or explicitly selected saved files, with generic safety validation, unchanged definition formats and bytes, optional metadata application, and bounded no-result operation polling. [[#4065](https://github.com/microsoft/mcp/pull/4065)]
 
+### Bugs Fixed
+
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+
 ### Other Changes
 
 - Updated bundled Fabric REST API specifications and examples, and added item-definition documentation for deployment plans, monitoring, and warehouses. [[#4078](https://github.com/microsoft/mcp/pull/4078)]

@@ -12,6 +12,10 @@
 
 - Updated bundled Fabric REST API specifications and examples, and added item-definition documentation for deployment plans, monitoring, and warehouses. [[#4078](https://github.com/microsoft/mcp/pull/4078)]
 
+### Fixed
+
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+
 ## 1.6.0 (2026-10-18)
 
 ### Changed
