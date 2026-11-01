@@ -82,6 +82,16 @@ public sealed class ItemJobInstanceGetCommand(
         _ => base.GetStatusCode(ex)
     };
 
+    protected override void HandleException(CommandContext context, Exception ex)
+    {
+        base.HandleException(context, ex);
+        if (ex is CommandValidationException validationException)
+        {
+            context.Response.Message = GetValidationErrorMessage(validationException,
+                "Invalid Fabric Jobs request. Provide workspace, item, and job-instance UUIDs.");
+        }
+    }
+
     protected override string GetErrorMessage(Exception ex)
     {
         var message = GetStatusCode(ex) switch

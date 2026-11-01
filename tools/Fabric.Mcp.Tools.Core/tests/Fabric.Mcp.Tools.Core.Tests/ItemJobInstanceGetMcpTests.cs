@@ -6,6 +6,9 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
+using Fabric.Mcp.Tools.Core.Commands;
+using Fabric.Mcp.Tools.Core.Models;
+using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -25,20 +28,43 @@ namespace Fabric.Mcp.Tools.Core.Tests;
 
 public sealed class ItemJobInstanceGetMcpTests()
 {
-    private const string ToolName = "core_get-item-job-instance";
+    private const string ToolName = "jobs_get-item-job-instance";
+    private const string OldToolName = "core_get-item-job-instance";
 
-    public static TheoryData<string, string, StructuredOutputMode?> Routes
+    public static TheoryData<string, string, StructuredOutputMode?, string> Routes
     {
         get
         {
-            var data = new TheoryData<string, string, StructuredOutputMode?>();
+            var data = new TheoryData<string, string, StructuredOutputMode?, string>();
             foreach (var route in new[] { "all", "namespace", "single" })
             {
                 foreach (var transport in new[] { TransportTypes.StdIo, TransportTypes.Http })
                 {
                     foreach (var output in new StructuredOutputMode?[] { null, StructuredOutputMode.Compact, StructuredOutputMode.Duplicated })
                     {
-                        data.Add(route, transport, output);
+                        foreach (var selection in new[] { "jobs", "combined", "default" })
+                        {
+                            data.Add(route, transport, output, selection);
+                        }
+                    }
+                }
+            }
+            return data;
+        }
+    }
+
+    public static TheoryData<string, string, string> NamespaceCases
+    {
+        get
+        {
+            var data = new TheoryData<string, string, string>();
+            foreach (var route in new[] { "all", "namespace", "single" })
+            {
+                foreach (var transport in new[] { TransportTypes.StdIo, TransportTypes.Http })
+                {
+                    foreach (var selection in new[] { "core", "jobs", "combined", "default" })
+                    {
+                        data.Add(route, transport, selection);
                     }
                 }
             }
@@ -49,7 +75,7 @@ public sealed class ItemJobInstanceGetMcpTests()
     [Theory]
     [MemberData(nameof(Routes))]
     public static async Task Get_IsDiscoverableReadOnlyAndReturnsOneSnapshotAcrossRoutesTransportsAndOutputs(
-        string route, string transport, StructuredOutputMode? output)
+        string route, string transport, StructuredOutputMode? output, string selection)
     {
         var json = JsonNode.Parse(Json)!.AsObject();
         json["status"] = "Failed";
@@ -69,10 +95,11 @@ public sealed class ItemJobInstanceGetMcpTests()
             return Task.FromResult(Response(json.ToJsonString(), retryAfter: "45"));
         });
         var credential = Credential();
-        await using var provider = Services(handler, credential, transport, output);
+        await using var provider = Services(handler, credential, transport, output, selection);
         var tools = await provider.GetRequiredService<CommandFactoryToolLoader>().ListToolsHandler(
             McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
         var tool = Assert.Single(tools.Tools, tool => tool.Name == ToolName);
+        Assert.DoesNotContain(tools.Tools, tool => tool.Name == OldToolName);
 
         Assert.True(tool.Annotations?.ReadOnlyHint);
         Assert.True(tool.Annotations?.IdempotentHint);
@@ -130,6 +157,162 @@ public sealed class ItemJobInstanceGetMcpTests()
         }
         Assert.Equal(1, handler.CallCount);
         await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public static async Task JobsSetup_RegistersOneIndependentAreaAndKeepsTheCommandIdentity()
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("No HTTP expected."));
+        var credential = Credential();
+        await using var provider = Services(handler, credential, TransportTypes.StdIo, StructuredOutputMode.Compact);
+        var setup = Assert.Single(provider.GetServices<IAreaSetup>(), area => area.Name == "jobs");
+        Assert.IsType<FabricJobsSetup>(setup);
+        Assert.Equal("Microsoft Fabric Jobs", setup.Title);
+        var factory = provider.GetRequiredService<ICommandFactory>();
+        Assert.Single(factory.RootGroup.SubGroup, group => group.Name == "jobs");
+        var registration = Assert.Single(factory.AllCommands, pair => pair.Key.StartsWith("jobs_", StringComparison.Ordinal));
+        Assert.Equal(ToolName, registration.Key);
+        Assert.Same(provider.GetRequiredService<ItemJobInstanceGetCommand>(), registration.Value.Command);
+        Assert.Single(provider.GetServices<ItemJobInstanceGetCommand>());
+        Assert.Equal("6a7f2abe-b9db-4c7f-8ae4-c9764b3cc591", registration.Value.Command.Id);
+        Assert.DoesNotContain(OldToolName, factory.AllCommands.Keys);
+        Assert.IsType<FabricCoreService>(provider.GetRequiredService<IFabricCoreService>());
+        var parsed = factory.RootCommand.Parse(
+            ["jobs", "get-item-job-instance", "--workspace-id", WorkspaceId, "--item-id", ItemId, "--job-instance-id", JobInstanceId]);
+        Assert.Empty(parsed.Errors);
+        Assert.Same(registration.Value.Command.GetCommand(), parsed.CommandResult.Command);
+        Assert.NotEmpty(factory.RootCommand.Parse(["core", "get-item-job-instance"]).Errors);
+        Assert.Equal(0, handler.CallCount);
+        Assert.Empty(credential.ReceivedCalls());
+    }
+
+    [Theory]
+    [MemberData(nameof(NamespaceCases))]
+    public static async Task Filters_RestrictDiscoveryLearnAndInvocationWithoutAFormerCoreAlias(
+        string route, string transport, string selection)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("No HTTP expected."));
+        var credential = Credential();
+        await using var provider = Services(handler, credential, transport, StructuredOutputMode.Compact, selection);
+        var expectedAreas = selection switch
+        {
+            "core" => new[] { "core" },
+            "jobs" => ["jobs"],
+            _ => ["core", "jobs"]
+        };
+        var loader = Loader(provider, route);
+        var catalog = await loader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+        if (route == "all")
+        {
+            Assert.Equal(expectedAreas, catalog.Tools.Select(tool => tool.Name.Split('_')[0]).Distinct().Order());
+            Assert.Equal(selection != "core", catalog.Tools.Any(tool => tool.Name == ToolName));
+            Assert.Equal(selection != "jobs", catalog.Tools.Any(tool => tool.Name == "core_get-item"));
+        }
+        else if (route == "namespace")
+        {
+            Assert.Equal(expectedAreas, catalog.Tools.Select(tool => tool.Name).Order());
+        }
+        else
+        {
+            Assert.Equal("fabric", Assert.Single(catalog.Tools).Name);
+            var root = await LearnAsync(provider, route);
+            Assert.Equal(expectedAreas, root.Select(tool => tool.GetProperty("tool").GetString()).Order());
+        }
+        Assert.DoesNotContain(catalog.Tools, tool => tool.Name == OldToolName);
+
+        if (route != "all")
+        {
+            foreach (var area in expectedAreas)
+            {
+                var commands = await LearnAsync(provider, route, area);
+                Assert.All(commands, command => Assert.StartsWith(area + "_", command.GetProperty("command").GetString()));
+                Assert.DoesNotContain(commands, command => command.GetProperty("command").GetString() == OldToolName);
+                if (area == "jobs")
+                {
+                    var command = Assert.Single(commands);
+                    Assert.Equal(ToolName, command.GetProperty("command").GetString());
+                    Assert.Equal(["item-id", "job-instance-id", "workspace-id"],
+                        command.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                }
+                else
+                {
+                    Assert.Contains(commands, command => command.GetProperty("command").GetString() == "core_get-item");
+                    Assert.DoesNotContain(commands, command => command.GetProperty("command").GetString() == ToolName);
+                }
+            }
+        }
+
+        var oldAlias = await CallAsync(provider, route, Arguments(), OldToolName, "core");
+        AssertUnavailable(oldAlias, route, OldToolName);
+        if (route != "all")
+        {
+            var wrongArea = await CallAsync(provider, route, Arguments(), ToolName, "core");
+            AssertUnavailable(wrongArea, route, ToolName);
+        }
+        if (selection == "core")
+        {
+            var hiddenJob = await CallAsync(provider, route, Arguments());
+            AssertUnavailable(hiddenJob, route, ToolName);
+        }
+        if (selection == "jobs")
+        {
+            var hiddenCore = await CallAsync(provider, route,
+                new() { ["workspace-id"] = WorkspaceId, ["item-id"] = ItemId }, "core_get-item", "core");
+            AssertUnavailable(hiddenCore, route, "core_get-item");
+        }
+        Assert.Equal(0, handler.CallCount);
+        Assert.Empty(credential.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("all", TransportTypes.StdIo)]
+    [InlineData("namespace", TransportTypes.StdIo)]
+    [InlineData("single", TransportTypes.StdIo)]
+    [InlineData("all", TransportTypes.Http)]
+    [InlineData("namespace", TransportTypes.Http)]
+    [InlineData("single", TransportTypes.Http)]
+    public static async Task CombinedWorkflow_HandsCoreItemIdsToJobsWithoutDiscoveringOrStartingAJob(string route, string transport)
+    {
+        var paths = new List<string>();
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal("job-test-token", request.Headers.Authorization?.Parameter);
+            var path = request.RequestUri!.AbsolutePath;
+            paths.Add(path);
+            if (path == $"/v1/workspaces/{WorkspaceId}/items/{ItemId}")
+            {
+                return Task.FromResult(Response(JsonSerializer.Serialize(new FabricItemMetadata
+                {
+                    Id = Guid.Parse(ItemId),
+                    WorkspaceId = Guid.Parse(WorkspaceId),
+                    DisplayName = "Existing item",
+                    Type = "Notebook"
+                }, CoreJsonContext.Default.FabricItemMetadata)));
+            }
+            Assert.Equal($"/v1/workspaces/{WorkspaceId}/items/{ItemId}/jobs/instances/{JobInstanceId}", path);
+            return Task.FromResult(Response());
+        });
+        var credential = Credential();
+        await using var provider = Services(handler, credential, transport, StructuredOutputMode.Compact, "combined");
+
+        var itemResult = await CallAsync(provider, route,
+            new() { ["workspace-id"] = WorkspaceId, ["item-id"] = ItemId }, "core_get-item", "core");
+        Assert.False(itemResult.IsError, Text(itemResult));
+        Assert.Equal(1, handler.CallCount);
+        var item = Payload(itemResult, route).GetProperty("item");
+        var jobResult = await CallAsync(provider, route, new()
+        {
+            ["workspace-id"] = item.GetProperty("workspaceId").GetString(),
+            ["item-id"] = item.GetProperty("id").GetString(),
+            ["job-instance-id"] = JobInstanceId
+        });
+
+        Assert.False(jobResult.IsError, Text(jobResult));
+        Assert.Equal(JobInstanceId, Payload(jobResult, route).GetProperty("jobInstance").GetProperty("id").GetString());
+        Assert.Equal(2, handler.CallCount);
+        Assert.Equal(2, paths.Distinct().Count());
+        await credential.Received(2).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -219,15 +402,18 @@ public sealed class ItemJobInstanceGetMcpTests()
         Assert.Equal(1, handler.CallCount);
     }
 
-    private static ServiceProvider Services(HttpMessageHandler handler, TokenCredential credential, string transport, StructuredOutputMode? output)
+    private static ServiceProvider Services(
+        HttpMessageHandler handler, TokenCredential credential, string transport, StructuredOutputMode? output, string selection = "jobs")
     {
         var services = new ServiceCollection();
-        var setup = new FabricCoreSetup();
-        setup.ConfigureServices(services);
+        foreach (var area in new IAreaSetup[] { new FabricCoreSetup(), new FabricJobsSetup() })
+        {
+            area.ConfigureServices(services);
+            services.AddSingleton(area);
+        }
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
         services.AddSingleton(credential);
         services.AddLogging();
-        services.AddSingleton<IAreaSetup>(setup);
         services.AddSingleton(Substitute.For<ITelemetryService>());
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
         {
@@ -241,7 +427,14 @@ public sealed class ItemJobInstanceGetMcpTests()
         }));
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration
         {
-            Namespace = ["core"],
+            Namespace = selection switch
+            {
+                "core" => ["core"],
+                "jobs" => ["jobs"],
+                "combined" => ["core", "jobs"],
+                "default" => null,
+                _ => throw new ArgumentOutOfRangeException(nameof(selection))
+            },
             ReadOnly = true,
             Transport = transport,
             StructuredOutputMode = output
@@ -254,37 +447,70 @@ public sealed class ItemJobInstanceGetMcpTests()
         return services.BuildServiceProvider();
     }
 
-    private static async Task<CallToolResult> CallAsync(IServiceProvider provider, string route, Dictionary<string, object?> arguments)
+    private static IToolLoader Loader(IServiceProvider provider, string route) => route switch
     {
-        IToolLoader loader = route switch
+        "all" => provider.GetRequiredService<CommandFactoryToolLoader>(),
+        "namespace" => provider.GetRequiredService<NamespaceToolLoader>(),
+        "single" => provider.GetRequiredService<SingleProxyToolLoader>(),
+        _ => throw new ArgumentOutOfRangeException(nameof(route))
+    };
+
+    private static async Task<JsonElement[]> LearnAsync(IServiceProvider provider, string route, string? area = null)
+    {
+        var arguments = new Dictionary<string, object?> { ["intent"] = "", ["learn"] = true };
+        if (route == "single" && area is not null)
         {
-            "all" => provider.GetRequiredService<CommandFactoryToolLoader>(),
-            "namespace" => provider.GetRequiredService<NamespaceToolLoader>(),
-            "single" => provider.GetRequiredService<SingleProxyToolLoader>(),
-            _ => throw new ArgumentOutOfRangeException(nameof(route))
-        };
+            arguments["tool"] = area;
+        }
+        var result = await Loader(provider, route).CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(route == "single" ? "fabric" : area!, arguments), TestContext.Current.CancellationToken);
+        Assert.NotEqual(true, result.IsError);
+        Assert.NotNull(result.StructuredContent);
+        return result.StructuredContent.Value.GetProperty("tools").EnumerateArray().ToArray();
+    }
+
+    private static async Task<CallToolResult> CallAsync(
+        IServiceProvider provider, string route, Dictionary<string, object?> arguments, string toolName = ToolName, string area = "jobs")
+    {
+        var loader = Loader(provider, route);
         if (route == "all")
         {
-            return await loader.CallToolHandler(McpTestUtilities.CreateToolCallRequest(ToolName, arguments), TestContext.Current.CancellationToken);
+            return await loader.CallToolHandler(McpTestUtilities.CreateToolCallRequest(toolName, arguments), TestContext.Current.CancellationToken);
         }
         var parameters = new Dictionary<string, object?>
         {
             ["intent"] = "Read this known job instance once",
-            ["command"] = ToolName,
+            ["command"] = toolName,
             ["parameters"] = arguments
         };
         if (route == "single")
         {
-            parameters["tool"] = "core";
+            parameters["tool"] = area;
         }
         return await loader.CallToolHandler(
-            McpTestUtilities.CreateToolCallRequest(route == "namespace" ? "core" : "fabric", parameters), TestContext.Current.CancellationToken);
+            McpTestUtilities.CreateToolCallRequest(route == "namespace" ? area : "fabric", parameters), TestContext.Current.CancellationToken);
     }
 
     private static Dictionary<string, object?> Arguments() =>
         new() { ["workspace-id"] = WorkspaceId, ["item-id"] = ItemId, ["job-instance-id"] = JobInstanceId };
 
     private static string Text(CallToolResult result) => Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+
+    private static void AssertUnavailable(CallToolResult result, string route, string rejectedCommand)
+    {
+        if (route == "single")
+        {
+            // The existing single router returns discovery guidance, not a command result, for unavailable commands.
+            Assert.NotNull(result.StructuredContent);
+            Assert.Equal("tool-list", result.StructuredContent.Value.GetProperty("kind").GetString());
+            Assert.DoesNotContain(rejectedCommand, result.StructuredContent.Value.GetRawText());
+            Assert.False(result.StructuredContent.Value.TryGetProperty("result", out _));
+        }
+        else
+        {
+            Assert.True(result.IsError);
+        }
+    }
 
     private static JsonElement Payload(CallToolResult result, string route)
     {

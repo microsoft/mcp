@@ -33,12 +33,14 @@ A local-first Model Context Protocol (MCP) server that provides AI agents with c
         - [Development Workflows](#development-workflows)
     - [Workspace Metadata](#workspace-metadata)
     - [Available Tools](#available-tools)
+        - [Namespace Filtering](#namespace-filtering)
         - [API Documentation & Best Practices](#api-documentation--best-practices)
         - [OneLake Data Operations](#onelake-data-operations)
         - [OneLake Security — Data Access Roles](#onelake-security--data-access-roles)
         - [OneLake Shortcuts](#onelake-shortcuts)
         - [OneLake Settings](#onelake-settings)
         - [Core Fabric Operations](#core-fabric-operations)
+        - [Jobs](#jobs)
         - [Data Factory Operations](#data-factory-operations)
 - [Support and Reference](#support-and-reference)
     - [Documentation](#documentation)
@@ -87,7 +89,7 @@ The manual configuration examples use `mcpServers` as the root object. In Visual
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
 
-When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job-instance lookup; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
 
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
@@ -341,7 +343,36 @@ By default, the MCP text response contains the command envelope with `results.wo
 
 ## Available Tools
 
-The Fabric MCP Server exposes four toolsets: `core`, `docs`, `onelake`, and `datafactory`.
+The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactory` areas.
+
+### Namespace Filtering
+
+`core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
+items, definitions, capacities, and Fabric `/operations` LROs. Jobs currently exposes only one operation:
+reading an existing item job instance. No job run, cancel, list, or schedule tools are provided by Jobs.
+Both areas reuse the same configured Fabric authentication and HTTP transport.
+
+```powershell
+# Core-only: item/definition tools, but no job-instance lookup.
+fabmcp server start --mode all --namespace core
+
+# Jobs-only: the single job-instance lookup, without Core tools.
+fabmcp server start --mode all --namespace jobs
+
+# Item/definition work plus existing job status: enable both areas.
+fabmcp server start --mode all --namespace core --namespace jobs
+
+# The same combined selection with hierarchical namespace routers or a single router.
+fabmcp server start --mode namespace --namespace core --namespace jobs
+fabmcp server start --mode single --namespace core --namespace jobs
+```
+
+Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
+not the shared services needed by the selected area. In `all` mode, the lookup is exposed directly as
+`jobs_get-item-job-instance`. In `namespace` mode, call the `jobs` router with `learn=true` to obtain its
+schema, then specify `command="jobs_get-item-job-instance"` and its `parameters`. In `single` mode,
+use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
+the commands for a selected area. Core-only selection never exposes or routes the Jobs lookup.
 
 ### API Documentation & Best Practices
 
@@ -421,7 +452,6 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
 | `core_get-item-definition` | Retrieves typed definition parts inline, optionally waits for completion, or resumes a completed definition operation. Can explicitly export to a new local directory without overwriting files. |
-| `core_get-item-job-instance` | Reads one known item's job instance, including status, timing, safe failure metadata, and available retry guidance. Does not poll, run, cancel, or schedule jobs. |
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
@@ -713,54 +743,6 @@ Command validation uses the shared sanitized handling; service errors do not exp
 bodies. HTTP 429 includes a valid `Retry-After` delay in seconds or retry time in UTC when supplied.
 Missing, malformed, negative, out-of-range, or multiple headers produce generic retry guidance.
 The tool does not retry automatically or follow redirects.
-
-**Get Item Job Instance (`core_get-item-job-instance`)**
-
-Calls the [Get Item Job Instance API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/get-item-job-instance)
-with exactly one `GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}`.
-The three options `workspace-id`, `item-id`, and `job-instance-id` are required nonempty UUIDs,
-validated and normalized before authentication or HTTP.
-
-```powershell
-fabmcp core get-item-job-instance --workspace-id <workspace-id> --item-id <item-id> --job-instance-id <job-instance-id>
-```
-
-The result contains `jobInstance` with matching `id` and `itemId`, plus nonempty `jobType`, `invokeType`,
-and `status`. Status values include `NotStarted`, `InProgress`, `Completed`, `Failed`, `Cancelled`, and
-`Deduped`; future status, invocation, and job-type strings are preserved without an allowlist.
-**HTTP 200 means the snapshot was read, not that the job succeeded.** A failed job stays `Failed`.
-
-Optional `rootActivityId`, `startTimeUtc`, `endTimeUtc`, and `failureReason` are returned when available;
-absent/null values are omitted rather than fabricated. The API declares timestamps as plain UTC
-strings and demonstrates values without a timezone suffix. They are returned verbatim, including
-fractional precision or empty strings, without interpreting them in the host's local timezone.
-Failure information is restricted to a safe identifier-shaped `errorCode` (up to 128 ASCII letters,
-digits, underscores, hyphens, or periods), a nonempty `requestId` UUID, and `isRetriable` when provided.
-Backend messages, nested details, parameters, related resources, and unknown fields are not exposed.
-
-A valid `Retry-After` header becomes `retryAfterSeconds`, or `retryAfterUtc` for an HTTP date.
-Missing, invalid, negative, out-of-range, or multiple headers are omitted; no fallback delay is
-invented. HTTP failures retain their status and valid retry guidance with sanitized messages,
-without reading backend error bodies. Only HTTP 200 with a valid `application/json` snapshot is
-accepted. Responses are bounded to **1 MiB (1,048,576 bytes)**, including streaming responses
-without `Content-Length`; malformed or oversized responses fail explicitly.
-
-This read-only tool works in stdio and HTTP modes. Compact and duplicated structured output modes
-expose `structuredContent.jobInstance`; default content-only responses use `results.jobInstance`.
-The caller needs item read access and the API's delegated `Item.Read.All`, `Item.ReadWrite.All`,
-or applicable item-specific read/read-write scope. The API supports users, service principals,
-and managed identities; the tool uses the host's configured credential without granting permissions.
-
-Job instances are **not** Fabric `/operations` long-running operations. Do not pass a job-instance ID
-to `core_get-operation-state` or `core_get-operation-result`. This tool does not discover items,
-jobs, or job types; poll or wait; fetch results; follow response URLs; retry automatically; or run,
-cancel, or schedule a job.
-
-Example prompts:
-
-- "Read job instance `<job-instance-id>` for item `<item-id>` in workspace `<workspace-id>` once."
-- "Show that job instance's status and safe failure information; do not wait or retrieve results."
-- "Get its latest snapshot and any Retry-After guidance without starting another job."
 
 **Get Item Definition (`core_get-item-definition`)**
 
@@ -1102,6 +1084,67 @@ The caller needs **workspace Admin** and **capacity Contributor or Admin** permi
 Workspaces containing Fabric items other than Power BI items cannot migrate across regions. Such workspaces can only be assigned to Fabric, Fabric trial, or Power BI Premium capacity. These restrictions are enforced by Fabric: the tool makes no preflight calls or eligibility guarantees. It does not create workspaces or provision, resize, or activate capacities; creating a workspace with a `capacityId` is a separate API operation.
 
 Failures preserve the service's HTTP status and return sanitized guidance. On throttling, a valid `Retry-After` delay is reported without automatically retrying. If a timeout or network failure prevents confirmation, inspect the workspace before submitting again. The tool never chooses a different target capacity.
+
+### Jobs
+
+| Tool | Description |
+|------|-------------|
+| `jobs_get-item-job-instance` | Reads one known item's job instance, including status, timing, safe failure metadata, and available retry guidance. Does not poll, run, cancel, or schedule jobs. |
+
+**Get Item Job Instance (`jobs_get-item-job-instance`)**
+
+Calls the [Get Item Job Instance API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/get-item-job-instance)
+with exactly one `GET /workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}`.
+The three options `workspace-id`, `item-id`, and `job-instance-id` are required nonempty UUIDs,
+validated and normalized before authentication or HTTP.
+
+```powershell
+fabmcp jobs get-item-job-instance --workspace-id <workspace-id> --item-id <item-id> --job-instance-id <job-instance-id>
+```
+
+The result contains `jobInstance` with matching `id` and `itemId`, plus nonempty `jobType`, `invokeType`,
+and `status`. Status values include `NotStarted`, `InProgress`, `Completed`, `Failed`, `Cancelled`, and
+`Deduped`; future status, invocation, and job-type strings are preserved without an allowlist.
+**HTTP 200 means the snapshot was read, not that the job succeeded.** A failed job stays `Failed`.
+
+Optional `rootActivityId`, `startTimeUtc`, `endTimeUtc`, and `failureReason` are returned when available;
+absent/null values are omitted rather than fabricated. The API declares timestamps as plain UTC
+strings and demonstrates values without a timezone suffix. They are returned verbatim, including
+fractional precision or empty strings, without interpreting them in the host's local timezone.
+Failure information is restricted to a safe identifier-shaped `errorCode` (up to 128 ASCII letters,
+digits, underscores, hyphens, or periods), a nonempty `requestId` UUID, and `isRetriable` when provided.
+Backend messages, nested details, parameters, related resources, and unknown fields are not exposed.
+
+A valid `Retry-After` header becomes `retryAfterSeconds`, or `retryAfterUtc` for an HTTP date.
+Missing, invalid, negative, out-of-range, or multiple headers are omitted; no fallback delay is
+invented. HTTP failures retain their status and valid retry guidance with sanitized messages,
+without reading backend error bodies. Only HTTP 200 with a valid `application/json` snapshot is
+accepted. Responses are bounded to **1 MiB (1,048,576 bytes)**, including streaming responses
+without `Content-Length`; malformed or oversized responses fail explicitly.
+
+This read-only tool works in stdio and HTTP modes. In `all` mode, compact and duplicated structured
+output expose `structuredContent.jobInstance`; default content-only responses use `results.jobInstance`.
+The caller needs item read access and the API's delegated `Item.Read.All`, `Item.ReadWrite.All`,
+or applicable item-specific read/read-write scope. The API supports users, service principals,
+and managed identities; the tool uses the host's configured credential without granting permissions.
+
+Job instances are **not** Fabric `/operations` long-running operations. Do not pass a job-instance ID
+to `core_get-operation-state` or `core_get-operation-result`. This tool does not discover items,
+jobs, or job types; poll or wait; fetch results; follow response URLs; retry automatically; or run,
+cancel, or schedule a job.
+
+For an item-metadata-to-job workflow, start the server with
+`fabmcp server start --mode all --namespace core --namespace jobs`. Call `core_get-item` with the known
+workspace and item UUIDs, then pass the returned `workspaceId` and `id` to `jobs_get-item-job-instance`
+together with a separately supplied existing `job-instance-id`. Item metadata does not discover or
+create a job-instance ID. The same combined selection is required when using Core definition tools
+and Jobs in one session, including in namespace or single mode.
+
+Example prompts:
+
+- "Read job instance `<job-instance-id>` for item `<item-id>` in workspace `<workspace-id>` once."
+- "Show that job instance's status and safe failure information; do not wait or retrieve results."
+- "Get its latest snapshot and any Retry-After guidance without starting another job."
 
 ### Data Factory Operations
 

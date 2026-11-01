@@ -20,6 +20,7 @@ public sealed class ItemJobInstanceGetCommandTests() : CommandUnitTestsBase<Item
     public void Constructor_DefinesOneReadOnlyTransportAgnosticTool()
     {
         Assert.Equal("get-item-job-instance", Command.Name);
+        Assert.Equal("6a7f2abe-b9db-4c7f-8ae4-c9764b3cc591", Command.Id);
         Assert.Equal("Get Fabric Item Job Instance", Command.Title);
         Assert.True(Command.Metadata.ReadOnly);
         Assert.True(Command.Metadata.Idempotent);
@@ -83,6 +84,7 @@ public sealed class ItemJobInstanceGetCommandTests() : CommandUnitTestsBase<Item
             var response = await ExecuteCommandAsync(args.SelectMany(pair => new[] { pair.Key, pair.Value }).ToArray());
 
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.DoesNotContain("Core", response.Message);
             FabricCoreErrorTestData.AssertSanitized(response);
             Assert.Empty(Service.ReceivedCalls());
         }
@@ -102,6 +104,7 @@ public sealed class ItemJobInstanceGetCommandTests() : CommandUnitTestsBase<Item
             option, FabricCoreErrorTestData.PrivateDetails);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Invalid Fabric Jobs request. Provide workspace, item, and job-instance UUIDs.", response.Message);
         FabricCoreErrorTestData.AssertSanitized(response);
         Assert.Empty(Service.ReceivedCalls());
     }

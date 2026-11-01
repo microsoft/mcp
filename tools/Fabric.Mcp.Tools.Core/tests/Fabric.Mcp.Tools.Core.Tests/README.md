@@ -36,7 +36,7 @@ Offline tests for the Fabric Core toolset.
 - **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
 - **Commands/ItemJobInstanceGetCommandTests.cs**: Required UUID binding, read-only metadata, unsupported-input rejection, cancellation forwarding, safe logging, and HTTP/retry guidance
 - **Services/ItemJobInstanceGetServiceTests.cs**: One normalized authenticated GET, all documented/future states, optional verbatim timestamp strings, matching IDs, safe failure fields, exact byte limits, malformed responses, retry headers, cancellation/disposal, and concurrent identities
-- **ItemJobInstanceGetMcpTests.cs**: Actual Core registration, typed input/output schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, output modes, and pre-authentication validation
+- **ItemJobInstanceGetMcpTests.cs**: Independent Jobs area registration, stable command identity, typed schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, default/Core-only/Jobs-only/combined filtering, learn schemas, cross-namespace item-ID handoff, output modes, and pre-authentication validation
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -109,12 +109,26 @@ The existing operation reader still defaults to 1 MiB, and definition retrieval 
 
 ## Job-instance Lookup
 
-`core_get-item-job-instance` reads an existing job instance exactly once, independently of the Fabric
+`jobs_get-item-job-instance` reads an existing job instance exactly once, independently of the Fabric
 LRO protocol. Tests cover every documented status plus future status, invocation, and job-type strings.
 The public API and bundled spec declare timing fields as plain UTC strings, so optional timestamps
 round-trip without host-local date parsing. Required identity/state fields must be present and valid;
 returned job and item UUIDs must match the request. Failure output excludes backend messages and nested
 details, retaining only an identifier-shaped code, nonempty request UUID, and optional retry flag.
+
+`FabricJobsSetup` is a real top-level `jobs` area registered in the same server and physical assembly
+as the existing Fabric Core infrastructure. The host configures all areas before filtering, so
+Jobs-only sessions reuse the Core-configured transport and services without exposing Core commands.
+The Core catalog stays unchanged. Tests reject the obsolete unmerged Core alias and wrong-area
+routing; Core-only sessions hide and deny Jobs, Jobs-only sessions execute the lookup, and combined
+or unfiltered sessions expose both. Namespace/single learn responses advertise only the selected areas'
+implemented commands and schemas.
+
+The offline cross-namespace workflow uses `--namespace core --namespace jobs --mode all` (or
+`--mode namespace` / `--mode single` with both namespace arguments): a real registered Core item
+metadata read hands workspace/item UUIDs to the registered Jobs lookup with a separately supplied
+existing job-instance fixture. It asserts one GET per invocation. This is deterministic routing
+coverage with substituted HTTP, not a natural-language agent benchmark or live workflow.
 
 Offline tests exercise the real command/service pipeline with substituted HTTP and credentials, plus
 real server startup discovery over stdio and HTTP. No existing live job fixture was supplied:

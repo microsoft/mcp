@@ -46,7 +46,6 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
         services.AddSingleton<ItemDefinitionGetCommand>(CreateItemDefinitionGetCommand);
         services.AddSingleton<ItemGetCommand>();
-        services.AddSingleton<ItemJobInstanceGetCommand>();
         services.AddSingleton<ItemListCommand>();
         services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<OperationStateGetCommand>();
@@ -70,7 +69,6 @@ public class FabricCoreSetup : IAreaSetup
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
-            "- Read one existing item job instance by workspace, item, and job-instance IDs without polling\n" +
             "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
@@ -92,7 +90,6 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
-        fabricCore.AddCommand<ItemJobInstanceGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<OperationStateGetCommand>(serviceProvider);
