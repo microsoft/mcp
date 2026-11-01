@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createReportRequest": {
+            "displayName": "Sales Dashboard",
+            "description": "An empty report connected to a semantic model.",
+            "creationPayload": {
+                "semanticModelReference": {
+                    "referenceType": "ById",
+                    "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                }
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "Sales Dashboard",
+                "description": "An empty report connected to a semantic model.",
+                "type": "Report",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}
