@@ -321,6 +321,18 @@ public class ServerStartupTests
         Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
         Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var definitionGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item-definition");
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        var definitionGetOptions = definitionGet.GetProperty("inputSchema").GetProperty("properties");
+        foreach (var option in new[] { "workspace-id", "item-id", "operation-id", "format" })
+        {
+            Assert.Equal("string", definitionGetOptions.GetProperty(option).GetProperty("type").GetString());
+        }
+        Assert.Equal(localFiles, definitionGetOptions.TryGetProperty("output-directory", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("definition", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("update-metadata", out _));
         var definitionUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item-definition");
         Assert.False(definitionUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());

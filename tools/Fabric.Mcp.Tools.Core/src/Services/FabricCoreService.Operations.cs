@@ -61,7 +61,10 @@ public partial class FabricCoreService
         return new(operationId, state, retryAfter, FabricOperationHttp.GetPollDelay(retryAfter));
     }
 
-    private async Task<OperationResult> GetOperationResultAsync(Guid operationId, CancellationToken cancellationToken)
+    private Task<OperationResult> GetOperationResultAsync(Guid operationId, CancellationToken cancellationToken) =>
+        GetOperationResultAsync(operationId, FabricOperationHttp.MaxJsonBytes, cancellationToken);
+
+    private async Task<OperationResult> GetOperationResultAsync(Guid operationId, int maxJsonBytes, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         using var response = await SendFabricHttpRequestAsync(
@@ -72,7 +75,7 @@ public partial class FabricCoreService
             FabricOperationHttp.ThrowUnexpectedResponse(response);
         }
         FabricOperationHttp.ValidateOperationId(response, operationId);
-        return await FabricOperationHttp.ReadJsonAsync(response, operationId, cancellationToken);
+        return await FabricOperationHttp.ReadJsonAsync(response, operationId, maxJsonBytes, cancellationToken);
     }
 
     private static Guid ParseOperationId(string operationId) =>

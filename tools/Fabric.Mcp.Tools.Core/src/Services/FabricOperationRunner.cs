@@ -33,7 +33,7 @@ internal sealed class FabricOperationRunner(TimeProvider timeProvider)
             var completed = new FabricOperationReceipt(FabricOperationStatus.Succeeded, FabricOperationHttp.GetOperationId(response));
             try
             {
-                var body = await FabricOperationHttp.ReadJsonAsync(response, completed.OperationId, cancellationToken);
+                var body = await FabricOperationHttp.ReadJsonAsync(response, completed.OperationId, contract.MaxJsonBytes, cancellationToken);
                 return new(ReadResult(body, contract), null);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
