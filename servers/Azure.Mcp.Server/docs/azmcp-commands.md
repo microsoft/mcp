@@ -3888,8 +3888,6 @@ azmcp monitor ingestion validate --subscription <subscription> \
 
 #### Health Models
 
-See the [Health Models guide](https://github.com/microsoft/mcp/blob/main/tools/Azure.Mcp.Tools.Monitor/docs/healthmodels.md) for examples and limits.
-
 ```bash
 # List health models in a subscription (optionally scoped to a resource group)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
