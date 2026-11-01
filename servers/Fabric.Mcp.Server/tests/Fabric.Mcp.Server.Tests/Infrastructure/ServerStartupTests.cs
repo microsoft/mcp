@@ -258,6 +258,14 @@ public class ServerStartupTests
         Assert.False(itemGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
         Assert.Equal(["item-id", "workspace-id"], itemGet.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var jobInstanceGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item-job-instance");
+        Assert.True(jobInstanceGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(jobInstanceGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.False(jobInstanceGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.Equal(["item-id", "job-instance-id", "workspace-id"], jobInstanceGet.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        Assert.Equal(["item-id", "job-instance-id", "workspace-id"], jobInstanceGet.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+            .Select(property => property.Name).Order());
         var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_assign-workspace-to-capacity");
         Assert.False(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
         Assert.True(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());

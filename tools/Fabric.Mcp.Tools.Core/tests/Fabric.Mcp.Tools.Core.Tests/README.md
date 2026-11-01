@@ -34,6 +34,9 @@ Offline tests for the Fabric Core toolset.
 - **Commands/ItemGetCommandTests.cs**: Get Item UUID and required-option validation, sanitized parser/service errors, typed metadata, and cancellation forwarding
 - **Services/FabricCoreServiceItemGetTests.cs**: One normalized authenticated GET, metadata whitelisting, required fields and matching IDs, validated throttling guidance, cancellation/disposal, and per-request credentials
 - **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
+- **Commands/ItemJobInstanceGetCommandTests.cs**: Required UUID binding, read-only metadata, unsupported-input rejection, cancellation forwarding, safe logging, and HTTP/retry guidance
+- **Services/ItemJobInstanceGetServiceTests.cs**: One normalized authenticated GET, all documented/future states, optional verbatim timestamp strings, matching IDs, safe failure fields, exact byte limits, malformed responses, retry headers, cancellation/disposal, and concurrent identities
+- **ItemJobInstanceGetMcpTests.cs**: Actual Core registration, typed input/output schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, output modes, and pre-authentication validation
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -98,6 +101,25 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 `FabricCapacityMetadata` is the shared capacity contract: required `Guid Id` followed by required string `DisplayName`, `Sku`, `Region`, and `State`. `IsValid` rejects null metadata, an empty ID, and blank strings without closing the string values to enums. A get operation must additionally compare the returned ID with its requested ID. Workspace and item response models remain operation-specific.
 
 `TestSupport/FabricCoreHttpMessageHandler` accepts an asynchronous request/cancellation callback and exposes a thread-safe `CallCount`. Reuse it for offline HTTP tests; inspect or capture request details inside the callback rather than introducing per-tool handler copies. Keep specialized content/cancellation doubles and all operation-specific assertions.
+
+`FabricResponseBodyReader` contains only the bounded byte-reading loop shared by job-instance snapshots
+and existing operation responses. Callers keep their own media, empty-body, parsing, and error contracts.
+The existing operation reader still defaults to 1 MiB, and definition retrieval retains its explicit
+64 MiB limit. Existing operation/definition tests cover those unchanged contracts.
+
+## Job-instance Lookup
+
+`core_get-item-job-instance` reads an existing job instance exactly once, independently of the Fabric
+LRO protocol. Tests cover every documented status plus future status, invocation, and job-type strings.
+The public API and bundled spec declare timing fields as plain UTC strings, so optional timestamps
+round-trip without host-local date parsing. Required identity/state fields must be present and valid;
+returned job and item UUIDs must match the request. Failure output excludes backend messages and nested
+details, retaining only an identifier-shaped code, nonempty request UUID, and optional retry flag.
+
+Offline tests exercise the real command/service pipeline with substituted HTTP and credentials, plus
+real server startup discovery over stdio and HTTP. No existing live job fixture was supplied:
+live Fabric calls, recorded/playback validation, and real OBO/RBAC validation have **not** been run.
+Tests do not start jobs, deploy resources, or discover a fixture.
 
 ## Long-running Operations
 
@@ -418,6 +440,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run Get Item command, service, and registered-handler tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemGet*'
+
+# Run job-instance lookup and its shared-reader/catalog regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobInstance*' '*FabricCoreHttpHelpersTests' '*FabricCoreCatalogTests' '*FabricOperation*' '*ItemDefinitionGet*'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"

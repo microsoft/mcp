@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: "Added `core_get-item-job-instance` to read one existing Fabric item job instance with status, timing, safe failure metadata, and available retry guidance, without polling or starting jobs."

@@ -70,6 +70,17 @@ public interface IFabricCoreService
         string itemId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one job-instance snapshot and retry guidance without polling or retrieving results.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobInstanceId">The nonempty job-instance UUID, not a Fabric operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemJobInstanceGetCommandResult> GetItemJobInstanceAsync(
+        string workspaceId,
+        string itemId,
+        string jobInstanceId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Retrieves metadata for one existing workspace without reading its items or data.</summary>
     /// <param name="workspaceId">The workspace ID as a nonempty UUID.</param>
     /// <param name="preferWorkspaceSpecificEndpoints">The endpoint preference, or null to preserve the service default.</param>
