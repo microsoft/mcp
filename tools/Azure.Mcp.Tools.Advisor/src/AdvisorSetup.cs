@@ -45,7 +45,8 @@ public class AdvisorSetup : IAreaSetup
             "subscription context for querying recommendations and subscription-scoped updates; service-group updates " +
             "use service-group context. For top recommendations, top actions to take, most critical, most important, prioritized, or what-should-I-fix-first " +
             "requests, start with advisor_recommendation_summary with --prioritized true, then use " +
-            "advisor_recommendation_list for the records of a selected recommendation type.",
+            "advisor_recommendation_list for the records of a selected recommendation type. " +
+            "For pre-aggregated insights on idle resources, zonal resiliency, or service retirement exposure, use advisor_insight_list.",
             Title);
 
         // Create Advisor subgroups
