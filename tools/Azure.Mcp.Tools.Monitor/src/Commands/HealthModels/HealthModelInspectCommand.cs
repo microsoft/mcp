@@ -37,6 +37,9 @@ public sealed class HealthModelInspectCommand(IMonitorHealthModelService healthM
 {
     private const int MaxTop = 500;
 
+    // A parsed payload is at most 64 levels deep, so a longer field path can match nothing.
+    private const int MaxFieldDepth = 64;
+
     private readonly IMonitorHealthModelService _healthModelService = healthModelService;
 
     public override void ValidateOptions(HealthModelInspectOptions options, ValidationResult validationResult)
@@ -58,6 +61,10 @@ public sealed class HealthModelInspectCommand(IMonitorHealthModelService healthM
         if (options.NextMarker is { } marker && !int.TryParse(marker, NumberStyles.None, CultureInfo.InvariantCulture, out _))
         {
             validationResult.Errors.Add("--next-marker must be the nextMarker of a previous result.");
+        }
+        if (options.Fields?.Any(field => field.Split(',').Any(path => path.Split('.').Length > MaxFieldDepth)) == true)
+        {
+            validationResult.Errors.Add($"Each --fields path can have at most {MaxFieldDepth} segments.");
         }
     }
 

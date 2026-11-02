@@ -78,6 +78,20 @@ public class HealthModelInspectCommandTests : SubscriptionCommandUnitTestsBase<H
     }
 
     [Theory]
+    // A parsed payload is at most 64 levels deep, so a field path can have at most 64 segments.
+    [InlineData(64, false)]
+    [InlineData(65, true)]
+    public async Task ExecuteAsync_RejectsAFieldPathDeeperThanAPayload(int segments, bool rejected)
+    {
+        var path = "entity" + string.Concat(Enumerable.Repeat(".**", segments - 1));
+
+        var response = await ExecuteCommandAsync(
+            $"--subscription {TestSubscription} --resource-group {TestResourceGroup} --health-model {TestHealthModel} --fields {path}");
+
+        Assert.Equal(rejected, response.Status == HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
     [InlineData("missing", HttpStatusCode.NotFound)]
     [InlineData("forbidden", HttpStatusCode.Forbidden)]
     public async Task ExecuteAsync_MapsServiceFailures(string failure, HttpStatusCode expected)
