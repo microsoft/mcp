@@ -5,15 +5,21 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.7.0 (Unreleased)
+## 1.7.0 (2026-11-01)
 
 ### Features Added
 
-### Breaking Changes
+- Extended `core_create-item` with inline definitions or explicitly selected local definition files, existing folder IDs, item-specific creation payloads and definition options, and sensitivity label settings. Generic safety and request-contract checks run locally; Fabric validates item-specific layouts and content. Supplied label settings require a nonempty label ID. HTTP inline creation and bounded operation waiting remain supported. [[#4051](https://github.com/microsoft/mcp/pull/4051)]
+- Added `core_get-item-definition` with typed inline results, bounded LRO waiting and one-GET resumption, and explicit local-only, no-overwrite definition export. [[#4064](https://github.com/microsoft/mcp/pull/4064)]
+- Added `core_update-item-definition` to replace complete item definitions from inline content or explicitly selected saved files, with generic safety validation, unchanged definition formats and bytes, optional metadata application, and bounded no-result operation polling. [[#4065](https://github.com/microsoft/mcp/pull/4065)]
 
 ### Bugs Fixed
 
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+
 ### Other Changes
+
+- Updated bundled Fabric REST API specifications and examples, and added item-definition documentation for deployment plans, monitoring, and warehouses. [[#4078](https://github.com/microsoft/mcp/pull/4078)]
 
 ## 1.6.0 (2026-10-18)
 
