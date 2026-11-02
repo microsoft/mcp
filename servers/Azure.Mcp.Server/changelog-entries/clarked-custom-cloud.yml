@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added configuration-driven custom cloud support for ARM, Resource Graph, and direct Log Analytics queries."
