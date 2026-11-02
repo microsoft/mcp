@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Reduced repeated Kusto query latency by caching access tokens per client and refreshing them before expiration."

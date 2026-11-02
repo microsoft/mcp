@@ -1,4 +1,5 @@
 # Fabric MCP Server tool selection prompts
+<!-- cspell:words pbism pbir TMDL -->
 
 These prompts validate tool selection. They do not imply that live Fabric calls, real OBO authorization, or recorded playback have been exercised.
 
@@ -12,6 +13,8 @@ For every deletion prompt, explain the scope and request consent before sending 
 
 Workspace capacity assignment changes a live resource. Use only with an explicitly approved workspace, capacity, and identity; do not run these assignments as automated development checks.
 
+Definition updates replace the complete definition of an existing item. Review the full selected parts and obtain authorization before a live update; these prompts are not permission to modify a workspace. Never upload only changed files, merge with a fetched definition, or retrieve an operation result after a no-result update succeeds.
+
 `context-required` means the caller must supply the required resource context and authorization. Sections and tool names are sorted alphabetically.
 
 ## Core
@@ -24,6 +27,16 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_create-item | Create a Lakehouse named Sales in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and return its metadata or operation receipt without waiting. | none |
 | core_create-item | Create a Lakehouse named Sales in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and wait up to 120 seconds for it, returning an operation ID if it takes longer. | none |
 | core_create-item | Create a Lakehouse named Planning in Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229, waiting up to 60 seconds and honoring the first server wait hint rather than checking early. | none |
+| core_create-item | Create a Notebook named Sales from the saved sales.ipynb in local folder C:\Fabric\Sales.Notebook in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229. Explicitly map just that file to artifact.content.ipynb, use format ipynb, and do not upload other files in the folder. | none |
+| core_create-item | Create a Notebook in workspace \<workspace-id> from the inline definition JSON I supplied, without reading any files on the HTTP server. Return the item or operation receipt without polling. | context-required |
+| core_create-item | Create a SemanticModel in workspace \<workspace-id> using my selected item folder, definition.pbism, and the explicit TMDL file list I supplied. Do not scan for additional files or create dependencies; wait up to 120 seconds after submission. | context-required |
+| core_create-item | Create a Report in workspace \<workspace-id> from my inline PBIR-Legacy definition containing definition.pbir and report.json. Preserve the existing semantic-model binding and do not make a preflight API call. | context-required |
+| core_create-item | Create a Notebook in workspace \<workspace-id> from the inline definition I supplied, preserving its format, content, and safe part names. Leave filename and notebook-language validation to Fabric without a preflight call. | context-required |
+| core_create-item | Create a SemanticModel in workspace \<workspace-id> from my selected local files with the supplied TMDL format. Package only the mapped files and let Fabric validate required parts and format combinations. | context-required |
+| core_create-item | Create a Lakehouse named Sales with schemas enabled using creationPayload enableSchemas=true, in existing folder bbbbbbbb-1111-2222-3333-cccccccccccc in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229. Do not send a definition or look up the folder. | none |
+| core_create-item | Create the item from the inline definition and workload-specific options JSON I supplied in workspace \<workspace-id>. Keep those API options separate from sync and wait up to 120 seconds for creation. | context-required |
+| core_create-item | Create a Lakehouse named Classified in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 with sensitivity label b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f and ApplyOrFail. If the label cannot be applied, do not retry without it or use Ignore. | none |
+| core_create-item | Create a Lakehouse named Draft in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 and request label b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f with the explicitly chosen Ignore strategy, allowing Fabric to proceed if the label cannot be applied. | none |
 | core_create-workspace | Create a Microsoft Fabric workspace called Sales Planning. | none |
 | core_create-workspace | Create a new Fabric workspace named Finance Sandbox with description Quarterly planning experiments. | none |
 | core_create-workspace | Create a Fabric workspace called Capacity Analytics and assign it to existing capacity f4031b2e-318f-4a14-9a3e-103e9bcfc953 during creation. | none |
@@ -40,6 +53,12 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_get-item | Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition. | none |
 | core_get-item | Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'. | none |
 | core_get-item | Inspect the existing Fabric item '<item-id>' in workspace '<workspace-id>' and return only its generic metadata. Do not modify it. | none |
+| core_get-item-definition | Get the definition of item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 as inline parts. Do not write files or wait if accepted. | none |
+| core_get-item-definition | Retrieve that Fabric item's definition in ipynb format, waiting up to 120 seconds; return an operation ID if it is still pending. | context-required |
+| core_get-item-definition | Export the definition for item \<item-id> in workspace \<workspace-id> to the new local directory C:\Fabric\Sales.Notebook. Preserve all bytes, nested paths, binary assets, and .platform; never overwrite existing files. | context-required |
+| core_get-item-definition | The Get Item Definition operation 0acd697c-1550-43cd-b998-91bfbfbd47c6 is already Succeeded. Retrieve its typed definition with one result GET, without another POST or workspace/item lookup. | none |
+| core_get-item-definition | My definition operation has succeeded. Use its saved operation ID to export the result to the new local directory I specified, without restarting retrieval or guessing a format. | context-required |
+| core_get-item-definition | Through the HTTP Fabric MCP server, retrieve my item's definition inline without reading or writing any host files. Request consent for sensitive definition content. | context-required |
 | core_get-operation-result | Get the JSON result of completed Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6. | none |
 | core_get-operation-result | The Fabric item creation operation in the previous receipt succeeded. Retrieve its result using that operation ID. | context-required |
 | core_get-operation-state | Check the current state and progress of Fabric operation 0acd697c-1550-43cd-b998-91bfbfbd47c6 once. | none |
@@ -62,6 +81,13 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 | core_update-item | Rename Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to ProjectNotebook, leaving its description unchanged. | none |
 | core_update-item | Set the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to "Monthly reporting", without changing its name or definition. | none |
 | core_update-item | Clear only the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 by setting it to an empty string. | none |
+| core_update-item-definition | Replace the complete definition of item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 using saved sales.ipynb from C:\Fabric\Sales.Notebook, mapped to artifact.content.ipynb with format ipynb. Preserve the format and bytes, upload no other files, and return without polling. | none |
+| core_update-item-definition | Update item \<item-id> in workspace \<workspace-id> from the complete inline definition JSON I supplied. Do not read any files on the HTTP server or look up the item's type. | context-required |
+| core_update-item-definition | Submit my complete definition with its supplied format and safe custom part layout to item \<item-id> in workspace \<workspace-id>. Keep generic safety checks but leave supported formats, required filenames, and content validation to Fabric. | context-required |
+| core_update-item-definition | Replace the definition of item \<item-id> in workspace \<workspace-id> with the full explicit saved-file mapping I supplied, including .platform. Preserve those bytes but do not request applying its metadata. | context-required |
+| core_update-item-definition | Upload my complete definition to item \<item-id> in workspace \<workspace-id> and explicitly set update-metadata to true to apply metadata from the supplied .platform part. Do not change the sensitivity label or add creation properties. | context-required |
+| core_update-item-definition | Replace item \<item-id>'s definition in workspace \<workspace-id> with my inline content and item-specific options JSON. Wait up to 120 seconds and finish when operation state says Succeeded, without requesting /result or getting the item. | context-required |
+| core_update-item-definition | Submit my complete replacement definition once for item \<item-id> in workspace \<workspace-id>, wait at most 60 seconds, and honor the initial Retry-After rather than polling early. If it remains pending, return the operation ID instead of submitting the update again. | context-required |
 | core_update-workspace | Rename Fabric workspace \<workspace-id> to 'Finance Analytics' without changing its description. | none |
 | core_update-workspace | Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' and leave its name unchanged. | none |
 | core_update-workspace | Clear the description of Fabric workspace \<workspace-id> without renaming it. | none |

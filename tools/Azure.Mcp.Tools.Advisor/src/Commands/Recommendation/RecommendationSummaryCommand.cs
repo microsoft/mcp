@@ -118,6 +118,15 @@ public sealed class RecommendationSummaryCommand(
                 : options.GroupBy.Trim().ToLowerInvariant();
         var top = options.Top ?? (prioritized ? DefaultPrioritizedTop : null);
 
+        Models.AdvisorTelemetryTags.AddScopeTags(context.Activity, options);
+        Models.AdvisorTelemetryTags.AddRecommendationTags(
+            context.Activity,
+            options.RecommendationTypeId,
+            options.Category,
+            options.SubCategory,
+            options.Impact);
+        Models.AdvisorTelemetryTags.AddQueryTags(context.Activity, options.Prioritized, options.GroupBy);
+
         try
         {
             _ = ServiceRetirementFilterValidator.TryParseRetirementDate(

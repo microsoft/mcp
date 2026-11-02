@@ -1934,7 +1934,7 @@ Live test projects must reference the server project and include specific proper
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Tools.{Toolset}.csproj" />
-    <ProjectReference Include="..\..\..\..\servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
+    <ProjectReference Include="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj" />
   </ItemGroup>
 </Project>
 ```

@@ -46,13 +46,17 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         }
     }
 
-    public async Task<IList<AzureMcpTool>> GetAvailableToolsAsync(CancellationToken cancellationToken = default)
+    public async Task<IList<AzureMcpTool>> GetAvailableToolsAsync(
+        string serverName,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(serverName);
+
         var queryFile = _queriesDirectory.GetFiles(ExistingToolsKqlFileName).FirstOrDefault() ?? throw new InvalidOperationException($"Could not find {ExistingToolsKqlFileName} in {_queriesDirectory.FullName}");
 
         var results = new List<AzureMcpTool>();
 
-        await foreach (var latestEvent in GetLatestToolEventsAsync(queryFile.FullName, cancellationToken))
+        await foreach (var latestEvent in GetLatestToolEventsAsync(queryFile.FullName, serverName, cancellationToken))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -130,9 +134,13 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         }
     }
 
-    internal async IAsyncEnumerable<McpToolEvent> GetLatestToolEventsAsync(string kqlFilePath,
+    internal async IAsyncEnumerable<McpToolEvent> GetLatestToolEventsAsync(
+        string kqlFilePath,
+        string serverName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(serverName);
+
         if (!File.Exists(kqlFilePath))
         {
             throw new FileNotFoundException($"KQL file not found: {kqlFilePath}");
@@ -141,6 +149,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         var kql = await File.ReadAllTextAsync(kqlFilePath, cancellationToken);
 
         var clientRequestProperties = new ClientRequestProperties();
+        clientRequestProperties.SetParameter("serverName", serverName);
         IDataReader reader = await _kustoClient.ExecuteQueryAsync(_databaseName, kql, clientRequestProperties, cancellationToken);
 
         var eventTimeOrdinal = reader.GetOrdinal(nameof(McpToolEvent.EventTime));

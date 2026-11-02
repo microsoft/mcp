@@ -99,6 +99,12 @@ public sealed class RecommendationMetadataListCommand(
         RecommendationMetadataListOptions options,
         CancellationToken cancellationToken)
     {
+        AdvisorTelemetryTags.AddRecommendationTags(
+            context.Activity,
+            category: options.Category,
+            subCategory: options.SubCategory,
+            impact: options.Impact);
+
         try
         {
             _ = TryNormalizeLanguage(options.Language, out var language);

@@ -43,16 +43,56 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
     [InlineData("dpp")]
     public async Task ExecuteAsync_ExistingVault_ReturnsConflictWithUpdateGuidance(string vaultType)
     {
+        const string serviceMessage =
+            "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, " +
+            "or choose a different name for a new vault.";
         Service.CreateVaultAsync(
             "v", "rg", "sub", vaultType, "eastus",
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
-            .ThrowsAsync(new RequestFailedException(409, "The vault already exists."));
+            .ThrowsAsync(new RequestFailedException(409, serviceMessage));
 
         var response = await ExecuteCommandAsync(
             $"--subscription sub --vault v --resource-group rg --vault-type {vaultType} --location eastus");
 
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
-        Assert.Contains("azurebackup_vault_update", response.Message);
+        Assert.Contains(serviceMessage, response.Message);
+    }
+
+    [Theory]
+    [InlineData(409, HttpStatusCode.Conflict)]
+    [InlineData(403, HttpStatusCode.Forbidden)]
+    [InlineData(400, HttpStatusCode.BadRequest)]
+    public async Task ExecuteAsync_StorageRedundancyFailsAfterCreate_PreservesPartialSuccessGuidance(int status, HttpStatusCode expectedStatus)
+    {
+        const string serviceMessage =
+            "Vault 'v' was created, but setting storage redundancy to 'LocallyRedundant' failed. " +
+            "Before configuring backup, retry with 'azurebackup vault update --subscription \"sub\" --resource-group \"rg\" " +
+            "--vault \"v\" --vault-type rsv --redundancy LocallyRedundant'. Details: Storage config update failed.";
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", "rsv", "eastus",
+            Arg.Any<string?>(), "LocallyRedundant", Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, serviceMessage, "BMSUserErrorStorageConfig", null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription sub --vault v --resource-group rg --vault-type rsv --location eastus --storage-type LocallyRedundant");
+
+        Assert.Equal(expectedStatus, response.Status);
+        Assert.Contains(serviceMessage, response.Message);
+        Assert.DoesNotContain("choose a different name", response.Message);
+    }
+
+    [Theory]
+    [InlineData("rsv", "ReadAccessGeoZoneRedundant")]
+    [InlineData("rsv", "Invalid")]
+    [InlineData("dpp", "Invalid")]
+    public async Task ExecuteAsync_InvalidStorageType_ReturnsBadRequestWithoutCallingService(string vaultType, string storageType)
+    {
+        var response = await ExecuteCommandAsync(
+            $"--subscription sub --vault v --resource-group rg --vault-type {vaultType} --location eastus --storage-type {storageType}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--storage-type must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

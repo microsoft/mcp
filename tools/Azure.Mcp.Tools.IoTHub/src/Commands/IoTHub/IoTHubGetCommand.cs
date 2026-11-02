@@ -18,7 +18,8 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.IoTHub;
     Title = "Get IoT Hub",
     Description = """
         Get IoT Hub details by name in a resource group of a subscription.
-        Returns the IoT Hub with id, name, location, resourceGroup, subscriptionId, sku, capacity, state, and hostName.
+        Returns the IoT Hub with id, name, location, resourceGroup, subscriptionId, sku, capacity, state, hostName,
+        and the configured message-routing custom endpoints (routingEndpoints) with their target resource details.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
@@ -39,11 +40,7 @@ public sealed class IoTHubGetCommand(
     public override void ValidateOptions(IoTHubGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-
-        if (!IsValidIoTHubName(options.HubName))
-        {
-            validationResult.Errors.Add("--hub-name must be 3-50 characters long and contain only letters, numbers, or hyphens, and it cannot end with a hyphen.");
-        }
+        IoTHubValidation.ValidateHubName(options.HubName, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -78,25 +75,4 @@ public sealed class IoTHubGetCommand(
     }
 
     public record IoTHubGetCommandResult(IoTHubDescription IoTHub, bool AreResultsTruncated);
-
-    private static bool IsValidIoTHubName(string value)
-    {
-        if (value.Length is < 3 or > 50 || value[^1] == '-')
-        {
-            return false;
-        }
-
-        foreach (var ch in value)
-        {
-            var isAlphaNumeric = (ch >= 'a' && ch <= 'z') ||
-                                 (ch >= 'A' && ch <= 'Z') ||
-                                 (ch >= '0' && ch <= '9');
-            if (!isAlphaNumeric && ch != '-')
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

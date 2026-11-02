@@ -13,11 +13,16 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
-public partial class FabricCoreService(HttpClient httpClient, TokenCredential? credential = null, TimeProvider? timeProvider = null) : IFabricCoreService
+public partial class FabricCoreService(
+    HttpClient httpClient,
+    TokenCredential? credential = null,
+    TimeProvider? timeProvider = null,
+    FabricItemDefinitionFileLimits? definitionLimits = null) : IFabricCoreService
 {
     private readonly HttpClient _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     private readonly TokenCredential _credential = credential ?? new DefaultAzureCredential();
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
+    private readonly FabricItemDefinitionValidator _definitionValidator = new(definitionLimits ?? new());
     private const string UserAgentHeaderName = "User-Agent";
     private const string UserAgentHeaderValue = "Fabric Core MCP";
     private const string InvalidUpdateResponseMessage = "Fabric returned an invalid Update Item response.";

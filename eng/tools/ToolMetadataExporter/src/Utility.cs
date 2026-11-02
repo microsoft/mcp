@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using ToolSelection.Models;
@@ -33,10 +34,24 @@ public partial class Utility(ILogger<Utility> logger)
                 throw new InvalidOperationException("No JSON output found from azmcp command.");
             }
 
-            // Parse the JSON output
-            var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+            try
+            {
+                return JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+            }
+            catch (JsonException ex)
+            {
+                var sanitizedJson = EscapeInvalidJsonStringControlCharacters(jsonOutput);
+                if (string.Equals(sanitizedJson, jsonOutput, StringComparison.Ordinal))
+                {
+                    throw;
+                }
 
-            return result;
+                _logger.LogWarning(
+                    ex,
+                    "azmcp returned JSON containing unescaped control characters. Retrying with escaped values.");
+
+                return JsonSerializer.Deserialize(sanitizedJson, SourceGenerationContext.Default.ListToolsResult);
+            }
         }
         catch (Exception)
         {
@@ -209,6 +224,75 @@ public partial class Utility(ILogger<Utility> logger)
                .Replace(UnicodeChars.RightSingleQuote, "'")
                .Replace(UnicodeChars.LeftDoubleQuote, "\"")
                .Replace(UnicodeChars.RightDoubleQuote, "\"");
+    }
+
+    /// <summary>
+    /// Escapes raw control characters inside JSON strings while preserving structural whitespace.
+    /// Historical azmcp versions emitted characters such as U+001A unescaped inside tool descriptions.
+    /// </summary>
+    private static string EscapeInvalidJsonStringControlCharacters(string json)
+    {
+        var inString = false;
+        var escaped = false;
+        StringBuilder? sanitized = null;
+
+        for (var index = 0; index < json.Length; index++)
+        {
+            var character = json[index];
+
+            if (!inString)
+            {
+                sanitized?.Append(character);
+                inString = character == '"';
+                continue;
+            }
+
+            if (escaped)
+            {
+                if (character < ' ')
+                {
+                    sanitized ??= new StringBuilder(json.Length + 6).Append(json, 0, index);
+                    sanitized.Append('\\');
+                    AppendUnicodeEscape(sanitized, character);
+                }
+                else
+                {
+                    sanitized?.Append(character);
+                }
+
+                escaped = false;
+                continue;
+            }
+
+            if (character == '\\')
+            {
+                sanitized?.Append(character);
+                escaped = true;
+                continue;
+            }
+
+            if (character == '"')
+            {
+                sanitized?.Append(character);
+                inString = false;
+                continue;
+            }
+
+            if (character < ' ')
+            {
+                sanitized ??= new StringBuilder(json.Length + 6).Append(json, 0, index);
+                AppendUnicodeEscape(sanitized, character);
+            }
+            else
+            {
+                sanitized?.Append(character);
+            }
+        }
+
+        return sanitized?.ToString() ?? json;
+
+        static void AppendUnicodeEscape(StringBuilder builder, char character) =>
+            builder.Append($"\\u{(int)character:X4}");
     }
 
     /// <summary>

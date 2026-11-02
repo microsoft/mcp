@@ -17,7 +17,7 @@ parameters:
     default: false
   - name: NetworkIsolationPolicy
     type: string
-    default: Permissive
+    default: Permissive,Kusto
 
 extends:
   ${{ if and(parameters.Use1ESOfficial, eq(variables['System.TeamProject'], 'internal')) }}:
