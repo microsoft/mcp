@@ -1,0 +1,45 @@
+{
+    "parameters": {
+        "connectionId": "9558d649-84f1-4b7e-850a-59b5d0ae95eb"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "1c15c348-dd88-4065-8f25-57581c216bcf",
+                        "principal": {
+                            "id": "1c15c348-dd88-4065-8f25-57581c216bcf",
+                            "type": "User"
+                        },
+                        "role": "Owner"
+                    },
+                    {
+                        "id": "d3a7dbf7-6641-48f2-851e-d71bbf9d90c4",
+                        "principal": {
+                            "id": "d3a7dbf7-6641-48f2-851e-d71bbf9d90c4",
+                            "type": "Group"
+                        },
+                        "role": "Owner"
+                    },
+                    {
+                        "id": "48ba22da-4431-4da4-8b70-3401685bf9e5",
+                        "principal": {
+                            "id": "48ba22da-4431-4da4-8b70-3401685bf9e5",
+                            "type": "Group"
+                        },
+                        "role": "User"
+                    },
+                    {
+                        "id": "1dfa1747-ce76-4caf-99c8-360b95f9f17a",
+                        "principal": {
+                            "id": "1dfa1747-ce76-4caf-99c8-360b95f9f17a",
+                            "type": "User"
+                        },
+                        "role": "UserWithReshare"
+                    }
+                ]
+            }
+        }
+    }
+}

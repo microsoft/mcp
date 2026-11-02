@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "connectionId": "a06fbff3-09e1-4958-a92b-2a7550459762",
+        "connectionRoleAssignmentId": "b7439ed7-7331-4c59-b2bb-f4f917e61979"
+    },
+    "responses": {
+        "200": {}
+    }
+}

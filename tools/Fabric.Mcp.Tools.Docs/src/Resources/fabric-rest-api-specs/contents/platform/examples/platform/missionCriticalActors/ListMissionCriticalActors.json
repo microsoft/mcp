@@ -1,0 +1,29 @@
+{
+  "parameters": {
+    "capacityId": "96f3f0ff-4fe2-4712-b61b-05a456ba9357"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "33445566-7788-99aa-bbcc-ddeeff001122",
+            "actorDetails": {
+              "actorType": "Workspace",
+              "workspaceId": "b2c3d4e5-f6a7-8901-bcde-2345678901fa"
+            }
+          },
+          {
+            "id": "44556677-8899-aabb-ccdd-eeff00112233",
+            "actorDetails": {
+              "actorType": "Workspace",
+              "workspaceId": "d4e5f6a7-b8c9-0123-def4-567890abcdef"
+            }
+          }
+        ],
+        "continuationToken": "MiwxMDAwMDAsMQ%3D%3D",
+        "continuationUri": "https://api.fabric.microsoft.com/v1/capacities/96f3f0ff-4fe2-4712-b61b-05a456ba9357/surgeProtection/missionCriticalActors?continuationToken='MiwxMDAwMDAsMQ%3D%3D'"
+      }
+    }
+  }
+}

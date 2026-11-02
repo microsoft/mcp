@@ -1095,6 +1095,11 @@
                 "connectionRecency": {
                     "$ref": "#/definitions/ConnectionRecency",
                     "description": "The recency details about the connection."
+                },
+                "myRole": {
+                    "description": "The calling principal's effective role on the connection. When the principal is part of multiple security groups with different roles, the highest role is returned. If the principal has no role on the connection, this property is not returned.",
+                    "readOnly": true,
+                    "$ref": "#/definitions/ConnectionRole"
                 }
             }
         },
@@ -1343,7 +1348,7 @@
                 },
                 "role": {
                     "description": "The connection role of the principal.",
-                    "$ref": "#/definitions/ConnectionRole"
+                    "$ref": "#/definitions/AssignableConnectionRole"
                 }
             }
         },
@@ -1354,7 +1359,7 @@
             "properties": {
                 "role": {
                     "description": "The connection role of the principal.",
-                    "$ref": "#/definitions/ConnectionRole"
+                    "$ref": "#/definitions/AssignableConnectionRole"
                 }
             }
         },
@@ -1398,10 +1403,37 @@
         },
         "ConnectionRole": {
             "type": "string",
-            "description": "A Connection role. Additional connection roles may be added over time.",
-            "enum": ["User", "UserWithReshare", "Owner"],
+            "description": "A connection role. Additional connection roles may be added over time.",
+            "enum": ["User", "UserWithReshare", "Owner", "PendingOwner"],
             "x-ms-enum": {
                 "name": "ConnectionRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "User",
+                        "description": "Enables user access for the connection."
+                    },
+                    {
+                        "value": "UserWithReshare",
+                        "description": "Enables user with resharing access for the connection."
+                    },
+                    {
+                        "value": "Owner",
+                        "description": "Enables ownership access for the connection."
+                    },
+                    {
+                        "value": "PendingOwner",
+                        "description": "Ownership of the connection is not yet effective; the principal must update the connection credentials (using [Update Connection API](/rest/api/fabric/core/connections/update-connection)) to make it effective."
+                    }
+                ]
+            }
+        },
+        "AssignableConnectionRole": {
+            "type": "string",
+            "description": "A connection role that can be assigned to a principal. Additional connection roles may be added over time.",
+            "enum": ["User", "UserWithReshare", "Owner"],
+            "x-ms-enum": {
+                "name": "AssignableConnectionRole",
                 "modelAsString": true,
                 "values": [
                     {
