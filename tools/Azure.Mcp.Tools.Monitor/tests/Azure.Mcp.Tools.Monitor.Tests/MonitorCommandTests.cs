@@ -1148,5 +1148,32 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         Assert.Equal(JsonValueKind.Object, item.AssertProperty("annotations").ValueKind);
     }
 
+    // Model B's root has an enabled Resource Health signal, which reports every few minutes, so its history in the
+    // default 24 h window is not empty.
+    [Fact]
+    public async Task Should_Inspect_HealthModel_EntitySignalHistory()
+    {
+        var model = _healthModelChildName!;
+
+        var result = await CallToolAsync(
+            "monitor_healthmodels_inspect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", model },
+                { "entity", model },
+                { "include", new[] { "SignalHistory" } }
+            });
+
+        // One getSignalHistory response per signal of the entity, each passed through.
+        var item = Assert.Single(result.AssertProperty("entities").EnumerateArray());
+        Assert.False(item.TryGetProperty("errors", out var errors), errors.ToString());
+        var reads = item.AssertProperty("signalHistory").EnumerateArray().ToList();
+        Assert.NotEmpty(reads);
+        Assert.All(reads, read => Assert.False(string.IsNullOrEmpty(read.AssertProperty("signalName").GetString())));
+        Assert.Contains(reads, read => read.AssertProperty("history").GetArrayLength() > 0);
+    }
+
     #endregion
 }
