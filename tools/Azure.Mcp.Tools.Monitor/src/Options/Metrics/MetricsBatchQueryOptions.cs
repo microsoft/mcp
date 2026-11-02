@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.Metrics;
 /// <summary>
 /// Options for querying metrics for multiple resources in a single batch request
 /// </summary>
-public sealed class MetricsBatchQueryOptions : ISubscriptionOption
+public sealed class MetricsBatchQueryOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// The resources to query metrics for (required)

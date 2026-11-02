@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.FileShares.Options.FileShare;
 /// <summary>
 /// Options for FileShareGetCommand.
 /// </summary>
-public sealed class FileShareGetOptions : ISubscriptionOption
+public sealed class FileShareGetOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the file share to retrieve.

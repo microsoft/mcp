@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Options.Queue;
 
-public class BaseQueueOptions
+public class BaseQueueOptions : ITenantOption
 {
     /// <summary>
     /// Service Bus namespace.

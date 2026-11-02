@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.KeyVault.Options;
 
-public class BaseKeyVaultOptions
+public class BaseKeyVaultOptions : ITenantOption
 {
     [Option(Description = "The name of the Key Vault.")]
     public required string Vault { get; set; }

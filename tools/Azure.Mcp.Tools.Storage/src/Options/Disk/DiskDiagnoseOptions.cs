@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Disk;
 
-public class DiskDiagnoseOptions
+public class DiskDiagnoseOptions : ITenantOption
 {
     [Option(Description = "The full Azure resource ID of a standalone virtual machine, canonical virtual machine scale set instance, or attached managed disk to diagnose. Do not combine with --resource-group or --vm.")]
     public string? ResourceId { get; set; }

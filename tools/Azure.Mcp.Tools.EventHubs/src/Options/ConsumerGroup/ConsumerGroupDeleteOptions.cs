@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 
-public sealed class ConsumerGroupDeleteOptions : ISubscriptionOption
+public sealed class ConsumerGroupDeleteOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = EventHubsOptionDescriptions.Namespace)]
     public required string Namespace { get; set; }

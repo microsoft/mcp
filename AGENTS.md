@@ -13,7 +13,8 @@
 - Follow the `{Resource}{Operation}Command` naming pattern
 - Use the two-generic pattern `SubscriptionCommand<TOptions, TResult>` for new commands
 - Use `[Option]` attributes on flat POCO option classes for option declaration
-- Use `ISubscriptionOption` interface on options classes that need subscription/tenant
+- Use `ISubscriptionOption` for options requiring subscription resolution and `ITenantOption` for options exposing `Tenant`; implement both when applicable
+- Keep `ISubscriptionOption` and `ITenantOption` independent; neither implies the other
 - Always call `HandleException(context, ex)` in catch blocks
 - Include live tests for all commands that interact with Azure resources
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
@@ -377,7 +378,7 @@ public class StorageAccountGetCommandTests     // ✅ Correct
 ### Option Handling Pattern (Two-Generic)
 ```csharp
 // Options are flat POCOs with [Option] attributes — no RegisterOptions/BindOptions needed
-public class AccountGetOptions : ISubscriptionOption
+public class AccountGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure Storage account.")]
     public string? Account { get; set; }

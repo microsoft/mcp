@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Container;
 
-public sealed class ContainerSchemaInferOptions : ISubscriptionOption
+public sealed class ContainerSchemaInferOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Number of documents to sample for schema inference (1-20). Defaults to 10.")]
     public int? SampleSize { get; set; }

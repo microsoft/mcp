@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Options.Informational;
 
-public sealed class FileShareGetUsageDataOptions : ISubscriptionOption
+public sealed class FileShareGetUsageDataOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FileSharesOptionDescriptions.Location)]
     public required string Location { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 
-public sealed class ServiceHealthEventsListOptions : ISubscriptionOption
+public sealed class ServiceHealthEventsListOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary> Filter by event type (ServiceIssue, PlannedMaintenance, HealthAdvisory, Security). </summary>
     [Option(Description = "Filter by event type (ServiceIssue, PlannedMaintenance, HealthAdvisory, Security). If not specified, all event types are included.")]

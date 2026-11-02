@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public sealed class UpdateWorkbooksOptions
+public sealed class UpdateWorkbooksOptions : ITenantOption
 {
     [Option(Description = "The Azure Resource ID of the workbook to retrieve.")]
     public required string WorkbookId { get; set; }

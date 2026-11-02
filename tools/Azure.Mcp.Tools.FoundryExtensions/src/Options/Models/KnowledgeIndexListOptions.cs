@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class KnowledgeIndexListOptions
+public sealed class KnowledgeIndexListOptions : ITenantOption
 {
     [Option(Description = FoundryExtensionsOptionDescriptions.Endpoint)]
     public required string Endpoint { get; set; }

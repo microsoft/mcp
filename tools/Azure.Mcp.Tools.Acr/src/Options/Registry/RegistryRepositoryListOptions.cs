@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Acr.Options.Registry;
 
-public class RegistryRepositoryListOptions : ISubscriptionOption
+public class RegistryRepositoryListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

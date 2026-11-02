@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Governance;
 
-public sealed class GovernanceFindUnprotectedOptions : ISubscriptionOption
+public sealed class GovernanceFindUnprotectedOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Resource types to filter (comma-separated).")]
     public string? ResourceTypeFilter { get; set; }

@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Item;
 
-public sealed class ItemVectorSearchOptions : ISubscriptionOption
+public sealed class ItemVectorSearchOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The document property containing the vector embedding (e.g., 'embedding' or 'metadata.vector'). The container must have a vector index on this property.")]
     public required string VectorProperty { get; set; }

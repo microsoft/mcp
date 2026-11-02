@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Options.Namespace;
 
-public sealed class NamespaceGetOptions : ISubscriptionOption
+public sealed class NamespaceGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = EventHubsOptionDescriptions.Namespace)]
     public string? Namespace { get; set; }

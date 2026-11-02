@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceBus.Options.Topic;
 
-public class BaseTopicOptions
+public class BaseTopicOptions : ITenantOption
 {
     /// <summary>
     /// Service Bus namespace.

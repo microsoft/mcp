@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 
-public sealed class AccountCreateOptions : ISubscriptionOption
+public sealed class AccountCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure NetApp Files account to create. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
     public required string Account { get; set; }

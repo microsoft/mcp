@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Postgres.Options.Server;
 
-public class BaseServerOptions : ISubscriptionOption
+public class BaseServerOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = PostgresOptionDefinitions.ServerDescription)]
     public required string Server { get; set; }

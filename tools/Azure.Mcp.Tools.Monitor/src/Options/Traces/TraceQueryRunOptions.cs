@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.Traces;
 
-public sealed class TraceQueryRunOptions : ISubscriptionOption
+public sealed class TraceQueryRunOptions : ISubscriptionOption, ITenantOption
 {
     // Mirrors the trace query service's own query-structure guidance, with parameter names mapped to
     // this tool's options. Keep in sync when that guidance changes.

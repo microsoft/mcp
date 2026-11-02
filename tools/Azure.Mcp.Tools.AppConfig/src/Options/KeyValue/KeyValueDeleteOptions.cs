@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 
-public sealed class KeyValueDeleteOptions : ISubscriptionOption
+public sealed class KeyValueDeleteOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = AppConfigOptionDescriptions.Account)]
     public required string Account { get; set; }

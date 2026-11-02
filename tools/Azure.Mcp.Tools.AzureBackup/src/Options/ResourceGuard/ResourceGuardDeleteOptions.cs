@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ResourceGuard;
 
-public sealed class ResourceGuardDeleteOptions : ISubscriptionOption
+public sealed class ResourceGuardDeleteOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Name of the Resource Guard to delete.")]
     public required string ResourceGuard { get; set; }

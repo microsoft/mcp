@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobGetOptions
+public class BlobGetOptions : ITenantOption
 {
     [Option(Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').")]
     public string? Blob { get; set; }

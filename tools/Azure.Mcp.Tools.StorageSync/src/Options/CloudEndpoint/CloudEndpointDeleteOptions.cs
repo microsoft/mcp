@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.CloudEndpoint;
 /// <summary>
 /// Options for CloudEndpointDeleteCommand.
 /// </summary>
-public sealed class CloudEndpointDeleteOptions : ISubscriptionOption
+public sealed class CloudEndpointDeleteOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

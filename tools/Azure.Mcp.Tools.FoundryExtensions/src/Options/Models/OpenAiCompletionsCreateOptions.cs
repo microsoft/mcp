@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class OpenAiCompletionsCreateOptions : ISubscriptionOption
+public sealed class OpenAiCompletionsCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FoundryExtensionsOptionDescriptions.Deployment)]
     public required string Deployment { get; set; }

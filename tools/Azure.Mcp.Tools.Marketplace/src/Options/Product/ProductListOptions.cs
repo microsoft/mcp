@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Options.Product;
 
-public sealed class ProductListOptions : ISubscriptionOption
+public sealed class ProductListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = MarketplaceOptionDescriptions.Language)]
     public string? Language { get; set; }

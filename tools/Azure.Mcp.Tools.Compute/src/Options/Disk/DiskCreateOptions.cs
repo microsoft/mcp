@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Compute.Options.Disk;
 /// <summary>
 /// Options for the DiskCreate command.
 /// </summary>
-public sealed class DiskCreateOptions : ISubscriptionOption
+public sealed class DiskCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the disk.

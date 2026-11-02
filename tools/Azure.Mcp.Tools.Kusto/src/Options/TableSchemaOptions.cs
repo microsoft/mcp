@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class TableSchemaOptions : ISubscriptionOption, ITableOption
+public sealed class TableSchemaOptions : ISubscriptionOption, ITenantOption, ITableOption
 {
     [Option(Description = KustOptionDescriptions.Table)]
     public required string Table { get; set; }

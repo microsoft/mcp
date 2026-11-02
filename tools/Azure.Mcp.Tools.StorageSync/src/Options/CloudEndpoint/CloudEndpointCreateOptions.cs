@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.CloudEndpoint;
 /// <summary>
 /// Options for CloudEndpointCreateCommand.
 /// </summary>
-public sealed class CloudEndpointCreateOptions : ISubscriptionOption
+public sealed class CloudEndpointCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoexportJob;
 
-public sealed class AutoexportJobCancelOptions : ISubscriptionOption
+public sealed class AutoexportJobCancelOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.FileSystemName)]
     public required string FilesystemName { get; set; }
