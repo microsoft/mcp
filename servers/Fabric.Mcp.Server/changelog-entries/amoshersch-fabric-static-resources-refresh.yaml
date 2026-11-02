@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated bundled Fabric REST API specifications and examples, and added item-definition documentation for deployment plans, monitoring, and warehouses."
