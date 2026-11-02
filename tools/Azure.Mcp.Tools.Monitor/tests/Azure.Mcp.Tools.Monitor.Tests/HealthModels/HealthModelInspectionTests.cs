@@ -98,6 +98,30 @@ public class HealthModelInspectionTests
     }
 
     [Theory]
+    // BestOf rolls up the least severe state of the children that are not Unknown, so a not healthy child drives its
+    // parent only when no sibling is healthier. WorstOf follows every not healthy child.
+    [InlineData("BestOf", "Healthy", "root")]
+    [InlineData("BestOf", "Degraded", "root;root/y")]
+    [InlineData("BestOf", "Unhealthy", "root;root/x;root/y")]
+    [InlineData("BestOf", "Unknown", "root;root/x")]
+    [InlineData("WorstOf", "Healthy", "root;root/x")]
+    // A suppressed sibling does not count in the rollup.
+    [InlineData("BestOf", "Healthy", "root;root/x", "Suppressed")]
+    public void Walk_Causes_FollowsOnlyTheChildrenTheRollupTakesItsStateFrom(string aggregationType, string siblingState, string expected, string siblingImpact = "Standard")
+    {
+        var entities = new[]
+        {
+            Json("{\"name\":\"root\",\"properties\":{\"healthState\":\"Degraded\",\"signalGroups\":{\"dependencies\":{\"aggregationType\":\"" + aggregationType + "\"}}}}"),
+            Entity("x", "Unhealthy"),
+            Entity("y", siblingState, siblingImpact),
+        }.ToDictionary(entity => HealthModelInspection.Name(entity)!, StringComparer.OrdinalIgnoreCase);
+
+        var found = HealthModelInspection.Walk(entities, [Relationship(("root", "x")), Relationship(("root", "y"))], "root", HealthModelWalk.Causes);
+
+        Assert.Equal(expected, string.Join(';', found.Select(step => step.Path)));
+    }
+
+    [Theory]
     // An enabled Resource Health signal is read like the group's other signals. A disabled one is skipped.
     [InlineData("""{"signalName":"RH"}""", "RH;cpu;lat;push")]
     [InlineData("""{"signalName":"RH","enabled":"Enabled"}""", "RH;cpu;lat;push")]

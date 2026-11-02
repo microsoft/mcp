@@ -75,9 +75,11 @@ internal static class HealthModelInspection
         for (var index = 0; index < found.Count; index++)
         {
             var step = found[index];
-            foreach (var name in next.GetValueOrDefault(Name(step.Entity) ?? string.Empty) ?? [])
+            var children = next.GetValueOrDefault(Name(step.Entity) ?? string.Empty) ?? [];
+            var best = children.Select(child => entities.TryGetValue(child, out var entity) && !Suppressed(entity) ? Severity(entity) : null).Min();
+            foreach (var name in children)
             {
-                if (entities.TryGetValue(name, out var reached) && (walk != HealthModelWalk.Causes || Drives(step.Entity, reached)) && seen.Add(name))
+                if (entities.TryGetValue(name, out var reached) && (walk != HealthModelWalk.Causes || Drives(step.Entity, reached, best)) && seen.Add(name))
                 {
                     found.Add(new(step, name, reached));
                 }
@@ -86,17 +88,32 @@ internal static class HealthModelInspection
         return found;
     }
 
-    // A child that is not suppressed drives its parent when it is Degraded or Unhealthy. An Unknown child never beats a
-    // known state under WorstOf (the default) or BestOf, and MinHealthy and MaxNotHealthy count it only when the
-    // parent's dependencies set ignoreUnknown to false. Otherwise it drives only a parent that is Unknown itself.
-    private static bool Drives(JsonElement parent, JsonElement child) =>
-        Text(Property(child, "properties"), "impact") != "Suppressed"
-        && HealthState(child) switch
-        {
-            "Degraded" or "Unhealthy" => true,
-            "Unknown" => HealthState(parent) == "Unknown" || CountsUnknown(Property(Property(Property(parent, "properties"), "signalGroups"), "dependencies")),
-            _ => false,
-        };
+    // A child that is not suppressed drives its parent when it is Degraded or Unhealthy. BestOf takes the least severe
+    // state of the children (best), so there a child drives only when no sibling is healthier. An Unknown child never
+    // beats a known state under WorstOf (the default) or BestOf, and MinHealthy and MaxNotHealthy count it only when
+    // the parent's dependencies set ignoreUnknown to false. Otherwise it drives only a parent that is Unknown itself.
+    private static bool Drives(JsonElement parent, JsonElement child, int? best)
+    {
+        var dependencies = Property(Property(Property(parent, "properties"), "signalGroups"), "dependencies");
+        return !Suppressed(child)
+            && HealthState(child) switch
+            {
+                "Degraded" or "Unhealthy" => Text(dependencies, "aggregationType") != "BestOf" || Severity(child) <= best,
+                "Unknown" => HealthState(parent) == "Unknown" || CountsUnknown(dependencies),
+                _ => false,
+            };
+    }
+
+    private static bool Suppressed(JsonElement entity) => Text(Property(entity, "properties"), "impact") == "Suppressed";
+
+    // How severe a known state is: Healthy 0, Degraded 1, Unhealthy 2. Unknown has no severity.
+    private static int? Severity(JsonElement entity) => HealthState(entity) switch
+    {
+        "Healthy" => 0,
+        "Degraded" => 1,
+        "Unhealthy" => 2,
+        _ => null,
+    };
 
     private static bool CountsUnknown(JsonElement dependencies) =>
         Text(dependencies, "aggregationType") is "MinHealthy" or "MaxNotHealthy"

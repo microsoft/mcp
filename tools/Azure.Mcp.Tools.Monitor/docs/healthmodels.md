@@ -29,8 +29,9 @@ azmcp monitor healthmodels inspect --subscription <subscription> --resource-grou
 ```
 
 Why the model is degraded: walk down from the root entity (named like the model) through the children that drive each
-state: Degraded or Unhealthy and not suppressed, and Unknown only where the rollup counts Unknown children (an Unknown
-parent, or a `MinHealthy` or `MaxNotHealthy` rollup with `ignoreUnknown: false`):
+state: Degraded or Unhealthy and not suppressed (under a `BestOf` rollup, only when no sibling is healthier), and
+Unknown only where the rollup counts Unknown children (an Unknown parent, or a `MinHealthy` or `MaxNotHealthy` rollup
+with `ignoreUnknown: false`):
 
 ```bash
 azmcp monitor healthmodels inspect ... --health-model shop --walk Causes --include Signals
