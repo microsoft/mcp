@@ -175,19 +175,20 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
             entities.TryAdd(HealthModelInspection.Name(entity) ?? string.Empty, entity);
         }
 
-        List<(string? Path, JsonElement Entity)> selected;
+        // A walk's paths are built only for the page it returns.
+        List<(HealthModelWalkStep? Step, JsonElement Entity)> selected;
         if (request.Walk is { } walk)
         {
             var start = Find(entities, request.Entity ?? healthModel, healthModel, truncated);
             var (relationships, relationshipsTruncated) = await ListAsync(model.GetHealthModelRelationships().GetAllAsync(request.Timestamp, cancellationToken), cancellationToken);
             truncated |= relationshipsTruncated;
-            selected = [.. HealthModelInspection.Walk(entities, relationships, start, walk).Select(step => ((string?)step.Path, step.Entity))];
+            selected = [.. HealthModelInspection.Walk(entities, relationships, start, walk).Select(step => ((HealthModelWalkStep?)step, step.Entity))];
         }
         else
         {
             selected = request.Entity is { } name
                 ? [(null, entities[Find(entities, name, healthModel, truncated)])]
-                : [.. listed.Select(entity => ((string?)null, entity))];
+                : [.. listed.Select(entity => ((HealthModelWalkStep?)null, entity))];
         }
 
         selected = [.. selected.Where(item => HealthModelInspection.Admits(request.WhereHealth, HealthModelInspection.HealthState(item.Entity)))];
@@ -222,7 +223,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         await Parallel.ForEachAsync(
             Enumerable.Range(0, page.Count),
             new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentRequests, CancellationToken = cancellationToken },
-            async (index, token) => items[index] = await CompleteAsync(armClient, model.Id, page[index].Path, page[index].Entity, reads, token));
+            async (index, token) => items[index] = await CompleteAsync(armClient, model.Id, page[index].Step?.Path, page[index].Entity, reads, token));
 
         return new([.. items.Select(item => Project(item, fields))], selected.Count)
         {

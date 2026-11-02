@@ -51,10 +51,10 @@ internal static class HealthModelInspection
 
     /// <summary>
     /// Walks the dependency graph breadth-first from <paramref name="start"/> and returns it and each entity reached,
-    /// once, with the path it was first reached by. <see cref="HealthModelWalk.Causes"/> follows only children that drive
+    /// once, with the step it was first reached from. <see cref="HealthModelWalk.Causes"/> follows only children that drive
     /// their parent's state. A walk reaches each listed entity at most once, so it needs no cap of its own.
     /// </summary>
-    internal static List<(string Path, JsonElement Entity)> Walk(
+    internal static List<HealthModelWalkStep> Walk(
         IReadOnlyDictionary<string, JsonElement> entities,
         IEnumerable<JsonElement> relationships,
         string start,
@@ -70,16 +70,16 @@ internal static class HealthModelInspection
             }
         }
 
-        var found = new List<(string Path, JsonElement Entity)> { (start, entities[start]) };
+        var found = new List<HealthModelWalkStep> { new(null, start, entities[start]) };
         var seen = new HashSet<string>([start], StringComparer.OrdinalIgnoreCase);
         for (var index = 0; index < found.Count; index++)
         {
-            var (path, entity) = found[index];
-            foreach (var name in next.GetValueOrDefault(Name(entity) ?? string.Empty) ?? [])
+            var step = found[index];
+            foreach (var name in next.GetValueOrDefault(Name(step.Entity) ?? string.Empty) ?? [])
             {
-                if (entities.TryGetValue(name, out var reached) && (walk != HealthModelWalk.Causes || Drives(entity, reached)) && seen.Add(name))
+                if (entities.TryGetValue(name, out var reached) && (walk != HealthModelWalk.Causes || Drives(step.Entity, reached)) && seen.Add(name))
                 {
-                    found.Add(($"{path}/{name}", reached));
+                    found.Add(new(step, name, reached));
                 }
             }
         }
