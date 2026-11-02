@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.Monitor.Models.HealthModels;
 
-/// <summary>Keeps entities in one health state; <see cref="NotHealthy"/> is Degraded, Unhealthy or Unknown.</summary>
+/// <summary>Keeps entities in one health state. <see cref="NotHealthy"/> keeps Degraded, Unhealthy and Unknown ones.</summary>
 public enum HealthModelHealthFilter
 {
     Healthy,

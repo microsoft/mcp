@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 
 /// <summary>
 /// The calculations of an inspection over CloudHealth API payloads: which entities it selects, and which of their
-/// fields it keeps. Payloads are never rearranged, renamed or merged; a projection only leaves fields out. No I/O.
+/// fields it keeps. Payloads are never rearranged, renamed or merged. A projection only leaves fields out. No I/O.
 /// </summary>
 internal static class HealthModelInspection
 {
@@ -28,13 +28,16 @@ internal static class HealthModelInspection
     internal static bool Admits(HealthModelHealthFilter? filter, string? state) => filter switch
     {
         null => true,
-        HealthModelHealthFilter.NotHealthy => state is "Degraded" or "Unhealthy" or "Unknown",
+        HealthModelHealthFilter.NotHealthy => Admits(HealthModelHealthFilter.Degraded, state)
+            || Admits(HealthModelHealthFilter.Unhealthy, state)
+            || Admits(HealthModelHealthFilter.Unknown, state),
         _ => string.Equals(state, filter.ToString(), StringComparison.OrdinalIgnoreCase),
     };
 
     /// <summary>
     /// The window to send for history and annotations: it ends at <paramref name="endAt"/>, else <paramref name="timestamp"/>,
     /// and starts a day before its end unless given. With neither, the service's own default applies.
+    /// For example, an endAt of 2026-11-01T12:00Z alone gives the window from 2026-10-31T12:00Z to then.
     /// </summary>
     internal static (DateTimeOffset? StartAt, DateTimeOffset? EndAt) Window(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset? timestamp)
     {
@@ -85,7 +88,7 @@ internal static class HealthModelInspection
 
     // A child that is not suppressed drives its parent when it is Degraded or Unhealthy. An Unknown child never beats a
     // known state under WorstOf (the default) or BestOf, and MinHealthy and MaxNotHealthy count it only when the
-    // parent's dependencies set ignoreUnknown to false; otherwise it drives only a parent that is Unknown itself.
+    // parent's dependencies set ignoreUnknown to false. Otherwise it drives only a parent that is Unknown itself.
     private static bool Drives(JsonElement parent, JsonElement child) =>
         Text(Property(child, "properties"), "impact") != "Suppressed"
         && HealthState(child) switch
@@ -115,7 +118,8 @@ internal static class HealthModelInspection
                 {
                     signals.Add(resourceHealthSignal);
                 }
-                // A group holds its signals; externalSignals is a bare list of them.
+                // A group lists its signals under "signals", as in azureResource.signals.
+                // externalSignals is the list itself.
                 var held = Property(group.Value, "signals") is { ValueKind: JsonValueKind.Array } list ? list : group.Value;
                 if (held.ValueKind != JsonValueKind.Array)
                 {
@@ -248,7 +252,8 @@ internal static class HealthModelInspection
         }
     }
 
-    // Whether a projection keeps any field of the value; a path that matches nothing leaves nothing behind.
+    // Whether a projection keeps any field of the value. A value that no path matches is left out.
+    // For example, properties.signalGroups.*.signals.status drops a signal group that holds no signals.
     private static bool Keeps(JsonElement element, Fields? keep) =>
         keep is null || element.ValueKind switch
         {
@@ -257,8 +262,10 @@ internal static class HealthModelInspection
             _ => false,
         };
 
-    // The fields kept below a property: its named entry, the * entry and the ** entry together; an entry with no
+    // The fields kept below a property are its named entry, the * entry and the ** entry together. An entry with no
     // children keeps everything. A ** entry stays in force below, and what follows it also applies at this level.
+    // For example, properties.healthState with **.status keeps healthState and every status at any depth below
+    // properties.
     private static bool Match(Fields keep, string name, out Fields? child)
     {
         var found = new List<Fields?>();

@@ -165,7 +165,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         var armClient = await CreateArmClientAsync(tenant, HealthModelApi.ClientOptions(), cancellationToken);
         var model = armClient.GetHealthModelResource(HealthModelResource.CreateResourceIdentifier(subscriptionId, resourceGroup, healthModel));
 
-        // One entity now is one GET; anything else reads the entity list, at an instant when asked.
+        // One entity at the current time is a single GET. Anything else lists the entities, at --timestamp when given.
         var (listed, truncated) = request is { Entity: { } single, Walk: null, Timestamp: null }
             ? ([Body((await Entity(armClient, model.Id, single).GetAsync(cancellationToken)).GetRawResponse())], false)
             : await ListAsync(model.GetHealthModelEntities().GetAllAsync(request.Timestamp, cancellationToken), cancellationToken);
@@ -241,7 +241,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
             ? $"Entity '{name}' is not among the first {MaxListed} entities of health model '{healthModel}'; read it without --walk or --timestamp."
             : $"Entity '{name}' was not found in health model '{healthModel}'.");
 
-    /// <summary>Reads what the request includes for one entity, each as the API returns it; a failed read is named in the item's errors.</summary>
+    /// <summary>Reads what the request includes for one entity, each as the API returns it. A failed read is named in the item's errors.</summary>
     private static async Task<HealthModelInspectItem> CompleteAsync(
         ArmClient armClient, ResourceIdentifier modelId, string? path, JsonElement entity, HealthModelInspectRequest request, CancellationToken cancellationToken)
     {
@@ -260,7 +260,8 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         }
         if (request.Include.Contains(HealthModelInclude.SignalHistory))
         {
-            // Signal history is read for one entity only, so its signals share the request bound; each keeps its place.
+            // Signal history is read for one entity only, so its signals share the request bound.
+            // Results stay in signal order.
             var signals = HealthModelInspection.SignalNames(entity).Signals;
             var reads = new (JsonElement? Read, List<string> Errors)[signals.Count];
             await Parallel.ForEachAsync(
@@ -286,7 +287,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         return errors.Count > 0 ? item with { Errors = errors } : item;
     }
 
-    // Keeps the selected fields of each payload; "*" keeps everything, a payload no field names is left out.
+    // Keeps the selected fields of each payload. "*" keeps everything, and a payload that no field names is left out.
     private static HealthModelInspectItem Project(HealthModelInspectItem item, IReadOnlyCollection<string> fields) =>
         fields.Contains("*") ? item : item with
         {
@@ -328,7 +329,8 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         return document.RootElement.Clone();
     }
 
-    // Authentication, authorization and cancellation end the command; any other failure is the entity's.
+    // Authentication, authorization and cancellation failures end the command.
+    // Any other failure is named in the entity's errors.
     private static async Task<JsonElement?> ReadAsync(List<string> errors, string read, Func<Task<Response>> fetch)
     {
         try

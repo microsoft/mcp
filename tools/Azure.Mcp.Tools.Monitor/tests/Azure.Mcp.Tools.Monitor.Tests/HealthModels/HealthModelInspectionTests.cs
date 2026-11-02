@@ -98,7 +98,7 @@ public class HealthModelInspectionTests
     }
 
     [Theory]
-    // An enabled Resource Health signal is read like the group's other signals; a disabled one is not.
+    // An enabled Resource Health signal is read like the group's other signals. A disabled one is skipped.
     [InlineData("""{"signalName":"RH"}""", "RH;cpu;lat;push")]
     [InlineData("""{"signalName":"RH","enabled":"Enabled"}""", "RH;cpu;lat;push")]
     [InlineData("""{"signalName":"RH","enabled":"Disabled"}""", "cpu;lat;push")]

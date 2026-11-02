@@ -139,7 +139,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         _healthModelTopologyName = $"{Settings.ResourceBaseName}-hm-c";
     }
 
-    // Web test recordings made before AZSDK3493 was disabled hold the name "Sanitized"; recordings made since hold the
+    // Web test recordings made before AZSDK3493 was disabled hold the name "Sanitized". Recordings made since hold the
     // base-name-sanitized name, and a timestamped name keeps the time it was recorded at.
     private void AssertWebTestName(string? expected, string? actual)
     {
@@ -1113,7 +1113,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         Assert.True(result.AssertProperty("readAt").TryGetDateTimeOffset(out _));
     }
 
-    // Model B's root has seeded health state transitions (see test-resources-post.ps1); they age out of the default
+    // Model B's root has seeded health state transitions (see test-resources-post.ps1). They age out of the default
     // 24 h window, so the history window covers the last 29 days (the service reach is 30).
     [Fact]
     public async Task Should_Inspect_HealthModel_EntityWithSignalsAndHistory()
