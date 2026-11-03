@@ -36,7 +36,6 @@ public class NetAppFilesPoolService(IAzureService azureService)
             return [Map(poolResource.Value)];
         }
 
-        // todo figure out if we can get GetAllAsync working here
         var poolResources = accountResource.GetCapacityPools().GetAll(cancellationToken);
         return [.. poolResources.Select(Map)];
     }

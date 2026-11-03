@@ -58,6 +58,16 @@ resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01'
   }
 }
 
+resource capacityPool2 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
+  parent: netAppAccount
+  name: '${baseName}-pool2'
+  location: location
+  properties: {
+    serviceLevel: 'Standard'
+    size: 2199023255552
+  }
+}
+
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'

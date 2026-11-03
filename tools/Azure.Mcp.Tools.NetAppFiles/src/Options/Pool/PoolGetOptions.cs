@@ -12,7 +12,7 @@ public sealed class PoolGetOptions : ISubscriptionOption
     public required string Account { get; set; }
 
     [Option(Description = "The name of the capacity pool to retrieve.")]
-    public required string? Pool { get; set; }
+    public string? Pool { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

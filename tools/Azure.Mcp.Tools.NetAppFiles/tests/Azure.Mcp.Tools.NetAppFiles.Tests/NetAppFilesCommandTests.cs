@@ -21,6 +21,8 @@ public class NetAppFilesCommandTests(
     int sizeInTiB = 1;
     string serviceLevel = "Standard";
 
+    long tibInBytes = 1_099_511_627_776;
+
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
     {
         new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
@@ -281,14 +283,48 @@ public class NetAppFilesCommandTests(
                 { "tenant", Settings.TenantId }
             });
 
-        var pool = result.AssertProperty("pool");
-        Assert.Equal(JsonValueKind.Object, pool.ValueKind);
+        var pools = result.AssertProperty("pools");
+        Assert.Equal(JsonValueKind.Array, pools.ValueKind);
+        var pool = pools[0];
         pool.AssertProperty("name");
         pool.AssertProperty("id");
         Assert.Equal(location, pool.AssertProperty("location").GetString());
         Assert.Equal(1_099_511_627_776, pool.AssertProperty("sizeInBytes").GetInt64());
         Assert.Equal(serviceLevel, pool.AssertProperty("serviceLevel").GetString());
         Assert.Equal("Succeeded", pool.AssertProperty("provisioningState").GetString());
+    }
+
+    [Fact]
+    public async Task PoolGet_NoPoolsFilterReturnsAllPools()
+    {
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        (string Name, int SizeInTib)[] poolInfos = [($"{Settings.ResourceBaseName}-pool", 1), ($"{Settings.ResourceBaseName}-pool2", 2)];
+        var resourceGroupName = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "netappfiles_pool_get",
+            new()
+            {
+                { "account", accountName },
+                { "resource-group", resourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var poolsResult = result.AssertProperty("pools");
+        Assert.Equal(JsonValueKind.Array, poolsResult.ValueKind);
+        var pools = poolsResult.EnumerateArray().ToArray();
+        foreach (var poolInfo in poolInfos)
+        {
+            var foundPool = pools.FirstOrDefault(pool => pool.AssertProperty("id").GetString()?.EndsWith($"capacityPools/{poolInfo.Name}") ?? false);
+            Assert.Equal(JsonValueKind.Object, foundPool.ValueKind);
+            foundPool.AssertProperty("id");
+            Assert.Equal("westus", foundPool.AssertProperty("location").GetString());
+            Assert.Equal(poolInfo.SizeInTib * tibInBytes, foundPool.AssertProperty("sizeInBytes").GetInt64());
+            Assert.Equal("Succeeded", foundPool.AssertProperty("provisioningState").GetString());
+        }
+
+        Assert.True(pools.Length >= poolInfos.Length);
     }
 
     [Fact]

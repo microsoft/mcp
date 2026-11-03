@@ -157,8 +157,8 @@ public class PoolUpdateCommandTests : SubscriptionCommandUnitTestsBase<PoolUpdat
 
     [Theory]
     [InlineData("0")]
-    [InlineData("2")]
-    [InlineData("5")]
+    [InlineData("-1")]
+    [InlineData("2049")]
     [InlineData("8388608")]
     public async Task ExecuteAsync_InvalidSize_ReturnsBadRequest(string size)
     {
