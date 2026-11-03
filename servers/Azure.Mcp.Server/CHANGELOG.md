@@ -2,15 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.5 (Unreleased)
+## 4.0.0-beta.5 (2026-11-03)
 
 ### Features Added
 
-### Breaking Changes
+- Added `azmcp advisor insight list` command to list Azure Advisor insights (idle resources, zonal resiliency, service retirement) with typed KPIs for a Service Group, a subscription, or all accessible Service Groups and subscriptions when no scope is given. Supports `--service-group` or `--subscription` (mutually exclusive), `--insight-name`, `--top`, and `--tenant`. [[#3938](https://github.com/microsoft/mcp/pull/3938)]
 
 ### Bugs Fixed
 
+- Reduced repeated Kusto query latency by caching access tokens per client and refreshing them before expiration. [[#4027](https://github.com/microsoft/mcp/pull/4027)]
+- Improved exception handling to preserve authentication, cancellation, and service error details, and correctly identify missing resources and malformed AppLens responses. [[#3795](https://github.com/microsoft/mcp/pull/3795)]
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Fixed concurrent external MCP client initialization, single-tool discovery cache publication, and overlapping tool-loader disposal. Canceling a caller no longer cancels shared client initialization. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Honor remote MCP tool-list time-to-live values and refresh cached proxy tools when they expire. [[#3780](https://github.com/microsoft/mcp/pull/3780)]
+
 ### Other Changes
+
+- Added scheduled Azure MCP release-preparation pull requests at noon Pacific on Tuesdays and Thursdays outside Microsoft US holidays, with configurable release-owner mentions. [[#4067](https://github.com/microsoft/mcp/pull/4067)]
 
 ## 4.0.0-beta.4 (2026-10-29)
 
