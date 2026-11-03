@@ -1,0 +1,4 @@
+pr: 4045
+changes:
+  - section: "Breaking Changes"
+    description: "Renamed `subscription` to `subscriptions`, `recommendation-type-id` to `recommendation-type-ids`, and `resource-type` to `resource-types` for `advisor_recommendation_list` and `advisor_recommendation_summary`. The new inputs require arrays of strings, including one-element arrays for single selections. The singular input names are no longer accepted."
