@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Options.Snapshot;
 
-public sealed class SnapshotCreateOptions : ISubscriptionOption
+public sealed class SnapshotCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FileSharesOptionDescriptions.SnapshotFileShareName)]
     public required string FileShareName { get; set; }

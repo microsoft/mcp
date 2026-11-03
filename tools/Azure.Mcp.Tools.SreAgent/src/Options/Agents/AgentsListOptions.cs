@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options.Agents;
 
-public sealed class AgentsListOptions : ISubscriptionOption
+public sealed class AgentsListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

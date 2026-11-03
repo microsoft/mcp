@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// <summary>
 /// Specifies the record to retrieve.
 /// </summary>
-public sealed class RecordGetOptions
+public sealed class RecordGetOptions : ITenantOption
 {
     [Option(Description = "The fully-qualified record id '{partition}:{object-type}:{unique-id}', for example 'opendes:well:W-99'. Pass it verbatim as returned by the record list operation.")]
     public required string Id { get; set; }

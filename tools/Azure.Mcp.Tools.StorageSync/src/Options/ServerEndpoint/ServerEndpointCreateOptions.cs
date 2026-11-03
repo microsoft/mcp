@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.ServerEndpoint;
 /// <summary>
 /// Options for ServerEndpointCreateCommand.
 /// </summary>
-public sealed class ServerEndpointCreateOptions : ISubscriptionOption
+public sealed class ServerEndpointCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 
-public class AutoimportJobGetOptions : ISubscriptionOption
+public class AutoimportJobGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.FileSystemName)]
     public required string FilesystemName { get; set; }

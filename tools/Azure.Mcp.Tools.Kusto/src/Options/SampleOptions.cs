@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class SampleOptions : ISubscriptionOption, ITableOption
+public sealed class SampleOptions : ISubscriptionOption, ITenantOption, ITableOption
 {
     [Option(Description = "The maximum number of results to return. Must be a positive integer between 1 and 10000. Default is 10.")]
     public int? Limit { get; set; }

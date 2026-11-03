@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Compute.Options.Disk;
 /// <summary>
 /// Options for the DiskUpdate command.
 /// </summary>
-public sealed class DiskUpdateOptions : ISubscriptionOption
+public sealed class DiskUpdateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the disk.

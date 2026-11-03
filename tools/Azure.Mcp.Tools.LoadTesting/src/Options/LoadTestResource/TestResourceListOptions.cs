@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.LoadTesting.Options.LoadTestResource;
 
-public sealed class TestResourceListOptions : ISubscriptionOption
+public sealed class TestResourceListOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// The name of the test resource.

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options;
 
-public sealed class ResourceLogQueryOptions : ISubscriptionOption
+public sealed class ResourceLogQueryOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = MonitorOptionDescriptions.Query)]
     public required string Query { get; set; }

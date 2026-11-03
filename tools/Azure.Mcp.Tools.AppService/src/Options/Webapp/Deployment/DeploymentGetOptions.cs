@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppService.Options.Webapp.Deployment;
 
-public sealed class DeploymentGetOptions : ISubscriptionOption
+public sealed class DeploymentGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = AppServiceOptionDefinitions.App)]
     public required string App { get; set; }

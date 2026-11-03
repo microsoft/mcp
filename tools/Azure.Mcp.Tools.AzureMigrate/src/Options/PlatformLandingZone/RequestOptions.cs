@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.PlatformLandingZone;
 /// <summary>
 /// Options for the platform landing zone request command.
 /// </summary>
-public sealed class RequestOptions : ISubscriptionOption
+public sealed class RequestOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the action to perform (update, generate, download, status, check).

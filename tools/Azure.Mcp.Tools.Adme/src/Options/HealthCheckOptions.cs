@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options;
 /// <summary>
 /// Configures the health check target.
 /// </summary>
-public sealed class HealthCheckOptions
+public sealed class HealthCheckOptions : ITenantOption
 {
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]
     public required string Endpoint { get; set; }

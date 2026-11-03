@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Item;
 
-public sealed class ItemTextSearchOptions : ISubscriptionOption
+public sealed class ItemTextSearchOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The document property to search. Supports dot notation (e.g., 'name' or 'profile.name'). Allowed characters: letters, digits, and underscores.")]
     public required string SearchProperty { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Options.Informational;
 
-public sealed class FileShareGetLimitsOptions : ISubscriptionOption
+public sealed class FileShareGetLimitsOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FileSharesOptionDescriptions.Location)]
     public required string Location { get; set; }

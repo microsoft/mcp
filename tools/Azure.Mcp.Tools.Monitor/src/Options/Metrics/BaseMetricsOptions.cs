@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.Metrics;
 /// <summary>
 /// Base options for all metrics commands
 /// </summary>
-public abstract class BaseMetricsOptions : ISubscriptionOption
+public abstract class BaseMetricsOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// The resource type (optional, e.g., 'Microsoft.Storage/storageAccounts')

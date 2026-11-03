@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Options;
 
-public sealed class ResourceListOptions : ISubscriptionOption
+public sealed class ResourceListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }

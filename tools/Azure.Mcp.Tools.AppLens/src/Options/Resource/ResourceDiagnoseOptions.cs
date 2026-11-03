@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.AppLens.Options.Resource;
 /// <summary>
 /// Options for the AppLens resource diagnose command.
 /// </summary>
-public sealed class ResourceDiagnoseOptions
+public sealed class ResourceDiagnoseOptions : ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

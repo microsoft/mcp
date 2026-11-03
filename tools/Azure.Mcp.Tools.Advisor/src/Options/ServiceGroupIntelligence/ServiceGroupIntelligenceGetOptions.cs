@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.ServiceGroupIntelligence;
 
 /// <summary> Options for getting the Advisor status of Service Groups. </summary>
-public sealed class ServiceGroupIntelligenceGetOptions
+public sealed class ServiceGroupIntelligenceGetOptions : ITenantOption
 {
     [Option(Description = "Service Group name (for example 'commerce'), not its full ARM ID. " +
         "Omit to return the status of all Service Groups.")]

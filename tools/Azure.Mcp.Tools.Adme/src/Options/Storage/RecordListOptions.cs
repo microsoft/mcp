@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// <summary>
 /// Specifies the kind and paging for listing record ids.
 /// </summary>
-public sealed class RecordListOptions
+public sealed class RecordListOptions : ITenantOption
 {
     [Option(Description = "The fully-qualified kind '{authority}:{source}:{entityType}:{version}', for example 'osdu:wks:master-data--Well:1.0.0'. Use the schema list operation to discover valid kinds.")]
     public required string Kind { get; set; }

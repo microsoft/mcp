@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.RegisteredServer;
 /// <summary>
 /// Options for RegisteredServerUpdateCommand.
 /// </summary>
-public sealed class RegisteredServerUpdateOptions : ISubscriptionOption
+public sealed class RegisteredServerUpdateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

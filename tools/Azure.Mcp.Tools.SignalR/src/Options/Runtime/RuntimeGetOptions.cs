@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.SignalR.Options.Runtime;
 /// <summary>
 /// Options for showing SignalR service details.
 /// </summary>
-public sealed class RuntimeGetOptions : ISubscriptionOption
+public sealed class RuntimeGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Name = "signalr", Description = "The name of the SignalR runtime")]
     public string? SignalR { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Grafana.Options.Workspace;
 
-public sealed class WorkspaceListOptions : ISubscriptionOption
+public sealed class WorkspaceListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

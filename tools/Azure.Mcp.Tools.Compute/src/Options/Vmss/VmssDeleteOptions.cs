@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Options.Vmss;
 
-public sealed class VmssDeleteOptions : ISubscriptionOption
+public sealed class VmssDeleteOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ComputeOptionDescriptions.VmssName, Aliases = ["name"])]
     public required string VmssName { get; set; }

@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.FileShares.Options.FileShare;
 /// <summary>
 /// Options for FileShareDeleteCommand.
 /// </summary>
-public sealed class FileShareDeleteOptions : ISubscriptionOption
+public sealed class FileShareDeleteOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the file share to delete.
