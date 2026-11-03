@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Options;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
@@ -106,7 +107,18 @@ internal static class OptionSchemaGenerator
         foreach (var option in options)
         {
             var propName = NameNormalization.NormalizeOptionName(option.Name);
-            properties[propName] = CreatePropertySchema(option.ValueType, option.Description);
+            var propertySchema = CreatePropertySchema(option.ValueType, option.Description);
+            if (OptionTypeHandler.GetEnumValues(option) is { } enumValues)
+            {
+                var enumSchema = option.ValueType.IsArray ? propertySchema["items"]! : propertySchema;
+                var values = new JsonArray();
+                foreach (var value in enumValues)
+                {
+                    values.Add((JsonNode)value);
+                }
+                enumSchema["enum"] = values;
+            }
+            properties[propName] = propertySchema;
 
             if (option.Required)
             {

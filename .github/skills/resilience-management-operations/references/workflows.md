@@ -78,7 +78,7 @@ option. GET selects an assignment with `name`; mutations use `goal-assignment`.
 2. Run `mcp_azure_mcp_ser_resiliency_drill_check-resync-readiness` when configuration may be stale or a current readiness result is required; retain the operation ID and do not treat acceptance as readiness.
 3. Validate with `mcp_azure_mcp_ser_resiliency_drill_validate-for-execution`. Supply source locations and optionally the intended operation (`Failover`, `Reprotect`, `FailoverReverse`, or `ReprotectReverse`). Sources may be omitted only for explicit `Reprotect`; omitting the operation still requires sources.
 4. Stop and report blockers when validation does not qualify the drill for execution.
-5. Ask for `Failover` versus `TestFailover` if not explicit.
+5. Ask for `Failover` versus `TestFailover` if not explicit. The required `mode` JSON Schema enum constrains the value but does not choose the execution mode for the customer.
 6. Start with `mcp_azure_mcp_ser_resiliency_drill_start` and retain the operation ID.
 7. Inspect runs with `mcp_azure_mcp_ser_resiliency_drill_run_get` when status is requested.
 8. Inspect run targets with `mcp_azure_mcp_ser_resiliency_drill_run_resource_get` when per-resource results are needed.
@@ -125,7 +125,7 @@ For an existing plan, read it first and preserve omitted values. If it retains a
 
 1. Require source locations, selected recovery-resource IDs, or both. Never derive selectors from plan metadata.
 2. Check readiness if no current readiness result exists.
-3. Call `mcp_azure_mcp_ser_resiliency_recoveryplan_validateforfailover` with the exact selectors and consent intended for execution.
+3. Call `mcp_azure_mcp_ser_resiliency_recoveryplan_validateforfailover` with the exact selectors and consent intended for execution. The optional `user-consent` JSON Schema enum accepts `Unspecified` or `Allowed`; omit it if the customer supplied neither, and never infer `Allowed`.
 4. Partition the result into qualified and unqualified resources and report every blocking reason.
 5. If any user-selected resource is unqualified, stop and ask whether the user wants to correct blockers or explicitly change the selector set.
 6. If selectors change, validate again.

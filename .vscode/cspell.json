@@ -37,6 +37,14 @@
     {
       "filename": "**/*.trx",
       "enabled": false
+    },
+    {
+      "filename": "docs/design/json-schema-enum-parameters*.json",
+      "words": [
+        "azurekeyvault",
+        "azurestorageaccount",
+        "examplefs"
+      ]
     }
   ],
   "dictionaryDefinitions": [

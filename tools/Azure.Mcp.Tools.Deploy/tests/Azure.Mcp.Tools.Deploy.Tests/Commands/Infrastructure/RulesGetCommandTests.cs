@@ -11,6 +11,21 @@ namespace Azure.Mcp.Tools.Deploy.Tests.Commands.Infrastructure;
 
 public class RulesGetCommandTests : CommandUnitTestsBase<RulesGetCommand, object>
 {
+    [Theory]
+    [InlineData("Unsupported")]
+    [InlineData("0")]
+    [InlineData("AzCli,AZD")]
+    [InlineData("")]
+    public async Task ExecuteAsync_RejectsInvalidDeploymentTool(string value)
+    {
+        var response = await ExecuteCommandAsync("--deployment-tool", value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--deployment-tool", response.Message);
+        Assert.Contains("AzCli", response.Message);
+        Assert.Contains("AZD", response.Message);
+    }
+
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {

@@ -671,6 +671,7 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - Throw specific exception types (CA2201 is enforced for production code). Preserve Azure SDK, authentication, HTTP, and cancellation exceptions so command handlers retain their status codes and diagnostics.
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
+- Use enum-typed options for small, closed sets of named parameter values. See the [JSON Schema enum parameter pattern and pilot](https://github.com/microsoft/mcp/blob/main/docs/design/json-schema-enum-parameters.md) for binding, compatibility, description, and migration requirements.
 
 ### Token Acquisition for HTTP Clients
 

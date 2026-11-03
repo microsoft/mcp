@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Plans;
@@ -20,8 +21,8 @@ public sealed class RecoveryPlanValidateForFailoverOptions
     [Option(Description = "Customer-provided full recovery-resource IDs to validate. Provide selected resource IDs, source locations, or both. Do not infer omitted IDs; ask the customer.")]
     public string[]? SelectedResourceIds { get; set; }
 
-    [Option(Description = "Optional execution consent. Allowed values are Unspecified and Allowed.")]
-    public string? UserConsent { get; set; }
+    [Option(Description = "Optional customer-provided execution consent; do not infer consent.")]
+    public RecoveryPlanUserConsent? UserConsent { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
