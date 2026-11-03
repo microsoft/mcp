@@ -89,7 +89,7 @@ The manual configuration examples use `mcpServers` as the root object. In Visual
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
 
-When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job-instance lookup; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job submission or lookup; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
 
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
@@ -348,18 +348,18 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs. Jobs currently exposes only one operation:
-reading an existing item job instance. No job run, cancel, list, or schedule tools are provided by Jobs.
+items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job and
+reads an existing item job instance in separate calls. No cancel, list, or schedule tools are provided by Jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
 # Core-only: item/definition tools, but no job-instance lookup.
 fabmcp server start --mode all --namespace core
 
-# Jobs-only: the single job-instance lookup, without Core tools.
+# Jobs-only: job submission and lookup, without Core tools.
 fabmcp server start --mode all --namespace jobs
 
-# Item/definition work plus existing job status: enable both areas.
+# Item/definition work plus job submission and status: enable both areas.
 fabmcp server start --mode all --namespace core --namespace jobs
 
 # The same combined selection with hierarchical namespace routers or a single router.
@@ -368,11 +368,12 @@ fabmcp server start --mode single --namespace core --namespace jobs
 ```
 
 Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
-not the shared services needed by the selected area. In `all` mode, the lookup is exposed directly as
-`jobs_get-item-job-instance`. In `namespace` mode, call the `jobs` router with `learn=true` to obtain its
-schema, then specify `command="jobs_get-item-job-instance"` and its `parameters`. In `single` mode,
+not the shared services needed by the selected area. In `all` mode, the tools are exposed directly as
+`jobs_get-item-job-instance` and `jobs_run-on-demand-item-job`. In `namespace` mode, call the `jobs`
+router with `learn=true` to obtain their schemas, then specify the command name and its `parameters`. In `single` mode,
 use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
-the commands for a selected area. Core-only selection never exposes or routes the Jobs lookup.
+the commands for a selected area. Core-only selection never exposes or routes Jobs tools.
+Read-only mode hides and denies Run while retaining Get.
 
 ### API Documentation & Best Practices
 
@@ -1090,6 +1091,7 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 | Tool | Description |
 |------|-------------|
 | `jobs_get-item-job-instance` | Reads one known item's job instance, including status, timing, safe failure metadata, and available retry guidance. Does not poll, run, cancel, or schedule jobs. |
+| `jobs_run-on-demand-item-job` | Submits exactly one on-demand item job and returns an accepted receipt, a trustworthy job-instance ID when available, and validated first-status-read guidance. Never automatically retries or polls. |
 
 **Get Item Job Instance (`jobs_get-item-job-instance`)**
 
@@ -1145,6 +1147,94 @@ Example prompts:
 - "Read job instance `<job-instance-id>` for item `<item-id>` in workspace `<workspace-id>` once."
 - "Show that job instance's status and safe failure information; do not wait or retrieve results."
 - "Get its latest snapshot and any Retry-After guidance without starting another job."
+
+**Run On-Demand Item Job (`jobs_run-on-demand-item-job`)**
+
+Calls the [Run On Demand Item Job API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/run-on-demand-item-job)
+with one `POST /v1/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances`.
+Explicit `workspace-id`, `item-id` (nonempty UUIDs), and `job-type` are required. The job type is encoded
+as one path component, not a query parameter. There is no default job type, workload allowlist,
+item/job discovery, or preflight request.
+
+Run **may consume compute or change data**. It is destructive, non-read-only, and non-idempotent;
+calling it again can start another job. The caller needs item execution permission and, for delegated
+access, `Item.Execute.All` or the corresponding item-specific scope such as `Notebook.Execute.All`.
+The API supports users, service principals, and managed identities, subject to Fabric and workload
+authorization. The host's existing credential provider is used in both stdio and HTTP modes; the
+tool does not grant permissions or bypass OBO. Read-only mode excludes and rejects Run without
+changing Get's read-only behavior.
+
+Optional inputs:
+
+| Option | API field | Contract |
+|--------|-----------|----------|
+| `execution-data` | `executionData` | A JSON object containing opaque workload-specific execution data. |
+| `job-parameters` | `parameters` | A JSON array of objects with required string `name` and `type` fields and a `value` field. Names are case-insensitively unique and at most 256 characters. Future type strings, opaque values (including scalars), and extension properties are preserved. |
+
+Omitted inputs stay omitted; omitting both sends **no body**. Explicit `{}` execution data and `[]`
+parameters are retained, not replaced with defaults. The tool rejects malformed/duplicate JSON,
+invalid envelopes, and parameter-name violations before authentication or HTTP. Each JSON option has
+a **1 MiB UTF-8 input budget and 32-level nesting limit**; the complete serialized request, including
+its envelope and escaping, also has a **1 MiB (1,048,576 byte) budget**. The job-type tool budget is
+1,024 UTF-8 bytes; blank values, control characters, invalid Unicode, and `.`/`..` path segments are
+rejected. These are generic tool resource/URI safeguards, not workload-specific content rules.
+As with other commands, the shared MCP argument binder treats an option whose RPC value is JSON
+`null` as omitted. To provide a JSON payload, use the documented string option; the JSON text `"null"`
+is rejected rather than sent as an execution-data object or parameter array.
+
+Parameter support varies by item and job type. `FeatureNotAvailable` or any other failure does **not**
+cause parameters to be removed or the POST to be retried. The option is named `job-parameters`
+deliberately: in namespace/single mode, the router's outer `parameters` remains the argument object,
+and its `job-parameters` member contains the JSON array string.
+
+**HTTP 202 means accepted, not running, completed, or succeeded.** The receipt has
+`submissionStatus: "Accepted"`, the requested `workspaceId`, `itemId`, and `jobType`, and `guidance`.
+When a single Location identifies the documented job-instance path on the expected Fabric HTTPS
+origin and matches the requested workspace/item, `jobInstanceId` is included. The Location is never
+followed or echoed. Missing, invalid, multiple, mismatched, or collection-only Locations produce an
+accepted receipt with `trackingIssue` and no invented ID. Some public API examples
+return a collection Location: this does not justify discovery, resubmission, or treating
+`x-ms-operation-id` as a job-instance ID.
+
+A single valid `Retry-After` becomes `retryAfterSeconds` or `retryAfterUtc`. **Wait at least the supplied
+delay (or until that UTC date) before the first separate status read.** No early-poll shortcut or
+fallback delay is applied. Missing/invalid/multiple guidance is reported as `retryAfterIssue`, leaving
+acceptance intact and the first-read delay unknown.
+
+Run never polls, waits, retrieves results, resubmits, or uses the `/operations` LRO runner. A network
+error, timeout, or cancellation can leave submission uncertain: **a job may already have started**.
+Inspect the item's job history before deciding on another submission; do not retry blindly.
+Confirmed acceptance is retained if cancellation arrives after response headers. Canceling the MCP
+request does not cancel a submitted Fabric job. Backend response/failure bodies and execution inputs
+are not returned or logged by the command.
+
+Run-to-Get handoff, as separate calls with an explicitly authorized item and supported job type:
+
+```powershell
+# Submit once. Choose the supported job type explicitly; this example does not discover one.
+$submission = fabmcp jobs run-on-demand-item-job --workspace-id <workspace-id> --item-id <item-id> --job-type <supported-job-type> | ConvertFrom-Json
+$receipt = $submission.results
+$receipt
+```
+
+Only if `submissionStatus` is `Accepted` and `jobInstanceId` is present, wait at least
+`retryAfterSeconds` or until `retryAfterUtc`. Then make a separate call using the receipt's IDs:
+
+```powershell
+fabmcp jobs get-item-job-instance --workspace-id $receipt.workspaceId --item-id $receipt.itemId --job-instance-id $receipt.jobInstanceId
+```
+
+If tracking or timing metadata is unavailable, inspect the receipt's guidance and Fabric job history
+instead of inventing an ID, an early-read delay, or a retry. The Get response is a snapshot, not an
+instruction to start another job. Both calls work with `--namespace jobs`; add `--namespace core`
+only when also using Core item/definition tools. In namespace mode, learn the `jobs` schema and invoke
+`command="jobs_run-on-demand-item-job"`; single mode additionally uses `tool="jobs"`.
+
+Example prompts (require explicit execution authorization):
+
+- "Submit one job of type `<job-type>` for this item using the workspace/item UUIDs I supplied. Return acceptance only; do not poll or retry."
+- "Run this authorized job once with my execution-data JSON and job-parameters array. Preserve both fields; do not retry without parameters if unsupported."
+- "After the receipt's minimum Retry-After wait, use its trusted job-instance ID in one separate Get call; do not submit another job."
 
 ### Data Factory Operations
 

@@ -24,8 +24,9 @@ suite('Fabric MCP Extension - configuration', () => {
         labels.forEach((label, index) => {
             assert.ok(descriptions[index].startsWith(label), `Missing description for ${label}`);
         });
-        assert.ok(descriptions[1].includes('Read one existing item job instance'));
-        assert.ok(descriptions[1].includes('without polling or starting jobs'));
+        assert.ok(descriptions[1].includes('Submit one on-demand item job or read an existing job instance'));
+        assert.ok(descriptions[1].includes('acceptance and retry guidance'));
+        assert.ok(descriptions[1].includes('no polling or automatic retries'));
     });
 
     test('keeps an empty namespace selection available to enable all toolsets', () => {

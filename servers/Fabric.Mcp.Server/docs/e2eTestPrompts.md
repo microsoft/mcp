@@ -17,7 +17,14 @@ Definition updates replace the complete definition of an existing item. Review t
 
 Job-instance lookup requires explicitly supplied workspace, item, and existing job-instance IDs. These prompts do not authorize starting a job or discovering a live fixture. Job-instance IDs are not Fabric operation IDs, and a successful snapshot read does not mean the job succeeded.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job-instance lookup alone,
+Job submission requires explicit execution authorization, workspace/item UUIDs, and a supported job type.
+Run prompts below are not permission to start a real job. No non-production execution fixture is assumed.
+Submit once, return acceptance rather than completion, and never retry automatically or strip unsupported
+parameters. Wait at least the receipt's valid Retry-After guidance before a separate Get call. An accepted
+receipt without a trustworthy job-instance ID cannot be recovered by listing, inventing an ID, or resubmitting.
+After an ambiguous network failure, timeout, or cancellation, inspect job history before any new submission.
+
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission and lookup alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -109,3 +116,8 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_get-item-job-instance | Use the workspace, item, and job-instance UUIDs I supplied to read the latest snapshot once. Preserve a future status string instead of treating it as successful completion. | context-required |
 | jobs_get-item-job-instance | Check that existing item's job instance using its saved job-instance ID, not the generic Fabric operation-state or operation-result tools. Return the snapshot without waiting. | context-required |
 | jobs_get-item-job-instance | With the server configured using --namespace core --namespace jobs --mode all, use the workspace and item UUIDs returned by core_get-item and the existing job-instance UUID I supplied to read its status once. Do not discover or start a job. | context-required |
+| jobs_run-on-demand-item-job | Submit exactly one explicitly authorized job of type \<job-type> for item \<item-id> in workspace \<workspace-id>. Return the accepted receipt without polling, waiting, fetching results, or retrying. | context-required |
+| jobs_run-on-demand-item-job | Run the authorized item job once with the execution-data JSON and job-parameters JSON array I supplied. Preserve omitted fields and opaque values; do not strip parameters or resubmit if Fabric reports FeatureNotAvailable. | context-required |
+| jobs_run-on-demand-item-job | Submit this authorized job with no optional body. If Location is missing, invalid, or identifies only a collection, report accepted but not trackable; never invent an ID or use x-ms-operation-id as the job-instance ID. | context-required |
+| jobs_run-on-demand-item-job | In the jobs namespace router, submit the authorized job once, keeping the outer parameters object separate from job-parameters. Return its job-instance ID and Retry-After guidance for a later independent Get call. | context-required |
+| jobs_run-on-demand-item-job | Submit the explicitly authorized job once. After waiting at least the receipt's valid Retry-After guidance, hand its workspaceId, itemId, and trusted jobInstanceId to jobs_get-item-job-instance in a separate call; do not use operation-state or operation-result tools. | context-required |
