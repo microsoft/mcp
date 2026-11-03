@@ -23,6 +23,21 @@ public class ItemCreateOptions
     [Option(Description = "The description for the item, at most 256 characters.")]
     public string? Description { get; set; }
 
+    [Option(Description = "Optional nonempty UUID of an existing Fabric folder in the workspace. Passed directly without looking up or creating folders. Omit to use the workspace root.")]
+    public string? FolderId { get; set; }
+
+    [Option(Description = "Item-specific creation properties as a JSON object string, up to 1 MiB (1048576 UTF-8 bytes) and 32 nesting levels. Mutually exclusive with every inline or saved-file definition option. Fabric validates supported properties for the item type. Not a path or a complete create-request body.")]
+    public string? CreationPayload { get; set; }
+
+    [Option(Description = "The API's top-level item-specific options as a JSON object string, up to 1 MiB (1048576 UTF-8 bytes) and 32 nesting levels. Requires an inline or saved-file definition source. Consult the item's Update Definition API for supported options. These are not LRO wait settings; use sync, max-wait-seconds, and early-poll for waiting.")]
+    public string? Options { get; set; }
+
+    [Option(Description = "Optional label settings as a JSON object string, up to 4096 UTF-8 bytes: {\"labelId\":\"nonempty UUID\",\"sensitivityLabelApplyStrategy\":\"ApplyOrFail\"}. When supplied, labelId is required and must be a nonempty UUID; the strategy is optional and stays omitted when not supplied. A supplied strategy must be ApplyOrFail or Ignore. Fabric defaults an omitted strategy to ApplyOrFail. Ignore explicitly permits creation without the label if it cannot be applied; the tool never downgrades policy or retries without it.")]
+    public string? SensitivityLabelSettings { get; set; }
+
+    [OptionContainer<DefinitionInputOptions>(Prefix = "")]
+    public DefinitionInputOptions? DefinitionInput { get; set; }
+
     [Option(Description = "Wait asynchronously for accepted creation to complete. Defaults to false, returning an operation receipt without polling.", DefaultValue = false)]
     public bool Sync { get; set; }
 

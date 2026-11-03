@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Commands.Insight;
 using Azure.Mcp.Tools.Advisor.Commands.Metadata;
 using Azure.Mcp.Tools.Advisor.Commands.Recommendation;
 using Azure.Mcp.Tools.Advisor.Commands.Remediation;
@@ -28,6 +29,8 @@ public class AdvisorSetup : IAreaSetup
         services.TryAddSingleton<IResourceResolverService, ResourceResolverService>();
         services.TryAddSingleton<IMonitorMetricsService, MonitorMetricsService>();
         services.AddSingleton<RecommendationPreValidationCommand>();
+        services.AddSingleton<IAdvisorInsightService, AdvisorInsightService>();
+        services.AddSingleton<InsightListCommand>();
         services.AddSingleton<IAdvisorServiceGroupIntelligenceService, AdvisorServiceGroupIntelligenceService>();
         services.AddSingleton<ServiceGroupIntelligenceGetCommand>();
         services.AddSingleton<RecommendationListCommand>();
@@ -49,7 +52,8 @@ public class AdvisorSetup : IAreaSetup
             "use service-group context. For top recommendations, top actions to take, most critical, most important, prioritized, or what-should-I-fix-first " +
             "requests, start with advisor_recommendation_summary with --prioritized true, then use " +
             "advisor_recommendation_list for the records of a selected recommendation type. For explicit idle-resource " +
-            "deletion-safety checks, use advisor_recommendation_prevalidate; it only reads evidence and never deletes or changes state.",
+            "deletion-safety checks, use advisor_recommendation_prevalidate; it only reads evidence and never deletes or changes state. " +
+            "For pre-aggregated insights on idle resources, zonal resiliency, or service retirement exposure, use advisor_insight_list.",
             Title);
 
         // Create Advisor subgroups
@@ -68,6 +72,11 @@ public class AdvisorSetup : IAreaSetup
             "Get the Azure Advisor remediation package that explains how to fix or resolve a recommendation type id. Returns step-by-step remediation guidance (manual, human-readable steps to fix the issue) and/or ready-to-run executable artifacts and scripts to remediate it: Azure CLI, PowerShell, Bicep, ARM template and terraform. Also includes remediation metadata, safety flags, methods with parameters, ordered steps, and verification. Use when an agent needs to know how to fix a recommendation, or wants the ARM, Bicep, CLI, PowerShell or terraform artifacts to remediate it.");
         advisor.AddSubGroup(remediation);
 
+        var insight = new CommandGroup(
+            "insight",
+            "Advisor insights - List aggregated Advisor KPIs for a Service Group or subscription, such as idle resources and potential savings, zonal resiliency coverage, and service retirement impact.");
+        advisor.AddSubGroup(insight);
+
         var serviceGroupIntelligence = new CommandGroup(
             "servicegroupintelligence",
             "Advisor Service Group intelligence - Get the current Advisor status (On Track, Attention Needed, At Risk, Critical, Unavailable) and criticality of Service Groups. Use to see which Service Groups, including mission-critical ones, need attention. Defaults to all Service Groups when none is specified.");
@@ -75,6 +84,7 @@ public class AdvisorSetup : IAreaSetup
 
         // Register Advisor commands
         recommendation.AddCommand<RecommendationSummaryCommand>(serviceProvider);
+        insight.AddCommand<InsightListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationListCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationUpdateCommand>(serviceProvider);
         recommendation.AddCommand<RecommendationPreValidationCommand>(serviceProvider);

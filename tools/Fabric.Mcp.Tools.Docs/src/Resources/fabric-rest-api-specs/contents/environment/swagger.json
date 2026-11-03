@@ -863,7 +863,7 @@
     "/workspaces/{workspaceId}/environments/{environmentId}/getDefinition": {
       "post": {
         "summary": "Returns the specified environment public definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a environment's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\n This API is blocked for a environment with an encrypted sensitivity label.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a environment's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\nTo retrieve the definition of an environment item protected by an encrypted sensitivity label, the caller must have sufficient [usage rights](/fabric/enterprise/powerbi/service-security-sensitivity-label-change-enforcement) to remove the label, as configured in [Microsoft Purview](/purview/purview).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -2118,6 +2118,165 @@
         "x-ms-examples": {
           "Publish environment cancellation example": {
             "$ref": "./examples/PublishCancellation.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/poolActivations": {
+      "get": {
+        "tags": [
+          "PoolActivations"
+        ],
+        "summary": "Lists pool activations for the specified environment.",
+        "description": "Returns pool activation history for a custom live pool associated with the specified environment. This API supports pagination and filtering by activation state.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have *read* permissions for the environment item.\n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "PoolActivations_ListPoolActivations",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment identifier.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "description": "The requested number of items per page. The server may return fewer items. If unspecified or exceeds the server maximum, the server uses its configured default.",
+            "type": "integer",
+            "format": "int32",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "description": "An expression that filters the collection. Supported filter: `state eq '<state>'`. Supported values for `<state>`: `NotStarted`, `InProgress`, `Succeeded`, `Failed`, `Cancelled`, `Unknown`.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/PoolActivations"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* SparkCoreBadWebRequest - The filter expression is malformed or uses an unsupported operator/field.\n\n* SparkCoreItemNotFound - The specified environment does not exist.\n\n* SparkCoreUnexpectedException - An unhandled exception occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List pool activations example": {
+            "$ref": "./examples/ListPoolActivations.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/poolActivations/{activationId}": {
+      "get": {
+        "tags": [
+          "PoolActivations"
+        ],
+        "summary": "Gets properties of the specified pool activation.",
+        "description": "Returns detailed properties of a single pool activation, including Spark configuration and resource breakdown diagnostics.\n\n## Permissions\n\nThe caller must have *read* permissions for the environment item.\n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "PoolActivations_GetPoolActivation",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace identifier.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment identifier.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "path",
+            "name": "activationId",
+            "description": "The pool activation identifier.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/PoolActivationDetails"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* SparkCoreItemNotFound - The specified environment does not exist.\n\n* SparkCoreJobNotFound - The specified pool activation does not exist.\n\n* SparkCoreUnexpectedException - An unhandled exception occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get pool activation example": {
+            "$ref": "./examples/GetPoolActivation.json"
           }
         }
       }

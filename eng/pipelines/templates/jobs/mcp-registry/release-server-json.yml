@@ -71,7 +71,7 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/server-json
       artifact: server.json_${{ parameters.ServerName }}
   
-  - task: ESRPRelease@12
+  - task: ESRPRelease@14
     displayName: Publish server.json to MCP Repository
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -88,4 +88,4 @@ jobs:
       Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-      MainPublisher: 'ESRPRELPACMANTEST'
+      MainPublisher: 'ESRPRELPACMAN'

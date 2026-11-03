@@ -86,7 +86,8 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         try
         {
-            var result = await _searchService.RetrieveFromKnowledgeBase(options.Service, options.KnowledgeBase, options.Query, parsedMessages, cancellationToken);
+            var result = await _searchService.RetrieveFromKnowledgeBase(
+                options.Service, options.KnowledgeBase, options.Query, parsedMessages, options.IncludeReferenceSourceData, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)

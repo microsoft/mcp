@@ -15,6 +15,20 @@ namespace Fabric.Mcp.Tools.Core.Tests;
 
 public class FabricCoreSetupTests
 {
+    [Fact]
+    public static void ConfigureServices_RegistersSingletonDefinitionFileService()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        new FabricCoreSetup().ConfigureServices(services);
+        using var provider = services.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<IFabricItemDefinitionFileService>();
+
+        Assert.IsType<FabricItemDefinitionFileService>(service);
+        Assert.Same(service, provider.GetRequiredService<IFabricItemDefinitionFileService>());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

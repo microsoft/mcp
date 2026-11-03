@@ -715,6 +715,11 @@
           "type": "string",
           "format": "uuid",
           "readOnly": true
+        },
+        "identityReference": {
+          "description": "The item reference for the workspace identity. Only ItemReferenceById is supported.",
+          "$ref": "../../common/definitions.json#/definitions/ItemReference",
+          "readOnly": true
         }
       }
     },
@@ -787,6 +792,76 @@
             }
         }
     },
+    "DeploymentPlanReference": {
+        "description": "A reference to a deployment plan item.",
+        "type": "object",
+        "required": ["referenceType"],
+        "discriminator": "referenceType",
+        "properties": {
+            "referenceType": {
+                "description": "The deployment plan reference type.",
+                "$ref": "#/definitions/DeploymentPlanReferenceType",
+                "readOnly": false
+            }
+        }
+    },
+    "DeploymentPlanReferenceType": {
+        "type": "string",
+        "description": "The deployment plan reference type. Additional `DeploymentPlanReferenceType` types may be added over time.",
+        "enum": ["ByItemId", "ByLogicalId"],
+        "x-ms-enum": {
+            "name": "DeploymentPlanReferenceType",
+            "modelAsString": true,
+            "values": [
+                {
+                    "value": "ByItemId",
+                    "description": "The deployment plan is referenced by its item ID."
+                },
+                {
+                    "value": "ByLogicalId",
+                    "description": "The deployment plan is referenced by its logical ID."
+                }
+            ]
+        }
+    },
+    "DeploymentPlanReferenceByItemId": {
+        "description": "A deployment plan reference by item ID.",
+        "type": "object",
+        "required": ["itemId"],
+        "properties": {
+            "itemId": {
+                "description": "The item ID of the deployment plan item.",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": false
+            }
+        },
+        "allOf": [
+            {
+                "$ref": "#/definitions/DeploymentPlanReference"
+            }
+        ],
+        "x-ms-discriminator-value": "ByItemId"
+    },
+    "DeploymentPlanReferenceByLogicalId": {
+        "description": "A deployment plan reference by logical ID.",
+        "type": "object",
+        "required": ["logicalId"],
+        "properties": {
+            "logicalId": {
+                "description": "The logical ID of the deployment plan item.",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": false
+            }
+        },
+        "allOf": [
+            {
+                "$ref": "#/definitions/DeploymentPlanReference"
+            }
+        ],
+        "x-ms-discriminator-value": "ByLogicalId"
+    },
     "BulkImportItemDefinitionsRequest": {
         "description": "Bulk import of exported item definitions request payload.",
         "type": "object",
@@ -813,6 +888,11 @@
                         "items": {
                             "$ref": "../../common/definitions.json#/definitions/ItemOptionsByLogicalIdEntry"
                         },
+                        "readOnly": false
+                    },
+                    "deploymentPlan": {
+                        "description": "A reference to a deployment plan item to orchestrate the deployment. When provided, the plan controls item deployment ordering and executes pre/post deployment actions. When absent or null, the operation behaves as today. Currently, only the `ByLogicalId` reference type is supported. Deployment plan support is currently in Beta. This property can be used only when the query parameter `beta` is set to `true` and may change based on feedback.",
+                        "$ref": "#/definitions/DeploymentPlanReference",
                         "readOnly": false
                     }
                 }

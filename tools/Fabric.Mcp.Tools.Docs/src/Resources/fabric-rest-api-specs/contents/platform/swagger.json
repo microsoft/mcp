@@ -1191,7 +1191,7 @@
     "/workspaces/{workspaceId}/items/{itemId}/getDefinition": {
       "post": {
         "summary": "Returns the specified item definition.",
-        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\nWhen you get an item's definition, the sensitivity label is not a part of the definition.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the item. \n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes). \n\n## Limitations\n\n This API is blocked for an item with a protected sensitivity label, unless the caller has the usage rights to delete the sensitivity label. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
+        "description": "This API is supported for a number of item types, find the supported item types and information about their definition structure in [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\nWhen you get an item's definition, the sensitivity label is not a part of the definition.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the item. \n\n## Required Delegated Scopes\n\n For item APIs use these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n for more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes). \n\n## Limitations\n\nTo retrieve the definition of an item protected by an encrypted sensitivity label, the caller must have sufficient [usage rights](/fabric/enterprise/powerbi/service-security-sensitivity-label-change-enforcement) to remove the label, as configured in [Microsoft Purview](/purview/purview).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | When the item type in the call is supported. Check the corresponding API for the item type you're calling, to see if your call is supported. For example, semantic models are supported. |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1464,7 +1464,7 @@
     "/workspaces/{workspaceId}/items/bulkImportDefinitions": {
       "post": {
         "summary": "Bulk import item definitions into the workspace.",
-        "description": "Imports item definitions for multiple items into a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). Each item definition in the request will be processed, creating new items or updating existing ones as determined by the system based on whether the item already exists. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nThe caller must have *read and write* permissions for each item being updated.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Limitations\n\n The following limitations apply: \n- The maximum supported request payload size is 128 MB. \n- If the request includes one or more Fabric item types, the workspace must be assigned to a Fabric capacity (F SKU, including Fabric Trial). Power BI Premium capacities are supported only for Power BI items and aren't sufficient for Fabric items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "> [!NOTE]\n> Deployment plan support in this API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. All other functionality of this API is generally available.\n**To use deployment plan support, callers must specify `true` as the value for the query parameter `beta`.**\n\nImports item definitions for multiple items into a workspace in a single operation. This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). Each item definition in the request will be processed, creating new items or updating existing ones as determined by the system based on whether the item already exists. To see the supported item types, see [Item definition overview](/rest/api/fabric/articles/item-management/definitions/item-definition-overview).\n\n## Permissions\n\nThe caller must have a *contributor* or higher role for the workspace.\n\nThe caller must have *read and write* permissions for each item being updated.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All.\n\n## Limitations\n\n The following limitations apply: \n- The maximum supported request payload size is 128 MB. \n- If the request includes one or more Fabric item types, the workspace must be assigned to a Fabric capacity (F SKU, including Fabric Trial). Power BI Premium capacities are supported only for Power BI items and aren't sufficient for Fabric items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -1493,6 +1493,13 @@
               "$ref": "./definitions/platform.json#/definitions/BulkImportItemDefinitionsRequest"
             },
             "required": true
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "Set to `true` to enable Beta functionality, including deployment plan support. When omitted or set to `false`, only generally available functionality is accessible and deployment plan input is not accepted.",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "responses": {
@@ -1546,6 +1553,9 @@
           },
           "Bulk import item definitions with options example": {
             "$ref": "./examples/platform/BulkImportItemDefinitionsWithOptions.json"
+          },
+          "Bulk import item definitions with deployment plan example": {
+            "$ref": "./examples/platform/BulkImportItemDefinitionsWithDeploymentPlan.json"
           }
         }
       }
@@ -2780,7 +2790,7 @@
     "/workspaces/{workspaceId}/git/updateFromGit": {
       "post": {
         "summary": "Updates the workspace with commits pushed to the connected branch.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nThe update only affects items in the workspace that were changed in those commits. If called after the [Connect](/rest/api/fabric/core/git/connect) and [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) APIs, it will perform a full update of the entire workspace.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "> [!NOTE]\n> Deployment plan support in this API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. All other functionality of this API is generally available.\n**To use deployment plan support, callers must specify `true` as the value for the query parameter `beta`.**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nThe update only affects items in the workspace that were changed in those commits. If called after the [Connect](/rest/api/fabric/core/git/connect) and [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) APIs, it will perform a full update of the entire workspace.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -2800,6 +2810,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "Set to `true` to enable Beta functionality, including deployment plan support. When omitted or set to `false`, only generally available functionality is accessible and deployment plan input is not accepted.",
+            "required": false,
+            "type": "boolean"
           },
           {
             "in": "body",
@@ -2859,6 +2876,9 @@
           },
           "Update a workspace from Git with options example": {
             "$ref": "./examples/gitIntegration/UpdateFromGitWithOptions.json"
+          },
+          "Update a workspace using data from a Git with a deployment plan example": {
+            "$ref": "./examples/gitIntegration/UpdateFromGitWithDeploymentPlan.json"
           }
         }
       }
@@ -3725,6 +3745,599 @@
           },
           "Disable surge protection on a capacity example": {
             "$ref": "./examples/surgeProtection/UpdateCapacitySurgeProtection_Disable.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/surgeProtection/blockedActors": {
+      "post": {
+        "summary": "Creates a blocked actor on a capacity.",
+        "description": "Creates a blocked actor on the specified capacity. The actor's background operations will be rejected regardless of capacity utilization.\n\n**Upsert-by-actor semantics:** If the specified actor is already blocked on this capacity, the existing record's `expirationPolicy` is overwritten with the values from this request and the updated record is returned with `200 OK`. If the actor is new, the record is created and returned with `201 Created`.\n\nWhen `expirationPolicy.policyType` is `ExpireAfterDate`, enforcement stops immediately when `expirationPolicy.expireAfterDateTime` passes. The record may remain visible via List and Get until an asynchronous background garbage-collection job removes it.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Limitations\n\n- Each capacity can hold a maximum of 1,000 surge-protection items combined across blocked actors, mission critical actors, and detection rules.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_CreateBlockedActor",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createBlockedActorRequest",
+            "description": "Create blocked actor request payload.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/CreateBlockedActorRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The actor was already blocked on the capacity; the existing blocked actor was updated and returned.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/BlockedActor"
+            }
+          },
+          "201": {
+            "description": "Successfully created a new blocked actor.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/BlockedActor"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidRequest - The request body is malformed or contains invalid field values.\n\n* SurgeProtectionItemsLimitExceeded - The capacity has reached the 1,000 combined surge-protection items limit.\n\n* WorkspaceNotFound - The workspace specified in `actorDetails.workspaceId` does not exist or is not associated with this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a blocked actor that is already blocked example": {
+            "$ref": "./examples/platform/blockedActors/CreateBlockedActorAlreadyBlocked.json"
+          },
+          "Create a new blocked actor example": {
+            "$ref": "./examples/platform/blockedActors/CreateBlockedActor.json"
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists blocked actors on a capacity.",
+        "description": "Returns a paginated list of blocked actors on the specified capacity.\n\nBlocked actors whose `expirationPolicy.expireAfterDateTime` has passed may still appear in the list until a background garbage-collection job removes them; enforcement has already stopped for those entries.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Limitations\n\n- Each capacity can hold a maximum of 1,000 surge-protection items combined across blocked actors, mission critical actors, and detection rules.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_ListBlockedActors",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the list of blocked actors.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/BlockedActors"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidContinuationToken - The continuation token is invalid or expired.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List blocked actors example": {
+            "$ref": "./examples/platform/blockedActors/ListBlockedActors.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/surgeProtection/blockedActors/{blockedActorId}": {
+      "get": {
+        "summary": "Gets the specified blocked actor.",
+        "description": "Returns the specified blocked actor on the capacity.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_GetBlockedActor",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "blockedActorId",
+            "description": "The blocked actor ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the blocked actor.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/BlockedActor"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* BlockedActorNotFound - The blocked actor with the specified ID does not exist on this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a blocked actor example": {
+            "$ref": "./examples/platform/blockedActors/GetBlockedActor.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates a blocked actor on a capacity.",
+        "description": "Updates the expiration configuration of the specified blocked actor.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_UpdateBlockedActor",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "blockedActorId",
+            "description": "The blocked actor ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateBlockedActorRequest",
+            "description": "Update blocked actor request payload.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/UpdateBlockedActorRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully updated the blocked actor.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/BlockedActor"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidRequest - The request body is malformed or contains invalid field values.\n\n* BlockedActorNotFound - The blocked actor with the specified ID does not exist on this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a blocked actor example": {
+            "$ref": "./examples/platform/blockedActors/UpdateBlockedActor.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a blocked actor from a capacity.",
+        "description": "Deletes the specified blocked actor from the capacity. The actor's background operations will no longer be blocked.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_DeleteBlockedActor",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "blockedActorId",
+            "description": "The blocked actor ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted the blocked actor."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* BlockedActorNotFound - The blocked actor with the specified ID does not exist on this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a blocked actor example": {
+            "$ref": "./examples/platform/blockedActors/DeleteBlockedActor.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/surgeProtection/missionCriticalActors": {
+      "post": {
+        "summary": "Creates a mission critical actor on a capacity.",
+        "description": "Creates a mission critical actor on the specified capacity. The actor's operations will be shielded from surge-protection rejection.\n\n**Idempotent no-op semantics:** If the specified actor is already mission critical on this capacity, the existing record is returned unchanged with `200 OK`. If the actor is new, the record is created and returned with `201 Created`.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Limitations\n\n- Each capacity can hold a maximum of 1,000 surge-protection items combined across blocked actors, mission critical actors, and detection rules.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_CreateMissionCriticalActor",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createMissionCriticalActorRequest",
+            "description": "Create mission critical actor request payload.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/CreateMissionCriticalActorRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The actor was already mission critical on the capacity; the existing mission critical actor was returned unchanged.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/MissionCriticalActor"
+            }
+          },
+          "201": {
+            "description": "Successfully created a new mission critical actor.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/MissionCriticalActor"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidRequest - The request body is malformed or contains invalid field values.\n\n* SurgeProtectionItemsLimitExceeded - The capacity has reached the 1,000 combined surge-protection items limit.\n\n* WorkspaceNotFound - The workspace specified in `actorDetails.workspaceId` does not exist or is not associated with this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a mission critical actor that already exists example": {
+            "$ref": "./examples/platform/missionCriticalActors/CreateMissionCriticalActorAlreadyExists.json"
+          },
+          "Create a new mission critical actor example": {
+            "$ref": "./examples/platform/missionCriticalActors/CreateMissionCriticalActor.json"
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists mission critical actors on a capacity.",
+        "description": "Returns a paginated list of mission critical actors on the specified capacity.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_ListMissionCriticalActors",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the list of mission critical actors.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/MissionCriticalActors"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidContinuationToken - The continuation token is invalid or expired.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List mission critical actors example": {
+            "$ref": "./examples/platform/missionCriticalActors/ListMissionCriticalActors.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/surgeProtection/missionCriticalActors/{missionCriticalActorId}": {
+      "get": {
+        "summary": "Gets the specified mission critical actor.",
+        "description": "Returns the specified mission critical actor on the capacity.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_GetMissionCriticalActor",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "missionCriticalActorId",
+            "description": "The mission critical actor ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the mission critical actor.",
+            "schema": {
+              "$ref": "./definitions/surgeProtectionActors.json#/definitions/MissionCriticalActor"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* MissionCriticalActorNotFound - The mission critical actor with the specified ID does not exist on this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a mission critical actor example": {
+            "$ref": "./examples/platform/missionCriticalActors/GetMissionCriticalActor.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a mission critical actor from a capacity.",
+        "description": "Deletes the specified mission critical actor from the capacity. The actor will no longer be shielded from surge-protection rejection.\n\n## Permissions\n\nThe caller must be a capacity admin.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_DeleteMissionCriticalActor",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "missionCriticalActorId",
+            "description": "The mission critical actor ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted the mission critical actor."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* MissionCriticalActorNotFound - The mission critical actor with the specified ID does not exist on this capacity.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a mission critical actor example": {
+            "$ref": "./examples/platform/missionCriticalActors/DeleteMissionCriticalActor.json"
           }
         }
       }
@@ -6191,7 +6804,7 @@
     "/deploymentPipelines/{deploymentPipelineId}/deploy": {
       "post": {
         "summary": "Deploys items from the specified stage of the specified deployment pipeline.",
-        "description": "To learn about items that are supported in deployment pipelines, see: [Supported items](/fabric/cicd/deployment-pipelines/intro-to-deployment-pipelines#supported-items).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\nThe user must be at least a contributor on both source and target deployment workspaces. For more information, see: [Permissions](https://go.microsoft.com/fwlink/?linkid=2235654).\n\n## Required Delegated Scopes\n\nPipeline.Deploy\n\n## Limitations\n\nMaximum 300 deployed items per request.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
+        "description": "> [!NOTE]\n> Deployment plan support in this API is part of a Beta release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. All other functionality of this API is generally available.\n**To use deployment plan support, callers must specify `true` as the value for the query parameter `beta`.**\n\nTo learn about items that are supported in deployment pipelines, see: [Supported items](/fabric/cicd/deployment-pipelines/intro-to-deployment-pipelines#supported-items).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\nThe user must be at least a contributor on both source and target deployment workspaces. For more information, see: [Permissions](https://go.microsoft.com/fwlink/?linkid=2235654).\n\n## Required Delegated Scopes\n\nPipeline.Deploy\n\n## Limitations\n\nMaximum 300 deployed items per request.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Only supported when all the [items](/rest/api/fabric/articles/item-management/item-management-overview) involved in the operation support service principals |\n\n## Interface",
         "tags": [
           "DeploymentPipelines"
         ],
@@ -6211,6 +6824,13 @@
             "required": true,
             "type": "string",
             "format": "uuid"
+          },
+          {
+            "name": "beta",
+            "in": "query",
+            "description": "Set to `true` to enable Beta functionality, including deployment plan support. When omitted or set to `false`, only generally available functionality is accessible and deployment plan input is not accepted.",
+            "required": false,
+            "type": "boolean"
           },
           {
             "name": "deployRequest",
@@ -6281,6 +6901,9 @@
           },
           "Example of deploying with options": {
             "$ref": "./examples/deploymentPipelines/DeployWithOptions.json"
+          },
+          "Example of deploying Fabric items from a deployment pipeline stage using a deployment plan": {
+            "$ref": "./examples/deploymentPipelines/DeployWithDeploymentPlan.json"
           }
         }
       }

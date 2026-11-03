@@ -97,7 +97,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(content);
+                AssertRepresentativeCoreTools(content, localFiles: false);
                 AssertListItemsTool(content);
             }
         }
@@ -171,7 +171,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(response);
+                AssertRepresentativeCoreTools(response, localFiles: true);
                 AssertListItemsTool(response);
             }
         }
@@ -246,7 +246,7 @@ public class ServerStartupTests
         }
     }
 
-    private static void AssertRepresentativeCoreTools(string response)
+    private static void AssertRepresentativeCoreTools(string response, bool localFiles)
     {
         using var document = JsonDocument.Parse(response);
         var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
@@ -307,11 +307,49 @@ public class ServerStartupTests
         }
         var itemCreate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-item");
         var creationOptions = itemCreate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("string", creationOptions.GetProperty("definition").GetProperty("type").GetString());
+        foreach (var option in new[] { "folder-id", "creation-payload", "options", "sensitivity-label-settings" })
+        {
+            Assert.Equal("string", creationOptions.GetProperty(option).GetProperty("type").GetString());
+        }
+        foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
+        {
+            Assert.Equal(localFiles, creationOptions.TryGetProperty(option, out _));
+        }
         Assert.Equal("boolean", creationOptions.GetProperty("sync").GetProperty("type").GetString());
         Assert.Equal("boolean", creationOptions.GetProperty("early-poll").GetProperty("type").GetString());
         Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
         Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var definitionGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item-definition");
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        var definitionGetOptions = definitionGet.GetProperty("inputSchema").GetProperty("properties");
+        foreach (var option in new[] { "workspace-id", "item-id", "operation-id", "format" })
+        {
+            Assert.Equal("string", definitionGetOptions.GetProperty(option).GetProperty("type").GetString());
+        }
+        Assert.Equal(localFiles, definitionGetOptions.TryGetProperty("output-directory", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("definition", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("update-metadata", out _));
+        var definitionUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item-definition");
+        Assert.False(definitionUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], definitionUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var definitionUpdateOptions = definitionUpdate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("definition").GetProperty("type").GetString());
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("options").GetProperty("type").GetString());
+        Assert.False(definitionUpdateOptions.TryGetProperty("definition-item-type", out _));
+        Assert.Equal(["boolean", "null"], definitionUpdateOptions.GetProperty("update-metadata").GetProperty("type").EnumerateArray()
+            .Select(value => value.GetString()));
+        Assert.False(definitionUpdateOptions.GetProperty("update-metadata").TryGetProperty("default", out _));
+        foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
+        {
+            Assert.Equal(localFiles, definitionUpdateOptions.TryGetProperty(option, out _));
+        }
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

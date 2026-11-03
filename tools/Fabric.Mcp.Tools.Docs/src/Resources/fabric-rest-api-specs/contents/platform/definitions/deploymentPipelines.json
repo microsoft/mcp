@@ -704,6 +704,11 @@
                         "$ref": "../../common/definitions.json#/definitions/ItemOptionsBySourceItemIdEntry"
                     },
                     "readOnly": false
+                },
+                "deploymentPlan": {
+                    "description": "A reference to a deployment plan item to orchestrate the deployment. When provided, the plan controls item deployment ordering and executes pre/post deployment actions. When absent or null, the operation behaves as today. Currently, only the `ByItemId` reference type is supported. Deployment plan support is currently in Beta. This property can be used only when the query parameter `beta` is set to `true` and may change based on feedback.",
+                    "$ref": "./platform.json#/definitions/DeploymentPlanReference",
+                    "readOnly": false
                 }
             }
         },

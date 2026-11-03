@@ -44,7 +44,7 @@ public sealed class FileShareCreateCommand(ILogger<FileShareCreateCommand> logge
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to parse tags JSON: {Tags}", options.Tags);
+                    logger.LogWarning(ex, "Failed to parse tags JSON.");
                 }
             }
 

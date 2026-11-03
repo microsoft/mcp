@@ -413,12 +413,13 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
-| `core_create-item` | Creates a Fabric item by workspace UUID. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
+| `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
+| `core_get-item-definition` | Retrieves typed definition parts inline, optionally waits for completion, or resumes a completed definition operation. Can explicitly export to a new local directory without overwriting files. |
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
@@ -427,11 +428,12 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
+| `core_update-item-definition` | Replaces a known item's complete definition from inline content or explicitly selected saved files. Optionally applies supplied `.platform` metadata and waits for a no-result operation. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
 
 **Create Item (`core_create-item`)**
 
-Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and optional `description`. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
+Calls the [Create Item API](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) once with `display-name`, `item-type`, and the optional request properties described below. Supply a nonempty workspace UUID using `workspace-id` or the backward-compatible `workspace` alias. Workspace names are not resolved. A `workspace-id` that is not empty or whitespace takes precedence when both options are supplied, even if it is invalid; the command does not silently fall back to the alias. Invalid and all-zero UUIDs are rejected before authentication or HTTP, and accepted UUID formats are normalized in the request URL.
 
 Missing required options are identified by their registered names, such as `--display-name` or `--item-type`, before any service call. Other parser failures return sanitized guidance without echoing supplied values or unknown option names.
 
@@ -443,7 +445,79 @@ fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --di
 
 The caller needs **Contributor or higher workspace access**. Delegated calls require `Item.ReadWrite.All` or the item-specific `ReadWrite.All` scope. Non-Power BI items require a supported Fabric capacity and [tenant/capacity settings that enable Fabric item creation](https://learn.microsoft.com/fabric/admin/fabric-switch); Power BI items require the appropriate license. Service-principal and managed-identity support depends on the item type. Item types remain strings rather than a fixed client-side list.
 
-Display names must follow the item's naming rules, and descriptions allow at most 256 characters. The tool does not supply item definitions, creation payloads, folders, or sensitivity-label settings. Item types that require a definition or creation payload need a different creation path.
+Display names must follow the item's naming rules, and descriptions allow at most 256 characters. Omitting the optional properties preserves the existing no-definition request; the tool never invents request fields or defaults.
+
+**Optional creation properties**
+
+All four options below are available locally and over HTTP:
+
+| Argument | Request property | Behavior |
+|----------|------------------|----------|
+| `folder-id` | `folderId` | Nonempty UUID of an existing folder in this workspace. Passed directly and normalized as a UUID, without a lookup or folder creation. Omit to use the workspace root. |
+| `creation-payload` | `creationPayload` | Item-specific properties as a JSON **object string**, not a file path or a full create-request body. Mutually exclusive with **every** inline or saved-file definition option. Consult the item's Create API for supported properties. |
+| `options` | `options` | Item-specific settings as a JSON **object string**. Requires a definition source; cannot accompany creation payload alone. Consult the item's Update Definition API for supported options. This is the request's top-level `options`, **not** LRO wait settings. |
+| `sensitivity-label-settings` | `sensitivityLabelSettings` | Optional typed JSON object string. When supplied, `labelId` is required and must be a nonempty UUID. `sensitivityLabelApplyStrategy` is optional; a supplied value must be exactly `ApplyOrFail` or `Ignore`. |
+
+`creation-payload` and `options` each allow at most **1 MiB (1,048,576 UTF-8 bytes)** and **32 JSON nesting levels**. `sensitivity-label-settings` allows at most **4,096 UTF-8 bytes**. These are host input limits, not Fabric API quotas. Non-object JSON, malformed input, duplicate properties (including nested properties), and repeated occurrences of these CLI options are rejected before reading definition files or contacting Fabric. Workload property names and values, including explicit nulls, false values, and empty objects, are otherwise passed through unchanged; Fabric validates their per-item meaning. Unknown label-setting fields are errors rather than silently ignored.
+
+When the whole label-settings object or its optional strategy is omitted, it stays omitted. A supplied object must contain a nonempty `labelId`; `{}` and strategy-only settings are rejected before file access, authentication, or the creation request. Fabric's documented default for an omitted strategy is **`ApplyOrFail`**; the tool does not insert a value. Explicit **`Ignore`** permits Fabric to proceed without applying the label if it cannot be applied, so select it only when that policy is intended. Explicit null/invalid IDs or strategies are rejected; omit the entire settings object when no label is requested. A label-related failure never causes a retry without the label, a fallback to `Ignore`, or another creation request.
+
+For example, the documented [Lakehouse creation payload](https://learn.microsoft.com/rest/api/fabric/lakehouse/items/create-lakehouse) can enable schemas. This example creates a real item in an existing folder and requests a label with the strict policy:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales" --item-type Lakehouse `
+  --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc `
+  --creation-payload '{"enableSchemas":true}' `
+  --sensitivity-label-settings '{"labelId":"b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f","sensitivityLabelApplyStrategy":"ApplyOrFail"}'
+```
+
+For definition-based creation, pass supported item-specific settings through `--options` alongside either definition source below. Keep `sync`, `max-wait-seconds`, and `early-poll` as separate tool arguments. Folder IDs, labels, and workload properties do not trigger resource lookups, preflight calls, or metadata read-backs.
+
+[//]: # (cspell:words nbformat pbism pbir TMDL TMSL )
+
+**Optional item definition input**
+
+Choose exactly one source when supplying a definition:
+
+| Source | Arguments | Availability |
+|--------|-----------|--------------|
+| Inline content | `definition`: a JSON **string** containing `parts` and optional `format`, not a path or a complete create-request body | Local CLI, stdio, and HTTP |
+| Saved files | `definition-directory`: an existing absolute local directory; `definition-files`: a JSON **string** containing an explicit array of `{ "partPath": "...", "sourcePath": "..." }`; optional `definition-format` | Local CLI and stdio only |
+
+Every inline part must supply `path`, Base64 `payload`, and `payloadType: "InlineBase64"`. `definition-format` applies only to saved files; for inline content put `format` inside the JSON. Neither source can be combined with `creation-payload`. Conflicting sources, incomplete selections, repeated definition options, malformed JSON, unknown definition-envelope fields, and duplicate JSON fields are errors, never silently preferred or dropped. Over HTTP, file options are omitted from discovery and rejected on invocation; the Fabric input service also checks its local-file capability before any filesystem access. The existing remote-capable tool remains available for inline, creation-payload, and no-definition creation.
+
+For a saved notebook, first save changes in your editor. This example reads only `sales.ipynb` from the selected directory and maps it to the Fabric part path without renaming the source file:
+
+```powershell
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Sales notebook" --item-type Notebook `
+  --definition-directory 'C:\Fabric\Sales.Notebook' `
+  --definition-files '[{"partPath":"artifact.content.ipynb","sourcePath":"sales.ipynb"}]' `
+  --definition-format ipynb
+```
+
+`sourcePath` defaults to `partPath`. Both are relative to the selected directory; logical `partPath` values use `/` separators. List every part you intend to upload, including nested model/report parts, binary assets, and optional `.platform` where appropriate. There is **no recursive scan, wildcard expansion, or automatic inclusion** of editor state, caches, secrets, or even `.platform`. Explicitly selected files are uploaded, so review that selection. Files come from the MCP host, not a remote client's filesystem, Git HEAD, or unsaved editor buffers. Save and stop editing while packaging; this is not an atomic snapshot of concurrent edits.
+
+For content already supplied directly, including to a remote HTTP server:
+
+```powershell
+$definition = @{
+  format = 'ipynb'
+  parts = @(@{
+    path = 'artifact.content.ipynb'
+    payload = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('{"nbformat":4,"nbformat_minor":5,"cells":[],"metadata":{}}'))
+    payloadType = 'InlineBase64'
+  })
+} | ConvertTo-Json -Depth 4 -Compress
+fabmcp core create-item --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --display-name "Empty notebook" --item-type Notebook --definition $definition
+```
+
+These are alternative **real item creation** examples, not validation-only operations. Definition preparation performs no Fabric requests; after preparation there is still only one initiating `POST /workspaces/{workspaceId}/items`. There are no workspace/name lookups, dependency creation, preflight calls, or metadata read-backs. The existing `sync`/polling options below work with either source.
+
+Both sources share host packaging limits: by default **1,024 parts, 16 MiB decoded per part, and 32 MiB decoded total**, plus encoded-payload and input-JSON bounds. These are local safeguards, not Fabric API quotas. Portable logical paths reject traversal, absolute paths, duplicate names (case-insensitively), and file/directory collisions. Saved-file input additionally rejects linked/junction paths and UNC/device paths. Selected bytes, encodings, line endings, and empty files are preserved. Filesystem checks require a trusted local filesystem; they are not an OS sandbox against concurrent hostile file replacement.
+
+**Fabric validates item-specific layouts and content.** The tool does not require particular filenames, notebook language files, or format-specific part combinations, even for recognized formats or when `format` is omitted. Safe part names, supplied format strings, and payload content are forwarded unchanged; an omitted format stays omitted so Fabric applies its defaults. The generic JSON/Base64/envelope checks, byte/count/depth limits, API/source exclusivity, UUID checks, and filesystem/HTTP safeguards above still apply before submission.
+
+Use the bundled [item-definition articles](https://github.com/microsoft/mcp/tree/main/tools/Fabric.Mcp.Tools.Docs/src/Resources/item-definitions) through `docs_item-definitions` to prepare a complete definition. They are documentation for callers, not executable schemas or a local layout-validation policy. Fabric remains authoritative for supported item types/formats, required parts, content schemas, format combinations, and dependency/binding correctness. The tool does not rewrite report bindings, interpret `.platform`, or create referenced resources.
 
 Create Item supports both outcomes documented by its endpoint: **201** returns validated metadata in the existing `results.item` shape; **202** returns an explicit `results.operation` receipt, never an empty/default item. Both modes return a synchronous 201 result immediately, without operation reads or requiring an operation ID. Other success codes, including 200 and 204, are not part of this endpoint's contract: they produce a sanitized unconfirmed-outcome error with guidance to check whether creation occurred. The shared LRO infrastructure also supports synchronous 200 for future adapters whose endpoints document it; it does not accept arbitrary success codes.
 
@@ -478,6 +552,87 @@ Creation is **never automatically resubmitted**. Stopping MCP waiting does not c
 
 Failures suppress raw backend messages, exception details, stack traces, and local paths. HTTP 403 can indicate permissions or unavailable tenant/capacity features; status-less network failures retain HTTP 503. Before acceptance is known, a timeout, cancellation, network failure, or invalid response can leave the mutation outcome uncertain; check whether creation occurred before retrying.
 
+**Update Item Definition (`core_update-item-definition`)**
+
+Calls [Update Item Definition](https://learn.microsoft.com/rest/api/fabric/core/items/update-item-definition)
+with one `POST /workspaces/{workspaceId}/items/{itemId}/updateDefinition`. Both `workspace-id` and
+`item-id` are required nonempty UUIDs. This is a **complete replacement, not a changed-files patch**:
+provide all required definition parts, not just the files edited since the last upload. The tool
+never fetches the old definition, merges parts, resolves names, downloads schemas, creates dependencies,
+or performs a metadata read-back.
+
+Exactly one definition source is required, reusing Create Item's input and file infrastructure:
+
+| Source | Arguments | Availability |
+|--------|-----------|--------------|
+| Inline | `definition`: JSON object **string** with `parts` and optional `format` | Local CLI, stdio, and HTTP |
+| Saved files | `definition-directory`: existing absolute directory; `definition-files`: explicit JSON array **string** of `partPath` and optional `sourcePath`; optional `definition-format` | Local CLI and stdio only |
+
+The same portable-path, strict JSON, Base64, byte/count, and local-file safeguards described above
+apply. Saved files come from the **MCP hosting machine**, not a remote client's filesystem or unsaved
+editor buffers. Save changes and explicitly list every part; no folder scan, wildcard, automatic
+`.platform` inclusion, or source-file modification occurs. Over HTTP, filesystem options are hidden
+and rejected. The input service independently rechecks local-file capability before any filesystem
+access, while inline updates remain available.
+
+Validation is **generic and content-independent**: it does not enforce item-type or format-specific
+filenames, required parts, or layout combinations. The supplied format, portable part paths, and
+payload bytes pass through unchanged for default, known, and future formats. There is no item-type
+hint, `.platform` interpretation, metadata preflight, or local completeness claim. Consult
+`docs_item-definitions` for the bundled reference and supply a complete definition; Fabric validates
+supported formats, required parts, content, and bindings.
+
+`options` supplies the API's optional top-level item-specific JSON **object string**. It is limited
+to **1 MiB of UTF-8 input and 32 nesting levels**, rejects duplicate properties at any depth, and
+is validated before file reads. Omitted options stay omitted; `{}`, false values, null members,
+and future workload properties are preserved. Fabric validates supported properties for the
+actual item type. These options never control polling.
+
+`update-metadata` requires an explicit Boolean value. Omission leaves the query parameter omitted;
+`false` sends `?updateMetadata=false`; **only explicit `true` requests applying metadata from a
+supplied `.platform` part**. The part's bytes are always preserved: the tool does not remove it
+when metadata application is disabled, add it when absent, or rewrite its contents or bindings.
+The flag can be sent without a `.platform` part; it does not cause the tool to invent metadata.
+This API **does not change the sensitivity label**. There are no `sensitivity-label-settings`,
+`folder-id`, `creation-payload`, display-name, or description arguments on this tool.
+
+This example **replaces a real item's definition** when run with authorized credentials. Review
+the complete file selection first. It includes `.platform` without opting into metadata application:
+
+```powershell
+fabmcp core update-item-definition `
+  --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 `
+  --definition-directory 'C:\Fabric\Sales.Notebook' `
+  --definition-files '[{"partPath":"artifact.content.ipynb","sourcePath":"sales.ipynb"},{"partPath":".platform"}]' `
+  --definition-format ipynb --sync true --max-wait-seconds 120
+```
+
+For inline content, supply `--definition $definition` instead of all three filesystem options,
+using a complete definition JSON string like the Create Item example above. Add
+`--update-metadata true` only when the supplied `.platform` metadata should also be applied.
+
+A documented **empty HTTP 200** returns `results.operation.status=Succeeded` immediately, in either
+sync mode. A **202** returns an `Accepted` receipt without polling by default. With `sync=true`,
+the shared runner polls **operation state only**; confirmed `Succeeded` finishes without a
+`/result` or Get Item request because this endpoint has no result body. Its result contains only
+the operation receipt, never echoed definitions, options, paths, or fabricated item metadata.
+
+`max-wait-seconds` defaults to 120 and allows positive finite values up to 600 seconds, including
+fractions. `early-poll` defaults to true; the shared initial early-probe and subsequent Retry-After
+rules above apply. Only status GETs may be retried on 429/503; the initiating POST is never retried.
+Budget expiry returns HTTP 202 with `Pending` and last-known state. A reported failure returns a
+safe `Failed` receipt; read failures preserve a `TrackingStopped` receipt. Caller cancellation
+stops only local waiting and preserves a known receipt when the client can still receive it.
+Resume a pending update with `core_get-operation-state` and stop at `Succeeded`: **do not call
+`core_get-operation-result` or resubmit the update to extend a wait**. Missing operation IDs,
+unexpected success codes/bodies, and transport failures are surfaced without assuming success or
+following response URLs.
+
+Read **and write** item permissions are required. Delegated callers need `Item.ReadWrite.All`
+or the appropriate item-specific `ReadWrite.All` scope. Service-principal and managed-identity
+support depends on item type. Development coverage uses substituted HTTP and credentials; it
+does not authorize live updates or establish actual OBO permissions or recorded playback.
+
 **Long-running operation tools**
 
 The [Get Operation State](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-state) and [Get Operation Result](https://learn.microsoft.com/rest/api/fabric/core/long-running-operations/get-operation-result) tools each take only `operation-id`, a nonempty UUID. Each invocation performs **one GET**, with no implicit polling, retries, mutation, or cancellation. URLs are constructed from the fixed Fabric API base and the validated ID. Returned links are not followed or returned as action URLs, and a response cannot replace the requested operation ID.
@@ -505,7 +660,7 @@ fabmcp core get-operation-result --operation-id 0acd697c-1550-43cd-b998-91bfbfbd
 
 A state GET returning HTTP 200 means the **read** succeeded, not necessarily the mutation. The returned `state.status` can be `Undefined`, `NotStarted`, `Running`, `Succeeded`, `Failed`, or a future string. Unknown states are preserved and handled conservatively, never interpreted as successful completion. Progress (0-100) and timestamps are optional. Failed states expose only a safe error code and request UUID, not backend error text or nested details.
 
-The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success.
+The generic result is not assumed to be a Fabric item. It uses `{ "operationId": "...", "hasBody": true, "value": ... }` for JSON objects, arrays, or scalars. JSON `null` remains `hasBody=true, value=null`; an actually empty HTTP 200 body uses `hasBody=false` with `value` omitted. Nonempty bodies require `application/json`. **Binary (`application/octet-stream`) and other media are explicitly unsupported, even if empty.** JSON responses are limited to **1 MiB (1,048,576 bytes)**, including streamed responses without `Content-Length`; oversized or malformed content produces a sanitized error, never truncation or fabricated success. For a completed **Get Item Definition** operation, use `core_get-item-definition` with `operation-id` instead: its typed definition reader has its own larger bound and optional local export.
 
 As described in the [Fabric LRO guidance](https://learn.microsoft.com/rest/api/fabric/articles/long-running-operation), not every operation has a result. For an API explicitly documented as having no result, confirmed `Succeeded` is sufficient; do not fetch `/result`. Neither HTTP 404 nor an absent `Location` proves successful no-result completion. The shared dispatcher/poller supports explicit result-bearing and no-result adapters; **workspace capacity assignment retains its existing submit-only contract** and is not retrofitted with sync waiting in this release.
 
@@ -556,6 +711,97 @@ Command validation uses the shared sanitized handling; service errors do not exp
 bodies. HTTP 429 includes a valid `Retry-After` delay in seconds or retry time in UTC when supplied.
 Missing, malformed, negative, out-of-range, or multiple headers produce generic retry guidance.
 The tool does not retry automatically or follow redirects.
+
+**Get Item Definition (`core_get-item-definition`)**
+
+Calls the [Get Item Definition API](https://learn.microsoft.com/rest/api/fabric/core/items/get-item-definition)
+with one `POST /workspaces/{workspaceId}/items/{itemId}/getDefinition`. For an initial request, supply
+both `workspace-id` and `item-id` as nonempty UUIDs. Optional `format` must not be empty or whitespace
+and allows at most 128 characters without control characters, encoded as one query value. Omit it to use the item's
+default; the tool does not look up item metadata, resolve names, download schemas or individual parts,
+or create/update any item.
+
+```powershell
+# Inline content only; a 202 response returns an operation receipt without polling.
+fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 --format ipynb
+```
+
+Only the documented **200** completed definition and **202** accepted receipt are supported.
+Completed output contains a typed `definition` with `parts` (`path`, `payload`, `payloadType`) and
+`format` only when Fabric actually returned one. Payloads remain Base64 for inline use. No item type
+is required and no item-specific filename, layout, or format-combination rules are imposed on returned content.
+The bundled item-definition articles remain useful editing references through `docs_item-definitions`,
+not runtime schemas. Sensitivity labels are **not included** in the definition.
+
+`sync` defaults to `false`. With `sync=true`, the existing LRO runner polls state and retrieves the
+definition after success. `max-wait-seconds` defaults to **120**, accepts positive finite fractional
+values, and has a **600-second** maximum. `early-poll` defaults to `true`, allowing one initial probe
+after at most three seconds; set it to `false` to honor the initial server hint. Later polls and
+429/503 read retries honor validated hints. There is no automatic resubmission of the initial POST.
+
+**Explicit local export**
+
+Supply `output-directory` only when files are wanted. It must name a **new absolute local directory
+below an existing parent**. The existing definition file service preserves every returned part's
+bytes, encodings, line endings, relative path, binary assets, empty payloads, and `.platform`.
+It writes a temporary sibling directory and publishes only the completed directory; existing files
+and directories are never overwritten, merged, or deleted. Export errors and cancellation do not
+fall back to inline success or claim that a partial definition was saved.
+
+```powershell
+# C:\Fabric already exists; Sales.Notebook must not exist.
+fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff229 --item-id 5b218778-e7a5-4d73-8187-f10824047715 `
+  --format ipynb --sync true --output-directory 'C:\Fabric\Sales.Notebook'
+```
+
+On completed export, the result still includes `definition` and adds the published `outputDirectory`.
+Keep any returned format when packaging edited files later; the tool does not invent a format or
+write an extra manifest. Omission of `output-directory` means **no filesystem access or output**.
+The option is hidden and rejected over HTTP, and a separate service-level capability check rejects
+file access even when command-schema checks are bypassed. File paths are on the local MCP host,
+not the remote client's machine. Linked/junction, UNC/device, and unsafe part paths are rejected.
+These checks assume a trusted local filesystem, not an OS sandbox against concurrent hostile changes.
+
+**Resuming without restarting**
+
+Acceptance, local wait expiry, and failed tracking never imply a saved definition. A receipt retains
+its operation ID and last-known state when available; no background poller or file writer continues
+after the call ends. Caller cancellation stops local waiting, not the Fabric operation.
+Check state using the receipt, respecting its polling guidance. When state is `Succeeded`, select
+the tool's mutually exclusive resume mode:
+
+```powershell
+fabmcp core get-operation-state --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6
+# Only after Succeeded; omit output-directory to retrieve inline content instead.
+fabmcp core get-item-definition --operation-id 0acd697c-1550-43cd-b998-91bfbfbd47c6 --output-directory 'C:\Fabric\Sales.Notebook'
+```
+
+Resume sends exactly **one GET** to `/operations/{operationId}/result`, without a state preflight,
+polling, or another POST. Do not combine `operation-id` with workspace/item IDs, `format`, or
+`sync=true`. The result endpoint does not identify its source item; use an operation ID retained
+from the intended Get Item Definition request, rather than assuming item provenance was verified.
+Only returned format information is preserved. A missing, malformed, not-ready, or oversized result
+is an explicit error. If Fabric reports success but result retrieval fails, the receipt preserves
+completion and the operation ID without pretending that the definition was retrieved or exported.
+
+**Bounds, permissions, and metadata**
+
+Definition JSON has a separate **64 MiB (67,108,864 byte)** wire limit, also enforced for streams
+without `Content-Length`. The existing Create Item, state, and generic operation-result limits stay
+at **1 MiB**. Generic definition validation requires a nonempty part list, unique portable paths
+without file/directory collisions, valid `InlineBase64`, and the shared host budgets (defaults:
+**1,024 parts, 16 MiB decoded per part, 32 MiB decoded total**). Invalid or oversized content is
+rejected before export, never truncated or silently skipped. These are host safeguards, not Fabric quotas.
+
+Fabric requires **read AND write item permissions**, plus `Item.ReadWrite.All` or the item-specific
+`ReadWrite.All` delegated scope. Service-principal and managed-identity support depends on item type.
+Encrypted sensitivity labels can require additional usage rights. Returning definition contents can
+expose sensitive code or configuration, so the tool advertises `Secret=true` and uses the existing
+MCP consent flow; clients without elicitation support are rejected by default. It remains remote-capable
+for inline results (`LocalRequired=false`). Because it can optionally write local files, it conservatively
+advertises `ReadOnly=false` and is **excluded from read-only server mode in every transport**, even
+when no export was requested. No-overwrite export is non-destructive and repeated calls cannot replace
+existing files. Errors omit raw backend bodies, definition contents, and filesystem details.
 
 **Get Capacity (`core_get-capacity`)**
 
