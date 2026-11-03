@@ -39,9 +39,12 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(true, "core")]
+    [InlineData(true, "jobs")]
+    [InlineData(true, "core,jobs")]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools, string? namespaces)
     {
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
         var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
@@ -52,7 +55,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}{NamespaceArguments(namespaces)}",
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -97,8 +100,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(content, localFiles: false);
-                AssertListItemsTool(content);
+                AssertCoreAndJobsDiscovery(content, namespaces, localFiles: false);
             }
         }
         finally
@@ -111,9 +113,12 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(true, "core")]
+    [InlineData(true, "jobs")]
+    [InlineData(true, "core,jobs")]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools, string? namespaces)
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -124,7 +129,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = listAllTools ? "server start --mode all" : "server start",
+            Arguments = (listAllTools ? "server start --mode all" : "server start") + NamespaceArguments(namespaces),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -171,8 +176,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(response, localFiles: true);
-                AssertListItemsTool(response);
+                AssertCoreAndJobsDiscovery(response, namespaces, localFiles: true);
             }
         }
         finally
@@ -243,6 +247,41 @@ public class ServerStartupTests
             {
                 process.Kill();
             }
+        }
+    }
+
+    private static string NamespaceArguments(string? namespaces) =>
+        namespaces is null ? "" : string.Concat(namespaces.Split(',').Select(value => " --namespace " + value));
+
+    private static void AssertCoreAndJobsDiscovery(string response, string? namespaces, bool localFiles)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
+        Assert.DoesNotContain("core_get-item-job-instance", names);
+        var expectedJobs = namespaces != "core";
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        if (namespaces is not null)
+        {
+            Assert.All(names, name => Assert.Contains(name!.Split('_')[0], namespaces.Split(',')));
+        }
+        if (namespaces != "jobs")
+        {
+            AssertRepresentativeCoreTools(response, localFiles);
+            AssertListItemsTool(response);
+        }
+        if (expectedJobs)
+        {
+            var job = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-job-instance");
+            Assert.True(job.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(job.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(job.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
         }
     }
 
