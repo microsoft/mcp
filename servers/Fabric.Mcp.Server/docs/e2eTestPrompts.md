@@ -24,7 +24,14 @@ parameters. Wait at least the receipt's valid Retry-After guidance before a sepa
 receipt without a trustworthy job-instance ID cannot be recovered by listing, inventing an ID, or resubmitting.
 After an ambiguous network failure, timeout, or cancellation, inspect job history before any new submission.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission and lookup alone,
+Job cancellation requires separate authorization for the exact workspace, item, and existing job-instance
+UUIDs. These prompts are not permission to cancel a real job. Obtain mutation consent, send one POST
+without a body, and return cancellation requested rather than a Cancelled state. Never retry automatically, promise
+rollback, or infer success/failure from JobAlreadyCompleted. After uncertain cancellation, check the known
+job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
+metadata does not undo acceptance or require a Location-derived ID.
+
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, and lookup alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -110,6 +117,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| jobs_cancel-item-job-instance | Request cancellation exactly once for the explicitly authorized job \<job-instance-id> of item \<item-id> in workspace \<workspace-id>. Obtain consent and return cancellation requested, not confirmation of a Cancelled state. Do not poll, wait, or retry. | context-required |
+| jobs_cancel-item-job-instance | Cancel this authorized existing job using only the three supplied UUIDs. Do not supply job-type, a body, an operation ID, or a response URL. Keep acceptance if response metadata is missing or malformed. | context-required |
+| jobs_cancel-item-job-instance | Request this authorized cancellation once. If Fabric reports JobAlreadyCompleted, return the failure without inferring the job's final success or failure status. Do not resubmit. | context-required |
+| jobs_cancel-item-job-instance | After requesting cancellation for the authorized job, wait at least the receipt's valid Retry-After guidance, then use its known IDs with jobs_get-item-job-instance in a separate call. The job may still be InProgress. | context-required |
+| jobs_cancel-item-job-instance | In the jobs namespace router, request the authorized cancellation once with workspace-id, item-id, and job-instance-id in the parameters object. On timeout, check the known job separately rather than retrying cancellation or starting a job. | context-required |
 | jobs_get-item-job-instance | Read job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa once, without polling. | none |
 | jobs_get-item-job-instance | Show the status, invocation type, and available start and end times for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch job results. | none |
 | jobs_get-item-job-instance | Get safe failure metadata and any Retry-After guidance for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not start, retry, cancel, or schedule a job. | none |

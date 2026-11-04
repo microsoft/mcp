@@ -261,6 +261,7 @@ public class ServerStartupTests
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
         Assert.DoesNotContain("core_get-item-job-instance", names);
         var expectedJobs = namespaces != "core";
+        Assert.Equal(expectedJobs, names.Contains("jobs_cancel-item-job-instance"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
         Assert.Equal(expectedJobs, names.Contains("jobs_run-on-demand-item-job"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
@@ -275,6 +276,14 @@ public class ServerStartupTests
         }
         if (expectedJobs)
         {
+            var cancel = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_cancel-item-job-instance");
+            Assert.False(cancel.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(cancel.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.True(cancel.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
             var job = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-job-instance");
             Assert.True(job.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
             Assert.True(job.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

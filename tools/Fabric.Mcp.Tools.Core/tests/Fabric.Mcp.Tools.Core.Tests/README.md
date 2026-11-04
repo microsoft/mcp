@@ -34,6 +34,9 @@ Offline tests for the Fabric Core toolset.
 - **Commands/ItemGetCommandTests.cs**: Get Item UUID and required-option validation, sanitized parser/service errors, typed metadata, and cancellation forwarding
 - **Services/FabricCoreServiceItemGetTests.cs**: One normalized authenticated GET, metadata whitelisting, required fields and matching IDs, validated throttling guidance, cancellation/disposal, and per-request credentials
 - **ItemGetToolRegistrationTests.cs**: Get Item discovery and schemas, read-only filtering, legacy/compact/duplicated output, and sanitized failures with substituted HTTP and credentials
+- **Commands/ItemJobInstanceCancelCommandTests.cs**: Required UUID binding, destructive/idempotent metadata, typed cancellation-request receipts, action-specific uncertainty and permission guidance, and sanitized failures/logging
+- **Services/ItemJobInstanceCancelServiceTests.cs**: One normalized POST without a body, ignored response URLs, acceptance preservation, bounded safe error-code extraction, JobAlreadyCompleted, retry guidance, malformed/oversized bodies, cancellation/disposal, and concurrent identity isolation
+- **ItemJobInstanceCancelMcpTests.cs**: Real registration, consent, read-only denial, all/namespace/single routes, stdio/HTTP configurations, namespace filters, learn/input/output schemas, separate zero-delay Cancel-to-Get handoff, invalid-input rejection before auth, and registered CLI 202 handling
 - **Commands/ItemJobInstanceGetCommandTests.cs**: Required UUID binding, read-only metadata, unsupported-input rejection, cancellation forwarding, safe logging, and HTTP/retry guidance
 - **Services/ItemJobInstanceGetServiceTests.cs**: One normalized authenticated GET, all documented/future states, optional verbatim timestamp strings, matching IDs, safe failure fields, exact byte limits, malformed responses, retry headers, cancellation/disposal, and concurrent identities
 - **ItemJobInstanceGetMcpTests.cs**: Independent Jobs area registration, stable command identity, typed schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, default/Core-only/Jobs-only/combined filtering, learn schemas, cross-namespace item-ID handoff, output modes, and pre-authentication validation
@@ -110,6 +113,36 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 and existing operation responses. Callers keep their own media, empty-body, parsing, and error contracts.
 The existing operation reader still defaults to 1 MiB, and definition retrieval retains its explicit
 64 MiB limit. Existing operation/definition tests cover those unchanged contracts.
+
+## Job-instance Cancellation
+
+`jobs_cancel-item-job-instance` sends one POST without a body for explicitly supplied, nonempty workspace,
+item, and job-instance UUIDs, with no job-type. It does not preflight, discover, poll, wait, follow
+response URLs, fetch results, or retry. It reuses the authenticated sender rather than the
+`FabricOperationRunner`. A 202 receipt reports `cancellationStatus: "Requested"`, never a final job state.
+The known IDs come from the request; Location and operation-ID headers are ignored even when missing,
+malformed, multiple, or mismatched. Late cancellation does not erase confirmed acceptance.
+
+The safe error-code reader is limited to 1 MiB, including streams without Content-Length. Tests
+exercise the exact boundary, duplicate codes, invalid shapes, depth limits, code-length/character
+validation, non-JSON media, and failed/canceled reads. Invalid error metadata retains the known HTTP
+failure with an explicit limitation, never raw bodies or stack traces. JobAlreadyCompleted stays a
+failure, without inferring success or failure of the job. A backend retry hint never resubmits.
+Valid Retry-After seconds/dates are retained; missing, malformed, out-of-range, or repeated values
+leave timing explicitly unknown rather than inventing a delay.
+
+Cancel is destructive and excluded in read-only mode. Its idempotent hint describes repeatedly
+targeting the same job, not repeated success or automatic retry. Declined/canceled consent,
+invalid/missing/unsupported/repeated inputs, authentication failures, and pre-send cancellation
+produce zero HTTP calls. Accepted, failed, and metadata-anomaly invocations each send one POST.
+The registered CLI retains the standard 202 status. The offline handoff uses a zero-delay receipt:
+only after Cancel returns does the test independently call Get, which can still report InProgress
+or subsequently report Cancelled. Existing Run/Get and Core/definition/LRO tests remain regressions.
+
+Real host startup tests verify discovery and annotations over stdio/HTTP; substituted request-aware
+credentials test per-call isolation, not real OBO/RBAC. No live target or cancellation authorization
+was supplied. Live Fabric, recordings/playback, and real OBO/RBAC validation were **not** run;
+the tests never start or cancel real jobs or discover fixtures.
 
 ## Job-instance Lookup
 
@@ -499,6 +532,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run job submission, lookup, JSON-input, and shared infrastructure regressions
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobRun*' '*ItemJobInstance*' '*ItemCreateRequestInput*' '*FabricCoreHttpHelpersTests' '*FabricCoreCatalogTests' '*FabricCoreSetupTests'
+
+# Run cancellation command/service/routing coverage
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobInstanceCancel*'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"
