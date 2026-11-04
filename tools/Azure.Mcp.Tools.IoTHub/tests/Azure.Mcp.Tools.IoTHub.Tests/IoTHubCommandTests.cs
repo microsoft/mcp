@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -12,9 +13,8 @@ namespace Azure.Mcp.Tools.IoTHub.Tests;
 
 public class IoTHubCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<IoTHubSetup>(output, fixture)
 {
     // Endpoint names and metric dimension names must remain distinct during playback.
     public override List<string> DisabledDefaultSanitizers => [.. base.DisabledDefaultSanitizers, "AZSDK3493"];

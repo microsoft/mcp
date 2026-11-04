@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -10,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.Tests;
 
-public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class EventGridCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<EventGridSetup>(output, fixture)
 {
     public override List<UriRegexSanitizer> UriRegexSanitizers =>
     [

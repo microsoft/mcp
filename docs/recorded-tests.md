@@ -69,12 +69,12 @@ Record and Playback modes.
    settings before suite-specific customization. The environment-clearing test attribute
    recognizes direct recorded fixtures and does not erase their configuration.
 5. Move HTTP-only availability assertions to server integration tests. Do not retain or
-   stub `AssertLocalToolIsUnavailableInHttpMode` in a direct operation test. The pilot
-   Storage upload and Key Vault certificate import checks are retained in
+   stub `AssertLocalToolIsUnavailableInHttpMode` in a direct operation test.    Local-only operation checks and ADME discovery assertions are retained in
    [`LocalToolAvailabilityTests`](../servers/Azure.Mcp.Server/tests/Azure.Mcp.Server.Tests/Infrastructure/LocalToolAvailabilityTests.cs).
 
-Storage, App Configuration, Redis, Compute, and Key Vault use this backend. Their
-unit and recorded tests now build without the full Azure server dependency.
+The operation suites in 50 Azure tool areas use direct execution, including the
+original Storage, App Configuration, Redis, Compute, and Key Vault pilots. Their
+unit and operation tests build without the full Azure server dependency.
 Direct execution is transport-independent: `MCP_TEST_TRANSPORT` does not turn it
 into an HTTP test. MCP availability, discovery, output-schema, authentication,
 sampling, elicitation, and process/package assertions must retain a suitable
@@ -86,6 +86,35 @@ Playback injects a fake credential provider; Live and Record retain real authent
 The framework sets playback mode before constructing services, and long-running
 operations evaluate playback polling at execution time rather than first type use.
 Non-HTTP protocols, native dependencies, and `[LiveTestOnly]` restrictions are unchanged.
+
+### Live-only operations and cross-area prerequisites
+
+Tests that require a real service and cannot use HTTP recordings can inherit from
+[`AzureToolTestsBase<TAreaSetup>`](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/AzureToolTestsBase.cs).
+PostgreSQL and Confidential Ledger use this base and retain their `[LiveTestOnly]`
+restrictions, credential requirements, and live resource setup. They do not gain
+recording/playback support merely by removing MCP. The live and recorded direct
+bases share the same command execution host, environment restoration, and cloned
+settings. Live-only tests without a live settings file remain skipped.
+
+Some operation scenarios intentionally call commands from another tool area.
+Register only those canonical setups in `ConfigureServices`, and reference their
+source projects explicitly instead of restoring a server dependency. For example,
+Optimization's VM recommendation scenarios register `ComputeSetup` alongside
+`OptimizationSetup`; their test project references Compute, not the Azure server.
+
+Transport-specific error shapes and client callbacks remain covered by MCP-backed
+tests in the core/server projects. The Resiliency Agent's completed-conversation
+recording can run directly, but elicitation, approval, and progress callback tests
+must still use an MCP-capable host. ADME discovery checks and Azure Migrate,
+Speech, and Resiliency Agent local-only HTTP restrictions run in the server
+integration suite instead of being repeated in each operation recording.
+
+Custom settings, sanitizers, matchers, and existing recording paths remain intact.
+Helpers asserting failures should inspect the command response's `status` rather
+than MCP `IsError` or text-content envelopes. Responses that contain signed URLs
+must bypass the logging helper: call the protected `InvokeToolAsync` path and
+assert only non-sensitive response fields.
 
 ```powershell
 dotnet test --project .\tools\Azure.Mcp.Tools.Storage\tests\Azure.Mcp.Tools.Storage.Tests\Azure.Mcp.Tools.Storage.Tests.csproj --filter-trait "TestType=Live"

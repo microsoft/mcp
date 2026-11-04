@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -9,7 +10,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Tests;
 
-public class ConfidentialLedgerCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
+public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : AzureToolTestsBase<ConfidentialLedgerSetup>(output)
 {
     [LiveTestOnly]
     [Fact]

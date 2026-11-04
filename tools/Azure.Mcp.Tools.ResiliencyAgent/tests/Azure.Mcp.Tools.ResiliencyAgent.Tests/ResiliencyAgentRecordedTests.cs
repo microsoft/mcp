@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -11,9 +12,8 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Tests;
 
 public sealed class ResiliencyAgentRecordedTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<ResiliencyAgentSetup>(output, fixture)
 {
     private const string SanitizedId = "00000000-0000-0000-0000-000000000000";
 
@@ -78,10 +78,7 @@ public sealed class ResiliencyAgentRecordedTests(
     [Fact]
     public async Task GuidanceGet_ResolvesDataBoundaryAndCompletesA2AConversation()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("resiliencyagent_guidance_get"))
-        {
-            return;
-        }
+
 
         JsonElement? result = await CallToolAsync(
             "resiliencyagent_guidance_get",

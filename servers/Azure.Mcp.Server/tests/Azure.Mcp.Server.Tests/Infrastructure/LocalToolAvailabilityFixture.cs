@@ -30,6 +30,7 @@ public sealed class LocalToolAvailabilityFixture : IAsyncLifetime
         var startInfo = new ProcessStartInfo(executable)
         {
             Arguments = "server start --transport http --mode all --namespace storage --namespace keyvault " +
+                "--namespace azuremigrate --namespace speech --namespace resiliencyagent --namespace adme " +
                 "--dangerously-disable-http-incoming-auth --disable-proxy-tools --disable-caching",
             UseShellExecute = false,
             RedirectStandardError = true,

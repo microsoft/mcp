@@ -72,4 +72,32 @@ public sealed class TestEnvironmentScopeTests
         await harness.DisposeAsync();
         await fixture.DisposeAsync();
     }
+
+    [Fact]
+    public async Task FailedLiveInitialization_RestoresEnvironmentWithoutStartingServer()
+    {
+        string name = $"MCP_SCOPE_TEST_{Guid.NewGuid():N}";
+        using var outer = new TestEnvironmentScope(new Dictionary<string, string?> { [name] = "original" });
+        string? originalMode = Environment.GetEnvironmentVariable("TEST_MODE");
+        var harness = new FailingDirectToolTests(Substitute.For<ITestOutputHelper>(), name);
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => harness.InitializeAsync().AsTask());
+
+        Assert.Equal("test configuration failure", error.Message);
+        Assert.Equal("original", Environment.GetEnvironmentVariable(name));
+        Assert.Equal(originalMode, Environment.GetEnvironmentVariable("TEST_MODE"));
+        await harness.DisposeAsync();
+    }
+
+    [Fact]
+    public void EnvironmentClearing_DoesNotRemoveLiveFixtureConfiguration()
+    {
+        using var scope = new TestEnvironmentScope(
+            new Dictionary<string, string?> { ["AZURE_TOKEN_CREDENTIALS"] = "test-credential" });
+        var method = typeof(DirectToolTestsBase).GetMethod(nameof(DirectToolTestsBase.InitializeAsync))!;
+
+        new ClearEnvironmentVariablesBeforeTestAttribute().Before(method, Substitute.For<IXunitTest>());
+
+        Assert.Equal("test-credential", Environment.GetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS"));
+    }
 }

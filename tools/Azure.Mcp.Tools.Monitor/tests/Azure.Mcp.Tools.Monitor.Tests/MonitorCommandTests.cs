@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Azure.ResourceManager.CloudHealth.Models;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
@@ -14,8 +15,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests;
 
-public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<MonitorSetup>(output, fixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
 

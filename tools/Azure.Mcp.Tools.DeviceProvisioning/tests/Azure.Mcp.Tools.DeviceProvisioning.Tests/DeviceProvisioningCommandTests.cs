@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -12,9 +13,8 @@ namespace Azure.Mcp.Tools.DeviceProvisioning.Tests;
 
 public class DeviceProvisioningCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<DeviceProvisioningSetup>(output, fixture)
 {
     // Resource-group names can include the recording user's alias.
     public override List<BodyKeySanitizer> BodyKeySanitizers =>

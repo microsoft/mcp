@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -12,8 +13,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureBackup.Tests;
 
-public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureBackupSetup>(output, fixture)
 {
     // Relax matching: ignore Authorization headers and don't compare request bodies
     // (ARM requests include timestamps, correlation IDs, etc. that vary between runs)
@@ -1442,7 +1443,6 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "daily-retention-days", "7" },
                 { "policy-tags", "env=test" }
             },
-            mcpClient: null,
             resultProcessor: elem => elem.TryGetProperty("status", out var s) ? s : null);
 
         Assert.NotNull(status);

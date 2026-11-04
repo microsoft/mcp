@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -15,9 +16,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests;
 // baseline PolicyUpdate live tests already present in AzureBackupCommandTests.
 public class AzureBackupPolicyUpdateParityCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureBackupSetup>(output, fixture)
 {
     public override CustomDefaultMatcher? TestMatcher => new()
     {
@@ -202,7 +202,6 @@ public class AzureBackupPolicyUpdateParityCommandTests(
                 { "policy", "DefaultPolicy" },
                 { "schedule-frequency", "Weekly" }
             },
-            mcpClient: null,
             resultProcessor: root => root);
 
         Assert.NotNull(result);

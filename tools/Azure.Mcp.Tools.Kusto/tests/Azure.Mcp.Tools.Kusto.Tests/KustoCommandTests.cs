@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Commands;
@@ -16,8 +17,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Kusto.Tests;
 
-public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<KustoSetup>(output, fixture)
 {
     private const string TestDatabaseName = "ToDoLists";
     private const string TestTableName = "ToDoList";
@@ -97,7 +98,6 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
         try
         {
             var credentials = new DefaultAzureCredential();
-            await Client.PingAsync();
             var clusterInfo = await CallToolAsync(
                 "kusto_cluster_get",
                 new()

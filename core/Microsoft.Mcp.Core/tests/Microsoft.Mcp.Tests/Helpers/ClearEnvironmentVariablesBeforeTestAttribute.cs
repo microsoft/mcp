@@ -37,7 +37,8 @@ namespace Microsoft.Mcp.Tests.Helpers
 
         public override void Before(MethodInfo methodUnderTest, IXunitTest test)
         {
-            if (methodUnderTest.DeclaringType is { } type && typeof(RecordedToolTestsBase).IsAssignableFrom(type))
+            if (methodUnderTest.DeclaringType is { } type &&
+                (typeof(RecordedToolTestsBase).IsAssignableFrom(type) || typeof(DirectToolTestsBase).IsAssignableFrom(type)))
             {
                 return;
             }

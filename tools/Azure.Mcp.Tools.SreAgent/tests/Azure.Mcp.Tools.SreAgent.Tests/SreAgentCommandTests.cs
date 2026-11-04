@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -8,8 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.SreAgent.Tests
 {
-    public class SreAgentCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-        : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    public class SreAgentCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+        : RecordedAzureToolTestsBase<SreAgentSetup>(output, fixture)
     {
         // Disable body comparison: SRE Agent data-plane responses contain dynamic fields
         // (timestamps, generated IDs, system state) that would cause spurious playback mismatches.

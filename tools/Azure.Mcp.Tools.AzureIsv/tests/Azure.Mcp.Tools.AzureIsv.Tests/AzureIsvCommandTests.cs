@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
@@ -12,8 +13,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.Tests;
 
-public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AzureIsvCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureIsvSetup>(output, fixture)
 {
     [Fact]
     public async Task Should_list_datadog_monitored_resources()

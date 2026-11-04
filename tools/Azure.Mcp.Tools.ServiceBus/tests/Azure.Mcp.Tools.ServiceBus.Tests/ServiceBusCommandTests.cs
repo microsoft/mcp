@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using Azure.Core;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -15,8 +16,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.Tests;
 
-public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class ServiceBusCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<ServiceBusSetup>(output, fixture)
 {
     private const string QueueName = "queue1";
     private const string TopicName = "topic1";

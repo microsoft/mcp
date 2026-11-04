@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -11,8 +12,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.Tests;
 
-public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class WorkbooksCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<WorkbooksSetup>(output, fixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     public override List<UriRegexSanitizer> UriRegexSanitizers =>

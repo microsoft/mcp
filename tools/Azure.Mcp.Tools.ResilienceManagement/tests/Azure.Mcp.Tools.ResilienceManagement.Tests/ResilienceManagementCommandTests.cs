@@ -19,9 +19,8 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 /// </summary>
 public partial class ResilienceManagementCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : ResilienceManagementRecordedTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : ResilienceManagementRecordedTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_get_usage_plan()

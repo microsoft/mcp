@@ -190,6 +190,7 @@ public sealed class DirectToolInvokerTests
     {
         var fixtureType = typeof(IClassFixture<LiveServerFixture>);
         Assert.DoesNotContain(fixtureType, typeof(RecordedAzureToolTestsBase<StorageSetup>).GetInterfaces());
+        Assert.DoesNotContain(fixtureType, typeof(AzureToolTestsBase<StorageSetup>).GetInterfaces());
     }
 
     private static Dictionary<string, JsonElement> SubscriptionArguments() => new()

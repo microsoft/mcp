@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,8 +12,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Ingestion;
 
-public sealed class IngestionCommandRecordedTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class IngestionCommandRecordedTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<MonitorSetup>(output, fixture)
 {
     private const string ValidLogData = """
         [

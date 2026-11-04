@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tests.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -10,20 +13,17 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Tests;
 
 public abstract class ResilienceManagementRecordedTestsBase(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<ResilienceManagementSetup>(output, fixture)
 {
-    public override ValueTask InitializeAsync()
+    protected override void ConfigureServices(IServiceCollection services)
     {
+        base.ConfigureServices(services);
         if (Environment.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") == "true")
         {
             // Opt-in Goals canary recording rewrites ARM requests to eastus2euap, which endpoint validation rejects.
-            SetArguments("server", "start", "--mode", "all", "--dangerously-disable-elicitation", "--disable-caching",
-                "--disable-proxy-tools", "--dangerously-disable-ssrf-protections-by-namespace", "resiliency");
+            services.AddSingleton(new SsrfProtectionPolicy(["resiliency"]));
         }
-
-        return base.InitializeAsync();
     }
 
     // Canary Goals recordings carry a routing header that playback without MCP_GOALS_TEST_ECY does not send.

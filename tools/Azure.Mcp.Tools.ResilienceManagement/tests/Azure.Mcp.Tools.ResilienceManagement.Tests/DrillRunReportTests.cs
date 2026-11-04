@@ -94,10 +94,10 @@ public partial class ResilienceManagementCommandTests
     }
 
     // The response carries a signed URL that grants read access to the report. CallToolAsync logs the whole
-    // response (to the test output in debug runs, or on failure), so call the client directly and never log it.
+    // response (to the test output in debug runs, or on failure), so invoke without the logging helper.
     private async Task<JsonElement?> TryGetReportDownloadWithoutLoggingAsync(string serviceGroup, string drill, string drillRun)
     {
-        var result = await Client.CallToolAsync(
+        JsonElement root = await InvokeToolAsync(
             "resiliency_drill_run_get-report-download-url",
             new Dictionary<string, object?>
             {
@@ -107,13 +107,7 @@ public partial class ResilienceManagementCommandTests
                 { "drill-run", drillRun },
                 { "format", "html" }
             },
-            cancellationToken: TestContext.Current.CancellationToken);
-
-        string? content = McpTestUtilities.GetFirstText(result.Content);
-        Assert.False(string.IsNullOrWhiteSpace(content), "The report download URL call returned no content.");
-
-        using var document = JsonDocument.Parse(content!);
-        JsonElement root = document.RootElement;
+            TestContext.Current.CancellationToken);
         if (root.TryGetProperty("results", out var results) && results.TryGetProperty("result", out var download))
         {
             return download.Clone();

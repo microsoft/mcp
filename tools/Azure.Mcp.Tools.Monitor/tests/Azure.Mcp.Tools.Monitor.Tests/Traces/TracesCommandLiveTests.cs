@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -15,8 +16,8 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Traces;
 /// Live tests for the monitor traces toolset. These target a deployed Azure Monitor
 /// Workspace with a traceContainers/default sub-resource (see test-resources.traces.module.bicep).
 /// </summary>
-public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<MonitorSetup>(output, fixture)
 {
     // Resource Graph returns the caller's tenant and object id in x-ms-operation-identifier, and
     // recordings are published to the public Azure/azure-sdk-assets repo. The base class adds its

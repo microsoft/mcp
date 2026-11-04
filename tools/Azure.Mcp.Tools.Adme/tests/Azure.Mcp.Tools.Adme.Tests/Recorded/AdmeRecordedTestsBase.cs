@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
@@ -12,9 +13,8 @@ namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 /// <summary>Provides shared infrastructure for ADME recorded tests.</summary>
 public abstract class AdmeRecordedTestsBase(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AdmeSetup>(output, fixture)
 {
     private const string PlaybackEndpoint = "https://recording.energy.azure.com";
     private const string PlaybackDataPartition = "recording-partition";
@@ -71,9 +71,6 @@ public abstract class AdmeRecordedTestsBase(
         }),
     ];
 
-    protected async Task<HashSet<string>> ListToolNamesAsync() =>
-        (await Client.ListToolsAsync()).Select(tool => tool.Name).ToHashSet();
-
     protected async Task<JsonElement> CallToolResultsAsync(
         string tool,
         Dictionary<string, object?> arguments)
@@ -89,8 +86,11 @@ public abstract class AdmeRecordedTestsBase(
 
     protected async Task<bool> CallToolReturnsErrorAsync(
         string tool,
-        Dictionary<string, object?> arguments) =>
-        (await Client.CallToolAsync(tool, arguments)).IsError == true;
+        Dictionary<string, object?> arguments)
+    {
+        var response = await InvokeToolAsync(tool, arguments, TestContext.Current.CancellationToken);
+        return response.GetProperty("status").GetInt32() is < 200 or >= 300;
+    }
 
     protected Dictionary<string, object?> CreateArguments()
     {

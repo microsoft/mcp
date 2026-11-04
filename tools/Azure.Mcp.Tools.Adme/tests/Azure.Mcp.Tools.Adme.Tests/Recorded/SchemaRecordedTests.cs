@@ -9,26 +9,15 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 
-/// <summary>Tests ADME schema operations through recorded MCP interactions.</summary>
+/// <summary>Tests ADME schema operations through recorded direct command execution.</summary>
 public sealed class SchemaRecordedTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : AdmeRecordedTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : AdmeRecordedTestsBase(output, fixture)
 {
     private const string SchemaListTool = "adme_schema_list";
     private const string SchemaGetTool = "adme_schema_get";
     private const string NonexistentKind = "osdu:wks:made-up--DoesNotExist:9.9.9";
-
-    /// <summary>Verifies that the server exposes the schema tools.</summary>
-    [Fact]
-    public async Task Server_exposes_schema_tools_over_mcp()
-    {
-        var toolNames = await ListToolNamesAsync();
-
-        Assert.Contains(SchemaListTool, toolNames);
-        Assert.Contains(SchemaGetTool, toolNames);
-    }
 
     /// <summary>Verifies that schema list returns descriptors for well entities.</summary>
     [Fact]
@@ -227,11 +216,7 @@ public sealed class SchemaRecordedTests(
         string tool,
         Dictionary<string, object?> arguments)
     {
-        var response = await Client.CallToolAsync(tool, arguments);
-
-        Assert.True(response.IsError);
-        var content = Assert.IsType<string>(McpTestUtilities.GetFirstText(response.Content));
-        var commandResponse = JsonSerializer.Deserialize<JsonElement>(content);
+        var commandResponse = await InvokeToolAsync(tool, arguments, TestContext.Current.CancellationToken);
         Assert.Equal((int)HttpStatusCode.Unauthorized, commandResponse.GetProperty("status").GetInt32());
         Assert.Contains(
             "verify the data partition name is correct and correctly cased",

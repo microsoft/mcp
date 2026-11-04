@@ -7,12 +7,11 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 
-/// <summary>Tests ADME health operations through recorded MCP interactions.</summary>
+/// <summary>Tests ADME health operations through recorded direct command execution.</summary>
 public sealed class HealthRecordedTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : AdmeRecordedTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : AdmeRecordedTestsBase(output, fixture)
 {
     private const string HealthCheckTool = "adme_health_check";
 

@@ -10,6 +10,36 @@ namespace Azure.Mcp.Core.Tests.Helpers;
 
 public class LiveTestSettingsTests
 {
+    [Fact]
+    public void Clone_PreservesSettingsAndCopiesMutableDictionaries()
+    {
+        var settings = new LiveTestSettings
+        {
+            PrincipalName = "test-principal",
+            IsServicePrincipal = true,
+            TenantId = "test-tenant",
+            TenantName = "test-tenant-name",
+            SubscriptionId = "test-subscription",
+            SubscriptionName = "test-subscription-name",
+            ResourceGroupName = "test-group",
+            ResourceBaseName = "test-resource",
+            SettingsDirectory = "test-directory",
+            TestPackage = "test-package",
+            TestMode = TestMode.Record,
+            DebugOutput = true,
+            DeploymentOutputs = new() { ["resource"] = "original" },
+            EnvironmentVariables = new() { ["setting"] = "original" }
+        };
+
+        var clone = settings.Clone();
+
+        Assert.Equivalent(settings, clone);
+        clone.DeploymentOutputs["resource"] = "changed";
+        clone.EnvironmentVariables["setting"] = "changed";
+        Assert.Equal("original", settings.DeploymentOutputs["resource"]);
+        Assert.Equal("original", settings.EnvironmentVariables["setting"]);
+    }
+
     [Theory]
     [InlineData("Live", TestMode.Live)]
     [InlineData("Record", TestMode.Record)]

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -10,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests;
 
-public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureMigrateSetup>(output, fixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
@@ -31,10 +32,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_check_platform_landing_zone_exists()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
-        {
-            return;
-        }
+
 
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
@@ -59,10 +57,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_update_platform_landing_zone_parameters()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
-        {
-            return;
-        }
+
 
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
@@ -94,10 +89,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_get_parameter_status()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
-        {
-            return;
-        }
+
 
         var result = await CallToolAsync(
             "azuremigrate_platformlandingzone_request",
@@ -119,10 +111,7 @@ public class AzureMigrateCommandTests(ITestOutputHelper output, TestProxyFixture
     [Fact]
     public async Task Should_handle_invalid_action()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("azuremigrate_platformlandingzone_request"))
-        {
-            return;
-        }
+
 
         try
         {

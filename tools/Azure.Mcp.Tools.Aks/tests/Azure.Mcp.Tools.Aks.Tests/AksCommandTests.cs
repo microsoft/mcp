@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -12,8 +13,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.Tests;
 
-public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class AksCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AksSetup>(output, fixture)
 {
     // ARM SDK calls for GetNodePools include the cluster name in the URL path.
     // In playback mode Settings.ResourceBaseName is "Sanitized", so the default

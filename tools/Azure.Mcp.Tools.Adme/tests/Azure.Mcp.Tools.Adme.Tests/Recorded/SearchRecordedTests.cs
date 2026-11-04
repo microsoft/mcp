@@ -9,13 +9,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 
-/// <summary>Tests ADME search operations through recorded MCP interactions.</summary>
+/// <summary>Tests ADME search operations through recorded direct command execution.</summary>
 public sealed class SearchRecordedTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture,
     RecordSeeder seeder)
-    : AdmeRecordedTestsBase(output, fixture, liveServerFixture), IClassFixture<RecordSeeder>
+    : AdmeRecordedTestsBase(output, fixture), IClassFixture<RecordSeeder>
 {
     private const string SearchTool = "adme_search";
 
@@ -36,14 +35,6 @@ public sealed class SearchRecordedTests(
                 Value = "recording",
             }),
         ];
-
-    [Fact]
-    public async Task Server_exposes_search_tool_over_mcp()
-    {
-        var toolNames = await ListToolNamesAsync();
-
-        Assert.Contains(SearchTool, toolNames);
-    }
 
     [Fact]
     public async Task Search_returns_projected_records_for_well_kind()

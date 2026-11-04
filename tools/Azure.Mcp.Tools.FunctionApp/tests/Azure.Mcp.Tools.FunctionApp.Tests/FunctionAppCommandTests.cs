@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -12,8 +13,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.Tests;
 
-public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class FunctionAppCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<FunctionAppSetup>(output, fixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [

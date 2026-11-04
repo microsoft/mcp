@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.AppService.Commands;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -12,8 +13,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.Tests;
 
-public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class AppServiceCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AppServiceSetup>(output, fixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [

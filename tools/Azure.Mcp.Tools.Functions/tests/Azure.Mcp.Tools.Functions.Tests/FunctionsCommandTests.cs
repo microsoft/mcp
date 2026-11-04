@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Functions.Commands;
 using Azure.Mcp.Tools.Functions.Models;
 using Microsoft.Mcp.Tests.Attributes;
@@ -22,8 +23,8 @@ namespace Azure.Mcp.Tools.Functions.Tests;
 /// </summary>
 [Trait("Command", "LanguageListCommand")]
 [Trait("Command", "TemplateGetCommand")]
-public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class FunctionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<FunctionsSetup>(output, fixture)
 {
     private static readonly string[] s_expectedLanguages = ["python", "typescript", "javascript", "csharp", "java", "powershell", "go"];
 

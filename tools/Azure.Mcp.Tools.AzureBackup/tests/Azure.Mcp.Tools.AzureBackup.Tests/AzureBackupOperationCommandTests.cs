@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Identity;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.AzureBackup.Tests.Operation;
 using Azure.ResourceManager;
 using Azure.ResourceManager.RecoveryServices;
@@ -25,8 +26,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests;
 // Requires the EXISTING protected ${ResourceBaseName}-sqlvm in ${ResourceBaseName}-sqlrsv.
 // Does not create policies/resources, enable/disable protection, or change disk coverage.
 public class AzureBackupOperationCommandTests(
-    ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureBackupSetup>(output, fixture)
 {
     public override List<string> DisabledDefaultSanitizers { get; } = ["AZSDK3430", "AZSDK3493", "AZSDK3436"];
 
@@ -43,9 +44,9 @@ public class AzureBackupOperationCommandTests(
         new(new() { Regex = @"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", Value = "sanitized@example.com" })
     ];
 
-    public override async ValueTask InitializeAsync()
+    protected override async ValueTask LoadSettingsAsync()
     {
-        await LoadSettingsAsync();
+        await base.LoadSettingsAsync();
         // Unlike the default URI-only group sanitizer, this also covers container/item
         // names in bodies and response headers. Escape input, don't interpret names as regex.
         GeneralRegexSanitizers.Add(new(new()
@@ -58,7 +59,6 @@ public class AzureBackupOperationCommandTests(
             Regex = "(?i)" + Regex.Escape(Settings.TenantId),
             Value = "00000000-0000-0000-0000-000000000000"
         }));
-        await base.InitializeAsync();
     }
 
     [Fact]

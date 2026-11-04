@@ -9,13 +9,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests.Recorded;
 
-/// <summary>Tests ADME storage operations through recorded MCP interactions.</summary>
+/// <summary>Tests ADME storage operations through recorded direct command execution.</summary>
 public sealed class StorageRecordedTests(
     ITestOutputHelper output,
     TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture,
     RecordSeeder seeder)
-    : AdmeRecordedTestsBase(output, fixture, liveServerFixture), IClassFixture<RecordSeeder>
+    : AdmeRecordedTestsBase(output, fixture), IClassFixture<RecordSeeder>
 {
     private const string RecordFetchTool = "adme_storage_record_fetch";
     private const string RecordGetTool = "adme_storage_record_get";
@@ -40,17 +39,6 @@ public sealed class StorageRecordedTests(
                 Value = "recording",
             }),
         ];
-
-    [Fact]
-    public async Task Server_exposes_storage_tools_over_mcp()
-    {
-        var toolNames = await ListToolNamesAsync();
-
-        Assert.Contains(RecordFetchTool, toolNames);
-        Assert.Contains(RecordGetTool, toolNames);
-        Assert.Contains(RecordListTool, toolNames);
-        Assert.Contains(RecordVersionListTool, toolNames);
-    }
 
     [Fact]
     public async Task RecordList_returns_ids_for_well_kind()

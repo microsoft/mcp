@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,8 +12,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.Tests;
 
-public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class EventHubsCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<EventHubsSetup>(output, fixture)
 {
     // Disable AZSDK2003 sanitizer to prevent it from over-sanitizing resource names in recordings.
     public override List<string> DisabledDefaultSanitizers =>

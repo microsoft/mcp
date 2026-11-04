@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
@@ -14,7 +15,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.Tests;
 
-public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture liveServerFixture) : CommandTestsBase(output, liveServerFixture)
+public class PostgresCommandTests(ITestOutputHelper output) : AzureToolTestsBase<PostgresSetup>(output)
 {
     private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
@@ -507,18 +508,10 @@ public class PostgresCommandTests(ITestOutputHelper output, LiveServerFixture li
 
     private async Task<JsonElement> CallToolAsyncWithErrorExpected(string command, Dictionary<string, object?> parameters)
     {
-        CallToolResult result = await Client.CallToolAsync(command, parameters);
-        Assert.NotNull(result);
-        Assert.True(result.IsError, $"Command {command} should have failed but succeeded.");
-
-        Assert.NotNull(result.Content);
-        Assert.Single(result.Content);
-
-        var textContent = (TextContentBlock)result.Content.Single();
-        Assert.NotNull(textContent.Text);
-        Assert.NotEmpty(textContent.Text);
-
-        JsonElement errorContent = JsonSerializer.Deserialize<JsonElement>(textContent.Text);
-        return errorContent;
+        var response = await CallToolAsync(command, parameters, root => root);
+        Assert.NotNull(response);
+        int status = response.Value.GetProperty("status").GetInt32();
+        Assert.True(status is < 200 or >= 300, $"Command {command} should have failed but succeeded.");
+        return response.Value;
     }
 }

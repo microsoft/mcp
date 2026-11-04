@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -14,9 +15,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests;
 // or update DefaultPolicy. Policies remain available for diagnosis and test-resource teardown.
 public class AzureBackupPolicyUpdateEnhancedCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureBackupSetup>(output, fixture)
 {
     public override CustomDefaultMatcher? TestMatcher => new()
     {

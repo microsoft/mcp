@@ -3,7 +3,11 @@
 
 using System.Globalization;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tools.Compute;
 using Azure.Mcp.Tools.Optimization.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -12,10 +16,18 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Optimization.Tests;
 
-public sealed class OptimizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public sealed class OptimizationCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<OptimizationSetup>(output, fixture)
 {
     private const int DefaultTop = 100;
+
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        var compute = new ComputeSetup();
+        services.AddSingleton<IAreaSetup>(compute);
+        compute.ConfigureServices(services);
+    }
 
     // These read-only tests query arbitrary existing resources across resource groups, so the base
     // ResourceBaseName/ResourceGroupName sanitizers don't apply; disable them and sanitize the

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -11,8 +12,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Tests;
 
-public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<FoundryExtensionsSetup>(output, fixture)
 {
     // Sanitize subscription IDs in URIs to allow playback to work
     public override List<UriRegexSanitizer> UriRegexSanitizers =>

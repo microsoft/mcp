@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -16,9 +17,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests;
 // re-recorded independently of the rest of the vault/protected-item suite.
 public class AzureBackupPrivateEndpointCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AzureBackupSetup>(output, fixture)
 {
     public override CustomDefaultMatcher? TestMatcher => new()
     {

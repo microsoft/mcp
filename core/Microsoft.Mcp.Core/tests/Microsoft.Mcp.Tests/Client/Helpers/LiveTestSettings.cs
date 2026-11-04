@@ -34,6 +34,24 @@ public class LiveTestSettings
     public Dictionary<string, string> DeploymentOutputs { get; set; } = [];
     public Dictionary<string, string> EnvironmentVariables { get; set; } = [];
 
+    public LiveTestSettings Clone() => new()
+    {
+        PrincipalName = PrincipalName,
+        IsServicePrincipal = IsServicePrincipal,
+        TenantId = TenantId,
+        TenantName = TenantName,
+        SubscriptionId = SubscriptionId,
+        SubscriptionName = SubscriptionName,
+        ResourceGroupName = ResourceGroupName,
+        ResourceBaseName = ResourceBaseName,
+        SettingsDirectory = SettingsDirectory,
+        TestPackage = TestPackage,
+        TestMode = TestMode,
+        DebugOutput = DebugOutput,
+        DeploymentOutputs = new(DeploymentOutputs),
+        EnvironmentVariables = new(EnvironmentVariables)
+    };
+
     public static bool TryFindTestSettingsFile([NotNullWhen(true)] out string? path)
     {
         var directory = AppContext.BaseDirectory;

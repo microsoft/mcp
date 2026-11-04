@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
 using Microsoft.Mcp.Tests.Client;
@@ -14,8 +15,8 @@ namespace Azure.Mcp.Tools.Communication.Tests;
 
 [Trait("Command", "EmailSendCommand")]
 [Trait("Command", "SmsSendCommand")]
-public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<CommunicationSetup>(output, fixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private string? _endpointRecorded;
@@ -25,9 +26,9 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
     private string? _toEmail;
     public override bool EnableDefaultSanitizerAdditions => false;
 
-    public override async ValueTask InitializeAsync()
+    protected override async ValueTask LoadSettingsAsync()
     {
-        await LoadSettingsAsync();
+        await base.LoadSettingsAsync();
         if (TestMode == TestMode.Playback)
         {
             _endpointRecorded = "https://sanitized.communication.azure.com";
@@ -46,8 +47,6 @@ public class CommunicationCommandTests(ITestOutputHelper output, TestProxyFixtur
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_SENDER_EMAIL", out _fromEmail);
             Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TEST_EMAIL", out _toEmail);
         }
-
-        await base.InitializeAsync();
     }
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>

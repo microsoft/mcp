@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client;
@@ -13,9 +14,8 @@ namespace Azure.Mcp.Tools.NetAppFiles.Tests;
 
 public class NetAppFilesCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<NetAppFilesSetup>(output, fixture)
 {
     public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
     {
