@@ -148,12 +148,17 @@ public partial class FabricCoreService
     private static bool IsJobPageContinuationUri(string? value, Uri collection, string token)
     {
         if (string.IsNullOrEmpty(value) || value.Any(static ch => char.IsWhiteSpace(ch) || char.IsControl(ch)) ||
-            value.Contains('\\') || value.Contains("/./", StringComparison.Ordinal) || value.Contains("/../", StringComparison.Ordinal))
+            value.Contains('\\'))
         {
             return false;
         }
         var queryStart = value.IndexOf('?');
-        if (queryStart < 0 || value.AsSpan(0, queryStart).Contains('%') ||
+        if (queryStart < 0)
+        {
+            return false;
+        }
+        var address = value.AsSpan(0, queryStart);
+        if (address.Contains('%') || address.Contains("/./", StringComparison.Ordinal) || address.Contains("/../", StringComparison.Ordinal) ||
             !Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != collection.Scheme ||
             !string.Equals(uri.Host, collection.Host, StringComparison.OrdinalIgnoreCase) || uri.Port != collection.Port ||
             uri.UserInfo.Length != 0 || uri.Fragment.Length != 0 ||

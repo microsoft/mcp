@@ -75,7 +75,7 @@ public sealed class FabricJobsSetup() : IAreaSetup
             "Use the known job-instance ID in a separate Get call after waiting at least the returned Retry-After guidance.\n" +
             "Get returns status, timing, safe failure metadata, and retry guidance. No tool polls, waits, or retrieves results.\n" +
             "List reads one page only; call again explicitly with the same workspace/item IDs and unchanged token for another page.\n" +
-            "Most items retain up to 100 recently completed instances, not a 100-row page cap; active instances have no corresponding limit.\n" +
+            "For most items the API reports up to 100 recently completed instances, not a 100-row page cap; active instances have no corresponding limit.\n" +
             "Listing does not identify an earlier ambiguous Run submission or authorize cancellation. HTTP success does not mean jobs succeeded.\n" +
             "Job-instance IDs are not operation IDs. Scheduling is not implemented.");
         jobs.AddCommand<ItemJobInstanceCancelCommand>(serviceProvider);

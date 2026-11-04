@@ -23,7 +23,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Returns job identities, types, statuses, invocation types, available UTC timing, safe failure metadata,
         and any continuation token and Retry-After guidance. Call again explicitly with the same IDs and
         unchanged token for another page. Makes one GET only, without per-job lookups or automatic pagination.
-        Most items retain at most 100 recently completed instances; active instances have no corresponding limit.
+        For most items, the API reports up to 100 recently completed instances; active instances have no corresponding limit.
         This is not a page-size cap or a full-history guarantee. HTTP success does not mean the jobs succeeded.
         Does not poll, retrieve results, run, cancel, or schedule jobs. A listed job cannot establish the
         identity of an earlier ambiguous submission or one without a tracking ID. Cancellation requires separate authorization.

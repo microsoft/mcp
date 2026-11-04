@@ -189,12 +189,15 @@ already-escaped, mixed, Unicode, whitespace-surrounded, and query-delimiter toke
 Each invocation sends exactly one GET and returns one complete `jobInstances` page. No row triggers
 an enrichment GET. The caller must explicitly request the next page with the same IDs and returned
 token. Tests preserve original ordering and repeated entries, include more than 100 active instances,
-and accept empty/final pages without continuation metadata. The service's recently completed history
-limit is not a local page cap or a full-history guarantee.
+and accept empty/final pages without continuation metadata. The API's completed-instance listing
+limit is not a local page cap, physical retention policy, or full-history guarantee.
 
 Only a token can request another page. Response URIs are neither exposed nor followed; if present,
 they must match the fixed Fabric origin, collection IDs, and token. URI-only, contradictory,
 duplicate, null, or otherwise invalid continuation metadata is a safe failure, not exhaustion.
+Dot-segment representation checks apply only before the query, so raw or escaped `/./` and `/../`
+within opaque cursor values remain data. Regression cases preserve those tokens and keep each
+explicit request on the same collection while still rejecting genuine path traversal.
 Required response inspection rejects malformed rows, invalid Unicode even in omitted fields, and
 duplicate/ambiguously cased properties. No partial result is returned. Exact 1 MiB byte and
 64-level depth thresholds retain the existing default response budget; token boundaries also test

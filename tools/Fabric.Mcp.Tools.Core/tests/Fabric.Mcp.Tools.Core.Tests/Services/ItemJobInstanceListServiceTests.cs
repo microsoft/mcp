@@ -102,6 +102,46 @@ public sealed class ItemJobInstanceListServiceTests()
         Assert.Equal(2, handler.CallCount);
     }
 
+    [Theory]
+    [InlineData("opaque/../cursor", "opaque/../cursor")]
+    [InlineData("opaque/./cursor", "opaque/./cursor")]
+    // cspell:disable
+    [InlineData("opaque/../cursor", "opaque%2F..%2Fcursor")]
+    [InlineData("opaque/./cursor", "opaque%2F.%2Fcursor")]
+    [InlineData("opaque%2F..%2Fcursor", "opaque/../cursor")]
+    [InlineData("opaque%2F.%2Fcursor", "opaque/./cursor")]
+    // cspell:enable
+    [InlineData("opaque/../cursor", "opaque/%2E%2E/cursor")]
+    [InlineData("opaque/./cursor", "opaque/%2E/cursor")]
+    public static async Task List_AcceptsOpaqueDotSegmentsInContinuationQueryWithoutChangingTheCollection(
+        string token, string queryValue)
+    {
+        var page = JsonNode.Parse(Page(token))!.AsObject();
+        page["continuationUri"] = $"{CollectionUrl}?continuationToken={queryValue}";
+        var requests = new List<string>();
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(new Uri(CollectionUrl).AbsolutePath, request.RequestUri!.AbsolutePath);
+            requests.Add(request.RequestUri.AbsoluteUri);
+            return Task.FromResult(Response(requests.Count == 1 ? page.ToJsonString() : """{"value":[]}"""));
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, Credential());
+
+        var first = await ReadAsync(service);
+
+        Assert.Equal(token, first.ContinuationToken);
+        Assert.Equal([CollectionUrl], requests);
+        Assert.DoesNotContain("continuationUri", JsonSerializer.Serialize(first, CoreJsonContext.Default.ItemJobInstanceListCommandResult));
+
+        var second = await ReadAsync(service, first.ContinuationToken);
+
+        Assert.Empty(second.JobInstances);
+        Assert.Null(second.ContinuationToken);
+        Assert.Equal([CollectionUrl, $"{CollectionUrl}?continuationToken={FabricCoreHttpHelpers.EncodeContinuationToken(token)}"], requests);
+        Assert.Equal(2, handler.CallCount);
+    }
+
     [Fact]
     public static async Task List_PreservesMoreThan100ActiveRowsTheirOrderAndRepeatedEntriesWithoutPerJobRequests()
     {

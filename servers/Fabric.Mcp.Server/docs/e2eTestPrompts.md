@@ -19,8 +19,8 @@ Job-instance lookup requires explicitly supplied workspace, item, and existing j
 
 Job-instance listing requires explicit workspace/item UUIDs and returns one complete page per call.
 Use only a returned continuation token with the same IDs for another explicit call; never follow
-continuation URLs, fetch each row, or infer a total count/full history. Most items retain up to 100
-recently completed instances with no corresponding limit for active instances; this is not a page cap.
+continuation URLs, fetch each row, or infer a total count/full history. For most items, the API reports
+up to 100 recently completed instances with no corresponding limit for active instances; this is not a page cap.
 List needs no mutation consent, but selecting a result for Cancel still needs separate authorization.
 The latest listed job cannot identify an earlier ambiguous Run submission or one without a tracking ID.
 No live workspace/item fixture is assumed or discovered for these prompts.

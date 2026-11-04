@@ -1262,9 +1262,10 @@ malformed rows, duplicate or ambiguously cased JSON properties, invalid Unicode 
 fields), and responses exceeding **1 MiB (1,048,576 bytes)** or **64 JSON nesting levels** also fail
 explicitly without returning a partial page. The shared response limit is unchanged.
 
-Most items retain **at most 100 recently completed instances**, with no corresponding limit for
-active instances. This service retention behavior is **not a 100-row page cap** or a guarantee of
-complete job history. The tool adds no count limit, total count, or ordering guarantee.
+For most items, the API reports **up to 100 recently completed instances**, with no corresponding
+limit for active instances. This documented listing limit is **not a 100-row page cap** or a guarantee
+of complete job history. It does not establish physical retention or whether older instance IDs
+remain accessible through Get. The tool adds no count limit, total count, or ordering guarantee.
 Validated `Retry-After` seconds or a UTC HTTP date are returned when present. HTTP failures keep
 their status and retry guidance with safe messages; error bodies are not read and requests are not retried.
 
