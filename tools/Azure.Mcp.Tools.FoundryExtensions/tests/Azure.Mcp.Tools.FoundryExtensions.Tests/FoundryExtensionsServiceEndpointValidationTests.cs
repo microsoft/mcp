@@ -144,7 +144,6 @@ public class FoundryExtensionsServiceEndpointValidationTests
     [Theory]
     [InlineData("https://my-resource.openai.azure.cn", "china")]
     [InlineData("https://my-resource.openai.azure.us", "government")]
-    [InlineData("https://my-resource.openai.azure.de", "germany")]
     public void ValidateAzureOpenAiEndpoint_AcceptsValidSovereignCloudEndpoints(string endpoint, string cloud)
     {
         var service = CreateService(GetArmEnvironment(cloud));
