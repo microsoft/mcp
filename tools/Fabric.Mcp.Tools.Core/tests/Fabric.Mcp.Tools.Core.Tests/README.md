@@ -37,6 +37,10 @@ Offline tests for the Fabric Core toolset.
 - **Commands/ItemJobInstanceGetCommandTests.cs**: Required UUID binding, read-only metadata, unsupported-input rejection, cancellation forwarding, safe logging, and HTTP/retry guidance
 - **Services/ItemJobInstanceGetServiceTests.cs**: One normalized authenticated GET, all documented/future states, optional verbatim timestamp strings, matching IDs, safe failure fields, exact byte limits, malformed responses, retry headers, cancellation/disposal, and concurrent identities
 - **ItemJobInstanceGetMcpTests.cs**: Independent Jobs area registration, stable command identity, typed schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, default/Core-only/Jobs-only/combined filtering, learn schemas, cross-namespace item-ID handoff, output modes, and pre-authentication validation
+- **Commands/ItemJobRunCommandTests.cs**: Explicit context and optional JSON binding, non-idempotent/destructive metadata, accepted receipts, unsupported-option rejection, safe mutation errors/logging, and cancellation forwarding
+- **Validation/ItemJobRunInputTests.cs**: Strict object/array JSON, duplicate rejection, required parameter envelope fields, case-insensitive name uniqueness and 256-character boundary, extensible types/opaque values, omission, and exact UTF-8/depth/serialized request budgets
+- **Services/ItemJobRunServiceTests.cs**: One normalized authenticated POST, encoded job types, optional body preservation, trusted Location context, accepted receipts without tracking IDs, Retry-After boundaries, no body reads or retries, FeatureNotAvailable without fallback, cancellation/acceptance preservation, disposal, and concurrent per-request identity isolation
+- **ItemJobRunMcpTests.cs**: Real registration, consent, schemas, all/namespace/single routes and output modes, stdio/HTTP configurations, namespace filters, reserved router parameters isolation, separate Run-to-Get handoff, read-only exclusion with Get retained, and validation before authentication
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -134,6 +138,41 @@ Offline tests exercise the real command/service pipeline with substituted HTTP a
 real server startup discovery over stdio and HTTP. No existing live job fixture was supplied:
 live Fabric calls, recorded/playback validation, and real OBO/RBAC validation have **not** been run.
 Tests do not start jobs, deploy resources, or discover a fixture.
+
+## On-demand Job Submission
+
+`jobs_run-on-demand-item-job` submits exactly one POST using the current job-type path route.
+It does not use `FabricOperationRunner`, poll, wait, fetch status/results, discover items/jobs, or
+resubmit. The optional JSON `execution-data` object and `job-parameters` array map to `executionData`
+and `parameters`, with omission and caller values preserved. The distinct option name avoids
+collision with the router's outer `parameters` object. Parameter names are case-insensitively unique
+and at most 256 characters; the bundled schema requires `name`, `type`, and `value`. Type strings
+remain extensible and values remain opaque, including the scalar values in the public examples.
+Tests distinguish the JSON text `null` (invalid object/array input) from an RPC option value of JSON
+null, which the shared `CommandExtensions` binder intentionally treats as omitted for every command.
+That existing conversion contract is preserved; Run does not introduce raw-RPC parsing or change
+shared argument binding.
+
+Each input JSON text is limited to 1 MiB UTF-8 and 32 nesting levels, with duplicate properties
+rejected throughout. The final serialized request has a separate 1 MiB budget including its envelope.
+Job types have a 1,024-byte UTF-8 tool budget; URI-unsafe representations are rejected before encoding.
+These are generic resource limits, not workload allowlists or content validation.
+
+A 202 remains `submissionStatus: "Accepted"` even when Location is absent, invalid, multiple,
+mismatched, or collection-only. Only a trusted matching job-instance path supplies `jobInstanceId`.
+No response URL or failure body is exposed or followed, and `x-ms-operation-id` cannot supply a job ID.
+`trackingIssue` and `retryAfterIssue` make incomplete receipts explicit. Valid Retry-After seconds or
+dates are retained with guidance to wait at least that long before the first separate Get; there is
+no early-poll shortcut or fabricated fallback. A zero-delay offline fixture demonstrates the two
+independent calls, asserting one POST before the caller explicitly issues one GET.
+
+Failure tests assert one POST with no retries, including FeatureNotAvailable, throttling, network
+failure, and in-flight cancellation. Late cancellation does not erase confirmed response headers.
+Input/authentication/pre-send cancellation and blocked invocations produce zero HTTP requests.
+Run is destructive, non-read-only, and non-idempotent; read-only mode retains Get and denies Run.
+The host credential composition is unchanged. Concurrent substituted credentials test isolation,
+not real delegated OBO/RBAC. No live execution target or permission was supplied: live, recorded/
+playback, and real OBO validation were not run, and these tests never start a Fabric job.
 
 ## Long-running Operations
 
@@ -457,6 +496,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run job-instance lookup and its shared-reader/catalog regressions
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobInstance*' '*FabricCoreHttpHelpersTests' '*FabricCoreCatalogTests' '*FabricOperation*' '*ItemDefinitionGet*'
+
+# Run job submission, lookup, JSON-input, and shared infrastructure regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobRun*' '*ItemJobInstance*' '*ItemCreateRequestInput*' '*FabricCoreHttpHelpersTests' '*FabricCoreCatalogTests' '*FabricCoreSetupTests'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"

@@ -60,7 +60,7 @@
                         ],
                         "markdownEnumDescriptions": [
                             "Core — Manage Fabric workspaces, items, capacities, and long-running operations.",
-                            "Jobs — Read one existing item job instance with status and retry guidance, without polling or starting jobs.",
+                            "Jobs — Submit one on-demand item job or read an existing job instance, with acceptance and retry guidance but no polling or automatic retries.",
                             "Documentation — Browse Fabric API specifications, item definitions, and best practices.",
                             "OneLake — Manage and interact with OneLake data lake storage.",
                             "Data Factory — Manage pipelines and Dataflow Gen2 operations."

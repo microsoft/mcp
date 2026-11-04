@@ -170,7 +170,7 @@ public sealed class ItemJobInstanceGetMcpTests()
         Assert.Equal("Microsoft Fabric Jobs", setup.Title);
         var factory = provider.GetRequiredService<ICommandFactory>();
         Assert.Single(factory.RootGroup.SubGroup, group => group.Name == "jobs");
-        var registration = Assert.Single(factory.AllCommands, pair => pair.Key.StartsWith("jobs_", StringComparison.Ordinal));
+        var registration = Assert.Single(factory.AllCommands, pair => pair.Key == ToolName);
         Assert.Equal(ToolName, registration.Key);
         Assert.Same(provider.GetRequiredService<ItemJobInstanceGetCommand>(), registration.Value.Command);
         Assert.Single(provider.GetServices<ItemJobInstanceGetCommand>());

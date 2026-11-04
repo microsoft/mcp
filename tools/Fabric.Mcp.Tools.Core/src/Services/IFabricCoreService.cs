@@ -81,6 +81,21 @@ public interface IFabricCoreService
         string jobInstanceId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Submits one job without retries or polling; a 202 receipt confirms acceptance, not completion.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item to execute.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="executionData">Optional opaque JSON object; null omits the field.</param>
+    /// <param name="jobParameters">Optional JSON parameter array; null omits the field.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request, not the submitted job.</param>
+    Task<ItemJobRunCommandResult> RunOnDemandItemJobAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string? executionData = null,
+        string? jobParameters = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Retrieves metadata for one existing workspace without reading its items or data.</summary>
     /// <param name="workspaceId">The workspace ID as a nonempty UUID.</param>
     /// <param name="preferWorkspaceSpecificEndpoints">The endpoint preference, or null to preserve the service default.</param>
