@@ -66,7 +66,7 @@ public sealed class ItemJobInstanceCancelMcpTests()
         var credential = Credential();
         await using var provider = Services(handler, credential, transport, output, selection);
         var factory = provider.GetRequiredService<ICommandFactory>();
-        Assert.Equal([ToolName, "jobs_get-item-job-instance", "jobs_run-on-demand-item-job"],
+        Assert.Equal([ToolName, "jobs_get-item-job-instance", "jobs_list-item-job-instances", "jobs_run-on-demand-item-job"],
             factory.AllCommands.Keys.Where(key => key.StartsWith("jobs_", StringComparison.Ordinal)).Order());
         Assert.Same(provider.GetRequiredService<ItemJobInstanceCancelCommand>(), factory.AllCommands[ToolName].Command);
         Assert.Single(provider.GetServices<ItemJobInstanceCancelCommand>());
@@ -148,11 +148,12 @@ public sealed class ItemJobInstanceCancelMcpTests()
         await using var provider = Services(handler, credential, transport, StructuredOutputMode.Compact, readOnly: true);
         var catalog = await provider.GetRequiredService<CommandFactoryToolLoader>().ListToolsHandler(
             McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
-        Assert.Equal("jobs_get-item-job-instance", Assert.Single(catalog.Tools).Name);
+        Assert.Equal(["jobs_get-item-job-instance", "jobs_list-item-job-instances"], catalog.Tools.Select(tool => tool.Name).Order());
         if (route != "all")
         {
             var learn = await LearnAsync(provider, route);
             Assert.Contains("jobs_get-item-job-instance", learn);
+            Assert.Contains("jobs_list-item-job-instances", learn);
             Assert.DoesNotContain(ToolName, learn);
             Assert.DoesNotContain("jobs_run-on-demand-item-job", learn);
         }

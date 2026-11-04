@@ -30,6 +30,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricJobFailure))]
 [JsonSerializable(typeof(ItemJobInstanceCancelCommandResult))]
 [JsonSerializable(typeof(ItemJobInstanceGetCommandResult))]
+[JsonSerializable(typeof(ItemJobInstanceListCommandResult))]
 [JsonSerializable(typeof(ItemJobRunCommandResult))]
 [JsonSerializable(typeof(ItemJobRunRequest))]
 [JsonSerializable(typeof(FabricItemSensitivityLabel))]

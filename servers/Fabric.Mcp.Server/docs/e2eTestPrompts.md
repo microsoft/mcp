@@ -17,6 +17,14 @@ Definition updates replace the complete definition of an existing item. Review t
 
 Job-instance lookup requires explicitly supplied workspace, item, and existing job-instance IDs. These prompts do not authorize starting a job or discovering a live fixture. Job-instance IDs are not Fabric operation IDs, and a successful snapshot read does not mean the job succeeded.
 
+Job-instance listing requires explicit workspace/item UUIDs and returns one complete page per call.
+Use only a returned continuation token with the same IDs for another explicit call; never follow
+continuation URLs, fetch each row, or infer a total count/full history. Most items retain up to 100
+recently completed instances with no corresponding limit for active instances; this is not a page cap.
+List needs no mutation consent, but selecting a result for Cancel still needs separate authorization.
+The latest listed job cannot identify an earlier ambiguous Run submission or one without a tracking ID.
+No live workspace/item fixture is assumed or discovered for these prompts.
+
 Job submission requires explicit execution authorization, workspace/item UUIDs, and a supported job type.
 Run prompts below are not permission to start a real job. No non-production execution fixture is assumed.
 Submit once, return acceptance rather than completion, and never retry automatically or strip unsupported
@@ -31,7 +39,7 @@ rollback, or infer success/failure from JobAlreadyCompleted. After uncertain can
 job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
 metadata does not undo acceptance or require a Location-derived ID.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, and lookup alone,
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, listing, and lookup alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -128,6 +136,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_get-item-job-instance | Use the workspace, item, and job-instance UUIDs I supplied to read the latest snapshot once. Preserve a future status string instead of treating it as successful completion. | context-required |
 | jobs_get-item-job-instance | Check that existing item's job instance using its saved job-instance ID, not the generic Fabric operation-state or operation-result tools. Return the snapshot without waiting. | context-required |
 | jobs_get-item-job-instance | With the server configured using --namespace core --namespace jobs --mode all, use the workspace and item UUIDs returned by core_get-item and the existing job-instance UUID I supplied to read its status once. Do not discover or start a job. | context-required |
+| jobs_list-item-job-instances | List one page of job instances for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch individual jobs or another page automatically. | none |
+| jobs_list-item-job-instances | Show one page of that item's jobs with statuses, available UTC timing, and safe failure metadata. Do not treat HTTP success as job success or assume the page is full history. | context-required |
+| jobs_list-item-job-instances | Fetch the next page using the unchanged continuation token from the previous response and the same explicit workspace/item UUIDs. Do not use a continuation URL or change filters. | context-required |
+| jobs_list-item-job-instances | In read-only Jobs mode, list one page for the workspace and item UUIDs I supplied, then stop. More than 100 active rows must not be capped locally. | context-required |
+| jobs_list-item-job-instances | List one page of jobs for this known item; I will explicitly select a returned job-instance ID for a separate Get. Do not infer the ID of an ambiguous Run submission or authorize cancellation from the listing. | context-required |
 | jobs_run-on-demand-item-job | Submit exactly one explicitly authorized job of type \<job-type> for item \<item-id> in workspace \<workspace-id>. Return the accepted receipt without polling, waiting, fetching results, or retrying. | context-required |
 | jobs_run-on-demand-item-job | Run the authorized item job once with the execution-data JSON and job-parameters JSON array I supplied. Preserve omitted fields and opaque values; do not strip parameters or resubmit if Fabric reports FeatureNotAvailable. | context-required |
 | jobs_run-on-demand-item-job | Submit this authorized job with no optional body. If Location is missing, invalid, or identifies only a collection, report accepted but not trackable; never invent an ID or use x-ms-operation-id as the job-instance ID. | context-required |

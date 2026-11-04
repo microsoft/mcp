@@ -66,7 +66,14 @@ public partial class FabricCoreService
             throw new JsonException("Fabric returned invalid job-instance metadata.");
         }
 
-        if (instance is null || instance.Id != jobInstanceId || instance.ItemId != itemId ||
+        return ValidateItemJobInstance(instance, itemId, jobInstanceId);
+    }
+
+    private static FabricItemJobInstance ValidateItemJobInstance(
+        FabricItemJobInstance? instance, Guid itemId, Guid? jobInstanceId = null)
+    {
+        if (instance is null || instance.Id == Guid.Empty ||
+            (jobInstanceId is { } requestedId && instance.Id != requestedId) || instance.ItemId != itemId ||
             string.IsNullOrWhiteSpace(instance.JobType) || string.IsNullOrWhiteSpace(instance.InvokeType) ||
             string.IsNullOrWhiteSpace(instance.Status))
         {

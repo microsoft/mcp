@@ -263,6 +263,7 @@ public class ServerStartupTests
         var expectedJobs = namespaces != "core";
         Assert.Equal(expectedJobs, names.Contains("jobs_cancel-item-job-instance"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
         Assert.Equal(expectedJobs, names.Contains("jobs_run-on-demand-item-job"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
         if (namespaces is not null)
@@ -300,6 +301,14 @@ public class ServerStartupTests
                 .Select(value => value.GetString()).Order());
             Assert.Equal(["execution-data", "item-id", "job-parameters", "job-type", "workspace-id"],
                 run.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            var list = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-job-instances");
+            Assert.True(list.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(list.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(list.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["continuation-token", "item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
         }
     }
 
