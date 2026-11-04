@@ -103,6 +103,19 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one complete schedule page without discovery, per-schedule reads, pagination, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="continuationToken">An unchanged token for the same IDs and job type, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemScheduleListCommandResult> ListItemSchedulesAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Submits one job without retries or polling; a 202 receipt confirms acceptance, not completion.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item to execute.</param>

@@ -27,6 +27,15 @@ A valid token still enables explicit continuation when its URI is absent/null or
 The latest listed job cannot identify an earlier ambiguous Run submission or one without a tracking ID.
 No live workspace/item fixture is assumed or discovered for these prompts.
 
+Schedule listing additionally requires an explicit job type and returns one complete page, with
+optional configuration, owner, creation time, and execution data preserved. These outputs can be
+sensitive, so the host's disclosure confirmation still applies in read-only mode. There is no
+name/job-type discovery, automatic continuation, per-schedule lookup, scheduling mutation, or live
+fixture discovery. Cron interval values are minutes, not cron expressions; do not infer a local
+time zone or next execution time. Schedule IDs are not job-instance IDs or operation IDs.
+Absent/null terminal continuation and token-only continuation follow the same pagination rules
+above. Job-instance history limits do not apply to schedule pages.
+
 Job submission requires explicit execution authorization, workspace/item UUIDs, and a supported job type.
 Run prompts below are not permission to start a real job. No non-production execution fixture is assumed.
 Submit once, return acceptance rather than completion, and never retry automatically or strip unsupported
@@ -41,7 +50,7 @@ rollback, or infer success/failure from JobAlreadyCompleted. After uncertain can
 job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
 metadata does not undo acceptance or require a Location-derived ID.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, listing, and lookup alone,
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule listing alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -144,6 +153,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_list-item-job-instances | Read one page for my supplied workspace/item UUIDs. Preserve all final-page rows when continuation metadata is absent or null; if a token is present, return it without fetching another page. | context-required |
 | jobs_list-item-job-instances | In read-only Jobs mode, list one page for the workspace and item UUIDs I supplied, then stop. More than 100 active rows must not be capped locally. | context-required |
 | jobs_list-item-job-instances | List one page of jobs for this known item; I will explicitly select a returned job-instance ID for a separate Get. Do not infer the ID of an ambiguous Run submission or authorize cancellation from the listing. | context-required |
+| jobs_list-item-schedules | List one page of schedules for job type DefaultJob on item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Preserve settings and available owner/execution data after sensitive-data confirmation; do not fetch individual schedules or another page. | none |
+| jobs_list-item-schedules | Show the enabled state and available creation time and configuration of schedules for the explicit workspace, item, and job type I supplied. Do not discover IDs or infer that an enabled schedule ran successfully. | context-required |
+| jobs_list-item-schedules | Fetch one more schedule page using the unchanged returned continuation token and the same workspace/item UUIDs and job type. Do not follow a continuation URL, change context, or apply job-history limits. | context-required |
+| jobs_list-item-schedules | In read-only Jobs mode, list one schedule page for my supplied context. Keep all final-page rows when continuation metadata is absent or null; return any usable token from an empty page without automatically continuing. | context-required |
+| jobs_list-item-schedules | Show this item's returned schedule configuration without converting time zones. Interpret Cron interval as minutes, not a cron expression; preserve unknown schedule and owner types. Do not create, update, delete, run, or cancel anything. | context-required |
+| jobs_list-item-schedules | Use the jobs namespace router to list schedules with workspace-id, item-id, and job-type in parameters. Do not pass a returned schedule ID to a job-instance or operation lookup. | context-required |
 | jobs_run-on-demand-item-job | Submit exactly one explicitly authorized job of type \<job-type> for item \<item-id> in workspace \<workspace-id>. Return the accepted receipt without polling, waiting, fetching results, or retrying. | context-required |
 | jobs_run-on-demand-item-job | Run the authorized item job once with the execution-data JSON and job-parameters JSON array I supplied. Preserve omitted fields and opaque values; do not strip parameters or resubmit if Fabric reports FeatureNotAvailable. | context-required |
 | jobs_run-on-demand-item-job | Submit this authorized job with no optional body. If Location is missing, invalid, or identifies only a collection, report accepted but not trackable; never invent an ID or use x-ms-operation-id as the job-instance ID. | context-required |

@@ -123,7 +123,8 @@ public partial class FabricCoreService
         }
     }
 
-    private static string? ReadJobPageContinuationToken(JsonElement page, Uri collection)
+    private static string? ReadJobPageContinuationToken(
+        JsonElement page, Uri collection, StringComparison pathComparison = StringComparison.OrdinalIgnoreCase)
     {
         var hasToken = page.TryGetProperty("continuationToken", out var tokenValue) && tokenValue.ValueKind != JsonValueKind.Null;
         var hasUri = page.TryGetProperty("continuationUri", out var uriValue) && uriValue.ValueKind != JsonValueKind.Null;
@@ -138,14 +139,14 @@ public partial class FabricCoreService
         if (tokenValue.ValueKind != JsonValueKind.String || tokenValue.GetString() is not { } token ||
             !ItemJobInstanceListInput.IsValidContinuationToken(token) ||
             (hasUri && (uriValue.ValueKind != JsonValueKind.String ||
-                !IsJobPageContinuationUri(uriValue.GetString(), collection, token))))
+                !IsJobPageContinuationUri(uriValue.GetString(), collection, token, pathComparison))))
         {
             throw new JsonException(InvalidJobPageMessage);
         }
         return token;
     }
 
-    private static bool IsJobPageContinuationUri(string? value, Uri collection, string token)
+    private static bool IsJobPageContinuationUri(string? value, Uri collection, string token, StringComparison pathComparison)
     {
         if (string.IsNullOrEmpty(value) || value.Any(static ch => char.IsWhiteSpace(ch) || char.IsControl(ch)) ||
             value.Contains('\\'))
@@ -157,12 +158,18 @@ public partial class FabricCoreService
         {
             return false;
         }
-        var address = value.AsSpan(0, queryStart);
-        if (address.Contains('%') || address.Contains("/./", StringComparison.Ordinal) || address.Contains("/../", StringComparison.Ordinal) ||
-            !Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != collection.Scheme ||
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != collection.Scheme ||
             !string.Equals(uri.Host, collection.Host, StringComparison.OrdinalIgnoreCase) || uri.Port != collection.Port ||
             uri.UserInfo.Length != 0 || uri.Fragment.Length != 0 ||
-            !string.Equals(uri.AbsolutePath, collection.AbsolutePath, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(uri.AbsolutePath, collection.AbsolutePath, pathComparison))
+        {
+            return false;
+        }
+        // Compare the unnormalized path, not opaque query data. The expected collection
+        // may contain an escaped job type; alternate escapes and dot-segment routes still fail.
+        var pathStart = value.IndexOf('/', value.IndexOf("://", StringComparison.Ordinal) + 3);
+        if (pathStart < 0 || pathStart >= queryStart || value.AsSpan(0, pathStart).Contains('%') ||
+            !value.AsSpan(pathStart, queryStart - pathStart).Equals(collection.AbsolutePath, pathComparison))
         {
             return false;
         }
