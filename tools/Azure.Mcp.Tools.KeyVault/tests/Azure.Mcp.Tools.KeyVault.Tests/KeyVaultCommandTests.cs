@@ -4,17 +4,17 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Azure.Security.KeyVault.Keys;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.Tests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<KeyVaultSetup>(output, fixture)
 {
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 
@@ -209,11 +209,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_import_certificate()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("keyvault_certificate_import"))
-        {
-            return;
-        }
-
         var fakePassword = _importCertificateAssets.Password;
         var tempPath = _importCertificateAssets.CreateTempCopy();
 

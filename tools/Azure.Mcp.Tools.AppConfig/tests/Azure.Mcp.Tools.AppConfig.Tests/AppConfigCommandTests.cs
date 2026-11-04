@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.Tests;
 
-public class AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<AppConfigSetup>(output, fixture)
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";

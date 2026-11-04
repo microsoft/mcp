@@ -7,7 +7,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 ## Architecture Overview
 
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
-- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
+- **Test Harness** – Azure operation tests can inherit from [`RecordedAzureToolTestsBase<TAreaSetup>`](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedAzureToolTestsBase.cs) to execute commands directly. Tests of MCP transport, authentication, or executable behavior retain [`RecordedCommandTestsBase`](../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs), or [`CommandTestsBase`](../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/CommandTestsBase.cs) when not recorded. Both recording backends share [`RecordedTestsBase`](../core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedTestsBase.cs), which:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
@@ -20,6 +20,77 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 > proxy can be reached. Endpoint validation still applies to the original endpoint
 > before redirection. Use recording proxies only in a trusted test environment.
 
+## Direct recorded command tests
+
+Use the direct backend when a test verifies Azure operations rather than MCP protocol behavior:
+
+```csharp
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tools.Storage;
+using Microsoft.Mcp.Tests.Client.Helpers;
+using Xunit;
+
+public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<StorageSetup>(output, fixture)
+{
+    [Fact]
+    public async Task Should_list_storage_accounts()
+    {
+        var result = await CallToolAsync("storage_account_get",
+            new() { ["subscription"] = Settings.SubscriptionId });
+        Assert.NotNull(result);
+    }
+}
+```
+
+The backend uses the selected area's existing `ConfigureServices` and `RegisterCommands`
+registrations. It runs production argument parsing, binding, validation, command-context
+scoping, and command execution against real services. Responses retain the production
+source-generated JSON representation. Tests can pass a response selector as the third
+`CallToolAsync` argument when they need the complete status/message/results envelope.
+No MCP server, MCP client, or server executable is needed; Test Proxy still runs for
+Record and Playback modes.
+
+### Migrating an operation suite
+
+1. Change its base to `RecordedAzureToolTestsBase<YourAreaSetup>` and remove the
+   `LiveServerFixture` constructor argument.
+2. Keep the test project directory, namespaces, test names, `assets.json`, sanitizers,
+   matchers, and recording variables unchanged. Existing recordings should be validated
+   in playback before deciding whether any need to be recorded again.
+3. Remove the test project's server `ProjectReference` after all of its process-backed
+   tests have been migrated or moved to a server integration project.
+4. Serialize the test assembly because service-specific environment settings and some
+   authentication/playback configuration remain process-wide:
+   ```csharp
+   [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
+   ```
+   The direct fixture restores environment values after execution and clones shared
+   settings before suite-specific customization. The environment-clearing test attribute
+   recognizes direct recorded fixtures and does not erase their configuration.
+5. Move HTTP-only availability assertions to server integration tests. Do not retain or
+   stub `AssertLocalToolIsUnavailableInHttpMode` in a direct operation test. The pilot
+   Storage upload and Key Vault certificate import checks are retained in
+   [`LocalToolAvailabilityTests`](../servers/Azure.Mcp.Server/tests/Azure.Mcp.Server.Tests/Infrastructure/LocalToolAvailabilityTests.cs).
+
+Storage, App Configuration, Redis, Compute, and Key Vault use this backend. Their
+unit and recorded tests now build without the full Azure server dependency.
+Direct execution is transport-independent: `MCP_TEST_TRANSPORT` does not turn it
+into an HTTP test. MCP availability, discovery, output-schema, authentication,
+sampling, elicitation, and process/package assertions must retain a suitable
+MCP-backed test. Direct suites reject server arguments and `TestPackage` settings
+rather than silently ignoring them.
+
+Record and Playback require Debug builds so the recording transport is present.
+Playback injects a fake credential provider; Live and Record retain real authentication.
+The framework sets playback mode before constructing services, and long-running
+operations evaluate playback polling at execution time rather than first type use.
+Non-HTTP protocols, native dependencies, and `[LiveTestOnly]` restrictions are unchanged.
+
+```powershell
+dotnet test --project .\tools\Azure.Mcp.Tools.Storage\tests\Azure.Mcp.Tools.Storage.Tests\Azure.Mcp.Tools.Storage.Tests.csproj --filter-trait "TestType=Live"
+```
+
 ## Test Proxy Primer (Relevant Bits)
 
 The Azure SDK Test Proxy is a cross-language recorder/playback service. Full upstream documentation lives in the Azure SDK Tools repo:
@@ -29,7 +100,7 @@ The Azure SDK Test Proxy is a cross-language recorder/playback service. Full ups
 
 For MCP developers, the key takeaways are:
 
-- The proxy exposes various endpoints that affect matching behavior, sanitization of recordings at rest and during playback, and other transport customizations. `RecordedCommandTestsBase` handles these calls automatically.
+- The proxy exposes various endpoints that affect matching behavior, sanitization of recordings at rest and during playback, and other transport customizations. `RecordedTestsBase` handles these calls for both execution backends.
 - Recordings are **externalized** via `assets.json` files and stored in the shared `Azure/azure-sdk-assets` repository. The proxy clones the relevant slice into `.assets/<hash>/...` on demand.
 - Asset management commands are exposed through the proxy CLI (`restore`, `reset`, `push`, `config locate/show`). MCP developers invoke these via the auto-downloaded binary in `.proxy/`.
 
@@ -37,7 +108,8 @@ For MCP developers, the key takeaways are:
 
 ```
 docs/recorded-tests.md             # this file
-core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting infrastructure
+core/Microsoft.Mcp.Core/tests/...  # Shared recording and execution infrastructure
+core/Azure.Mcp.Core/tests/...      # Azure-specific direct test composition
 .proxy/                            # auto-downloaded Test Proxy binaries (created on demand)
 .assets/                           # sparse clones of Azure/azure-sdk-assets slices
 ```

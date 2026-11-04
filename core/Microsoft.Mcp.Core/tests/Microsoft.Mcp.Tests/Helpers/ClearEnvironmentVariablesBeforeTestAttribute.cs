@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
+using Microsoft.Mcp.Tests.Client;
 using Xunit.v3;
 
 namespace Microsoft.Mcp.Tests.Helpers
@@ -36,6 +37,11 @@ namespace Microsoft.Mcp.Tests.Helpers
 
         public override void Before(MethodInfo methodUnderTest, IXunitTest test)
         {
+            if (methodUnderTest.DeclaringType is { } type && typeof(RecordedToolTestsBase).IsAssignableFrom(type))
+            {
+                return;
+            }
+
             foreach (var envVar in _variablesToClear)
             {
                 Environment.SetEnvironmentVariable(envVar, null);

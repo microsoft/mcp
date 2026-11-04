@@ -11,18 +11,6 @@ namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService(IAzureService azureService)
 {
-    private static readonly TimeSpan? s_defaultPollInterval = null;
-
-    static BaseAzureService()
-    {
-#if DEBUG
-        if (EnvironmentHelpers.IsPlaybackTesting())
-        {
-            s_defaultPollInterval = TimeSpan.Zero;
-        }
-#endif
-    }
-
     /// <summary>
     /// Initializes the user agent policy to include the transport type for all Azure service calls.
     /// This method must be called once during application startup before creating any <see cref="BaseAzureService"/> instances.
@@ -138,7 +126,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        if (s_defaultPollInterval.HasValue)
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
             await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
         }
@@ -158,7 +146,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     {
         ArgumentNullException.ThrowIfNull(operation);
 
-        if (s_defaultPollInterval.HasValue)
+        if (EnvironmentHelpers.IsPlaybackTesting())
         {
             await WaitForLroCompletionInternalAsync(operation, cancellationToken).ConfigureAwait(false);
         }
@@ -178,7 +166,7 @@ public abstract class BaseAzureService(IAzureService azureService)
                 return operation.GetRawResponse();
             }
 
-            await Task.Delay(s_defaultPollInterval!.Value, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
         }
     }
 

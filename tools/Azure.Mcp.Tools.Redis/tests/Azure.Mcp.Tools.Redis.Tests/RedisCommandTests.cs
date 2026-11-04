@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.Tests;
 
-public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class RedisCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<RedisSetup>(output, fixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [

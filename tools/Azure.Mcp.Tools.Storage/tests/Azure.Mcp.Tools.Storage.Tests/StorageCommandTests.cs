@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
@@ -11,8 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.Tests;
 
-public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<StorageSetup>(output, fixture)
 {
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
@@ -279,11 +279,6 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_upload_blob()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("storage_blob_upload"))
-        {
-            return;
-        }
-
         // Create a temporary file to upload
         var tempFileName = RegisterOrRetrieveVariable("blobName", $"test-upload-{DateTime.UtcNow.Ticks}.txt");
         var tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);

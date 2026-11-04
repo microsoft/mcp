@@ -14,7 +14,7 @@ public class TestProxyFixture : IAsyncLifetime
     public IRecordingPathResolver PathResolver { get; private set; } = new RecordingPathResolver();
 
     /// <summary>
-    /// Proxy instance created lazily. RecordedCommandTestsBase will start it after determining TestMode from LiveTestSettings.
+    /// Proxy instance created lazily. RecordedTestsBase starts it after determining TestMode from LiveTestSettings.
     /// </summary>
     public TestProxy? Proxy { get; private set; }
 

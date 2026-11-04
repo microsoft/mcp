@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Compute.Tests;
 
-public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+public class ComputeCommandTests(ITestOutputHelper output, TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<ComputeSetup>(output, fixture)
 {
     // Use Settings.ResourceBaseName with suffixes (following SQL pattern)
     private string VmName => $"{Settings.ResourceBaseName}-vm";

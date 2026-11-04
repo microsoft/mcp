@@ -4,8 +4,8 @@
 // cspell:ignore VMRESOURCEID
 
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Microsoft.Mcp.Tests.Helpers;
@@ -16,9 +16,8 @@ namespace Azure.Mcp.Tools.Storage.Tests;
 [Trait("Command", "DiskDiagnoseCommand")]
 public class StorageDiskCommandTests(
     ITestOutputHelper output,
-    TestProxyFixture fixture,
-    LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, fixture, liveServerFixture)
+    TestProxyFixture fixture)
+    : RecordedAzureToolTestsBase<StorageSetup>(output, fixture)
 {
     private const string EmptyGuid = "00000000-0000-0000-0000-000000000000";
     private const string EndpointEnvironmentVariable = "AZURE_MCP_STORAGE_INTELLIGENCE_ENDPOINT";
