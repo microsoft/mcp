@@ -60,7 +60,7 @@ public sealed class SignalRService(IAzureService azureService, ICacheService cac
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (!resourceGroupResource.HasValue)
                 {
-                    throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                    throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                 }
 
                 var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
@@ -88,13 +88,13 @@ public sealed class SignalRService(IAzureService azureService, ICacheService cac
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
             if (!resourceGroupResource.HasValue)
             {
-                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
             }
 
             var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
             if (!signalRResource.HasValue)
             {
-                throw new Exception($"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
+                throw new KeyNotFoundException($"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
             }
 
             runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));

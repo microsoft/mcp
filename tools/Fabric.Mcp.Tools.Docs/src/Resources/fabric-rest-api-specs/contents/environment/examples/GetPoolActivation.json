@@ -1,0 +1,47 @@
+{
+    "title": "Get pool activation example",
+    "parameters": {
+        "workspaceId": "11111111-2222-3333-4444-555555555555",
+        "environmentId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "activationId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "jobInstanceId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                "name": "WeekdayMorningActivation",
+                "capacityId": "99999999-8888-7777-6666-555555555555",
+                "state": "Failed",
+                "scheduledStartDateTime": "2025-06-01T08:00:00Z",
+                "startDateTime": "2025-06-01T08:00:12Z",
+                "scheduledEndDateTime": "2025-06-01T18:00:00Z",
+                "endDateTime": "2025-06-01T08:05:30Z",
+                "maxClustersToHydrate": 5,
+                "clusterIdleTimeout": "PT30M",
+                "customLivePoolLifespan": "PT12H",
+                "isRecurring": true,
+                "jobType": "SparkPool",
+                "runtimeVersion": "1.3",
+                "poolName": "ProductionPool",
+                "sparkConfiguration": {
+                    "driverMemory": "28g",
+                    "driverCores": 4,
+                    "executorMemory": "28g",
+                    "executorCores": 4,
+                    "numExecutors": 5,
+                    "isDynamicAllocationEnabled": false
+                },
+                "resourceStatusSummary": {
+                    "starting": 0,
+                    "ready": 0,
+                    "acquired": 0,
+                    "stopping": 0,
+                    "deactivated": 0,
+                    "expired": 0,
+                    "cancelled": 0,
+                    "failed": 5
+                }
+            }
+        }
+    }
+}

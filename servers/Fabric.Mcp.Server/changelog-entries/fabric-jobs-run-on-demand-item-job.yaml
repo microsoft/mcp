@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added jobs_run-on-demand-item-job to submit one Fabric item job with explicit context and optional execution data and parameters, returning an accepted receipt and validated status-read guidance without polling or automatic retries."

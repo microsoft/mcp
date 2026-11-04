@@ -1,0 +1,36 @@
+{
+  "parameters": {
+    "capacityId": "96f3f0ff-4fe2-4712-b61b-05a456ba9357"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "11223344-5566-7788-99aa-bbccddeeff00",
+            "actorDetails": {
+              "actorType": "Workspace",
+              "workspaceId": "a1f2c3d4-e5f6-7890-abcd-1234567890ef"
+            },
+            "expirationPolicy": {
+              "policyType": "ExpireAfterDate",
+              "expireAfterDateTime": "2026-07-15T18:00:00Z"
+            }
+          },
+          {
+            "id": "22334455-6677-8899-aabb-ccddeeff0011",
+            "actorDetails": {
+              "actorType": "Workspace",
+              "workspaceId": "c3d4e5f6-a7b8-9012-cdef-3456789012ab"
+            },
+            "expirationPolicy": {
+              "policyType": "NeverExpire"
+            }
+          }
+        ],
+        "continuationToken": "LDEsMTAwMDAwLDA%3D",
+        "continuationUri": "https://api.fabric.microsoft.com/v1/capacities/96f3f0ff-4fe2-4712-b61b-05a456ba9357/surgeProtection/blockedActors?continuationToken='LDEsMTAwMDAwLDA%3D'"
+      }
+    }
+  }
+}

@@ -42,7 +42,7 @@ public class ResourceResolverService(IAzureService azureService)
 
         if (allMatchingResources.Count == 0)
         {
-            throw new Exception($"Resource '{resourceName}' not found in subscription '{subscription}'");
+            throw new KeyNotFoundException($"Resource '{resourceName}' not found in subscription '{subscription}'");
         }
 
         // Apply filtering based on provided parameters
@@ -67,7 +67,7 @@ public class ResourceResolverService(IAzureService azureService)
         if (finalResources.Count == 0)
         {
             var filterInfo = BuildFilterDescription(resourceGroup, resourceType);
-            throw new Exception($"No resources named '{resourceName}' found in subscription '{subscription}'{filterInfo}");
+            throw new KeyNotFoundException($"No resources named '{resourceName}' found in subscription '{subscription}'{filterInfo}");
         }
 
         if (finalResources.Count > 1)
@@ -77,13 +77,13 @@ public class ResourceResolverService(IAzureService azureService)
                 .ToList();
 
             var filterInfo = BuildFilterDescription(resourceGroup, resourceType);
-            throw new Exception($"Multiple resources named '{resourceName}' found in subscription '{subscription}'{filterInfo}. " +
+            throw new InvalidOperationException($"Multiple resources named '{resourceName}' found in subscription '{subscription}'{filterInfo}. " +
                                $"Please specify both resourceGroup and resourceType parameters to disambiguate. Found resources:\n" +
                                string.Join("\n", resourceDetails));
         }
 
         return finalResources[0].Data.Id ??
-               throw new Exception($"Unable to get resource ID for '{resourceName}'");
+               throw new KeyNotFoundException($"Unable to get resource ID for '{resourceName}'");
     }
 
     private static string BuildFilterDescription(string? resourceGroup, string? resourceType)

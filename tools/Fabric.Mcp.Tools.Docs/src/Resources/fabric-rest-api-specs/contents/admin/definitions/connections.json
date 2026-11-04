@@ -1,0 +1,74 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Admin connection data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ListConnectionsResponse": {
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of connections.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../platform/definitions/connections.json#/definitions/Connection"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "AddAdminConnectionRoleAssignmentRequest": {
+            "type": "object",
+            "description": "The add connection role assignment request for a principal.",
+            "required": ["principal", "role"],
+            "properties": {
+                "principal": {
+                    "description": "The principal. Group principal type is not supported.",
+                    "readOnly": false,
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The connection role of the principal.",
+                    "readOnly": false,
+                    "$ref": "#/definitions/AssignableAdminConnectionRole"
+                }
+            }
+        },
+        "UpdateAdminConnectionRoleAssignmentRequest": {
+            "type": "object",
+            "description": "An update connection role assignment request payload.",
+            "required": ["role"],
+            "properties": {
+                "role": {
+                    "description": "The connection role of the principal.",
+                    "readOnly": false,
+                    "$ref": "#/definitions/AssignableAdminConnectionRole"
+                }
+            }
+        },
+        "AssignableAdminConnectionRole": {
+            "type": "string",
+            "description": "A connection role. Additional connection roles may be added over time.",
+            "enum": ["Owner"],
+            "x-ms-enum": {
+                "name": "AssignableAdminConnectionRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Owner",
+                        "description": "Enables the principal to gain ownership of the connection. The principal is initially assigned the 'PendingOwner' role and to complete the transition to 'Owner', the principal must update the connection credentials using [Update Connection API](/rest/api/fabric/core/connections/update-connection)."
+                    }
+                ]
+            }
+        }
+    }
+}

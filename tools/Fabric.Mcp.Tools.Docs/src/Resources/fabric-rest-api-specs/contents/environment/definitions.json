@@ -469,7 +469,7 @@
                     "description": "End time of publish operation in UTC, using the YYYY-MM-DDTHH:mm:ss.sssssssZ format.",
                     "format": "date-time",
                     "type": "string"
-                }, 
+                },
                 "componentPublishInfo": {
                     "description": "Environment component publish information.",
                     "$ref": "#/definitions/ComponentPublishInfo"
@@ -590,7 +590,7 @@
                     }
                 ]
             }
-        },        
+        },
         "Libraries": {
             "description": "Environment libraries.",
             "type": "object",
@@ -753,6 +753,244 @@
                         "type": "string"
                     }
                 }
+            }
+        },
+        "PoolActivations": {
+            "description": "A paginated list of pool activations.",
+            "type": "object",
+            "required": ["value"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of pool activations.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PoolActivation"
+                    }
+                }
+            }
+        },
+        "PoolActivation": {
+            "description": "A pool activation object.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CustomLivePoolSettings"
+                }
+            ],
+            "properties": {
+                "jobInstanceId": {
+                    "description": "The pool activation job instance identifier.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "name": {
+                    "description": "The pool activation name.",
+                    "type": "string"
+                },
+                "capacityId": {
+                    "description": "The capacity identifier.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "state": {
+                    "description": "The current lifecycle state of the activation.",
+                    "$ref": "#/definitions/JobHistoryStatus"
+                },
+                "scheduledStartDateTime": {
+                    "description": "The scheduled start time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string"
+                },
+                "startDateTime": {
+                    "description": "The actual start time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string"
+                },
+                "scheduledEndDateTime": {
+                    "description": "The scheduled end time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string"
+                },
+                "endDateTime": {
+                    "description": "The actual end time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format. Omitted if the activation is ongoing.",
+                    "type": "string"
+                },
+                "isRecurring": {
+                    "description": "Whether the activation recurs on a schedule.",
+                    "type": "boolean"
+                },
+                "cancellationReason": {
+                    "description": "The reason for cancellation, if applicable.",
+                    "type": "string"
+                },
+                "jobType": {
+                    "description": "The monitoring job type classification.",
+                    "type": "string"
+                },
+                "runtimeVersion": {
+                    "description": "The Fabric runtime version used for the activation.",
+                    "type": "string"
+                }
+            }
+        },
+        "PoolActivationDetails": {
+            "description": "A pool activation details object with extended diagnostic properties.",
+            "type": "object",
+            "required": [
+                "sparkConfiguration"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/PoolActivation"
+                }
+            ],
+            "properties": {
+                "poolName": {
+                    "description": "The pool display name.",
+                    "type": "string"
+                },
+                "sparkConfiguration": {
+                    "description": "The Spark configuration for the activation. Always present in the Get pool activation detail response.",
+                    "$ref": "#/definitions/SparkConfiguration"
+                },
+                "resourceStatusSummary": {
+                    "description": "The summary of activation resources grouped by lifecycle status.",
+                    "$ref": "#/definitions/ResourceStatusSummary"
+                }
+            }
+        },
+        "SparkComputeConfiguration": {
+            "description": "Common Spark compute configuration properties.",
+            "type": "object",
+            "properties": {
+                "driverMemory": {
+                    "description": "The driver memory allocation including the unit suffix, for example `7g` or `28g`.",
+                    "type": "string"
+                },
+                "driverCores": {
+                    "description": "The number of CPU cores allocated to the driver.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "executorMemory": {
+                    "description": "The executor memory allocation including the unit suffix, for example `7g` or `28g`.",
+                    "type": "string"
+                },
+                "executorCores": {
+                    "description": "The number of CPU cores allocated to each executor.",
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "SparkConfiguration": {
+            "description": "The Spark configuration for a pool activation.",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SparkComputeConfiguration"
+                }
+            ],
+            "properties": {
+                "numExecutors": {
+                    "description": "The number of executors.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "isDynamicAllocationEnabled": {
+                    "description": "Whether dynamic allocation was enabled for the activation. When `false`, the activation used a fixed executor count from `numExecutors` and no dynamic scaling was applied.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "ResourceStatusSummary": {
+            "description": "The summary of custom live pool activation resources grouped by user-facing lifecycle status.",
+            "type": "object",
+            "properties": {
+                "starting": {
+                    "description": "The number of resources currently provisioning.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ready": {
+                    "description": "The number of resources warmed up and available.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "acquired": {
+                    "description": "The number of resources acquired by (actively assigned to) a session.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "stopping": {
+                    "description": "The number of resources being decommissioned.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "deactivated": {
+                    "description": "The number of resources intentionally deactivated by policy.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "expired": {
+                    "description": "The number of resources that exceeded their lifetime.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "cancelled": {
+                    "description": "The number of resources cancelled before completion.",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "failed": {
+                    "description": "The number of resources that failed to provision.",
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "JobHistoryStatus": {
+            "description": "The lifecycle state of a pool activation. Additional JobHistoryStatus types may be added over time.",
+            "type": "string",
+            "enum": [
+                "NotStarted",
+                "InProgress",
+                "Succeeded",
+                "Failed",
+                "Cancelled",
+                "Unknown"
+            ],
+            "x-ms-enum": {
+                "name": "State",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "NotStarted",
+                        "description": "The activation has not yet started."
+                    },
+                    {
+                        "value": "InProgress",
+                        "description": "The activation is currently in progress."
+                    },
+                    {
+                        "value": "Succeeded",
+                        "description": "The activation completed successfully."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "The activation failed."
+                    },
+                    {
+                        "value": "Cancelled",
+                        "description": "The activation was cancelled."
+                    },
+                    {
+                        "value": "Unknown",
+                        "description": "The activation state is unknown."
+                    }
+                ]
             }
         }
     }

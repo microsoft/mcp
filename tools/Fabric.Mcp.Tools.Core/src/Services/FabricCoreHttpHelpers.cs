@@ -8,6 +8,9 @@ namespace Fabric.Mcp.Tools.Core.Services;
 
 internal static class FabricCoreHttpHelpers
 {
+    internal static bool IsSafeErrorCode(string? code) =>
+        code is { Length: > 0 and <= 128 } && code.All(static ch => char.IsAsciiLetterOrDigit(ch) || ch is '_' or '-' or '.');
+
     internal static RetryConditionHeaderValue? GetRetryAfter(HttpResponseMessage response)
     {
         ArgumentNullException.ThrowIfNull(response);
