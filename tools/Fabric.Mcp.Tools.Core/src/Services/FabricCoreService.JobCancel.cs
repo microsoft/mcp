@@ -65,12 +65,21 @@ public partial class FabricCoreService
             using var document = JsonDocument.Parse(body);
             if (document.RootElement.ValueKind == JsonValueKind.Object)
             {
-                // Ambiguous duplicate codes must not turn a generic error into JobAlreadyCompleted.
-                var codes = document.RootElement.EnumerateObject().Where(static property => property.NameEquals("errorCode")).ToArray();
-                if (codes is [{ Value.ValueKind: JsonValueKind.String }] &&
-                    codes[0].Value.GetString() is { } code && FabricCoreHttpHelpers.IsSafeErrorCode(code))
+                try
                 {
-                    return (code, false);
+                    // Ambiguous duplicate codes must not turn a generic error into JobAlreadyCompleted.
+                    var codes = document.RootElement.EnumerateObject().Where(static property => property.NameEquals("errorCode")).ToArray();
+                    if (codes is [{ Value.ValueKind: JsonValueKind.String }] &&
+                        codes[0].Value.GetString() is { } code && FabricCoreHttpHelpers.IsSafeErrorCode(code))
+                    {
+                        return (code, false);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // JsonDocument decodes escaped UTF-16 lazily in names and string values.
+                    // Limit this catch to JSON inspection, not unrelated response-reader failures.
+                    return (null, true);
                 }
             }
             return (null, true);

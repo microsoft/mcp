@@ -229,6 +229,10 @@ public sealed class ItemJobInstanceCancelServiceTests()
     [InlineData("""{"errorCode":42}""")]
     [InlineData("""{"errorCode":""}""")]
     [InlineData("""{"errorCode":"private\nsecret"}""")]
+    [InlineData("""{"errorCode":"\uD800"}""")]
+    [InlineData("""{"errorCode":"\uDC00"}""")]
+    [InlineData("""{"error\uD800Code":"JobAlreadyCompleted"}""")]
+    [InlineData("""{"error\uDC00Code":"JobAlreadyCompleted"}""")]
     [InlineData("""{"errorCode":"https://example.invalid/private"}""")]
     [InlineData("""{"errorCode":"JobAlreadyCompleted","errorCode":"JobAlreadyCompleted"}""")]
     [InlineData("""{"errorCode":"FutureCode","errorCode":"JobAlreadyCompleted"}""")]
@@ -243,6 +247,21 @@ public sealed class ItemJobInstanceCancelServiceTests()
         Assert.Null(error.ErrorCode);
         Assert.True(error.ErrorMetadataUnavailable);
         Assert.Equal(TimeSpan.FromSeconds(60), error.RetryAfter?.Delta);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public static async Task Cancel_DoesNotSwallowUnrelatedMetadataReaderFailures()
+    {
+        using var content = new UnreadableHttpContent();
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        using var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests) { Content = content };
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+        using var client = new HttpClient(handler);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CancelAsync(new FabricCoreService(client, Credential())));
+
+        Assert.True(content.IsDisposed);
         Assert.Equal(1, handler.CallCount);
     }
 

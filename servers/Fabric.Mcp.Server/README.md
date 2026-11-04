@@ -348,18 +348,19 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job and
-reads an existing item job instance in separate calls. No cancel, list, or schedule tools are provided by Jobs.
+items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
+requests cancellation of an existing job, or reads one job instance in separate calls.
+Job listing and scheduling tools are not provided by Jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: item/definition tools, but no job-instance lookup.
+# Core-only: item/definition tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
-# Jobs-only: job submission and lookup, without Core tools.
+# Jobs-only: job submission, cancellation requests, and lookup, without Core tools.
 fabmcp server start --mode all --namespace jobs
 
-# Item/definition work plus job submission and status: enable both areas.
+# Item/definition work plus job submission, cancellation, and status: enable both areas.
 fabmcp server start --mode all --namespace core --namespace jobs
 
 # The same combined selection with hierarchical namespace routers or a single router.
@@ -369,11 +370,12 @@ fabmcp server start --mode single --namespace core --namespace jobs
 
 Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
 not the shared services needed by the selected area. In `all` mode, the tools are exposed directly as
-`jobs_get-item-job-instance` and `jobs_run-on-demand-item-job`. In `namespace` mode, call the `jobs`
+`jobs_cancel-item-job-instance`, `jobs_get-item-job-instance`, and `jobs_run-on-demand-item-job`.
+In `namespace` mode, call the `jobs`
 router with `learn=true` to obtain their schemas, then specify the command name and its `parameters`. In `single` mode,
 use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
 the commands for a selected area. Core-only selection never exposes or routes Jobs tools.
-Read-only mode hides and denies Run while retaining Get.
+Read-only mode hides and denies Run and Cancel while retaining Get.
 
 ### API Documentation & Best Practices
 

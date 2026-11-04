@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
@@ -239,6 +241,44 @@ public sealed class ItemJobInstanceCancelMcpTests()
         Assert.DoesNotContain("private", Text(result));
         Assert.DoesNotContain("stackTrace", Text(result));
         Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData("all")]
+    [InlineData("namespace")]
+    [InlineData("single")]
+    public static async Task Cancel_MalformedUnicodeMetadataKeepsHttpFailureAndRetryGuidance(string route)
+    {
+        foreach (var json in new[]
+        {
+            """{"errorCode":"\uD800","message":"private"}""",
+            """{"errorCode":"\uDC00","message":"private"}""",
+            """{"error\uD800Code":"JobAlreadyCompleted","message":"private"}""",
+            """{"error\uDC00Code":"JobAlreadyCompleted","message":"private"}"""
+        })
+        {
+            using var stream = new OperationTestStream(Encoding.UTF8.GetBytes(json));
+            using var response = new HttpResponseMessage(HttpStatusCode.TooManyRequests) { Content = new StreamContent(stream) };
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            response.Headers.TryAddWithoutValidation("Retry-After", "60");
+            using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+            var credential = Credential();
+            await using var provider = Services(handler, credential, TransportTypes.Http, StructuredOutputMode.Compact);
+
+            var result = await CallAsync(provider, route, Arguments(), Consent());
+
+            Assert.True(result.IsError, Text(result));
+            using var error = JsonDocument.Parse(Text(result));
+            Assert.Equal(429, error.RootElement.GetProperty("status").GetInt32());
+            Assert.Contains("Wait at least 60 seconds", Text(result));
+            Assert.Contains("error metadata was unavailable", Text(result));
+            Assert.DoesNotContain("JobAlreadyCompleted", Text(result));
+            Assert.DoesNotContain("private", Text(result));
+            Assert.DoesNotContain("stackTrace", Text(result));
+            Assert.True(stream.Disposed);
+            Assert.Equal(1, handler.CallCount);
+            await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
+        }
     }
 
     [Theory]

@@ -125,7 +125,9 @@ malformed, multiple, or mismatched. Late cancellation does not erase confirmed a
 
 The safe error-code reader is limited to 1 MiB, including streams without Content-Length. Tests
 exercise the exact boundary, duplicate codes, invalid shapes, depth limits, code-length/character
-validation, non-JSON media, and failed/canceled reads. Invalid error metadata retains the known HTTP
+validation, unpaired Unicode escapes in values and property names, non-JSON media, and failed/canceled reads.
+Service and routed MCP cases retain HTTP 429 and Retry-After after lazy Unicode decoding fails,
+while unrelated response-reader exceptions are not swallowed. Invalid error metadata retains the known HTTP
 failure with an explicit limitation, never raw bodies or stack traces. JobAlreadyCompleted stays a
 failure, without inferring success or failure of the job. A backend retry hint never resubmits.
 Valid Retry-After seconds/dates are retained; missing, malformed, out-of-range, or repeated values
