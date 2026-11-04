@@ -32,12 +32,13 @@ public interface ICosmosService : IAsyncDisposable
         string? resourceGroup = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<JsonElement>> QueryItems(
+    Task<(List<JsonElement> Items, string? NextCursor)> QueryItems(
         string accountName,
         string databaseName,
         string containerName,
         string? query,
         string subscription,
+        string? cursor = null,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         CancellationToken cancellationToken = default);
@@ -52,12 +53,12 @@ public interface ICosmosService : IAsyncDisposable
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<JsonElement>> GetRecentItems(
+    Task<(List<JsonElement> Items, string? NextCursor)> GetRecentItems(
         string accountName,
         string databaseName,
         string containerName,
-        int count,
         string subscription,
+        string? cursor = null,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         CancellationToken cancellationToken = default);

@@ -1,7 +1,9 @@
 changes:
-  - section: "Features Added"
-    description: "Standardized cursor continuation for Marketplace product listing, ADME search, and ADME record listing using a shared ICursorOption interface."
   - section: "Breaking Changes"
-    description: "Replaced the ADME search and record-list result.cursor output in favor of root nextCursor. Pass nextCursor unchanged as cursor; other result fields and paging controls remain unchanged."
-  - section: "Breaking Changes"
-    description: "Replaced the Marketplace next-cursor with cursor. Pass nextCursor unchanged as cursor; other result fields and paging controls remain unchanged."
+    description: >-
+      Standardized pagination using ICursorOption, opaque cursor input, and root nextCursor output for Marketplace
+      product listing, ADME search and record listing, Storage blob and container listing, Storage table listing,
+      Cosmos item queries, and Cosmos recent-item listing. ADME result.cursor is replaced by nextCursor, and Marketplace
+      uses cursor in place of next-cursor. Storage listings and Cosmos item queries now return fixed pages of up to
+      100 items; Cosmos recent-item listing returns fixed pages of up to 10 documents and replaces count with cursor.
+      Pass nextCursor unchanged as cursor to continue. Specific blob and container lookups are unchanged and reject cursor.

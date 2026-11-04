@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands;
     Id = "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5",
     Name = "query",
     Title = "Query Cosmos DB Container",
-    Description = "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.",
+    Description = "Query one page of up to 100 items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results. The page size is fixed; Cosmos DB may return fewer items or an empty page. Pass nextCursor unchanged as --cursor with the same account, database, container, and query to retrieve another page. The items collection preserves the Cosmos DB response envelope containing Documents.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
@@ -58,11 +58,12 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosSe
                 options.Container,
                 queryToRun,
                 options.Subscription!,
+                options.Cursor,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);
+            context.Response.Results = ResponseResult.Create(new(items.Items ?? [], items.NextCursor), CosmosJsonContext.Default.ItemQueryCommandResult);
         }
         catch (Exception ex)
         {
@@ -75,5 +76,5 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosSe
         return context.Response;
     }
 
-    public sealed record ItemQueryCommandResult(List<JsonElement> Items);
+    public sealed record ItemQueryCommandResult(List<JsonElement> Items, string? NextCursor = null);
 }

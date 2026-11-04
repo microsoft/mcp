@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
@@ -17,12 +18,14 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     Name = "get",
     Title = "Get Storage Container Details",
     Description = """
-        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or
-        show details for a specific Storage container. If no container specified, shows all containers in the storage
-        account, optionally filtering on a prefix. The prefix is ignored if a container is specified.
+        Show/list containers in a storage account. Use this tool to list blob containers in the storage account or
+        show details for a specific Storage container. If no container specified, returns one page of up to 100
+        containers, optionally filtering on a prefix. The page size is fixed. Pass nextCursor unchanged as --cursor
+        with the same account and prefix to retrieve another page, even if the current page is empty.
+        The prefix is ignored if a container is specified. Do not combine --cursor with --container.
 
         Required: --account
-        Optional: --container, --tenant, --prefix
+        Optional: --container, --tenant, --prefix, --cursor
 
         Returns: container name, lastModified, leaseStatus, publicAccess, metadata, and container properties.
         Do not use this tool to list blobs in a container.
@@ -40,6 +43,15 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
     private readonly ILogger<ContainerGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
+    public override void ValidateOptions(ContainerGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+        if (options.Cursor is not null && !string.IsNullOrEmpty(options.Container))
+        {
+            validationResult.Errors.Add("--cursor cannot be used with --container.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ContainerGetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -48,11 +60,12 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
                 options.Account,
                 options.Container,
                 options.Prefix,
+                options.Cursor,
                 options.Tenant,
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers.Containers ?? [], containers.NextCursor), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -84,5 +97,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
         _ => base.GetErrorMessage(ex)
     };
 
-    public record ContainerGetCommandResult(List<ContainerInfo> Containers);
+    public record ContainerGetCommandResult(List<ContainerInfo> Containers, string? NextCursor = null);
 }

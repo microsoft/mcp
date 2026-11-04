@@ -6,8 +6,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob.Container;
 
-public class ContainerGetOptions
+public class ContainerGetOptions : ICursorOption
 {
+    [Option(Description = "Opaque nextCursor from a previous call. Omit for the first page.")]
+    public string? Cursor { get; set; }
+
     [Option(Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
 

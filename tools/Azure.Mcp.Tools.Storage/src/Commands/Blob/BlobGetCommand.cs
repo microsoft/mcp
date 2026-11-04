@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
@@ -18,11 +19,13 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     Title = "Get Storage Blob Details",
     Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
-        get details for a specific blob. If no blob specified, lists all blobs present in the container, optionally
-        filtering on a prefix. The prefix is ignored if a blob is specified.
+        get details for a specific blob. If no blob specified, returns one page of up to 100 blobs, optionally
+        filtering on a prefix. The page size is fixed. Pass nextCursor unchanged as --cursor with the same account,
+        container, and prefix to retrieve another page, even if the current page is empty.
+        The prefix is ignored if a blob is specified. Do not combine --cursor with --blob.
 
         Required: --account, --container
-        Optional: --blob, --tenant, --prefix
+        Optional: --blob, --tenant, --prefix, --cursor
 
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
         Do not use this tool to list containers in the storage account.
@@ -40,6 +43,15 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     private readonly ILogger<BlobGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
+    public override void ValidateOptions(BlobGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+        if (options.Cursor is not null && !string.IsNullOrEmpty(options.Blob))
+        {
+            validationResult.Errors.Add("--cursor cannot be used with --blob.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobGetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -49,11 +61,12 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 options.Container,
                 options.Blob,
                 options.Prefix,
+                options.Cursor,
                 options.Tenant,
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details.Blobs ?? [], details.NextCursor), StorageJsonContext.Default.BlobGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
@@ -87,5 +100,5 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         _ => base.GetErrorMessage(ex)
     };
 
-    public record BlobGetCommandResult(List<BlobInfo> Blobs);
+    public record BlobGetCommandResult(List<BlobInfo> Blobs, string? NextCursor = null);
 }

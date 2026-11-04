@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Models;
@@ -30,9 +31,10 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedContainers);
+            .Returns((expectedContainers, null));
 
         // Act
         var response = await ExecuteCommandAsync("--account", account);
@@ -55,9 +57,10 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(([], null));
 
         // Act
         var response = await ExecuteCommandAsync("--account", account);
@@ -78,6 +81,7 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
@@ -120,8 +124,9 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(expectedContainers);
+                .Returns((expectedContainers, null));
         }
 
         // Act
@@ -154,8 +159,9 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
             Arg.Is(container),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns([expected]);
+            .Returns(([expected], null));
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -184,6 +190,7 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
             Arg.Is(container),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -208,6 +215,7 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
         Service.GetContainerDetails(
             Arg.Is(account),
             Arg.Is(container),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -235,6 +243,7 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
             Arg.Is(container),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
@@ -246,5 +255,44 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Theory]
+    [InlineData(null, " next+/=% token ")]
+    [InlineData(" next+/=% token ", " last+/=% token ")]
+    [InlineData(" last+/=% token ", null)]
+    [InlineData(null, null)]
+    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    {
+        Service.GetContainerDetails("testaccount", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], nextCursor));
+        var args = new List<string> { "--account", "testaccount", "--prefix", "prefix", "--tenant", "tenant" };
+        if (cursor is not null)
+        {
+            args.AddRange(["--cursor", cursor]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
+        Assert.Empty(result.Containers);
+        Assert.Equal(nextCursor, result.NextCursor);
+        var payload = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.ContainerGetCommandResult);
+        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
+        await Service.Received(1).GetContainerDetails(
+            "testaccount", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsCursorWithSpecificContainer()
+    {
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount", "--container", "container", "--cursor", "opaque");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--cursor cannot be used with --container", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().GetContainerDetails(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

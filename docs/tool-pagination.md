@@ -56,6 +56,25 @@ result: callers use only root `nextCursor` for continuation, then supply it as t
 These tools already paginate, so adopting the interface does not introduce new result caps or automatic page draining.
 The standalone `top`/`skip` alternative is a separate design; this implementation adds only the cursor contract.
 
+## Fixed-size data-plane migrations
+
+The following tools return one service page per call instead of draining the enumeration. Page sizes are immutable
+maximums, not caller-configurable options; a service may return fewer items, including an empty page with a continuation.
+
+| Tool | Page size | Migration |
+|---|---:|---|
+| `storage_blob_get` | 100 blobs | Listing without `blob` now returns one page. Specific-blob lookups are unchanged and cannot be combined with `cursor`. Repeat the same account, container, and prefix. |
+| `storage_blob_container_get` | 100 containers | Listing without `container` now returns one page. Specific-container lookups are unchanged and cannot be combined with `cursor`. Repeat the same account and prefix. |
+| `storage_table_list` | 100 table names | Returns one page rather than every table. Repeat the same account. |
+| `cosmos_database_container_item_query` | 100 documents | Returns one query response page rather than every page. Preserves `items` as a collection of Cosmos DB response envelopes containing `Documents`. Repeat the same account, database, container, and SQL query. SQL limits such as `TOP` still apply to the overall query. |
+| `cosmos_database_container_item_list-recent` | 10 documents | Removes `count` and the overall `TOP` limit. Returns successive pages ordered by `_ts` descending. Repeat the same account, database, and container. |
+
+These are intentional breaking pagination changes. Omit `cursor` for the first page. Pass root `nextCursor` unchanged
+as `cursor` with the same tenant, subscription/authentication context (where applicable), resource, and filters.
+Continue even after an empty page when `nextCursor` is present; enumeration is complete only when it is omitted or null.
+The services use native Azure SDK continuation tokens, request only one page, and propagate invalid/expired-token
+errors without restarting the listing. Cursors do not provide snapshot isolation: concurrent writes may affect results.
+
 ## Verification
 
 Test first, continued, and terminal pages through option binding and source-generated result serialization. Verify
@@ -63,3 +82,7 @@ opaque characters are preserved and empty-page behavior follows the tool's contr
 responses never expose `result.cursor`, while Marketplace's legacy continuation argument still works. Reject conflicting
 continuation inputs before service calls. Use recorded multi-page tests where available without changing the existing
 request sequence unnecessarily.
+
+For fixed-size migrations, also verify the exact SDK page-size request, that a call does not drain subsequent pages,
+and that continued calls preserve filters and return a terminal page. Test empty pages with continuation, invalid
+tokens, and unchanged specific-resource lookups. Recorded tests follow every returned cursor and check the page limits.

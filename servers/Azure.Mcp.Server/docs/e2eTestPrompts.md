@@ -666,10 +666,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> | none |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> | none |
+| cosmos_database_container_item_query | Get the next page of query results using nextCursor \<cursor> with the same query and Cosmos DB account, database, and container | context-required |
 | cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> | none |
-| cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
+| cosmos_database_container_item_list-recent | Show me the first page of the most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
 | cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
+| cosmos_database_container_item_list-recent | Get the next page of recent documents using nextCursor \<cursor> with the same Cosmos DB account, database, and container | context-required |
 | cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" | none |
 | cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint \<endpoint> and deployment \<deployment> | context-required |
@@ -1650,11 +1652,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_blob_container_get | List all blob containers in the storage account \<account> | none |
 | storage_blob_container_get | List all blob containers in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_container_get | Show me the containers in the storage account \<account> | none |
+| storage_blob_container_get | Get the next page of containers using nextCursor \<cursor> with the same storage account and prefix | context-required |
 | storage_blob_get | Show me the properties for blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_blob_get | Get the details about blob \<blob> in the container \<container> in storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
+| storage_blob_get | Get the next page of blobs using nextCursor \<cursor> with the same storage account, container, and prefix | context-required |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
 | storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
@@ -1665,6 +1669,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
+| storage_table_list | Get the next page of table names using nextCursor \<cursor> with the same storage account | context-required |
 
 ## Azure Storage Sync
 

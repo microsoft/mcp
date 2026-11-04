@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     Id = "9a1b1c2d-3e4f-4a5b-9c6d-7e8f9a0b1c2d",
     Name = "list-recent",
     Title = "List Recent Cosmos DB Documents",
-    Description = "Retrieve the most recently modified documents from a Cosmos DB container, ordered by the system timestamp (_ts) in descending order. Use the --count option to control how many documents are returned (1-20, default is 10).",
+    Description = "Retrieve one page of up to 10 documents from a Cosmos DB container, ordered by the system timestamp (_ts) in descending order, most recently modified first. The page size is fixed; Cosmos DB may return fewer items or an empty page. Pass nextCursor unchanged as --cursor with the same account, database, and container to retrieve another page.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
@@ -30,16 +30,6 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
     private readonly ILogger<ItemListRecentCommand> _logger = logger;
     private readonly ICosmosService _cosmosService = cosmosService;
 
-    public override void ValidateOptions(ItemListRecentOptions options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);
-
-        if (options.Count != null && (options.Count < 1 || options.Count > 20))
-        {
-            validationResult.Errors.Add("--count must be between 1 and 20.");
-        }
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ItemListRecentOptions options, CancellationToken cancellationToken)
     {
         try
@@ -48,14 +38,14 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
                 options.Account,
                 options.Database,
                 options.Container,
-                options.Count ?? 10,
                 options.Subscription!,
+                options.Cursor,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new ItemListRecentCommandResult(items ?? []),
+                new ItemListRecentCommandResult(items.Items ?? [], items.NextCursor),
                 CosmosJsonContext.Default.ItemListRecentCommandResult);
         }
         catch (Exception ex)
@@ -68,5 +58,5 @@ public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger,
         return context.Response;
     }
 
-    public sealed record ItemListRecentCommandResult(List<JsonElement> Items);
+    public sealed record ItemListRecentCommandResult(List<JsonElement> Items, string? NextCursor = null);
 }
