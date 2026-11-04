@@ -47,6 +47,9 @@ Offline tests for the Fabric Core toolset.
 - **Validation/ItemJobRunInputTests.cs**: Strict object/array JSON, duplicate rejection, required parameter envelope fields, case-insensitive name uniqueness and 256-character boundary, extensible types/opaque values, omission, and exact UTF-8/depth/serialized request budgets
 - **Services/ItemJobRunServiceTests.cs**: One normalized authenticated POST, encoded job types, optional body preservation, trusted Location context, accepted receipts without tracking IDs, Retry-After boundaries, no body reads or retries, FeatureNotAvailable without fallback, cancellation/acceptance preservation, disposal, and concurrent per-request identity isolation
 - **ItemJobRunMcpTests.cs**: Real registration, consent, schemas, all/namespace/single routes and output modes, stdio/HTTP configurations, namespace filters, reserved router parameters isolation, separate Run-to-Get handoff, read-only exclusion with Get retained, and validation before authentication
+- **Commands/ItemScheduleListCommandTests.cs**: Required UUID/job-type binding, unchanged optional cursors, sensitive read-only metadata, source-generated settings, safe failures/logging, and cancellation forwarding
+- **Services/ItemScheduleListServiceTests.cs**: One normalized GET, encoded job types/tokens, optional schedule fields, full extensible configuration/owner/execution JSON, explicit continuation, absent/null terminal metadata, no count cap or per-row reads, malformed/Unicode/duplicate data, exact bounds, HTTP status/retry guidance, disposal/cancellation, and concurrent identity isolation
+- **ItemScheduleListMcpTests.cs**: Actual registration, schemas and learn, all/namespace/single routes, stdio/HTTP configurations and output modes, namespace/read-only filtering, sensitive-read consent, zero-I/O denied consent/invalid input, complete pages, and safe malformed responses
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -208,13 +211,44 @@ duplicate/ambiguously cased properties. No partial result is returned. Exact 1 M
 multibyte UTF-8. Lazy JSON decoding failures are caught only in JSON inspection, not the response reader.
 HTTP error bodies remain unread so even malformed error metadata cannot replace known status/retry guidance.
 
-The read-only catalog now contains Get and List, not Run or Cancel. MCP tests run both read-only
+The read-only catalog contains Get Job Instance, List Job Instances, and List Schedules, not Run or Cancel. MCP tests run both read-only
 and normal configurations across all routing/output modes and selected namespaces, including
 legacy text learn responses. An explicit selected result supplies the IDs for a separate Get;
 subsequent Cancel still requests its own consent and sends no mutation when consent is declined.
 Neither listing nor selecting the latest row correlates an ambiguous Run receipt or one without a tracking ID.
 Offline credentials, concurrency, and HTTP runtime configuration do not establish real OBO/RBAC
 authorization. Live/recorded validation is unavailable without an explicitly approved fixture.
+
+## Schedule Listing
+
+`jobs_list-item-schedules` sends one GET for explicit workspace/item UUIDs and a workload job type.
+It reuses the Run context validator, List Job Instances token validator and continuation metadata
+check, authenticated transport, bounded reader, and source-generated JSON context. The continuation
+check compares the raw expected path separately from query data, including an escaped, case-sensitive
+job type. Existing job-instance listing behavior is covered in the same regression run; no generic
+pagination service or automatic page enumeration is introduced.
+
+The current bundled `BaseItemSchedule` and `ItemSchedule` schemas require only `id` and `enabled`.
+Tests preserve absent/null creation time, configuration, owner, and optional `executionData`, and
+exercise Cron (minute interval), Daily, Weekly, Monthly, and future schedule/occurrence/principal
+types. Full nested JSON survives response disposal and source-generated serialization. Opaque
+execution-data keys remain case-sensitive. UTC text and Windows time-zone IDs are not converted;
+no local scheduling calculations or job-history/count limits are added.
+
+Known configuration shapes retain their published ranges and required fields. Tests cover exact
+1 MiB/64-level page budgets, 1,024-byte job types, 8,192-byte cursors, Unicode multibyte boundaries,
+documented arrays/ranges, malformed/duplicate metadata, and the lazy Unicode-decoding boundary.
+An invalid later row fails the whole page. Unknown top-level row properties are not projected.
+Empty/nonempty terminal pages allow absent/null continuation fields; token-only continuation
+requires an explicit subsequent invocation. Untrusted or contradictory URI metadata fails safely.
+HTTP error bodies remain unread, preserving known status and Retry-After even for malformed errors.
+
+The tool is read-only and available remotely, but `Secret=true` retains the host's sensitive-data
+confirmation for owner and execution data. Routing tests accept that confirmation for reads and
+prove that declining it sends no authentication or HTTP request, including in read-only mode.
+Real server startup tests verify normal/read-only discovery and schemas over stdio and HTTP.
+All authorization fixtures remain offline substitutes; no live Fabric, recorded playback, or real
+OBO/RBAC result is claimed without an explicitly approved fixture.
 
 ## On-demand Job Submission
 
@@ -246,7 +280,7 @@ independent calls, asserting one POST before the caller explicitly issues one GE
 Failure tests assert one POST with no retries, including FeatureNotAvailable, throttling, network
 failure, and in-flight cancellation. Late cancellation does not erase confirmed response headers.
 Input/authentication/pre-send cancellation and blocked invocations produce zero HTTP requests.
-Run is destructive, non-read-only, and non-idempotent; read-only mode retains Get and List and denies Run.
+Run is destructive, non-read-only, and non-idempotent; read-only mode retains Get Job Instance and both listing tools and denies Run.
 The host credential composition is unchanged. Concurrent substituted credentials test isolation,
 not real delegated OBO/RBAC. No live execution target or permission was supplied: live, recorded/
 playback, and real OBO validation were not run, and these tests never start a Fabric job.
@@ -582,6 +616,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run one-page listing command/service/routing coverage
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemJobInstanceList*'
+
+# Run schedule listing and the affected Jobs/input/pagination/catalog regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemScheduleList*' '*ItemJobInstance*' '*ItemJobRun*' '*FabricCoreHttpHelpersTests' '*FabricCoreCatalogTests' '*FabricCoreSetupTests'
 
 # Run only Get Capacity command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*CapacityGetCommandTests"
