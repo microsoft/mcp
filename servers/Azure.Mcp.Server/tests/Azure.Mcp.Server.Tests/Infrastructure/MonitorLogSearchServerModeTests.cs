@@ -60,7 +60,7 @@ public sealed class MonitorLogSearchServerModeTests
         AssertAggregateSchema(RequireOutputSchema(monitor), includesTool: false);
 
         var structuredContent = await server.LearnAsync("monitor");
-        AssertContainsCommand(structuredContent, SearchTool);
+        AssertContainsCommand(structuredContent, "workspace_log_search");
     }
 
     [Fact]
