@@ -92,6 +92,17 @@ public interface IFabricCoreService
         string jobInstanceId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one complete page of job instances without pagination, per-job reads, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="continuationToken">An unchanged token from a preceding page for the same IDs, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemJobInstanceListCommandResult> ListItemJobInstancesAsync(
+        string workspaceId,
+        string itemId,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Submits one job without retries or polling; a 202 receipt confirms acceptance, not completion.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item to execute.</param>
