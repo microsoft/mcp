@@ -125,8 +125,8 @@ public partial class FabricCoreService
 
     private static string? ReadJobPageContinuationToken(JsonElement page, Uri collection)
     {
-        var hasToken = page.TryGetProperty("continuationToken", out var tokenValue);
-        var hasUri = page.TryGetProperty("continuationUri", out var uriValue);
+        var hasToken = page.TryGetProperty("continuationToken", out var tokenValue) && tokenValue.ValueKind != JsonValueKind.Null;
+        var hasUri = page.TryGetProperty("continuationUri", out var uriValue) && uriValue.ValueKind != JsonValueKind.Null;
         if (!hasToken)
         {
             if (hasUri)

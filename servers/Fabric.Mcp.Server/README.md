@@ -1255,9 +1255,12 @@ These are resource/URI safeguards, not a workload-specific token format. The too
 continuation-URL option, never follows or returns `continuationUri`, and validates a supplied
 response URI against the fixed Fabric origin, requested collection, and token.
 
-Absence of both continuation fields is the documented end of pagination, including an empty/final
-page. A token alone is sufficient. URI-only, null/invalid, duplicate, or contradictory continuation
-metadata fails explicitly, rather than silently appearing exhausted. Missing/null/wrong-type `value`,
+When both continuation fields are absent or JSON null, in any combination, the
+[Fabric pagination contract](https://learn.microsoft.com/rest/api/fabric/articles/pagination)
+marks the final page. Empty and nonempty final pages are preserved. A valid token with an absent
+or null URI is sufficient to continue, even when the current page is empty. A non-null URI without
+a token, wrong-type fields, invalid tokens, duplicate fields, or contradictory non-null continuation
+metadata fail explicitly, rather than silently appearing exhausted. Missing/null/wrong-type `value`,
 malformed rows, duplicate or ambiguously cased JSON properties, invalid Unicode (including ignored
 fields), and responses exceeding **1 MiB (1,048,576 bytes)** or **64 JSON nesting levels** also fail
 explicitly without returning a partial page. The shared response limit is unchanged.

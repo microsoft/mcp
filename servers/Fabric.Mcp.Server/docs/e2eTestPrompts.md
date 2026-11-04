@@ -22,6 +22,8 @@ Use only a returned continuation token with the same IDs for another explicit ca
 continuation URLs, fetch each row, or infer a total count/full history. For most items, the API reports
 up to 100 recently completed instances with no corresponding limit for active instances; this is not a page cap.
 List needs no mutation consent, but selecting a result for Cancel still needs separate authorization.
+Absent or null continuation fields mark a final page, whether its rows are empty or nonempty.
+A valid token still enables explicit continuation when its URI is absent/null or its page is empty.
 The latest listed job cannot identify an earlier ambiguous Run submission or one without a tracking ID.
 No live workspace/item fixture is assumed or discovered for these prompts.
 
@@ -139,6 +141,7 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_list-item-job-instances | List one page of job instances for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch individual jobs or another page automatically. | none |
 | jobs_list-item-job-instances | Show one page of that item's jobs with statuses, available UTC timing, and safe failure metadata. Do not treat HTTP success as job success or assume the page is full history. | context-required |
 | jobs_list-item-job-instances | Fetch the next page using the unchanged continuation token from the previous response and the same explicit workspace/item UUIDs. Do not use a continuation URL or change filters. | context-required |
+| jobs_list-item-job-instances | Read one page for my supplied workspace/item UUIDs. Preserve all final-page rows when continuation metadata is absent or null; if a token is present, return it without fetching another page. | context-required |
 | jobs_list-item-job-instances | In read-only Jobs mode, list one page for the workspace and item UUIDs I supplied, then stop. More than 100 active rows must not be capped locally. | context-required |
 | jobs_list-item-job-instances | List one page of jobs for this known item; I will explicitly select a returned job-instance ID for a separate Get. Do not infer the ID of an ambiguous Run submission or authorize cancellation from the listing. | context-required |
 | jobs_run-on-demand-item-job | Submit exactly one explicitly authorized job of type \<job-type> for item \<item-id> in workspace \<workspace-id>. Return the accepted receipt without polling, waiting, fetching results, or retrying. | context-required |

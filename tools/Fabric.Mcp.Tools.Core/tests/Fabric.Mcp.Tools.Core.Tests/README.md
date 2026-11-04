@@ -41,8 +41,8 @@ Offline tests for the Fabric Core toolset.
 - **Services/ItemJobInstanceGetServiceTests.cs**: One normalized authenticated GET, all documented/future states, optional verbatim timestamp strings, matching IDs, safe failure fields, exact byte limits, malformed responses, retry headers, cancellation/disposal, and concurrent identities
 - **ItemJobInstanceGetMcpTests.cs**: Independent Jobs area registration, stable command identity, typed schemas, read-only discovery, all/namespace/single routes, stdio/HTTP configurations, default/Core-only/Jobs-only/combined filtering, learn schemas, cross-namespace item-ID handoff, output modes, and pre-authentication validation
 - **Commands/ItemJobInstanceListCommandTests.cs**: Explicit ID/token binding, read-only metadata, empty-page output, unsupported options, pre-service validation, safe errors/logging, and cancellation forwarding
-- **Services/ItemJobInstanceListServiceTests.cs**: One GET per page, explicit second-page token round trips, more than 100 active rows and repeated rows without reordering, shared safe snapshots, invalid continuation targets, exact UTF-8/byte/depth budgets, duplicate/Unicode/malformed responses, safe HTTP/retry guidance, disposal/cancellation, and concurrent identity isolation
-- **ItemJobInstanceListMcpTests.cs**: Real registration, input/output/learn schemas, all/namespace/single routes, stdio/HTTP configurations, Jobs-only/Core-only/combined/default filtering, normal/read-only modes, one-page continuation, no List consent, explicit List-to-Get handoff, separate Cancel consent, and safe malformed-page failures
+- **Services/ItemJobInstanceListServiceTests.cs**: One GET per page, absent/null terminal metadata, explicit token continuation with absent/null URI, more than 100 active rows and repeated rows without reordering, shared safe snapshots, invalid continuation targets, exact UTF-8/byte/depth budgets, duplicate/Unicode/malformed responses, safe HTTP/retry guidance, disposal/cancellation, and concurrent identity isolation
+- **ItemJobInstanceListMcpTests.cs**: Real registration, input/output/learn schemas, all/namespace/single routes, stdio/HTTP configurations, Jobs-only/Core-only/combined/default filtering, normal/read-only modes, empty/nonempty final pages with absent/null metadata, explicit token continuation, no List consent, explicit List-to-Get handoff, separate Cancel consent, and safe malformed-page failures
 - **Commands/ItemJobRunCommandTests.cs**: Explicit context and optional JSON binding, non-idempotent/destructive metadata, accepted receipts, unsupported-option rejection, safe mutation errors/logging, and cancellation forwarding
 - **Validation/ItemJobRunInputTests.cs**: Strict object/array JSON, duplicate rejection, required parameter envelope fields, case-insensitive name uniqueness and 256-character boundary, extensible types/opaque values, omission, and exact UTF-8/depth/serialized request budgets
 - **Services/ItemJobRunServiceTests.cs**: One normalized authenticated POST, encoded job types, optional body preservation, trusted Location context, accepted receipts without tracking IDs, Retry-After boundaries, no body reads or retries, FeatureNotAvailable without fallback, cancellation/acceptance preservation, disposal, and concurrent per-request identity isolation
@@ -189,12 +189,16 @@ already-escaped, mixed, Unicode, whitespace-surrounded, and query-delimiter toke
 Each invocation sends exactly one GET and returns one complete `jobInstances` page. No row triggers
 an enrichment GET. The caller must explicitly request the next page with the same IDs and returned
 token. Tests preserve original ordering and repeated entries, include more than 100 active instances,
-and accept empty/final pages without continuation metadata. The API's completed-instance listing
+and accept empty/nonempty final pages with absent or null continuation metadata. The API's completed-instance listing
 limit is not a local page cap, physical retention policy, or full-history guarantee.
 
-Only a token can request another page. Response URIs are neither exposed nor followed; if present,
-they must match the fixed Fabric origin, collection IDs, and token. URI-only, contradictory,
-duplicate, null, or otherwise invalid continuation metadata is a safe failure, not exhaustion.
+Only a token can request another page. The [general Fabric pagination contract](https://learn.microsoft.com/rest/api/fabric/articles/pagination)
+allows terminal continuation fields to be absent or JSON null. Service and MCP tests cover every
+absent/null combination on empty and nonempty final pages, plus explicit token continuation with an
+absent/null URI even from an empty page. No arbitrary wrong-type value is treated as absence.
+Response URIs are neither exposed nor followed; non-null URIs must match the fixed Fabric origin,
+collection IDs, and token. Non-null URI-only, contradictory, duplicate, or otherwise invalid
+continuation metadata is a safe failure, not exhaustion.
 Dot-segment representation checks apply only before the query, so raw or escaped `/./` and `/../`
 within opaque cursor values remain data. Regression cases preserve those tokens and keep each
 explicit request on the same collection while still rejecting genuine path traversal.

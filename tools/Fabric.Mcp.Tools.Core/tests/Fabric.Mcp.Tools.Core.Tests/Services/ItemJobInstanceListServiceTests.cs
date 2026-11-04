@@ -67,6 +67,93 @@ public sealed class ItemJobInstanceListServiceTests()
     }
 
     [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public static async Task List_AcceptsAbsentOrNullContinuationOnEmptyAndNonemptyFinalPages(
+        bool nullToken, bool nullUri, bool empty)
+    {
+        var page = JsonNode.Parse(Page())!.AsObject();
+        if (nullToken)
+        {
+            page["continuationToken"] = null;
+        }
+        if (nullUri)
+        {
+            page["continuationUri"] = null;
+        }
+        if (empty)
+        {
+            page["value"] = new JsonArray();
+        }
+        using var response = Response(page.ToJsonString());
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal(CollectionUrl, request.RequestUri?.AbsoluteUri);
+            return Task.FromResult(response);
+        });
+        using var client = new HttpClient(handler);
+
+        var result = await ReadAsync(new FabricCoreService(client, Credential()));
+
+        Assert.Equal(empty ? [] : new[] { Instance() }, result.JobInstances);
+        Assert.Null(result.ContinuationToken);
+        var output = JsonSerializer.SerializeToElement(result, CoreJsonContext.Default.ItemJobInstanceListCommandResult);
+        Assert.False(output.TryGetProperty("continuationToken", out _));
+        Assert.False(output.TryGetProperty("continuationUri", out _));
+        Assert.Equal(1, handler.CallCount);
+        Assert.Throws<ObjectDisposedException>(() => response.Content.ReadAsStream(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public static async Task List_ContinuesOnlyOnExplicitCallWithTokenAndAbsentOrNullUri(bool nullUri, bool empty)
+    {
+        var page = JsonNode.Parse(Page(DocumentedToken))!.AsObject();
+        if (nullUri)
+        {
+            page["continuationUri"] = null;
+        }
+        if (empty)
+        {
+            page["value"] = new JsonArray();
+        }
+        var requests = new List<string>();
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            Assert.Equal(HttpMethod.Get, request.Method);
+            requests.Add(request.RequestUri!.AbsoluteUri);
+            return Task.FromResult(Response(requests.Count == 1
+                ? page.ToJsonString()
+                : """{"value":[],"continuationToken":null,"continuationUri":null}"""));
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, Credential());
+
+        var first = await ReadAsync(service);
+
+        Assert.Equal(empty ? [] : new[] { Instance() }, first.JobInstances);
+        Assert.Equal(DocumentedToken, first.ContinuationToken);
+        Assert.Equal([CollectionUrl], requests);
+
+        var second = await ReadAsync(service, first.ContinuationToken);
+
+        Assert.Empty(second.JobInstances);
+        Assert.Null(second.ContinuationToken);
+        Assert.Equal([CollectionUrl, $"{CollectionUrl}?continuationToken={DocumentedToken}"], requests);
+        Assert.Equal(2, handler.CallCount);
+    }
+
+    [Theory]
     [InlineData(DocumentedToken, DocumentedToken)]
     [InlineData("raw+/= &?#", "raw%2B%2F%3D%20%26%3F%23")]
     [InlineData(" raw ", "%20raw%20")]
@@ -299,16 +386,26 @@ public sealed class ItemJobInstanceListServiceTests()
         await AssertInvalidPageAsync($"{{\"value\":[{Json[..Json.LastIndexOf('}')]},{additional}}}]}}");
 
     [Theory]
-    [InlineData("""{"continuationToken":null}""")]
     [InlineData("""{"continuationToken":""}""")]
     [InlineData("""{"continuationToken":" "}""")]
+    [InlineData("""{"continuationToken":false}""")]
+    [InlineData("""{"continuationToken":0}""")]
     [InlineData("""{"continuationToken":42}""")]
     [InlineData("""{"continuationToken":[]}""")]
+    [InlineData("""{"continuationToken":{}}""")]
     [InlineData("""{"continuationToken":"private\r\n"}""")]
     [InlineData("""{"continuationToken":"\uD800"}""")]
-    [InlineData("""{"continuationUri":null}""")]
+    [InlineData("""{"continuationUri":""}""")]
+    [InlineData("""{"continuationUri":false}""")]
+    [InlineData("""{"continuationUri":0}""")]
+    [InlineData("""{"continuationUri":[]}""")]
+    [InlineData("""{"continuationUri":{}}""")]
     [InlineData("""{"continuationUri":"https://example.invalid/private"}""")]
-    [InlineData("""{"continuationToken":"next","continuationUri":null}""")]
+    [InlineData("""{"continuationToken":null,"continuationUri":"https://example.invalid/private"}""")]
+    [InlineData("""{"continuationToken":null,"continuationUri":false}""")]
+    [InlineData("""{"continuationToken":false,"continuationUri":null}""")]
+    [InlineData("""{"continuationToken":"next","continuationUri":""}""")]
+    [InlineData("""{"continuationToken":"next","continuationUri":false}""")]
     [InlineData("""{"continuationToken":"next","continuationUri":42}""")]
     [InlineData("""{"continuationToken":"next","continuationToken":"another"}""")]
     [InlineData("""{"continuationToken":"next","ContinuationToken":"another"}""")]
@@ -348,11 +445,20 @@ public sealed class ItemJobInstanceListServiceTests()
         await AssertInvalidPageAsync(page.ToJsonString());
     }
 
-    [Fact]
-    public static async Task List_RejectsUriOnlyEvenWhenItPointsToTheExpectedCollection()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public static async Task List_RejectsUriOnlyEvenWhenItPointsToTheExpectedCollection(bool nullToken)
     {
         var page = JsonNode.Parse(Page("next", includeUri: true))!.AsObject();
-        page.Remove("continuationToken");
+        if (nullToken)
+        {
+            page["continuationToken"] = null;
+        }
+        else
+        {
+            page.Remove("continuationToken");
+        }
         await AssertInvalidPageAsync(page.ToJsonString());
     }
 

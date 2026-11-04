@@ -173,6 +173,121 @@ public sealed class ItemJobInstanceListMcpTests()
     [InlineData("all", TransportTypes.Http)]
     [InlineData("namespace", TransportTypes.Http)]
     [InlineData("single", TransportTypes.Http)]
+    public static async Task List_AcceptsEveryAbsentOrNullTerminalCombinationWithoutConsent(string route, string transport)
+    {
+        foreach (var nullToken in new[] { false, true })
+        {
+            foreach (var nullUri in new[] { false, true })
+            {
+                foreach (var empty in new[] { false, true })
+                {
+                    var page = JsonNode.Parse(Page())!.AsObject();
+                    if (nullToken)
+                    {
+                        page["continuationToken"] = null;
+                    }
+                    if (nullUri)
+                    {
+                        page["continuationUri"] = null;
+                    }
+                    if (empty)
+                    {
+                        page["value"] = new JsonArray();
+                    }
+                    using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+                    {
+                        Assert.Equal(HttpMethod.Get, request.Method);
+                        Assert.Equal(CollectionUrl, request.RequestUri?.AbsoluteUri);
+                        return Task.FromResult(Response(page.ToJsonString()));
+                    });
+                    var credential = Credential();
+                    await using var provider = Services(handler, credential, transport, StructuredOutputMode.Compact, readOnly: true);
+                    var server = DecliningConsentServer();
+
+                    var result = await CallAsync(provider, route, Arguments(), server);
+
+                    Assert.False(result.IsError, Text(result));
+                    var payload = Payload(result, route);
+                    var instances = payload.GetProperty("jobInstances").EnumerateArray().ToArray();
+                    Assert.Equal(empty ? 0 : 1, instances.Length);
+                    if (!empty)
+                    {
+                        Assert.Equal(JobInstanceId, instances[0].GetProperty("id").GetString());
+                    }
+                    Assert.False(payload.TryGetProperty("continuationToken", out _));
+                    Assert.False(payload.TryGetProperty("continuationUri", out _));
+                    Assert.Equal(1, handler.CallCount);
+                    await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
+                    await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("all", TransportTypes.StdIo)]
+    [InlineData("namespace", TransportTypes.StdIo)]
+    [InlineData("single", TransportTypes.StdIo)]
+    [InlineData("all", TransportTypes.Http)]
+    [InlineData("namespace", TransportTypes.Http)]
+    [InlineData("single", TransportTypes.Http)]
+    public static async Task List_UsesTokenWithAbsentOrNullUriForExplicitContinuation(string route, string transport)
+    {
+        foreach (var nullUri in new[] { false, true })
+        {
+            foreach (var empty in new[] { false, true })
+            {
+                var page = JsonNode.Parse(Page(DocumentedToken))!.AsObject();
+                if (nullUri)
+                {
+                    page["continuationUri"] = null;
+                }
+                if (empty)
+                {
+                    page["value"] = new JsonArray();
+                }
+                var requests = new List<string>();
+                using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+                {
+                    Assert.Equal(HttpMethod.Get, request.Method);
+                    requests.Add(request.RequestUri!.AbsoluteUri);
+                    return Task.FromResult(Response(requests.Count == 1
+                        ? page.ToJsonString()
+                        : """{"value":[],"continuationToken":null,"continuationUri":null}"""));
+                });
+                await using var provider = Services(handler, Credential(), transport, StructuredOutputMode.Compact, readOnly: true);
+                var server = DecliningConsentServer();
+
+                var first = await CallAsync(provider, route, Arguments(), server);
+
+                Assert.False(first.IsError, Text(first));
+                var payload = Payload(first, route);
+                Assert.Equal(empty ? 0 : 1, payload.GetProperty("jobInstances").GetArrayLength());
+                Assert.Equal(DocumentedToken, payload.GetProperty("continuationToken").GetString());
+                Assert.False(payload.TryGetProperty("continuationUri", out _));
+                Assert.Equal([CollectionUrl], requests);
+                var next = Arguments();
+                next["continuation-token"] = payload.GetProperty("continuationToken").GetString();
+
+                var second = await CallAsync(provider, route, next, server);
+
+                Assert.False(second.IsError, Text(second));
+                Assert.Empty(Payload(second, route).GetProperty("jobInstances").EnumerateArray());
+                Assert.False(Payload(second, route).TryGetProperty("continuationToken", out _));
+                Assert.Equal([CollectionUrl, $"{CollectionUrl}?continuationToken={DocumentedToken}"], requests);
+                Assert.Equal(2, handler.CallCount);
+                await server.DidNotReceive().SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>());
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("all", TransportTypes.StdIo)]
+    [InlineData("namespace", TransportTypes.StdIo)]
+    [InlineData("single", TransportTypes.StdIo)]
+    [InlineData("all", TransportTypes.Http)]
+    [InlineData("namespace", TransportTypes.Http)]
+    [InlineData("single", TransportTypes.Http)]
     public static async Task List_CoreOnlyCannotDiscoverLearnOrInvokeJobs(string route, string transport)
     {
         using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("No HTTP expected."));
@@ -312,6 +427,10 @@ public sealed class ItemJobInstanceListMcpTests()
                 """{"value":[],"continuationToken":"\uD800"}""",
                 """{"value":[],"extra\uDC00":"private"}""",
                 """{"value":[],"continuationUri":"https://example.invalid/private"}""",
+                """{"value":[],"continuationToken":null,"continuationUri":"https://example.invalid/private"}""",
+                """{"value":[],"continuationToken":false,"continuationUri":null}""",
+                """{"value":[],"continuationToken":null,"continuationUri":0}""",
+                """{"value":[],"continuationToken":null,"continuationUri":null,"value":[{}]}""",
                 """{"value":[],"value":[{}]}"""
             })
             {
