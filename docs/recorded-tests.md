@@ -14,6 +14,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
 - **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set before HTTP services are registered. Its fallback is captured into `HttpClientOptions.RecordingProxy` for that provider; handler creation does not reread the environment. In-process tests should configure this option or supply the deferred fixture resolver instead of changing process-wide environment variables. Tests must ensure the tool is correctly injecting and utilizing `IHttpClientFactory`.
+- **Loopback routing** – Debug recording transports contact loopback recording endpoints directly, bypassing configured and runtime outbound HTTP proxies independently of `NO_PROXY`. This prevents infrastructure proxies from injecting `X-Forwarded-*` headers that are absent from recordings and cause playback matching failures. Non-loopback recording endpoints and normal, non-recording requests retain their existing proxy routing. Network isolation remains enabled.
 
 > **Security warning:** A recording proxy configured through `TEST_PROXY_URL` or a
 > fixture takes precedence over transport-level AntiSSRF protection so the local
