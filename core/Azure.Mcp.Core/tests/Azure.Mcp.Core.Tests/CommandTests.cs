@@ -2,17 +2,29 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Areas.Group;
+using Azure.Mcp.Core.Areas.Subscription;
+using Azure.Mcp.Tests.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Tests;
-using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests;
 
-public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFixture, LiveServerFixture liveServerFixture)
-    : RecordedCommandTestsBase(output, testProxyFixture, liveServerFixture)
+public class CommandTests(ITestOutputHelper output, TestProxyFixture testProxyFixture)
+    : RecordedAzureToolTestsBase<GroupSetup>(output, testProxyFixture)
 {
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        base.ConfigureServices(services);
+        var subscription = new SubscriptionSetup();
+        services.AddSingleton<IAreaSetup>(subscription);
+        subscription.ConfigureServices(services);
+    }
+
     [Fact]
     public async Task Should_list_groups_by_subscription()
     {
