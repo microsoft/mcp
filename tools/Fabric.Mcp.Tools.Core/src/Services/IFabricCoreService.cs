@@ -70,6 +70,17 @@ public interface IFabricCoreService
         string itemId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Requests cancellation once; a 202 receipt confirms acceptance, not the job's final state.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobInstanceId">The existing job-instance UUID, not a Fabric operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request, not the Fabric job.</param>
+    Task<ItemJobInstanceCancelCommandResult> CancelItemJobInstanceAsync(
+        string workspaceId,
+        string itemId,
+        string jobInstanceId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one job-instance snapshot and retry guidance without polling or retrieving results.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item.</param>

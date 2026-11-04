@@ -89,7 +89,7 @@ The manual configuration examples use `mcpServers` as the root object. In Visual
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
 
-When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job submission or lookup; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job submission, cancellation, or lookup; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
 
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
@@ -348,18 +348,19 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job and
-reads an existing item job instance in separate calls. No cancel, list, or schedule tools are provided by Jobs.
+items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
+requests cancellation of an existing job, or reads one job instance in separate calls.
+Job listing and scheduling tools are not provided by Jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: item/definition tools, but no job-instance lookup.
+# Core-only: item/definition tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
-# Jobs-only: job submission and lookup, without Core tools.
+# Jobs-only: job submission, cancellation requests, and lookup, without Core tools.
 fabmcp server start --mode all --namespace jobs
 
-# Item/definition work plus job submission and status: enable both areas.
+# Item/definition work plus job submission, cancellation, and status: enable both areas.
 fabmcp server start --mode all --namespace core --namespace jobs
 
 # The same combined selection with hierarchical namespace routers or a single router.
@@ -369,11 +370,12 @@ fabmcp server start --mode single --namespace core --namespace jobs
 
 Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
 not the shared services needed by the selected area. In `all` mode, the tools are exposed directly as
-`jobs_get-item-job-instance` and `jobs_run-on-demand-item-job`. In `namespace` mode, call the `jobs`
+`jobs_cancel-item-job-instance`, `jobs_get-item-job-instance`, and `jobs_run-on-demand-item-job`.
+In `namespace` mode, call the `jobs`
 router with `learn=true` to obtain their schemas, then specify the command name and its `parameters`. In `single` mode,
 use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
 the commands for a selected area. Core-only selection never exposes or routes Jobs tools.
-Read-only mode hides and denies Run while retaining Get.
+Read-only mode hides and denies Run and Cancel while retaining Get.
 
 ### API Documentation & Best Practices
 
@@ -1090,8 +1092,81 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 
 | Tool | Description |
 |------|-------------|
+| `jobs_cancel-item-job-instance` | Requests cancellation of one known item job with one POST. Returns cancellation requested, not a Cancelled job state, with known IDs and validated guidance for a separate Get. Never automatically retries or polls. |
 | `jobs_get-item-job-instance` | Reads one known item's job instance, including status, timing, safe failure metadata, and available retry guidance. Does not poll, run, cancel, or schedule jobs. |
 | `jobs_run-on-demand-item-job` | Submits exactly one on-demand item job and returns an accepted receipt, a trustworthy job-instance ID when available, and validated first-status-read guidance. Never automatically retries or polls. |
+
+**Cancel Item Job Instance (`jobs_cancel-item-job-instance`)**
+
+Calls the [Cancel Item Job Instance API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/cancel-item-job-instance)
+with exactly one `POST /v1/workspaces/{workspaceId}/items/{itemId}/jobs/instances/{jobInstanceId}/cancel`.
+The explicit `workspace-id`, `item-id`, and `job-instance-id` options must be nonempty UUIDs.
+They are validated and normalized before authentication or HTTP. There is **no job-type or request
+body**, no discovery or preflight Get, and no polling, waiting, automatic retry, or result retrieval.
+Job listing and scheduling are not implemented.
+
+Cancel is **destructive and not read-only**: obtain explicit cancellation authorization and normal
+mutation consent. It can stop useful work and does not promise to roll back work already performed.
+The idempotent hint describes the effect of repeatedly targeting the **same existing job**, not a
+promise that repeated requests succeed; `JobAlreadyCompleted` remains a failure. The tool never
+automatically retries, even for throttling or a backend `isRetriable` hint. Read-only mode hides and
+rejects Cancel and Run while retaining Get.
+
+The caller needs item execution permission and, for delegated access, `Item.Execute.All` or the
+corresponding item-specific scope such as `Notebook.Execute.All`. The API supports users, service
+principals, and managed identities, subject to Fabric authorization. The existing request-aware
+host credential provider is used in both stdio and HTTP modes, without granting permissions or
+bypassing caller identity.
+
+**HTTP 202 means cancellation was requested, not that the job is `Cancelled`.** The typed receipt
+contains `cancellationStatus: "Requested"`, the requested `workspaceId`, `itemId`, `jobInstanceId`,
+and `guidance`. Those IDs come from the request: the tool ignores `Location` and
+`x-ms-operation-id`, never follows or echoes response URLs, and does not read the acceptance body.
+Missing or malformed response metadata and cancellation arriving after response headers do not
+erase confirmed acceptance.
+
+A single valid `Retry-After` becomes `retryAfterSeconds` or `retryAfterUtc`. Wait at least that
+delay, or until that UTC date, before the first separate status read. Missing, invalid, negative,
+out-of-range, or multiple guidance produces `retryAfterIssue: "MissingOrInvalidRetryAfter"`;
+acceptance remains intact and no fallback delay is invented.
+
+Failures preserve HTTP status and validated retry guidance. `JobAlreadyCompleted` means the
+cancellation was not accepted because the job already completed; it does **not** establish the
+job's final success or failure status. Error-code extraction requires unambiguous JSON bounded
+to **1 MiB (1,048,576 bytes)** and a safe identifier-shaped code. Malformed, oversized, unreadable,
+or canceled error-body reads retain the known HTTP failure and explicitly report unavailable
+metadata. Raw backend messages, nested details, exception text, and stack traces are not returned.
+
+Network failure, timeout, or cancellation after a possible POST can leave the outcome uncertain.
+Check the **known job** with `jobs_get-item-job-instance` before considering another cancellation
+request. Canceling the MCP request itself is not canceling a Fabric job. Job-instance IDs are not
+Fabric `/operations` IDs; never use the operation-state/result tools for this flow.
+
+Cancel-to-Get handoff as **separate calls**, using only an explicitly authorized existing job:
+
+```powershell
+$cancellation = fabmcp jobs cancel-item-job-instance --workspace-id <workspace-id> --item-id <item-id> --job-instance-id <job-instance-id> | ConvertFrom-Json
+$receipt = $cancellation.results
+$receipt
+```
+
+After an accepted receipt, wait at least its valid Retry-After guidance. If timing is unavailable,
+do not invent an immediate-read delay. Then make a separate status call:
+
+```powershell
+fabmcp jobs get-item-job-instance --workspace-id $receipt.workspaceId --item-id $receipt.itemId --job-instance-id $receipt.jobInstanceId
+```
+
+The snapshot may still report `InProgress`; only Get reports the observed job state.
+Both calls work with `--namespace jobs`; select both `core` and `jobs` when also using Core tools.
+Namespace routing uses `command="jobs_cancel-item-job-instance"` with the three IDs in `parameters`;
+single routing additionally uses `tool="jobs"`. Default, compact, and duplicated output retain the
+same receipt semantics.
+
+Example prompts (require explicit cancellation authorization):
+
+- "Request cancellation once for job `<job-instance-id>` of item `<item-id>` in workspace `<workspace-id>`. Return the receipt without polling or retrying."
+- "After the cancellation receipt's minimum Retry-After wait, read that known job once using Get. Do not infer that it is already Cancelled."
 
 **Get Item Job Instance (`jobs_get-item-job-instance`)**
 
