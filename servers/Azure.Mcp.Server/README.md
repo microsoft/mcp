@@ -890,7 +890,7 @@ See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/mai
 
 # Usage
 
-In default namespace mode, built-in Azure tools use service-relative command names: call `appservice` with `"command": "webapp_get"` rather than repeating `appservice_`. Existing prefixed names remain accepted. Retrieval commands use `get` for single-resource or combined retrieval/listing operations and `list` for collection-only operations. CLI paths, global tool names, consolidated mode, and external MCP proxies are unchanged. See [Namespace command names](docs/azmcp-commands.md#namespace-command-names) for compatibility aliases and examples.
+In default namespace mode, built-in Azure tools use service-relative command names: call `appservice` with `"command": "webapp_get"` rather than repeating `appservice_`. Existing prefixed names remain accepted. Retrieval commands use `get` for single-resource or combined retrieval/listing operations and `list` for collection-only operations. CLI paths, global tool names, consolidated mode, and external MCP proxies are unchanged. See [Namespace command names](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#namespace-command-names) for compatibility aliases and examples.
 
 ## Getting Started
 
