@@ -3,8 +3,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ServerInstructions;
+using Microsoft.Mcp.Core.Configuration;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
