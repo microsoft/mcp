@@ -103,6 +103,23 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Creates one schedule with explicit timing and enabled intent, without preflight, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="enabled">Whether to enable the schedule. A past start time may trigger a job immediately.</param>
+    /// <param name="configuration">Required schedule JSON, including explicit UTC bounds and localTimeZoneId.</param>
+    /// <param name="executionData">Optional opaque, static job-input JSON object; null omits the field.</param>
+    /// <param name="cancellationToken">Cancels the request, not a schedule that may already have been created.</param>
+    Task<ItemScheduleCreateCommandResult> CreateItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        bool enabled,
+        string configuration,
+        string? executionData = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete schedule page without discovery, per-schedule reads, pagination, or mutations.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item.</param>

@@ -36,6 +36,15 @@ time zone or next execution time. Schedule IDs are not job-instance IDs or opera
 Absent/null terminal continuation and token-only continuation follow the same pagination rules
 above. Job-instance history limits do not apply to schedule pages.
 
+Schedule creation requires separate authorization for the exact workspace/item/job type, enabled
+state, timing, and time zone. Before requesting consent, explain that an enabled schedule with a
+past start time may trigger a job immediately and consume compute or change data. Require explicit
+enabled true/false and configuration; never infer a cadence, machine time zone, or job type.
+Send one POST with optional static execution data intact. No count preflight, retry, polling,
+operation lookup, follow-up run, or live fixture discovery is authorized by these prompts.
+HTTP 201 is creation, not execution. Unusable metadata after 201 does not undo creation;
+inspect schedules separately before any new creation after uncertainty, never blindly resubmit.
+
 Job submission requires explicit execution authorization, workspace/item UUIDs, and a supported job type.
 Run prompts below are not permission to start a real job. No non-production execution fixture is assumed.
 Submit once, return acceptance rather than completion, and never retry automatically or strip unsupported
@@ -50,7 +59,7 @@ rollback, or infer success/failure from JobAlreadyCompleted. After uncertain can
 job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
 metadata does not undo acceptance or require a Location-derived ID.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule listing alone,
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule listing/creation alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -141,6 +150,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_cancel-item-job-instance | Request this authorized cancellation once. If Fabric reports JobAlreadyCompleted, return the failure without inferring the job's final success or failure status. Do not resubmit. | context-required |
 | jobs_cancel-item-job-instance | After requesting cancellation for the authorized job, wait at least the receipt's valid Retry-After guidance, then use its known IDs with jobs_get-item-job-instance in a separate call. The job may still be InProgress. | context-required |
 | jobs_cancel-item-job-instance | In the jobs namespace router, request the authorized cancellation once with workspace-id, item-id, and job-instance-id in the parameters object. On timeout, check the known job separately rather than retrying cancellation or starting a job. | context-required |
+| jobs_create-item-schedule | Create one disabled schedule for job type DefaultJob on item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa with enabled false and configuration {"type":"Cron","startDateTime":"2030-01-01T00:00:00Z","endDateTime":"2030-02-01T00:00:00Z","localTimeZoneId":"UTC","interval":10}. Obtain consent and send one POST only. | none |
+| jobs_create-item-schedule | Create the explicitly authorized enabled schedule for my supplied workspace/item/job type and configuration. Before consent, explain that the supplied past start time may run a job immediately, consuming compute or changing data. Do not change the timing or infer a time zone. | context-required |
+| jobs_create-item-schedule | Create one schedule using my supplied Daily, Weekly, or Monthly configuration and static execution-data JSON. Preserve extensible fields and opaque values. Do not preflight the schedule count, strip fields, retry, poll, or run the job separately. | context-required |
+| jobs_create-item-schedule | In the jobs namespace router, create the approved schedule with explicit workspace-id, item-id, job-type, enabled, and configuration in parameters. Return creation, not execution; do not pass its schedule ID to a job-instance or operation tool. | context-required |
+| jobs_create-item-schedule | If this approved creation receives HTTP 201 but its metadata cannot be read, report confirmed creation with unavailable metadata. If confirmation is lost to a timeout, report uncertainty. Never resubmit blindly or automatically delete another schedule after ScheduleExceedsLimit. | context-required |
 | jobs_get-item-job-instance | Read job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa once, without polling. | none |
 | jobs_get-item-job-instance | Show the status, invocation type, and available start and end times for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch job results. | none |
 | jobs_get-item-job-instance | Get safe failure metadata and any Retry-After guidance for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not start, retry, cancel, or schedule a job. | none |

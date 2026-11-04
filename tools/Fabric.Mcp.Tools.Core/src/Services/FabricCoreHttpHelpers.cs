@@ -3,6 +3,7 @@
 
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
@@ -21,6 +22,48 @@ internal static class FabricCoreHttpHelpers
             (retryAfter.Delta is null || retryAfter.Delta >= TimeSpan.Zero)
                 ? retryAfter
                 : null;
+    }
+
+    internal static async Task<(string? Code, bool Unavailable)> ReadErrorCodeAsync(
+        HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!string.Equals(response.Content.Headers.ContentType?.MediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                return (null, true);
+            }
+            var body = await FabricResponseBodyReader.ReadAsync(
+                response, FabricResponseBodyReader.DefaultMaxJsonBytes,
+                static () => new JsonException("Fabric error metadata exceeds the 1 MiB limit."),
+                cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            if (document.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                try
+                {
+                    // Duplicate codes cannot safely identify a specific service failure.
+                    var codes = document.RootElement.EnumerateObject().Where(static property => property.NameEquals("errorCode")).ToArray();
+                    if (codes is [{ Value.ValueKind: JsonValueKind.String }] &&
+                        codes[0].Value.GetString() is { } code && IsSafeErrorCode(code))
+                    {
+                        return (code, false);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // JSON decoding is lazy. Keep this boundary separate from reader failures.
+                    return (null, true);
+                }
+            }
+            return (null, true);
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or HttpRequestException or OperationCanceledException)
+        {
+            // Optional metadata must not replace a known HTTP status or Retry-After.
+            // Callers explicitly report its unavailability instead of exposing backend content.
+            return (null, true);
+        }
     }
 
     internal static string EncodeContinuationToken(string token)
