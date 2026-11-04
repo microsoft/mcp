@@ -59,7 +59,8 @@ public static class HttpClientFactoryConfigurator
     /// while <c>NO_PROXY</c>, operating-system bypass, and PAC direct routes retain it.
     /// When no configured proxy is selected, <see cref="HttpClient.DefaultProxy"/> supplies
     /// the runtime proxy and bypass rules. Debug recording proxies remain a handler-wide
-    /// exception to transport protection.
+    /// exception to transport protection. Loopback recording endpoints bypass outbound proxies;
+    /// non-loopback recording endpoints retain the configured or runtime proxy.
     /// Callers' endpoint validation remains independent of every transport proxy exception.
     /// Repeated calls are ignored so client and handler configuration delegates are registered
     /// exactly once. The first <paramref name="recordingProxyResolver"/> is retained.
@@ -166,9 +167,13 @@ public static class HttpClientFactoryConfigurator
             Uri? recordingProxy = ResolveRecordingProxy(options.RecordingProxy, recordingProxyResolver);
             if (recordingProxy != null)
             {
-                // The inner handler retains either the configured proxy above or, when Proxy is
-                // null, SocketsHttpHandler's automatic use of HttpClient.DefaultProxy.
-                LogProxyProtection(serviceProvider, clientName);
+                // Infrastructure proxies can inject forwarding headers that break recording matches.
+                // Only loopback recording traffic should bypass the configured or runtime proxy.
+                handler.UseProxy = !recordingProxy.IsLoopback;
+                if (handler.UseProxy)
+                {
+                    LogProxyProtection(serviceProvider, clientName);
+                }
                 return new RecordingRedirectHandler(recordingProxy)
                 {
                     InnerHandler = handler
