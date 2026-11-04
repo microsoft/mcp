@@ -109,7 +109,7 @@ public sealed class ItemJobInstanceListMcpTests()
         }
         if (readOnly)
         {
-            Assert.Equal(["jobs_get-item-job-instance", ToolName],
+            Assert.Equal(["jobs_get-item-job-instance", ToolName, "jobs_list-item-schedules"],
                 catalog.Tools.Where(tool => tool.Name.StartsWith("jobs_", StringComparison.Ordinal)).Select(tool => tool.Name).Order());
         }
         if (route != "all")

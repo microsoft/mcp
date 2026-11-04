@@ -229,7 +229,7 @@ public sealed class ItemJobInstanceGetMcpTests()
                 Assert.DoesNotContain(commands, command => command.GetProperty("command").GetString() == OldToolName);
                 if (area == "jobs")
                 {
-                    Assert.Equal([ToolName, "jobs_list-item-job-instances"],
+                    Assert.Equal([ToolName, "jobs_list-item-job-instances", "jobs_list-item-schedules"],
                         commands.Select(command => command.GetProperty("command").GetString()).Order());
                     var command = Assert.Single(commands, command => command.GetProperty("command").GetString() == ToolName);
                     Assert.Equal(ToolName, command.GetProperty("command").GetString());
