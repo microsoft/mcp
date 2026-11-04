@@ -69,7 +69,12 @@ public partial class FabricCoreService
         {
             using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 64, AllowDuplicateProperties = false });
             FabricItemScheduleJson.ValidateUnicode(document.RootElement);
-            return FabricItemScheduleJson.Read(document.RootElement);
+            var schedule = FabricItemScheduleJson.Read(document.RootElement);
+            // Reserve four levels for the result, namespace, tool-response, and JSON-RPC
+            // envelopes. Validate retained fields before leaving the confirmed-201 boundary.
+            using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = 60 });
+            JsonSerializer.Serialize(writer, schedule, CoreJsonContext.Default.FabricItemSchedule);
+            return schedule;
         }
         catch (Exception ex) when (ex is JsonException or InvalidOperationException)
         {

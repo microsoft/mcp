@@ -252,6 +252,11 @@ Location/operation headers are not used. Response/error bodies have the existing
 input JSON has a 32-level and response JSON a 64-level bound. Error metadata is optional and cannot
 replace a known failure status. Tests cover exact byte/depth thresholds, lazy Unicode decoding,
 read cancellation/failures, response disposal, independent identities, and schema/output paths.
+Retained schedule output is serialized to a null stream with a 60-level limit inside the confirmed
+201 boundary, reserving four levels for result/routing/protocol envelopes. Routed regressions cover
+60/61/64-level configuration, owner, and execution data in every output mode and transport, including
+serialization and parsing of the JSON-RPC envelope. Excess depth returns confirmed-creation and
+do-not-resubmit guidance rather than a late, ambiguous serializer failure. List's limits are unchanged.
 No live schedule, resource provisioning, recorded playback, or real OBO/RBAC validation is performed.
 
 ## Schedule Listing

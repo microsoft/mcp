@@ -1357,7 +1357,11 @@ offline tests do not establish live permissions or real OBO behavior.
 The schedule requires a nonempty `id` and Boolean `enabled`. Available `createdDateTime`,
 `configuration`, `owner`, and `executionData` are preserved without inventing absent/null fields.
 Owner and execution data may be sensitive. Unknown top-level fields are not projected.
-The response budget is **1 MiB / 64 JSON levels**. Optional `Location` and operation headers are
+The response body budget is **1 MiB / 64 JSON levels**. The retained schedule snapshot is limited to
+**60 levels including its root**, reserving four levels for the result, namespace, tool-response,
+and JSON-RPC envelopes. This is checked inside the confirmed-creation boundary, before any output
+serializer can lose that confirmation. Unknown top-level fields that are not returned retain the
+64-level body budget. Optional `Location` and operation headers are
 ignored: this endpoint is not a standard Fabric operation LRO and never triggers a follow-up read.
 Schedule IDs must not be used as job-instance or operation IDs.
 

@@ -30,4 +30,17 @@ internal static class ItemScheduleCreateTestData
 
     internal static ItemScheduleCreateCommandResult Created() =>
         new(Guid.Parse(WorkspaceId), Guid.Parse(ItemId), JobType, Schedule());
+
+    internal static string DeepSchedule(int depth, string field)
+    {
+        var nested = new string('[', depth - 2) + "0" + new string(']', depth - 2);
+        var value = field switch
+        {
+            "configuration" => Configuration[..^1] + ",\"deep\":" + nested + "}",
+            "owner" => $$"""{"id":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","type":"FuturePrincipal","deep":{{nested}}}""",
+            "executionData" => $$"""{"deep":{{nested}}}""",
+            _ => throw new ArgumentOutOfRangeException(nameof(field))
+        };
+        return $$"""{"id":"{{ScheduleId}}","enabled":false,"{{field}}":{{value}}}""";
+    }
 }

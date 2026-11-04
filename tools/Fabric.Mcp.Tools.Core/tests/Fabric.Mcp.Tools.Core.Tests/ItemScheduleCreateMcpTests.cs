@@ -284,6 +284,61 @@ public sealed class ItemScheduleCreateMcpTests()
         Assert.Equal(2, handler.CallCount);
     }
 
+    [Theory]
+    [InlineData("all")]
+    [InlineData("namespace")]
+    [InlineData("single")]
+    public static async Task Create_DeepRetainedResponsePreservesConfirmedCreationGuidance(string route)
+    {
+        foreach (var transport in new[] { TransportTypes.StdIo, TransportTypes.Http })
+        {
+            foreach (var output in new StructuredOutputMode?[] { null, StructuredOutputMode.Compact, StructuredOutputMode.Duplicated })
+            {
+                foreach (var field in new[] { "configuration", "owner", "executionData" })
+                {
+                    foreach (var depth in new[] { 60, 61, 64 })
+                    {
+                        var body = DeepSchedule(depth, field);
+                        using var handler = new FabricCoreHttpMessageHandler((_, _) =>
+                            Task.FromResult(Response(body, HttpStatusCode.Created, "60")));
+                        var credential = Credential();
+                        await using var provider = Services(handler, credential, transport, output);
+                        var result = await CallAsync(provider, route, Arguments(false), Consent());
+                        if (depth == 60)
+                        {
+                            Assert.False(result.IsError, Text(result));
+                            using var expected = JsonDocument.Parse(body);
+                            Assert.True(JsonElement.DeepEquals(expected.RootElement, Payload(result, route).GetProperty("schedule")));
+                        }
+                        else
+                        {
+                            Assert.True(result.IsError, Text(result));
+                            Assert.Contains("confirmed schedule creation (HTTP 201)", Text(result));
+                            Assert.Contains("Do not resubmit", Text(result));
+                            Assert.Contains("Wait at least 60 seconds", Text(result));
+                            Assert.DoesNotContain("CurrentDepth", Text(result));
+                            Assert.DoesNotContain("stackTrace", Text(result));
+                        }
+                        var toolResult = new JsonObject
+                        {
+                            ["content"] = new JsonArray(new JsonObject { ["type"] = "text", ["text"] = Text(result) }),
+                            ["isError"] = result.IsError
+                        };
+                        if (result.StructuredContent is { } content)
+                        {
+                            toolResult["structuredContent"] = JsonNode.Parse(content.GetRawText());
+                        }
+                        var wire = new JsonObject { ["jsonrpc"] = "2.0", ["id"] = 1, ["result"] = toolResult };
+                        using var parsedWire = JsonDocument.Parse(wire.ToJsonString(new JsonSerializerOptions { MaxDepth = 64 }));
+                        Assert.True(parsedWire.RootElement.TryGetProperty("result", out _));
+                        Assert.Equal(1, handler.CallCount);
+                        await credential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), TestContext.Current.CancellationToken);
+                    }
+                }
+            }
+        }
+    }
+
     private static void AssertInputSchema(JsonElement schema)
     {
         Assert.Equal(["configuration", "enabled", "item-id", "job-type", "workspace-id"],
