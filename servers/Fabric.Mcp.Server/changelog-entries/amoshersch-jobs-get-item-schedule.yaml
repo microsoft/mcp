@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added jobs_get-item-schedule to read one explicitly identified Fabric schedule with sensitive-data consent, extensible settings, identity validation, and safe retry guidance without discovery, polling, or mutations."

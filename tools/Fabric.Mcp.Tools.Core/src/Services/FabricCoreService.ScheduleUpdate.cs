@@ -17,7 +17,7 @@ public partial class FabricCoreService
         string? executionData = null, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationResult();
-        ItemScheduleInput.ValidateUpdateContext(workspaceId, itemId, jobType, scheduleId, validation);
+        ItemScheduleInput.ValidateScheduleContext(workspaceId, itemId, jobType, scheduleId, validation);
         if (!validation.IsValid)
         {
             throw new FabricItemInputException(string.Join(' ', validation.Errors));
@@ -52,7 +52,7 @@ public partial class FabricCoreService
                 response, FabricResponseBodyReader.DefaultMaxJsonBytes,
                 static () => new JsonException("The Fabric schedule exceeds the 1 MiB response limit."), cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            var snapshot = FabricItemScheduleJson.ReadMutationResponse(bytes);
+            var snapshot = FabricItemScheduleJson.ReadResponse(bytes);
             if (snapshot.Id != schedule)
             {
                 throw new JsonException("Fabric returned a different schedule.");

@@ -51,7 +51,7 @@ public partial class FabricCoreService
                 response, FabricResponseBodyReader.DefaultMaxJsonBytes,
                 static () => new JsonException("The Fabric schedule exceeds the 1 MiB response limit."), cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            var schedule = FabricItemScheduleJson.ReadMutationResponse(bytes);
+            var schedule = FabricItemScheduleJson.ReadResponse(bytes);
             return new(workspace, item, jobType, schedule,
                 retryAfter?.Delta is { } delay ? (long)delay.TotalSeconds : null, retryAfter?.Date);
         }

@@ -167,7 +167,7 @@ public sealed class ItemScheduleUpdateMcpTests()
             Assert.DoesNotContain(catalog.Tools, tool => tool.Name == ToolName);
             if (selection == "read-only")
             {
-                Assert.Equal(["jobs_get-item-job-instance", "jobs_list-item-job-instances", "jobs_list-item-schedules"],
+                Assert.Equal(["jobs_get-item-job-instance", "jobs_get-item-schedule", "jobs_list-item-job-instances", "jobs_list-item-schedules"],
                     catalog.Tools.Select(tool => tool.Name).Order());
             }
             if (route != "all")

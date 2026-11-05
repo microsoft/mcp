@@ -139,6 +139,19 @@ public interface IFabricCoreService
         string? executionData = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one explicitly identified schedule snapshot without discovery, retries, polling, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<ItemScheduleGetCommandResult> GetItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete schedule page without discovery, per-schedule reads, pagination, or mutations.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item.</param>

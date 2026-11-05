@@ -12,7 +12,7 @@ internal static class ItemScheduleInput
 {
     internal const int MaxRequestBytes = FabricItemJsonInput.MaxObjectBytes;
 
-    internal static void ValidateUpdateContext(
+    internal static void ValidateScheduleContext(
         string workspaceId, string itemId, string jobType, string scheduleId, ValidationResult validation)
     {
         ItemJobRunInput.ValidateContext(workspaceId, itemId, jobType, validation);

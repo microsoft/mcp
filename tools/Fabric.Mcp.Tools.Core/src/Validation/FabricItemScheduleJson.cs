@@ -11,7 +11,7 @@ internal static class FabricItemScheduleJson
 {
     private const string InvalidMetadataMessage = "Fabric returned invalid schedule metadata.";
 
-    internal static FabricItemSchedule ReadMutationResponse(ReadOnlyMemory<byte> body)
+    internal static FabricItemSchedule ReadResponse(ReadOnlyMemory<byte> body)
     {
         try
         {
@@ -19,7 +19,7 @@ internal static class FabricItemScheduleJson
             ValidateUnicode(document.RootElement);
             var schedule = Read(document.RootElement);
             // Reserve four levels for the result, namespace, tool-response, and JSON-RPC
-            // envelopes. Call this inside the mutation's confirmed-success boundary.
+            // envelopes. Mutation callers keep this inside their confirmed-success boundary.
             using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = 60 });
             JsonSerializer.Serialize(writer, schedule, CoreJsonContext.Default.FabricItemSchedule);
             return schedule;

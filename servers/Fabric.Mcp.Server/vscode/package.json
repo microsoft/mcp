@@ -60,7 +60,7 @@
                         ],
                         "markdownEnumDescriptions": [
                             "Core — Manage Fabric workspaces, items, capacities, and long-running operations.",
-                            "Jobs — Submit one on-demand item job, request cancellation, read/list job instances, or list/create/update item schedules, with acceptance, creation/update, and retry guidance but no polling or automatic retries. Each listing returns one page; request continuation explicitly.",
+                            "Jobs — Submit one on-demand item job, request cancellation, read/list job instances, or get/list/create/update item schedules, with acceptance, creation/update, and retry guidance but no polling or automatic retries. Each listing returns one page; request continuation explicitly.",
                             "Documentation — Browse Fabric API specifications, item definitions, and best practices.",
                             "OneLake — Manage and interact with OneLake data lake storage.",
                             "Data Factory — Manage pipelines and Dataflow Gen2 operations."
