@@ -48,6 +48,10 @@ Offline tests for the Fabric Core toolset.
 - **Services/ItemJobRunServiceTests.cs**: One normalized authenticated POST, encoded job types, optional body preservation, trusted Location context, accepted receipts without tracking IDs, Retry-After boundaries, no body reads or retries, FeatureNotAvailable without fallback, cancellation/acceptance preservation, disposal, and concurrent per-request identity isolation
 - **ItemJobRunMcpTests.cs**: Real registration, consent, schemas, all/namespace/single routes and output modes, stdio/HTTP configurations, namespace filters, reserved router parameters isolation, separate Run-to-Get handoff, read-only exclusion with Get retained, and validation before authentication
 - **Commands/ItemScheduleListCommandTests.cs**: Required UUID/job-type binding, unchanged optional cursors, sensitive read-only metadata, source-generated settings, safe failures/logging, and cancellation forwarding
+- **Commands/ItemScheduleCreateCommandTests.cs**: Explicit creation binding, sensitive/destructive/non-idempotent metadata, typed 201 results, safe errors/logging, scope guidance, and confirmed-creation versus uncertain-send failures
+- **Validation/ItemScheduleCreateInputTests.cs**: Explicit UTC bounds and Windows time-zone intent, documented configuration bounds, future string types, opaque execution data, omission, Unicode/duplicate checks, and exact UTF-8/serialized/depth budgets
+- **Services/ItemScheduleCreateServiceTests.cs**: One normalized authenticated POST, full JSON preservation, optional schedule fields, ignored Location/operation headers, bounded responses/errors, safe status/retry guidance, confirmed creation on body failure, cancellation/disposal, and concurrent caller isolation
+- **ItemScheduleCreateMcpTests.cs**: Real registration, explicit Boolean value/no-default guards, schema/learn/output modes, all/namespace/single routing, stdio/HTTP, namespace/read-only filtering, consent, invalid/missing/repeated options with zero authentication/HTTP, and registered CLI 201 handling
 - **Services/ItemScheduleListServiceTests.cs**: One normalized GET, encoded job types/tokens, optional schedule fields, full extensible configuration/owner/execution JSON, explicit continuation, absent/null terminal metadata, no count cap or per-row reads, malformed/Unicode/duplicate data, exact bounds, HTTP status/retry guidance, disposal/cancellation, and concurrent identity isolation
 - **ItemScheduleListMcpTests.cs**: Actual registration, schemas and learn, all/namespace/single routes, stdio/HTTP configurations and output modes, namespace/read-only filtering, sensitive-read consent, zero-I/O denied consent/invalid input, complete pages, and safe malformed responses
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
@@ -218,6 +222,42 @@ subsequent Cancel still requests its own consent and sends no mutation when cons
 Neither listing nor selecting the latest row correlates an ambiguous Run receipt or one without a tracking ID.
 Offline credentials, concurrency, and HTTP runtime configuration do not establish real OBO/RBAC
 authorization. Live/recorded validation is unavailable without an explicitly approved fixture.
+
+## Schedule Creation
+
+`jobs_create-item-schedule` requires workspace/item UUIDs, job type, an explicit Boolean `enabled`,
+and configuration JSON; optional execution data is an opaque static object. Registered CLI/MCP
+tests reject missing, null, valueless, repeated, and invalid enabled inputs before authentication.
+System.CommandLine's implicit false Boolean default is removed for this command only.
+Every valid invocation sends exactly one POST, with no schedule-count preflight, job/type discovery,
+hidden List/Get, retry, parameter stripping, operation polling, or follow-up execution.
+
+The current public API and bundled common/platform schemas define Cron as an interval in minutes,
+not a cron expression. Tests exercise Daily/Weekly/Monthly fields and exact documented ranges,
+future configuration/occurrence/string-enum values, opaque extension fields, and case-sensitive
+execution-data keys. Input UTC bounds must be ordered; offset-less API examples are UTC, never
+machine-local. Timezone IDs are explicit and not looked up on the host. A past start time is valid
+and may execute immediately when enabled; descriptions/prompts require explaining this before
+the existing destructive/sensitive consent gate. No local calendar simulation is performed.
+
+Schedule JSON validation is shared with List through `FabricItemScheduleJson`, preserving List's
+existing optional-field and timestamp contracts. Create alone validates ordered UTC input bounds.
+The error-code reader extracted to `FabricCoreHttpHelpers.ReadErrorCodeAsync` retains cancellation's
+known-status/Retry-After semantics; all affected cancellation and schedule-list tests run alongside
+the new tests. No pagination infrastructure or existing read contract is changed.
+
+The 201 result contains a typed schedule; an unusable 201 body reports confirmed creation but
+unavailable metadata. Lost confirmation remains uncertain, never an instruction to resubmit.
+Location/operation headers are not used. Response/error bodies have the existing 1 MiB budget;
+input JSON has a 32-level and response JSON a 64-level bound. Error metadata is optional and cannot
+replace a known failure status. Tests cover exact byte/depth thresholds, lazy Unicode decoding,
+read cancellation/failures, response disposal, independent identities, and schema/output paths.
+Retained schedule output is serialized to a null stream with a 60-level limit inside the confirmed
+201 boundary, reserving four levels for result/routing/protocol envelopes. Routed regressions cover
+60/61/64-level configuration, owner, and execution data in every output mode and transport, including
+serialization and parsing of the JSON-RPC envelope. Excess depth returns confirmed-creation and
+do-not-resubmit guidance rather than a late, ambiguous serializer failure. List's limits are unchanged.
+No live schedule, resource provisioning, recorded playback, or real OBO/RBAC validation is performed.
 
 ## Schedule Listing
 

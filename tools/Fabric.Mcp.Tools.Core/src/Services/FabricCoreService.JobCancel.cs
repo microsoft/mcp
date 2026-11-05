@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Text.Json;
 using Fabric.Mcp.Tools.Core.Models;
 
 namespace Fabric.Mcp.Tools.Core.Services;
@@ -45,50 +44,7 @@ public partial class FabricCoreService
             throw new ItemJobInstanceCancelRequestException(HttpStatusCode.BadGateway, retryAfter);
         }
 
-        var (errorCode, unavailable) = await ReadJobCancellationErrorCodeAsync(response, cancellationToken);
+        var (errorCode, unavailable) = await FabricCoreHttpHelpers.ReadErrorCodeAsync(response, cancellationToken);
         throw new ItemJobInstanceCancelRequestException(response.StatusCode, retryAfter, errorCode, unavailable);
-    }
-
-    private static async Task<(string? Code, bool Unavailable)> ReadJobCancellationErrorCodeAsync(
-        HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (!string.Equals(response.Content.Headers.ContentType?.MediaType, "application/json", StringComparison.OrdinalIgnoreCase))
-            {
-                return (null, true);
-            }
-            var body = await FabricResponseBodyReader.ReadAsync(
-                response, FabricResponseBodyReader.DefaultMaxJsonBytes,
-                static () => new JsonException("Fabric cancellation error metadata exceeds the 1 MiB limit."),
-                cancellationToken);
-            using var document = JsonDocument.Parse(body);
-            if (document.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                try
-                {
-                    // Ambiguous duplicate codes must not turn a generic error into JobAlreadyCompleted.
-                    var codes = document.RootElement.EnumerateObject().Where(static property => property.NameEquals("errorCode")).ToArray();
-                    if (codes is [{ Value.ValueKind: JsonValueKind.String }] &&
-                        codes[0].Value.GetString() is { } code && FabricCoreHttpHelpers.IsSafeErrorCode(code))
-                    {
-                        return (code, false);
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    // JsonDocument decodes escaped UTF-16 lazily in names and string values.
-                    // Limit this catch to JSON inspection, not unrelated response-reader failures.
-                    return (null, true);
-                }
-            }
-            return (null, true);
-        }
-        catch (Exception ex) when (ex is JsonException or IOException or HttpRequestException or OperationCanceledException)
-        {
-            // Preserve the known HTTP failure and retry guidance even if optional metadata cannot
-            // be read. The command explicitly reports its absence without exposing backend content.
-            return (null, true);
-        }
     }
 }

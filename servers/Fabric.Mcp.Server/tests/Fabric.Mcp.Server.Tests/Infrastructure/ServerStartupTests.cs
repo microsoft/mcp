@@ -266,6 +266,7 @@ public class ServerStartupTests
         Assert.DoesNotContain("core_get-item-job-instance", names);
         var expectedJobs = namespaces != "core";
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_cancel-item-job-instance"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_create-item-schedule"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-schedules"));
@@ -284,6 +285,17 @@ public class ServerStartupTests
         {
             if (!readOnly)
             {
+                var create = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_create-item-schedule");
+                Assert.False(create.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(create.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(create.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "workspace-id"],
+                    create.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var createOptions = create.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "workspace-id"],
+                    createOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", createOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(createOptions.GetProperty("enabled").TryGetProperty("default", out _));
                 var cancel = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_cancel-item-job-instance");
                 Assert.False(cancel.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
                 Assert.True(cancel.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
