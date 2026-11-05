@@ -265,9 +265,11 @@ public class ServerStartupTests
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
         Assert.DoesNotContain("core_get-item-job-instance", names);
         Assert.DoesNotContain("core_get-item-schedule", names);
+        Assert.DoesNotContain("core_delete-item-schedule", names);
         var expectedJobs = namespaces != "core";
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_cancel-item-job-instance"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_create-item-schedule"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_delete-item-schedule"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-schedule"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
@@ -288,6 +290,16 @@ public class ServerStartupTests
         {
             if (!readOnly)
             {
+                var delete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_delete-item-schedule");
+                Assert.False(delete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.False(delete.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+                Assert.Contains("Only HTTP 200 confirms deletion", delete.GetProperty("description").GetString());
                 var create = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_create-item-schedule");
                 Assert.False(create.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
                 Assert.False(create.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

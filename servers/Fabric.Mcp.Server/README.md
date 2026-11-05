@@ -350,17 +350,18 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
 items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
-or schedules, or reads, creates, or updates one schedule in separate calls. Each listing requires an explicit continuation
+or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
 token for each additional page. Schedule operations require an explicit job type.
-Schedule lookup and updates require a schedule ID; creation and updates also require explicit
-enabled/timing/timezone intent and full configuration. Schedule deletion is not implemented.
+Schedule lookup, updates, and deletion require a schedule ID; creation and updates also require explicit
+enabled/timing/timezone intent and full configuration. Deletion returns a receipt, not a schedule snapshot,
+and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
 # Core-only: item/definition tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
-# Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates.
+# Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
 fabmcp server start --mode all --namespace jobs
 
 # Item/definition work plus job and schedule operations: enable both areas.
@@ -373,13 +374,13 @@ fabmcp server start --mode single --namespace core --namespace jobs
 
 Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
 not the shared services needed by the selected area. In `all` mode, the tools are exposed directly as
-`jobs_cancel-item-job-instance`, `jobs_create-item-schedule`, `jobs_get-item-job-instance`, `jobs_get-item-schedule`,
+`jobs_cancel-item-job-instance`, `jobs_create-item-schedule`, `jobs_delete-item-schedule`, `jobs_get-item-job-instance`, `jobs_get-item-schedule`,
 `jobs_list-item-job-instances`, `jobs_list-item-schedules`, `jobs_run-on-demand-item-job`, and `jobs_update-item-schedule`.
 In `namespace` mode, call the `jobs`
 router with `learn=true` to obtain their schemas, then specify the command name and its `parameters`. In `single` mode,
 use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
 the commands for a selected area. Core-only selection never exposes or routes Jobs tools.
-Read-only mode hides and denies Run, Cancel, Create Schedule, and Update Schedule while retaining Get Job Instance,
+Read-only mode hides and denies Run, Cancel, Create Schedule, Update Schedule, and Delete Schedule while retaining Get Job Instance,
 Get Schedule, and both listing tools. Schedule lookup and listing retain the host's sensitive-data confirmation
 because their output may include configuration, owner information, and job execution data.
 
@@ -1100,6 +1101,7 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 |------|-------------|
 | `jobs_cancel-item-job-instance` | Requests cancellation of one known item job with one POST. Returns cancellation requested, not a Cancelled job state, with known IDs and validated guidance for a separate Get. Never automatically retries or polls. |
 | `jobs_create-item-schedule` | Creates one schedule with explicit enabled state, UTC bounds, time zone, configuration, and optional static execution data. Returns the created schedule, not job execution or success. No discovery, preflight, polling, or automatic retry. |
+| `jobs_delete-item-schedule` | Deletes one explicitly identified schedule with one DELETE and no body. HTTP 200 returns a deletion receipt, not a snapshot or job cancellation. No discovery, follow-up verification, polling, or automatic retry. |
 | `jobs_get-item-job-instance` | Reads one known item's job instance, including status, timing, safe failure metadata, and available retry guidance. Does not poll, run, cancel, or schedule jobs. |
 | `jobs_get-item-schedule` | Reads one schedule by explicit workspace/item/schedule IDs and job type, preserving available configuration, owner, and execution data after disclosure consent. Returns a snapshot, not job status or a mutation receipt. No discovery, enrichment, polling, or automatic retry. |
 | `jobs_list-item-job-instances` | Reads one complete page of an item's job snapshots, with safe failure metadata and an unchanged token for an explicitly requested next page. Does not fetch individual jobs or infer full history. |
@@ -1380,6 +1382,56 @@ Namespace mode calls `jobs` with `command="jobs_create-item-schedule"` and all o
 `parameters`; single mode calls `fabric` with `tool="jobs"` and the same command/parameters.
 Inline JSON options work in stdio and HTTP modes. All routes require the same consent and
 explicit intent, and none performs a follow-up job run.
+
+**Delete Item Schedule (`jobs_delete-item-schedule`)**
+
+Calls the [Delete Item Schedule API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/delete-item-schedule)
+with exactly one `DELETE /v1/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}`.
+Supply explicit nonempty `workspace-id`, `item-id`, and `schedule-id` UUIDs and the workload `job-type`.
+UUIDs are validated and normalized before authentication; job types are validated within the existing
+**1,024 UTF-8 byte** tool budget and encoded as one path component without discovery or defaults.
+There is **no request body**, configuration, enabled flag, execution data, or name lookup.
+
+The tool is destructive, requires MCP mutation consent, and is hidden and denied in read-only mode.
+Its idempotent hint describes deleting the same resource, not a guarantee of repeated success:
+**404 and other failures are never converted to confirmed deletion.** The caller needs appropriate
+Fabric permissions and delegated **`Item.ReadWrite.All` or the corresponding item-type
+`ReadWrite.All` scope**. This endpoint does not require the Create/Update combination of
+`Item.Execute.All` and `Item.ReadWrite.All`. Users, service principals, and managed identities reuse
+the host's existing authentication, subject to Fabric authorization.
+
+```powershell
+# Example only: use an explicitly authorized schedule. This does not cancel running jobs.
+fabmcp jobs delete-item-schedule --workspace-id <workspace-id> --item-id <item-id> --job-type DefaultJob --schedule-id <schedule-id>
+```
+
+**Only HTTP 200 confirms deletion.** The result is a receipt containing `deletionStatus: "Deleted"`,
+the requested `workspaceId`, `itemId`, `jobType`, `scheduleId`, and `guidance`; it does not fabricate a
+returned schedule snapshot. The documented empty body is sufficient. Success bodies, Location,
+operation headers, and late request cancellation do not erase confirmation or trigger another call.
+Unexpected 2xx responses, including 202 and 204, do not establish this endpoint's documented success.
+This synchronous API does not use the Fabric operation runner.
+
+Invalid inputs, failed authentication, and cancellation before sending do not send a DELETE.
+After a possible send with no confirmation, the outcome may be uncertain: inspect the target with
+Get or List Schedules **in a separate invocation** before considering another deletion; never retry
+blindly. A later snapshot does not prove which earlier request changed the schedule.
+HTTP failures retain their status, safe identifier-shaped error code when available, and valid
+Retry-After seconds/date guidance. Optional error JSON is bounded to **1 MiB**; malformed Unicode,
+oversized data, failed reads, and non-JSON bodies do not replace known status or retry guidance.
+Raw backend messages, nested details, and exception traces are not exposed.
+
+Deleting a schedule **does not cancel already-running jobs or promise rollback of completed work**.
+Job cancellation remains a separate tool and separate authorization. Canceling the MCP request
+does not undo a deletion. There is no hidden Get/List, verification, dependency operation, retry,
+polling, result retrieval, or job run/cancellation. Schedule IDs are not job-instance or operation IDs.
+
+In `all` mode, default responses expose the receipt under `results`; compact/duplicated output
+uses `structuredContent`. Namespace mode calls `jobs` with `command="jobs_delete-item-schedule"`
+and the four options in `parameters`; its structured payload is under `result`. Single mode calls
+`fabric` with `tool="jobs"` and the same command/parameters. Both stdio and HTTP use the same consent
+and read-only restrictions. Direct CLI execution does not itself use MCP elicitation; these examples
+and offline tests do not authorize a live deletion.
 
 **Update Item Schedule (`jobs_update-item-schedule`)**
 

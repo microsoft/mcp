@@ -112,7 +112,7 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 
 `FabricCoreCommand` replaces raw parser failures with fixed guidance and reports missing options only when their names exactly match registered required options. Get Workspace, List Items, and List Workspaces tests exercise real option binding with private invalid Boolean values and unknown options, verify sanitized public responses, and assert that the service is not called. Create Item and Catalog Search retain their command-specific validation guidance.
 
-`FabricCoreService.SendFabricHttpRequestAsync` performs one authenticated send and returns the response to its caller. The caller owns disposal, status handling, and deserialization. Its default completion option is `ResponseContentRead`; operations that explicitly need headers first can select `ResponseHeadersRead`. Catalog Search keeps its legacy stream wrapper and error behavior. Create Item uses `ResponseHeadersRead` and the shared LRO dispatcher.
+`FabricCoreService.SendFabricHttpRequestAsync` performs one authenticated send and returns the response to its caller. The caller owns disposal, status handling, and deserialization. Its default completion option is `ResponseContentRead`; operations that explicitly need headers first can select `ResponseHeadersRead`. Its optional `onSending` callback runs only after authentication, request construction, and the final pre-send cancellation check, letting a mutation distinguish unsent requests from possible sends without adding another authentication path. Catalog Search keeps its legacy stream wrapper and error behavior. Create Item uses `ResponseHeadersRead` and the shared LRO dispatcher.
 
 `FabricCoreHttpHelpers.GetRetryAfter` returns a single valid nonnegative delta or HTTP date, or `null` for a missing, malformed, or multiple-valued header. It does not interpret status codes, retry, format messages, or treat backend response text as safe output. Keep tool-specific exception types, integer bounds, date support, and uncertain-mutation outcomes in the owning operation/command.
 
@@ -158,6 +158,34 @@ Real host startup tests verify discovery and annotations over stdio/HTTP; substi
 credentials test per-call isolation, not real OBO/RBAC. No live target or cancellation authorization
 was supplied. Live Fabric, recordings/playback, and real OBO/RBAC validation were **not** run;
 the tests never start or cancel real jobs or discover fixtures.
+
+## Schedule Deletion
+
+`jobs_delete-item-schedule` requires explicit workspace/item/schedule UUIDs and a job type. It sends
+one authenticated DELETE without a body, lookup, preflight, verification, polling, retry, or job
+execution/cancellation. Only HTTP 200 returns `deletionStatus: "Deleted"` with the requested context,
+not a returned snapshot. Empty success and an unreadable irrelevant body are both valid; Location
+and operation headers are ignored. Late cancellation does not erase confirmed deletion.
+Deleting a schedule does not cancel running jobs or promise rollback. Cancellation is separately authorized.
+
+`Commands/ItemScheduleDeleteCommandTests.cs` covers binding, metadata, source-generated receipts,
+safe errors/logging, and distinct invalid/not-sent/uncertain/confirmed outcomes.
+`Services/ItemScheduleDeleteServiceTests.cs` covers the exact method/path and absence of a body, escaping and
+UUID normalization, exact 1,024-byte UTF-8 job-type bounds, zero-call invalid/auth/cancellation paths,
+single-call success/failure/unknown outcomes, disposal, and concurrent caller isolation. Repeated
+deletion returning 404 remains a failure. Optional error metadata retains status and Retry-After
+through malformed Unicode, exact 1 MiB boundaries, and failed/canceled reads; it never exposes raw
+backend messages or follows retry hints.
+`ItemScheduleDeleteMcpTests.cs` covers all/namespace/single routes, stdio/HTTP configurations, output
+modes, namespace selection, input/output schemas, mutation consent, read-only catalogs and invocation
+denial, and late cancellation. Host startup tests discover the real registered tool without calling Fabric.
+Existing Core, Jobs, and operation/definition tests cover the unchanged shared authenticated sender.
+
+The idempotent hint describes repeated effects on the same target, not guaranteed success or a retry
+policy. Delegated deletion needs `Item.ReadWrite.All` or its item-specific equivalent, not the
+Create/Update execution-scope combination. Offline credentials do not establish real OBO/RBAC behavior.
+No live schedule fixture or mutation authorization was supplied. Live Fabric, recordings/playback,
+real OBO/RBAC, and resource deployment were not run.
 
 ## Job-instance Lookup
 

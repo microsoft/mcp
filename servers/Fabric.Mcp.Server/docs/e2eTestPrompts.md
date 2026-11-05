@@ -66,7 +66,15 @@ rollback, or infer success/failure from JobAlreadyCompleted. After uncertain can
 job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
 metadata does not undo acceptance or require a Location-derived ID.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates alone,
+Schedule deletion requires explicit workspace/item/schedule UUIDs, a job type, and separate mutation
+authorization. Send one DELETE without a body; only HTTP 200 confirms deletion, returning the requested
+context rather than a schedule snapshot. Never treat 404 as success, retry automatically, perform a
+hidden verification read, follow response URLs, or cancel running jobs. Deletion does not promise
+rollback; cancellation remains a separate tool and separate authorization. These prompts are not
+permission to discover or delete live schedules. After an uncertain send, inspect separately before
+considering another deletion; do not retry blindly.
+
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -162,6 +170,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_create-item-schedule | Create one schedule using my supplied Daily, Weekly, or Monthly configuration and static execution-data JSON. Preserve extensible fields and opaque values. Do not preflight the schedule count, strip fields, retry, poll, or run the job separately. | context-required |
 | jobs_create-item-schedule | In the jobs namespace router, create the approved schedule with explicit workspace-id, item-id, job-type, enabled, and configuration in parameters. Return creation, not execution; do not pass its schedule ID to a job-instance or operation tool. | context-required |
 | jobs_create-item-schedule | If this approved creation receives HTTP 201 but its metadata cannot be read, report confirmed creation with unavailable metadata. If confirmation is lost to a timeout, report uncertainty. Never resubmit blindly or automatically delete another schedule after ScheduleExceedsLimit. | context-required |
+| jobs_delete-item-schedule | Delete schedule eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee for job type DefaultJob on item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Explain that running jobs are not canceled, obtain consent, and send one DELETE without a body. | none |
+| jobs_delete-item-schedule | Delete only the explicitly authorized schedule using my supplied workspace/item/schedule IDs and job type. Return the HTTP 200 deletion receipt with those IDs, not a fabricated snapshot. Do not fetch settings, run/cancel jobs, or verify with another request. | context-required |
+| jobs_delete-item-schedule | In the jobs namespace router, delete the approved schedule with workspace-id, item-id, job-type, and schedule-id in parameters. Do not ask for configuration, enabled, or execution-data. Do not use the schedule ID as a job-instance or operation ID. | context-required |
+| jobs_delete-item-schedule | If deletion returns 404, report the failure rather than claiming success. If it is throttled, preserve valid Retry-After guidance and safe error codes even when optional error JSON is unreadable. Never retry automatically. | context-required |
+| jobs_delete-item-schedule | If the authorized DELETE times out after sending, report an uncertain outcome and suggest a separate schedule lookup before any further deletion. If HTTP 200 already arrived, retain confirmed deletion despite late cancellation or irrelevant body data. | context-required |
 | jobs_get-item-job-instance | Read job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa once, without polling. | none |
 | jobs_get-item-job-instance | Show the status, invocation type, and available start and end times for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch job results. | none |
 | jobs_get-item-job-instance | Get safe failure metadata and any Retry-After guidance for job instance cccccccc-cccc-4ccc-8ccc-cccccccccccc of item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not start, retry, cancel, or schedule a job. | none |
