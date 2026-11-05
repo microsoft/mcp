@@ -3,7 +3,6 @@
 
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Advisor.Commands.ServiceGroupIntelligence;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Services;
@@ -24,8 +23,9 @@ public class ServiceGroupIntelligenceGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<int>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new ResourceQueryResults<AdvisorServiceGroupStatus>([], false));
+            .Returns(new AdvisorQueryPage<AdvisorServiceGroupStatus>([], false));
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -74,7 +74,7 @@ public class ServiceGroupIntelligenceGetCommandTests
         Assert.Contains("weighted by recommendation-type priority",
             result.GetProperty("statusCalculationExplanation").GetString());
         await Service.Received(1).GetStatusAsync(
-            null, null, null, 50, null, Arg.Any<CancellationToken>());
+            null, null, null, 50, null, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class ServiceGroupIntelligenceGetCommandTests
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).GetStatusAsync(
-            "commerce", "MissionCritical", "At Risk", 7, "tenant1", Arg.Any<CancellationToken>());
+            "commerce", "MissionCritical", "At Risk", 7, "tenant1", null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class ServiceGroupIntelligenceGetCommandTests
     {
         Service.GetStatusAsync(
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<int>(),
-            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException(
                 "Multiple tenants are accessible, so the tenant to query cannot be inferred. Specify the tenant explicitly."));
 
@@ -107,5 +107,26 @@ public class ServiceGroupIntelligenceGetCommandTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Specify the tenant explicitly", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsContinuationAndSerializesNextPage()
+    {
+        Service.GetStatusAsync(null, null, null, 7, null, "previous+/=", Arg.Any<CancellationToken>())
+            .Returns(new AdvisorQueryPage<AdvisorServiceGroupStatus>([], true, "next+/="));
+        var response = await ExecuteCommandAsync("--top", "7", "--continuation-token", "previous+/=");
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(response.Results));
+        Assert.True(document.RootElement.GetProperty("areResultsTruncated").GetBoolean());
+        Assert.Equal("next+/=", document.RootElement.GetProperty("continuationToken").GetString());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("bad\r\n")]
+    public async Task ExecuteAsync_RejectsInvalidContinuation(string token)
+    {
+        var response = await ExecuteCommandAsync("--continuation-token", token);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

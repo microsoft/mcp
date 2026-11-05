@@ -60,6 +60,10 @@ public sealed class RecommendationMetadataListCommand(
         ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        if (!AdvisorPagination.IsValid(options.ContinuationToken))
+        {
+            validationResult.Errors.Add(AdvisorPagination.Error);
+        }
 
         if (!TryNormalizeLanguage(options.Language, out _))
         {
@@ -122,7 +126,10 @@ public sealed class RecommendationMetadataListCommand(
                 SubCategory: NormalizeOptionalFilter(options.SubCategory),
                 TrackingIds: NormalizeTrackingIds(options.TrackingId),
                 RetirementDateOperator: retirementDateOperator,
-                RetirementDate: retirementDate);
+                RetirementDate: retirementDate)
+            {
+                ContinuationToken = options.ContinuationToken,
+            };
 
             var metadata = await _advisorService.ListRecommendationMetadataAsync(
                 language,
@@ -130,7 +137,7 @@ public sealed class RecommendationMetadataListCommand(
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(metadata.Results, metadata.AreResultsTruncated),
+                new(metadata.Results, metadata.AreResultsTruncated, metadata.ContinuationToken),
                 AdvisorJsonContext.Default.RecommendationMetadataListResult);
         }
         catch (Exception ex)
@@ -202,5 +209,6 @@ public sealed class RecommendationMetadataListCommand(
 
     public sealed record RecommendationMetadataListResult(
         List<Models.RecommendationMetadata> Metadata,
-        bool AreResultsTruncated);
+        bool AreResultsTruncated,
+        string? ContinuationToken = null);
 }
