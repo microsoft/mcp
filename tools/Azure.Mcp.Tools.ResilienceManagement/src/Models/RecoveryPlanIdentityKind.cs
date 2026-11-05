@@ -7,5 +7,6 @@ public enum RecoveryPlanIdentityKind
 {
     SystemAssigned,
     UserAssigned,
-    SystemAndUserAssigned
+    SystemAndUserAssigned,
+    None
 }

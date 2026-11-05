@@ -104,7 +104,7 @@
             }
         },
         "DataBuildToolJobPublicDefinition" : {
-            "description": "The DataBuildToolJob public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/data-build-tool-job-definition) for more details on the structure of the DataBuildToolJob definition.",
+            "description": "The DataBuildToolJob public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/dbtjob-definition) for more details on the structure of the DataBuildToolJob definition.",
             "type": "object",
             "required": ["parts"],
             "properties": {
@@ -120,7 +120,7 @@
                         "values": [
                             {
                             "value": "DataBuildToolJobV1",
-                            "description": "The format for DataBuildToolJob definitions, designed to support CI/CD scenarios in Fabric. See [DataBuildToolJob - DataBuildToolJobV1 specification](/rest/api/fabric/articles/item-management/definitions/data-build-tool-job-definition) for more details."
+                            "description": "The format for DataBuildToolJob definitions, designed to support CI/CD scenarios in Fabric. See [DataBuildToolJob - DataBuildToolJobV1 specification](/rest/api/fabric/articles/item-management/definitions/dbtjob-definition) for more details."
                             }
                         ]
                     },

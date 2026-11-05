@@ -9,4 +9,6 @@ public sealed record RecoveryPlanGroupActionInput(
     string? Description,
     int TimeoutInMinutes,
     string? ActionResourceId,
-    IReadOnlyDictionary<string, string>? Parameters);
+    IReadOnlyDictionary<string, string>? Parameters,
+    string? AssociatedIdentityType = null,
+    string? AssociatedUserAssignedIdentity = null);

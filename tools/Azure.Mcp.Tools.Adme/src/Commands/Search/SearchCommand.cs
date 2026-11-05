@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Options.Search;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Adme.Commands.Search;
@@ -31,7 +32,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
     ReadOnly = true,
     LocalRequired = false,
     Secret = false)]
-public sealed class SearchCommand(ISearchService searchService)
+public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchService searchService)
     : AuthenticatedCommand<SearchOptions, SearchResponse>
 {
     private readonly ISearchService _searchService = searchService;
@@ -39,7 +40,7 @@ public sealed class SearchCommand(ISearchService searchService)
     public override void ValidateOptions(SearchOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        AdmeServiceValidator.ValidateTarget(options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
+        AdmeServiceValidator.ValidateTarget(endpointValidator, options.Endpoint, options.DataPartition, options.AuthAppId, validationResult);
         AdmeServiceValidator.ValidateSearch(
             options.Kind, options.Limit, options.Sort, options.SpatialFilter, validationResult, options.Offset);
 

@@ -56,7 +56,7 @@ public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeS
 
         if (!string.IsNullOrWhiteSpace(options.LocalFilePath) && !System.IO.File.Exists(options.LocalFilePath))
         {
-            validationResult.Errors.Add($"Local file not found: {options.LocalFilePath}");
+            validationResult.AddError($"Local file not found: {options.LocalFilePath}", "Local file not found.");
         }
     }
 

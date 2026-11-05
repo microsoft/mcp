@@ -15,11 +15,12 @@ namespace Azure.Mcp.Tools.NetAppFiles.Tests.Account;
 
 public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGetCommand, INetAppFilesAccountService>
 {
-    private static readonly NetAppFilesAccount ExistingAccount = new(
+    private static readonly IReadOnlyList<NetAppFilesAccount> ExistingAccount = [new(
         "account1",
         "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.NetApp/netAppAccounts/account1",
         "eastus",
-        "Succeeded");
+        null,
+        "Succeeded")];
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -34,9 +35,9 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
     public async Task ExecuteAsync_GetsAccount()
     {
         Service.GetAccountAsync(
-            "account1",
             "rg",
             "sub",
+            "account1",
             "tenant",
             Arg.Any<CancellationToken>())
             .Returns(ExistingAccount);
@@ -50,7 +51,7 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
         var result = ValidateAndDeserializeResponse(
             response,
             NetAppFilesJsonContext.Default.AccountGetResult);
-        Assert.Equal(ExistingAccount, result.Account);
+        Assert.Equal(ExistingAccount, result.Accounts);
     }
 
     [Theory]
@@ -83,7 +84,6 @@ public class AccountGetCommandTests : SubscriptionCommandUnitTestsBase<AccountGe
     }
 
     [Theory]
-    [InlineData("--resource-group rg --subscription sub")]
     [InlineData("--account account1 --subscription sub")]
     [InlineData("--account account1 --resource-group rg")]
     public async Task ExecuteAsync_MissingRequiredOption_ReturnsBadRequest(string args)

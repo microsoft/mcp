@@ -12,19 +12,9 @@ public sealed record GoalResourceInfo(
     [property: JsonPropertyName("systemData")] GoalResourceInfoSystemData? SystemData = null);
 
 public sealed record GoalResourceInfoProperties(
-    [property: JsonPropertyName("disasterRecoveryAttestationStatus")] string DisasterRecoveryAttestationStatus,
-    [property: JsonPropertyName("disasterRecoveryGoalParticipation")] string DisasterRecoveryGoalParticipation,
-    [property: JsonPropertyName("exclusionReasonForDisasterRecoveryGoals")] string ExclusionReasonForDisasterRecoveryGoals,
-    [property: JsonPropertyName("exclusionReasonForHighAvailabilityGoals")] string ExclusionReasonForHighAvailabilityGoals,
-    [property: JsonPropertyName("highAvailabilityAttestationStatus")] string HighAvailabilityAttestationStatus,
-    [property: JsonPropertyName("highAvailabilityGoalParticipation")] string HighAvailabilityGoalParticipation,
     [property: JsonPropertyName("provisioningState")] string ProvisioningState,
     [property: JsonPropertyName("resourceArmId")] string ResourceArmId,
-    [property: JsonPropertyName("serviceGroupMemberships")] IReadOnlyList<GoalResourceServiceGroupMembership>? ServiceGroupMemberships = null);
-
-public sealed record GoalResourceServiceGroupMembership(
-    [property: JsonPropertyName("membershipType")] string MembershipType,
-    [property: JsonPropertyName("serviceGroupId")] string ServiceGroupId);
+    [property: JsonPropertyName("zonalResiliency")] GoalResourceResiliencyInfo? ZonalResiliency = null);
 
 public sealed record GoalResourceInfoSystemData(
     [property: JsonPropertyName("createdAt")] string CreatedAt,

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Fabric.Mcp.Tools.Core.Models;
@@ -8,16 +9,76 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(AssignWorkspaceToCapacityRequest))]
+[JsonSerializable(typeof(CapacityGetCommandResult))]
+[JsonSerializable(typeof(CapacityListCommandResult))]
+[JsonSerializable(typeof(CapacityListResponse))]
 [JsonSerializable(typeof(FabricItem))]
+[JsonSerializable(typeof(FabricItemDefinition))]
+[JsonSerializable(typeof(FabricItemDefinitionPart))]
+[JsonSerializable(typeof(FabricItemDefinitionResponse))]
+[JsonSerializable(typeof(FabricSensitivityLabelSettings))]
 [JsonSerializable(typeof(CreateItemRequest))]
 [JsonSerializable(typeof(ItemCreateCommandResult))]
+[JsonSerializable(typeof(ItemDefinitionUpdateCommandResult))]
+[JsonSerializable(typeof(UpdateItemDefinitionRequest))]
+[JsonSerializable(typeof(ItemDeleteCommandResult))]
+[JsonSerializable(typeof(ItemDefinitionGetCommandResult))]
+[JsonSerializable(typeof(FabricItemMetadata))]
+[JsonSerializable(typeof(ItemGetCommandResult))]
+[JsonSerializable(typeof(FabricItemJobInstance))]
+[JsonSerializable(typeof(FabricJobFailure))]
+[JsonSerializable(typeof(ItemJobInstanceCancelCommandResult))]
+[JsonSerializable(typeof(ItemJobInstanceGetCommandResult))]
+[JsonSerializable(typeof(ItemJobInstanceListCommandResult))]
+[JsonSerializable(typeof(ItemJobRunCommandResult))]
+[JsonSerializable(typeof(ItemJobRunRequest))]
+[JsonSerializable(typeof(FabricItemSchedule))]
+[JsonSerializable(typeof(ItemScheduleCreateCommandResult))]
+[JsonSerializable(typeof(ItemScheduleCreateRequest))]
+[JsonSerializable(typeof(ItemScheduleDeleteCommandResult))]
+[JsonSerializable(typeof(ItemScheduleGetCommandResult))]
+[JsonSerializable(typeof(ItemScheduleListCommandResult))]
+[JsonSerializable(typeof(ItemScheduleUpdateCommandResult))]
+[JsonSerializable(typeof(FabricItemSensitivityLabel))]
+[JsonSerializable(typeof(FabricItemSummary))]
+[JsonSerializable(typeof(FabricItemTag))]
+[JsonSerializable(typeof(ItemListCommandResult))]
+[JsonSerializable(typeof(ItemListResponse))]
 [JsonSerializable(typeof(CatalogSearchRequest))]
 [JsonSerializable(typeof(CatalogSearchResponse))]
 [JsonSerializable(typeof(CatalogSearchCommandResult))]
+[JsonSerializable(typeof(FabricCapacityMetadata))]
+[JsonSerializable(typeof(FabricWorkspaceAppliedTag))]
+[JsonSerializable(typeof(FabricWorkspaceIdentity))]
+[JsonSerializable(typeof(FabricWorkspaceMetadata))]
+[JsonSerializable(typeof(FabricWorkspaceOneLakeEndpoints))]
+[JsonSerializable(typeof(WorkspaceGetCommandResult))]
+[JsonSerializable(typeof(FabricWorkspaceListEntry))]
+[JsonSerializable(typeof(FabricWorkspaceListTag))]
+[JsonSerializable(typeof(WorkspaceListCommandResult))]
+[JsonSerializable(typeof(WorkspaceListResponse))]
+[JsonSerializable(typeof(CreatedWorkspaceMetadata))]
+[JsonSerializable(typeof(CreatedWorkspaceTag))]
+[JsonSerializable(typeof(CreateWorkspaceRequest))]
+[JsonSerializable(typeof(WorkspaceCreateResult))]
+[JsonSerializable(typeof(UpdateWorkspaceRequest))]
+[JsonSerializable(typeof(WorkspaceUpdateCommandResult))]
+[JsonSerializable(typeof(WorkspaceUpdateResponse))]
+[JsonSerializable(typeof(ItemUpdateCommandResult))]
+[JsonSerializable(typeof(ItemUpdateMetadata))]
+[JsonSerializable(typeof(UpdateItemRequest))]
+[JsonSerializable(typeof(WorkspaceDeleteCommandResult))]
+[JsonSerializable(typeof(WorkspaceAssignToCapacityCommandResult))]
+[JsonSerializable(typeof(FabricOperationError))]
+[JsonSerializable(typeof(FabricOperationIssue))]
+[JsonSerializable(typeof(FabricOperationReceipt))]
+[JsonSerializable(typeof(FabricOperationState))]
+[JsonSerializable(typeof(OperationStateResult))]
+[JsonSerializable(typeof(OperationResult))]
+[JsonSerializable(typeof(JsonElement))]
 public partial class CoreJsonContext : JsonSerializerContext
 {
 }
-
-public sealed record ItemCreateCommandResult(FabricItem Item);
 
 public sealed record CatalogSearchCommandResult(CatalogSearchResponse Results);

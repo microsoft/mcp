@@ -1,0 +1,86 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Surge protection data types"
+    },
+    "paths": {},
+    "definitions": {
+        "CapacitySurgeProtection": {
+            "type": "object",
+            "description": "Represents the surge protection configuration for a capacity. A capacity with no configured surge protection is represented by `state` set to `Disabled` with the threshold properties omitted.",
+            "properties": {
+                "state": {
+                    "$ref": "#/definitions/SurgeProtectionState",
+                    "description": "The state of surge protection for background operations on the capacity. Additional SurgeProtectionState values may be added over time.",
+                    "readOnly": false
+                },
+                "rejectionThreshold": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The 24-hour background utilization percentage at which background operations are rejected. Present only when `state` is `Enabled`. Valid range: 15-100.",
+                    "minimum": 15,
+                    "maximum": 100,
+                    "readOnly": false
+                },
+                "recoveryThreshold": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The 24-hour background utilization percentage at which surge protection deactivates. Present only when `state` is `Enabled`. Must be greater than 5 and strictly less than `rejectionThreshold`.",
+                    "minimum": 6,
+                    "maximum": 99,
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateCapacitySurgeProtectionRequest": {
+            "type": "object",
+            "description": "The request payload for updating a capacity's surge protection configuration. Omitting a property leaves it unchanged. When `state` transitions from `Disabled` to `Enabled` on an unconfigured capacity, both `rejectionThreshold` and `recoveryThreshold` must be provided in the same request. When `state` is set to `Disabled`, the persisted threshold values are cleared.",
+            "properties": {
+                "state": {
+                    "$ref": "#/definitions/SurgeProtectionState",
+                    "description": "Set to `Enabled` to enable surge protection or `Disabled` to disable it and clear the persisted threshold values. Additional `SurgeProtectionState` values may be added over time.",
+                    "readOnly": false
+                },
+                "rejectionThreshold": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The 24-hour background utilization percentage at which background operations are rejected. Valid range: 15-100.",
+                    "minimum": 15,
+                    "maximum": 100,
+                    "readOnly": false
+                },
+                "recoveryThreshold": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "The 24-hour background utilization percentage at which surge protection deactivates. Must be greater than 5 and strictly less than `rejectionThreshold`.",
+                    "minimum": 6,
+                    "maximum": 99,
+                    "readOnly": false
+                }
+            }
+        },
+        "SurgeProtectionState": {
+            "type": "string",
+            "description": "The state of surge protection on a capacity. Additional `SurgeProtectionState` values may be added over time.",
+            "enum": [
+                "Enabled",
+                "Disabled"
+            ],
+            "x-ms-enum": {
+                "name": "SurgeProtectionState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Surge protection is enabled and the configured thresholds are enforced."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Surge protection is disabled and no thresholds are enforced."
+                    }
+                ]
+            }
+        }
+    }
+}

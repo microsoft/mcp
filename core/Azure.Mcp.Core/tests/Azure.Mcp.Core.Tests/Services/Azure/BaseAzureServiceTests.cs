@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
+using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Helpers;
+using Azure.Mcp.Tests.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Options;
@@ -36,6 +39,8 @@ public class BaseAzureServiceTests
             Arg.Any<CancellationToken>())
             .Returns(Substitute.For<TokenCredential>());
         _azureService.GetClient().Returns(_ => new HttpClient(new HttpClientHandler()));
+        AzureServiceTestHelpers.ConfigureArmClientOptions(
+            _azureService, _azureService.GetClient(), cloudConfig.ArmEnvironment);
     }
 
     [Fact]
@@ -47,18 +52,67 @@ public class BaseAzureServiceTests
 
         _azureService.GetTenantId(tenantName2, Arg.Any<CancellationToken>()).Returns(tenantId2);
 
-        var client = await _testAzureService.GetArmClientAsync(TenantName);
-        var client2 = await _testAzureService.GetArmClientAsync(TenantName);
+        var client = await _testAzureService.GetArmClientAsync(TenantName, TestContext.Current.CancellationToken);
+        var client2 = await _testAzureService.GetArmClientAsync(TenantName, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(client, client2);
 
-        var otherClient = await _testAzureService.GetArmClientAsync(tenantName2);
+        var otherClient = await _testAzureService.GetArmClientAsync(tenantName2, TestContext.Current.CancellationToken);
 
         Assert.NotEqual(client, otherClient);
 
         // Not tested: we'd like to, but can't, verify the TokenCredential is reused
         // between client and client2 but NOT with otherClient. ArmClient doesn't expose
         // the credential nor the HttpPipeline the credential is included within.
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CredentialAcquisition_PreservesExceptions(bool createArmClient)
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        _azureService.ResolveTenantIdAsync(null, Arg.Any<CancellationToken>()).Returns((string?)null);
+        Exception[] expectedExceptions =
+        [
+            new CredentialUnavailableException("Credentials unavailable."),
+            new AuthenticationFailedException("Authentication failed."),
+            new RequestFailedException(403, "Access denied.", "AuthorizationFailed", null),
+            new HttpRequestException("Service unavailable.", null, HttpStatusCode.ServiceUnavailable),
+            new OperationCanceledException(cancellationToken),
+            new TaskCanceledException("Request canceled."),
+            new IOException("Unexpected I/O failure.")
+        ];
+
+        Func<Task> operation = createArmClient
+            ? () => _testAzureService.GetArmClientAsync(cancellationToken: cancellationToken)
+            : () => _testAzureService.GetCredentialPublicAsync(cancellationToken);
+
+        foreach (var expected in expectedExceptions)
+        {
+            _azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+                .Returns(Task.FromException<TokenCredential>(expected));
+
+            var actual = await Assert.ThrowsAnyAsync<Exception>(operation);
+
+            Assert.Same(expected, actual);
+        }
+
+        await _azureService.Received(expectedExceptions.Length)
+            .GetTokenCredentialAsync(null, cancellationToken);
+    }
+
+    [Fact]
+    public async Task CreateArmClientAsync_PreservesConfigurationExceptions()
+    {
+        var expected = new RequestFailedException(403, "Access denied.", "AuthorizationFailed", null);
+        _azureService.When(service => service.ConfigureArmClientOptions(Arg.Any<ArmClientOptions>()))
+            .Do(_ => throw expected);
+
+        var actual = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _testAzureService.GetArmClientAsync(cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Same(expected, actual);
     }
 
     [Fact]
@@ -281,8 +335,11 @@ public class BaseAzureServiceTests
 
     private sealed class TestAzureService(IAzureService azureService) : BaseAzureService(azureService)
     {
-        public Task<ArmClient> GetArmClientAsync(string? tenant = null) =>
-            CreateArmClientAsync(tenant);
+        public Task<ArmClient> GetArmClientAsync(string? tenant = null, CancellationToken cancellationToken = default) =>
+            CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+
+        public Task<TokenCredential> GetCredentialPublicAsync(CancellationToken cancellationToken) =>
+            GetCredential(null, cancellationToken);
 
         public Task<AccessToken> GetArmAccessTokenPublicAsync(CancellationToken cancellationToken) =>
             GetArmAccessTokenAsync(null, cancellationToken);

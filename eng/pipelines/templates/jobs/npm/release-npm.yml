@@ -48,7 +48,7 @@ jobs:
             PathToArtifacts: $(Pipeline.Workspace)/drop
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
-        - task: ESRPRelease@12
+        - task: ESRPRelease@14
           displayName: Publish platform packages to npmjs.com
           inputs:
             ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -63,9 +63,9 @@ jobs:
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-            MainPublisher: 'ESRPRELPACMANTEST'
+            MainPublisher: 'ESRPRELPACMAN'
             ProductState: latest
-        - task: ESRPRelease@12
+        - task: ESRPRelease@14
           displayName: Publish wrapper package to npmjs.com
           inputs:
             ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -80,10 +80,10 @@ jobs:
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-            MainPublisher: 'ESRPRELPACMANTEST'
+            MainPublisher: 'ESRPRELPACMAN'
             ProductState: latest
         - ${{ if eq(parameters.IncludeNative, true) }}:
-          - task: ESRPRelease@12
+          - task: ESRPRelease@14
             displayName: Publish native platform packages to npmjs.com
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -98,9 +98,9 @@ jobs:
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-              MainPublisher: 'ESRPRELPACMANTEST'
+              MainPublisher: 'ESRPRELPACMAN'
               ProductState: latest
-          - task: ESRPRelease@12
+          - task: ESRPRelease@14
             displayName: Publish native wrapper package to npmjs.com
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -115,5 +115,5 @@ jobs:
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-              MainPublisher: 'ESRPRELPACMANTEST'
+              MainPublisher: 'ESRPRELPACMAN'
               ProductState: latest

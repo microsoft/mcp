@@ -6,13 +6,16 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Account;
 
-public class AccountCreateOptions : ISubscriptionOption
+public sealed class AccountCreateOptions : ISubscriptionOption
 {
     [Option(Description = "The name of the Azure NetApp Files account to create. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
     public required string Account { get; set; }
 
     [Option(Description = "The Azure region where the Azure NetApp Files account will be created (for example, 'eastus' or 'westus2').")]
     public required string Location { get; set; }
+
+    [Option(Description = "Resource tags as a JSON key-value object. Providing an empty object removes all tags.")]
+    public string? Tags { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

@@ -4,6 +4,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Search.Commands;
@@ -28,6 +29,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "search";
     private const string SearchServicesCacheKey = "services";
+    private const string KnowledgeSourceTypesCacheKey = "knowledge-source-types";
+    private const int MaxConcurrentKnowledgeSourceLookups = 5;
     private static readonly TimeSpan s_cacheDurationServices = CacheDurations.ServiceData;
     private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
 
@@ -94,7 +97,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
     public async Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
         string? indexName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
@@ -220,6 +223,7 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
+        bool? includeReferenceSourceData = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
@@ -236,9 +240,36 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
         clientOptions.Audience = GetSearchAudience();
 
+        // SearchIndexClient manages service-level resources and knowledge-base metadata, while
+        // KnowledgeBaseRetrievalClient executes retrieval for one knowledge base. Both target the same validated
+        // Search service endpoint. This service only caches SearchIndexClient instances created from the validated
+        // endpoint below, so reusing its Endpoint here preserves that authorization; baseName affects the
+        // SDK-managed request path, not the destination host.
         var knowledgeBaseClient = new KnowledgeBaseRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(null, cancellationToken), clientOptions);
         var useMinimalReasoning = knowledgeBase.Value.RetrievalReasoningEffort is KnowledgeRetrievalMinimalReasoningEffort;
         var request = BuildKnowledgeBaseRetrievalRequest(useMinimalReasoning, query, messages);
+
+        if (includeReferenceSourceData.HasValue)
+        {
+            var sources = knowledgeBase.Value.KnowledgeSources;
+            var sourceParameters = new KnowledgeSourceParams[sources.Count];
+            await Parallel.ForEachAsync(
+                Enumerable.Range(0, sources.Count),
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = MaxConcurrentKnowledgeSourceLookups,
+                    CancellationToken = cancellationToken
+                },
+                async (index, token) =>
+                {
+                    sourceParameters[index] = await GetKnowledgeSourceParamsAsync(
+                        searchClient, sources[index].Name, includeReferenceSourceData.Value, token);
+                });
+            foreach (var parameters in sourceParameters)
+            {
+                request.KnowledgeSourceParams.Add(parameters);
+            }
+        }
 
         var results = await knowledgeBaseClient.RetrieveAsync(request, cancellationToken: cancellationToken);
 
@@ -275,6 +306,54 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
 
         request.Messages.Add(new([new KnowledgeBaseMessageTextContent(query ?? string.Empty)]) { Role = "user" });
         return request;
+    }
+
+    private async Task<KnowledgeSourceParams> GetKnowledgeSourceParamsAsync(
+        SearchIndexClient searchClient,
+        string sourceName,
+        bool includeReferenceSourceData,
+        CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.Build(KnowledgeSourceTypesCacheKey, searchClient.Endpoint.AbsoluteUri, sourceName);
+        var sourceType = await _cacheService.GetAsync<string>(CacheGroup, cacheKey, CacheDurations.ServiceData, cancellationToken);
+        if (sourceType != null)
+        {
+            return CreateKnowledgeSourceParams(sourceName, sourceType, includeReferenceSourceData);
+        }
+
+        var source = await searchClient.GetKnowledgeSourceAsync(sourceName, cancellationToken: cancellationToken);
+        sourceType = source.Value.GetType().Name;
+        var parameters = CreateKnowledgeSourceParams(sourceName, sourceType, includeReferenceSourceData);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, sourceType, CacheDurations.ServiceData, cancellationToken);
+        return parameters;
+    }
+
+    internal static KnowledgeSourceParams CreateKnowledgeSourceParams(
+        string sourceName, string sourceType, bool includeReferenceSourceData)
+    {
+        // Cache only source types, never mutable parameters shared across retrievals.
+        // When upgrading Azure.Search.Documents or changing its API version, revalidate this mapping
+        // and the reference options below. New SDK source types require matching parameter mappings.
+        KnowledgeSourceParams parameters = sourceType switch
+        {
+            nameof(AzureBlobKnowledgeSource) => new AzureBlobKnowledgeSourceParams(sourceName),
+            nameof(FabricDataAgentKnowledgeSource) => new FabricDataAgentKnowledgeSourceParams(sourceName),
+            nameof(FabricOntologyKnowledgeSource) => new FabricOntologyKnowledgeSourceParams(sourceName),
+            nameof(FileKnowledgeSource) => new FileKnowledgeSourceParams(sourceName),
+            nameof(IndexedOneLakeKnowledgeSource) => new IndexedOneLakeKnowledgeSourceParams(sourceName),
+            nameof(IndexedSharePointKnowledgeSource) => new IndexedSharePointKnowledgeSourceParams(sourceName),
+            nameof(IndexedSqlKnowledgeSource) => new IndexedSqlKnowledgeSourceParams(sourceName),
+            nameof(McpServerKnowledgeSource) => new McpServerKnowledgeSourceParams(sourceName),
+            nameof(RemoteSharePointKnowledgeSource) => new RemoteSharePointKnowledgeSourceParams(sourceName),
+            nameof(SearchIndexKnowledgeSource) => new SearchIndexKnowledgeSourceParams(sourceName),
+            nameof(WebKnowledgeSource) => new WebKnowledgeSourceParams(sourceName),
+            nameof(WorkIQKnowledgeSource) => new WorkIQKnowledgeSourceParams(sourceName),
+            _ => throw new NotSupportedException("Reference source data options are not supported for this knowledge source type.")
+        };
+
+        parameters.IncludeReferences = true;
+        parameters.IncludeReferenceSourceData = includeReferenceSourceData;
+        return parameters;
     }
 
     internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
@@ -339,13 +418,13 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         var searchClient = await _cacheService.GetAsync<SearchIndexClient>(CacheGroup, key, s_cacheDurationClients, cancellationToken);
         if (searchClient == null)
         {
-            var credential = await GetCredential(null, cancellationToken);
+            Uri endpoint = CreateAndValidateSearchEndpoint(serviceName);
+            TokenCredential credential = await GetCredential(null, cancellationToken);
 
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             clientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
             clientOptions.Audience = GetSearchAudience();
 
-            var endpoint = new Uri(GetSearchEndpoint(serviceName));
             searchClient = new SearchIndexClient(endpoint, credential, clientOptions);
             await _cacheService.SetAsync(CacheGroup, key, searchClient, s_cacheDurationClients, cancellationToken);
         }
@@ -458,26 +537,74 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
         }
     }
 
-    private string GetSearchEndpoint(string serviceName)
+    /// <summary>
+    /// Creates and validates the shared Azure AI Search service endpoint used by Search SDK clients in the
+    /// configured Azure cloud.
+    /// </summary>
+    /// <param name="serviceName">The Azure AI Search service name.</param>
+    /// <returns>The validated Search SDK endpoint.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the service name is malformed or the Search endpoint allow-list is unavailable.
+    /// </exception>
+    /// <exception cref="InvalidConfigurationException">
+    /// Thrown when the configured Azure cloud is not supported for Azure AI Search.
+    /// </exception>
+    /// <exception cref="System.Security.SecurityException">
+    /// Thrown when the completed endpoint is not authorized for the configured Azure cloud.
+    /// </exception>
+    internal Uri CreateAndValidateSearchEndpoint(string serviceName)
     {
         ValidateServiceName(serviceName);
-        return AzureService.CloudConfiguration.CloudType switch
+        AzureCloudConfiguration.AzureCloud cloud = AzureService.CloudConfiguration.CloudType;
+
+        // EndpointValidator.AllowLists.cs contains the authorization copy of these DNS suffixes. This construction
+        // copy selects the configured cloud, so changes to either location and their tests must stay synchronized.
+        string endpoint = cloud switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
-            _ => $"https://{serviceName}.search.windows.net"
+            _ => throw GetUnsupportedCloudException(cloud)
         };
+
+        Uri endpointUri = new(endpoint);
+
+        // Service-name validation restricts the interpolated host label, while the shared validator independently
+        // authorizes the completed SDK endpoint against the configured Azure cloud immediately before use.
+        AzureService.ValidateAzureServiceEndpoint(
+            endpoint: endpointUri.AbsoluteUri,
+            serviceType: "search");
+
+        return endpointUri;
     }
 
     private SearchAudience GetSearchAudience()
     {
-        return AzureService.CloudConfiguration.CloudType switch
+        AzureCloudConfiguration.AzureCloud cloud = AzureService.CloudConfiguration.CloudType;
+        return cloud switch
         {
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => SearchAudience.AzureGovernment,
-            _ => SearchAudience.AzurePublicCloud
+            _ => throw GetUnsupportedCloudException(cloud)
         };
+    }
+
+    /// <summary>
+    /// Gets a new exception to throw when the currently configured Azure cloud is not supported.
+    /// </summary>
+    /// <param name="cloud"></param>
+    /// <returns></returns>
+    /// <remarks>
+    /// The Azure Search SDK docs specify defaulting to the public cloud for a <see langword="null"/>
+    /// delegated permission audience, but the docs do not define an endpoint-domain fallback for an
+    /// unrecognized cloud. We'll reject unknown clouds rather than use that fallback for endpoint
+    /// creation or audience selection. This was a subjective choice that should be changed if required.
+    /// <seealso href="https://learn.microsoft.com/dotnet/api/azure.search.documents.searchclientoptions.audience"/>
+    /// </remarks>
+    private static InvalidOperationException GetUnsupportedCloudException(AzureCloudConfiguration.AzureCloud cloud)
+    {
+        return new InvalidOperationException(
+            $"The configured Azure cloud is not supported for Azure AI Search. Value given: '{cloud}'.");
     }
 }

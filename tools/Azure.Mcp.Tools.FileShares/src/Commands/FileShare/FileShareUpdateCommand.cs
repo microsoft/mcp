@@ -44,7 +44,7 @@ public sealed class FileShareUpdateCommand(ILogger<FileShareUpdateCommand> logge
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to parse tags JSON: {Tags}", options.Tags);
+                    logger.LogWarning(ex, "Failed to parse tags JSON.");
                 }
             }
 

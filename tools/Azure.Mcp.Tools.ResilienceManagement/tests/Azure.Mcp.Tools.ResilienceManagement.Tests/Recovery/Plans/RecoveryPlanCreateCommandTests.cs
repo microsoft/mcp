@@ -270,16 +270,89 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid --plan-type 'Regional'", response.Message);
         Assert.Contains("Zonal", response.Message);
-        await Service.DidNotReceive().CreateRecoveryPlanAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RecoveryPlanKind>(),
-            Arg.Any<string>(),
-            Arg.Any<RecoveryPlanIdentityKind>(),
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsNoneIdentityAndDefaultGroupId()
+    {
+        const string defaultGroupId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--plan-type", "Zonal",
+            "--plan-description", "description",
+            "--identity-type", "None",
+            "--default-group-description", "default",
+            "--default-group-unique-id", defaultGroupId);
+
+        Assert.True(response.Status == HttpStatusCode.OK, response.Message);
+        await Service.Received(1).CreateRecoveryPlanAsync(
+            "sg1",
+            "plan1",
+            RecoveryPlanKind.Zonal,
+            "description",
+            RecoveryPlanIdentityKind.None,
+            null,
+            "default",
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            Arg.Any<string?>(),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<IReadOnlyList<RecoveryPlanGroupInput>?>(),
+            Arg.Any<IReadOnlyList<RecoveryPlanGroupActionInput>?>(),
+            Arg.Any<IReadOnlyList<RecoveryPlanGroupActionInput>?>(),
+            defaultGroupId.ToLowerInvariant(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--identity-type None --user-assigned-identity /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id", "not allowed when --identity-type is SystemAssigned or None")]
+    [InlineData("--identity-type SystemAssigned --default-group-unique-id not-a-guid", "--default-group-unique-id must be a GUID")]
+    public async Task ExecuteAsync_RejectsInvalidIdentityOrDefaultGroupId(string extraArgs, string expectedMessage)
+    {
+        var response = await ExecuteCommandAsync(
+            $"--service-group sg1 --recoveryplan plan1 --plan-type Zonal --plan-description description {extraArgs}".Split(' '));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedMessage, response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public void ParseGroupActions_ParsesCustomRunbookAssociatedIdentity()
+    {
+        const string identityId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id";
+        string json = "[{\"type\":\"CustomRunbook\",\"name\":\"Start-app\",\"timeoutInMinutes\":30," +
+            "\"actionResourceId\":\"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Automation/automationAccounts/aa/runbooks/rb\"," +
+            $"\"associatedIdentity\":{{\"type\":\"UserAssigned\",\"userAssignedIdentity\":\"{identityId}\"}}}}]";
+
+        RecoveryPlanGroupActionInput action = Assert.Single(RecoveryPlanCreateCommand.ParseGroupActions(json, "--default-group-pre-actions")!);
+
+        Assert.Equal("UserAssigned", action.AssociatedIdentityType);
+        Assert.Equal(identityId, action.AssociatedUserAssignedIdentity, ignoreCase: true);
+    }
+
+    [Theory]
+    [InlineData("{\"type\":\"UserAssigned\"}", "exactly when type includes UserAssigned")]
+    [InlineData("{\"type\":\"SystemAssigned\",\"extra\":1}", "associatedIdentity must be an object")]
+    [InlineData("{\"type\":\"Unknown\"}", "associatedIdentity must be an object")]
+    public void ParseGroupActions_RejectsInvalidAssociatedIdentity(string identity, string expectedMessage)
+    {
+        string json = "[{\"type\":\"CustomRunbook\",\"name\":\"Start-app\",\"timeoutInMinutes\":30," +
+            "\"actionResourceId\":\"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Automation/automationAccounts/aa/runbooks/rb\"," +
+            $"\"associatedIdentity\":{identity}}}]";
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => RecoveryPlanCreateCommand.ParseGroupActions(json, "--default-group-pre-actions"));
+
+        Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ParseGroupActions_RejectsAssociatedIdentityOnManualAction()
+    {
+        string json = "[{\"type\":\"ManualAction\",\"name\":\"Confirm\",\"timeoutInMinutes\":30,\"associatedIdentity\":{\"type\":\"SystemAssigned\"}}]";
+
+        ArgumentException exception = Assert.Throws<ArgumentException>(() => RecoveryPlanCreateCommand.ParseGroupActions(json, "--default-group-pre-actions"));
+
+        Assert.Contains("Only CustomRunbook", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -373,6 +446,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 groups[0].Description == "Second recovery group"),
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -397,6 +471,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             Arg.Is<IReadOnlyList<RecoveryPlanGroupInput>?>(groups => groups != null && groups.Count == 1),
             null,
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -443,6 +518,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
                 actions[0].Type == RecoveryPlanGroupActionKind.ManualAction &&
                 actions[0].TimeoutInMinutes == 30),
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions.Count == 0),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -497,6 +573,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Description == string.Empty),
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 
@@ -527,6 +604,7 @@ public sealed class RecoveryPlanCreateCommandTests : CommandUnitTestsBase<Recove
             null,
             Arg.Is<IReadOnlyList<RecoveryPlanGroupActionInput>?>(actions => actions != null && actions[0].Parameters == null),
             null,
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .Returns(Element("plan1"));
 

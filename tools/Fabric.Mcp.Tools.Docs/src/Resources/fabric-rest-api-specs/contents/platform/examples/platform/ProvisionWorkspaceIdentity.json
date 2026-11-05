@@ -6,7 +6,12 @@
         "200": {
             "body": {
                 "applicationId" : "00a4a8f9-78d3-41b3-b87a-6ae5271c8d0d",
-                "servicePrincipalId": "5ba4ae58-d402-45c6-a848-0253e834fd78"
+                "servicePrincipalId": "5ba4ae58-d402-45c6-a848-0253e834fd78",
+                "identityReference": {
+                    "referenceType": "ById",
+                    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                    "itemId": "4a1d86e3-d740-4610-b32d-7bae87d33e9d"
+                }
             }
         },
         "202": {

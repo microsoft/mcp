@@ -26,11 +26,11 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration;
-    private readonly Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
+    private Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)> _toolClientMap = [];
     private readonly List<McpClient> _discoveredClients = [];
-    private readonly Dictionary<McpClient, string?> _clientPrefixMap = [];
+    private readonly Dictionary<McpClient, (string ServerName, string? Prefix)> _clientMetadataMap = [];
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
-    private bool _isInitialized = false;
+    private volatile bool _isInitialized = false;
 
     /// <summary>
     /// Gets or sets the client options used when creating MCP clients.
@@ -47,37 +47,59 @@ public sealed class RegistryToolLoader(
     {
         await InitializeAsync(cancellationToken);
 
-        var allToolsResponse = new ListToolsResult
+        if (_discoveredClients.Count == 0)
         {
-            Tools = []
-        };
-
-        // Use cached discovered clients instead of re-discovering servers
-        foreach (var mcpClient in _discoveredClients)
-        {
-            var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-            var filteredTools = toolsResponse
-                .Select(t => t.ProtocolTool)
-                .Where(t => !_configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
-                .Where(t => !_configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
-
-            // Filter by specific tools if provided
-            if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
-            {
-                filteredTools = filteredTools.Where(t => _configuration.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
-            }
-
-            var prefix = _clientPrefixMap.TryGetValue(mcpClient, out var p) ? p : null;
-            foreach (var tool in filteredTools)
-            {
-                var exposedTool = string.IsNullOrEmpty(prefix)
-                    ? tool
-                    : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
-                allToolsResponse.Tools.Add(exposedTool);
-            }
+            return new ListToolsResult { Tools = [] };
         }
 
-        return allToolsResponse;
+        await _initializationSemaphore.WaitAsync(cancellationToken);
+        try
+        {
+            var allToolsResponse = new ListToolsResult { Tools = [] };
+            var refreshedToolMap = new Dictionary<string, (string ServerName, string OriginalToolName, McpClient Client, Tool Tool)>();
+
+            foreach (var mcpClient in _discoveredClients)
+            {
+                var (serverName, prefix) = _clientMetadataMap[mcpClient];
+                var toolsResponse = await ToolListCache.ListRemoteToolsAsync(mcpClient, cancellationToken);
+                if (toolsResponse.TimeToLive is { } remoteTimeToLive &&
+                    (allToolsResponse.TimeToLive is null || remoteTimeToLive < allToolsResponse.TimeToLive))
+                {
+                    allToolsResponse.TimeToLive = remoteTimeToLive;
+                }
+
+                foreach (var tool in toolsResponse.Tools)
+                {
+                    var exposedName = string.IsNullOrEmpty(prefix) ? tool.Name : prefix + tool.Name;
+                    refreshedToolMap[exposedName] = (serverName, tool.Name, mcpClient, tool);
+                }
+
+                var filteredTools = toolsResponse.Tools
+                    .Where(t => !_configuration.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true))
+                    .Where(t => !_configuration.Value.IsHttpMode || !McpHelper.HasHint(t, McpHelper.LocalRequiredHintMetaKey));
+
+                // Filter by the exposed tool name, including the optional server prefix.
+                if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
+                {
+                    filteredTools = filteredTools.Where(t => _configuration.Value.Tool.Any(tool => string.Equals(tool, prefix + t.Name, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                foreach (var tool in filteredTools)
+                {
+                    var exposedTool = string.IsNullOrEmpty(prefix)
+                        ? tool
+                        : new Tool { Name = prefix + tool.Name, Description = tool.Description, InputSchema = tool.InputSchema, OutputSchema = tool.OutputSchema, Annotations = tool.Annotations };
+                    allToolsResponse.Tools.Add(exposedTool);
+                }
+            }
+
+            _toolClientMap = refreshedToolMap;
+            return allToolsResponse;
+        }
+        finally
+        {
+            _initializationSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -111,7 +133,7 @@ public sealed class RegistryToolLoader(
         // Check if tool filtering is enabled and validate the requested tool
         if (_configuration.Value.Tool != null && _configuration.Value.Tool.Length > 0)
         {
-            if (!_configuration.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
+            if (!_configuration.Value.Tool.Any(tool => string.Equals(tool, request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
                 activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);
@@ -283,10 +305,8 @@ public sealed class RegistryToolLoader(
 
                     try
                     {
-                        var toolsResponse = await mcpClient.ListToolsAsync(cancellationToken: cancellationToken);
-                        var allTools = toolsResponse
-                            .Select(t => t.ProtocolTool)
-                            .ToArray();
+                        var toolsResponse = await ToolListCache.ListRemoteToolsAsync(mcpClient, cancellationToken);
+                        var allTools = toolsResponse.Tools.ToArray();
 
                         return (serverMetadata.Name, serverMetadata.ToolPrefix, mcpClient, (IEnumerable<Tool>?)allTools);
                     }
@@ -295,7 +315,7 @@ public sealed class RegistryToolLoader(
                         // Rethrow cancellation to prevent setting _isInitialized
                         throw;
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is not ToolListPaginationException)
                     {
                         _logger.LogWarning("Failed to list tools for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
                         return (serverMetadata.Name, serverMetadata.ToolPrefix, (McpClient?)null, (IEnumerable<Tool>?)null);
@@ -319,7 +339,7 @@ public sealed class RegistryToolLoader(
                 if (mcpClient != null && tools != null)
                 {
                     _discoveredClients.Add(mcpClient);
-                    _clientPrefixMap[mcpClient] = toolPrefix;
+                    _clientMetadataMap[mcpClient] = (serverName, toolPrefix);
 
                     foreach (var tool in tools)
                     {
@@ -357,7 +377,7 @@ public sealed class RegistryToolLoader(
         // Clear references to clients (but don't dispose them - discovery strategy owns them)
         _discoveredClients.Clear();
         _toolClientMap.Clear();
-        _clientPrefixMap.Clear();
+        _clientMetadataMap.Clear();
 
         await ValueTask.CompletedTask;
     }

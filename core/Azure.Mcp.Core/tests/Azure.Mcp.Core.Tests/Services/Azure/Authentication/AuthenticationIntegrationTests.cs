@@ -11,6 +11,8 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Tests;
@@ -39,6 +41,8 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());
         services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
         services.AddSingleton<IAzureService, AzureService>();
+        services.AddCommandContextAccessor();
+        services.AddEndpointValidation();
 
         _serviceProvider = services.BuildServiceProvider();
         _azureService = _serviceProvider.GetRequiredService<IAzureService>();

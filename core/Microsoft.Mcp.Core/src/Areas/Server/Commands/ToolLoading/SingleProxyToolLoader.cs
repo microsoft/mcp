@@ -23,13 +23,31 @@ using ModelContextProtocol.Server;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
+/// <summary>
+/// Exposes a single routing tool for local command execution and external tool forwarding.
+/// </summary>
+/// <param name="contextAccessor">The singleton accessor shared with services executing local command work.</param>
+/// <param name="commandFactory">The factory supplying commands that can execute in process.</param>
+/// <param name="logger">The logger for routing, discovery, sampling, and execution.</param>
+/// <param name="configuration">The server's filtering, transport, consent, and output settings.</param>
+/// <param name="serverConfiguration">The identity, description, and schema settings for the routing tool.</param>
+/// <param name="discoveryStrategy">
+/// The optional discovery strategy for external servers, or <see langword="null"/> for local commands only.
+/// </param>
+/// <remarks>
+/// Only awaited local command execution establishes an ambient context. Sampling and external
+/// forwarding do not open a scope. The context identifies the selected command's original
+/// namespace, not the routing tool name or a caller-supplied group name.
+/// </remarks>
 public sealed class SingleProxyToolLoader(
+    ICommandContextAccessor contextAccessor,
     ICommandFactory commandFactory,
     ILogger<SingleProxyToolLoader> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> serverConfiguration,
     IMcpDiscoveryStrategy? discoveryStrategy = null) : BaseToolLoader(logger)
 {
+    private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IMcpDiscoveryStrategy? _discoveryStrategy = discoveryStrategy;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -39,10 +57,10 @@ public sealed class SingleProxyToolLoader(
     private readonly JsonElement _toolSchema = BuildToolSchema(serverConfiguration!.Value.ShortName);
     private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
 
-    private (List<Tool> Tools, string Json)? _cachedTools;
+    private RootToolsSnapshot? _cachedTools;
     private readonly ConcurrentDictionary<string, (List<ToolCommandInfo> Commands, string Json)> _cachedToolCommands = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IList<Tool>> _cachedCommandFactoryTools = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, IList<Tool>> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, (IList<Tool> Tools, long CachedAt, TimeSpan? TimeToLive)> _cachedDiscoveryTools = new(StringComparer.OrdinalIgnoreCase);
 
     private const string ToolCallProxySchema = """
         {
@@ -189,11 +207,12 @@ public sealed class SingleProxyToolLoader(
     /// Gets and caches all of the <see cref="IAreaSetup"/>'s available in the server.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>
-    private async Task InitializeRootToolsCacheAsync(CancellationToken cancellationToken)
+    private async Task<RootToolsSnapshot> GetRootToolsSnapshotAsync(CancellationToken cancellationToken)
     {
-        if (_cachedTools != null)
+        var existing = Volatile.Read(ref _cachedTools);
+        if (existing != null)
         {
-            return;
+            return existing;
         }
 
         var tools = new List<Tool>();
@@ -244,8 +263,8 @@ public sealed class SingleProxyToolLoader(
         }
 
         var json = JsonSerializer.Serialize(tools.Select(t => new ToolCommandInfo(t, false)), ServerJsonContext.Default.IEnumerableToolCommandInfo);
-        _cachedTools = (tools, json);
-        return;
+        var snapshot = new RootToolsSnapshot(tools.AsReadOnly(), json);
+        return Interlocked.CompareExchange(ref _cachedTools, snapshot, null) ?? snapshot;
     }
 
     /// <summary>
@@ -277,23 +296,24 @@ public sealed class SingleProxyToolLoader(
     }
 
     /// <summary>
-    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// Gets the set of <see cref="IBaseCommand"/> within an <see cref="IAreaSetup"/>.
     /// </summary>
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<(List<ToolCommandInfo> Commands, string Json)> GetToolCommandsAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        if (!IsNamespaceAllowed(tool))
+        var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
+        if (listTools.Count == 0)
         {
             return ([], "[]");
         }
+
         if (_cachedToolCommands.TryGetValue(tool, out var cached))
         {
             return cached;
         }
 
-        var listTools = await GetToolsInGroupAsync(request, tool, cancellationToken);
         var commands = listTools.Select(t => new ToolCommandInfo(t, true)).ToList();
         var json = JsonSerializer.Serialize(commands, ServerJsonContext.Default.IEnumerableToolCommandInfo);
         _cachedToolCommands[tool] = (commands, json);
@@ -312,9 +332,10 @@ public sealed class SingleProxyToolLoader(
         {
             return cachedCommandFactoryTools;
         }
-        if (_cachedDiscoveryTools.TryGetValue(tool, out var cachedDiscoveryTools))
+        if (_cachedDiscoveryTools.TryGetValue(tool, out var cachedDiscoveryTools) &&
+            ToolListCache.IsFresh(cachedDiscoveryTools.CachedAt, cachedDiscoveryTools.TimeToLive))
         {
-            return cachedDiscoveryTools;
+            return cachedDiscoveryTools.Tools;
         }
 
         // Check ICommandFactory first, then call the external discovery strategy if the tool is not found in the local command factory.
@@ -324,8 +345,8 @@ public sealed class SingleProxyToolLoader(
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
-                .Where(command => ShouldKeepBaseCommand(command.Value, _configuration.Value))
-                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
+                .Where(command => ShouldKeepBaseCommand(command.Value.Command, _configuration.Value))
+                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
                 .ToList();
             _cachedCommandFactoryTools[tool] = groupTools;
             return groupTools;
@@ -346,12 +367,14 @@ public sealed class SingleProxyToolLoader(
                 throw;
             }
 
-            var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
-            var remoteTools = listTools.Select(t => t.ProtocolTool)
+            var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
+            var cachedAt = Stopwatch.GetTimestamp();
+            var remoteTools = toolsResponse.Tools
                 .Where(tool => ShouldKeepTool(tool, _configuration.Value))
                 .ToArray();
 
-            _cachedDiscoveryTools[tool] = remoteTools;
+            _cachedDiscoveryTools[tool] = (remoteTools, cachedAt, toolsResponse.TimeToLive);
+            _cachedToolCommands.TryRemove(tool, out _);
             return remoteTools;
         }
 
@@ -368,22 +391,22 @@ public sealed class SingleProxyToolLoader(
     {
         activity?.SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.IsLearn, true);
-        await InitializeRootToolsCacheAsync(cancellationToken);
+        var rootTools = await GetRootToolsSnapshotAsync(cancellationToken);
         var contentText = $"""
             Here are the available tools.
             Next, identify the tool you want to learn about and run again with the "learn" argument and the "tool" name to get a list of available commands and their parameters.
 
-            {_cachedTools!.Value.Json}
+            {rootTools.Json}
             """;
         var learnResponse = StructuredOutputHelper.CreateCallToolResult(
             _configuration.Value.StructuredOutputMode,
             () => contentText,
-            () => AggregateStructuredOutput.CreateToolList(_cachedTools!.Value.Json));
+            () => AggregateStructuredOutput.CreateToolList(rootTools.Json));
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var toolName = await GetToolNameFromIntentAsync(request, intent, cancellationToken);
-            var availableTool = _cachedTools!.Value.Tools.FirstOrDefault(candidate =>
+            var toolName = await GetToolNameFromIntentAsync(request, intent, rootTools.Json, cancellationToken);
+            var availableTool = rootTools.Tools.FirstOrDefault(candidate =>
                 string.Equals(candidate.Name, toolName, StringComparison.OrdinalIgnoreCase));
             if (availableTool != null)
             {
@@ -469,9 +492,9 @@ public sealed class SingleProxyToolLoader(
 
         command = resolvedTool.Name;
 
-        if (_commandFactory.AllCommands.TryGetValue(command, out var baseCommand))
+        if (_commandFactory.AllCommands.TryGetValue(command, out CommandRegistration? registration))
         {
-            return await LocalCommandModeAsync(request, baseCommand, tool, command, parameters, activity, cancellationToken);
+            return await LocalCommandModeAsync(request, registration, tool, command, parameters, activity, cancellationToken);
         }
         else if (_discoveryStrategy != null)
         {
@@ -490,13 +513,14 @@ public sealed class SingleProxyToolLoader(
 
     private async Task<CallToolResult> LocalCommandModeAsync(
         RequestContext<CallToolRequestParams> request,
-        IBaseCommand baseCommand,
+        CommandRegistration registration,
         string tool,
         string command,
         IDictionary<string, object?> parameters,
         Activity? activity,
         CancellationToken cancellationToken)
     {
+        IBaseCommand baseCommand = registration.Command;
         try
         {
             activity?.SetTag(TagName.ToolName, command)
@@ -555,7 +579,8 @@ public sealed class SingleProxyToolLoader(
             var commandContext = new CommandContext(activity)
             {
                 McpServer = request.Server,
-                ProgressToken = request.Params?.ProgressToken
+                ProgressToken = request.Params?.ProgressToken,
+                ToolNamespaceName = registration.ToolNamespaceName
             };
             var realCommand = baseCommand.GetCommand();
 
@@ -595,7 +620,11 @@ public sealed class SingleProxyToolLoader(
             // this case, which will be executed.
             activity?.SetTag(TagName.IsServerCommandInvoked, true);
 
-            var commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            CommandResponse commandResponse;
+            using (_contextAccessor.BeginScope(commandContext))
+            {
+                commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
+            }
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
@@ -639,12 +668,22 @@ public sealed class SingleProxyToolLoader(
                 };
             }
 
-            return new CallToolResult
+            var result = new CallToolResult
             {
                 Content = [new TextContentBlock { Text = jsonResponse }],
                 IsError = isError,
                 Meta = new([new(McpHelper.ToolIdMetaKey, baseCommand.Id)])
             };
+
+            if (commandResponse.McpContent is { Count: > 0 })
+            {
+                foreach (var contentBlock in commandResponse.McpContent)
+                {
+                    result.Content.Add(contentBlock);
+                }
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -815,7 +854,8 @@ public sealed class SingleProxyToolLoader(
             }, cancellationToken: cancellationToken);
     }
 
-    private async Task<string?> GetToolNameFromIntentAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
+    private async Task<string?> GetToolNameFromIntentAsync(
+        RequestContext<CallToolRequestParams> request, string intent, string availableToolsJson, CancellationToken cancellationToken)
     {
 #pragma warning disable MCP9005 // Sampling APIs remain for backward compatibility during migration.
         await NotifyProgressAsync(request, $"Learning about {_displayName} capabilities...", cancellationToken);
@@ -838,7 +878,7 @@ public sealed class SingleProxyToolLoader(
                             {intent}
 
                             Available Tools:
-                            {_cachedTools!.Value.Json}
+                            {availableToolsJson}
                             """
                     }]
                 }
@@ -856,7 +896,7 @@ public sealed class SingleProxyToolLoader(
         }
         catch
         {
-            _logger.LogError("Failed to get tool name from intent: {Intent}", intent);
+            _logger.LogError("Failed to get tool name from intent.");
         }
 
         return null;
@@ -936,7 +976,7 @@ public sealed class SingleProxyToolLoader(
         }
         catch
         {
-            _logger.LogError("Failed to get command and parameters from intent: {Intent} for tool: {Tool}", intent, tool);
+            _logger.LogError("Failed to get command and parameters from intent for tool: {Tool}", tool);
         }
 
         return (null, new Dictionary<string, object?>());
@@ -954,7 +994,7 @@ public sealed class SingleProxyToolLoader(
         _cachedCommandFactoryTools.Clear();
         _cachedDiscoveryTools.Clear();
         _cachedToolCommands.Clear();
-        _cachedTools = null;
+        Interlocked.Exchange(ref _cachedTools, null);
 
         await ValueTask.CompletedTask;
     }

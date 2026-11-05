@@ -1,489 +1,897 @@
-# Ontology definition
+# Ontology definition (TMDL/new experience)
 
-This article provides a breakdown of the structure for ontology definition items.
+This article provides a breakdown of the structure for **new experience (TMDL-based)** ontology definition items. It is the TMDL counterpart to the old experience (entity-type JSON) [Ontology (old) definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/ontology-old-definition) article: same item type, different definition format.
+
+A new experience ontology expresses its definition as **TMSL / TMDL** (the Analysis Services tabular-model format, plus ontology-only extensions) instead of the old experience's entity-type JSON. Because the definition is TMDL, the item plugs into the platform's item-definition ALM surface — **Git integration**, the Public API `getDefinition` / `updateDefinition`, and **Deployment Pipelines**.
 
 ## Supported formats
 
-Ontology items support the JSON format.
+New experience ontology items support the **TMDL** format (Tabular Model Definition Language). The parts are flat, item-folder-relative `.tmdl` text files plus the platform-owned `.platform` metadata file.
 
 ## Definition parts
 
-This table lists the ontology definition parts.
-
-Several parts include an entity type ID value. The entity type ID is a positive 64-bit integer that's unique across the ontology instance.
+This table lists the new experience ontology definition parts.
 
 | Definition part path | Type | Required | Description |
-|----|----|----|----|
-| `definition.json` | DefinitionDetails (JSON) | true | Empty definition. |
-| `.platform` | PlatformDetails (JSON) | true | Describes common details of the item. |
-| `EntityTypes/{ID}` | Directory | false | Contains the definition.json file for the entity type which describes details of the entity type. The entity type ID is a positive 64-bit integer that's unique across the ontology instance. |
-| `EntityTypes/{ID}/DataBindings` | Directory | false | Contains a list of data binding files that are part of the entity type. Each data binding operation file (JSON) describes details of the data binding. |
-| `EntityTypes/{ID}/Documents` | Directory | false | Contains a list of document files that are part of the entity type. Each document operation file (JSON) describes details of the document. |
-| `EntityTypes/{ID}/Overviews` | Directory | false | Contains the definition.json file for the overviews of the entity type. |
-| `EntityTypes/{ID}/ResourceLinks` | Directory | false | Contains the definition.json file for the resource links of the entity type. |
-| `RelationshipTypes/{ID}` | Directory | false | Contains the definition.json file for the relationship type which describes details of the relationship type. |
-| `RelationshipTypes/{ID}/Contextualizations` | Directory | false | Contains a list of contextualization files that are part of the relationship type. Each contextualization file (JSON) describes details of the contextualization. |
+| --- | --- | --- | --- |
+| `.platform` | PlatformDetails (JSON) | true | Describes common details of the item (`metadata.type = "Ontology"`, `displayName`, `config.version = "2.0"`, `logicalId`). Platform-owned. |
+| `database.tmdl` | TMDL (`database`) | true | The `database` object and its `compatibilityLevel`. |
+| `model.tmdl` | TMDL (`model`) | true† | The tabular `model` and its `ref` statements. Emitted by default (includes `ref namespace default`). |
+| `tables/{name}.tmdl` | TMDL (`table`) | false | A backing table: columns, a DirectLake `partition`, and (optionally) table-level `measure` objects (`measures[]`). |
+| `metrics/{name}.tmdl` | TMDL (`metric`) | false | A top-level metric (`model.metrics[]`), one file per metric, referenced from `model.tmdl` by `ref metric {name}`. |
+| `relationships.tmdl` | TMDL (`relationship`) | false | TOM (table-to-table) relationships. |
+| `expressions.tmdl` | TMDL (`expression`) | false | Shared M expressions (for example, the DirectLake `DatabaseQuery` source). |
+| `entities/{namespace}#{name}.tmdl` | TMDL (`entity`) | false | **Ontology extension** — an `EntityType` and its `property` list. Namespaced entities use the `<Namespace>#<Entity>.tmdl` convention; an unqualified filename such as `Sensor.tmdl` is an entity in the default namespace. |
+| `entityRelationships.tmdl` | TMDL (`entityRelationship`) | false | **Ontology extension** — `EntityRelationship` objects. Each relationship name in the file content is `<Namespace>#<EntityRelationship>`; an unqualified name is in the default namespace. |
+| `namespaces/{namespace}.tmdl` | TMDL (`namespace`) | true*† | **Ontology extension** — a `namespace` declaration. `namespaces/default.tmdl` (the reserved default namespace) is **required** and must be referenced by `ref namespace default` in `model.tmdl`; each additional namespace has its own file (`false`). |
+| `rules/{rule}.tmdl` | TMDL (`rule`) | false | **Ontology extension** — one `rule` per file, named after the rule (for example, `SpeedLimit.tmdl`). |
+
+\* Only `namespaces/default.tmdl` is required — a default ontology is created with `.platform`, `database.tmdl`, `model.tmdl`, and `namespaces/default.tmdl`. Additional namespace files are optional.
+
+† **Required** describes the definition returned by `getDefinition`, not what you must supply on write. `model.tmdl` and `namespaces/default.tmdl` are synthesized by the service when omitted from a create or update, so the smallest definition you can send is `.platform` plus `database.tmdl`.
+
+>[!NOTE]
+> The `entity`, `entityRelationship`, `rule`, and `namespace` blocks are **TMSL++ extensions** — ontology-only syntax layered on top of the Analysis Services tabular model.
+
+## Folder layout and naming
+
+The definition parts are organized as follows:
+
+- `database.tmdl` and `model.tmdl` contain the top-level database and semantic-model definitions.
+- `tables/` contains the underlying semantic-model table definitions.
+- `metrics/` contains one file per top-level metric, named after the metric.
+- `entities/` contains one file per ontology entity type. Namespaced entities use the `<Namespace>#<Entity>.tmdl` convention. This allows the same entity name — such as `Freezer` — to exist in multiple namespaces without filename collisions. An unqualified filename such as `Sensor.tmdl` represents an entity in the default namespace.
+- `namespaces/` contains namespace definitions. `default.tmdl` (the reserved default namespace) is always present, while each additional namespace has its own file.
+- `rules/` contains business rule definitions, with one file per rule named after the rule (for example, `SpeedLimit.tmdl`).
+- `entityRelationships.tmdl` represents relationships between ontology entities. Every entity relationship name in the file content is represented as `<Namespace>#<EntityRelationship>`. An unqualified entity relationship name such as `Status Code For Plant` represents an entity relationship in the default namespace.
+- `relationships.tmdl` represents semantic-model table relationships.
+- `expressions.tmdl` contains shared model-level expressions.
+
+>[!NOTE]
+> For part types whose file is named after an element (`entities/`, `namespaces/`, and `rules/`), the file name derives from the element's `name` field — never its server-derived `displayName`.
+>
+> **Why some collections get one file per element and others stay flat:** `entities/`, `namespaces/`, and `rules/` are TMSL++-only extensions the workload defines, and each can carry a large amount of independently-reviewable content (a rule's natural-language `statement` plus many referenced entities/properties/relationships) — so, like `tables/` and `metrics/`, each gets its own per-element file for readable diffs. `relationship` and `expression` are **native AS TOM objects** whose engine TMDL serialization already emits `model.relationships[]` and `model.expressions[]` as flat files, and the workload's ontology extensions build on top of that existing shape rather than introducing a new per-file convention for those collections.
+>
+> **Defaults are elided on read.** This is general TMDL round-trip behavior, not specific to any one part: a property left at its default value is accepted on write and then omitted from what `getDefinition` returns. `propertyScope: none` on a rule's `ruleReferencedEntity`, `type: explicit` on a metric, `type: Direct` on a resource link's `item`, and `type: singleColumn` on a relationship all behave this way. Treat an absent property as "at its default", not as "unsupported".
 
 ## Definition example
 
-```json
-{
-  "parts": [
-    {
-      "path": ".platform",
-      "payload": "eyANCiAgIm1ldGFkYXRhIjogeyANCiAgICAidHlwZSI6ICJPbnRvbG9neSIsIA0KICAgICJkaXNwbGF5TmFtZSI6ICJvbnRvbG9neSIgDQogIH0gDQp9",
-      "payloadType": "InlineBase64"
-    },
-    { 
-      "path": "definition.json",
-      "payload": "e30=",
-      "payloadType": "InlineBase64"
-    }
-  ]
-}
-```
-
-### Definition example with optional definition parts
+A minimal new experience ontology definition — the two parts you must supply on a create or update. `getDefinition` on the resulting item returns four parts, because the service synthesizes `model.tmdl` (`model Model` plus `ref namespace default`) and `namespaces/default.tmdl`:
 
 ```json
 {
-  "parts": [
-    {
-      "path": ".platform",
-      "payload": "eyANCiAgIm1ldGFkYXRhIjogeyANCiAgICAidHlwZSI6ICJPbnRvbG9neSIsIA0KICAgICJkaXNwbGF5TmFtZSI6ICJvbnRvbG9neSIgDQogIH0gDQp9",
-      "payloadType": "InlineBase64"
-    },
-    { 
-      "path": "definition.json",
-      "payload": "e30=",
-      "payloadType": "InlineBase64"
-    }, 
-    {
-      "path": "EntityTypes/8813598896083/definition.json",
-      "payload": "ew0KICAiaWQiOiAiODgxMzU5ODg5NjA4MyIsDQogICJuYW1lc3BhY2UiOiAidXNlcnR5cGVzIiwNCiAgImJhc2VFbnRpdHlUeXBlSWQiOiBudWxsLA0KICAibmFtZSI6ICJFcXVpcG1lbnQxIiwNCiAgImVudGl0eUlkUGFydHMiOiBbDQogICAgIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogIF0sDQogICJkaXNwbGF5TmFtZVByb3BlcnR5SWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICJuYW1lc3BhY2VUeXBlIjogIkN1c3RvbSIsDQogICJ2aXNpYmlsaXR5IjogIlZpc2libGUiLA0KICAicHJvcGVydGllcyI6IFsNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzNjM3NDU5NDAxMyIsDQogICAgICAibmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJTdHJpbmciDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNzA2ODAzMTk1MDAwMDMzMSIsDQogICAgICAibmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIg0KICAgIH0NCiAgXSwNCiAgInRpbWVzZXJpZXNQcm9wZXJ0aWVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTgxMzY4Nzk2OTUzIiwNCiAgICAgICJuYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiRGF0ZVRpbWUiDQogICAgfSwNCiAgICB7DQogICAgICAiaWQiOiAiMzExNDU4NDk3OTc0MzMyMDkzNCIsDQogICAgICAibmFtZSI6ICJOYW1lIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwNCiAgICAgICJuYW1lIjogIlRlbXBlcmF0dXJlIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIkRvdWJsZSINCiAgICB9DQogIF0NCn0=",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/8813598896083/DataBindings/66253a71-c26f-4c9d-877f-3af5632a4be2.json",
-      "payload": "ew0KICAiaWQiOiAiNjYyNTNhNzEtYzI2Zi00YzlkLTg3N2YtM2FmNTYzMmE0YmUyIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIk5vblRpbWVTZXJpZXMiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTE3MDY4MDMxOTUwMDAwMzMxIg0KICAgICAgfQ0KICAgIF0sDQogICAgInNvdXJjZVRhYmxlUHJvcGVydGllcyI6IHsNCiAgICAgICJzb3VyY2VUeXBlIjogIkxha2Vob3VzZVRhYmxlIiwNCiAgICAgICJ3b3Jrc3BhY2VJZCI6ICI1ODBmNDEwZS03MzNkLTQzYmQtOGE4Ny1iZTEyYjUzNmY3ZmYiLA0KICAgICAgIml0ZW1JZCI6ICJkMGQ4NjNiYy00OGUxLTQ1YjItOGY0Yi01NDc5NWM5N2JhNzEiLA0KICAgICAgInNvdXJjZVRhYmxlTmFtZSI6ICJlcXVpcG1lbnQxbm9udGltZXNlcmllcyIsDQogICAgICAic291cmNlU2NoZW1hIjogImRibyINCiAgICB9DQogIH0NCn0=",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/8813598896083/DataBindings/39a3889b-77e4-4851-8960-e3b779a5d9ba.json",
-      "payload": "ew0KICAiaWQiOiAiMzlhMzg4OWItNzdlNC00ODUxLTg5NjAtZTNiNzc5YTVkOWJhIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIlRpbWVTZXJpZXMiLA0KICAgICJ0aW1lc3RhbXBDb2x1bW5OYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJQcmVjaXNlVGltZXN0YW1wIiwNCiAgICAgICAgInRhcmdldFByb3BlcnR5SWQiOiAiMzExNDU4NDk4MTM2ODc5Njk1MyINCiAgICAgIH0sDQogICAgICB7DQogICAgICAgICJzb3VyY2VDb2x1bW5OYW1lIjogIk5hbWUiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTE0NTg0OTc5NzQzMzIwOTM0Ig0KICAgICAgfSwNCiAgICAgIHsNCiAgICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiVGVtcGVyYXR1cmUiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIg0KICAgICAgfSwNCiAgICAgIHsNCiAgICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiTmFtZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogICAgICB9DQogICAgXSwNCiAgICAic291cmNlVGFibGVQcm9wZXJ0aWVzIjogew0KICAgICAgInNvdXJjZVR5cGUiOiAiTGFrZWhvdXNlVGFibGUiLA0KICAgICAgIndvcmtzcGFjZUlkIjogIjU4MGY0MTBlLTczM2QtNDNiZC04YTg3LWJlMTJiNTM2ZjdmZiIsDQogICAgICAiaXRlbUlkIjogImQwZDg2M2JjLTQ4ZTEtNDViMi04ZjRiLTU0Nzk1Yzk3YmE3MSIsDQogICAgICAic291cmNlVGFibGVOYW1lIjogImVxdWlwbWVudDF0aW1lc2VyaWVzIiwNCiAgICAgICJzb3VyY2VTY2hlbWEiOiAiZGJvIg0KICAgIH0NCiAgfQ0KfQ==",
-      "payloadType": "InlineBase64"
-    },  
-    {
-      "path": "EntityTypes/8813598896083/Documents/document1.json",
-      "payload": "eyANCiAgImRpc3BsYXlUZXh0IjogImRvYzEiLCANCiAgInVybCI6ICJleGFtcGxldXJsMSIgDQp9",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/8813598896083/Overviews/definition.json",
-      "payload": "ew0KICAid2lkZ2V0cyI6IFsNCiAgICB7DQogICAgICAidHlwZSI6ICJsaW5lQ2hhcnQiLA0KICAgICAgInlBeGlzUHJvcGVydHlJZCI6ICIzMTE0NTg0OTc3NTYyNjc5NjcyIiwNCiAgICAgICJpZCI6ICI2ZDczMzAxOC1jMTc3LTQ3YjUtODdiYS02MDI0Y2MxNDM3NzYiLA0KICAgICAgInRpdGxlIjogInRlbXBlcmF0dXJlIGRhdGEiDQogICAgfQ0KICBdLA0KICAic2V0dGluZ3MiOiB7DQogICAgInR5cGUiOiAiZml4ZWRUaW1lIiwNCiAgICAiZml4ZWRUaW1lUmFuZ2UiOiAiTGFzdDFIb3VyIiwNCiAgICAiaW50ZXJ2YWwiOiAiT25lSG91ciIsDQogICAgImFnZ3JlZ2F0aW9uIjogIkF2ZXJhZ2UiDQogIH0NCn0=",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/159990879905613/definition.json",
-      "payload": "ew0KICAiaWQiOiAiMTU5OTkwODc5OTA1NjEzIiwNCiAgIm5hbWVzcGFjZSI6ICJ1c2VydHlwZXMiLA0KICAiYmFzZUVudGl0eVR5cGVJZCI6IG51bGwsDQogICJuYW1lIjogIkVxdWlwbWVudDIiLA0KICAiZW50aXR5SWRQYXJ0cyI6IFsNCiAgICAiMzExMzQ5MzI1NjY3NDEyOTE1MSINCiAgXSwNCiAgImRpc3BsYXlOYW1lUHJvcGVydHlJZCI6ICIzMTEzNDkzMjU2Njc0MTI5MTUxIiwNCiAgIm5hbWVzcGFjZVR5cGUiOiAiQ3VzdG9tIiwNCiAgInZpc2liaWxpdHkiOiAiVmlzaWJsZSIsDQogICJwcm9wZXJ0aWVzIjogWw0KICAgIHsNCiAgICAgICJpZCI6ICIzMTEzNDkzMjU2Njc0MTI5MTUxIiwNCiAgICAgICJuYW1lIjogIkRpc3BsYXlOYW1lIiwNCiAgICAgICJyZWRlZmluZXMiOiBudWxsLA0KICAgICAgImJhc2VUeXBlTmFtZXNwYWNlVHlwZSI6IG51bGwsDQogICAgICAidmFsdWVUeXBlIjogIlN0cmluZyINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTEzNDkzMjUzMTc3MDYyMTY4IiwNCiAgICAgICJuYW1lIjogIk1hbnVmYWN0dXJlciIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJTdHJpbmciDQogICAgfQ0KICBdLA0KICAidGltZXNlcmllc1Byb3BlcnRpZXMiOiBbDQogICAgew0KICAgICAgImlkIjogIjMxMTE4Nzg1NDU4NTQ3MDE1MjUiLA0KICAgICAgIm5hbWUiOiAiUHJlY2lzZVRpbWVzdGFtcCIsDQogICAgICAicmVkZWZpbmVzIjogbnVsbCwNCiAgICAgICJiYXNlVHlwZU5hbWVzcGFjZVR5cGUiOiBudWxsLA0KICAgICAgInZhbHVlVHlwZSI6ICJEYXRlVGltZSINCiAgICB9LA0KICAgIHsNCiAgICAgICJpZCI6ICIzMTExODc4NTQ2MTUwMzUzMzEyIiwNCiAgICAgICJuYW1lIjogIk5hbWUiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiU3RyaW5nIg0KICAgIH0sDQogICAgew0KICAgICAgImlkIjogIjMxMTE4Nzg1NDQwMTM1MzYzNTIiLA0KICAgICAgIm5hbWUiOiAiVGVtcGVyYXR1cmUiLA0KICAgICAgInJlZGVmaW5lcyI6IG51bGwsDQogICAgICAiYmFzZVR5cGVOYW1lc3BhY2VUeXBlIjogbnVsbCwNCiAgICAgICJ2YWx1ZVR5cGUiOiAiRG91YmxlIg0KICAgIH0NCiAgXQ0KfQ==",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/159990879905613/DataBindings/60efb0e8-2225-4a1b-84c8-1987d37ee422.json",
-      "payload": "ew0KICAiaWQiOiAiNjBlZmIwZTgtMjIyNS00YTFiLTg0YzgtMTk4N2QzN2VlNDIyIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIk5vblRpbWVTZXJpZXMiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJEaXNwbGF5TmFtZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTM0OTMyNTY2NzQxMjkxNTEiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJNYW51ZmFjdHVyZXIiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTEzNDkzMjUzMTc3MDYyMTY4Ig0KICAgICAgfQ0KICAgIF0sDQogICAgInNvdXJjZVRhYmxlUHJvcGVydGllcyI6IHsNCiAgICAgICJzb3VyY2VUeXBlIjogIkxha2Vob3VzZVRhYmxlIiwNCiAgICAgICJ3b3Jrc3BhY2VJZCI6ICI1ODBmNDEwZS03MzNkLTQzYmQtOGE4Ny1iZTEyYjUzNmY3ZmYiLA0KICAgICAgIml0ZW1JZCI6ICJkMGQ4NjNiYy00OGUxLTQ1YjItOGY0Yi01NDc5NWM5N2JhNzEiLA0KICAgICAgInNvdXJjZVRhYmxlTmFtZSI6ICJlcXVpcG1lbnQybm9udGltZXNlcmllcyIsDQogICAgICAic291cmNlU2NoZW1hIjogImRibyINCiAgICB9DQogIH0NCn0=",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "EntityTypes/159990879905613/DataBindings/0542df13-5b4b-4590-8dcf-ea2435d90a73.json",
-      "payload": "ew0KICAiaWQiOiAiMDU0MmRmMTMtNWI0Yi00NTkwLThkY2YtZWEyNDM1ZDkwYTczIiwNCiAgImRhdGFCaW5kaW5nQ29uZmlndXJhdGlvbiI6IHsNCiAgICAiZGF0YUJpbmRpbmdUeXBlIjogIlRpbWVTZXJpZXMiLA0KICAgICJ0aW1lc3RhbXBDb2x1bW5OYW1lIjogIlByZWNpc2VUaW1lc3RhbXAiLA0KICAgICJwcm9wZXJ0eUJpbmRpbmdzIjogWw0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJOYW1lIiwNCiAgICAgICAgInRhcmdldFByb3BlcnR5SWQiOiAiMzExMzQ5MzI1NjY3NDEyOTE1MSINCiAgICAgIH0sDQogICAgICB7DQogICAgICAgICJzb3VyY2VDb2x1bW5OYW1lIjogIk5hbWUiLA0KICAgICAgICAidGFyZ2V0UHJvcGVydHlJZCI6ICIzMTExODc4NTQ2MTUwMzUzMzEyIg0KICAgICAgfSwNCiAgICAgIHsNCiAgICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiUHJlY2lzZVRpbWVzdGFtcCIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDU4NTQ3MDE1MjUiDQogICAgICB9LA0KICAgICAgew0KICAgICAgICAic291cmNlQ29sdW1uTmFtZSI6ICJUZW1wZXJhdHVyZSIsDQogICAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTE4Nzg1NDQwMTM1MzYzNTIiDQogICAgICB9DQogICAgXSwNCiAgICAic291cmNlVGFibGVQcm9wZXJ0aWVzIjogew0KICAgICAgInNvdXJjZVR5cGUiOiAiTGFrZWhvdXNlVGFibGUiLA0KICAgICAgIndvcmtzcGFjZUlkIjogIjU4MGY0MTBlLTczM2QtNDNiZC04YTg3LWJlMTJiNTM2ZjdmZiIsDQogICAgICAiaXRlbUlkIjogImQwZDg2M2JjLTQ4ZTEtNDViMi04ZjRiLTU0Nzk1Yzk3YmE3MSIsDQogICAgICAic291cmNlVGFibGVOYW1lIjogImVxdWlwbWVudDJ0aW1lc2VyaWVzIiwNCiAgICAgICJzb3VyY2VTY2hlbWEiOiAiZGJvIg0KICAgIH0NCiAgfQ0KfQ==",
-      "payloadType": "InlineBase64"
-    },
-    { 
-      "path": "EntityTypes/159990879905613/ResourceLinks/definition.json",
-      "payload": "ewogICJyZXNvdXJjZUxpbmtzIjogWwogICAgewogICAgICAidHlwZSI6ICJQb3dlckJJUmVwb3J0IiwKICAgICAgIndvcmtzcGFjZUlkIjogImE3NmFkMjdlLTg5NmUtNGQ0Mi04YjcyLTAzN2ZkYmI0YmZmMSIsCiAgICAgICJpdGVtSWQiOiAiMGM4MGYwNDItZDllZC00YzcxLWFiOGMtNTEyOWFkN2FiYTg4IgogICAgfQogIF0KfQ==",
-      "payloadType": "InlineBase64"
-    }, 
-    {
-      "path": "RelationshipTypes/3110733855942077719/definition.json",
-      "payload": "ew0KICAibmFtZXNwYWNlIjogInVzZXJ0eXBlcyIsDQogICJpZCI6ICIzMTEwNzMzODU1OTQyMDc3NzE5IiwNCiAgIm5hbWUiOiAiY29udGFpbnMiLA0KICAibmFtZXNwYWNlVHlwZSI6ICJDdXN0b20iLA0KICAic291cmNlIjogew0KICAgICJlbnRpdHlUeXBlSWQiOiAiODgxMzU5ODg5NjA4MyINCiAgfSwNCiAgInRhcmdldCI6IHsNCiAgICAiZW50aXR5VHlwZUlkIjogIjE1OTk5MDg3OTkwNTYxMyINCiAgfQ0KfQ==",
-      "payloadType": "InlineBase64"
-    },
-    {
-      "path": "RelationshipTypes/3110733855942077719/Contextualizations/62bbbf52-39a4-47ed-b7bf-651debaca6ab.json",
-      "payload": "ew0KICAiaWQiOiAiNjJiYmJmNTItMzlhNC00N2VkLWI3YmYtNjUxZGViYWNhNmFiIiwNCiAgImRhdGFCaW5kaW5nVGFibGUiOiB7DQogICAgIndvcmtzcGFjZUlkIjogIjU4MGY0MTBlLTczM2QtNDNiZC04YTg3LWJlMTJiNTM2ZjdmZiIsDQogICAgIml0ZW1JZCI6ICJkMGQ4NjNiYy00OGUxLTQ1YjItOGY0Yi01NDc5NWM5N2JhNzEiLA0KICAgICJzb3VyY2VUYWJsZU5hbWUiOiAicmVsYXRpb25zaGlwdGFibGUiLA0KICAgICJzb3VyY2VTY2hlbWEiOiAiZGJvIiwNCiAgICAic291cmNlVHlwZSI6ICJMYWtlaG91c2VUYWJsZSINCiAgfSwNCiAgInNvdXJjZUtleVJlZkJpbmRpbmdzIjogWw0KICAgIHsNCiAgICAgICJzb3VyY2VDb2x1bW5OYW1lIjogIkVxdWlwbWVudDFOYW1lIiwNCiAgICAgICJ0YXJnZXRQcm9wZXJ0eUlkIjogIjMxMTcwNjgwMzYzNzQ1OTQwMTMiDQogICAgfQ0KICBdLA0KICAidGFyZ2V0S2V5UmVmQmluZGluZ3MiOiBbDQogICAgew0KICAgICAgInNvdXJjZUNvbHVtbk5hbWUiOiAiRXF1aXBtZW50Mk5hbWUiLA0KICAgICAgInRhcmdldFByb3BlcnR5SWQiOiAiMzExMzQ5MzI1NjY3NDEyOTE1MSINCiAgICB9DQogIF0NCn0=",
-      "payloadType": "InlineBase64"
-    }
-  ]
+    "parts": [
+        {
+            "path": ".platform",
+            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIk9udG9sb2d5IiwKICAgICJkaXNwbGF5TmFtZSI6ICJXaW5kRmFybSIKICB9LAogICJjb25maWciOiB7CiAgICAidmVyc2lvbiI6ICIyLjAiLAogICAgImxvZ2ljYWxJZCI6ICIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiCiAgfQp9",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "database.tmdl",
+            "payload": "ZGF0YWJhc2UKCWNvbXBhdGliaWxpdHlMZXZlbDogMTAwMDAwMAo=",
+            "payloadType": "InlineBase64"
+        }
+    ]
 }
 ```
 
-## DefinitionDetails 
+## Full WindFarm ontology definition example
 
-The DefinitionDetails file name is *definition.json*. It is an empty definition.
-
-### DefinitionDetails file example 
-
-```json
-{}
-```
-
-## EntityTypes/{ID} directory: EntityType file
-
-The EntityType file name is the *definition.json*.
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | BigInt | true | Unique ID of the entity type. The entity type ID is a positive 64-bit integer that's unique across the ontology instance. |
-| `namespace` | string | true | Allowed value: *usertypes*. |
-| `baseEntityTypeId` | BigInt | false | Unique ID of the base entity type. |
-| `name` | string | true | Name of the entity type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
-| `entityIdParts` | BigInt[] | false | The properties (by ID) that together uniquely identify an entity. |
-| `displayNamePropertyId` | BigInt | false | The ID of the property that's used as the display name for the entity. |
-| `namespaceType` | string | true | Allowed value: *Custom.* |
-| `visibility` | string | false | Allowed value: *Visible.* |
-| `properties` | EntityTypeProperty[] | false | List of entity type properties. |
-| `timeseriesProperties` | EntityTypeProperty[] | false | List of entity type properties. |
-| `untypedProperties` | UntypedEntityTypeProperty[] | false | List of untyped entity type properties. |
-
-### EntityTypeProperty
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | BigInt | true | Unique ID of the entity type property. |
-| `name` | string | true | Name of the entity type property. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
-| `redefines` | string | false | Pointer to property inherited from base type that this property redefines. |
-| `baseTypeNamespaceType` | string | false | The namespace of the base entity type. |
-| `valueType` | string | true | Describes the value type of the entity type property. Allowed values: *String*, *Boolean*, *DateTime*, *Object*, *BigInt*, *Double*. |
-
-### UntypedEntityTypeProperty
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | BigInt | true | Unique ID of the entity type property. |
-| `name` | string | true | Name of the entity type property. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
-| `redefines` | string | false | Pointer to property inherited from base type that this property redefines. |
-| `baseTypeNamespaceType` | string | false | The namespace of the base entity type. |
-| `valueType` | string | true | Allowed value: *Any*. |
-
-### EntityType file example
+The complete **WindFarm** sample ontology definition — all 35 parts (14 backing tables, 12 entities, `relationships`, `entityRelationships`, `expressions`, the `default`/`mynamespace` namespaces, one `rules/SpeedLimit.tmdl` rule, `model`, `database`, and the platform-owned `.platform`). This is the canonical sample referenced throughout this article; it round-trips faithfully through `getDefinition` / `updateDefinition`.
 
 ```json
 {
-  "id": "8813598896083",
-  "namespace": "usertypes",
-  "baseEntityTypeId": null,
-  "name": "Equipment1",
-  "entityIdParts": [
-    "3117068036374594013"
-  ],
-  "displayNamePropertyId": "3117068036374594013",
-  "namespaceType": "Custom",
-  "visibility": "Visible",
-  "properties": [
-    {
-      "id": "3117068036374594013",
-      "name": "DisplayName",
-      "redefines": null,
-      "baseTypeNamespaceType": null,
-      "valueType": "String"
-    },
-    {
-      "id": "3117068031950000331",
-      "name": "Manufacturer",
-      "redefines": null,
-      "baseTypeNamespaceType": null,
-      "valueType": "String"
-    }
-  ],
-  "timeseriesProperties": [
-    {
-      "id": "3114584981368796953",
-      "name": "PreciseTimestamp",
-      "redefines": null,
-      "baseTypeNamespaceType": null,
-      "valueType": "DateTime"
-    },
-    {
-      "id": "3114584979743320934",
-      "name": "Name",
-      "redefines": null,
-      "baseTypeNamespaceType": null,
-      "valueType": "String"
-    },
-    {
-      "id": "3114584977562679672",
-      "name": "Temperature",
-      "redefines": null,
-      "baseTypeNamespaceType": null,
-      "valueType": "Double"
-    }
-  ]
+    "parts": [
+        {
+            "path": "tables/wind_maintenance_requests.tmdl",
+            "payload": "dGFibGUgd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cw0KCWxpbmVhZ2VUYWc6IDJjZDllMzQyLThkOTItNDIzOS05OTNmLWViYzA2ZWIxZmZjYw0KDQoJY29sdW1uIFdvcmtvcmRlcklkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogODI2YTBmMWYtNmQ1YS00OTFiLWFkYmEtZmFhZjk3ZDJmNGUwDQoJCXNvdXJjZUNvbHVtbjogV29ya29yZGVySWQNCg0KCWNvbHVtbiBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBlOWY2ODFhZi0zZjZlLTQ3OTctODZhNy0zNzUwYWMwY2M3NmYNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lSWQNCg0KCWNvbHVtbiBXb3JrT3JkZXJUeXBlDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogYTllNGRkNDktYWJiMS00ZWY0LWFmNDgtOWE4MjIxODJiMGI2DQoJCXNvdXJjZUNvbHVtbjogV29ya09yZGVyVHlwZQ0KDQoJY29sdW1uIFN0YXR1cw0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IDNhY2Q2ZmQwLTFmMjQtNGVmMy1hYWVmLTYzMGMyMmRiZWZiMw0KCQlzb3VyY2VDb2x1bW46IFN0YXR1cw0KDQoJY29sdW1uIFByaW9yaXR5DQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogMjI3YTBlNjYtYjU2ZC00OTI3LTkxOTctZTE3MWYxYWE0ODdlDQoJCXNvdXJjZUNvbHVtbjogUHJpb3JpdHkNCg0KCWNvbHVtbiBPcmRlckRhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWZvcm1hdFN0cmluZzogR2VuZXJhbCBEYXRlDQoJCWxpbmVhZ2VUYWc6IDFkZGYwOTMwLWVkNTEtNDZjNC1iYjQ4LWU0MWQxOTA4Mzc5OQ0KCQlzb3VyY2VDb2x1bW46IE9yZGVyRGF0ZQ0KDQoJY29sdW1uIExhc3RVcGRhdGVkRGF0ZQ0KCQlkYXRhVHlwZTogZGF0ZVRpbWUNCgkJZm9ybWF0U3RyaW5nOiBHZW5lcmFsIERhdGUNCgkJbGluZWFnZVRhZzogOThhMzY3MGUtODI5Yi00ZWNkLTk1NTQtYzg2MDRlZTZhZjQ2DQoJCXNvdXJjZUNvbHVtbjogTGFzdFVwZGF0ZWREYXRlDQoNCgljb2x1bW4gRXN0aW1hdGVkU3RhcnREYXRlDQoJCWRhdGFUeXBlOiBkYXRlVGltZQ0KCQlmb3JtYXRTdHJpbmc6IEdlbmVyYWwgRGF0ZQ0KCQlsaW5lYWdlVGFnOiA4NDE2MGQ1Zi0wODI4LTQxZDktYWEzOS05NGYwOGM0M2UwYTYNCgkJc291cmNlQ29sdW1uOiBFc3RpbWF0ZWRTdGFydERhdGUNCg0KCWNvbHVtbiBDb21taXRtZW50RGF0ZQ0KCQlkYXRhVHlwZTogZGF0ZVRpbWUNCgkJZm9ybWF0U3RyaW5nOiBHZW5lcmFsIERhdGUNCgkJbGluZWFnZVRhZzogMDA0MzJmM2QtNTdiOS00M2YzLTkyZjgtY2FkNjU1ZmE2MzM2DQoJCXNvdXJjZUNvbHVtbjogQ29tbWl0bWVudERhdGUNCg0KCWNvbHVtbiBFc3RpbWF0ZWRMYWJvdXJIb3Vycw0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IDA3NDU5NWJlLWRlZjEtNDg0NC04YWIxLTYwMDAyYjRlZTIwOA0KCQlzb3VyY2VDb2x1bW46IEVzdGltYXRlZExhYm91ckhvdXJzDQoNCgljb2x1bW4gQWN0dWFsTGFib3VySG91cnMNCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiBjN2ViZmJlMi01YjJhLTRjYjctYmJlNi05M2VmMTFmZmRiMzUNCgkJc291cmNlQ29sdW1uOiBBY3R1YWxMYWJvdXJIb3Vycw0KDQoJY29sdW1uIEFjdHVhbEVuZERhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWZvcm1hdFN0cmluZzogR2VuZXJhbCBEYXRlDQoJCWxpbmVhZ2VUYWc6IDJmY2E5ZGU2LTM4MjUtNDI2Zi04NTRkLTViYzkwNGFhYmJjZg0KCQlzb3VyY2VDb2x1bW46IEFjdHVhbEVuZERhdGUNCg0KCWNvbHVtbiBBc3NpZ25lZFRvDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogN2RlY2YzN2MtOGY2Ny00MGEwLTk5YmQtYmNkY2U5NGFjNGU5DQoJCXNvdXJjZUNvbHVtbjogQXNzaWduZWRUbw0KDQoJcGFydGl0aW9uIHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMNCgkJCXNjaGVtYU5hbWU6IGRibw0KCQkJZXhwcmVzc2lvblNvdXJjZTogRGF0YWJhc2VRdWVyeQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_maintenance_staff.tmdl",
+            "payload": "dGFibGUgd2luZF9tYWludGVuYW5jZV9zdGFmZg0KCWxpbmVhZ2VUYWc6IDI1NzNkN2YyLTIzODktNDZiZC1iMjE4LTAwNTliMjU1NzdhZg0KDQoJY29sdW1uIElkDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogZWNjMDg4NWQtZDdhMC00NjM0LWE1M2YtYTAwNjZmMmI3N2U3DQoJCXNvdXJjZUNvbHVtbjogSWQNCg0KCWNvbHVtbiBOYW1lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZDBkYjdiMjctYjIwZi00MDViLTk0NWQtNzE5ZTUxMWE3M2JhDQoJCXNvdXJjZUNvbHVtbjogTmFtZQ0KDQoJY29sdW1uIEVtYWlsDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZjg1ZDUzMjctYzc0Yi00ODliLWI0ZTktMjllNjAxYjM1MGE2DQoJCXNvdXJjZUNvbHVtbjogRW1haWwNCg0KCWNvbHVtbiBQaG9uZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGQ5ODNmODE2LWY4MWYtNDEwNC1hNzkyLTJhNzk1YjgxZDhlZg0KCQlzb3VyY2VDb2x1bW46IFBob25lDQoNCgljb2x1bW4gSm9pbmVkU2luY2UNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWZvcm1hdFN0cmluZzogR2VuZXJhbCBEYXRlDQoJCWxpbmVhZ2VUYWc6IGQ3OWJmYmIzLWJlZWUtNDg4YS1iNWQ1LWVlODNkMTAxNTE0Mw0KCQlzb3VyY2VDb2x1bW46IEpvaW5lZFNpbmNlDQoNCgljb2x1bW4gTWFuYWdlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDE5ZjkyODE5LTFmMzQtNDJjOS1hYWM0LWM1Y2I5NjI3ZTI2MA0KCQlzb3VyY2VDb2x1bW46IE1hbmFnZXINCg0KCWNvbHVtbiBXb3JrT3JkZXJUeXBlUmVzcG9uc2libGUNCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiA2ZDIyNTYzOS0xZTBhLTQ3NzktYjk1My00OGI2NmJlNzQzODQNCgkJc291cmNlQ29sdW1uOiBXb3JrT3JkZXJUeXBlUmVzcG9uc2libGUNCg0KCXBhcnRpdGlvbiB3aW5kX21haW50ZW5hbmNlX3N0YWZmID0gZW50aXR5DQoJCW1vZGU6IGRpcmVjdExha2UNCgkJc291cmNlDQoJCQllbnRpdHlOYW1lOiB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQoJCQlzY2hlbWFOYW1lOiBkYm8NCgkJCWV4cHJlc3Npb25Tb3VyY2U6IERhdGFiYXNlUXVlcnkNCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_power_plants.tmdl",
+            "payload": "dGFibGUgd2luZF9wb3dlcl9wbGFudHMNCglsaW5lYWdlVGFnOiBlNTYxODg5MS02OTQxLTRmZTYtYTE2My03MWE5NGNhOWNmOTANCg0KCWNvbHVtbiBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYjQ0ZjEzYTMtMWJmZi00ZjVkLWI5ZDAtYzE5N2YxNzUxODY5DQoJCXNvdXJjZUNvbHVtbjogUGxhbnRJZA0KDQoJY29sdW1uIFBsYW50TmFtZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDc0MjYxNjViLTM2OTctNDgwMi1hNjE2LWE3ZjBjM2Q2MmM2Yg0KCQlzb3VyY2VDb2x1bW46IFBsYW50TmFtZQ0KDQoJY29sdW1uIFR5cGUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAyNGFlZmYyNS0xYWNkLTQ2ZDctYmFkOS00MjQxNTZiNDgyNGMNCgkJc291cmNlQ29sdW1uOiBUeXBlDQoNCgljb2x1bW4gQ2FwYWNpdHlGYWN0b3INCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiA3OTU4ZWZkYS1kM2FhLTQ1MTgtYjU4My0yNTZlMDdmMmExMzANCgkJc291cmNlQ29sdW1uOiBDYXBhY2l0eUZhY3Rvcg0KDQoJY29sdW1uIExvY2F0aW9uDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogOTI2NWFhMzMtYWI3Zi00YzYxLWJlOGQtZDA5NjMzNTQ4ZTlhDQoJCXNvdXJjZUNvbHVtbjogTG9jYXRpb24NCg0KCWNvbHVtbiBaaXBDb2RlDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogOTk3YWNmZDItYWQwOC00NDE4LWI4M2QtNTE2MDdhZDYyNzkyDQoJCXNvdXJjZUNvbHVtbjogWmlwQ29kZQ0KDQoJY29sdW1uIExhdGl0dWRlDQoJCWRhdGFUeXBlOiBkb3VibGUNCgkJbGluZWFnZVRhZzogOTVlMTkwYTYtOGQ2Yi00NWM4LWJkZWItYmY4NmVkZmZjNGMzDQoJCXNvdXJjZUNvbHVtbjogTGF0aXR1ZGUNCg0KCWNvbHVtbiBMb25naXR1ZGUNCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiA0ODgzYmY3Yy03MjFjLTQwN2QtODY1ZC00N2Y4OTljNTMyODUNCgkJc291cmNlQ29sdW1uOiBMb25naXR1ZGUNCg0KCXBhcnRpdGlvbiB3aW5kX3Bvd2VyX3BsYW50cyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogd2luZF9wb3dlcl9wbGFudHMNCgkJCXNjaGVtYU5hbWU6IGRibw0KCQkJZXhwcmVzc2lvblNvdXJjZTogRGF0YWJhc2VRdWVyeQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_status_codes.tmdl",
+            "payload": "dGFibGUgd2luZF9zdGF0dXNfY29kZXMNCglsaW5lYWdlVGFnOiA4NGVmMjg5Ni1jYTVmLTQxMDctYWU5My0wYWIyMjhlMGJhODUNCg0KCWNvbHVtbiBFcnJvckNvZGUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2OTZhMTA3ZS01ZWZlLTQ4YzktYTU0My0wZDgwNmM3MzI2MzkNCgkJc291cmNlQ29sdW1uOiBFcnJvckNvZGUNCg0KCWNvbHVtbiBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogOGQxYTM0MTctOTEzMy00ZmIyLTljZjUtY2Q4YzhkYTNjMDM5DQoJCXNvdXJjZUNvbHVtbjogUGxhbnRJZA0KDQoJY29sdW1uIERlc2NyaXB0aW9uDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogM2IwOTU0ZTMtMWMxNy00NDgxLTgzNjQtMDhmNzAwNjUzN2U5DQoJCXNvdXJjZUNvbHVtbjogRGVzY3JpcHRpb24NCg0KCWNvbHVtbiBTZXZlcml0eQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDNhZWEwZjNjLTVhNmMtNDk1MC1iMzEwLTRmYzUwZmRmMTBhNA0KCQlzb3VyY2VDb2x1bW46IFNldmVyaXR5DQoNCgljb2x1bW4gUG9zc2libGVDYXVzZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDhlNDFjYjg2LTZhZjQtNGEyNC04NTQxLWUxNjIyZDk4YmMwYQ0KCQlzb3VyY2VDb2x1bW46IFBvc3NpYmxlQ2F1c2UNCg0KCWNvbHVtbiBSZWNvbW1lbmRlZEFjdGlvbg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGJiMGVkYThhLTdkZjUtNGI0MC1iM2UxLTU4Yzc4MDg3MTRjOA0KCQlzb3VyY2VDb2x1bW46IFJlY29tbWVuZGVkQWN0aW9uDQoNCgljb2x1bW4gQWZmZWN0ZWRDb21wb25lbnRzDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZGFjOGI2OTEtNTUxMy00NWFjLTgzZDYtM2NmMzk1Zjc5MTkwDQoJCXNvdXJjZUNvbHVtbjogQWZmZWN0ZWRDb21wb25lbnRzDQoNCglwYXJ0aXRpb24gd2luZF9zdGF0dXNfY29kZXMgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfc3RhdHVzX2NvZGVzDQoJCQlzY2hlbWFOYW1lOiBkYm8NCgkJCWV4cHJlc3Npb25Tb3VyY2U6IERhdGFiYXNlUXVlcnkNCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_blade.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX2JsYWRlDQoJbGluZWFnZVRhZzogNGU2NzMyNTMtNTA4My00YTk5LWExY2EtOTZjNmJiNTgzZDM5DQoNCgljb2x1bW4gVHVyYmluZUlkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogMDgxYmZkOWMtMDRhZS00YjRmLTkzNzUtZmZhYzhlYWE1NWU0DQoJCXNvdXJjZUNvbHVtbjogVHVyYmluZUlkDQoNCgljb2x1bW4gQ29tcG9uZW50SWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAyMTQwM2ZmOS1iMTZhLTQ5MGYtOTk5YS1lMTZhNWVjZGMyNDcNCgkJc291cmNlQ29sdW1uOiBDb21wb25lbnRJZA0KDQoJY29sdW1uIENvbXBvbmVudE5hbmUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA1Y2U3NWUzMS1mMGUwLTQ5ZDgtYjM5Ny02ODBiNDk2NGY2MWUNCgkJc291cmNlQ29sdW1uOiBDb21wb25lbnROYW5lDQoNCgljb2x1bW4gQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGNkNDJkM2FiLTY2ZGUtNDZiYS1iNmExLTQ0MWRlNzU4Y2MzOQ0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudERldGFpbHMNCg0KCWNvbHVtbiBTZXJpYWxOdW1iZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBiNjlkNDI5NS0xMWZkLTQ1NTktYjMyMy01YzVkM2NkZjdkMTUNCgkJc291cmNlQ29sdW1uOiBTZXJpYWxOdW1iZXINCg0KCWNvbHVtbiBNYW51ZmFjdHVyZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2NjEyMjJjYi05OGQyLTQyMTEtYTc1OC04NTM1MmJjN2ZlNTENCgkJc291cmNlQ29sdW1uOiBNYW51ZmFjdHVyZXINCg0KCXBhcnRpdGlvbiB3aW5kX3R1cmJpbmVfYmxhZGUgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfdHVyYmluZV9ibGFkZQ0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_gearbox.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX2dlYXJib3gNCglsaW5lYWdlVGFnOiA5NTgxNDA4OC01OGRjLTQxOWUtYTYyYy1iYTAzZjFmYzdkYWMNCg0KCWNvbHVtbiBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA5YjlkOWYyMC0yNGUyLTQ3OGEtOGJhZi1hYTg1MWMyNmFjYTkNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lSWQNCg0KCWNvbHVtbiBDb21wb25lbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDVmNDFjODE5LTQwYTUtNDk1Zi05OGEzLWI4NDZmNTZhNzk5ZQ0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudElkDQoNCgljb2x1bW4gQ29tcG9uZW50TmFuZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGMzNTE4YjZmLTEyYzEtNDNiNS1hZWJkLWVhMTMzYzgxYzA3ZQ0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudE5hbmUNCg0KCWNvbHVtbiBDb21wb25lbnREZXRhaWxzDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogODhjOTBhYTAtY2YyYS00ZjJlLTg3MGItMGEwZjFmYjViYjUxDQoJCXNvdXJjZUNvbHVtbjogQ29tcG9uZW50RGV0YWlscw0KDQoJY29sdW1uIFNlcmlhbE51bWJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGE2Yjc5OGNlLTZjNmYtNGFkNy1hZDFmLTZlYjc1YWQ4ZDRiYw0KCQlzb3VyY2VDb2x1bW46IFNlcmlhbE51bWJlcg0KDQoJY29sdW1uIE1hbnVmYWN0dXJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDFiMjIxNWYwLTRhYzgtNGE4ZS1iOTU0LWE4YTZmZTIxMWUzMg0KCQlzb3VyY2VDb2x1bW46IE1hbnVmYWN0dXJlcg0KDQoJcGFydGl0aW9uIHdpbmRfdHVyYmluZV9nZWFyYm94ID0gZW50aXR5DQoJCW1vZGU6IGRpcmVjdExha2UNCgkJc291cmNlDQoJCQllbnRpdHlOYW1lOiB3aW5kX3R1cmJpbmVfZ2VhcmJveA0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_generator.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX2dlbmVyYXRvcg0KCWxpbmVhZ2VUYWc6IDQzMWEzMDQwLWUyODItNDU0Mi05MzBmLTk4YWQwMTdlMWQ2Yg0KDQoJY29sdW1uIFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDdmNmE0OWM3LWYxNDktNDYzMi1iYTFjLTIxOTczYWEwMGM3NQ0KCQlzb3VyY2VDb2x1bW46IFR1cmJpbmVJZA0KDQoJY29sdW1uIENvbXBvbmVudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogM2NiNzVlMzgtZGI4OS00NWRiLTgxNjUtMmQ0NjRkYzU4Njk2DQoJCXNvdXJjZUNvbHVtbjogQ29tcG9uZW50SWQNCg0KCWNvbHVtbiBDb21wb25lbnROYW5lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogOGFlMzZlZjYtMjk2My00NzZmLTlkNGEtZGEwYWMyNzM5MzViDQoJCXNvdXJjZUNvbHVtbjogQ29tcG9uZW50TmFuZQ0KDQoJY29sdW1uIENvbXBvbmVudERldGFpbHMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA5MDRmM2YwZS1kYzMzLTQ4YTgtYTRjZS02NTEyMGZjYzY3NWMNCgkJc291cmNlQ29sdW1uOiBDb21wb25lbnREZXRhaWxzDQoNCgljb2x1bW4gU2VyaWFsTnVtYmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZDgxOTFhMDEtM2E3Yy00YjIzLTliZGEtNWQ4N2EwMzhlNzIzDQoJCXNvdXJjZUNvbHVtbjogU2VyaWFsTnVtYmVyDQoNCgljb2x1bW4gTWFudWZhY3R1cmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZTI4NDIxNmMtMjFiMi00YTVkLThjNzktNDdkYmVlNmQxZmI3DQoJCXNvdXJjZUNvbHVtbjogTWFudWZhY3R1cmVyDQoNCglwYXJ0aXRpb24gd2luZF90dXJiaW5lX2dlbmVyYXRvciA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogd2luZF90dXJiaW5lX2dlbmVyYXRvcg0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_nacelle.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX25hY2VsbGUNCglsaW5lYWdlVGFnOiBiZGE5NDY1OS1hOWFmLTQzZGItYmIxMi02NWYxNzQxODc1NWINCg0KCWNvbHVtbiBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA3NDcxNmJhNi0zMzBiLTQ3YWUtOGE2YS1hNmFjMDQzMDExYWYNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lSWQNCg0KCWNvbHVtbiBDb21wb25lbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDExNTJmNDI1LWQxOGYtNDQyZi04ZmU4LTg1YThhMzZjMWM5Nw0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudElkDQoNCgljb2x1bW4gQ29tcG9uZW50TmFuZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDE2NWY5ZTcwLWMxMWYtNGRlZi04MDE3LWQ1ZDE1MTZhMGE2Yg0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudE5hbmUNCg0KCWNvbHVtbiBDb21wb25lbnREZXRhaWxzDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogMWNjODEwMmQtNDdkNi00NjNlLTllMjktNGM5MjBjNGQwMjhkDQoJCXNvdXJjZUNvbHVtbjogQ29tcG9uZW50RGV0YWlscw0KDQoJY29sdW1uIFNlcmlhbE51bWJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGZlMTZlMzNmLTRkM2UtNDk4Yy05NDNmLTE4ZGI5Y2E2ZjA0NA0KCQlzb3VyY2VDb2x1bW46IFNlcmlhbE51bWJlcg0KDQoJY29sdW1uIE1hbnVmYWN0dXJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDI2OTA0NmM5LTUwY2YtNGRlZi1iNjFlLTg4MGQ2OGM3N2ZhOA0KCQlzb3VyY2VDb2x1bW46IE1hbnVmYWN0dXJlcg0KDQoJcGFydGl0aW9uIHdpbmRfdHVyYmluZV9uYWNlbGxlID0gZW50aXR5DQoJCW1vZGU6IGRpcmVjdExha2UNCgkJc291cmNlDQoJCQllbnRpdHlOYW1lOiB3aW5kX3R1cmJpbmVfbmFjZWxsZQ0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_rotor.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX3JvdG9yDQoJbGluZWFnZVRhZzogZDQ5ZWYzNDAtMjRiOS00MGQ4LThkY2UtNGM0ODA5NzU5YzM0DQoNCgljb2x1bW4gVHVyYmluZUlkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZjM3YTE4MDctOTNlNy00NjE3LTljOGYtMzRjOTI5Mzc4ZmE5DQoJCXNvdXJjZUNvbHVtbjogVHVyYmluZUlkDQoNCgljb2x1bW4gQ29tcG9uZW50SWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBkMDQ5MTBmYi1kNGNjLTQ2ZGItODIzZi04ZWMzMTUzMmU1NDkNCgkJc291cmNlQ29sdW1uOiBDb21wb25lbnRJZA0KDQoJY29sdW1uIENvbXBvbmVudE5hbmUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAyZGE1NzhkOC1mM2I4LTRlMGQtYWQxMy00NDUzNzQwNDNlM2MNCgkJc291cmNlQ29sdW1uOiBDb21wb25lbnROYW5lDQoNCgljb2x1bW4gQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGFkYzVjNDc5LWE4MWYtNGJjMy04Y2FmLTIwYzY5NjY4ZGVmMw0KCQlzb3VyY2VDb2x1bW46IENvbXBvbmVudERldGFpbHMNCg0KCWNvbHVtbiBTZXJpYWxOdW1iZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAzNmRhYzU5My04NDg3LTQxNTgtYjQ2NS1lZDRmNGE0ODNkOGENCgkJc291cmNlQ29sdW1uOiBTZXJpYWxOdW1iZXINCg0KCWNvbHVtbiBNYW51ZmFjdHVyZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA3ZjQwMjJkZS03NDg1LTQ0Y2QtODllNC0xMGY2ODM0ZWFhMGYNCgkJc291cmNlQ29sdW1uOiBNYW51ZmFjdHVyZXINCg0KCXBhcnRpdGlvbiB3aW5kX3R1cmJpbmVfcm90b3IgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfdHVyYmluZV9yb3Rvcg0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbine_telemetry_augmented_Mar2025.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNQ0KCWxpbmVhZ2VUYWc6IDE0NzdiM2UxLTAwOGUtNGZkZC1hYTIyLTZmM2M4MDRmZGY4NQ0KDQoJLy8vIE1lYW4gaW5zdGFudGFuZW91cyBwb3dlciBvdXRwdXQgYWNyb3NzIHR1cmJpbmUgdGVsZW1ldHJ5IHJlYWRpbmdzLg0KCW1lYXN1cmUgJ0F2ZXJhZ2UgUG93ZXInID0gQVZFUkFHRSgnd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNSdbUG93ZXJdKQ0KCQlmb3JtYXRTdHJpbmc6IDAuMDANCgkJZGlzcGxheUZvbGRlcjogVGVsZW1ldHJ5DQoJCWxpbmVhZ2VUYWc6IGE1YzE4MTMyLTNlN2MtNGExZC1iM2YxLWI2ZTk1NTdkMzRiOA0KDQoJLy8vIFRvdGFsIGVuZXJneSBwcm9kdWNlZCAoa1doKSBhY3Jvc3MgdHVyYmluZSB0ZWxlbWV0cnkgcmVhZGluZ3MuDQoJbWVhc3VyZSAnVG90YWwgRW5lcmd5IEt3aCcgPSBTVU0oJ3dpbmRfdHVyYmluZV90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUnW0VuZXJneUt3aF0pDQoJCWZvcm1hdFN0cmluZzogIywwDQoJCWRpc3BsYXlGb2xkZXI6IFRlbGVtZXRyeQ0KCQlsaW5lYWdlVGFnOiAxNGRkMDhiMC1mMmQwLTQxOWYtYmI5OS1mNGQ1OTU5NThhMWUNCg0KCWNvbHVtbiBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBlNjVmYWE4NC0zYWQyLTQ3ZTYtOGFhOC1hOGFlMmEzZGRiZDcNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lSWQNCg0KCWNvbHVtbiBFbmVyZ3lLd2gNCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiA4MzViYzA5ZC1kNTlkLTQ2MDAtYmY5Yi0zYjQ1YWEzMjIyYWMNCgkJc291cmNlQ29sdW1uOiBFbmVyZ3lLd2gNCg0KCWNvbHVtbiBEaWFtZXRlcg0KCQlkYXRhVHlwZTogZG91YmxlDQoJCWxpbmVhZ2VUYWc6IDA1ZmQ0MDE0LTIzZGQtNDIzZi1iZjNkLWYwZTY2NDJmNDNiZQ0KCQlzb3VyY2VDb2x1bW46IERpYW1ldGVyDQoNCgljb2x1bW4gUmF0aW8NCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiBkNDQ3YzA2Ny0wOTRkLTQwZDUtODgyMy00MDE0OTc0NGFlMGQNCgkJc291cmNlQ29sdW1uOiBSYXRpbw0KDQoJY29sdW1uIEVmZmljaWVuY3kNCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiA5YjJjMzA4Ny1lZjY4LTRhOTUtOGVmMC04YmIwYjc2YzIwMGMNCgkJc291cmNlQ29sdW1uOiBFZmZpY2llbmN5DQoNCgljb2x1bW4gUG93ZXINCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiBjYmIwNGE2My1lYTA1LTQ2MGUtOTMyYy03YjVhNzg4Y2RlNDgNCgkJc291cmNlQ29sdW1uOiBQb3dlcg0KDQoJY29sdW1uIFZvbHRhZ2UNCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiA1NTNjMTBiMC04ZjVjLTQ5YzctOWFhMy04MGMzOWY4ZjlhZTANCgkJc291cmNlQ29sdW1uOiBWb2x0YWdlDQoNCgljb2x1bW4gVGltZXN0YW1wDQoJCWRhdGFUeXBlOiBkYXRlVGltZQ0KCQlmb3JtYXRTdHJpbmc6IEdlbmVyYWwgRGF0ZQ0KCQlsaW5lYWdlVGFnOiAxZjljMTI5NS00MDlhLTQ0MzgtOWRmZi1kYmIyZjAyMjRlZTANCgkJc291cmNlQ29sdW1uOiBUaW1lc3RhbXANCg0KCXBhcnRpdGlvbiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1ID0gZW50aXR5DQoJCW1vZGU6IGRpcmVjdExha2UNCgkJc291cmNlDQoJCQllbnRpdHlOYW1lOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1DQoJCQlzY2hlbWFOYW1lOiBkYm8NCgkJCWV4cHJlc3Npb25Tb3VyY2U6IERhdGFiYXNlUXVlcnkNCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbines.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lcw0KCWxpbmVhZ2VUYWc6IDNmMjExZTBmLTcwMzMtNDZkMS05ZDU4LTM3ZmI5YWExYWU5ZA0KDQoJY29sdW1uIFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDFhYjM2N2JmLTA0YjItNGZhOC1iOTQ2LTllNTYzMTk0YTVmZA0KCQlzb3VyY2VDb2x1bW46IFR1cmJpbmVJZA0KDQoJY29sdW1uIFBsYW50SWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBjNGYzZjU0Ni04MDAxLTQwZDAtOWU5MC0zZmZkZTliOGM0OTcNCgkJc291cmNlQ29sdW1uOiBQbGFudElkDQoNCgljb2x1bW4gVHVyYmluZU5hbWUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2YWEwODkxNS02ZjczLTRkNTktODZhYi0xMzI5NjgyZTA1NjcNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lTmFtZQ0KDQoJY29sdW1uIEF4aXMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAzZDk4ZjExNS01YmMzLTQ2OWUtOTNhNy04MzEyY2Q5ZTM0MWQNCgkJc291cmNlQ29sdW1uOiBBeGlzDQoNCgljb2x1bW4gVHVyYmluZVN0YXR1cw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDZkYjI4ZWY4LTM1NGYtNDY1Mi1iNTNhLWExNTgxOTA3OTM0Yg0KCQlzb3VyY2VDb2x1bW46IFR1cmJpbmVTdGF0dXMNCg0KCWNvbHVtbiBDYXBhY2l0eQ0KCQlkYXRhVHlwZTogZG91YmxlDQoJCWxpbmVhZ2VUYWc6IGE4Yjg1MGYxLTNjZDItNGM1My1hZWNmLWJhMDJhZTg0ZGI0MQ0KCQlzb3VyY2VDb2x1bW46IENhcGFjaXR5DQoNCgljb2x1bW4gSHViSGVpZ2h0DQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogYTg4NjA2NDEtMTU5NC00NjY0LWJiZjEtNmQ0NjM2ZjU0ZDE4DQoJCXNvdXJjZUNvbHVtbjogSHViSGVpZ2h0DQoNCgljb2x1bW4gU2VyaWFsTnVtYmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNzYyNDFkNWQtN2M3OC00NDQ5LTg1YzAtY2NkOTA5YWVkZmIxDQoJCXNvdXJjZUNvbHVtbjogU2VyaWFsTnVtYmVyDQoNCgljb2x1bW4gTWFudWZhY3R1cmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogODNhZWRlM2EtNzRkNC00OWE4LWJiMGEtMTU4NjViZmMwOTE4DQoJCXNvdXJjZUNvbHVtbjogTWFudWZhY3R1cmVyDQoNCglwYXJ0aXRpb24gd2luZF90dXJiaW5lcyA9IGVudGl0eQ0KCQltb2RlOiBkaXJlY3RMYWtlDQoJCXNvdXJjZQ0KCQkJZW50aXR5TmFtZTogd2luZF90dXJiaW5lcw0KCQkJc2NoZW1hTmFtZTogZGJvDQoJCQlleHByZXNzaW9uU291cmNlOiBEYXRhYmFzZVF1ZXJ5DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_turbines2.tmdl",
+            "payload": "dGFibGUgd2luZF90dXJiaW5lczINCglsaW5lYWdlVGFnOiAzZmFlODBjMS1kMGNlLTQ1MGEtYjAxYS00NmI1YjkxYjQyNTgNCg0KCWNvbHVtbiBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBlM2U5ZmM1OC05ZGVlLTQzZjgtODcyOS0zYzY0OTMyOWM3YWYNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lSWQNCg0KCWNvbHVtbiBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZGEyYWNkMGMtNWRiNS00NzhmLWE5ZDItY2JiZDhjMjRkOTFkDQoJCXNvdXJjZUNvbHVtbjogUGxhbnRJZA0KDQoJY29sdW1uIFR1cmJpbmVOYW1lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZTMwZjViZDctZTNkZS00MDk2LWE1ZDUtYzI4NWM5OTkwYTM5DQoJCXNvdXJjZUNvbHVtbjogVHVyYmluZU5hbWUNCg0KCWNvbHVtbiBBeGlzDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZDJmZGY3YjItYjNjOS00ZTY2LTk0NmYtOGJhODhhNjUzNTQ2DQoJCXNvdXJjZUNvbHVtbjogQXhpcw0KDQoJY29sdW1uIFR1cmJpbmVTdGF0dXMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBiNjhkZDllNS1iMWFlLTRiM2ItYWM1Ny0xZTUzOTg3OWE0MDQNCgkJc291cmNlQ29sdW1uOiBUdXJiaW5lU3RhdHVzDQoNCgljb2x1bW4gQ2FwYWNpdHkNCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiAyZjJhZjdjNy04YTAwLTRhZmUtYTA5Ni01ZGZkODM3OTgwNTMNCgkJc291cmNlQ29sdW1uOiBDYXBhY2l0eQ0KDQoJY29sdW1uIEh1YkhlaWdodA0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IDhmMjE1MTU2LWMwN2EtNDgwYS1hOGE3LTk5ZTVhYTE1MzJjNg0KCQlzb3VyY2VDb2x1bW46IEh1YkhlaWdodA0KDQoJY29sdW1uIFNlcmlhbE51bWJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGQwYjA2YmJiLWNjZmItNDIyYS1iMTI2LTUxZmM5ZmJjYWE5MQ0KCQlzb3VyY2VDb2x1bW46IFNlcmlhbE51bWJlcg0KDQoJY29sdW1uIE1hbnVmYWN0dXJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGEzODIxMDVjLTU2NWEtNGU3Mi04MDU3LWM5ZDYyNjFmNDRiNg0KCQlzb3VyY2VDb2x1bW46IE1hbnVmYWN0dXJlcg0KDQoJcGFydGl0aW9uIHdpbmRfdHVyYmluZXMgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfdHVyYmluZXMNCgkJCXNjaGVtYU5hbWU6IGRibw0KCQkJZXhwcmVzc2lvblNvdXJjZTogRGF0YWJhc2VRdWVyeQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_weather_tower_telemetry_augmented_Mar2025.tmdl",
+            "payload": "dGFibGUgd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNQ0KCWxpbmVhZ2VUYWc6IGQ0ODNlMDM5LThjZGUtNDIxNC04YzMwLTU2NDI2ZjUyN2QyNw0KDQoJY29sdW1uIFRvd2VySWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2YjExY2NkYy0yN2Q0LTQ2MzItODBlNi1jMjQ1OGM4MjQ1YmUNCgkJc291cmNlQ29sdW1uOiBUb3dlcklkDQoNCgljb2x1bW4gSHVtaWRpdHlfcGVyY2VudA0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IDZiNGFiM2Q4LTU4YjctNGQ0OC1hNzkwLTQxY2E4OGFmZDMzZg0KCQlzb3VyY2VDb2x1bW46IEh1bWlkaXR5X3BlcmNlbnQNCg0KCWNvbHVtbiBQcmVzc3VyZV9oUGENCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiA3ZmZiMDNkZi1kZTA4LTQ0M2QtYjkyZi03MmVmYmJjYTQ3NWQNCgkJc291cmNlQ29sdW1uOiBQcmVzc3VyZV9oUGENCg0KCWNvbHVtbiBTb2xhclJhZGlhdGlvbg0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IDRkODI0NjYxLTA2ZmQtNDEwYy05NjE5LWFkMzEyMzI0YmJhNw0KCQlzb3VyY2VDb2x1bW46IFNvbGFyUmFkaWF0aW9uDQoNCgljb2x1bW4gVGVtcGVyYXR1cmUNCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiA4YjgxNWMwMy0yNDk4LTRiZDQtYjU4Ny1mNjI5N2VkZTQzYTkNCgkJc291cmNlQ29sdW1uOiBUZW1wZXJhdHVyZQ0KDQoJY29sdW1uIFR1cmJ1bGVuY2UNCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiA2Mzg1NjY3My0wZDc2LTQwMjEtODY1OC1hMzE5NGE0MTY0ZTANCgkJc291cmNlQ29sdW1uOiBUdXJidWxlbmNlDQoNCgljb2x1bW4gV2luZERpcmVjdGlvbg0KCQlkYXRhVHlwZTogaW50NjQNCgkJZm9ybWF0U3RyaW5nOiAwDQoJCWxpbmVhZ2VUYWc6IGU2NDE5NDk5LWViMGUtNDQ0NS1iZDFhLWQ1MWE5NzRlNDNlZQ0KCQlzb3VyY2VDb2x1bW46IFdpbmREaXJlY3Rpb24NCg0KCWNvbHVtbiBXaW5kU2hlYXINCgkJZGF0YVR5cGU6IGRvdWJsZQ0KCQlsaW5lYWdlVGFnOiAwNTU4ZDJiOC1mODBlLTQyMWItODc4OC0zNTcwZjdlM2ViY2MNCgkJc291cmNlQ29sdW1uOiBXaW5kU2hlYXINCg0KCWNvbHVtbiBXaW5kU3BlZWQNCgkJZGF0YVR5cGU6IGludDY0DQoJCWZvcm1hdFN0cmluZzogMA0KCQlsaW5lYWdlVGFnOiAwOTBmN2E1Ni0zZWYxLTQyOWQtYTgwNi0wZTVlYTg3ZDZhN2ENCgkJc291cmNlQ29sdW1uOiBXaW5kU3BlZWQNCg0KCWNvbHVtbiBUaW1lc3RhbXANCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWZvcm1hdFN0cmluZzogR2VuZXJhbCBEYXRlDQoJCWxpbmVhZ2VUYWc6IGQ5ODQxYmQ4LTIxNGYtNGJmMy04MDhhLWE4MmNjMzY5YzJkMA0KCQlzb3VyY2VDb2x1bW46IFRpbWVzdGFtcA0KDQoJcGFydGl0aW9uIHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUgPSBlbnRpdHkNCgkJbW9kZTogZGlyZWN0TGFrZQ0KCQlzb3VyY2UNCgkJCWVudGl0eU5hbWU6IHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUNCgkJCXNjaGVtYU5hbWU6IGRibw0KCQkJZXhwcmVzc2lvblNvdXJjZTogRGF0YWJhc2VRdWVyeQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "tables/wind_weather_towers.tmdl",
+            "payload": "dGFibGUgd2luZF93ZWF0aGVyX3Rvd2Vycw0KCWxpbmVhZ2VUYWc6IGYwYjYxYmVhLTU3MDYtNGNiYi05NjA1LTIwODAyNzBjZDNhYw0KDQoJY29sdW1uIFRvd2VySWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBlM2VkNWE2MC0xOTg0LTRkNWUtOGE2Ni04NjBhMmU4N2MzM2INCgkJc291cmNlQ29sdW1uOiBUb3dlcklkDQoNCgljb2x1bW4gUGxhbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDQzMTNlYWVlLTY4MjAtNDgzZC1hNWMzLTQwODYxMTUxNThhNQ0KCQlzb3VyY2VDb2x1bW46IFBsYW50SWQNCg0KCWNvbHVtbiBOYW1lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZGZiMmI5ZTgtMjcyYi00MWRiLTk0NDgtY2M1NWQzMDA0NDczDQoJCXNvdXJjZUNvbHVtbjogTmFtZQ0KDQoJY29sdW1uIEhlaWdodF9tDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlmb3JtYXRTdHJpbmc6IDANCgkJbGluZWFnZVRhZzogMGU0MjlmNDMtYTljYS00Yzk3LWI5MzctNDM4NjUxZWQ5YTY3DQoJCXNvdXJjZUNvbHVtbjogSGVpZ2h0X20NCg0KCXBhcnRpdGlvbiB3aW5kX3dlYXRoZXJfdG93ZXJzID0gZW50aXR5DQoJCW1vZGU6IGRpcmVjdExha2UNCgkJc291cmNlDQoJCQllbnRpdHlOYW1lOiB3aW5kX3dlYXRoZXJfdG93ZXJzDQoJCQlzY2hlbWFOYW1lOiBkYm8NCgkJCWV4cHJlc3Npb25Tb3VyY2U6IERhdGFiYXNlUXVlcnkNCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "relationships.tmdl",
+            "payload": "cmVsYXRpb25zaGlwIHJlbF93ZWF0aGVydGVsZW1ldHJ5X3Rvd2VyDQoJZnJvbUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5Ub3dlcklkDQoJdG9Db2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcnMuVG93ZXJJZA0KDQpyZWxhdGlvbnNoaXAgcmVsX3N0YXR1c2NvZGVfcGxhbnQNCglmcm9tQ29sdW1uOiB3aW5kX3N0YXR1c19jb2Rlcy5QbGFudElkDQoJdG9Db2x1bW46IHdpbmRfcG93ZXJfcGxhbnRzLlBsYW50SWQNCg0KcmVsYXRpb25zaGlwIHJlbF90dXJiaW5ldGVsZW1ldHJ5X3R1cmJpbmUNCglmcm9tQ29sdW1uOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlR1cmJpbmVJZA0KCXRvQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlR1cmJpbmVJZA0KDQpyZWxhdGlvbnNoaXAgcmVsX2JsYWRlX3R1cmJpbmUNCglmcm9tQ29sdW1uOiB3aW5kX3R1cmJpbmVfYmxhZGUuVHVyYmluZUlkDQoJdG9Db2x1bW46IHdpbmRfdHVyYmluZXMuVHVyYmluZUlkDQoNCnJlbGF0aW9uc2hpcCByZWxfZ2VhcmJveF90dXJiaW5lDQoJZnJvbUNvbHVtbjogd2luZF90dXJiaW5lX2dlYXJib3guVHVyYmluZUlkDQoJdG9Db2x1bW46IHdpbmRfdHVyYmluZXMuVHVyYmluZUlkDQoNCnJlbGF0aW9uc2hpcCByZWxfZ2VuZXJhdG9yX3R1cmJpbmUNCglmcm9tQ29sdW1uOiB3aW5kX3R1cmJpbmVfZ2VuZXJhdG9yLlR1cmJpbmVJZA0KCXRvQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlR1cmJpbmVJZA0KDQpyZWxhdGlvbnNoaXAgcmVsX25hY2VsbGVfdHVyYmluZQ0KCWZyb21Db2x1bW46IHdpbmRfdHVyYmluZV9uYWNlbGxlLlR1cmJpbmVJZA0KCXRvQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlR1cmJpbmVJZA0KDQpyZWxhdGlvbnNoaXAgcmVsX3JvdG9yX3R1cmJpbmUNCglmcm9tQ29sdW1uOiB3aW5kX3R1cmJpbmVfcm90b3IuVHVyYmluZUlkDQoJdG9Db2x1bW46IHdpbmRfdHVyYmluZXMuVHVyYmluZUlkDQoNCnJlbGF0aW9uc2hpcCByZWxfd2VhdGhlcnRvd2VyX3BsYW50DQoJZnJvbUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2Vycy5QbGFudElkDQoJdG9Db2x1bW46IHdpbmRfcG93ZXJfcGxhbnRzLlBsYW50SWQNCg0KcmVsYXRpb25zaGlwIHJlbF90dXJiaW5lX3BsYW50DQoJZnJvbUNvbHVtbjogd2luZF90dXJiaW5lcy5QbGFudElkDQoJdG9Db2x1bW46IHdpbmRfcG93ZXJfcGxhbnRzLlBsYW50SWQNCg0KcmVsYXRpb25zaGlwIHJlbF9tYWludGVuYW5jZV90dXJiaW5lDQoJZnJvbUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5UdXJiaW5lSWQNCgl0b0NvbHVtbjogd2luZF90dXJiaW5lcy5UdXJiaW5lSWQNCg0KcmVsYXRpb25zaGlwIHJlbF9tYWludGVuYW5jZV9zdGFmZg0KCWZyb21Db2x1bW46IHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMuQXNzaWduZWRUbw0KCXRvQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3N0YWZmLklkDQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "expressions.tmdl",
+            "payload": "ZXhwcmVzc2lvbiBEYXRhYmFzZVF1ZXJ5ID0NCgkJbGV0DQoJCSAgICBkYXRhYmFzZSA9IFNxbC5EYXRhYmFzZSgiWDZFUFM0WFJRMlhVREVOTEZWNk5BRU8zSTQtVEVQRjdSS0JUVTZFVkJSWUJQVVNOTDdLT1EuZGFpbHktZGF0YXdhcmVob3VzZS5mYWJyaWMubWljcm9zb2Z0LmNvbSIsICI3ZDRlOWQzYi1kMjY1LTQ0NjItOTExNi1iYzgxNGY2NGE1ZjYiKQ0KCQlpbg0KCQkgICAgZGF0YWJhc2UNCglsaW5lYWdlVGFnOiA4NjEwZDVlYy0xMTJjLTQ1NWItYjcwYS0zMDVmNDc2ZmMwN2INCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/mynamespace#wind_turbines2.tmdl",
+            "payload": "Ly8vIEEgd2luZCB0dXJiaW5lIGJlbG9uZ2luZyB0byBhIHBsYW50LCBpbmNsdWRpbmcgaXRzIHRpbWUtc2VyaWVzIHRlbGVtZXRyeS4NCmVudGl0eSBteW5hbWVzcGFjZSN3aW5kX3R1cmJpbmVzMg0KCWxpbmVhZ2VUYWc6IGQ4ODlhZGFkLTE2ODUtNDI0NS1hMDZiLTdjODk4ZTBiY2RlNg0KCWJhY2tpbmdUYWJsZTogd2luZF90dXJiaW5lczINCglrZXlQcm9wZXJ0eTogVHVyYmluZUlkDQoNCgkvLy8gVW5pcXVlIHR1cmJpbmUgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA4Zjc0MzQ3OC1mZGQ1LTRmMGUtYjA2Yy0yMjgyZjNmYmRiMWMNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZXMyLlR1cmJpbmVJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBsYW50IHRoYXQgb3ducyB0aGUgdHVyYmluZS4NCglwcm9wZXJ0eSBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogMGM3YjY4M2MtMDgyYi00ZTkzLTkwZDAtMmQ0NDU1NThhMmFmDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5QbGFudElkDQoNCgkvLy8gRGlzcGxheSBuYW1lIG9mIHRoZSB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVOYW1lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogZWI0MzNhMDYtZDU0MC00Yzk3LWJmYTQtMjBiMGY5OTFhNzRiDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5UdXJiaW5lTmFtZQ0KDQoJLy8vIFR1cmJpbmUgYXhpcyBvcmllbnRhdGlvbi4NCglwcm9wZXJ0eSBBeGlzDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogMzg5YjEyYjMtMTk5My00MGU5LTkyZWQtNjMzOWUzMDZjYjhhDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5BeGlzDQoNCgkvLy8gT3BlcmF0aW9uYWwgc3RhdHVzIG9mIHRoZSB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVTdGF0dXMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA5YmMyMzBhMS05ZGRkLTQ1OTUtYmM4Ny02YmI0MmNmNjQ0NDcNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZXMyLlR1cmJpbmVTdGF0dXMNCg0KCS8vLyBSYXRlZCBjYXBhY2l0eSBvZiB0aGUgdHVyYmluZS4NCglwcm9wZXJ0eSBDYXBhY2l0eQ0KCQlkYXRhVHlwZTogZG91YmxlDQoJCWxpbmVhZ2VUYWc6IDU0YjhhMGJjLWRmNTYtNDM1My04MmJmLTQ4ZTQwMjZlMTllYg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lczIuQ2FwYWNpdHkNCg0KCS8vLyBIdWIgaGVpZ2h0IG9mIHRoZSB0dXJiaW5lLg0KCXByb3BlcnR5IEh1YkhlaWdodA0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogNTM3Njk1NmYtNDZkOC00YjI0LWIwNGYtZTAyYTI3Njk5ZTFhDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5IdWJIZWlnaHQNCg0KCS8vLyBUdXJiaW5lIHNlcmlhbCBudW1iZXIuDQoJcHJvcGVydHkgU2VyaWFsTnVtYmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNTgzODgwODEtNTE0OC00YjBiLTg4YzQtNjJiZTkxYTMxMmVjDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5TZXJpYWxOdW1iZXINCg0KCS8vLyBNYW51ZmFjdHVyZXIgb2YgdGhlIHR1cmJpbmUuDQoJcHJvcGVydHkgTWFudWZhY3R1cmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYTVmMzRkMGMtZDNjMS00NTIzLTgwODEtMTQ4NzY3N2ViNTg4DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzMi5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_maintenance_requests.tmdl",
+            "payload": "Ly8vIEEgbWFpbnRlbmFuY2Ugd29yayBvcmRlciByYWlzZWQgYWdhaW5zdCBhIHdpbmQgdHVyYmluZS4NCmVudGl0eSB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzDQoJbGluZWFnZVRhZzogMGUwMjE5NmItNmMwZi00M2RhLTg0NjctMWYyNmZkOGUwYzk3DQoJYmFja2luZ1RhYmxlOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzDQoJa2V5UHJvcGVydHk6IFdvcmtvcmRlcklkDQoNCgkvLy8gVW5pcXVlIHdvcmsgb3JkZXIgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBXb3Jrb3JkZXJJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGVjMzgxMDQzLTE3NzktNGM3OS05MDczLTE4NTZhN2VkYTFmZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5Xb3Jrb3JkZXJJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHR1cmJpbmUgdGhlIHdvcmsgb3JkZXIgdGFyZ2V0cy4NCglwcm9wZXJ0eSBUdXJiaW5lSWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBlYTNjNjk0MC1iM2E5LTRjOTktODY2NS1kNDM0YjUwYTFjOWYNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMuVHVyYmluZUlkDQoNCgkvLy8gQ2F0ZWdvcnkgb2YgdGhlIHdvcmsgb3JkZXIuDQoJcHJvcGVydHkgV29ya09yZGVyVHlwZQ0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogMTZkNDA5MzEtNDI1OS00NmU4LWFkYmYtM2Q3YTU0NWNhMGM4DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzLldvcmtPcmRlclR5cGUNCg0KCS8vLyBDdXJyZW50IHN0YXR1cyBjb2RlIG9mIHRoZSB3b3JrIG9yZGVyLg0KCXByb3BlcnR5IFN0YXR1cw0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogOTEzMjY0MWEtNDAyMC00NWU4LTgwNGMtYmU3N2YxYzkxODgxDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzLlN0YXR1cw0KDQoJLy8vIFByaW9yaXR5IGxldmVsIG9mIHRoZSB3b3JrIG9yZGVyLg0KCXByb3BlcnR5IFByaW9yaXR5DQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlsaW5lYWdlVGFnOiBkYzI5OWJlMC05ZmU3LTQ3ODAtOWEyMi02NGU4ZmI2ZDA5OWYNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMuUHJpb3JpdHkNCg0KCS8vLyBEYXRlIHRoZSB3b3JrIG9yZGVyIHdhcyBjcmVhdGVkLg0KCXByb3BlcnR5IE9yZGVyRGF0ZQ0KCQlkYXRhVHlwZTogZGF0ZVRpbWUNCgkJbGluZWFnZVRhZzogMzJiODI5ZjMtNDY0ZC00YmM2LWI2ZTMtYThiNmYwOGExYTM5DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzLk9yZGVyRGF0ZQ0KDQoJLy8vIERhdGUgdGhlIHdvcmsgb3JkZXIgd2FzIGxhc3QgdXBkYXRlZC4NCglwcm9wZXJ0eSBMYXN0VXBkYXRlZERhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWxpbmVhZ2VUYWc6IDliOWYyNzQ0LWJhYjEtNDllMS1iMWQ2LTExMzEzYjI3MzUzZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5MYXN0VXBkYXRlZERhdGUNCg0KCS8vLyBFc3RpbWF0ZWQgc3RhcnQgZGF0ZSBvZiB0aGUgd29yay4NCglwcm9wZXJ0eSBFc3RpbWF0ZWRTdGFydERhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWxpbmVhZ2VUYWc6IDc2YTQ2YWNiLWI1YzYtNDEzOC1iNTgyLTRhODhkYmM0ZmVkMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5Fc3RpbWF0ZWRTdGFydERhdGUNCg0KCS8vLyBDb21taXR0ZWQgY29tcGxldGlvbiBkYXRlLg0KCXByb3BlcnR5IENvbW1pdG1lbnREYXRlDQoJCWRhdGFUeXBlOiBkYXRlVGltZQ0KCQlsaW5lYWdlVGFnOiBjYzI3YmYyMi1lNzkzLTQ0MTktYjFhMC02Njg2YzYwNThlYzkNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMuQ29tbWl0bWVudERhdGUNCg0KCS8vLyBFc3RpbWF0ZWQgbGFib3VyIGhvdXJzIGZvciB0aGUgd29yay4NCglwcm9wZXJ0eSBFc3RpbWF0ZWRMYWJvdXJIb3Vycw0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogNGE4Mzg0NTctMWQzZS00ZGFjLWIyNTEtNzM1YWU3MWQ2MDNjDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzLkVzdGltYXRlZExhYm91ckhvdXJzDQoNCgkvLy8gQWN0dWFsIGxhYm91ciBob3VycyBzcGVudC4NCglwcm9wZXJ0eSBBY3R1YWxMYWJvdXJIb3Vycw0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogZTNjOGNjNDEtZDhlZS00OWEyLThjMmUtNWQ3ZTdhNTYzYjFjDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzLkFjdHVhbExhYm91ckhvdXJzDQoNCgkvLy8gRGF0ZSB0aGUgd29yayB3YXMgYWN0dWFsbHkgY29tcGxldGVkLg0KCXByb3BlcnR5IEFjdHVhbEVuZERhdGUNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWxpbmVhZ2VUYWc6IDJkYWIyZThhLTI2MGUtNGJjNC04YTNiLTdkNjYwMDJmM2Y2YQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5BY3R1YWxFbmREYXRlDQoNCgkvLy8gSWRlbnRpZmllciBvZiB0aGUgc3RhZmYgbWVtYmVyIGFzc2lnbmVkIHRvIHRoZSB3b3JrIG9yZGVyLg0KCXByb3BlcnR5IEFzc2lnbmVkVG8NCgkJZGF0YVR5cGU6IGludDY0DQoJCWxpbmVhZ2VUYWc6IDM0OTUzZTY2LTUyZGEtNDkzMC1hMDVkLTAyYmQzN2Q0ZGVkYg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cy5Bc3NpZ25lZFRvDQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_maintenance_staff.tmdl",
+            "payload": "Ly8vIEEgbWVtYmVyIG9mIHRoZSBtYWludGVuYW5jZSBzdGFmZi4NCmVudGl0eSB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQoJbGluZWFnZVRhZzogNmI3MmI5MjAtY2I2Ni00OGIwLWFhMDctMjFkYzZjMzVlZDUyDQoJYmFja2luZ1RhYmxlOiB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQoJa2V5UHJvcGVydHk6IElkDQoNCgkvLy8gVW5pcXVlIHN0YWZmIGlkZW50aWZpZXIuDQoJcHJvcGVydHkgSWQNCgkJZGF0YVR5cGU6IGludDY0DQoJCWxpbmVhZ2VUYWc6IGZkYWM1NzZkLTIzMjMtNGZhMy1iZDgwLTBiMzgyMzllMTZjMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9zdGFmZi5JZA0KDQoJLy8vIEZ1bGwgbmFtZSBvZiB0aGUgc3RhZmYgbWVtYmVyLg0KCXByb3BlcnR5IE5hbWUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAxMWRlOTYzYi00NzU0LTQ2MzktYTcxNS00Yzg1NzUwMWNkMmINCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfbWFpbnRlbmFuY2Vfc3RhZmYuTmFtZQ0KDQoJLy8vIEVtYWlsIGFkZHJlc3MuDQoJcHJvcGVydHkgRW1haWwNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2NWJiYTRhOC0yNzA4LTQwNDgtOWE5YS0wYzIyNjk1YmJkNTUNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfbWFpbnRlbmFuY2Vfc3RhZmYuRW1haWwNCg0KCS8vLyBDb250YWN0IHBob25lIG51bWJlci4NCglwcm9wZXJ0eSBQaG9uZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGIyNjUzNWZkLTEyMzQtNDJiZi1iZWM0LTk5Zjg1MDk0YjQzMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9zdGFmZi5QaG9uZQ0KDQoJLy8vIERhdGUgdGhlIHN0YWZmIG1lbWJlciBqb2luZWQuDQoJcHJvcGVydHkgSm9pbmVkU2luY2UNCgkJZGF0YVR5cGU6IGRhdGVUaW1lDQoJCWxpbmVhZ2VUYWc6IDc1ZGM5NzE5LTdkMjUtNDExNS04NjdmLTY4MDBhYmY4ODFiMg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9zdGFmZi5Kb2luZWRTaW5jZQ0KDQoJLy8vIE5hbWUgb2YgdGhlIHN0YWZmIG1lbWJlcidzIG1hbmFnZXIuDQoJcHJvcGVydHkgTWFuYWdlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDM1NmY5NjRkLTlmNTgtNGU2Ni1iODUxLWJhMTA3ZTc4YmQzYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9tYWludGVuYW5jZV9zdGFmZi5NYW5hZ2VyDQoNCgkvLy8gV29yayBvcmRlciB0eXBlIHRoZSBzdGFmZiBtZW1iZXIgaXMgcmVzcG9uc2libGUgZm9yLg0KCXByb3BlcnR5IFdvcmtPcmRlclR5cGVSZXNwb25zaWJsZQ0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogNDczODFjMTgtZWY4ZC00ZmFmLWIwZTYtZGUzMjRjYTAyMmVkDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX21haW50ZW5hbmNlX3N0YWZmLldvcmtPcmRlclR5cGVSZXNwb25zaWJsZQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_power_plants.tmdl",
+            "payload": "Ly8vIEEgd2luZCBwb3dlciBwbGFudCAoc2l0ZSkgY29udGFpbmluZyB0dXJiaW5lcyBhbmQgd2VhdGhlciB0b3dlcnMuDQplbnRpdHkgd2luZF9wb3dlcl9wbGFudHMNCglsaW5lYWdlVGFnOiA3MWVlOWYzNC01OGUyLTQ5YTEtODM1NS1iZTU5NWMxMDhlNjcNCgliYWNraW5nVGFibGU6IHdpbmRfcG93ZXJfcGxhbnRzDQoJa2V5UHJvcGVydHk6IFBsYW50SWQNCg0KCS8vLyBVbmlxdWUgcGxhbnQgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYzNjODY3NDYtYWRiZi00ZWExLTg1MTUtODVhZjM3ZDkwMTQ0DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3Bvd2VyX3BsYW50cy5QbGFudElkDQoNCgkvLy8gRGlzcGxheSBuYW1lIG9mIHRoZSBwbGFudC4NCglwcm9wZXJ0eSBQbGFudE5hbWUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2ODRkOWRhNi0zYjUxLTQ1NTEtYjcxZS1iYWYwZWVjY2ZiYzYNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfcG93ZXJfcGxhbnRzLlBsYW50TmFtZQ0KDQoJLy8vIFR5cGUgb2YgdGhlIHBsYW50Lg0KCXByb3BlcnR5IFR5cGUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAwYzUzNGIxNy1kYjcyLTRjOTItYjAyNS02NDM3Y2MzN2FkN2YNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfcG93ZXJfcGxhbnRzLlR5cGUNCg0KCS8vLyBDYXBhY2l0eSBmYWN0b3Igb2YgdGhlIHBsYW50Lg0KCXByb3BlcnR5IENhcGFjaXR5RmFjdG9yDQoJCWRhdGFUeXBlOiBkb3VibGUNCgkJbGluZWFnZVRhZzogNDhhNzAxZmMtMDMwYy00OWFhLWI0ZGItOGNhY2RjMDdlZTZlDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3Bvd2VyX3BsYW50cy5DYXBhY2l0eUZhY3Rvcg0KDQoJLy8vIExvY2F0aW9uIGRlc2NyaXB0aW9uIG9mIHRoZSBwbGFudC4NCglwcm9wZXJ0eSBMb2NhdGlvbg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDRhYjA0NDkyLTEzZTMtNDc5Mi05NjNjLTU0MWUwYmNiNmIwMg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9wb3dlcl9wbGFudHMuTG9jYXRpb24NCg0KCS8vLyBQb3N0YWwgY29kZSBvZiB0aGUgcGxhbnQgbG9jYXRpb24uDQoJcHJvcGVydHkgWmlwQ29kZQ0KCQlkYXRhVHlwZTogaW50NjQNCgkJbGluZWFnZVRhZzogYTU1NTA3NmMtNzQzZS00M2Q0LTljYzctYjk3NzRlNGE3Mjc5DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3Bvd2VyX3BsYW50cy5aaXBDb2RlDQoNCgkvLy8gTGF0aXR1ZGUgb2YgdGhlIHBsYW50Lg0KCXByb3BlcnR5IExhdGl0dWRlDQoJCWRhdGFUeXBlOiBkb3VibGUNCgkJbGluZWFnZVRhZzogODVmMWFmNDctOWU3My00ZWZmLThhYjMtOWNmYWQ1ODZhNGJiDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3Bvd2VyX3BsYW50cy5MYXRpdHVkZQ0KDQoJLy8vIExvbmdpdHVkZSBvZiB0aGUgcGxhbnQuDQoJcHJvcGVydHkgTG9uZ2l0dWRlDQoJCWRhdGFUeXBlOiBkb3VibGUNCgkJbGluZWFnZVRhZzogNzEzNDhmOTQtZjczZS00YTkyLThiZWItN2U5MjQ4OTkxODQwDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3Bvd2VyX3BsYW50cy5Mb25naXR1ZGUNCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_status_codes.tmdl",
+            "payload": "Ly8vIEEgZGlhZ25vc3RpYyBzdGF0dXMvZXJyb3IgY29kZSBhcHBsaWNhYmxlIHRvIGEgcGxhbnQuDQplbnRpdHkgd2luZF9zdGF0dXNfY29kZXMNCglsaW5lYWdlVGFnOiBhOTBiOTQ1NS00NWQ2LTQ0ZGItOWIyNS1hOGEzNWRlOGUzZmYNCgliYWNraW5nVGFibGU6IHdpbmRfc3RhdHVzX2NvZGVzDQoJa2V5UHJvcGVydHk6IEVycm9yQ29kZQ0KDQoJLy8vIFVuaXF1ZSBzdGF0dXMvZXJyb3IgY29kZS4NCglwcm9wZXJ0eSBFcnJvckNvZGUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAzOWUxMGNlNS1iYzc0LTQ4YTEtOTMwNy1iOTViZDE0ZWQ2YjENCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfc3RhdHVzX2NvZGVzLkVycm9yQ29kZQ0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBsYW50IHRoZSBjb2RlIGFwcGxpZXMgdG8uDQoJcHJvcGVydHkgUGxhbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDQ1ZjQzNzU2LTI1OWUtNGY5NS05NWZkLTg5ODZlYzY4ZGE1ZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9zdGF0dXNfY29kZXMuUGxhbnRJZA0KDQoJLy8vIEh1bWFuLXJlYWRhYmxlIGRlc2NyaXB0aW9uIG9mIHRoZSBjb2RlLg0KCXByb3BlcnR5IERlc2NyaXB0aW9uDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogODI2NzJkNWItYmExMi00MmJmLWIwY2YtNzJmNmExNWQ2ZDlhDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3N0YXR1c19jb2Rlcy5EZXNjcmlwdGlvbg0KDQoJLy8vIFNldmVyaXR5IG9mIHRoZSBzdGF0dXMgY29kZS4NCglwcm9wZXJ0eSBTZXZlcml0eQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGQxMGRjY2I5LTc4NzAtNDRjNC05ZGVjLWQ1MDFjMjcyNDNjMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF9zdGF0dXNfY29kZXMuU2V2ZXJpdHkNCg0KCS8vLyBQb3NzaWJsZSBjYXVzZSBvZiB0aGUgY29uZGl0aW9uLg0KCXByb3BlcnR5IFBvc3NpYmxlQ2F1c2UNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAwZDU4NmMxMC00N2QzLTRhN2UtOTM1Yy1lMWFmOGM1MThlM2MNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfc3RhdHVzX2NvZGVzLlBvc3NpYmxlQ2F1c2UNCg0KCS8vLyBSZWNvbW1lbmRlZCByZW1lZGlhdGlvbiBhY3Rpb24uDQoJcHJvcGVydHkgUmVjb21tZW5kZWRBY3Rpb24NCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBiMjFmZmNjMC04M2FjLTRkNmUtOTRlYi1jZmNlYjQ0NDk2MTUNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfc3RhdHVzX2NvZGVzLlJlY29tbWVuZGVkQWN0aW9uDQoNCgkvLy8gQ29tcG9uZW50cyBhZmZlY3RlZCBieSB0aGUgY29kZS4NCglwcm9wZXJ0eSBBZmZlY3RlZENvbXBvbmVudHMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBkNmM2YzQwZS01OTBjLTQ1YjctYmFlOC05OTQ0ZTZlZGM0MzkNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfc3RhdHVzX2NvZGVzLkFmZmVjdGVkQ29tcG9uZW50cw0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbine_blade.tmdl",
+            "payload": "Ly8vIEEgYmxhZGUgY29tcG9uZW50IGluc3RhbGxlZCBvbiBhIHdpbmQgdHVyYmluZS4NCmVudGl0eSB3aW5kX3R1cmJpbmVfYmxhZGUNCglsaW5lYWdlVGFnOiA3NTY2MWYwOC1iYzZjLTRmOGYtOGZlOC0xNWY3NWE0MGJmNTcNCgliYWNraW5nVGFibGU6IHdpbmRfdHVyYmluZV9ibGFkZQ0KCWtleVByb3BlcnR5OiBDb21wb25lbnRJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBhcmVudCB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDAzNTFlNjk1LThlNDctNGY2NC1hYThjLTc2OTVkNjQyZGUyYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2JsYWRlLlR1cmJpbmVJZA0KDQoJLy8vIFVuaXF1ZSBjb21wb25lbnQgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBDb21wb25lbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDQ2MzdmNTVkLWRjMWMtNDNkMC1iZjVkLWMzZDlhMmEwYmNkYw0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2JsYWRlLkNvbXBvbmVudElkDQoNCgkvLy8gQ29tcG9uZW50IG5hbWUgKHNvdXJjZSBjb2x1bW4gc3BlbGxpbmcgcHJlc2VydmVkKS4NCglwcm9wZXJ0eSBDb21wb25lbnROYW5lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYTY4YzQyOTMtM2UxYi00ODI0LTkxMzQtNWYwYzFlNDE0NDYyDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfYmxhZGUuQ29tcG9uZW50TmFuZQ0KDQoJLy8vIEFkZGl0aW9uYWwgY29tcG9uZW50IGRldGFpbHMuDQoJcHJvcGVydHkgQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDdjZDNhMzdlLTliODMtNDQwNS05MzBkLTYzNzZlMzdjZTU3Mw0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2JsYWRlLkNvbXBvbmVudERldGFpbHMNCg0KCS8vLyBDb21wb25lbnQgc2VyaWFsIG51bWJlci4NCglwcm9wZXJ0eSBTZXJpYWxOdW1iZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA1YzVhNjcxNi01NjQ5LTQ4NzUtYTQ5Mi03YjUxYWRkNWNhZjcNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9ibGFkZS5TZXJpYWxOdW1iZXINCg0KCS8vLyBNYW51ZmFjdHVyZXIgb2YgdGhlIGNvbXBvbmVudC4NCglwcm9wZXJ0eSBNYW51ZmFjdHVyZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBmYzJkYjk2ZC03ZDYyLTQ1NTUtODE2YS1mZDgxZTM1MjYwYmENCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9ibGFkZS5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbine_gearbox.tmdl",
+            "payload": "Ly8vIEEgZ2VhcmJveCBjb21wb25lbnQgaW5zdGFsbGVkIG9uIGEgd2luZCB0dXJiaW5lLg0KZW50aXR5IHdpbmRfdHVyYmluZV9nZWFyYm94DQoJbGluZWFnZVRhZzogYjllYWJiNDMtODFlZC00MzZjLWE2YWMtNjJmOTVhMjI0MDY5DQoJYmFja2luZ1RhYmxlOiB3aW5kX3R1cmJpbmVfZ2VhcmJveA0KCWtleVByb3BlcnR5OiBDb21wb25lbnRJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBhcmVudCB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDEyYzc5ZmVmLTA0YmUtNDc3YS1hZmFhLTZjNjA4MThhOGZkMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlYXJib3guVHVyYmluZUlkDQoNCgkvLy8gVW5pcXVlIGNvbXBvbmVudCBpZGVudGlmaWVyLg0KCXByb3BlcnR5IENvbXBvbmVudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYjk0NDMzZTUtNDllNi00YjgyLTg0N2UtZDYyYjdmNWZjYmJlDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfZ2VhcmJveC5Db21wb25lbnRJZA0KDQoJLy8vIENvbXBvbmVudCBuYW1lIChzb3VyY2UgY29sdW1uIHNwZWxsaW5nIHByZXNlcnZlZCkuDQoJcHJvcGVydHkgQ29tcG9uZW50TmFuZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDA5N2ZkM2Q5LTMzOWQtNDAzOC1hZmI0LWQ1N2U1NmM0NDhhZg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlYXJib3guQ29tcG9uZW50TmFuZQ0KDQoJLy8vIEFkZGl0aW9uYWwgY29tcG9uZW50IGRldGFpbHMuDQoJcHJvcGVydHkgQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDdhMmZiZDRjLTFmNTUtNDZiMC1iY2ZlLWMzMWY5MzYwZDIyZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlYXJib3guQ29tcG9uZW50RGV0YWlscw0KDQoJLy8vIENvbXBvbmVudCBzZXJpYWwgbnVtYmVyLg0KCXByb3BlcnR5IFNlcmlhbE51bWJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDMzZGQ3MTY1LWU2NzYtNDczYi05NTU4LTJlZjFmNjU1MjA4MA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlYXJib3guU2VyaWFsTnVtYmVyDQoNCgkvLy8gTWFudWZhY3R1cmVyIG9mIHRoZSBjb21wb25lbnQuDQoJcHJvcGVydHkgTWFudWZhY3R1cmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYWMwNjIwMGEtMGFiOS00NzJiLTljMGEtMWQ4NDM0MjIwNGEzDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfZ2VhcmJveC5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbine_generator.tmdl",
+            "payload": "Ly8vIEEgZ2VuZXJhdG9yIGNvbXBvbmVudCBpbnN0YWxsZWQgb24gYSB3aW5kIHR1cmJpbmUuDQplbnRpdHkgd2luZF90dXJiaW5lX2dlbmVyYXRvcg0KCWxpbmVhZ2VUYWc6IDMxZDE1MjBiLTA3ZDctNDc0Yy1hNzI2LWUzYWVmMzExZTEyMg0KCWJhY2tpbmdUYWJsZTogd2luZF90dXJiaW5lX2dlbmVyYXRvcg0KCWtleVByb3BlcnR5OiBDb21wb25lbnRJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBhcmVudCB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDMyZWJmYmU2LWVkNDgtNGMzYi05ZmVmLTE0ZWZhMGZhYzQxZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlbmVyYXRvci5UdXJiaW5lSWQNCg0KCS8vLyBVbmlxdWUgY29tcG9uZW50IGlkZW50aWZpZXIuDQoJcHJvcGVydHkgQ29tcG9uZW50SWQNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBmYTAwYmNiYS1iYzEzLTQ3NGQtYTg0Yi1mOWFiZGFhZTAwMWENCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9nZW5lcmF0b3IuQ29tcG9uZW50SWQNCg0KCS8vLyBDb21wb25lbnQgbmFtZSAoc291cmNlIGNvbHVtbiBzcGVsbGluZyBwcmVzZXJ2ZWQpLg0KCXByb3BlcnR5IENvbXBvbmVudE5hbmUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiBiZDA4YWYwZi0xMmZmLTRiN2EtYmIwYi1iMzgyYWQ0OWMxYTANCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9nZW5lcmF0b3IuQ29tcG9uZW50TmFuZQ0KDQoJLy8vIEFkZGl0aW9uYWwgY29tcG9uZW50IGRldGFpbHMuDQoJcHJvcGVydHkgQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGY0MDdiNTM0LThiM2MtNGQyMS1hNzc1LWMyZjA1Yzc2OGU1Mw0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlbmVyYXRvci5Db21wb25lbnREZXRhaWxzDQoNCgkvLy8gQ29tcG9uZW50IHNlcmlhbCBudW1iZXIuDQoJcHJvcGVydHkgU2VyaWFsTnVtYmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNDZmMWM1MzAtOGNlMS00MzJlLTk5MjEtMTk0OGVkMDJkZDE4DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfZ2VuZXJhdG9yLlNlcmlhbE51bWJlcg0KDQoJLy8vIE1hbnVmYWN0dXJlciBvZiB0aGUgY29tcG9uZW50Lg0KCXByb3BlcnR5IE1hbnVmYWN0dXJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDRhZWMzNzE0LWY5MzMtNDljNC05OGMzLTlkZmMwNDE1NzAyYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX2dlbmVyYXRvci5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbine_nacelle.tmdl",
+            "payload": "Ly8vIEEgbmFjZWxsZSBjb21wb25lbnQgaW5zdGFsbGVkIG9uIGEgd2luZCB0dXJiaW5lLg0KZW50aXR5IHdpbmRfdHVyYmluZV9uYWNlbGxlDQoJbGluZWFnZVRhZzogZDAwNDY1NTItYzY0NS00MzQyLTljYjItNjRlZDgzOGRkMTNkDQoJYmFja2luZ1RhYmxlOiB3aW5kX3R1cmJpbmVfbmFjZWxsZQ0KCWtleVByb3BlcnR5OiBDb21wb25lbnRJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBhcmVudCB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDQ4YzRhNThlLTYyMTAtNDkxMC1iZTE0LTAxODFmOWJmODA2OA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX25hY2VsbGUuVHVyYmluZUlkDQoNCgkvLy8gVW5pcXVlIGNvbXBvbmVudCBpZGVudGlmaWVyLg0KCXByb3BlcnR5IENvbXBvbmVudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogY2IyMGM1ZDQtYTM4YS00MjE4LThlZjktZDUyMGI0NWRhNjY1DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfbmFjZWxsZS5Db21wb25lbnRJZA0KDQoJLy8vIENvbXBvbmVudCBuYW1lIChzb3VyY2UgY29sdW1uIHNwZWxsaW5nIHByZXNlcnZlZCkuDQoJcHJvcGVydHkgQ29tcG9uZW50TmFuZQ0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDA1YzYzNjc2LWFiZTktNDUwYy04MGQyLWUxMjIzOTdiYzRhYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX25hY2VsbGUuQ29tcG9uZW50TmFuZQ0KDQoJLy8vIEFkZGl0aW9uYWwgY29tcG9uZW50IGRldGFpbHMuDQoJcHJvcGVydHkgQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDMxOWM3ZjFiLTU0ZTAtNGQ3ZC1iMzMxLWQ4MGYxNWRmYmFlNg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX25hY2VsbGUuQ29tcG9uZW50RGV0YWlscw0KDQoJLy8vIENvbXBvbmVudCBzZXJpYWwgbnVtYmVyLg0KCXByb3BlcnR5IFNlcmlhbE51bWJlcg0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGU0Yzg2YWY5LWFhZDYtNDBiMS1iY2E1LWY4NzYyYjgzNDNjMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX25hY2VsbGUuU2VyaWFsTnVtYmVyDQoNCgkvLy8gTWFudWZhY3R1cmVyIG9mIHRoZSBjb21wb25lbnQuDQoJcHJvcGVydHkgTWFudWZhY3R1cmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNzYzNDYzNTMtMTJmOS00NjM1LTkwMzYtM2E4Mjg1ODNhZmU4DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfbmFjZWxsZS5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbine_rotor.tmdl",
+            "payload": "Ly8vIEEgcm90b3IgY29tcG9uZW50IGluc3RhbGxlZCBvbiBhIHdpbmQgdHVyYmluZS4NCmVudGl0eSB3aW5kX3R1cmJpbmVfcm90b3INCglsaW5lYWdlVGFnOiBjNWRjNWYwOC05MzVjLTQyZGItODUyYy04OGRhYjBlYzhkMjgNCgliYWNraW5nVGFibGU6IHdpbmRfdHVyYmluZV9yb3Rvcg0KCWtleVByb3BlcnR5OiBDb21wb25lbnRJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBhcmVudCB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IGUwYTg0NDk1LTBmNmYtNDRhYS04YWQwLTI5YTZkNDA4ZGY1MA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3JvdG9yLlR1cmJpbmVJZA0KDQoJLy8vIFVuaXF1ZSBjb21wb25lbnQgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBDb21wb25lbnRJZA0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDY2YjlkNjk4LTE2ZGUtNDIyYS1hZmVhLTU0OTM4MjUwZjI2Yw0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3JvdG9yLkNvbXBvbmVudElkDQoNCgkvLy8gQ29tcG9uZW50IG5hbWUgKHNvdXJjZSBjb2x1bW4gc3BlbGxpbmcgcHJlc2VydmVkKS4NCglwcm9wZXJ0eSBDb21wb25lbnROYW5lDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogYjM1MTdmZGYtYTkyMi00NjY4LTkyN2MtNzU3MzBjMmNmZmJmDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfcm90b3IuQ29tcG9uZW50TmFuZQ0KDQoJLy8vIEFkZGl0aW9uYWwgY29tcG9uZW50IGRldGFpbHMuDQoJcHJvcGVydHkgQ29tcG9uZW50RGV0YWlscw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDhjOGEyYmFmLWNmMDQtNDZkZi1iNTUxLTg1NDI4OWZjMDBiMg0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3JvdG9yLkNvbXBvbmVudERldGFpbHMNCg0KCS8vLyBDb21wb25lbnQgc2VyaWFsIG51bWJlci4NCglwcm9wZXJ0eSBTZXJpYWxOdW1iZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA2MzVlMmU4Ny04YmQ3LTQ4NGMtOGVlMS0yZWM3ZjBkZWRiYWYNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9yb3Rvci5TZXJpYWxOdW1iZXINCg0KCS8vLyBNYW51ZmFjdHVyZXIgb2YgdGhlIGNvbXBvbmVudC4NCglwcm9wZXJ0eSBNYW51ZmFjdHVyZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAyYTI1YTQ2Zi0zZTRhLTRmMzgtYjE1NC1lYWVhODUxOGE2OTINCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZV9yb3Rvci5NYW51ZmFjdHVyZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_turbines.tmdl",
+            "payload": "Ly8vIEEgd2luZCB0dXJiaW5lIGJlbG9uZ2luZyB0byBhIHBsYW50LCBpbmNsdWRpbmcgaXRzIHRpbWUtc2VyaWVzIHRlbGVtZXRyeS4NCmVudGl0eSB3aW5kX3R1cmJpbmVzDQoJbGluZWFnZVRhZzogOTJiNmQyYTEtNzcxNy00ZDlmLTk4ZjMtYTgzNGY5M2I2MGJhDQoJYmFja2luZ1RhYmxlOiB3aW5kX3R1cmJpbmVzDQoJa2V5UHJvcGVydHk6IFR1cmJpbmVJZA0KDQoJLy8vIFVuaXF1ZSB0dXJiaW5lIGlkZW50aWZpZXIuDQoJcHJvcGVydHkgVHVyYmluZUlkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNGEzNmNjN2UtZmM2Yi00ZjY1LWFjZGEtZGI2YWYyMDM3ZjExDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlR1cmJpbmVJZA0KDQoJLy8vIElkZW50aWZpZXIgb2YgdGhlIHBsYW50IHRoYXQgb3ducyB0aGUgdHVyYmluZS4NCglwcm9wZXJ0eSBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogODAwMTQyNTItMjQyMy00YmIxLTk4Y2YtN2YxMjU3MWVmZjJmDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlBsYW50SWQNCg0KCS8vLyBEaXNwbGF5IG5hbWUgb2YgdGhlIHR1cmJpbmUuDQoJcHJvcGVydHkgVHVyYmluZU5hbWUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA5MzIzMTk3YS0wZGFlLTRmNDYtYWY4Yy0wOTA0MjBjZjczZTINCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZXMuVHVyYmluZU5hbWUNCg0KCS8vLyBUdXJiaW5lIGF4aXMgb3JpZW50YXRpb24uDQoJcHJvcGVydHkgQXhpcw0KCQlkYXRhVHlwZTogc3RyaW5nDQoJCWxpbmVhZ2VUYWc6IDAxZGZjM2E5LTI2ZGYtNGM0OC05M2Y2LTVmMTdlMGEyNjQxMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lcy5BeGlzDQoNCgkvLy8gT3BlcmF0aW9uYWwgc3RhdHVzIG9mIHRoZSB0dXJiaW5lLg0KCXByb3BlcnR5IFR1cmJpbmVTdGF0dXMNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA5ZjZiZmE2MS02NTg4LTQ1ZjktYmYzNC1lY2EwYjk4OGRmZmMNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZXMuVHVyYmluZVN0YXR1cw0KDQoJLy8vIFJhdGVkIGNhcGFjaXR5IG9mIHRoZSB0dXJiaW5lLg0KCXByb3BlcnR5IENhcGFjaXR5DQoJCWRhdGFUeXBlOiBkb3VibGUNCgkJbGluZWFnZVRhZzogOWRmMmU0NWUtMzY1ZC00ZWQ0LTkyZDEtNWYzNWQwODQwOTA2DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzLkNhcGFjaXR5DQoNCgkvLy8gSHViIGhlaWdodCBvZiB0aGUgdHVyYmluZS4NCglwcm9wZXJ0eSBIdWJIZWlnaHQNCgkJZGF0YVR5cGU6IGludDY0DQoJCWxpbmVhZ2VUYWc6IDlkMjJmYmJkLTRjMmQtNGU5Ni1iM2MyLTIxODA1ZDg2MTQxZQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lcy5IdWJIZWlnaHQNCg0KCS8vLyBUdXJiaW5lIHNlcmlhbCBudW1iZXIuDQoJcHJvcGVydHkgU2VyaWFsTnVtYmVyDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNjllMWEzNmQtYjg1Yi00OGUzLThmMzgtOTJlMjc4MWYxNWRjDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVzLlNlcmlhbE51bWJlcg0KDQoJLy8vIE1hbnVmYWN0dXJlciBvZiB0aGUgdHVyYmluZS4NCglwcm9wZXJ0eSBNYW51ZmFjdHVyZXINCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiAwZjA5YmNkOS00NGZiLTQ5ODMtYmQyZS01MzJjODc2ZjczNWINCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfdHVyYmluZXMuTWFudWZhY3R1cmVyDQoNCgkvLy8gRW5lcmd5IHByb2R1Y2VkIGluIGtpbG93YXR0LWhvdXJzLg0KCXByb3BlcnR5IEVuZXJneUt3aA0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IGUxZjk1YTQ1LWI1NGMtNDc0OC1iMjIzLWUxZjdlZGE3MDhiZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5FbmVyZ3lLd2gNCgkJCW9yZGVyaW5nQ29sdW1uOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlRpbWVzdGFtcA0KDQoJLy8vIFJvdG9yIGRpYW1ldGVyLg0KCXByb3BlcnR5IERpYW1ldGVyDQoJCWRhdGFUeXBlOiBUaW1lU2VyaWVzPGRvdWJsZT4NCgkJbGluZWFnZVRhZzogZmY1YjA5M2YtY2I0Ni00NzIyLTljYTEtZTg4OWY4MzI4NjZiDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXR5cGU6IHRpbWVTZXJpZXMNCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LkRpYW1ldGVyDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBPcGVyYXRpb25hbCByYXRpby4NCglwcm9wZXJ0eSBSYXRpbw0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IDQ5MTEyZmU0LTExY2QtNGIwZS04MTc4LTIzMGFjNGI1NmNmYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5SYXRpbw0KCQkJb3JkZXJpbmdDb2x1bW46IHdpbmRfdHVyYmluZV90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuVGltZXN0YW1wDQoNCgkvLy8gT3BlcmF0aW5nIGVmZmljaWVuY3kuDQoJcHJvcGVydHkgRWZmaWNpZW5jeQ0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IDNiNzlkNmEwLWE1MDctNGE4MS04NzBkLTliOWRlMzM3MDAzZA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5FZmZpY2llbmN5DQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBJbnN0YW50YW5lb3VzIHBvd2VyIG91dHB1dC4NCglwcm9wZXJ0eSBQb3dlcg0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IDQyOWI3ZjhhLTkzODAtNDZmZC05Njk5LTZjNDdiYjQ3NGZkOQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5Qb3dlcg0KCQkJb3JkZXJpbmdDb2x1bW46IHdpbmRfdHVyYmluZV90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuVGltZXN0YW1wDQoNCgkvLy8gT3V0cHV0IHZvbHRhZ2UuDQoJcHJvcGVydHkgVm9sdGFnZQ0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IGU1NmYyM2UzLTI4ZjUtNDgwNi1hMDcyLTAxNDAxMDU3YzMwYQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5Wb2x0YWdlDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBUaW1lc3RhbXAgb2YgdGhlIHRlbGVtZXRyeSByZWFkaW5nLg0KCXByb3BlcnR5IFRpbWVzdGFtcA0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkYXRlVGltZT4NCgkJbGluZWFnZVRhZzogZGM5ODc2MDgtMWJlMi00NzVkLWI3OGMtNDU1NzFkMDY0Y2VhDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXR5cGU6IHRpbWVTZXJpZXMNCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlRpbWVzdGFtcA0KCQkJb3JkZXJpbmdDb2x1bW46IHdpbmRfdHVyYmluZV90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuVGltZXN0YW1wDQoNCglhZGRpdGlvbmFsQmFja2luZ1RhYmxlDQoJCXRhYmxlOiB3aW5kX3R1cmJpbmVfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1DQoJCXJlbGF0aW9uc2hpcDogcmVsX3R1cmJpbmV0ZWxlbWV0cnlfdHVyYmluZQ0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entities/wind_weather_towers.tmdl",
+            "payload": "Ly8vIEEgbWV0ZW9yb2xvZ2ljYWwgd2VhdGhlciB0b3dlciBpbnN0YWxsZWQgYXQgYSBwbGFudCwgaW5jbHVkaW5nIGl0cyB0aW1lLXNlcmllcyB0ZWxlbWV0cnkuDQplbnRpdHkgd2luZF93ZWF0aGVyX3Rvd2Vycw0KCWxpbmVhZ2VUYWc6IDQxMzZjNTFmLTZiODQtNGFmMS04YTEyLTM1NGQxZDZjYmE0ZQ0KCWJhY2tpbmdUYWJsZTogd2luZF93ZWF0aGVyX3Rvd2Vycw0KCWtleVByb3BlcnR5OiBUb3dlcklkDQoNCgkvLy8gVW5pcXVlIHdlYXRoZXIgdG93ZXIgaWRlbnRpZmllci4NCglwcm9wZXJ0eSBUb3dlcklkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogMDZhNDMxMGYtMDE1MC00YzBmLTkxYjktYWEyZjgxOWI2NmU0DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3dlYXRoZXJfdG93ZXJzLlRvd2VySWQNCg0KCS8vLyBJZGVudGlmaWVyIG9mIHRoZSBwbGFudCB0aGUgdG93ZXIgYmVsb25ncyB0by4NCglwcm9wZXJ0eSBQbGFudElkDQoJCWRhdGFUeXBlOiBzdHJpbmcNCgkJbGluZWFnZVRhZzogNDM0YTI1ZDctOGJiMC00ZTUwLTljNjQtMDFlNWYyNjdiNWFmDQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3dlYXRoZXJfdG93ZXJzLlBsYW50SWQNCg0KCS8vLyBEaXNwbGF5IG5hbWUgb2YgdGhlIHRvd2VyLg0KCXByb3BlcnR5IE5hbWUNCgkJZGF0YVR5cGU6IHN0cmluZw0KCQlsaW5lYWdlVGFnOiA0ZjEyYmU0My1iYWY4LTQ2ZTQtODZjZC1lMzdjZWZjNmM1MTUNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcnMuTmFtZQ0KDQoJLy8vIEhlaWdodCBvZiB0aGUgdG93ZXIgaW4gbWV0cmVzLg0KCXByb3BlcnR5IEhlaWdodF9tDQoJCWRhdGFUeXBlOiBpbnQ2NA0KCQlsaW5lYWdlVGFnOiBmYjBkMjNlZC0wYjg3LTQyYjEtOTZjNS04ZTcxODUxYzhmYjcNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdmFsdWVDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcnMuSGVpZ2h0X20NCg0KCS8vLyBSZWxhdGl2ZSBodW1pZGl0eSBwZXJjZW50YWdlLg0KCXByb3BlcnR5IEh1bWlkaXR5X3BlcmNlbnQNCgkJZGF0YVR5cGU6IFRpbWVTZXJpZXM8aW50NjQ+DQoJCWxpbmVhZ2VUYWc6IGI1MThjYjJjLTdkOGEtNGU0Zi1iYzIzLWEyNzdlM2U1MjNjMw0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5IdW1pZGl0eV9wZXJjZW50DQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBBdG1vc3BoZXJpYyBwcmVzc3VyZSBpbiBoZWN0b3Bhc2NhbHMuDQoJcHJvcGVydHkgUHJlc3N1cmVfaFBhDQoJCWRhdGFUeXBlOiBUaW1lU2VyaWVzPGludDY0Pg0KCQlsaW5lYWdlVGFnOiBkMWI3NThmOS1hOWMyLTQzZjgtYTIxNC1mMTE5N2Y2YWU0OWMNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdHlwZTogdGltZVNlcmllcw0KCQkJdmFsdWVDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuUHJlc3N1cmVfaFBhDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBTb2xhciByYWRpYXRpb24gbWVhc3VyZW1lbnQuDQoJcHJvcGVydHkgU29sYXJSYWRpYXRpb24NCgkJZGF0YVR5cGU6IFRpbWVTZXJpZXM8aW50NjQ+DQoJCWxpbmVhZ2VUYWc6IDBlYTQ4MDBhLTgwZjItNGE2Yy04MzJhLTJiM2U4YTA0MGE4YQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5Tb2xhclJhZGlhdGlvbg0KCQkJb3JkZXJpbmdDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuVGltZXN0YW1wDQoNCgkvLy8gQW1iaWVudCB0ZW1wZXJhdHVyZS4NCglwcm9wZXJ0eSBUZW1wZXJhdHVyZQ0KCQlkYXRhVHlwZTogVGltZVNlcmllczxpbnQ2ND4NCgkJbGluZWFnZVRhZzogODhmYzQ5MDItYjBjMS00YzMxLWEzYzEtZjI0NDNlNjdmMTk1DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXR5cGU6IHRpbWVTZXJpZXMNCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3dlYXRoZXJfdG93ZXJfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlRlbXBlcmF0dXJlDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBUdXJidWxlbmNlIG1lYXN1cmVtZW50Lg0KCXByb3BlcnR5IFR1cmJ1bGVuY2UNCgkJZGF0YVR5cGU6IFRpbWVTZXJpZXM8aW50NjQ+DQoJCWxpbmVhZ2VUYWc6IGIwMWM1Yjc3LTMxNmMtNGZjZi1hZjNmLTFmZmI2Y2JmMjQxNQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UdXJidWxlbmNlDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBXaW5kIGRpcmVjdGlvbiBpbiBkZWdyZWVzLg0KCXByb3BlcnR5IFdpbmREaXJlY3Rpb24NCgkJZGF0YVR5cGU6IFRpbWVTZXJpZXM8aW50NjQ+DQoJCWxpbmVhZ2VUYWc6IDRmMTMxNTE1LWQ5OGItNDlhZi1hYTlhLWQ2MDNhODEwOGNkMQ0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5XaW5kRGlyZWN0aW9uDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBXaW5kIHNoZWFyIG1lYXN1cmVtZW50Lg0KCXByb3BlcnR5IFdpbmRTaGVhcg0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkb3VibGU+DQoJCWxpbmVhZ2VUYWc6IDg1YTUxZDFmLThiYWEtNDA1OS1iZmZmLTc3MTU4ZmY4YWRlOA0KDQoJCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCQl0eXBlOiB0aW1lU2VyaWVzDQoJCQl2YWx1ZUNvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5XaW5kU2hlYXINCgkJCW9yZGVyaW5nQ29sdW1uOiB3aW5kX3dlYXRoZXJfdG93ZXJfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlRpbWVzdGFtcA0KDQoJLy8vIFdpbmQgc3BlZWQuDQoJcHJvcGVydHkgV2luZFNwZWVkDQoJCWRhdGFUeXBlOiBUaW1lU2VyaWVzPGludDY0Pg0KCQlsaW5lYWdlVGFnOiAzZGU5ZDJhNy02ZjdlLTRmM2QtYmZmZi1lYjIwOGZkYjk2ZjgNCg0KCQliYWNraW5nQ29uZmlndXJhdGlvbg0KCQkJdHlwZTogdGltZVNlcmllcw0KCQkJdmFsdWVDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuV2luZFNwZWVkDQoJCQlvcmRlcmluZ0NvbHVtbjogd2luZF93ZWF0aGVyX3Rvd2VyX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNS5UaW1lc3RhbXANCg0KCS8vLyBUaW1lc3RhbXAgb2YgdGhlIHRlbGVtZXRyeSByZWFkaW5nLg0KCXByb3BlcnR5IFRpbWVzdGFtcA0KCQlkYXRhVHlwZTogVGltZVNlcmllczxkYXRlVGltZT4NCgkJbGluZWFnZVRhZzogZTJjMzcyMGUtMGY3Mi00OTc5LWJlYWQtNTE0MDVjODkwNzc2DQoNCgkJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJCXR5cGU6IHRpbWVTZXJpZXMNCgkJCXZhbHVlQ29sdW1uOiB3aW5kX3dlYXRoZXJfdG93ZXJfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1LlRpbWVzdGFtcA0KCQkJb3JkZXJpbmdDb2x1bW46IHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUuVGltZXN0YW1wDQoNCglhZGRpdGlvbmFsQmFja2luZ1RhYmxlDQoJCXRhYmxlOiB3aW5kX3dlYXRoZXJfdG93ZXJfdGVsZW1ldHJ5X2F1Z21lbnRlZF9NYXIyMDI1DQoJCXJlbGF0aW9uc2hpcDogcmVsX3dlYXRoZXJ0ZWxlbWV0cnlfdG93ZXINCg0K",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "entityRelationships.tmdl",
+            "payload": "ZW50aXR5UmVsYXRpb25zaGlwICdTdGF0dXMgQ29kZSBGb3IgUGxhbnQnDQoJbGluZWFnZVRhZzogMzI2MzU5NGMtN2VmMC00YThkLThlYzgtN2Y2MjIyMWFkYmQyDQoJZnJvbUVudGl0eTogd2luZF9zdGF0dXNfY29kZXMNCgl0b0VudGl0eTogd2luZF9wb3dlcl9wbGFudHMNCg0KCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCXJlbGF0aW9uc2hpcDogcmVsX3N0YXR1c2NvZGVfcGxhbnQNCg0KZW50aXR5UmVsYXRpb25zaGlwICdCbGFkZSBPbiBUdXJiaW5lJw0KCWxpbmVhZ2VUYWc6IGIxODI5ZmM2LTMzZjYtNDQ0OC04YmIxLTlmNjFkNjViY2M0NA0KCWZyb21FbnRpdHk6IHdpbmRfdHVyYmluZV9ibGFkZQ0KCXRvRW50aXR5OiB3aW5kX3R1cmJpbmVzDQoNCgliYWNraW5nQ29uZmlndXJhdGlvbg0KCQlyZWxhdGlvbnNoaXA6IHJlbF9ibGFkZV90dXJiaW5lDQoNCmVudGl0eVJlbGF0aW9uc2hpcCAnR2VhcmJveCBPbiBUdXJiaW5lJw0KCWxpbmVhZ2VUYWc6IDI4MzRjNDU3LTdhMTQtNDBlNC05M2IzLTBiMjYyM2ZiMDVmZg0KCWZyb21FbnRpdHk6IHdpbmRfdHVyYmluZV9nZWFyYm94DQoJdG9FbnRpdHk6IHdpbmRfdHVyYmluZXMNCg0KCWJhY2tpbmdDb25maWd1cmF0aW9uDQoJCXJlbGF0aW9uc2hpcDogcmVsX2dlYXJib3hfdHVyYmluZQ0KDQplbnRpdHlSZWxhdGlvbnNoaXAgJ0dlbmVyYXRvciBPbiBUdXJiaW5lJw0KCWxpbmVhZ2VUYWc6IDg2M2ZlMzdlLTBhYzEtNDQ0Yy1iMDg5LWViYjdjOTFmYzVhMA0KCWZyb21FbnRpdHk6IHdpbmRfdHVyYmluZV9nZW5lcmF0b3INCgl0b0VudGl0eTogd2luZF90dXJiaW5lcw0KDQoJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJcmVsYXRpb25zaGlwOiByZWxfZ2VuZXJhdG9yX3R1cmJpbmUNCg0KZW50aXR5UmVsYXRpb25zaGlwICdOYWNlbGxlIE9uIFR1cmJpbmUnDQoJbGluZWFnZVRhZzogZTA0MTUwMWQtYmI5MS00ZjEwLWE0MTUtOTU0ODJiMTFiMjQ0DQoJZnJvbUVudGl0eTogd2luZF90dXJiaW5lX25hY2VsbGUNCgl0b0VudGl0eTogd2luZF90dXJiaW5lcw0KDQoJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJcmVsYXRpb25zaGlwOiByZWxfbmFjZWxsZV90dXJiaW5lDQoNCmVudGl0eVJlbGF0aW9uc2hpcCAnUm90b3IgT24gVHVyYmluZScNCglsaW5lYWdlVGFnOiBjMDVjMjkzYy02NGIwLTQ3MDEtOTM0NS0xNTQyMmIyMWQ5ZTcNCglmcm9tRW50aXR5OiB3aW5kX3R1cmJpbmVfcm90b3INCgl0b0VudGl0eTogd2luZF90dXJiaW5lcw0KDQoJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJcmVsYXRpb25zaGlwOiByZWxfcm90b3JfdHVyYmluZQ0KDQplbnRpdHlSZWxhdGlvbnNoaXAgJ1dlYXRoZXIgVG93ZXIgSW4gUGxhbnQnDQoJbGluZWFnZVRhZzogZTcwMTMyZDQtYWNkYi00ODZiLWIxZDItOGJkNmMzYWM1MjJjDQoJZnJvbUVudGl0eTogd2luZF93ZWF0aGVyX3Rvd2Vycw0KCXRvRW50aXR5OiB3aW5kX3Bvd2VyX3BsYW50cw0KDQoJYmFja2luZ0NvbmZpZ3VyYXRpb24NCgkJcmVsYXRpb25zaGlwOiByZWxfd2VhdGhlcnRvd2VyX3BsYW50DQoNCmVudGl0eVJlbGF0aW9uc2hpcCAnVHVyYmluZSBJbiBQbGFudCcNCglsaW5lYWdlVGFnOiBmZWY2ZWQwYi1kZmQ2LTQ2ZjAtYjhmOS04OTVkNzUwZGNjMjgNCglmcm9tRW50aXR5OiB3aW5kX3R1cmJpbmVzDQoJdG9FbnRpdHk6IHdpbmRfcG93ZXJfcGxhbnRzDQoNCgliYWNraW5nQ29uZmlndXJhdGlvbg0KCQlyZWxhdGlvbnNoaXA6IHJlbF90dXJiaW5lX3BsYW50DQoNCmVudGl0eVJlbGF0aW9uc2hpcCAnTWFpbnRlbmFuY2UgRm9yIFR1cmJpbmUnDQoJbGluZWFnZVRhZzogNjdjOGUyN2QtMmEzMS00ZjMwLTk2NzQtZWRkNjUzN2JiMzA0DQoJZnJvbUVudGl0eTogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cw0KCXRvRW50aXR5OiB3aW5kX3R1cmJpbmVzDQoNCgliYWNraW5nQ29uZmlndXJhdGlvbg0KCQlyZWxhdGlvbnNoaXA6IHJlbF9tYWludGVuYW5jZV90dXJiaW5lDQoNCmVudGl0eVJlbGF0aW9uc2hpcCAnQXNzaWduZWQgU3RhZmYnDQoJbGluZWFnZVRhZzogNzMxNjUwNmMtNjllNC00M2I3LTgzNjMtNDk2Y2JiMDQwYmE1DQoJZnJvbUVudGl0eTogd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cw0KCXRvRW50aXR5OiB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQoNCgliYWNraW5nQ29uZmlndXJhdGlvbg0KCQlyZWxhdGlvbnNoaXA6IHJlbF9tYWludGVuYW5jZV9zdGFmZg0KDQo=",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "namespaces/mynamespace.tmdl",
+            "payload": "bmFtZXNwYWNlIG15bmFtZXNwYWNlDQoJbGluZWFnZVRhZzogNGM1ZTQyYWUtYjFjYS00NGRkLTlkYjMtYmZhM2M2ODc5MzRhDQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "namespaces/default.tmdl",
+            "payload": "bmFtZXNwYWNlIGRlZmF1bHQNCglsaW5lYWdlVGFnOiBkZWZhdWx0DQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "rules/SpeedLimit.tmdl",
+            "payload": "cnVsZSBTcGVlZExpbWl0DQoJc3RhdGVtZW50OiBBIHR1cmJpbmUncyBpbnN0YW50YW5lb3VzIHBvd2VyIG91dHB1dCBtdXN0IG5vdCBleGNlZWQgaXRzIHJhdGVkIGNhcGFjaXR5Lg0KCWxpbmVhZ2VUYWc6IDhmMWMwZTJhLTFiMmMtNGQzZS05ZjhhLTBhMWIyYzNkNGU1Zg0KDQoJcnVsZVJlZmVyZW5jZWRFbnRpdHkgd2luZF90dXJiaW5lcw0KCQlwcm9wZXJ0eVNjb3BlOiBzcGVjaWZpYw0KDQoJCXJ1bGVSZWZlcmVuY2VkUHJvcGVydHkgQ2FwYWNpdHkNCg0KCQlydWxlUmVmZXJlbmNlZFByb3BlcnR5IFBvd2VyDQoNCglydWxlUmVmZXJlbmNlZEVudGl0eSB3aW5kX21haW50ZW5hbmNlX3JlcXVlc3RzDQoNCglydWxlUmVmZXJlbmNlZFJlbGF0aW9uc2hpcCAnTWFpbnRlbmFuY2UgRm9yIFR1cmJpbmUnDQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "model.tmdl",
+            "payload": "bW9kZWwgTW9kZWwNCg0KcmVmIHRhYmxlIHdpbmRfbWFpbnRlbmFuY2VfcmVxdWVzdHMNCnJlZiB0YWJsZSB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQpyZWYgdGFibGUgd2luZF9wb3dlcl9wbGFudHMNCnJlZiB0YWJsZSB3aW5kX3N0YXR1c19jb2Rlcw0KcmVmIHRhYmxlIHdpbmRfdHVyYmluZV9ibGFkZQ0KcmVmIHRhYmxlIHdpbmRfdHVyYmluZV9nZWFyYm94DQpyZWYgdGFibGUgd2luZF90dXJiaW5lX2dlbmVyYXRvcg0KcmVmIHRhYmxlIHdpbmRfdHVyYmluZV9uYWNlbGxlDQpyZWYgdGFibGUgd2luZF90dXJiaW5lX3JvdG9yDQpyZWYgdGFibGUgd2luZF90dXJiaW5lX3RlbGVtZXRyeV9hdWdtZW50ZWRfTWFyMjAyNQ0KcmVmIHRhYmxlIHdpbmRfdHVyYmluZXMNCnJlZiB0YWJsZSB3aW5kX3R1cmJpbmVzMg0KcmVmIHRhYmxlIHdpbmRfd2VhdGhlcl90b3dlcl90ZWxlbWV0cnlfYXVnbWVudGVkX01hcjIwMjUNCnJlZiB0YWJsZSB3aW5kX3dlYXRoZXJfdG93ZXJzDQoNCnJlZiBlbnRpdHkgbXluYW1lc3BhY2Ujd2luZF90dXJiaW5lczINCnJlZiBlbnRpdHkgd2luZF9tYWludGVuYW5jZV9yZXF1ZXN0cw0KcmVmIGVudGl0eSB3aW5kX21haW50ZW5hbmNlX3N0YWZmDQpyZWYgZW50aXR5IHdpbmRfcG93ZXJfcGxhbnRzDQpyZWYgZW50aXR5IHdpbmRfc3RhdHVzX2NvZGVzDQpyZWYgZW50aXR5IHdpbmRfdHVyYmluZV9ibGFkZQ0KcmVmIGVudGl0eSB3aW5kX3R1cmJpbmVfZ2VhcmJveA0KcmVmIGVudGl0eSB3aW5kX3R1cmJpbmVfZ2VuZXJhdG9yDQpyZWYgZW50aXR5IHdpbmRfdHVyYmluZV9uYWNlbGxlDQpyZWYgZW50aXR5IHdpbmRfdHVyYmluZV9yb3Rvcg0KcmVmIGVudGl0eSB3aW5kX3R1cmJpbmVzDQpyZWYgZW50aXR5IHdpbmRfd2VhdGhlcl90b3dlcnMNCg0KcmVmIG5hbWVzcGFjZSBkZWZhdWx0DQpyZWYgbmFtZXNwYWNlIG15bmFtZXNwYWNlDQoNCnJlZiBydWxlIFNwZWVkTGltaXQNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": "database.tmdl",
+            "payload": "Ly8vIFdpbmQgZmFybSBBTE0gdGVzdCBvbnRvbG9neSAoZnJvbSByYXVsYWxvbnNvX21pY3Jvc29mdC9hbG1fZmFicmljX3Rlc3Q6IG9udG9sb2d5X2FsbV90ZXN0Lk9udG9sb2d5KS4NCmRhdGFiYXNlDQoJY29tcGF0aWJpbGl0eUxldmVsOiAxMDAwMDAwDQoNCg==",
+            "payloadType": "InlineBase64"
+        },
+        {
+            "path": ".platform",
+            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIk9udG9sb2d5IiwKICAgICJkaXNwbGF5TmFtZSI6ICJXaW5kRmFybSIKICB9LAogICJjb25maWciOiB7CiAgICAidmVyc2lvbiI6ICIyLjAiLAogICAgImxvZ2ljYWxJZCI6ICIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiCiAgfQp9",
+            "payloadType": "InlineBase64"
+        }
+    ]
 }
 ```
 
-## EntityTypes/{ID}/DataBindings directory: DataBinding file
+## database.tmdl: Database file
 
-The DataBinding file name is the DataBinding ID.
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | Guid | true | Unique ID of the data binding. |
-| `dataBindingConfiguration` | DataBindingConfiguration | true | Configuration specific to the kind of data binding. |
-
-### DataBindingConfiguration
+The `database` part carries the model container and its compatibility level.
 
 | Property | Type | Required | Description |
-|----|----|----|----|
-| `dataBindingType` | string | true | Allowed values: *TimeSeries*, *NonTimeSeries* |
-| `timestampColumnName` | string | false | Only required if `dataBindingType` is *TimeSeries*. This is the name of the timestamp column from the data table. |
-| `propertyBindings` | EntityTypePropertyBinding[] | false | The bindings from source columns to entity type properties. |
-| `sourceTableProperties` | LakehouseTableDataBindingProperties or EventhouseTableDataBindingProperties.<br>**Note:** EventhouseTableDataBindingProperties can only be used if the `dataBindingType` is *TimeSeries*. | true | Data source table properties. |
+| --- | --- | --- | --- |
+| `compatibilityLevel` | int | true | Tabular compatibility level. Set to `1000000` — the level required for the TMSL++ ontology extensions. |
 
-### EntityTypePropertyBinding
+`database.tmdl` file example:
 
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `sourceColumnName` | string | true | The name of the source column in the data table. |
-| `targetPropertyId` | string | true | The target property ID in the entity type. |
-
-### LakehouseTableDataBindingProperties
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `sourceType` | string | true | The sourceType of the Data Binding. Allowed value: *LakehouseTable*. |
-| `workspaceId` | Guid | true | The ID of the workspace where the customer's lakehouse table is located. |
-| `itemId` | Guid | true | `ArtifactId` of the customer's lakehouse. |
-| `sourceTableName` | string | true | The name of the data table from the lakehouse. |
-| `sourceSchema` | string | false | The schema of the data table. |
-
-### EventhouseTableDataBindingProperties
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `sourceType` | string | true | The source type of the Data Binding. Allowed value: *KustoTable*. |
-| `workspaceId` | Guid | true | The ID of the workspace where the customer's eventhouse is located. |
-| `itemId` | Guid | true | `ArtifactId` of the customer's eventhouse. |
-| `clusterUri` | string | true | The URL to the Kusto cluster. |
-| `databaseName` | string | true | The name of the database in the Kusto cluster. |
-| `sourceTableName` | string | true | The name of the source table in the Kusto cluster. |
-
-### DataBinding file example
-
-```json
-{
-  "id": "39a3889b-77e4-4851-8960-e3b779a5d9ba",
-  "dataBindingConfiguration": {
-    "dataBindingType": "TimeSeries",
-    "timestampColumnName": "PreciseTimestamp",
-    "propertyBindings": [
-      {
-          "sourceColumnName": "PreciseTimestamp",
-          "targetPropertyId": "3114584981368796953"
-      },
-      {
-          "sourceColumnName": "Name",
-          "targetPropertyId": "3114584979743320934"
-      },
-      {
-          "sourceColumnName": "Temperature",
-          "targetPropertyId": "3114584977562679672"
-      },
-      {
-          "sourceColumnName": "Name",
-          "targetPropertyId": "3117068036374594013"
-      }
-    ],
-    "sourceTableProperties": {
-      "sourceType": "LakehouseTable",
-      "workspaceId": "580f410e-733d-43bd-8a87-be12b536f7ff",
-      "itemId": "d0d863bc-48e1-45b2-8f4b-54795c97ba71",
-      "sourceTableName": "equipment1timeseries",
-      "sourceSchema": "dbo"
-    }
-  }
-}
+```tmdl
+database
+	compatibilityLevel: 1000000
 ```
 
-## EntityTypes/{ID}/Documents directory: Document file
+## model.tmdl: Model file
 
-The Document file name is the *document{id}.json*, where *id* is the document number for the entity type.
+The `model` part carries the tabular `model` and the `ref` statements that pull the tables, entities, and namespaces into the definition. It **must** include `ref namespace default` — the reserved default namespace has to be referenced here (and defined in `namespaces/default.tmdl`) for the definition to resolve.
 
-### Document
+| Statement | Required | Description |
+| --- | --- | --- |
+| `ref table {name}` | false | References a backing `tables/{name}.tmdl` part. |
+| `ref entity {name}` | false | References an `entities/{name}.tmdl` part. |
+| `ref namespace default` | true | References the reserved default namespace. Additional `ref namespace {name}` lines reference other `namespaces/{name}.tmdl` parts. |
+| `ref rule {name}` | false | References a `rules/{name}.tmdl` part. |
+| `reusableProperty {name}` | false | Declares a reusable (global) property directly in `model.tmdl` — reusable properties are global and not namespaced, so they aren't referenced through `entities/{name}.tmdl` files. An entity property binds to it via its `reusableProperty` field (see the `entities/{name}.tmdl` section above). ⚠️ *Same rollout status as entity type inheritance — may not yet be available for every tenant/capacity/workspace.* |
+| `ref metric {name}` | false | References a `metrics/{name}.tmdl` part. Unlike `entity`/`entityRelationship`/`rule`, a metric is a **native AS TOM construct** (`Microsoft.AnalysisServices.Tabular.Metric` and its `ExplicitMetric`/`ProjectedMetric` subclasses) — not an ontology-only TMSL++ extension. See **Metric details** below. |
 
-| Property    | Type   | Required | Description                        |
-|-------------|--------|----------|------------------------------------|
-| `displayText` | string | false    | The display text for the document. |
-| `url`         | string | true     | The URL pointing to the document.  |
+>[!NOTE]
+> `ref` statements are an **output projection, not an input gate**. A supplied part is ingested even when `model.tmdl` carries no matching `ref` line, and `getDefinition` emits the `ref` line for it on the way back out. Author the `ref` lines anyway — the definition you get back will always contain them — but do not rely on omitting one to exclude a part.
 
-### Document file example
+### Metric details
 
-```json
-{
-  "displayText": "doc1",
-  "url": "exampleurl1"
-}
+Represented as `model.metrics[]`, native AS TOM top-level metric — see `metrics/{name}.tmdl`.
+
+A metric is one of three kinds (`type`):
+
+| `type` | Description |
+| --- | --- |
+| `explicit` | A standalone, user-authored metric with its own `expression` (a KQL/SQL/Generic/NaturalLanguage-dialect formula — **not** DAX). Requires `name`. This is the only kind that can be authored through the TMDL definition — see the note below. |
+| `enrichment` | Decorates an existing table `measure` (see `tables/{name}.tmdl` below) with ontology-only metadata (for example `synonyms`) without redefining its expression. Requires `backingMeasure`; `name` must be **omitted** — `MetricShapeRule` rejects an enrichment metric that carries its own `name` (`EnrichmentMetricFieldNotAllowed`), since the `backingMeasure` pair is its only identity. |
+| `projected` | A named, ontology-facing alias of an existing table `measure`. Requires `name` and `backingMeasure`. |
+
+> [!NOTE]
+> **`enrichment` and `projected` metrics cannot currently be authored through the TMDL definition.** Both require `backingMeasure`, and `backingMeasure` has no TMDL representation — the TMDL parser rejects the keyword outright (`The keyword 'backingMeasure' is neither a property nor an object in the current context`), while `MetricShapeRule` rejects a `projected`/`enrichment` metric that omits it (`MetricBackingMeasureMissing`). The field is carried on the V4 and ALM JSON contracts, but it is lost on the TMDL round trip. Only `explicit` metrics are round-trippable through `getDefinition`/`updateDefinition` today.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | string | false | `explicit`, `enrichment`, or `projected`. Omit for `explicit` — the TMDL round trip does not re-emit it. |
+| `name` | string | required for `explicit`/`projected`; **disallowed** for `enrichment` | The metric name, which is also the `metrics/{name}.tmdl` file name. `MetricShapeRule` rejects `name` on an `enrichment` metric — its `backingMeasure` pair is its only identity. |
+| `expression` | MetricExpression | explicit-only | A nested block with `dialect` and `expression` lines — `dialect` is one of `KQL`, `SQL`, `Generic`, `NaturalLanguage`. **`DAX` is rejected** (`ExplicitMetricDaxNotAllowed`) — a DAX-backed metric must be authored as a table `measure` and surfaced via a `projected`/`enrichment` metric instead. Not present on `enrichment`/`projected` (they inherit their expression from the backing table `measure`, which must be DAX). |
+| `formatString` / `formatStringDefinition` | string / FormatStringDefinition | false, mutually exclusive | A literal display format string, or a structured format-string definition. |
+| `dataType` | string | false | The metric's value type. |
+| `synonyms` | string[] | false | Alternate names surfaced to natural-language querying. |
+| `lineageTag` / `sourceLineageTag` | string | false | Standard lineage-tag pair. |
+| `backingMeasure` | MeasureRef | required for `enrichment`/`projected` | `{ table, measure }` — names the `tables/{name}.tmdl` `measure` this metric decorates or projects. **Not expressible in TMDL** (see the note above); available only on the V4/ALM JSON contracts. |
+| `targetScopes` | MetricTargetScope[] | false | `{ table }` entries scoping the metric to specific entity backing tables. **Not expressible in TMDL** — the `targetScope` keyword does not parse. |
+| *(description)* | string | false | A human-readable description, rendered as a `///` doc-comment directly above the `metric` keyword — not a `description:` line. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. Repeated as one `annotation <name> = <value>` line per entry. |
+
+`metrics/{name}.tmdl` file example (an `explicit` metric):
+
+```tmdl
+metric AvgWindSpeed
+	lineageTag: 11111111-2222-3333-4444-555555555555
+
+	expression
+		dialect: KQL
+		expression: avg(WindSpeed)
 ```
 
-## EntityTypes/{ID}/Overviews directory: Overviews file
+`model.tmdl` file example:
 
-The Overviews file name is *definition.json*.
+```tmdl
+model Model
 
-### Overviews
+ref table wind_maintenance_requests
+ref entity wind_maintenance_requests
 
-| Property | Type                | Required | Description                    |
-|----------|---------------------|----------|--------------------------------|
-| `widgets`  | Widget[] | false    | The widgets on the preview experience.  |
-| `settings` | Settings   | false    | The settings of the preview experience. |
+ref namespace default
+ref namespace mynamespace
 
-### Widget
+ref rule SpeedLimit
 
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | Guid | true | Unique ID of the widget. |
-| `type` | string | true | Type of widget. Allowed values: *lineChart*, *barChart*, *file*, *graph*, *liveMap*. |
-| `title` | string | false | The title of the widget. |
-| `yAxisPropertyId` | string | false | The property to display on the y-axis.<br>**Note:** Include this field only if `type` is *lineChart* or *barChart*. |
-
-### Settings
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `type` | string | true | Type of Settings. Allowed values: *fixedTime*, *customTime*. |
-| `interval` | string | true | Sample window values in seconds for the preview experience data. Allowed values: *OneMinute*, *FiveMinutes*, *FifteenMinutes*, *ThirtyMinutes*, *OneHour*, *SixHours*, *TwelveHours*, *OneDay*. |
-| `aggregation` | string | true | Aggregation function for the preview experience data. Allowed values: *Average*, *Count*, *Maximum*, *Minimum*, *Sum*, *LastKnownValue*. |
-| `fixedTimeRange` | string | false | The fixed time range for the preview experience data. Allowed values: *Last30Minutes*, *Last1Hour*, *Last4Hours*, *Last12Hours*, *Last24Hours*, *Last48Hours*, *Last3Days*, *Last7Days*, *Last30Days*.<br>**Note:** Include this field only if `type` is *fixedTime*. |
-| `timeRange` | TimeRange | false | Time range for the preview experience data.<br>**Note:** Include this field only if `type` is *customTime*. |
-
-### TimeRange
-
-| Property  | Type        | Required | Description                           |
-|-----------|-------------|----------|---------------------------------------|
-| `startTime` | UTCDateTime | true     | Start time for the custom time range. |
-| `endTime`   | UTCDateTime | true     | End time for the custom time range.   |
-
-### Overviews file example
-
-```json
-{
-  "widgets": [
-    {
-      "type": "lineChart",
-      "yAxisPropertyId": "3114584977562679672",
-      "id": "6d733018-c177-47b5-87ba-6024cc143776",
-      "title": "temperature data"
-    }
-  ],
-  "settings": {
-    "type": "fixedTime",
-    "fixedTimeRange": "Last1Hour",
-    "interval": "OneHour",
-    "aggregation": "Average"
-  }
-}
+reusableProperty GlobalWorkorderId
+	lineageTag: 8f3c9b2a-1d4e-4a6f-9c2b-7e5d6a1f0b3c
 ```
 
-## EntityTypes/{ID}/ResourceLinks directory: ResourceLinks file
+### Reusable property details
 
-The ResourceLinks file name is *definition.json*.
+Represented as `model.reusableProperties[]`, referenced by name from `entity.properties[].reusableProperty`.
 
-### ResourceLinks
-
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `resourceLinks` | ResourceLink[] | true | The list of resource links for the entity type. |
-
-### ResourceLink
+A reusable property carries no data type of its own — the data type always lives on the bound entity-type property. It is purely shared metadata (`description`, `synonym`, `annotation`) that a binding entity-type property inherits unless that property lists the field in its own `overriddenMetadataFields`.
 
 | Property | Type | Required | Description |
-|----|----|----|----|
-| `type` | string | true | The type of resource link. Allowed values: *PowerBIReport*. |
-| `workspaceId` | Guid | true | The ID of the workspace where the customer's resource link is located. |
-| `itemId` | Guid | true | The `ArtifactId` of the customer's resource link. |
+| --- | --- | --- | --- |
+| `lineageTag` | string | false | Stable identity of the reusable property. Any string up to 512 characters — a GUID is the convention, but not a requirement. |
+| `name` | string | true | Unique within the ontology, case-insensitive. A bare name (max 128 characters) — not the composite `"namespace#displayName"` form entity types, entity relationships, rules, and top-level metrics use — so a binding survives a delete + recreate of the target under the same name. |
+| `description` | string | false | A human-readable description. Shareable — inherited by a bound entity-type property unless that property lists `description` in `overriddenMetadataFields`. |
+| `synonym` | string[] | false | Alternate names. Shareable like `description` — inherited unless overridden. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. |
 
-### ResourceLinks file example
+## tables/{name}.tmdl: Table file
 
-```json
-{
-  "resourceLinks": [
-    {
-      "type": "PowerBIReport",
-      "workspaceId": "318666aa-3d5a-4701-a3a7-1d37f3de57d2",
-      "itemId": "d29df38d-6974-4b0c-ae78-7126257a222f"
-    }
-  ]
-}
+Each backing table is a `table` part named after the table. A table has `column` blocks and, when it is DirectLake-backed, a `partition`. Partitions are optional — a table with no partition at all is accepted — and up to 1,000 are allowed per table.
+
+### Column details
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `dataType` | string | false | AS data type: `string`, `int64`, `double`, `dateTime`, `boolean`, `decimal`. Omitting it parses, but leaves the column typed `unknown`, which fails validation as soon as an entity property binds to it (`PropertyTypeIncompatible`) — so supply it in practice. |
+| `sourceColumn` | string | false | Column name in the backing table. Optional to the parser, but required for the column to resolve against a DirectLake source. |
+| `formatString` | string | false | Display format (for example `0`, `General Date`). |
+| `sourceLineageTag` | string | false | Lineage tag of the source column. |
+
+### Partition source (`entity` / DirectLake)
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `mode` | string | true | `directLake`. |
+| `entityName` | string | true | Backing table name in the warehouse/lakehouse. |
+| `schemaName` | string | false | Source schema (for example `dbo`). |
+| `expressionSource` | string | true | Name of the shared M expression that resolves the source (for example `DatabaseQuery`). |
+
+### Measure details
+
+A table can also declare native AS TOM `measure` blocks (`DAX` only). A table measure is the target that a top-level `enrichment`/`projected` `metric` (see `model.tmdl` above) refers to through `backingMeasure: { table, measure }` on the V4/ALM JSON contracts. Note that adding a table `measure` does **not** by itself create a metric — `getDefinition` does not project measures into `model.metrics[]`.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| *(expression)* | string | true | The DAX expression, written as the value after `measure {name} =`. |
+| `formatString` | string | false | Display format string. |
+| `lineageTag` / `sourceLineageTag` | string | false | Standard lineage-tag pair. |
+| `isHidden` | bool | false | Hides the measure from client tooling. |
+| *(description)* | string | false | Rendered as a `///` doc-comment directly above the `measure` keyword. |
+
+`tables/{name}.tmdl` file example:
+
+```tmdl
+table wind_maintenance_requests
+	sourceLineageTag: [dbo].[wind_maintenance_requests]
+
+	column WorkorderId
+		dataType: string
+		sourceColumn: WorkorderId
+		sourceLineageTag: WorkorderId
+
+	column TurbineId
+		dataType: string
+		sourceColumn: TurbineId
+		sourceLineageTag: TurbineId
+
+	column Status
+		dataType: int64
+		formatString: 0
+		sourceColumn: Status
+		sourceLineageTag: Status
+
+	column ActualLabourHours
+		dataType: double
+		sourceColumn: ActualLabourHours
+		sourceLineageTag: ActualLabourHours
+
+	partition wind_maintenance_requests = entity
+		mode: directLake
+		source
+			entityName: wind_maintenance_requests
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+
+	measure TotalLabourHours = SUM(wind_maintenance_requests[ActualLabourHours])
+		formatString: 0
+		lineageTag: 2f8e1a4c-9b3d-4e7f-8a1c-5d6e9f2b3a7c
 ```
 
-## RelationshipTypes/{ID} directory: RelationshipType file
+## entities/{name}.tmdl: EntityType file (ontology extension)
 
-The RelationshipType file name is *definition.json*.
+Each ontology entity is an `entity` part named after the entity. Namespaced entities use the `<Namespace>#<Entity>.tmdl` filename convention (for example, `mynamespace#wind_turbines2.tmdl`); an unqualified filename such as `Sensor.tmdl` represents an entity in the default namespace.
 
-| Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | BigInt | true | Unique ID of the relationship type. |
-| `namespace` | string | true | Allowed value: *usertypes*. |
-| `name` | string | true | Name of the relationship type. Must follow this Regex pattern: `^[a-zA-Z][a-zA-Z0-9_-]{0,127}$`. |
-| `namespaceType` | BigInt | true | Allowed value: *Custom*. |
-| `source` | RelationshipEnd | true | The relationship end that denotes the source. |
-| `target` | RelationshipEnd | true | The relationship end that denotes the target. |
+> [!NOTE]
+> An entity's `displayName` and `namespace` are **server-derived, read-only** properties — `displayName` is derived from the entity `name`, and `namespace` is derived from the `<Namespace>#<Entity>` filename. Neither is accepted as an input keyword, and neither is emitted back in the definition.
 
-### RelationshipEnd
+### EntityType details
 
 | Property | Type | Required | Description |
-|----|----|----|----|
-| `entityTypeId` | string | true | The entity type ID of the relationship end that exists in the workspace. The entity type ID is a positive 64-bit integer that's unique across the ontology instance. |
+| --- | --- | --- | --- |
+| *(description)* | string | false | A human-readable description, rendered as a `///` doc-comment directly above the `entity` keyword — not a `description:` line. The same convention applies to a `property`. |
+| `lineageTag` | string | false | Stable identity of the entity; elements match by `LineageTagThenName`, so a rename that preserves the lineage tag replaces in place. Any string up to 512 characters — a GUID is the convention, but not a requirement. |
+| `backingTable` | string | false | Name of the backing `table` that supplies this entity's rows. Omit for an ontology-first entity. |
+| `baseEntityType` | string | false | The `<Namespace>#<Entity>` name of the base entity type this entity type derives from, or absent for a root entity type. Set on create and immutable thereafter — a git-authored change to this value is deployed as a delete + recreate, never as an in-place reparent. ⚠️ *Entity type inheritance is being rolled out gradually; it may not yet be available for every tenant/capacity/workspace. An import that authors `baseEntityType`/`overriddenMetadataFields`/`redefines` while the feature isn't enabled for the target is rejected.* |
+| `overriddenMetadataFields` | string[] | false | The names of the inherited metadata fields this entity type overrides. Same rollout status as `baseEntityType`. |
+| `keyProperty` | string | false | The single property that uniquely identifies an entity. Scalar and singular — a repeated `keyProperty` line or a comma-separated list is rejected. |
+| `additionalBackingTables` | AdditionalBackingTable[] | false | Additional backing tables joined to the primary backing table via a base TOM `relationship` (see below). |
+| `property` | Property[] | false | The entity's properties (see below). |
+| `resourceLink` | ResourceLink[] | false | Fabric items (dashboards, reports, notebooks, etc.) attached to the entity type (see below). |
+| `synonym` | string[] | false | Alternative names for the entity type. Repeated as one `synonym <value>` line per entry. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. Repeated as one `annotation <name> = <value>` line per entry. |
 
-### RelationshipType file example
+### Additional backing table details
 
-```json
-{
-  "namespace": "usertypes",
-  "id": "3110733855942077719",
-  "name": "contains",
-  "namespaceType": "Custom",
-  "source": {
-    "entityTypeId": "8813598896083"
-  },
-  "target": {
-    "entityTypeId": "159990879905613"
-  }
-}
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `table` | string | true | Name of the additional backing `table`. |
+| `relationship` | string | true | Name of the base TOM `relationship` (in `relationships.tmdl`, `model.relationships[]`) — **not** an `entityRelationship` — that joins this table to the entity's primary backing table. Must reference an existing TOM relationship. |
+
+`additionalBackingTable` is an **unnamed** block — `additionalBackingTable t2` is rejected (`AdditionalBackingTable is not a named object`). Write a bare `additionalBackingTable` header with the `table:` and `relationship:` lines beneath it:
+
+```tmdl
+	additionalBackingTable
+		table: wind_maintenance_labour
+		relationship: wind_maintenance_requests_to_labour
 ```
 
-## RelationshipTypes/{ID}/Contextualizations directory: Contextualization file
-
-The Contextualization file name is the contextualization ID.
+### Property details
 
 | Property | Type | Required | Description |
-|----|----|----|----|
-| `id` | Guid | true | Unique ID of the contextualization. |
-| `dataBindingTable` | LakehouseTableDataBindingProperties | true | The source lakehouse data table. |
-| `sourceKeyRefBindings` | EntityTypePropertyBinding[] | true | The columns in the dataTable making up the unique ID of the source-side entity type. |
-| `targetKeyRefBindings` | EntityTypePropertyBinding[] | true | The columns in the dataTable making up the unique ID of the target-side entity type. |
+| --- | --- | --- | --- |
+| `dataType` | string | true | Value type of the property: a primitive (`string`, `int64`, `double`, `dateTime`, `boolean`, `decimal`), `Any`, a time-series form `TimeSeries<T>` where `T` is one of the primitives (for example `TimeSeries<double>`), or the sentinel `complex` — which requires `complexDataType` to be present alongside it (see below). |
+| `complexDataType` | ComplexDataType | required when `dataType` is `complex` | The recursive logical shape of a complex-typed property, emitted as a single JSON-assignment line, `complexDataType = { ... }` (there is no nested block/keyword form). Absent for a non-complex `dataType`. **There is no `array` kind** — `ComplexDataTypeKind` is exactly `primitive`, `any`, `struct`, or `timeSeries`. |
+| `lineageTag` | string | false | Stable identity of the property. Any string up to 512 characters — a GUID is the convention, but not a requirement. |
+| `backingConfiguration` | BackingConfiguration | false | How this property's values are sourced from the entity's backing table(s). Omit for an ontology-first property. Replaces the earlier flat `backingColumn: table.column` shorthand (see below). |
+| `reusableProperty` | string | false | The name of the reusable (global) property (declared once at the model level, see `model.tmdl`) this property binds to, or absent for a property that carries its own metadata. Reusable properties are global and not namespaced. Unlike `baseEntityType`, this binding is mutable — a git-authored change deploys as an ordinary in-place update. |
+| `redefines` | RedefinesRef | false | A reference to the ancestor property (declared on a `baseEntityType` ancestor, possibly several levels up) that this property redefines, or absent for a purely local property. Set on create and immutable thereafter, on the same terms as `baseEntityType`. Same rollout status as `baseEntityType`. |
+| `overriddenMetadataFields` | string[] | false | The names of the inherited metadata fields this property overrides. Same rollout status as `baseEntityType`. |
+| `synonym` | string[] | false | Alternative names for the property. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. |
 
-### Contextualization file example:
+### ComplexDataType details
 
-```json
-{
-  "id": "62bbbf52-39a4-47ed-b7bf-651debaca6ab",
-  "dataBindingTable": {
-    "workspaceId": "580f410e-733d-43bd-8a87-be12b536f7ff",
-    "itemId": "d0d863bc-48e1-45b2-8f4b-54795c97ba71",
-    "sourceTableName": "relationshiptable",
-    "sourceSchema": "dbo",
-    "sourceType": "LakehouseTable"
-  },
-  "sourceKeyRefBindings": [
-    {
-      "sourceColumnName": "Equipment1Name",
-      "targetPropertyId": "3117068036374594013"
-    }
-  ],
-  "targetKeyRefBindings": [
-    {
-      "sourceColumnName": "Equipment2Name",
-      "targetPropertyId": "3113493256674129151"
-    }
-  ]
-}
+Represented as `complexDataType`, required when `dataType` is `complex`.
+
+`complexDataType` is a discriminated union on `kind`, emitted as one JSON-assignment line: `complexDataType = { "kind": ..., ... }`.
+
+| `kind` | Description |
+| --- | --- |
+| `primitive` | A primitive/state logical node. Carries `dataType` (an existing `TmslDataType` value). |
+| `any` | An intentionally schema-free node — no further fields. Ontology-first or default one-column backing only; structured backing is invalid. |
+| `struct` | A non-empty anonymous struct. Carries `fields: ComplexStructField[]`, each `{ "name": string, "type": ComplexDataType }` (recursive). |
+| `timeSeries` | A time series whose element is another logical node. Carries `elementType: ComplexDataType` (recursive) — **always required**; `TimeSeriesComplexDataType.elementType` has no default and must be supplied for every `kind: timeSeries` node, regardless of the property's own top-level `dataType`. |
+
+> [!NOTE]
+> The **root** node must be `struct` or `timeSeries`. A root of `primitive` or `any` is rejected (`The root kind must be struct or timeSeries`) — those kinds are only valid at nested positions (a struct field's `type`, or a time series' `elementType`).
+
+### BackingConfiguration details
+
+`backingConfiguration` describes how a property's values are sourced from the entity's backing table(s). It is a discriminated union on `type`; the `default` variant may omit `type` (it's inferred when a `valueColumn` is present without a `fields`/`orderingColumn`), the other two variants must specify `type` explicitly.
+
+| `type` | Description |
+| --- | --- |
+| `default` (or omitted) | A single scalar column supplies the property's values. |
+| `struct` | The property is a complex/struct value; each named field of the struct has its own (recursive) `backingConfiguration`. |
+| `timeSeries` | The property is a `TimeSeries<T>` value: an ordering column plus either a single value column or a recursive `valueBackingConfiguration` (used when the time-series element itself is a struct). |
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | string | false | The variant discriminator: `default`, `struct`, or `timeSeries`. Omit for `default`. |
+| `valueColumn` | ColumnRef | required for `default`; optional for `timeSeries` | The column that supplies the value. In the TMDL keyword form this is a `{table}.{column}` string (`valueColumn: wind_turbines.Capacity`); inside a JSON assignment (`valueBackingConfiguration = { ... }`) it is a JSON **object**, `{ "table": ..., "column": ... }`. On `timeSeries`, mutually exclusive with `valueBackingConfiguration` — supply exactly one. |
+| `orderingColumn` | string | required for `timeSeries` | `{table}.{column}` reference to the column that orders the time-series points. |
+| `valueBackingConfiguration` | BackingConfiguration | required for `timeSeries` when the element type is a struct | A recursive `backingConfiguration`, emitted as one JSON-assignment line (`valueBackingConfiguration = { ... }`), describing how each time-series element's fields are sourced. Mutually exclusive with `valueColumn`. |
+| `fields` | StructField[] | required for `struct` | The struct's named fields, emitted as one JSON-assignment line (`fields = [ ... ]`), not as nested `field {name}` blocks (see below). |
+
+### Struct field details
+
+Applies to the `struct` backing configuration only.
+
+Each entry of the `fields = [ ... ]` array is a JSON object, not a TMDL block:
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | true | The struct field's name. |
+| `backingConfiguration` | BackingConfiguration | true | A recursive `backingConfiguration` object describing how this field's value is sourced — itself `default`, `struct`, or `timeSeries`. Inside a JSON assignment the `"type"` discriminator is **required** on every nested field backing (including `"default"`); it may only be omitted in the TMDL keyword form. |
+
+Shorthand shape reference:
+
+| Shape | TMDL | Description |
+| --- | --- | --- |
+| Default (single column) | `valueColumn: {table}.{column}` | The column that supplies this property's values. |
+| Struct | `type: struct` + `fields = [ { "name": ..., "backingConfiguration": { ... } }, ... ]` | A nested field-by-field mapping, as one JSON-assignment array — not a `field {name}` block. |
+| Time series (scalar element) | `type: timeSeries` + `orderingColumn: {table}.{column}` + `valueColumn: {table}.{column}` | Ordering plus value columns for a scalar-element time series. |
+| Time series (struct element) | `type: timeSeries` + `orderingColumn: {table}.{column}` + `valueBackingConfiguration = { ... }` | Ordering column plus a recursive backing configuration, as one JSON-assignment line, for a struct-element time series. |
+
+`entities/{name}.tmdl` complex/struct property example (round-trippable):
+
+```tmdl
+property WeatherReadings
+	dataType: complex
+	complexDataType = {"kind":"timeSeries","elementType":{"kind":"struct","fields":[{"name":"WindSpeed","type":{"kind":"primitive","dataType":"int64"}},{"name":"Temperature","type":{"kind":"primitive","dataType":"int64"}}]}}
+	lineageTag: 4b8e2f1a-6c9d-4e3f-8a1b-2d5c7e9f3a6b
+
+	backingConfiguration
+		type: timeSeries
+		orderingColumn: wind_weather_tower_telemetry_augmented_Mar2025.Timestamp
+		valueBackingConfiguration = {"type":"struct","fields":[{"name":"WindSpeed","backingConfiguration":{"type":"default","valueColumn":{"table":"wind_weather_tower_telemetry_augmented_Mar2025","column":"WindSpeed"}}},{"name":"Temperature","backingConfiguration":{"type":"default","valueColumn":{"table":"wind_weather_tower_telemetry_augmented_Mar2025","column":"Temperature"}}}]}
 ```
+
+
+### Redefines reference details
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `entity` | string | true | The `<Namespace>#<Entity>` name of the ancestor entity type that declares the redefined property. Must reference an ancestor of the declaring entity type. |
+| `property` | string | true | The name of the redefined property, declared on `entity`. |
+
+### Resource link details
+
+A resource link attaches a Fabric item (dashboard, report, notebook, etc.) to an entity type. A resource link has no name of its own — its identity is the item it points at, and its position in the `resourceLink[]` list is preserved across a wholesale replace.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| *(description)* | string | false | A human-readable description, rendered as a `///` doc-comment directly above the `resourceLink` keyword — not a `description:` line. |
+| `item` | FabricItemReference | true | The Fabric item the link refers to (see below). A `resourceLink` without an `item` is rejected (`ResourceLinkItemMissing`). |
+| `synonym` | string[] | false | Alternative names for the resource link. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. |
+
+### Fabric item reference details
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | string | false | `Direct` (the default — omitted from the emitted TMDL) or `variable`. |
+| `workspaceId` | Guid | required when `type` is `Direct` | The id of the workspace that owns the Fabric item. |
+| `itemId` | Guid | required when `type` is `Direct` | The id of the Fabric item. |
+| `variableReference` | string | required when `type` is `variable` | The full Fabric variable-reference token, for example `$(/**/ResourceVariables/Report)`. |
+
+`entities/{name}.tmdl` file example:
+
+```tmdl
+/// A maintenance work order raised against a wind turbine.
+entity wind_maintenance_requests
+	lineageTag: dacaba5a-82df-4f9c-8b31-8a32b424f878
+	backingTable: wind_maintenance_requests
+	keyProperty: WorkorderId
+
+	/// Unique work order identifier.
+	property WorkorderId
+		dataType: string
+		lineageTag: e3f67fa4-1431-40ff-9135-43ccbc8175c3
+
+		backingConfiguration
+			valueColumn: wind_maintenance_requests.WorkorderId
+
+	property TurbineId
+		dataType: string
+
+		backingConfiguration
+			valueColumn: wind_maintenance_requests.TurbineId
+
+	property Status
+		dataType: int64
+
+		backingConfiguration
+			valueColumn: wind_maintenance_requests.Status
+
+	/// Live dashboard for this maintenance request.
+	resourceLink
+
+		item
+			workspaceId: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+			itemId: bbbbbbbb-cccc-dddd-eeee-ffffffffffff
+
+		synonym dashboard
+
+	resourceLink
+
+		item
+			type: variable
+			variableReference: $(/**/ResourceVariables/MaintenanceReport)
+```
+
+## entityRelationships.tmdl: EntityRelationship file (ontology extension)
+
+Ontology-level relationships between entities live in a single `entityRelationships.tmdl` part. Each `entityRelationship` binds two entities through a backing configuration. Every relationship name in the file content is represented as `<Namespace>#<EntityRelationship>`; an unqualified name such as `Status Code For Plant` is an entity relationship in the default namespace.
+
+> [!NOTE]
+> As with entities, an entity relationship's `displayName` and `namespace` are **server-derived, read-only** properties (derived from the relationship `name`). Neither is accepted as an input keyword, and neither is emitted back in the definition.
+
+### EntityRelationship details
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `lineageTag` | string | false | Stable identity of the entity relationship. Any string up to 512 characters — a GUID is the convention, but not a requirement. |
+| *(description)* | string | false | A human-readable description, rendered as a `///` doc-comment directly above the `entityRelationship` keyword — not a `description:` line. |
+| `synonym` | string[] | false | Alternative names for the entity relationship. Repeated as one `synonym <value>` line per entry. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. Repeated as one `annotation <name> = <value>` line per entry. |
+| `label` | string | false | A human-readable label for the entity relationship. |
+| `fromEntity` | string | true | Name of the source entity. |
+| `toEntity` | string | true | Name of the target entity. |
+| `backingConfiguration.type` | string | false | How the relationship is realized: `relationship` (backed by a TOM table relationship) or `table` (backed by a junction/relationship table). If omitted, the type is inferred from which `backingConfiguration` fields are present (for example, `relationship` is inferred when `backingConfiguration.relationship` is provided). |
+| `backingConfiguration.relationship` | string | conditional | Name of the backing TOM `relationship` when `type = relationship` (or when the inferred type is `relationship`). Rejected as an unrecognized property when combined with `table`/`fromRelationship`/`toRelationship` — the two variants are mutually exclusive. |
+| `backingConfiguration.table` | string | required when `type = table` | Name of the junction `table` that backs the relationship. The junction table must **not** also be an entity's `backingTable` — a table bound both ways is rejected with `BackingTableBoundMoreThanOnce`. |
+| `backingConfiguration.fromRelationship` | string | required when `type = table` | Name of the TOM `relationship` joining the source entity's (`fromEntity`) primary backing table to the junction `table`. |
+| `backingConfiguration.toRelationship` | string | required when `type = table` | Name of the TOM `relationship` joining the target entity's (`toEntity`) primary backing table to the junction `table`. |
+
+`entityRelationships.tmdl` file example (relationship-backed):
+
+```tmdl
+entityRelationship 'Status Code For Plant'
+	lineageTag: 3263594c-7ef0-4a8d-8ec8-7f62221adbd2
+	fromEntity: wind_status_codes
+	toEntity: wind_power_plants
+
+	backingConfiguration
+		relationship: rel_statuscode_plant
+```
+
+`entityRelationships.tmdl` file example (table-backed, a many-to-many relationship realized through a junction table).
+
+A table-backed relationship is not self-contained: the junction `table` and both TOM `relationship` objects it names must already exist in the definition, and the junction table must not be any entity's `backingTable`. Extending the **WindFarm** sample above, add the junction table as a new `tables/wind_turbine_plant_junction.tmdl` part (plus a matching `ref table` line in `model.tmdl`):
+
+```tmdl
+table wind_turbine_plant_junction
+	lineageTag: 0c9d3a4e-7b21-4f6d-9a83-2e5c1d7f4b90
+
+	column TurbineId
+		dataType: string
+		lineageTag: 1a2b3c4d-0001-4000-8000-000000000001
+		sourceColumn: TurbineId
+
+	column PlantId
+		dataType: string
+		lineageTag: 1a2b3c4d-0002-4000-8000-000000000002
+		sourceColumn: PlantId
+
+	partition wind_turbine_plant_junction = entity
+		mode: directLake
+		source
+			entityName: wind_turbine_plant_junction
+			schemaName: dbo
+			expressionSource: DatabaseQuery
+```
+
+Add the two joining relationships to `relationships.tmdl`:
+
+```tmdl
+relationship rel_turbine_junction
+	fromColumn: wind_turbine_plant_junction.TurbineId
+	toColumn: wind_turbines.TurbineId
+
+relationship rel_junction_plant
+	fromColumn: wind_turbine_plant_junction.PlantId
+	toColumn: wind_power_plants.PlantId
+```
+
+Then the entity relationship itself, in `entityRelationships.tmdl`:
+
+```tmdl
+entityRelationship 'Turbine Serves Plant'
+	lineageTag: 6d6e6a9c-9d1c-42b9-b9e0-484a1bc7e124
+	fromEntity: wind_turbines
+	toEntity: wind_power_plants
+
+	backingConfiguration
+		type: table
+		table: wind_turbine_plant_junction
+		fromRelationship: rel_turbine_junction
+		toRelationship: rel_junction_plant
+```
+
+## namespaces/{namespace}.tmdl: Namespace file (ontology extension)
+
+Namespaces group ontology entities and entity relationships so the same name can be reused across namespaces without collisions. Each additional namespace has its own file (`namespaces/{namespace}.tmdl`); the reserved `default` namespace is `namespaces/default.tmdl`. Namespaced entities and entity relationships reference their namespace via the `<Namespace>#<Name>` convention.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `lineageTag` | string | false | Stable identity of the namespace. Any string up to 512 characters — a GUID is the convention, but not a requirement; the reserved `default` namespace uses the literal value `default`. |
+| *(description)* | string | false | A human-readable description, rendered as a `///` doc-comment directly above the `namespace` keyword — not a `description:` line. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. Repeated as one `annotation <name> = <value>` line per entry. |
+
+`namespaces/{namespace}.tmdl` file example:
+
+```tmdl
+namespace mynamespace
+	lineageTag: 4c5e42ae-b1ca-44dd-9db3-bfa3c687934a
+```
+
+The reserved default namespace (`namespaces/default.tmdl`):
+
+```tmdl
+namespace default
+	lineageTag: default
+```
+
+## relationships.tmdl: Relationship file
+
+TOM table-to-table relationships (the physical relationships that entity relationships may bind to).
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `fromColumn` | string | true | `{table}.{column}` on the many side. Repeat the line once per column for a `multiColumn` relationship (up to 100 per side). |
+| `toColumn` | string | true | `{table}.{column}` on the one side. Repeat the line once per column for a `multiColumn` relationship (up to 100 per side). |
+| `type` | string | false | `singleColumn` (the default — omitted from the emitted TMDL) or `multiColumn`. |
+| `isActive` | bool | false | `true` by default; set `false` for an inactive relationship. |
+| `fromCardinality` / `toCardinality` | string | false | `one` or `many` on each side. |
+| `crossFilteringBehavior` | string | false | `oneDirection` (default) or `bothDirections`. |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. |
+
+`relationships.tmdl` file example:
+
+```tmdl
+relationship rel_weathertelemetry_tower
+	fromColumn: wind_weather_tower_telemetry_augmented_Mar2025.TowerId
+	toColumn: wind_weather_towers.TowerId
+```
+
+A multi-column relationship repeats `fromColumn`/`toColumn`:
+
+```tmdl
+relationship rel_multi
+	type: multiColumn
+	isActive: false
+	fromCardinality: many
+	toCardinality: one
+	fromColumn: wind_maintenance_requests.TurbineId
+	fromColumn: wind_maintenance_requests.WorkorderId
+	toColumn: wind_turbines.TurbineId
+	toColumn: wind_turbines.WorkorderId
+```
+
+## expressions.tmdl: Expression file
+
+Shared M expressions — typically the single DirectLake source expression that table partitions reference by name via `expressionSource`.
+
+`expressions.tmdl` file example:
+
+```tmdl
+expression DatabaseQuery =
+		let
+		    database = Sql.Database("<warehouse-endpoint>", "<database-guid>")
+		in
+		    database
+	lineageTag: 00000000-0000-0000-0000-000000000000
+```
+
+## rules/{rule}.tmdl: Rule file (ontology extension)
+
+Business rules capture natural-language constraints and guidance over the ontology. Each rule is a `rule` part named after the rule (for example, `SpeedLimit.tmdl`), backed by the flat `model.rules[]` collection.
+
+### Rule details
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | true | The name of the rule. |
+| `statement` | string | true | The natural-language statement of the rule. |
+| `lineageTag` | string | false | Stable identity of the rule; stable across renames. |
+| `referencedEntities` | RuleEntityReference[] | false | Entities the rule mentions. Each entry is `{ entity, propertyScope, properties }` — `propertyScope` is one of `none`/`specific`/`all`; `properties` is required (1-10 names) when `propertyScope` is `specific` and disallowed otherwise. At most 50 entries, case-insensitively unique by `entity`. Emitted as one or more `ruleReferencedEntity <entity>` blocks — **not** a single JSON-array-valued `referencedEntities` keyword (that form does not parse against the engine). **Namespaced references are supported**: `entity` accepts a composite `<namespace>#<name>` value (for example `sales#Customer`) — only the rule's *own* name is restricted to the default namespace (`RuleDefaultNamespaceRule`); a rule may freely reference entities in any namespace. |
+| `referencedRelationships` | string[] | false | Entity-relationship names the rule mentions. At most 50 entries. Emitted as one or more `ruleReferencedRelationship <name>` lines — **not** a JSON-array-valued `referencedRelationships` keyword. Namespaced references are supported the same way as `referencedEntities` (for example `sales#rel`). |
+| `annotation` | Annotation[] | false | Name/value metadata pairs. |
+
+A document may contain at most 1000 rules. See **Payload limits** below for the full set of size guards enforced across the definition.
+
+### Rule TMDL keyword shapes
+
+The real emitted/parsed TMDL uses distinct keywords per referenced-entity/relationship entry — not a nested JSON-object or JSON-array assignment:
+
+| Keyword | Description |
+| --- | --- |
+| `ruleReferencedEntity <entity>` | One block per referenced entity. Nests a `propertyScope: none\|specific\|all` line and, when `specific`, a `ruleReferencedProperty <name>` line per referenced property (1-10). |
+| `ruleReferencedProperty <name>` | Nested under a `ruleReferencedEntity` block; one line per referenced property when that entity's `propertyScope` is `specific`. |
+| `ruleReferencedRelationship <name>` | One line per referenced entity-relationship, declared alongside (not nested under) `ruleReferencedEntity` blocks. |
+
+`rules/{rule}.tmdl` file example:
+
+```tmdl
+rule SpeedLimit
+	lineageTag: 8f1c0e2a-1b2c-4d3e-9f8a-0a1b2c3d4e5f
+	statement: A turbine's instantaneous power output must not exceed its rated capacity.
+	ruleReferencedEntity wind_turbines
+		propertyScope: specific
+		ruleReferencedProperty Capacity
+		ruleReferencedProperty Power
+	ruleReferencedEntity wind_maintenance_requests
+		propertyScope: none
+	ruleReferencedRelationship 'Maintenance For Turbine'
+```
+
+`propertyScope: none` is the default, so it is accepted on write but is not re-emitted by `getDefinition` — see the general note on default elision under **Folder layout and naming**. An entity-relationship name that contains spaces must be single-quoted in the `ruleReferencedRelationship` position, as shown above.
+
+Indentation is significant and positional: `propertyScope` and `ruleReferencedProperty` sit one level under their `ruleReferencedEntity` block, while `ruleReferencedRelationship` is a **peer** of `ruleReferencedEntity` at one tab. Over-indenting `propertyScope` and then following it with a `ruleReferencedRelationship` line fails the parse (`Parsing error type - Indentation`).
+
+> [!NOTE]
+> `description` (a `///` doc-comment) and `synonym` are accepted by the parser on a `rule` — unlike a genuinely unknown keyword, which is rejected with `UnknownKeyword` — but neither is re-emitted by `getDefinition`. Do not rely on them surviving a round trip.
+
+## Payload limits
+
+Beyond the modeling constraints called out per part above, the Gen4 TypeSpec contract (and the matching workload-side `PayloadLimits` validation, kept in lock-step so the scripting/merge-patch/ALM-import paths that bypass the typed DTO enforce the same bounds) caps the size of a definition. These are payload guards against unbounded/adversarial input, not intended modeling limits:
+
+| Collection | Max items |
+| --- | --- |
+| `model.tables[]` | 15,998 (combined with `columns`: engine budget `2 + tables + columns ≤ 16,000`) |
+| `model.expressions[]` | 10,000 |
+| `model.relationships[]` | 10,000 |
+| `model.entities[]` | 10,000 |
+| `model.entityRelationships[]` | 10,000 |
+| `model.namespaces[]` | 10,000 |
+| `model.metrics[]` | 10,000 |
+| `model.reusableProperties[]` | 10,000 |
+| `model.rules[]` | 1,000 |
+| `table.columns[]` | 15,997 (shares the same `2 + tables + columns ≤ 16,000` engine budget) |
+| `table.measures[]` | 10,000 |
+| `table.partitions[]` | 1,000 |
+| `entity.properties[]` | 1,000 |
+| `entity.keyProperties[]` / `entity.additionalBackingTables[]` / `entity.resourceLinks[]` | 100 each |
+| `overriddenMetadataFields[]` (entity or property) | 100 |
+| `metric.targetScopes[]` | 100 |
+| `relationship.fromColumns[]` / `relationship.toColumns[]` | 100 each |
+| `complexDataType` struct `fields[]` | 1,024 per struct node |
+| `rule.referencedEntities[]` / `rule.referencedRelationships[]` | 50 each |
+| `rule.referencedEntities[].properties[]` (when `propertyScope: specific`) | 10 |
+| `annotations[]` / `synonyms[]` (any object) | 100 |
+
+String fields carry their own explicit caps. Every case where the limit is *not* the 100,000-character default is listed here:
+
+| Field | Max characters |
+| --- | --- |
+| M/DAX expression body (`expression`, a measure's expression, a metric's `expression`) | 100,000 |
+| `description` (any object) / `rule.statement` | 4,000 |
+| `annotation` value | 4,000 |
+| `name` (any named object) | 512 |
+| `name` under `model.reusableProperties[]` | 128 |
+| `synonym` (each entry) | 100 |
+| `dataType`, `dataCategory`, `formatString` | 512 |
+| `lineageTag`, `sourceLineageTag` | 512 |
+| `sourceColumn`, `expressionSource`, partition `entityName`/`schemaName` | 512 |
+| `backingTable`, `baseEntityType` | 512 |
+| `reusableProperty` (the reference on a property) | 128 |
+| Relationship/entity-relationship references — `fromEntity`, `toEntity`, `fromTable`, `toTable`, `fromColumn`, `toColumn`, `fromRelationship`, `toRelationship` | 512 |
+| `ref` targets — `table`, `column`, `entity`, `property`, `measure`, `relationship` | 512 |
+| `keyProperty` entries, rule `ruleReferencedProperty`/`ruleReferencedRelationship` entries, `fromColumns[]`/`toColumns[]` entries | 512 |
+| `variableReference` | 512 |
+| `workspaceId`, `itemId` | 36 |
+| Struct field name (complex property) | 512 |
+
+A complex property's logical graph is additionally capped at 32 levels of nesting (counting the root) and 4,096 total nodes.
+
+Any field with no entry in the two tables above falls back to a 100,000-character/10,000-item default. Whole-document backstops apply on top of every per-field cap: at most 1,000,000 JSON nodes and a maximum nesting depth of 160.

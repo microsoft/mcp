@@ -1,6 +1,6 @@
 # Tool Description Evaluator – Quickstart Guide
 
-This tool helps you test and validate the descriptions of new Azure MCP Server tools. It checks how well your tool descriptions match real user prompts, ensuring users get the right tool when they ask for something.
+This tool helps you test and validate the descriptions of new Azure MCP Server tools. It checks how well your tool descriptions match real user prompts, ensuring users get the right tool when they ask for something. Evaluation is optional for Fabric MCP tools.
 
 The tool returns a confidence score between `0.00` and `1.00` for each tool-prompt combination. The higher the score, the better chance the tool will be selected given a specific prompt. Scores below `0.40` generally indicate low tool selection chances and tool descriptions should be improved.
 
@@ -22,7 +22,15 @@ An Azure OpenAI deployment of the text embedding model `text-embedding-3-large`.
 
 ### Minimal Setup
 
-Set your Azure OpenAI endpoint and API key as environment variables:
+To find the complete embeddings URL for your Azure OpenAI resource in Microsoft Foundry:
+
+1. Open your resource and select **Deployments** under **Shared resources**.
+2. Select your `text-embedding-3-large` deployment, not a chat model deployment.
+3. On the deployment details page, find the **Endpoint** section and copy **Target URI**. This is the complete URL, including the deployment path, `/embeddings`, and the `api-version` query parameter.
+
+Set `AOAI_ENDPOINT` to this **Target URI**, not the resource's base endpoint (such as `https://<your-resource>.openai.azure.com/`). The evaluator sends requests directly to the configured URL.
+
+Set the complete embeddings URL and an API key for the same resource as environment variables:
 
 ```bash
 export AOAI_ENDPOINT="https://<your-resource>.openai.azure.com/openai/deployments/<embeddings-deployment-name>/embeddings?api-version=<api-version>"

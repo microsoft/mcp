@@ -11,8 +11,8 @@ public class RecommendationAlternativesOptions : ISubscriptionOption
 {
     [Option(Description = "Full Azure ARM resource id of the VM or VM Scale Set, e.g. " +
         "'/subscriptions/<subId>/resourceGroups/<rg>/providers/Microsoft.Compute/virtualMachines/<name>'. " +
-        "You can pass either the impacted resource id or the Advisor recommendation id (the " +
-        "'/providers/Microsoft.Advisor/...' suffix is stripped automatically). Use the " +
+        "You can pass either the impacted resource id or the recommendation id (any trailing " +
+        "'/providers/.../recommendations/...' segment is stripped automatically). Use the " +
         "'resourceId' or 'id' field from the 'list' tool output.")]
     public string? ResourceId { get; set; }
 

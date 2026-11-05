@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "--mode single no longer spawns child processes for tools managed in the repository"

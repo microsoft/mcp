@@ -15,6 +15,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
+// todo: make account name optional and list all accounts in RG if not specified
 [CommandMetadata(
     Id = "d46bb832-5b3e-4259-85c4-5d5f70e30a4c",
     Name = "get",
@@ -43,15 +44,15 @@ public sealed class AccountGetCommand(
     {
         try
         {
-            var account = await _service.GetAccountAsync(
-                options.Account,
+            var accounts = await _service.GetAccountAsync(
                 options.ResourceGroup,
                 options.Subscription!,
+                options.Account,
                 options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new AccountGetResult(account),
+                new AccountGetResult(accounts),
                 NetAppFilesJsonContext.Default.AccountGetResult);
         }
         catch (Exception ex)
@@ -88,5 +89,11 @@ public sealed class AccountGetCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    public record AccountGetResult(NetAppFilesAccount Account);
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        _ => base.GetStatusCode(ex),
+    };
+
+    public record AccountGetResult(IReadOnlyList<NetAppFilesAccount> Accounts);
 }

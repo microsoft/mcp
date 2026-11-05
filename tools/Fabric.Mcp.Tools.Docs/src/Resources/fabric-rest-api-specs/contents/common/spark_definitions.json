@@ -313,6 +313,12 @@
                     "format": "uuid",
                     "description": "Instance pool ID.",
                     "type": "string"
+                },
+                "maxClustersToHydrateLimit": {
+                    "description": "Server-computed upper bound for the live pool `maxClustersToHydrate` setting, determined by the capacity size associated with this pool.",
+                    "format": "int32",
+                    "type": "integer",
+                    "readOnly": true
                 }
             }
         },

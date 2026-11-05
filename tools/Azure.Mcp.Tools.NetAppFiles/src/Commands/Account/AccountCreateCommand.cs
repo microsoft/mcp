@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.NetAppFiles.Models;
@@ -22,7 +23,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
     Description = "Creates an Azure NetApp Files account in a specified resource group and region. Returns the account name, resource ID, location, and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
@@ -43,11 +44,16 @@ public sealed class AccountCreateCommand(
     {
         try
         {
+            var tags = options.Tags is null
+                    ? null
+                    : JsonSerializer.Deserialize(options.Tags, NetAppFilesJsonContext.Default.DictionaryStringString);
+
             var account = await _service.CreateAccountAsync(
                 options.Account,
                 options.Location,
                 options.ResourceGroup,
                 options.Subscription!,
+                tags,
                 options.Tenant,
                 cancellationToken);
 
@@ -90,6 +96,12 @@ public sealed class AccountCreateCommand(
         RequestFailedException requestFailedException when requestFailedException.Status == (int)HttpStatusCode.NotFound =>
             "Resource group not found. Verify the resource group exists and you have access.",
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        _ => base.GetStatusCode(ex),
     };
 
     public record AccountCreateResult(NetAppFilesAccount Account);

@@ -52,6 +52,12 @@
                   "type": "string",
                   "readOnly": false
               },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the paginated report is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
               "definition": {
                   "description": "The paginated report public definition.",
                   "$ref": "#/definitions/PaginatedReportDefinition",

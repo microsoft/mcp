@@ -7,13 +7,18 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorWebTestService(IAzureService azureService)
+public class MonitorWebTestService(
+    IAzureService azureService,
+    ILogger<MonitorWebTestService> logger)
     : BaseAzureService(azureService), IMonitorWebTestService
 {
+    private readonly ILogger<MonitorWebTestService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string? tenant = null,
@@ -50,7 +55,7 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(resourceGroup), resourceGroup));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTests = await resourceGroupResource
             .GetApplicationInsightsWebTests()
@@ -81,12 +86,12 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(resourceName), resourceName));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
         if (webTest == null || !webTest.HasValue || !webTest.Value!.HasData)
         {
-            throw new Exception($"Error retrieving details for web test '{resourceName}'");
+            throw new KeyNotFoundException($"Error retrieving details for web test '{resourceName}'");
         }
 
         if (webTest.Value.Data.WebTestKind == WebTestKind.Ping || webTest.Value.Data.WebTestKind == WebTestKind.MultiStep)
@@ -157,9 +162,10 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(appInsightsComponentId), appInsightsComponentId),
             (nameof(location), location),
             (nameof(requestUrl), requestUrl));
+        var requestUri = MonitorWebTestValidateRequestUri(AzureService, new Uri(requestUrl, UriKind.Absolute));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Check if web test already exists
         var existingWebTestResponse = await resourceGroupResource.GetApplicationInsightsWebTests()
@@ -183,7 +189,7 @@ public class MonitorWebTestService(IAzureService azureService)
             Description = description,
             Request = new()
             {
-                RequestUri = new(requestUrl),
+                RequestUri = requestUri,
                 HttpVerb = (httpVerb ?? HttpMethod.Get.ToString()).ToUpperInvariant(),
                 RequestBody = requestBody,
                 FollowRedirects = followRedirects,
@@ -231,7 +237,7 @@ public class MonitorWebTestService(IAzureService azureService)
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
-            throw new Exception($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
+            throw new InvalidOperationException($"Error creating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
         }
 
         var createdWebTest = webTestArmResource.Value.Data;
@@ -295,13 +301,13 @@ public class MonitorWebTestService(IAzureService azureService)
             (nameof(resourceName), resourceName));
 
         var resourceGroupResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken) ??
-            throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
 
         // Get existing web test
         var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
         if (existingWebTest == null || !existingWebTest.HasValue || !existingWebTest.Value!.HasData)
         {
-            throw new Exception($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
+            throw new KeyNotFoundException($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
         }
 
         var currentData = existingWebTest.Value.Data;
@@ -309,6 +315,9 @@ public class MonitorWebTestService(IAzureService azureService)
         {
             throw new NotSupportedException($"Web test '{resourceName}' is of type '{currentData.WebTestKind}', which has been deprecated and is not supported by this command.");
         }
+        var requestUri = ResolveValidatedRequestUri(AzureService,
+            requestUrl,
+            currentData.Request.RequestUri);
 
         // Create updated web test data using existing values as defaults
         var webTestData = new ApplicationInsightsWebTestData(new(location ?? currentData.Location))
@@ -323,7 +332,7 @@ public class MonitorWebTestService(IAzureService azureService)
             Description = description ?? currentData.Description,
             Request = new()
             {
-                RequestUri = requestUrl != null ? new(requestUrl) : currentData.Request?.RequestUri,
+                RequestUri = requestUri,
                 HttpVerb = httpVerb?.ToUpperInvariant() ?? currentData.Request?.HttpVerb,
                 RequestBody = requestBody ?? currentData.Request?.RequestBody,
                 FollowRedirects = followRedirects ?? currentData.Request?.FollowRedirects,
@@ -398,7 +407,7 @@ public class MonitorWebTestService(IAzureService azureService)
 
         if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
         {
-            throw new Exception($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
+            throw new InvalidOperationException($"Error updating web test resource with name '{resourceName}' in resource group '{resourceGroup}'");
         }
 
         var updatedWebTest = webTestArmResource.Value.Data;
@@ -428,6 +437,41 @@ public class MonitorWebTestService(IAzureService azureService)
             ValidationRules = updatedWebTest.ValidationRules,
             AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(updatedWebTest)
         };
+    }
+
+    /// <summary>
+    /// Validates that the given URI points to a public target and returns the same URI if valid.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="uri">The URI to validate.</param>
+    /// <returns>The validated URI if it points to a public target.</returns>
+    internal static Uri MonitorWebTestValidateRequestUri(IAzureService azureService, Uri uri)
+    {
+        azureService.ValidatePublicTargetUrl(
+            url: uri.AbsoluteUri);
+        return uri;
+    }
+
+    /// <summary>
+    /// Resolves the request URL to a validated public target URI. If a new request URL is provided, it validates and
+    /// returns it. If not, it falls back to the existing request URI and validates it.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="newWebTestUri">The new request URI to validate.</param>
+    /// <param name="existingRequestUri">The existing URI to fall back to if no new request URL is provided.</param>
+    /// <returns>The validated URI if it points to a public target, or null if no request URL is provided and the existing URI is null.</returns>
+    internal static Uri? ResolveValidatedRequestUri(
+        IAzureService azureService,
+        string? newWebTestUri,
+        Uri existingRequestUri)
+    {
+        if (newWebTestUri is not null)
+        {
+            var uri = new Uri(newWebTestUri, UriKind.Absolute);
+            return MonitorWebTestValidateRequestUri(azureService, uri);
+        }
+
+        return MonitorWebTestValidateRequestUri(azureService, existingRequestUri);
     }
 
     private List<WebTestRequestHeaderField> ParseHeadersFromRawResponse(Response response)

@@ -81,7 +81,8 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 {
                     if (!Guid.TryParse(member, out _) && !member.Contains('@'))
                     {
-                        validationResult.Errors.Add($"Invalid --entra-members value '{member}'. Must be a GUID, email, or UPN.");
+                        validationResult.AddError($"Invalid --entra-members value '{member}'. Must be a GUID, email, or UPN.",
+                            "Invalid OneLake role member.");
                     }
                 }
             }
@@ -92,7 +93,8 @@ public sealed class DataAccessRoleCreateOrUpdateCommand(ILogger<DataAccessRoleCr
                 {
                     if (!string.Equals(action, "Read", StringComparison.OrdinalIgnoreCase))
                     {
-                        validationResult.Errors.Add($"Unsupported --permitted-actions value '{action}'. Only 'Read' is currently supported.");
+                        validationResult.AddError($"Unsupported --permitted-actions value '{action}'. Only 'Read' is currently supported.",
+                            "Unsupported OneLake permitted action.");
                     }
                 }
             }

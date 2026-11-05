@@ -11,11 +11,8 @@ public sealed class AccountUpdateOptions : ISubscriptionOption
     [Option(Description = "The name of the Azure NetApp Files account to update. Must be 1-128 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
     public required string Account { get; set; }
 
-    [Option(Description = "Resource tags as a JSON key-value object. Providing an empty object removes all tags.")]
+    [Option(Description = "Resource tags as a JSON key-value object. Replaces all existing tags and does not merge tags. Providing an empty object removes all tags.")]
     public string? Tags { get; set; }
-
-    [Option(Description = "The domain for NFSv4 user ID mapping. This setting applies to all Azure NetApp Files accounts in the subscription and region and affects non-LDAP NFSv4 volumes.")]
-    public string? NfsV4IdDomain { get; set; }
 
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

@@ -4,9 +4,11 @@
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Azure.Mcp.Tools.Postgres.Tests.Services.Support;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Microsoft.Mcp.Core.Commands;
 using Npgsql;
@@ -32,7 +34,8 @@ public class PostgresServiceTests
 
     public PostgresServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
+        _azureService.ConfigureCloud(ArmEnvironment.AzurePublicCloud);
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
         _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>(), Arg.Any<CancellationToken>())
@@ -190,7 +193,7 @@ public class PostgresServiceTests
             resourceGroupServers: []);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<Exception>(
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(
             () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
         Assert.Contains(resourceGroup, ex.Message);
     }
@@ -230,7 +233,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert — resource group lookup happens first; null triggers the exception
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, server, tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
@@ -247,7 +250,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
@@ -264,7 +267,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", "value123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)

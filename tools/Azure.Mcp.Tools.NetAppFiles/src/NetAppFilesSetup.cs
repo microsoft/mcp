@@ -12,41 +12,41 @@ namespace Azure.Mcp.Tools.NetAppFiles;
 
 public class NetAppFilesSetup : IAreaSetup
 {
-    public string Name => "netappfiles";
+        public string Name => "netappfiles";
 
-    public string Title => "Azure NetApp Files";
+        public string Title => "Azure NetApp Files";
 
-    public void ConfigureServices(IServiceCollection services)
-    {
-        services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
-        services.AddSingleton<INetAppFilesVolumeService, NetAppFilesVolumeService>();
-        services.AddSingleton<AccountCreateCommand>();
-        services.AddSingleton<AccountGetCommand>();
-        services.AddSingleton<AccountUpdateCommand>();
-        services.AddSingleton<VolumeCreateCommand>();
-        services.AddSingleton<VolumeGetCommand>();
-        services.AddSingleton<VolumeUpdateCommand>();
-    }
+        public void ConfigureServices(IServiceCollection services)
+        {
+                services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+                services.AddSingleton<INetAppFilesVolumeService, NetAppFilesVolumeService>();
+                services.AddSingleton<AccountCreateCommand>();
+                services.AddSingleton<AccountGetCommand>();
+                services.AddSingleton<AccountUpdateCommand>();
+                services.AddSingleton<VolumeCreateCommand>();
+                services.AddSingleton<VolumeGetCommand>();
+                services.AddSingleton<VolumeUpdateCommand>();
+        }
 
-    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
-    {
-        var root = new CommandGroup(
-            Name,
-            "Azure NetApp Files operations for managing enterprise file storage resources.",
-            Title);
+        public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
+        {
+                var root = new CommandGroup(
+                    Name,
+                    "Azure NetApp Files operations for managing enterprise file storage resources.",
+                    Title);
 
-        var account = new CommandGroup("account", "Azure NetApp Files account operations.");
-        root.AddSubGroup(account);
-        account.AddCommand<AccountCreateCommand>(serviceProvider);
-        account.AddCommand<AccountGetCommand>(serviceProvider);
-        account.AddCommand<AccountUpdateCommand>(serviceProvider);
+                var account = new CommandGroup("account", "Azure NetApp Files account operations.");
+                root.AddSubGroup(account);
+                account.AddCommand<AccountCreateCommand>(serviceProvider);
+                account.AddCommand<AccountGetCommand>(serviceProvider);
+                account.AddCommand<AccountUpdateCommand>(serviceProvider);
 
-        var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
-        root.AddSubGroup(volume);
-        volume.AddCommand<VolumeCreateCommand>(serviceProvider);
-        volume.AddCommand<VolumeGetCommand>(serviceProvider);
-        volume.AddCommand<VolumeUpdateCommand>(serviceProvider);
+                var volume = new CommandGroup("volume", "Azure NetApp Files volume operations.");
+                root.AddSubGroup(volume);
+                volume.AddCommand<VolumeCreateCommand>(serviceProvider);
+                volume.AddCommand<VolumeGetCommand>(serviceProvider);
+                volume.AddCommand<VolumeUpdateCommand>(serviceProvider);
 
-        return root;
-    }
+                return root;
+        }
 }

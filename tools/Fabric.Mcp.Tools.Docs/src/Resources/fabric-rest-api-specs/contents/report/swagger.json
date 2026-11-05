@@ -91,7 +91,7 @@
       },
       "post": {
         "summary": "Creates a report in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n This API requires a [definition](/rest/api/fabric/articles/item-management/definitions/report-definition).\n\n## Permissions \n The caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes \n\n Report.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a report item, the user must have the appropriate license. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe API supports two creation modes: (1) provide a `definition` for full control over the report structure, or (2) provide a `creationPayload` with a `semanticModelReference` to create an empty report connected to an existing semantic model. Either `definition` or `creationPayload` is required. You can't use both at the same time.\n\n## Permissions\n\nThe caller must have a *contributor* workspace role. When creating a report with a `creationPayload` that references a semantic model via `semanticModelReference`, the caller must also have read access to the referenced semantic model, including when that semantic model resides in a different workspace (cross-workspace reference).\n\n## Required Delegated Scopes\n\nReport.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n\n- To create a report item, the user must have the appropriate license. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -161,7 +161,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid.\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "description": "Common error codes:\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* MutuallyExclusiveProperties - The `definition` and `creationPayload` cannot both be provided. \n\n* MissingRequiredProperty - Either `definition` or `creationPayload` must be provided. \n\n* SemanticModelNotFound - The referenced semantic model does not exist or is not accessible.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -170,6 +170,9 @@
         "x-ms-examples": {
           "Create a report example": {
             "$ref": "./examples/CreateReport.json"
+          },
+          "Create a report with creation payload example": {
+            "$ref": "./examples/CreateReportWithCreationPayload.json"
           }
         }
       }
@@ -381,7 +384,7 @@
     "/workspaces/{workspaceId}/reports/{reportId}/getDefinition": {
       "post": {
         "summary": "Returns the specified report public definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a report's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\nThe caller must have *read and write* permissions for the report.\n\n## Required Delegated Scopes \n\n Report.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\n This API is blocked for a report with an encrypted sensitivity label.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a report's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\nThe caller must have *read and write* permissions for the report.\n\n## Required Delegated Scopes \n\n Report.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\nTo retrieve the definition of a report item protected by an encrypted sensitivity label, the caller must have sufficient [usage rights](/fabric/enterprise/powerbi/service-security-sensitivity-label-change-enforcement) to remove the label, as configured in [Microsoft Purview](/purview/purview).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],

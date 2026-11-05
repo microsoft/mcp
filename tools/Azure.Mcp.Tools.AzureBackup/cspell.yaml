@@ -13,6 +13,7 @@ words:
   - azurefiles
   - azureiaasvm
   - backupconfig
+  - backupstorageconfig
   - badformat
   - badvalue
   - bper
@@ -70,6 +71,7 @@ words:
   - sqlb
   - sqldev
   - sqlinstance
+  - sqlrsv
   - sqlvm
   - startofweek
   - storagecontainer
@@ -91,4 +93,5 @@ words:
   - unknowncontainer
   - unknownformat
   - vaultconfig
+  - vaultstorageconfig
   - vmappcontainer

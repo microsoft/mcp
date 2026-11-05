@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
@@ -66,7 +67,8 @@ public class SpeechService(
                     // Convert to unified result
                     return SpeechRecognitionResult.FromFastTranscriptionResult(fastResult);
                 }
-                catch (Exception ex)
+                // Security validation failures are terminal; switching recognizers must not retry rejected input.
+                catch (Exception ex) when (ex is not SecurityException)
                 {
                     _logger.LogWarning(ex, "Fast Transcription failed for language '{Language}', falling back to Realtime Transcription", language);
                     // Fall through to use Realtime Transcription

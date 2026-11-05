@@ -3,7 +3,7 @@ targetScope = 'resourceGroup'
 @minLength(3)
 @maxLength(24)
 @description('The base resource name used by the live tests.')
-param baseName string = 'azurenetappfiles-test'
+param baseName string = resourceGroup().name
 
 @description('The client object ID to grant access to the test resource group.')
 param testApplicationOid string
@@ -43,6 +43,11 @@ resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
   location: location
 }
 
+resource netAppAccount2 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
+  name: '${baseName}-account2'
+  location: location
+}
+
 resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
   parent: netAppAccount
   name: '${baseName}-pool'
@@ -78,9 +83,3 @@ resource netAppFilesContributorRoleAssignment 'Microsoft.Authorization/roleAssig
     description: 'Contributor for Azure NetApp Files live tests'
   }
 }
-
-output NETAPP_ACCOUNT_NAME string = netAppAccount.name
-output NETAPP_POOL_NAME string = capacityPool.name
-output NETAPP_SUBNET_ID string = virtualNetwork.properties.subnets[0].id
-output NETAPP_VOLUME_NAME string = volume.name
-output LOCATION string = location

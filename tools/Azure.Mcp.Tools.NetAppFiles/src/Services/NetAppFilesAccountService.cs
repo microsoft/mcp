@@ -1,34 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
+using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.NetAppFiles.Models;
 using Azure.ResourceManager.NetApp;
 using Azure.ResourceManager.NetApp.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureService(azureService), INetAppFilesAccountService
 {
-    public async Task<NetAppFilesAccount> GetAccountAsync(
-        string account,
+    public async Task<IReadOnlyList<NetAppFilesAccount>> GetAccountAsync(
         string resourceGroup,
         string subscription,
+        string? account = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
 
-        var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
+        if (account is not null)
+        {
+            var accountResource = await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken);
+            return [Map(accountResource.Value)];
+        }
 
-        return Map(accountResource.Value);
+        var accountResources = await resourceGroupResource.GetNetAppAccounts().GetAllAsync(cancellationToken).ToListAsync(cancellationToken);
+        return accountResources.Select(Map).ToList();
     }
 
     public async Task<NetAppFilesAccount> CreateAccountAsync(
@@ -36,17 +41,31 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string location,
         string resourceGroup,
         string subscription,
+        IReadOnlyDictionary<string, string>? tags = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
+
+        var existingAccounts = resourceGroupResource.GetNetAppAccounts();
+        var hasAccount = await existingAccounts.ExistsAsync(account, cancellationToken).ConfigureAwait(false);
+        if (hasAccount)
+        {
+            throw new RequestFailedException((int)HttpStatusCode.Conflict, $"Conflict: NetApp account '{account}' already exists in resource group '{resourceGroup}'.");
+        }
 
         var accountData = new NetAppAccountData(new AzureLocation(location));
+        if (tags is not null)
+        {
+            foreach (var tag in tags)
+            {
+                accountData.Tags[tag.Key] = tag.Value;
+            }
+        }
         var operation = await resourceGroupResource
             .GetNetAppAccounts()
             .CreateOrUpdateAsync(WaitUntil.Started, account, accountData, cancellationToken);
@@ -61,23 +80,17 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         string resourceGroup,
         string subscription,
         IReadOnlyDictionary<string, string>? tags = null,
-        string? nfsV4IdDomain = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
-        var resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription,
+        var resourceGroupResource = await GetResourceGroupOrThrowAsync(
             resourceGroup,
+            subscription,
             tenant,
-            cancellationToken: cancellationToken)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+            cancellationToken: cancellationToken);
 
         var accountResource = (await resourceGroupResource.GetNetAppAccountAsync(account, cancellationToken)).Value;
-        var patch = new NetAppAccountPatch(accountResource.Data.Location)
-        {
-            NfsV4IdDomain = nfsV4IdDomain
-        };
-
+        var patch = new NetAppAccountPatch(accountResource.Data.Location);
         if (tags is not null)
         {
             patch.Tags.Clear();
@@ -97,5 +110,22 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         account.Data.Name,
         account.Data.Id.ToString(),
         account.Data.Location.ToString(),
+        account.Data.Tags?.ToDictionary(t => t.Key, t => t.Value),
         account.Data.ProvisioningState?.ToString());
+
+    private async Task<ResourceGroupResource> GetResourceGroupOrThrowAsync(
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resourceGroupResource = await AzureService.GetResourceGroupResource(
+            subscription,
+            resourceGroup,
+            tenant,
+            cancellationToken: cancellationToken)
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' was not found.");
+
+        return resourceGroupResource;
+    }
 }

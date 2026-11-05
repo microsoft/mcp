@@ -33,7 +33,7 @@ internal static class ToolCountMeasurement
         var allCommands = commandFactory.AllCommands;
 
         var commandSummaries = allCommands
-            .Select(kvp => new { name = kvp.Key, description = kvp.Value.Description })
+            .Select(kvp => new { name = kvp.Key, description = kvp.Value.Command.Description })
             .OrderBy(c => c.name)
             .ToList();
 
