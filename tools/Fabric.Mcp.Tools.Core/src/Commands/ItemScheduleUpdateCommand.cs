@@ -54,7 +54,7 @@ public sealed class ItemScheduleUpdateCommand(
     public override void ValidateOptions(ItemScheduleUpdateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        ItemScheduleInput.ValidateUpdateContext(options.WorkspaceId, options.ItemId, options.JobType, options.ScheduleId, validationResult);
+        ItemScheduleInput.ValidateScheduleContext(options.WorkspaceId, options.ItemId, options.JobType, options.ScheduleId, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(

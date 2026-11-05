@@ -36,6 +36,13 @@ time zone or next execution time. Schedule IDs are not job-instance IDs or opera
 Absent/null terminal continuation and token-only continuation follow the same pagination rules
 above. Job-instance history limits do not apply to schedule pages.
 
+Schedule lookup requires explicit workspace/item/schedule UUIDs and a job type, with sensitive-data
+disclosure confirmation even in read-only mode. It reads exactly one matching snapshot, retaining
+available settings, owner, and static execution data without inventing optional fields. No List,
+name/job-type discovery, enrichment, polling, mutation, or live fixture discovery is authorized.
+The snapshot is not job execution status or proof of an ambiguous earlier mutation; reading does
+not authorize updating, deleting, running, or canceling anything.
+
 Schedule creation requires separate authorization for the exact workspace/item/job type, enabled
 state, timing, and time zone. Before requesting consent, explain that an enabled schedule with a
 past start time may trigger a job immediately and consume compute or change data. Require explicit
@@ -59,7 +66,7 @@ rollback, or infer success/failure from JobAlreadyCompleted. After uncertain can
 job with a separate Get; wait at least valid Retry-After guidance before another request. Missing response
 metadata does not undo acceptance or require a Location-derived ID.
 
-Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule listing/creation alone,
+Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
 
@@ -161,6 +168,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | jobs_get-item-job-instance | Use the workspace, item, and job-instance UUIDs I supplied to read the latest snapshot once. Preserve a future status string instead of treating it as successful completion. | context-required |
 | jobs_get-item-job-instance | Check that existing item's job instance using its saved job-instance ID, not the generic Fabric operation-state or operation-result tools. Return the snapshot without waiting. | context-required |
 | jobs_get-item-job-instance | With the server configured using --namespace core --namespace jobs --mode all, use the workspace and item UUIDs returned by core_get-item and the existing job-instance UUID I supplied to read its status once. Do not discover or start a job. | context-required |
+| jobs_get-item-schedule | Read schedule eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee for job type DefaultJob on item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa once after disclosure confirmation. Return only its snapshot; do not list, enrich, poll, or change anything. | none |
+| jobs_get-item-schedule | Show the enabled state and available configuration, owner, and static execution data for the workspace/item/schedule UUIDs and job type I supplied. Preserve missing optional fields and future types without inventing defaults or converting time zones. | context-required |
+| jobs_get-item-schedule | In read-only Jobs mode, inspect this explicitly identified schedule after sensitive-data confirmation. Cron interval is minutes, not an expression. Do not start or cancel a job or treat enabled state as execution success. | context-required |
+| jobs_get-item-schedule | Use the jobs namespace router with command jobs_get-item-schedule and my workspace-id, item-id, job-type, and schedule-id in parameters. Do not pass the schedule ID to a job-instance or operation lookup. | context-required |
+| jobs_get-item-schedule | Read this known schedule once and report valid Retry-After guidance without retrying. Reject a different returned schedule ID instead of replacing my target or claiming a successful create or update. | context-required |
+| jobs_get-item-schedule | Inspect the explicitly authorized schedule after an earlier ambiguous update, but do not claim that the snapshot proves that update occurred or authorize another mutation from the read. | context-required |
 | jobs_list-item-job-instances | List one page of job instances for item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Do not fetch individual jobs or another page automatically. | none |
 | jobs_list-item-job-instances | Show one page of that item's jobs with statuses, available UTC timing, and safe failure metadata. Do not treat HTTP success as job success or assume the page is full history. | context-required |
 | jobs_list-item-job-instances | Fetch the next page using the unchanged continuation token from the previous response and the same explicit workspace/item UUIDs. Do not use a continuation URL or change filters. | context-required |

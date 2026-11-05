@@ -282,7 +282,7 @@ its creator or last modifier independently of item ownership. Descriptions requi
 identity/timing/enablement before consent: an enabled past start may execute immediately, while
 disabling is not cancellation.
 
-`FabricItemScheduleJson.ReadMutationResponse` performs the shared 60-level retained-output check
+`FabricItemScheduleJson.ReadResponse` performs the shared 60-level retained-output check
 inside each operation's confirmed-success boundary (201 for Create, 200 for Update). Routed tests
 exercise exact 60/61/64-level configuration, owner, and execution data across all routes, stdio/HTTP,
 and legacy/compact/duplicated output, then serialize and parse the JSON-RPC envelope. Fields that
@@ -291,9 +291,40 @@ Content-Length. Known HTTP errors retain status and Retry-After after unreadable
 uncertain sends and late cancellation never cause automatic resubmission.
 
 Create, List, Run/Cancel catalog, shared validation, and actual Fabric host discovery regressions
-cover the shared surfaces. The read-only Jobs catalog remains the three implemented read tools,
+cover the shared surfaces. The read-only Jobs catalog retains all implemented read tools,
 excluding Update along with the other mutations. Tests use existing HTTP/credential fixtures and
 do not discover customer IDs, mutate live schedules, deploy resources, or claim live/OBO/RBAC proof.
+
+## Schedule Lookup
+
+`jobs_get-item-schedule` reads exactly one schedule with explicit workspace/item/schedule UUIDs and
+job type. It shares `ItemScheduleInput.ValidateScheduleContext` with Update and
+`FabricItemScheduleJson.ReadResponse` with Create/Update, without changing their contracts.
+No List preflight, discovery, enrichment, pagination, mutation, retry, or polling occurs.
+
+Command/service tests cover exact normalized GET paths, no body/query, safe error/status/retry
+guidance, matching identity, required id/enabled, absent/null optional metadata, and preserved
+extensible configuration/owner/execution data. Returned configuration has its documented shape,
+but does not use creation-time UTC ordering, current-time, or machine-time-zone policy.
+The snapshots remain valid after response disposal. Malformed/duplicate metadata, lazy Unicode
+decoding, invalid UTF-8, known/unknown Content-Length, 1 MiB and raw 64-level response boundaries,
+and 1,024-byte job-type boundaries are covered. Pre-send cancellation and invalid inputs make
+zero credential/HTTP calls; failed authentication makes no HTTP call. During-send/body cancellation,
+reader failures, response disposal, and concurrent caller/target/sensitive-result isolation are tested.
+
+Routing tests cover all/namespace/single, stdio/HTTP, legacy/compact/duplicated output, namespace
+filters, discovery/learn schemas, and normal/read-only operation. They verify exact retained
+60/61/64-level boundaries for configuration, owner, and execution data through JSON-RPC serialization.
+Get never returns a mutation receipt or late output-serialization failure. Invalid snapshots retain
+retry guidance; unreadable optional error metadata cannot replace a known HTTP error status.
+Accepted disclosure consent permits one GET; declined/canceled/rejected/unsupported consent makes
+no credential/HTTP calls even in read-only mode. Read-only discovery keeps Get Schedule, Get Job
+Instance, and both listing tools, while excluding all mutations.
+
+Actual Fabric startup discovery covers the new command and four required string options in stdio
+and HTTP. Fixtures reuse `FabricCoreHttpMessageHandler`, existing schedule data, and substituted
+credentials. No customer IDs are discovered and no live Fabric, OBO/RBAC, resource deployment, or
+recorded playback coverage is claimed without approved fixtures and API-operation authorization.
 
 ## Schedule Listing
 

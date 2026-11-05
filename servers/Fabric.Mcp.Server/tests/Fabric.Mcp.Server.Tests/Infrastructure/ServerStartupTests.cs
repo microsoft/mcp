@@ -264,10 +264,12 @@ public class ServerStartupTests
         var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
         Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
         Assert.DoesNotContain("core_get-item-job-instance", names);
+        Assert.DoesNotContain("core_get-item-schedule", names);
         var expectedJobs = namespaces != "core";
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_cancel-item-job-instance"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_create-item-schedule"));
         Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-schedule"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-schedules"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
@@ -341,6 +343,22 @@ public class ServerStartupTests
                 .Select(value => value.GetString()).Order());
             Assert.Equal(["continuation-token", "item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
                 .Select(property => property.Name).Order());
+            var schedule = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-schedule");
+            Assert.True(schedule.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(schedule.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            Assert.Contains("disclosure consent, even in read-only mode", schedule.GetProperty("description").GetString());
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                schedule.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            var scheduleOptions = schedule.GetProperty("inputSchema").GetProperty("properties");
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                scheduleOptions.EnumerateObject().Select(property => property.Name).Order());
+            Assert.All(scheduleOptions.EnumerateObject(), property =>
+            {
+                Assert.Equal("string", property.Value.GetProperty("type").GetString());
+                Assert.False(property.Value.TryGetProperty("default", out _));
+            });
             var schedules = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-schedules");
             Assert.True(schedules.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
             Assert.True(schedules.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
