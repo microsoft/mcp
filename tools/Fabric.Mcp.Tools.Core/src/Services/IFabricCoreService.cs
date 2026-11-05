@@ -120,6 +120,25 @@ public interface IFabricCoreService
         string? executionData = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Updates one schedule with the full required payload; no preflight, merging, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="enabled">Explicit enabled intent. Disabling does not cancel existing jobs.</param>
+    /// <param name="configuration">Required full schedule JSON with explicit UTC bounds and localTimeZoneId.</param>
+    /// <param name="executionData">Optional opaque JSON object; null omits the field, without a preservation/clearing guarantee.</param>
+    /// <param name="cancellationToken">Cancels the request, not an update or job that may already have occurred.</param>
+    Task<ItemScheduleUpdateCommandResult> UpdateItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        bool enabled,
+        string configuration,
+        string? executionData = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete schedule page without discovery, per-schedule reads, pagination, or mutations.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item.</param>

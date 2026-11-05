@@ -89,7 +89,7 @@ The manual configuration examples use `mcpServers` as the root object. In Visual
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You're all set! Fabric MCP Server is now ready to help you work smarter with Microsoft Fabric in VS Code.}} -->
 
-When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job submission, cancellation, instance listing/lookup, or schedule listing/creation; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
+When using the VS Code extension, `fabricMcp.enabledServices` selects from `core`, `jobs`, `docs`, `onelake`, and `datafactory`. Leave the list empty to enable all toolsets. Select both `core` and `jobs` for workflows combining item or definition operations with job submission, cancellation, instance listing/lookup, or schedule listing/creation/updates; selecting only `core` does not expose Jobs. If an existing setting contains `publicapis`, replace it with `docs` or clear the list; saved settings are not migrated automatically.
 
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
@@ -350,17 +350,17 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
 items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
-or schedules, or creates one schedule in separate calls. Each listing requires an explicit continuation
-token for each additional page. Schedule listing and creation require an explicit job type.
-Creation also requires explicit enabled/timing/timezone intent; schedule update, individual lookup,
-and deletion are not implemented.
+or schedules, or creates or updates one schedule in separate calls. Each listing requires an explicit continuation
+token for each additional page. Schedule listing, creation, and updates require an explicit job type.
+Creation and updates also require explicit enabled/timing/timezone intent; updates require a schedule ID
+and full configuration. Individual schedule lookup and deletion are not implemented.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
 # Core-only: item/definition tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
-# Jobs-only: job submission, cancellation, instance listing/lookup, and schedule listing/creation.
+# Jobs-only: job submission, cancellation, instance listing/lookup, and schedule listing/creation/updates.
 fabmcp server start --mode all --namespace jobs
 
 # Item/definition work plus job and schedule operations: enable both areas.
@@ -374,12 +374,12 @@ fabmcp server start --mode single --namespace core --namespace jobs
 Omit `--namespace` to enable all registered areas. Filtering restricts both discovery and invocation,
 not the shared services needed by the selected area. In `all` mode, the tools are exposed directly as
 `jobs_cancel-item-job-instance`, `jobs_create-item-schedule`, `jobs_get-item-job-instance`, `jobs_list-item-job-instances`,
-`jobs_list-item-schedules`, and `jobs_run-on-demand-item-job`.
+`jobs_list-item-schedules`, `jobs_run-on-demand-item-job`, and `jobs_update-item-schedule`.
 In `namespace` mode, call the `jobs`
 router with `learn=true` to obtain their schemas, then specify the command name and its `parameters`. In `single` mode,
 use the `fabric` router with `tool="jobs"` and the same command/parameters; `learn=true` lists areas or
 the commands for a selected area. Core-only selection never exposes or routes Jobs tools.
-Read-only mode hides and denies Run, Cancel, and Create Schedule while retaining Get Job Instance and both listing
+Read-only mode hides and denies Run, Cancel, Create Schedule, and Update Schedule while retaining Get Job Instance and both listing
 tools. Schedule listing retains the host's sensitive-data confirmation because its output may
 include owner information and job execution data.
 
@@ -1104,6 +1104,7 @@ Failures preserve the service's HTTP status and return sanitized guidance. On th
 | `jobs_list-item-job-instances` | Reads one complete page of an item's job snapshots, with safe failure metadata and an unchanged token for an explicitly requested next page. Does not fetch individual jobs or infer full history. |
 | `jobs_list-item-schedules` | Reads one complete schedule page for an explicit item and job type, preserving available settings, owner, and execution data. Requires explicit continuation and never changes or executes schedules. |
 | `jobs_run-on-demand-item-job` | Submits exactly one on-demand item job and returns an accepted receipt, a trustworthy job-instance ID when available, and validated first-status-read guidance. Never automatically retries or polls. |
+| `jobs_update-item-schedule` | Updates one known schedule with explicit enabled state and full configuration in one PATCH. Returns the updated schedule, not job execution or cancellation. No hidden read/merge, polling, or automatic retry. |
 
 **Cancel Item Job Instance (`jobs_cancel-item-job-instance`)**
 
@@ -1112,14 +1113,14 @@ with exactly one `POST /v1/workspaces/{workspaceId}/items/{itemId}/jobs/instance
 The explicit `workspace-id`, `item-id`, and `job-instance-id` options must be nonempty UUIDs.
 They are validated and normalized before authentication or HTTP. There is **no job-type or request
 body**, no discovery or preflight Get, and no polling, waiting, automatic retry, or result retrieval.
-Instance and schedule listing are separate read-only tools; schedule creation requires its own authorization.
+Instance and schedule listing are separate read-only tools; schedule creation and updates require their own authorization.
 
 Cancel is **destructive and not read-only**: obtain explicit cancellation authorization and normal
 mutation consent. It can stop useful work and does not promise to roll back work already performed.
 The idempotent hint describes the effect of repeatedly targeting the **same existing job**, not a
 promise that repeated requests succeed; `JobAlreadyCompleted` remains a failure. The tool never
 automatically retries, even for throttling or a backend `isRetriable` hint. Read-only mode hides and
-rejects Cancel, Run, and Create Schedule while retaining Get and List.
+rejects Cancel, Run, Create Schedule, and Update Schedule while retaining Get and List.
 
 The caller needs item execution permission and, for delegated access, `Item.Execute.All` or the
 corresponding item-specific scope such as `Notebook.Execute.All`. The API supports users, service
@@ -1378,6 +1379,77 @@ Namespace mode calls `jobs` with `command="jobs_create-item-schedule"` and all o
 `parameters`; single mode calls `fabric` with `tool="jobs"` and the same command/parameters.
 Inline JSON options work in stdio and HTTP modes. All routes require the same consent and
 explicit intent, and none performs a follow-up job run.
+
+**Update Item Schedule (`jobs_update-item-schedule`)**
+
+Calls the [Update Item Schedule API](https://learn.microsoft.com/rest/api/fabric/core/job-scheduler/update-item-schedule)
+with exactly one `PATCH /v1/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/schedules/{scheduleId}`.
+Supply explicit nonempty `workspace-id`, `item-id`, and `schedule-id` UUIDs and a workload `job-type`.
+**Both `enabled` (true or false) and full `configuration` JSON are required, despite the PATCH verb.**
+To change only enabled state, still supply the full intended configuration. If you need existing
+settings, call List Schedules separately and explicitly select the target schedule; Update never
+performs a hidden Get/List, lookup, read/merge/PATCH, or schedule-count preflight.
+
+Configuration uses the same documented shapes and bounds as Create above: explicit type, ordered UTC
+start/end, Windows time-zone ID, and the type's timing fields. **Cron means an interval in minutes,
+not a Unix cron expression.** Offset-less API examples remain UTC text; no machine time zone,
+cadence, start/end, or enabled defaults are inferred. Future types/fields, array order, and opaque
+workload data are preserved. No local calendar simulation or workload-specific scheduling policy
+is added. Job types have the same 1,024-byte UTF-8 single-path-component budget.
+
+Optional `execution-data` is a fixed static, workload/job-type-defined JSON object. Omission omits
+`executionData` from the PATCH; `{}` remains an empty object, while JSON `null`, arrays, and scalars
+are rejected. **The API does not document whether omission preserves or clears stored execution data.**
+The tool makes neither guarantee and never fetches, fills in, or strips fields to compensate.
+Each JSON input has a 1 MiB UTF-8 / 32-level budget; the complete serialized request also must fit
+1 MiB. Invalid, duplicate, ambiguous, or malformed Unicode inputs fail before authentication.
+
+Before requesting consent, confirm the calling identity and explicit enabled/timing intent.
+**An enabled schedule with a past start may trigger a job immediately, consuming compute or changing
+data. Disabling a schedule does not cancel an existing job instance or roll back work.** The
+[schedule owner](https://learn.microsoft.com/fabric/fundamentals/job-scheduler#schedule-ownership-and-item-takeover)
+is the identity that created or last modified the schedule, separately from item ownership.
+Updating a schedule must not be treated as an ownership-neutral read or proof that its future jobs
+can authenticate successfully. The API exposes no owner override here.
+
+The tool is destructive, sensitive, not read-only, and does not advertise an idempotent replay
+guarantee. It is hidden and denied in read-only mode. The normal MCP mutation/sensitive-data
+confirmation applies; direct CLI execution does not itself use that MCP elicitation gate.
+The caller needs appropriate Fabric permissions and both delegated **`Item.Execute.All` and
+`Item.ReadWrite.All`** scopes. Users, service principals, and managed identities are supported subject
+to workload/tenant authorization. Existing host and HTTP/OBO credentials are reused.
+
+```powershell
+# Example only: use approved IDs and full timing intent. This does not cancel running jobs.
+$configuration = '{"type":"Daily","startDateTime":"2030-01-01T00:00:00Z","endDateTime":"2030-02-01T00:00:00Z","localTimeZoneId":"UTC","times":["09:00","15:00"]}'
+fabmcp jobs update-item-schedule --workspace-id <workspace-id> --item-id <item-id> --job-type DefaultJob --schedule-id <schedule-id> --enabled false --configuration $configuration
+```
+
+**HTTP 200 confirms the update, not job execution or success.** The typed result contains
+`updateStatus: "Updated"`, the requested `workspaceId`, `itemId`, `jobType`, `schedule`, and `guidance`.
+The returned schedule ID must match the requested ID; an example response with a different ID is
+not an identity rule. Available configuration, owner, execution data, and UTC creation time are
+preserved without synthesizing absent/null metadata from the input. Sensitive fields are returned
+only through the existing consent-controlled tool. Schedule IDs are not job-instance or operation IDs.
+
+The response body retains the 1 MiB / 64-level budget. Retained schedule output has the same
+60-level limit as Create, reserving four levels for result/routing/protocol envelopes. Identity,
+Unicode, and retained-output validation occur **inside the confirmed-200 boundary**: if metadata
+is invalid, too deep, too large, or unreadable, the error still reports confirmed update and warns
+against blind resubmission. Cancellation after headers does not erase that confirmation.
+Loss of confirmation during sending remains uncertain; inspect the target schedule separately
+before another update. HTTP failures keep their status, safe error code when available, and valid
+Retry-After seconds/date guidance even when optional error metadata is unreadable. Raw backend
+messages and exception traces are not returned.
+
+This synchronous endpoint never uses the Fabric operation runner or follows Location/operation
+headers. There is no automatic retry, field-stripping fallback, polling, result retrieval, or
+follow-up job execution. Default output uses `results.schedule`; compact/duplicated `all` output
+uses `structuredContent.schedule`. Namespace mode calls `jobs` with
+`command="jobs_update-item-schedule"` and options in `parameters`; its structured payload is under
+`result`. Single mode calls `fabric` with `tool="jobs"` and the same command/parameters.
+Inline JSON works in stdio and HTTP. Examples and offline validation do not authorize live changes
+or establish real OBO/RBAC behavior.
 
 **List Item Schedules (`jobs_list-item-schedules`)**
 

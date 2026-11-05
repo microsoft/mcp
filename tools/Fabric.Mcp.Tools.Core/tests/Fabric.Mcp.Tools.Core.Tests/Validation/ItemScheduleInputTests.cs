@@ -11,7 +11,7 @@ using static Fabric.Mcp.Tools.Core.Tests.TestSupport.ItemScheduleCreateTestData;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Validation;
 
-public sealed class ItemScheduleCreateInputTests()
+public sealed class ItemScheduleInputTests()
 {
     [Theory]
     [InlineData(false, null)]
@@ -20,7 +20,7 @@ public sealed class ItemScheduleCreateInputTests()
     [InlineData(true, ExecutionData)]
     public static void Body_PreservesExplicitEnabledConfigurationAndOpaqueExecutionData(bool enabled, string? execution)
     {
-        var body = ItemScheduleCreateInput.CreateBody(enabled, Configuration, execution, TestContext.Current.CancellationToken);
+        var body = ItemScheduleInput.CreateBody(enabled, Configuration, execution, TestContext.Current.CancellationToken);
         using var document = JsonDocument.Parse(body);
         var value = document.RootElement;
         Assert.Equal(enabled, value.GetProperty("enabled").GetBoolean());
@@ -53,7 +53,7 @@ public sealed class ItemScheduleCreateInputTests()
         config["localTimeZoneId"] = "Future Windows time zone";
         config["extension"] = new JsonArray(1, null, "extra");
         var json = config.ToJsonString();
-        using var result = JsonDocument.Parse(ItemScheduleCreateInput.CreateBody(true, json, null, TestContext.Current.CancellationToken));
+        using var result = JsonDocument.Parse(ItemScheduleInput.CreateBody(true, json, null, TestContext.Current.CancellationToken));
         using var expected = JsonDocument.Parse(json);
         Assert.True(JsonElement.DeepEquals(expected.RootElement, result.RootElement.GetProperty("configuration")));
     }
@@ -67,7 +67,7 @@ public sealed class ItemScheduleCreateInputTests()
         var config = JsonNode.Parse(Configuration)!.AsObject();
         config["startDateTime"] = start;
         config["endDateTime"] = end;
-        using var result = JsonDocument.Parse(ItemScheduleCreateInput.CreateBody(true, config.ToJsonString(), null, TestContext.Current.CancellationToken));
+        using var result = JsonDocument.Parse(ItemScheduleInput.CreateBody(true, config.ToJsonString(), null, TestContext.Current.CancellationToken));
         Assert.Equal(start, result.RootElement.GetProperty("configuration").GetProperty("startDateTime").GetString());
         Assert.Equal(end, result.RootElement.GetProperty("configuration").GetProperty("endDateTime").GetString());
     }
@@ -146,7 +146,7 @@ public sealed class ItemScheduleCreateInputTests()
         var config = Config("Weekly", fields.ToJsonString());
         if (valid)
         {
-            Assert.NotEmpty(ItemScheduleCreateInput.CreateBody(false, config, null, TestContext.Current.CancellationToken));
+            Assert.NotEmpty(ItemScheduleInput.CreateBody(false, config, null, TestContext.Current.CancellationToken));
         }
         else
         {
@@ -194,10 +194,10 @@ public sealed class ItemScheduleCreateInputTests()
     public static void Body_EnforcesExactInputByteBudget(bool execution, int excess)
     {
         var json = execution ? "{}" : Configuration;
-        json = new string(' ', ItemScheduleCreateInput.MaxRequestBytes - Encoding.UTF8.GetByteCount(json) + excess) + json;
+        json = new string(' ', ItemScheduleInput.MaxRequestBytes - Encoding.UTF8.GetByteCount(json) + excess) + json;
         if (excess == 0)
         {
-            Assert.NotEmpty(ItemScheduleCreateInput.CreateBody(false, execution ? Configuration : json, execution ? json : null, TestContext.Current.CancellationToken));
+            Assert.NotEmpty(ItemScheduleInput.CreateBody(false, execution ? Configuration : json, execution ? json : null, TestContext.Current.CancellationToken));
         }
         else
         {
@@ -210,12 +210,12 @@ public sealed class ItemScheduleCreateInputTests()
     [InlineData(1)]
     public static void Body_EnforcesExactSerializedBudgetIncludingEnvelope(int excess)
     {
-        var empty = ItemScheduleCreateInput.CreateBody(false, Configuration, """{"pad":""}""", TestContext.Current.CancellationToken);
-        var execution = $$"""{"pad":"{{new string('x', ItemScheduleCreateInput.MaxRequestBytes - Encoding.UTF8.GetByteCount(empty) + excess)}}"}""";
+        var empty = ItemScheduleInput.CreateBody(false, Configuration, """{"pad":""}""", TestContext.Current.CancellationToken);
+        var execution = $$"""{"pad":"{{new string('x', ItemScheduleInput.MaxRequestBytes - Encoding.UTF8.GetByteCount(empty) + excess)}}"}""";
         if (excess == 0)
         {
-            var body = ItemScheduleCreateInput.CreateBody(false, Configuration, execution, TestContext.Current.CancellationToken);
-            Assert.Equal(ItemScheduleCreateInput.MaxRequestBytes, Encoding.UTF8.GetByteCount(body));
+            var body = ItemScheduleInput.CreateBody(false, Configuration, execution, TestContext.Current.CancellationToken);
+            Assert.Equal(ItemScheduleInput.MaxRequestBytes, Encoding.UTF8.GetByteCount(body));
         }
         else
         {
@@ -235,14 +235,14 @@ public sealed class ItemScheduleCreateInputTests()
         var execution = useExecution ? "{\"x\":" + nested + "}" : null;
         if (valid)
         {
-            Assert.NotEmpty(ItemScheduleCreateInput.CreateBody(false, configuration, execution, TestContext.Current.CancellationToken));
+            Assert.NotEmpty(ItemScheduleInput.CreateBody(false, configuration, execution, TestContext.Current.CancellationToken));
         }
         else
         {
             AssertInvalid(configuration, execution);
         }
         var unicode = $$"""{"pad":"{{new string('\u00e9', 200_000)}}"}""";
-        Assert.True(Encoding.UTF8.GetByteCount(unicode) < ItemScheduleCreateInput.MaxRequestBytes);
+        Assert.True(Encoding.UTF8.GetByteCount(unicode) < ItemScheduleInput.MaxRequestBytes);
         AssertInvalid(Configuration, unicode);
     }
 
@@ -251,8 +251,8 @@ public sealed class ItemScheduleCreateInputTests()
     {
         var config = Configuration.Replace("\"interval\":10", "\"interval\":10,\"pad\":\"" + new string('x', 600_000) + "\"", StringComparison.Ordinal);
         var execution = $$"""{"pad":"{{new string('x', 600_000)}}"}""";
-        Assert.True(Encoding.UTF8.GetByteCount(config) < ItemScheduleCreateInput.MaxRequestBytes);
-        Assert.True(Encoding.UTF8.GetByteCount(execution) < ItemScheduleCreateInput.MaxRequestBytes);
+        Assert.True(Encoding.UTF8.GetByteCount(config) < ItemScheduleInput.MaxRequestBytes);
+        Assert.True(Encoding.UTF8.GetByteCount(execution) < ItemScheduleInput.MaxRequestBytes);
         AssertInvalid(config, execution);
     }
 
@@ -261,13 +261,13 @@ public sealed class ItemScheduleCreateInputTests()
     {
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        Assert.Throws<OperationCanceledException>(() => ItemScheduleCreateInput.CreateBody(false, Configuration, null, cancellation.Token));
+        Assert.Throws<OperationCanceledException>(() => ItemScheduleInput.CreateBody(false, Configuration, null, cancellation.Token));
     }
 
     private static void AssertInvalid(string configuration, string? execution = null)
     {
         var error = Assert.Throws<FabricItemInputException>(() =>
-            ItemScheduleCreateInput.CreateBody(false, configuration, execution, TestContext.Current.CancellationToken));
+            ItemScheduleInput.CreateBody(false, configuration, execution, TestContext.Current.CancellationToken));
         Assert.DoesNotContain("private", error.Message);
         Assert.DoesNotContain("LineNumber", error.Message);
     }

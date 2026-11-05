@@ -271,6 +271,7 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
         Assert.Equal(expectedJobs, names.Contains("jobs_list-item-schedules"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
         if (namespaces is not null)
         {
@@ -296,6 +297,17 @@ public class ServerStartupTests
                     createOptions.EnumerateObject().Select(property => property.Name).Order());
                 Assert.Equal("boolean", createOptions.GetProperty("enabled").GetProperty("type").GetString());
                 Assert.False(createOptions.GetProperty("enabled").TryGetProperty("default", out _));
+                var update = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_update-item-schedule");
+                Assert.False(update.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(update.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    update.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var updateOptions = update.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    updateOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", updateOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(updateOptions.GetProperty("enabled").TryGetProperty("default", out _));
                 var cancel = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_cancel-item-job-instance");
                 Assert.False(cancel.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
                 Assert.True(cancel.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

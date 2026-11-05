@@ -4,12 +4,23 @@
 using System.Text;
 using System.Text.Json;
 using Fabric.Mcp.Tools.Core.Models;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.Core.Validation;
 
-internal static class ItemScheduleCreateInput
+internal static class ItemScheduleInput
 {
     internal const int MaxRequestBytes = FabricItemJsonInput.MaxObjectBytes;
+
+    internal static void ValidateUpdateContext(
+        string workspaceId, string itemId, string jobType, string scheduleId, ValidationResult validation)
+    {
+        ItemJobRunInput.ValidateContext(workspaceId, itemId, jobType, validation);
+        if (!Guid.TryParse(scheduleId, out var schedule) || schedule == Guid.Empty)
+        {
+            validation.Errors.Add("--schedule-id must be a nonempty UUID.");
+        }
+    }
 
     internal static string CreateBody(bool enabled, string configuration, string? executionData, CancellationToken cancellationToken)
     {
@@ -31,6 +42,7 @@ internal static class ItemScheduleCreateInput
             {
                 FabricItemScheduleJson.ValidateUnicode(data);
             }
+            // Create and Update share the same required payload in the Fabric contract.
             var body = JsonSerializer.Serialize(new ItemScheduleCreateRequest(enabled, settings, execution), CoreJsonContext.Default.ItemScheduleCreateRequest);
             if (Encoding.UTF8.GetByteCount(body) > MaxRequestBytes)
             {

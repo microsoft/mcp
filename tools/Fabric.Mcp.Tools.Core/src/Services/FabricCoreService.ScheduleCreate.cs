@@ -22,7 +22,7 @@ public partial class FabricCoreService
         {
             throw new FabricItemInputException(string.Join(' ', validation.Errors));
         }
-        var body = ItemScheduleCreateInput.CreateBody(enabled, configuration, executionData, cancellationToken);
+        var body = ItemScheduleInput.CreateBody(enabled, configuration, executionData, cancellationToken);
         var workspace = Guid.Parse(workspaceId);
         var item = Guid.Parse(itemId);
         var url = $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspace:D}/items/{item:D}/jobs/{Uri.EscapeDataString(jobType)}/schedules";
@@ -51,7 +51,7 @@ public partial class FabricCoreService
                 response, FabricResponseBodyReader.DefaultMaxJsonBytes,
                 static () => new JsonException("The Fabric schedule exceeds the 1 MiB response limit."), cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            var schedule = ReadCreatedSchedule(bytes);
+            var schedule = FabricItemScheduleJson.ReadMutationResponse(bytes);
             return new(workspace, item, jobType, schedule,
                 retryAfter?.Delta is { } delay ? (long)delay.TotalSeconds : null, retryAfter?.Date);
         }
@@ -60,25 +60,6 @@ public partial class FabricCoreService
             throw new ItemScheduleCreateRequestException(
                 ex is OperationCanceledException ? HttpStatusCode.RequestTimeout : HttpStatusCode.BadGateway,
                 retryAfter, creationConfirmed: true);
-        }
-    }
-
-    private static FabricItemSchedule ReadCreatedSchedule(ReadOnlyMemory<byte> body)
-    {
-        try
-        {
-            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 64, AllowDuplicateProperties = false });
-            FabricItemScheduleJson.ValidateUnicode(document.RootElement);
-            var schedule = FabricItemScheduleJson.Read(document.RootElement);
-            // Reserve four levels for the result, namespace, tool-response, and JSON-RPC
-            // envelopes. Validate retained fields before leaving the confirmed-201 boundary.
-            using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = 60 });
-            JsonSerializer.Serialize(writer, schedule, CoreJsonContext.Default.FabricItemSchedule);
-            return schedule;
-        }
-        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
-        {
-            throw new JsonException("Fabric returned invalid created schedule metadata.");
         }
     }
 }
