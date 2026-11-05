@@ -1,3 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed Debug recording-proxy routing so loopback playback requests stay local instead of passing through outbound HTTP proxies."

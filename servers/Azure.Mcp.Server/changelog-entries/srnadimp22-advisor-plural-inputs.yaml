@@ -1,6 +1,0 @@
-pr: 4045
-changes:
-  - section: "Features Added"
-    description: "Added `advisor_recommendation_prevalidate` for resource deletion safety checks, batch recommendation updates with `--recommendation-ids`, continuation-token pagination with `--continuation-token`, and Cost/IdleResources summary and list capabilities for savings, lifecycle status, and Service Group scopes."
-  - section: "Breaking Changes"
-    description: "Renamed `subscription` to `subscriptions`, `recommendation-type-id` to `recommendation-type-ids`, and `resource-type` to `resource-types` for `advisor_recommendation_list` and `advisor_recommendation_summary`. The new inputs require arrays of strings, including one-element arrays for single selections. The singular input names are no longer accepted."
