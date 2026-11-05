@@ -980,10 +980,6 @@ get operations and recommendation-update inputs are unchanged.
 * "Postpone these selected Advisor recommendation IDs together in my service group until \<future-date-time-with-offset>, with one batch approval"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
-* "Show Advisor insights for service group 'my-service-group'"
-* "Show Advisor insights for my subscription"
-* "Give me Advisor insights across all my service groups and subscriptions"
-* "How much retirement exposure has my subscription reduced or increased since its Day 1 count?"
 * "What is the status of service group 'my-service-group'?"
 * "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
@@ -1454,7 +1450,7 @@ for payloads and completion semantics. The tools use the released
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Generate the report for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
 * "Get a download link for the report of drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
-* "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
+* "Create a Standard resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
 ### Azure Resource Manager
