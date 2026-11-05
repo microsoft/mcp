@@ -54,6 +54,11 @@ public sealed class PriceItem
     public double UnitPrice { get; set; }
 
     /// <summary>
+    /// Minimum units of consumption to avail the price. Zero is the first tier.
+    /// </summary>
+    public double TierMinimumUnits { get; set; }
+
+    /// <summary>
     /// Currency code (e.g., USD).
     /// </summary>
     public string? CurrencyCode { get; set; }

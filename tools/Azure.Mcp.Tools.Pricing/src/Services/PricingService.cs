@@ -192,6 +192,7 @@ public class PricingService(
             Location = item.Location,
             RetailPrice = item.RetailPrice,
             UnitPrice = item.UnitPrice,
+            TierMinimumUnits = item.TierMinimumUnits,
             CurrencyCode = item.CurrencyCode,
             UnitOfMeasure = item.UnitOfMeasure,
             PriceType = item.Type.ToString(),
