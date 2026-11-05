@@ -153,6 +153,22 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 
 `Compress-ForSigning.ps1` doesn't have any use in local development other than to test that its output is correct for later signing in a CI pipeline.
 
+## Tool ID validation
+
+Run `.\eng\scripts\Test-ToolId.ps1` to validate production tool command IDs across toolsets. The check reads `Id`
+string literals from `[CommandMetadata]` attributes using the C# parser bundled with PowerShell, without building or
+starting a server. It scans each toolset's `src` directory and excludes tests, `bin`, and `obj`.
+
+The script reports the number of IDs checked and exits with code 1 for duplicate IDs, missing or unsupported ID
+declarations, or scans that find no command metadata. Duplicate comparison remains case-insensitive. `Analyze-Code.ps1`
+and `Preflight.ps1` invoke this check. Use `-ToolsDirectory` to check a different toolset root.
+
+Run its regression tests with:
+
+```powershell
+Invoke-Pester -Path .\eng\scripts\Test-ToolId.Tests.ps1
+```
+
 # Published artifact types
 
 ### npm/npx
@@ -217,6 +233,17 @@ For design details, see [docs/design/mcpb-packaging-and-signing-via-esrp.md](htt
 # Server release process
 
 We only ship the repo's server projects, with each server stored under `servers/<ServerName>`. The release pipelines are driven by the server-specific `build.yml` files (for example, `servers/Azure.Mcp.Server/build.yml`). Those files opt a server into the artifact types we publish and pass the settings that flow through `/eng/pipelines/templates/common.yml`.
+
+## Scheduled Azure MCP release preparation
+
+[release-prep.yml](https://github.com/microsoft/mcp/blob/main/eng/pipelines/release-prep.yml) opens an Azure MCP Server release-preparation PR every Tuesday and Thursday at **12 PM Pacific**, except on Microsoft US holidays. It does not merge PRs, publish packages, or queue the release pipeline.
+
+- Azure DevOps uses UTC schedules, so the pipeline has 19:00 and 20:00 UTC triggers. A Pacific time-zone check selects exactly one trigger for the current daylight-saving offset, including when agent allocation delays the job within the scheduled Pacific day. The inactive trigger exits without requesting GitHub credentials.
+- The calendar excludes these 10 Microsoft US holidays: New Year's Day, Martin Luther King Jr. Day, Washington's Birthday, Memorial Day, Independence Day, Labor Day, Thanksgiving Day, the day after Thanksgiving, Christmas Eve, and Christmas Day. Fixed-date holidays are excluded on both their actual and observed dates. Saturday holidays are observed on Friday and Sunday holidays on Monday, including New Year's Day observed in the previous December. Holiday runs are skipped, not moved to another day.
+- The `ReleaseOwners` parameter is the list of GitHub usernames, without `@`, to mention in the PR description. The description asks them to review, approve and merge the PR after checks pass, then start Azure.Mcp release.
+- Preparation uses the existing version in the Azure MCP Server project and requires a matching `Unreleased` changelog heading. Already-finalized versions and runs without changelog entries are skipped; merge the normal post-release version-increment PR before the next release.
+- The job compiles both changelogs, removes the compiled entry files, and opens a PR from a version-specific branch in `azure-sdk/mcp`. An existing open preparation PR for that version is left unchanged, preserving reviewer edits.
+- The repository PR template is preserved, with a pipeline link and validation results added. Required PR checks still run normally; preparation does not claim that builds or tests have passed.
 
 ## Queuing a release run
 - Manually queue the server pipeline (e.g. [`mcp - Azure.Mcp.Server`](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7866&_a=summary)) with `PublishTarget` set to `none`, `internal`, or `public`.

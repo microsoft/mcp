@@ -10,6 +10,7 @@ words:
   - advisorresources
   - applicationgatewaywebapplicationfirewallpolicies
   - aseries
+  - burndown
   - connectedclusters
   - containerregistry
   - databaseaccounts
@@ -29,11 +30,15 @@ words:
   - machinelearningservices
   - managedinstances
   - rdma
+  - recommenddata
   - scom
+  - servicegroups
+  - serviceretirement
   - serviceupgradeandretirement
   - startofday
   - staticsites
   - subtag
+  - tobool
   - todatetime
   - todouble
   - tolower

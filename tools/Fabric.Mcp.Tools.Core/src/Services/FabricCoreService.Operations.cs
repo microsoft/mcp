@@ -51,7 +51,7 @@ public partial class FabricCoreService
             {
                 Error = error with
                 {
-                    ErrorCode = IsSafeErrorCode(error.ErrorCode) ? error.ErrorCode : null,
+                    ErrorCode = FabricCoreHttpHelpers.IsSafeErrorCode(error.ErrorCode) ? error.ErrorCode : null,
                     RequestId = error.RequestId == Guid.Empty ? null : error.RequestId
                 }
             };
@@ -61,7 +61,10 @@ public partial class FabricCoreService
         return new(operationId, state, retryAfter, FabricOperationHttp.GetPollDelay(retryAfter));
     }
 
-    private async Task<OperationResult> GetOperationResultAsync(Guid operationId, CancellationToken cancellationToken)
+    private Task<OperationResult> GetOperationResultAsync(Guid operationId, CancellationToken cancellationToken) =>
+        GetOperationResultAsync(operationId, FabricOperationHttp.MaxJsonBytes, cancellationToken);
+
+    private async Task<OperationResult> GetOperationResultAsync(Guid operationId, int maxJsonBytes, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         using var response = await SendFabricHttpRequestAsync(
@@ -72,16 +75,13 @@ public partial class FabricCoreService
             FabricOperationHttp.ThrowUnexpectedResponse(response);
         }
         FabricOperationHttp.ValidateOperationId(response, operationId);
-        return await FabricOperationHttp.ReadJsonAsync(response, operationId, cancellationToken);
+        return await FabricOperationHttp.ReadJsonAsync(response, operationId, maxJsonBytes, cancellationToken);
     }
 
     private static Guid ParseOperationId(string operationId) =>
         Guid.TryParse(operationId, out var id) && id != Guid.Empty
             ? id
             : throw new ArgumentException("Operation ID must be a nonempty UUID.", nameof(operationId));
-
-    private static bool IsSafeErrorCode(string? code) =>
-        code is { Length: > 0 and <= 128 } && code.All(static ch => char.IsAsciiLetterOrDigit(ch) || ch is '_' or '-' or '.');
 
     private static FabricOperationException InvalidState() =>
         new("InvalidOperationState", "Fabric returned an invalid operation state. Completion could not be determined from this response.");

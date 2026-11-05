@@ -1,0 +1,268 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Surge protection actor data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "SurgeProtectionActorType": {
+      "type": "string",
+      "description": "The type of the actor. Additional SurgeProtectionActorType values may be added over time.",
+      "enum": [
+        "Workspace"
+      ],
+      "x-ms-enum": {
+        "name": "SurgeProtectionActorType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Workspace",
+            "description": "The actor is a workspace."
+          }
+        ]
+      }
+    },
+    "BlockedActorExpirationPolicyType": {
+      "type": "string",
+      "description": "The type of expiration policy. Additional BlockedActorExpirationPolicyType values may be added over time.",
+      "enum": [
+        "NeverExpire",
+        "ExpireAfterDate"
+      ],
+      "x-ms-enum": {
+        "name": "BlockedActorExpirationPolicyType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "NeverExpire",
+            "description": "The block does not expire automatically."
+          },
+          {
+            "value": "ExpireAfterDate",
+            "description": "The block expires at the date and time specified in `expireAfterDateTime`."
+          }
+        ]
+      }
+    },
+    "BlockedActorExpirationPolicy": {
+      "type": "object",
+      "description": "Defines when a blocked actor expires.",
+      "required": [
+        "policyType"
+      ],
+      "discriminator": "policyType",
+      "properties": {
+        "policyType": {
+          "description": "The type of expiration policy.",
+          "$ref": "#/definitions/BlockedActorExpirationPolicyType",
+          "readOnly": false
+        }
+      }
+    },
+    "NeverExpireBlockedActorExpirationPolicy": {
+      "description": "An expiration policy where the block does not expire automatically.",
+      "type": "object",
+      "x-ms-discriminator-value": "NeverExpire",
+      "allOf": [
+        {
+          "$ref": "#/definitions/BlockedActorExpirationPolicy"
+        }
+      ]
+    },
+    "ExpireAfterDateBlockedActorExpirationPolicy": {
+      "description": "An expiration policy where the block expires at the date and time specified in `expireAfterDateTime`.",
+      "type": "object",
+      "x-ms-discriminator-value": "ExpireAfterDate",
+      "required": [
+        "expireAfterDateTime"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/definitions/BlockedActorExpirationPolicy"
+        }
+      ],
+      "properties": {
+        "expireAfterDateTime": {
+          "description": "The date and time at which the block expires. Expressed in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "SurgeProtectionActorDetails": {
+      "type": "object",
+      "description": "The details of the actor.",
+      "required": [
+        "actorType"
+      ],
+      "discriminator": "actorType",
+      "properties": {
+        "actorType": {
+          "description": "The type of the actor.",
+          "$ref": "#/definitions/SurgeProtectionActorType",
+          "readOnly": false
+        }
+      }
+    },
+    "WorkspaceActorDetails": {
+      "description": "The details of a workspace actor.",
+      "type": "object",
+      "x-ms-discriminator-value": "Workspace",
+      "required": [
+        "workspaceId"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/definitions/SurgeProtectionActorDetails"
+        }
+      ],
+      "properties": {
+        "workspaceId": {
+          "description": "The workspace ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        }
+      }
+    },
+    "BlockedActor": {
+      "description": "A blocked actor on a capacity.",
+      "type": "object",
+      "required": [
+        "id",
+        "actorDetails",
+        "expirationPolicy"
+      ],
+      "properties": {
+        "id": {
+          "description": "The blocked actor ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "actorDetails": {
+          "description": "The actor that is blocked.",
+          "$ref": "#/definitions/SurgeProtectionActorDetails",
+          "readOnly": true
+        },
+        "expirationPolicy": {
+          "description": "Defines when the block expires.",
+          "$ref": "#/definitions/BlockedActorExpirationPolicy",
+          "readOnly": false
+        }
+      }
+    },
+    "MissionCriticalActor": {
+      "description": "A mission critical actor on a capacity.",
+      "type": "object",
+      "required": [
+        "id",
+        "actorDetails"
+      ],
+      "properties": {
+        "id": {
+          "description": "The mission critical actor ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "actorDetails": {
+          "description": "The actor that is shielded from surge-protection rejection.",
+          "$ref": "#/definitions/SurgeProtectionActorDetails",
+          "readOnly": true
+        }
+      }
+    },
+    "CreateBlockedActorRequest": {
+      "description": "The request payload for creating a blocked actor on a capacity.",
+      "type": "object",
+      "required": [
+        "actorDetails",
+        "expirationPolicy"
+      ],
+      "properties": {
+        "actorDetails": {
+          "description": "The actor to block.",
+          "$ref": "#/definitions/SurgeProtectionActorDetails",
+          "readOnly": false
+        },
+        "expirationPolicy": {
+          "description": "Defines when the block expires.",
+          "$ref": "#/definitions/BlockedActorExpirationPolicy",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateBlockedActorRequest": {
+      "description": "The request payload for updating a blocked actor on a capacity.",
+      "type": "object",
+      "required": [
+        "expirationPolicy"
+      ],
+      "properties": {
+        "expirationPolicy": {
+          "description": "Defines when the block expires.",
+          "$ref": "#/definitions/BlockedActorExpirationPolicy",
+          "readOnly": false
+        }
+      }
+    },
+    "CreateMissionCriticalActorRequest": {
+      "description": "The request payload for creating a mission critical actor on a capacity.",
+      "type": "object",
+      "required": [
+        "actorDetails"
+      ],
+      "properties": {
+        "actorDetails": {
+          "description": "The actor to shield from surge-protection rejection.",
+          "$ref": "#/definitions/SurgeProtectionActorDetails",
+          "readOnly": false
+        }
+      }
+    },
+    "BlockedActors": {
+      "description": "A list of blocked actors.",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "description": "A list of blocked actors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BlockedActor"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MissionCriticalActors": {
+      "description": "A list of mission critical actors.",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "description": "A list of mission critical actors.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissionCriticalActor"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    }
+  }
+}

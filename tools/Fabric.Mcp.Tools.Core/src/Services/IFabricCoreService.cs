@@ -22,6 +22,24 @@ public interface IFabricCoreService
         FabricOperationWaitOptions? waitOptions = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Retrieves a typed item definition, optionally waiting for its operation or reading an earlier completed result.</summary>
+    Task<ItemDefinitionGetCommandResult> GetItemDefinitionAsync(
+        string? workspaceId = null,
+        string? itemId = null,
+        string? format = null,
+        string? operationId = null,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Replaces a known item's complete definition with one POST and optional no-result LRO state polling.</summary>
+    Task<ItemDefinitionUpdateCommandResult> UpdateItemDefinitionAsync(
+        string workspaceId,
+        string itemId,
+        UpdateItemDefinitionRequest request,
+        bool? updateMetadata = null,
+        FabricOperationWaitOptions? waitOptions = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads operation state once, without polling or interpreting HTTP success as operation success.</summary>
     Task<OperationStateResult> GetOperationStateAsync(string operationId, CancellationToken cancellationToken);
 
@@ -50,6 +68,129 @@ public interface IFabricCoreService
     Task<FabricItemMetadata> GetItemAsync(
         string workspaceId,
         string itemId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Requests cancellation once; a 202 receipt confirms acceptance, not the job's final state.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobInstanceId">The existing job-instance UUID, not a Fabric operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request, not the Fabric job.</param>
+    Task<ItemJobInstanceCancelCommandResult> CancelItemJobInstanceAsync(
+        string workspaceId,
+        string itemId,
+        string jobInstanceId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one job-instance snapshot and retry guidance without polling or retrieving results.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobInstanceId">The nonempty job-instance UUID, not a Fabric operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemJobInstanceGetCommandResult> GetItemJobInstanceAsync(
+        string workspaceId,
+        string itemId,
+        string jobInstanceId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one complete page of job instances without pagination, per-job reads, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="continuationToken">An unchanged token from a preceding page for the same IDs, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemJobInstanceListCommandResult> ListItemJobInstancesAsync(
+        string workspaceId,
+        string itemId,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Creates one schedule with explicit timing and enabled intent, without preflight, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="enabled">Whether to enable the schedule. A past start time may trigger a job immediately.</param>
+    /// <param name="configuration">Required schedule JSON, including explicit UTC bounds and localTimeZoneId.</param>
+    /// <param name="executionData">Optional opaque, static job-input JSON object; null omits the field.</param>
+    /// <param name="cancellationToken">Cancels the request, not a schedule that may already have been created.</param>
+    Task<ItemScheduleCreateCommandResult> CreateItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        bool enabled,
+        string configuration,
+        string? executionData = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes one explicit schedule without a request body; HTTP 200 confirms deletion, not job cancellation.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    Task<ItemScheduleDeleteCommandResult> DeleteItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Updates one schedule with the full required payload; no preflight, merging, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="enabled">Explicit enabled intent. Disabling does not cancel existing jobs.</param>
+    /// <param name="configuration">Required full schedule JSON with explicit UTC bounds and localTimeZoneId.</param>
+    /// <param name="executionData">Optional opaque JSON object; null omits the field, without a preservation/clearing guarantee.</param>
+    /// <param name="cancellationToken">Cancels the request, not an update or job that may already have occurred.</param>
+    Task<ItemScheduleUpdateCommandResult> UpdateItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        bool enabled,
+        string configuration,
+        string? executionData = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one explicitly identified schedule snapshot without discovery, retries, polling, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<ItemScheduleGetCommandResult> GetItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one complete schedule page without discovery, per-schedule reads, pagination, or mutations.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="continuationToken">An unchanged token for the same IDs and job type, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<ItemScheduleListCommandResult> ListItemSchedulesAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Submits one job without retries or polling; a 202 receipt confirms acceptance, not completion.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item to execute.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="executionData">Optional opaque JSON object; null omits the field.</param>
+    /// <param name="jobParameters">Optional JSON parameter array; null omits the field.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request, not the submitted job.</param>
+    Task<ItemJobRunCommandResult> RunOnDemandItemJobAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string? executionData = null,
+        string? jobParameters = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Retrieves metadata for one existing workspace without reading its items or data.</summary>

@@ -20,6 +20,7 @@ public class FabricCoreSetup : IAreaSetup
     {
         services.AddSingleton<IFabricItemDefinitionFileService, FabricItemDefinitionFileService>();
         services.AddSingleton<IFabricItemDefinitionInputService, FabricItemDefinitionInputService>();
+        services.AddSingleton<IFabricItemDefinitionExportService, FabricItemDefinitionExportService>();
         services.AddHttpClient<IFabricCoreService, FabricCoreService>()
             .ConfigurePrimaryHttpMessageHandler(static (handler, _) =>
             {
@@ -41,7 +42,9 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
+        services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
+        services.AddSingleton<ItemDefinitionGetCommand>(CreateItemDefinitionGetCommand);
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
         services.AddSingleton<ItemUpdateCommand>();
@@ -66,9 +69,11 @@ public class FabricCoreSetup : IAreaSetup
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
+            "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
+            "- Replace a known item's complete definition from inline content or explicitly selected saved files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
@@ -81,7 +86,9 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemDefinitionGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
@@ -125,6 +132,70 @@ public class FabricCoreSetup : IAreaSetup
             if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each item-creation input option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ItemDefinitionGetCommand CreateItemDefinitionGetCommand(IServiceProvider serviceProvider)
+    {
+        var export = serviceProvider.GetRequiredService<IFabricItemDefinitionExportService>();
+        var command = new ItemDefinitionGetCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemDefinitionGetCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            export);
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        if (!export.SupportsLocalFiles)
+        {
+            // Do not change cached OptionBinder options shared by other hosts.
+            definition.Options.Remove(options.Single(static option => option.Name == "--output-directory"));
+        }
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each get-item-definition option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ItemDefinitionUpdateCommand CreateItemDefinitionUpdateCommand(IServiceProvider serviceProvider)
+    {
+        var definitionInput = serviceProvider.GetRequiredService<IFabricItemDefinitionInputService>();
+        var command = new ItemDefinitionUpdateCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemDefinitionUpdateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            definitionInput);
+        var definition = command.GetCommand();
+        var inputOptions = definition.Options.ToArray();
+        if (!definitionInput.SupportsLocalFiles)
+        {
+            // Only this command's collection changes; cached binder options remain available to local hosts.
+            foreach (var option in inputOptions.Where(static option =>
+                option.Name is "--definition-directory" or "--definition-files" or "--definition-format"))
+            {
+                definition.Options.Remove(option);
+            }
+        }
+        if (definition.Options.SingleOrDefault(static option => option.Name == "--update-metadata") is not Option<bool?> updateMetadata ||
+            updateMetadata.Required || updateMetadata.HasDefaultValue)
+        {
+            throw new InvalidOperationException("The update-item-definition command requires optional Boolean --update-metadata without a default.");
+        }
+        updateMetadata.Arity = ArgumentArity.ExactlyOne;
+        definition.Validators.Add(result =>
+        {
+            if (inputOptions.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each definition-update option at most once.");
+            }
+            var metadata = result.GetResult(updateMetadata);
+            if (metadata is { Implicit: false } &&
+                (metadata.Tokens.Count != 1 || !bool.TryParse(metadata.Tokens[0].Value, out _)))
+            {
+                result.AddError("Specify --update-metadata with an explicit true or false value.");
             }
         });
         return command;

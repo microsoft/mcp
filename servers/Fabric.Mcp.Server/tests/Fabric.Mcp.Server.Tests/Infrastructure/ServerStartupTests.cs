@@ -39,9 +39,14 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
+    [InlineData(false, null, false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "core", false)]
+    [InlineData(true, "jobs", false)]
+    [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "jobs", true)]
+    [InlineData(true, "core,jobs", true)]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools, string? namespaces, bool readOnly)
     {
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
         var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
@@ -52,7 +57,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}{NamespaceArguments(namespaces)}{(readOnly ? " --read-only" : "")}",
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -97,8 +102,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(content, localFiles: false);
-                AssertListItemsTool(content);
+                AssertCoreAndJobsDiscovery(content, namespaces, localFiles: false, readOnly);
             }
         }
         finally
@@ -111,9 +115,14 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
+    [InlineData(false, null, false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "core", false)]
+    [InlineData(true, "jobs", false)]
+    [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "jobs", true)]
+    [InlineData(true, "core,jobs", true)]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools, string? namespaces, bool readOnly)
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -124,7 +133,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = listAllTools ? "server start --mode all" : "server start",
+            Arguments = (listAllTools ? "server start --mode all" : "server start") + NamespaceArguments(namespaces) + (readOnly ? " --read-only" : ""),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -171,8 +180,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(response, localFiles: true);
-                AssertListItemsTool(response);
+                AssertCoreAndJobsDiscovery(response, namespaces, localFiles: true, readOnly);
             }
         }
         finally
@@ -243,6 +251,134 @@ public class ServerStartupTests
             {
                 process.Kill();
             }
+        }
+    }
+
+    private static string NamespaceArguments(string? namespaces) =>
+        namespaces is null ? "" : string.Concat(namespaces.Split(',').Select(value => " --namespace " + value));
+
+    private static void AssertCoreAndJobsDiscovery(string response, string? namespaces, bool localFiles, bool readOnly)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
+        Assert.DoesNotContain("core_get-item-job-instance", names);
+        Assert.DoesNotContain("core_get-item-schedule", names);
+        Assert.DoesNotContain("core_delete-item-schedule", names);
+        var expectedJobs = namespaces != "core";
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_cancel-item-job-instance"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_create-item-schedule"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_delete-item-schedule"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-schedule"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_list-item-schedules"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        if (namespaces is not null)
+        {
+            Assert.All(names, name => Assert.Contains(name!.Split('_')[0], namespaces.Split(',')));
+        }
+        if (namespaces != "jobs" && !readOnly)
+        {
+            AssertRepresentativeCoreTools(response, localFiles);
+            AssertListItemsTool(response);
+        }
+        if (expectedJobs)
+        {
+            if (!readOnly)
+            {
+                var delete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_delete-item-schedule");
+                Assert.False(delete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.False(delete.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+                Assert.Contains("Only HTTP 200 confirms deletion", delete.GetProperty("description").GetString());
+                var create = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_create-item-schedule");
+                Assert.False(create.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(create.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(create.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "workspace-id"],
+                    create.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var createOptions = create.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "workspace-id"],
+                    createOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", createOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(createOptions.GetProperty("enabled").TryGetProperty("default", out _));
+                var update = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_update-item-schedule");
+                Assert.False(update.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(update.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    update.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var updateOptions = update.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    updateOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", updateOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(updateOptions.GetProperty("enabled").TryGetProperty("default", out _));
+                var cancel = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_cancel-item-job-instance");
+                Assert.False(cancel.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.True(cancel.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(cancel.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                    .Select(value => value.GetString()).Order());
+                Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                    .Select(property => property.Name).Order());
+                var run = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_run-on-demand-item-job");
+                Assert.False(run.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(run.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(run.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["item-id", "job-type", "workspace-id"], run.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                    .Select(value => value.GetString()).Order());
+                Assert.Equal(["execution-data", "item-id", "job-parameters", "job-type", "workspace-id"],
+                    run.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            }
+            var job = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-job-instance");
+            Assert.True(job.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(job.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(job.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
+            var list = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-job-instances");
+            Assert.True(list.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(list.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(list.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["continuation-token", "item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
+            var schedule = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-schedule");
+            Assert.True(schedule.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(schedule.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            Assert.Contains("disclosure consent, even in read-only mode", schedule.GetProperty("description").GetString());
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                schedule.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            var scheduleOptions = schedule.GetProperty("inputSchema").GetProperty("properties");
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                scheduleOptions.EnumerateObject().Select(property => property.Name).Order());
+            Assert.All(scheduleOptions.EnumerateObject(), property =>
+            {
+                Assert.Equal("string", property.Value.GetProperty("type").GetString());
+                Assert.False(property.Value.TryGetProperty("default", out _));
+            });
+            var schedules = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-schedules");
+            Assert.True(schedules.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(schedules.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(schedules.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-type", "workspace-id"], schedules.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["continuation-token", "item-id", "job-type", "workspace-id"], schedules.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
         }
     }
 
@@ -321,6 +457,35 @@ public class ServerStartupTests
         Assert.Equal("number", creationOptions.GetProperty("max-wait-seconds").GetProperty("type").GetString());
         Assert.Equal(["display-name", "item-type"], itemCreate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
             .Select(value => value.GetString()).Order());
+        var definitionGet = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-item-definition");
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.False(definitionGet.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionGet.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        var definitionGetOptions = definitionGet.GetProperty("inputSchema").GetProperty("properties");
+        foreach (var option in new[] { "workspace-id", "item-id", "operation-id", "format" })
+        {
+            Assert.Equal("string", definitionGetOptions.GetProperty(option).GetProperty("type").GetString());
+        }
+        Assert.Equal(localFiles, definitionGetOptions.TryGetProperty("output-directory", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("definition", out _));
+        Assert.False(definitionGetOptions.TryGetProperty("update-metadata", out _));
+        var definitionUpdate = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-item-definition");
+        Assert.False(definitionUpdate.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+        Assert.True(definitionUpdate.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+        Assert.Equal(["item-id", "workspace-id"], definitionUpdate.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+            .Select(value => value.GetString()).Order());
+        var definitionUpdateOptions = definitionUpdate.GetProperty("inputSchema").GetProperty("properties");
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("definition").GetProperty("type").GetString());
+        Assert.Equal("string", definitionUpdateOptions.GetProperty("options").GetProperty("type").GetString());
+        Assert.False(definitionUpdateOptions.TryGetProperty("definition-item-type", out _));
+        Assert.Equal(["boolean", "null"], definitionUpdateOptions.GetProperty("update-metadata").GetProperty("type").EnumerateArray()
+            .Select(value => value.GetString()));
+        Assert.False(definitionUpdateOptions.GetProperty("update-metadata").TryGetProperty("default", out _));
+        foreach (var option in new[] { "definition-directory", "definition-files", "definition-format" })
+        {
+            Assert.Equal(localFiles, definitionUpdateOptions.TryGetProperty(option, out _));
+        }
     }
 
     private static async Task<string> ReadToolResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)

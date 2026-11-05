@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text;
 using System.Text.Json;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Options;
@@ -10,9 +9,7 @@ namespace Fabric.Mcp.Tools.Core.Validation;
 
 internal static class ItemCreateRequestInput
 {
-    internal const int MaxObjectBytes = 1024 * 1024;
     internal const int MaxLabelSettingsBytes = 4096;
-    internal const int MaxObjectDepth = 32;
 
     internal static CreateItemRequest CreateRequest(ItemCreateOptions options, CancellationToken cancellationToken)
     {
@@ -20,12 +17,12 @@ internal static class ItemCreateRequestInput
         var hasDefinitionInput = options.DefinitionInput?.HasInput is true;
         if (options.CreationPayload is not null && hasDefinitionInput)
         {
-            throw new ItemCreateInputException(
+            throw new FabricItemInputException(
                 "--creation-payload cannot be combined with any inline or saved-file definition option.");
         }
         if (options.Options is not null && !hasDefinitionInput)
         {
-            throw new ItemCreateInputException("--options requires an inline or saved-file definition source.");
+            throw new FabricItemInputException("--options requires an inline or saved-file definition source.");
         }
 
         Guid? folderId = null;
@@ -33,7 +30,7 @@ internal static class ItemCreateRequestInput
         {
             if (!Guid.TryParse(options.FolderId, out var parsedFolderId) || parsedFolderId == Guid.Empty)
             {
-                throw new ItemCreateInputException("--folder-id must be a nonempty UUID for an existing Fabric folder.");
+                throw new FabricItemInputException("--folder-id must be a nonempty UUID for an existing Fabric folder.");
             }
             folderId = parsedFolderId;
         }
@@ -46,48 +43,17 @@ internal static class ItemCreateRequestInput
             Type = options.ItemType,
             Description = options.Description,
             FolderId = folderId,
-            CreationPayload = ParseObject(options.CreationPayload, "--creation-payload", MaxObjectBytes),
-            Options = ParseObject(options.Options, "--options", MaxObjectBytes),
+            CreationPayload = FabricItemJsonInput.ParseObject(options.CreationPayload, "--creation-payload"),
+            Options = FabricItemJsonInput.ParseObject(options.Options, "--options"),
             SensitivityLabelSettings = ParseLabelSettings(options.SensitivityLabelSettings)
         };
         cancellationToken.ThrowIfCancellationRequested();
         return request;
     }
 
-    private static JsonElement? ParseObject(string? json, string option, int maxBytes)
-    {
-        if (json is null)
-        {
-            return null;
-        }
-        if (json.Length > maxBytes || Encoding.UTF8.GetByteCount(json) > maxBytes)
-        {
-            throw new ItemCreateInputException(FormattableString.Invariant(
-                $"{option} must not exceed {maxBytes} UTF-8 bytes."));
-        }
-        try
-        {
-            using var document = JsonDocument.Parse(json, new JsonDocumentOptions
-            {
-                MaxDepth = MaxObjectDepth,
-                AllowDuplicateProperties = false
-            });
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                throw new ItemCreateInputException($"{option} must be a JSON object, not null, an array, or a scalar.");
-            }
-            return document.RootElement.Clone();
-        }
-        catch (JsonException)
-        {
-            throw new ItemCreateInputException(FormattableString.Invariant(
-                $"{option} must contain valid JSON with no duplicate properties and at most {MaxObjectDepth} nesting levels."));
-        }
-    }
-
     private static FabricSensitivityLabelSettings? ParseLabelSettings(string? json)
     {
-        var value = ParseObject(json, "--sensitivity-label-settings", MaxLabelSettingsBytes);
+        var value = FabricItemJsonInput.ParseObject(json, "--sensitivity-label-settings", MaxLabelSettingsBytes);
         if (value is null)
         {
             return null;
@@ -97,21 +63,21 @@ internal static class ItemCreateRequestInput
         try
         {
             settings = value.Value.Deserialize(FabricItemCreateInputJsonContext.Default.FabricSensitivityLabelSettings) ??
-                throw new ItemCreateInputException("--sensitivity-label-settings must be a JSON object.");
+                throw new FabricItemInputException("--sensitivity-label-settings must be a JSON object.");
         }
         catch (JsonException)
         {
-            throw new ItemCreateInputException(
+            throw new FabricItemInputException(
                 "--sensitivity-label-settings requires labelId (a nonempty UUID) and accepts optional sensitivityLabelApplyStrategy (a string).");
         }
         if (settings.LabelId == Guid.Empty)
         {
-            throw new ItemCreateInputException("--sensitivity-label-settings requires a nonempty labelId UUID.");
+            throw new FabricItemInputException("--sensitivity-label-settings requires a nonempty labelId UUID.");
         }
         if (value.Value.TryGetProperty("sensitivityLabelApplyStrategy", out _) &&
             settings.SensitivityLabelApplyStrategy is not ("ApplyOrFail" or "Ignore"))
         {
-            throw new ItemCreateInputException(
+            throw new FabricItemInputException(
                 "A supplied sensitivityLabelApplyStrategy must be ApplyOrFail or Ignore. Omit it to retain Fabric's ApplyOrFail default.");
         }
 

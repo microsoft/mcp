@@ -52,7 +52,7 @@ public sealed class FabricOperationRunnerTests()
             .HandleAsync(response, NoResultContract(), new(Sync: true), NoStateRead, NoResultRead, TestContext.Current.CancellationToken));
 
         Assert.Equal(HttpStatusCode.BadGateway, error.StatusCode);
-        Assert.Contains("whether creation occurred", error.Message);
+        Assert.Contains("whether the mutation completed", error.Message);
     }
 
     [Theory]
