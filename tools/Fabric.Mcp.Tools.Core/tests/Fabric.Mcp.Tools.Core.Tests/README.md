@@ -49,11 +49,14 @@ Offline tests for the Fabric Core toolset.
 - **ItemJobRunMcpTests.cs**: Real registration, consent, schemas, all/namespace/single routes and output modes, stdio/HTTP configurations, namespace filters, reserved router parameters isolation, separate Run-to-Get handoff, read-only exclusion with Get retained, and validation before authentication
 - **Commands/ItemScheduleListCommandTests.cs**: Required UUID/job-type binding, unchanged optional cursors, sensitive read-only metadata, source-generated settings, safe failures/logging, and cancellation forwarding
 - **Commands/ItemScheduleCreateCommandTests.cs**: Explicit creation binding, sensitive/destructive/non-idempotent metadata, typed 201 results, safe errors/logging, scope guidance, and confirmed-creation versus uncertain-send failures
-- **Validation/ItemScheduleCreateInputTests.cs**: Explicit UTC bounds and Windows time-zone intent, documented configuration bounds, future string types, opaque execution data, omission, Unicode/duplicate checks, and exact UTF-8/serialized/depth budgets
+- **Validation/ItemScheduleInputTests.cs**: Shared Create/Update explicit UTC bounds and Windows time-zone intent, documented configuration bounds, future string types, opaque execution data, omission, Unicode/duplicate checks, and exact UTF-8/serialized/depth budgets
 - **Services/ItemScheduleCreateServiceTests.cs**: One normalized authenticated POST, full JSON preservation, optional schedule fields, ignored Location/operation headers, bounded responses/errors, safe status/retry guidance, confirmed creation on body failure, cancellation/disposal, and concurrent caller isolation
 - **ItemScheduleCreateMcpTests.cs**: Real registration, explicit Boolean value/no-default guards, schema/learn/output modes, all/namespace/single routing, stdio/HTTP, namespace/read-only filtering, consent, invalid/missing/repeated options with zero authentication/HTTP, and registered CLI 201 handling
 - **Services/ItemScheduleListServiceTests.cs**: One normalized GET, encoded job types/tokens, optional schedule fields, full extensible configuration/owner/execution JSON, explicit continuation, absent/null terminal metadata, no count cap or per-row reads, malformed/Unicode/duplicate data, exact bounds, HTTP status/retry guidance, disposal/cancellation, and concurrent identity isolation
 - **ItemScheduleListMcpTests.cs**: Actual registration, schemas and learn, all/namespace/single routes, stdio/HTTP configurations and output modes, namespace/read-only filtering, sensitive-read consent, zero-I/O denied consent/invalid input, complete pages, and safe malformed responses
+- **Commands/ItemScheduleUpdateCommandTests.cs**: Full update binding, sensitive/destructive metadata, typed 200 output, safe status/logging/retry guidance, and confirmed-update versus uncertain-send errors
+- **Services/ItemScheduleUpdateServiceTests.cs**: One exact normalized PATCH, full payload/omission preservation, matching schedule identity, optional response fields, bounded bytes/depth, malformed/Unicode metadata, ignored operation headers, cancellation/disposal, and concurrent caller isolation
+- **ItemScheduleUpdateMcpTests.cs**: Explicit Boolean/schema/learn guards, one PATCH across all/namespace/single routes, transports, output modes, and namespace selections; read-only/consent exclusion, missing/invalid/repeated inputs, wrong response identity, and exact retained-output depth with JSON-RPC serialization
 - **Commands/ItemDeleteCommandTests.cs**: Registered command validation, explicit hard-delete opt-in, typed confirmation, and sanitized failures
 - **Services/FabricCoreServiceItemDeleteTests.cs**: Mocked single-request deletion, omitted/false/true query behavior, empty HTTP 200 responses, pre-authentication validation, status preservation, Retry-After validation, cancellation, and disposal
 - **ItemDeleteToolRegistrationTests.cs**: Registered CLI and MCP paths, schemas, output modes, Boolean argument coercions, repeated/valueless option rejection, read-only exclusion, and destructive-operation consent
@@ -228,7 +231,7 @@ authorization. Live/recorded validation is unavailable without an explicitly app
 `jobs_create-item-schedule` requires workspace/item UUIDs, job type, an explicit Boolean `enabled`,
 and configuration JSON; optional execution data is an opaque static object. Registered CLI/MCP
 tests reject missing, null, valueless, repeated, and invalid enabled inputs before authentication.
-System.CommandLine's implicit false Boolean default is removed for this command only.
+System.CommandLine's implicit false Boolean default is removed for schedule mutation commands only.
 Every valid invocation sends exactly one POST, with no schedule-count preflight, job/type discovery,
 hidden List/Get, retry, parameter stripping, operation polling, or follow-up execution.
 
@@ -241,7 +244,7 @@ and may execute immediately when enabled; descriptions/prompts require explainin
 the existing destructive/sensitive consent gate. No local calendar simulation is performed.
 
 Schedule JSON validation is shared with List through `FabricItemScheduleJson`, preserving List's
-existing optional-field and timestamp contracts. Create alone validates ordered UTC input bounds.
+existing optional-field and timestamp contracts. Create and Update share ordered UTC input validation.
 The error-code reader extracted to `FabricCoreHttpHelpers.ReadErrorCodeAsync` retains cancellation's
 known-status/Retry-After semantics; all affected cancellation and schedule-list tests run alongside
 the new tests. No pagination infrastructure or existing read contract is changed.
@@ -258,6 +261,39 @@ Retained schedule output is serialized to a null stream with a 60-level limit in
 serialization and parsing of the JSON-RPC envelope. Excess depth returns confirmed-creation and
 do-not-resubmit guidance rather than a late, ambiguous serializer failure. List's limits are unchanged.
 No live schedule, resource provisioning, recorded playback, or real OBO/RBAC validation is performed.
+
+## Schedule Updates
+
+`jobs_update-item-schedule` requires explicit workspace/item/schedule UUIDs, job type, enabled state,
+and full configuration, even though its single initiating request is PATCH. There is no hidden
+Get/List, name lookup, read/merge/PATCH, retry, field removal, polling, result retrieval, or job run.
+The same `ItemScheduleInput` validator and existing source-generated request shape serve Create
+and Update; their required body contracts are identical. Shared tests cover known and future
+configurations, UTC bounds, time-zone intent, opaque execution data, and exact input/serialized
+budgets. Service and routed tests confirm that Update invokes these checks before authentication.
+Omitted execution data is absent on the wire, `{}` remains an object, and JSON null is invalid.
+The API makes no preservation/clearing promise when execution data is omitted.
+
+The 200 snapshot must identify the requested schedule. Tests reject wrong, missing, empty, duplicate,
+or malformed IDs without replacing the confirmed update with an ambiguous failure. Optional absent
+or null response fields stay absent; no settings are synthesized from the request. Configuration,
+owner, and execution data remain extensible and potentially sensitive. An update's owner identifies
+its creator or last modifier independently of item ownership. Descriptions require confirming
+identity/timing/enablement before consent: an enabled past start may execute immediately, while
+disabling is not cancellation.
+
+`FabricItemScheduleJson.ReadMutationResponse` performs the shared 60-level retained-output check
+inside each operation's confirmed-success boundary (201 for Create, 200 for Update). Routed tests
+exercise exact 60/61/64-level configuration, owner, and execution data across all routes, stdio/HTTP,
+and legacy/compact/duplicated output, then serialize and parse the JSON-RPC envelope. Fields that
+are not retained keep the 64-level input limit. Exact 1 MiB response thresholds cover streams with and without
+Content-Length. Known HTTP errors retain status and Retry-After after unreadable optional metadata;
+uncertain sends and late cancellation never cause automatic resubmission.
+
+Create, List, Run/Cancel catalog, shared validation, and actual Fabric host discovery regressions
+cover the shared surfaces. The read-only Jobs catalog remains the three implemented read tools,
+excluding Update along with the other mutations. Tests use existing HTTP/credential fixtures and
+do not discover customer IDs, mutate live schedules, deploy resources, or claim live/OBO/RBAC proof.
 
 ## Schedule Listing
 

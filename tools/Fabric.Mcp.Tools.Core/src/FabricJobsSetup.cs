@@ -70,28 +70,7 @@ public sealed class FabricJobsSetup() : IAreaSetup
             var command = new ItemScheduleCreateCommand(
                 serviceProvider.GetRequiredService<ILogger<ItemScheduleCreateCommand>>(),
                 serviceProvider.GetRequiredService<IFabricCoreService>());
-            var definition = command.GetCommand();
-            if (definition.Options.Single(static option => option.Name == "--enabled") is not Option<bool> enabled ||
-                !enabled.Required)
-            {
-                throw new InvalidOperationException("Schedule creation requires Boolean --enabled without a default.");
-            }
-            // System.CommandLine gives bool flags an implicit false default. Omission is
-            // not an instruction to create a disabled schedule, so require a value instead.
-            enabled.DefaultValueFactory = null;
-            enabled.Arity = ArgumentArity.ExactlyOne;
-            definition.Validators.Add(result =>
-            {
-                if (definition.Options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
-                {
-                    result.AddError("Specify each schedule creation option at most once.");
-                }
-                var value = result.GetResult(enabled);
-                if (value is null || value.Implicit || value.Tokens.Count != 1 || !bool.TryParse(value.Tokens[0].Value, out _))
-                {
-                    result.AddError("Specify --enabled with an explicit true or false value.");
-                }
-            });
+            ConfigureScheduleMutationOptions(command.GetCommand(), "creation");
             return command;
         });
         services.AddSingleton<ItemScheduleListCommand>(static serviceProvider =>
@@ -109,12 +88,20 @@ public sealed class FabricJobsSetup() : IAreaSetup
             });
             return command;
         });
+        services.AddSingleton<ItemScheduleUpdateCommand>(static serviceProvider =>
+        {
+            var command = new ItemScheduleUpdateCommand(
+                serviceProvider.GetRequiredService<ILogger<ItemScheduleUpdateCommand>>(),
+                serviceProvider.GetRequiredService<IFabricCoreService>());
+            ConfigureScheduleMutationOptions(command.GetCommand(), "update");
+            return command;
+        });
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var jobs = new CommandGroup(Name,
-            "Microsoft Fabric Jobs - Submit, request cancellation of, read, or list item jobs, and list or create schedules using explicit context.\n" +
+            "Microsoft Fabric Jobs - Submit, request cancellation of, read, or list item jobs, and list, create, or update schedules using explicit context.\n" +
             "Run and Cancel require execution permission and consent. Run may consume compute or change data; Cancel does not promise rollback.\n" +
             "Run returns submission acceptance; Cancel returns cancellation requested, not a Cancelled job state. Neither automatically retries.\n" +
             "Use the known job-instance ID in a separate Get call after waiting at least the returned Retry-After guidance.\n" +
@@ -124,16 +111,44 @@ public sealed class FabricJobsSetup() : IAreaSetup
             "Listing does not identify an earlier ambiguous Run submission or authorize cancellation. HTTP success does not mean jobs succeeded.\n" +
             "List Schedules reads one page for workspace/item IDs and an explicit job type; continuation requires the same context and unchanged token.\n" +
             "Create Schedule sends one POST with explicit enabled and configuration, returning creation, not job execution or success.\n" +
+            "Update Schedule sends one PATCH for an explicit schedule ID with enabled and full configuration; no hidden Get or merge.\n" +
+            "Updating is not job execution; disabling is not cancellation. Omitted execution data has no documented preservation or clearing guarantee.\n" +
             "Before consenting, confirm timing: an enabled schedule with a past start may execute immediately, consuming compute or changing data.\n" +
-            "Creation requires Fabric permissions and delegated Item.Execute.All plus Item.ReadWrite.All. No preflight or automatic retry is performed.\n" +
+            "Creation and updates require Fabric permissions and delegated Item.Execute.All plus Item.ReadWrite.All. No preflight or automatic retry is performed.\n" +
             "Schedule settings, owner, and execution data may be sensitive. Cron intervals are minutes, not cron expressions. No timezone conversion is performed.\n" +
-            "Schedule IDs, job-instance IDs, and operation IDs are distinct. Schedule update, lookup, and deletion are not implemented.");
+            "A schedule's owner identifies its creator or last modifier, separately from item ownership. Confirm the calling identity before updates.\n" +
+            "Schedule IDs, job-instance IDs, and operation IDs are distinct. Individual schedule lookup and deletion are not implemented.");
         jobs.AddCommand<ItemJobInstanceCancelCommand>(serviceProvider);
         jobs.AddCommand<ItemJobInstanceGetCommand>(serviceProvider);
         jobs.AddCommand<ItemJobInstanceListCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleCreateCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleListCommand>(serviceProvider);
+        jobs.AddCommand<ItemScheduleUpdateCommand>(serviceProvider);
         jobs.AddCommand<ItemJobRunCommand>(serviceProvider);
         return jobs;
+    }
+
+    private static void ConfigureScheduleMutationOptions(Command definition, string operation)
+    {
+        if (definition.Options.Single(static option => option.Name == "--enabled") is not Option<bool> enabled ||
+            !enabled.Required)
+        {
+            throw new InvalidOperationException($"Schedule {operation} requires Boolean --enabled without a default.");
+        }
+        // A bool flag's implicit false default is not explicit scheduling intent.
+        enabled.DefaultValueFactory = null;
+        enabled.Arity = ArgumentArity.ExactlyOne;
+        definition.Validators.Add(result =>
+        {
+            if (definition.Options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError($"Specify each schedule {operation} option at most once.");
+            }
+            var value = result.GetResult(enabled);
+            if (value is null || value.Implicit || value.Tokens.Count != 1 || !bool.TryParse(value.Tokens[0].Value, out _))
+            {
+                result.AddError("Specify --enabled with an explicit true or false value.");
+            }
+        });
     }
 }
