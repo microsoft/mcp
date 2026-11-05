@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Expose enum-backed tool parameters as JSON Schema enums and include accepted values in CLI discovery metadata. Migrate seven parameters across five sampled deployment, Managed Lustre, and Resilience Management tools.
+  - section: Bugs Fixed
+    description: Reject unsupported deployment tools, Managed Lustre autoimport settings, maintenance days, and root squash modes during parameter binding instead of forwarding arbitrary strings.

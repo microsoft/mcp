@@ -11,14 +11,14 @@ public sealed class FileSystemUpdateOptions : ISubscriptionOption
     [Option(Description = ManagedLustreOptionDescriptions.Name)]
     public required string Name { get; set; }
 
-    [Option(Description = ManagedLustreOptionDescriptions.MaintenanceDay)]
-    public string? MaintenanceDay { get; set; }
+    [Option(Description = "Preferred day for the maintenance window; requires --maintenance-time.")]
+    public DayOfWeek? MaintenanceDay { get; set; }
 
     [Option(Description = ManagedLustreOptionDescriptions.MaintenanceTime)]
     public string? MaintenanceTime { get; set; }
 
-    [Option(Description = ManagedLustreOptionDescriptions.RootSquashMode)]
-    public string? RootSquashMode { get; set; }
+    [Option(Description = "Root squash policy. Non-None modes require --squash-uid, --squash-gid, and --no-squash-nid-list.")]
+    public RootSquashMode? RootSquashMode { get; set; }
 
     [Option(Description = ManagedLustreOptionDescriptions.NoSquashNidLists)]
     public string? NoSquashNidList { get; set; }
