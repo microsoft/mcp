@@ -71,7 +71,6 @@ public class PoolGetCommandTests : SubscriptionCommandUnitTestsBase<PoolGetComma
 
     [Theory]
     [InlineData("--pool pool1 --resource-group rg --subscription sub")]
-    // [InlineData("--account account1 --resource-group rg --subscription sub")]
     [InlineData("--account account1 --subscription sub")]
     [InlineData("--account account1 --resource-group rg")]
     public async Task ExecuteAsync_MissingRequiredOption_ReturnsBadRequest(string args)
