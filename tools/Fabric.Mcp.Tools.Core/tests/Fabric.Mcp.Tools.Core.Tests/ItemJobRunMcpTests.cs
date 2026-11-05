@@ -68,7 +68,7 @@ public sealed class ItemJobRunMcpTests()
         var credential = Credential();
         await using var provider = Services(handler, credential, transport, output, selection);
         var factory = provider.GetRequiredService<ICommandFactory>();
-        Assert.Equal(["jobs_cancel-item-job-instance", "jobs_create-item-schedule", "jobs_get-item-job-instance", "jobs_get-item-schedule", "jobs_list-item-job-instances", "jobs_list-item-schedules", ToolName, "jobs_update-item-schedule"], factory.AllCommands.Keys.Where(key => key.StartsWith("jobs_", StringComparison.Ordinal)).Order());
+        Assert.Equal(["jobs_cancel-item-job-instance", "jobs_create-item-schedule", "jobs_delete-item-schedule", "jobs_get-item-job-instance", "jobs_get-item-schedule", "jobs_list-item-job-instances", "jobs_list-item-schedules", ToolName, "jobs_update-item-schedule"], factory.AllCommands.Keys.Where(key => key.StartsWith("jobs_", StringComparison.Ordinal)).Order());
         Assert.Same(provider.GetRequiredService<ItemJobRunCommand>(), factory.AllCommands[ToolName].Command);
         Assert.Single(provider.GetServices<ItemJobRunCommand>());
         var catalog = await provider.GetRequiredService<CommandFactoryToolLoader>().ListToolsHandler(

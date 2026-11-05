@@ -120,6 +120,19 @@ public interface IFabricCoreService
         string? executionData = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Deletes one explicit schedule without a request body; HTTP 200 confirms deletion, not job cancellation.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the item.</param>
+    /// <param name="jobType">The explicit workload job type, encoded as one path component.</param>
+    /// <param name="scheduleId">The existing schedule UUID, not a job-instance or operation ID.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    Task<ItemScheduleDeleteCommandResult> DeleteItemScheduleAsync(
+        string workspaceId,
+        string itemId,
+        string jobType,
+        string scheduleId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Updates one schedule with the full required payload; no preflight, merging, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="itemId">The nonempty UUID of the item.</param>

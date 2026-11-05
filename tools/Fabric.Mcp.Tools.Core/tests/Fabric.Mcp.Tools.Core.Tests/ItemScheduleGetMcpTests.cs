@@ -110,7 +110,7 @@ public sealed class ItemScheduleGetMcpTests()
             {
                 Assert.Contains(commands, command => command.GetProperty("command").GetString() == read);
             }
-            foreach (var mutation in new[] { "jobs_cancel-item-job-instance", "jobs_run-on-demand-item-job", "jobs_create-item-schedule", "jobs_update-item-schedule" })
+            foreach (var mutation in new[] { "jobs_cancel-item-job-instance", "jobs_run-on-demand-item-job", "jobs_create-item-schedule", "jobs_delete-item-schedule", "jobs_update-item-schedule" })
             {
                 Assert.Equal(!readOnly, commands.Any(command => command.GetProperty("command").GetString() == mutation));
             }

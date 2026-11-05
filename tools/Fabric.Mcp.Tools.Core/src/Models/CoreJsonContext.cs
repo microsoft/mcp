@@ -36,6 +36,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricItemSchedule))]
 [JsonSerializable(typeof(ItemScheduleCreateCommandResult))]
 [JsonSerializable(typeof(ItemScheduleCreateRequest))]
+[JsonSerializable(typeof(ItemScheduleDeleteCommandResult))]
 [JsonSerializable(typeof(ItemScheduleGetCommandResult))]
 [JsonSerializable(typeof(ItemScheduleListCommandResult))]
 [JsonSerializable(typeof(ItemScheduleUpdateCommandResult))]

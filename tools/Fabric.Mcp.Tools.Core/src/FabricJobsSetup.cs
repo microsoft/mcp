@@ -73,6 +73,21 @@ public sealed class FabricJobsSetup() : IAreaSetup
             ConfigureScheduleMutationOptions(command.GetCommand(), "creation");
             return command;
         });
+        services.AddSingleton<ItemScheduleDeleteCommand>(static serviceProvider =>
+        {
+            var command = new ItemScheduleDeleteCommand(
+                serviceProvider.GetRequiredService<ILogger<ItemScheduleDeleteCommand>>(),
+                serviceProvider.GetRequiredService<IFabricCoreService>());
+            var definition = command.GetCommand();
+            definition.Validators.Add(result =>
+            {
+                if (definition.Options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+                {
+                    result.AddError("Specify each schedule deletion option at most once.");
+                }
+            });
+            return command;
+        });
         services.AddSingleton<ItemScheduleGetCommand>(static serviceProvider =>
         {
             var command = new ItemScheduleGetCommand(
@@ -116,7 +131,7 @@ public sealed class FabricJobsSetup() : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var jobs = new CommandGroup(Name,
-            "Microsoft Fabric Jobs - Submit, request cancellation of, read, or list item jobs, and get, list, create, or update schedules using explicit context.\n" +
+            "Microsoft Fabric Jobs - Submit, request cancellation of, read, or list item jobs, and get, list, create, update, or delete schedules using explicit context.\n" +
             "Run and Cancel require execution permission and consent. Run may consume compute or change data; Cancel does not promise rollback.\n" +
             "Run returns submission acceptance; Cancel returns cancellation requested, not a Cancelled job state. Neither automatically retries.\n" +
             "Use the known job-instance ID in a separate Get call after waiting at least the returned Retry-After guidance.\n" +
@@ -132,13 +147,17 @@ public sealed class FabricJobsSetup() : IAreaSetup
             "Updating is not job execution; disabling is not cancellation. Omitted execution data has no documented preservation or clearing guarantee.\n" +
             "Before consenting, confirm timing: an enabled schedule with a past start may execute immediately, consuming compute or changing data.\n" +
             "Creation and updates require Fabric permissions and delegated Item.Execute.All plus Item.ReadWrite.All. No preflight or automatic retry is performed.\n" +
+            "Delete Schedule sends one DELETE without a body for explicit workspace/item/schedule IDs and job type. HTTP 200 returns a deletion receipt, not a schedule snapshot.\n" +
+            "Deletion requires consent, Fabric permissions, and delegated Item.ReadWrite.All or the item-specific ReadWrite.All scope. It does not cancel existing jobs or promise rollback.\n" +
+            "Deletion never retries, verifies with a second request, or treats 404 as success. Inspect uncertain outcomes separately before considering another deletion.\n" +
             "Schedule settings, owner, and execution data may be sensitive. Cron intervals are minutes, not cron expressions. No timezone conversion is performed.\n" +
             "A schedule's owner identifies its creator or last modifier, separately from item ownership. Confirm the calling identity before updates.\n" +
-            "Schedule IDs, job-instance IDs, and operation IDs are distinct. Schedule deletion is not implemented.");
+            "Schedule IDs, job-instance IDs, and operation IDs are distinct.");
         jobs.AddCommand<ItemJobInstanceCancelCommand>(serviceProvider);
         jobs.AddCommand<ItemJobInstanceGetCommand>(serviceProvider);
         jobs.AddCommand<ItemJobInstanceListCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleCreateCommand>(serviceProvider);
+        jobs.AddCommand<ItemScheduleDeleteCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleGetCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleListCommand>(serviceProvider);
         jobs.AddCommand<ItemScheduleUpdateCommand>(serviceProvider);
