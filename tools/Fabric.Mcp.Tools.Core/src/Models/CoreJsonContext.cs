@@ -13,6 +13,8 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(CapacityGetCommandResult))]
 [JsonSerializable(typeof(CapacityListCommandResult))]
 [JsonSerializable(typeof(CapacityListResponse))]
+[JsonSerializable(typeof(FabricFolder))]
+[JsonSerializable(typeof(FolderListCommandResult))]
 [JsonSerializable(typeof(FabricItem))]
 [JsonSerializable(typeof(FabricItemDefinition))]
 [JsonSerializable(typeof(FabricItemDefinitionPart))]

@@ -24,9 +24,9 @@ public partial class FabricCoreService
         {
             throw new FabricItemInputException(string.Join(' ', validation.Errors));
         }
-        if (!ItemJobInstanceListInput.IsValidContinuationToken(continuationToken))
+        if (!FabricContinuationToken.IsValidContinuationToken(continuationToken))
         {
-            throw new ArgumentException(ItemJobInstanceListInput.InvalidContinuationTokenMessage, nameof(continuationToken));
+            throw new ArgumentException(FabricContinuationToken.InvalidContinuationTokenMessage, nameof(continuationToken));
         }
 
         cancellationToken.ThrowIfCancellationRequested();

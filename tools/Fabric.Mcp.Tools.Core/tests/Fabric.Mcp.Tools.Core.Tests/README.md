@@ -5,6 +5,9 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
+- **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
+- **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
@@ -126,6 +129,27 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 and existing operation responses. Callers keep their own media, empty-body, parsing, and error contracts.
 The existing operation reader still defaults to 1 MiB, and definition retrieval retains its explicit
 64 MiB limit. Existing operation/definition tests cover those unchanged contracts.
+
+## Folder Listing
+
+`core_list-folders` reads one complete page of logical workspace folder metadata. It preserves
+optional `root-folder-id` and `recursive` omission, normalizes explicit UUIDs, and never performs
+folder walking, enrichment, lookups, or automatic pagination. Empty pages may still have tokens.
+Missing or null terminal continuation fields are accepted; non-null URI-only, unsafe, wrong-type,
+or contradictory continuation metadata fails without a partial result. Optional URI filter values
+must agree with the requested context; cursor-only metadata is safe because the next explicit call
+always uses the caller's workspace/root/recursive options, never the returned URL.
+
+`FabricContinuationToken` is the unchanged Jobs cursor validator shared with folder listing.
+`FabricCoreHttpHelpers.ValidateMetadataJson` and `GetMatchingCollectionUri` contain only the existing
+Unicode/duplicate-property and collection-address guards extracted from Jobs. Endpoint-specific
+paging and filter checks stay with each operation. Jobs instance/schedule list regressions cover
+the extraction; no generic pagination engine or existing Core/Jobs contract changes are introduced.
+
+Offline HTTP/credential fixtures cover folder pages, auth failures, cancellation, per-call identities,
+and response disposal. The exact Core catalog and actual Fabric host discovery include the new
+read-only tool. These tests make no live Fabric calls and do not establish live OBO/RBAC behavior;
+that requires separately approved identities and workspace fixtures.
 
 ## Job-instance Cancellation
 
