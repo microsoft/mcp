@@ -1308,6 +1308,9 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Get details about my NetApp account 'mynetappaccount'"
 * "Create a new NetApp account in East US"
 * "Update tags on my NetApp account 'mynetappaccount'"
+* "Create a 4 TiB Premium capacity pool named 'my-pool' in Azure NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Show the configuration and provisioning state of capacity pool 'my-pool' in Azure NetApp Files account 'my-account'"
+* "Resize capacity pool 'my-pool' in Azure NetApp Files account 'my-account' to 8 TiB"
 
 ### 📊 Azure Quota
 
@@ -1532,7 +1535,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
-- 💾 **Azure NetApp Files** - Enterprise file storage account management
+- 💾 **Azure NetApp Files** - Enterprise file storage account and capacity pool management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)

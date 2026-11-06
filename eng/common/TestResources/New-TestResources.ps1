@@ -382,7 +382,7 @@ try {
         $ProvisionerApplicationOid = $sp.Id
     }
 
-    $tags = @{ Owners = (GetUserName) }
+    $tags = @{ Owners = (GetUserName); Owner = (GetUserName) }
 
     if ($ServiceDirectory) {
         $tags['ServiceDirectory'] = $ServiceDirectory

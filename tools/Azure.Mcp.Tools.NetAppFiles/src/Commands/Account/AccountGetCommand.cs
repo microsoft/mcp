@@ -11,16 +11,14 @@ using Azure.Mcp.Tools.NetAppFiles.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Account;
 
-// todo: make account name optional and list all accounts in RG if not specified
 [CommandMetadata(
     Id = "d46bb832-5b3e-4259-85c4-5d5f70e30a4c",
     Name = "get",
     Title = "Get Azure NetApp Files Account",
-    Description = "Gets an Azure NetApp Files account by name from a specified resource group. Returns the account name, resource ID, location, and provisioning state.",
+    Description = "Gets Azure NetApp Files accounts by name from a specified resource group. Returns a list of accounts with account name, resource ID, location, and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
