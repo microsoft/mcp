@@ -172,6 +172,9 @@ public class PathToTest
     [JsonPropertyName("hasRecordedTests")]
     public bool HasRecordedTests { get; set; }
 
+    [JsonPropertyName("liveTestResourcesCanBeReused")]
+    public bool LiveTestResourcesCanBeReused { get; set; }
+
     [JsonPropertyName("azureSupportedClouds")]
     public List<string> AzureSupportedClouds { get; set; } = [];
 }

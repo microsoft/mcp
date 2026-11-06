@@ -17,6 +17,7 @@ jobs:
     os: windows
   steps:
   - checkout: self
+    fetchTags: false
 
   - download: current
     displayName: "Download build_info"
