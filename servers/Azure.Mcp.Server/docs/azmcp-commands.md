@@ -2711,16 +2711,13 @@ azmcp cosmos list --subscription <subscription> \
                   [--resource-group <resource-group>] \
                   [--auth-method <auth-method>]
 
-# Query one page of up to 100 items in a Cosmos DB container (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same query and resource to continue, even after an empty page.
-# The items collection preserves the Cosmos DB response envelope containing Documents.
+# Query items in a Cosmos DB container
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item query --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
                                            --container <container> \
                                            [--query "SELECT * FROM c"] \
-                                           [--cursor <nextCursor>] \
                                            [--auth-method <auth-method>]
 
 # Infer an approximate schema for a Cosmos DB container by sampling documents. Reports top-level properties only; nested
@@ -2734,14 +2731,13 @@ azmcp cosmos database container schema infer --subscription <subscription> \
                                            [--sample-size 10] \
                                            [--auth-method <auth-method>]
 
-# Get one page of up to 10 documents from a Cosmos DB container, most recently modified first (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same resource to continue, even after an empty page.
+# Get the most recently modified documents from a Cosmos DB container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item list-recent --subscription <subscription> \
                                                  --account <account> \
                                                  --database <database> \
                                                  --container <container> \
-                                                 [--cursor <nextCursor>] \
+                                                 [--count 10] \
                                                  [--auth-method <auth-method>]
 
 # Get a single Cosmos DB document by id (provide --partition-key to scope to one partition; otherwise cross-partition).

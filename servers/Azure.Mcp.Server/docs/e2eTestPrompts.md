@@ -666,12 +666,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | cosmos_list | List all the containers in the database <database_name> for the cosmosdb account <account_name> | none |
 | cosmos_list | Show me the containers in the database <database_name> for the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_query | Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name> | none |
-| cosmos_database_container_item_query | Get the next page of query results using nextCursor \<cursor> with the same query and Cosmos DB account, database, and container | context-required |
 | cosmos_database_container_item_get | Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name> | none |
 | cosmos_database_container_item_get | Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key> | none |
-| cosmos_database_container_item_list-recent | Show me the first page of the most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
+| cosmos_database_container_item_list-recent | Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name> | none |
 | cosmos_database_container_item_list-recent | Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name> | none |
-| cosmos_database_container_item_list-recent | Get the next page of recent documents using nextCursor \<cursor> with the same Cosmos DB account, database, and container | context-required |
 | cosmos_database_container_item_text-search | Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains "<search_phrase>" | none |
 | cosmos_database_container_item_text-search | Run a full-text search for the word "<search_phrase>" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name> | none |
 | cosmos_database_container_item_vector-search | Find documents similar to "<text_to_search>" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint \<endpoint> and deployment \<deployment> | context-required |

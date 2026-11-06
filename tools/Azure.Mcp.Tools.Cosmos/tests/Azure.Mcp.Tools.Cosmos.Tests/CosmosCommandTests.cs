@@ -90,19 +90,19 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     public async Task Should_query_cosmos_database_container_items()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
-        await AssertItemPagesAsync(
+        var result = await CallToolAsync(
             "cosmos_database_container_item_query",
-            100,
-            true,
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId },
                 { "account", resourceBaseName },
                 { "database", "ToDoList" },
                 { "container", "Items" }
             });
 
+        var itemsArray = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, itemsArray.ValueKind);
+        Assert.NotEmpty(itemsArray.EnumerateArray());
     }
 
     [Fact]
@@ -275,46 +275,19 @@ public class CosmosCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
     public async Task Should_list_recent_items()
     {
         var resourceBaseName = TestMode == TestMode.Playback ? "Sanitized" : Settings.ResourceBaseName;
-        await AssertItemPagesAsync(
+        var result = await CallToolAsync(
             "cosmos_database_container_item_list-recent",
-            10,
-            false,
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId },
                 { "account", resourceBaseName },
                 { "database", "ToDoList" },
                 { "container", "Items" }
             });
 
-    }
-
-    private async Task AssertItemPagesAsync(
-        string tool, int pageSize, bool responseEnvelope, Dictionary<string, object?> parameters)
-    {
-        var cursors = new HashSet<string>(StringComparer.Ordinal);
-        var total = 0;
-        while (true)
-        {
-            var result = await CallToolAsync(tool, parameters);
-            var items = result.AssertProperty("items");
-            Assert.Equal(JsonValueKind.Array, items.ValueKind);
-            var documents = responseEnvelope ? Assert.Single(items.EnumerateArray()).GetProperty("Documents") : items;
-            Assert.InRange(documents.GetArrayLength(), 0, pageSize);
-            total += documents.GetArrayLength();
-            if (!result!.Value.TryGetProperty("nextCursor", out var nextCursor) || nextCursor.ValueKind == JsonValueKind.Null)
-            {
-                break;
-            }
-
-            var cursor = nextCursor.GetString();
-            Assert.False(string.IsNullOrEmpty(cursor));
-            Assert.True(cursors.Add(cursor), "The service repeated a continuation cursor.");
-            parameters["cursor"] = cursor;
-        }
-
-        Assert.True(total > 0);
+        var items = result.AssertProperty("items");
+        Assert.Equal(JsonValueKind.Array, items.ValueKind);
+        Assert.NotEmpty(items.EnumerateArray());
     }
 
     [Fact]

@@ -7,11 +7,8 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options;
 
-public sealed class ItemQueryOptions : ISubscriptionOption, ICursorOption
+public sealed class ItemQueryOptions : ISubscriptionOption
 {
-    [Option(Description = "Opaque nextCursor from a previous call. Omit for the first page.")]
-    public string? Cursor { get; set; }
-
     [Option(Description = "SQL query to execute against the container. Uses Cosmos DB SQL syntax.")]
     public string? Query { get; set; }
 

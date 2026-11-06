@@ -60,3 +60,21 @@ Set-AzStorageBlobContent `
     -Force `
     -ProgressAction SilentlyContinue
 | Out-Null
+
+$paginationFile = New-TemporaryFile
+try {
+    Set-Content -LiteralPath $paginationFile.FullName -Value "Pagination test fixture" -NoNewline
+    for ($index = 0; $index -lt 101; $index++) {
+        Set-AzStorageBlobContent `
+            -File $paginationFile.FullName `
+            -Container "bar" `
+            -Blob ("pagination-{0:D3}" -f $index) `
+            -Context $context `
+            -Force `
+            -ProgressAction SilentlyContinue
+        | Out-Null
+    }
+}
+finally {
+    Remove-Item -LiteralPath $paginationFile.FullName -Force
+}

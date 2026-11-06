@@ -427,7 +427,7 @@ public class CosmosServiceTests : IAsyncDisposable
 
         // Act & Assert: a non-success response must throw rather than being returned as a data item
         await Assert.ThrowsAnyAsync<CosmosException>(() =>
-            _service.QueryItems("myaccount", "mydb", "mycontainer", "SELECT * FROM c", "sub123", authMethod: AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
+            _service.QueryItems("myaccount", "mydb", "mycontainer", "SELECT * FROM c", "sub123", AuthMethod.Key, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     private sealed class MockHttpHandler(HttpStatusCode statusCode) : HttpMessageHandler

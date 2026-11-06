@@ -28,24 +28,11 @@ public class ItemListRecentCommandTests : SubscriptionCommandUnitTestsBase<ItemL
         };
 
         Service.GetRecentItems(
-            Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"),
-            Arg.Is("sub"), null, Arg.Any<AuthMethod>(), Arg.Any<string?>(),
+            Arg.Is("acct"), Arg.Is("db"), Arg.Is("c"), Arg.Is(2),
+            Arg.Is("sub"), Arg.Any<AuthMethod>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns((items, null));
+            .Returns(items);
 
-        var response = await ExecuteCommandAsync(
-            "--subscription", "sub",
-            "--account", "acct",
-            "--database", "db",
-            "--container", "c");
-
-        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemListRecentCommandResult);
-        Assert.Equal(2, result.Items.Count);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_RejectsRemovedCountOption()
-    {
         var response = await ExecuteCommandAsync(
             "--subscription", "sub",
             "--account", "acct",
@@ -53,38 +40,23 @@ public class ItemListRecentCommandTests : SubscriptionCommandUnitTestsBase<ItemL
             "--container", "c",
             "--count", "2");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        Assert.Contains("count", response.Message, StringComparison.OrdinalIgnoreCase);
+        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemListRecentCommandResult);
+        Assert.Equal(2, result.Items.Count);
     }
 
     [Theory]
-    [InlineData(null, " next+/=% token ")]
-    [InlineData(" next+/=% token ", " last+/=% token ")]
-    [InlineData(" last+/=% token ", null)]
-    [InlineData(null, null)]
-    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    [InlineData("0")]
+    [InlineData("21")]
+    public async Task ExecuteAsync_RejectsOutOfRangeCount(string count)
     {
-        Service.GetRecentItems("account", "database", "container", "sub", cursor,
-                AuthMethod.Credential, "tenant", Arg.Any<CancellationToken>())
-            .Returns(([], nextCursor));
-        var args = new List<string>
-        {
-            "--account", "account", "--database", "database", "--container", "container",
-            "--subscription", "sub", "--tenant", "tenant"
-        };
-        if (cursor is not null)
-        {
-            args.AddRange(["--cursor", cursor]);
-        }
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--account", "acct",
+            "--database", "db",
+            "--container", "c",
+            "--count", count);
 
-        var response = await ExecuteCommandAsync(args.ToArray());
-
-        var result = ValidateAndDeserializeResponse(response, CosmosJsonContext.Default.ItemListRecentCommandResult);
-        Assert.Empty(result.Items);
-        Assert.Equal(nextCursor, result.NextCursor);
-        var payload = JsonSerializer.SerializeToElement(result, CosmosJsonContext.Default.ItemListRecentCommandResult);
-        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
-        await Service.Received(1).GetRecentItems("account", "database", "container", "sub", cursor,
-            AuthMethod.Credential, "tenant", Arg.Any<CancellationToken>());
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("count", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

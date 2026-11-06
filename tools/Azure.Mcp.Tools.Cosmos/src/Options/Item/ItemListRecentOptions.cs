@@ -7,10 +7,10 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Item;
 
-public sealed class ItemListRecentOptions : ISubscriptionOption, ICursorOption
+public sealed class ItemListRecentOptions : ISubscriptionOption
 {
-    [Option(Description = "Opaque nextCursor from a previous call. Omit for the first page.")]
-    public string? Cursor { get; set; }
+    [Option(Description = CosmosOptionDescriptions.Count)]
+    public int? Count { get; set; }
 
     [Option(Description = CosmosOptionDescriptions.Container)]
     public required string Container { get; set; }

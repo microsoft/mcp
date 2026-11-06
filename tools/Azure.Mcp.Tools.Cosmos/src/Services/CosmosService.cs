@@ -27,8 +27,6 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
     private const string CosmosClientsCacheKeyPrefix = "clients";
     private const string CosmosDatabasesCacheKeyPrefix = "databases";
     private const string CosmosContainersCacheKeyPrefix = "containers";
-    private const int ItemQueryPageSize = 100;
-    private const int RecentItemsPageSize = 10;
     private static readonly TimeSpan s_cacheDurationClients = CacheDurations.AuthenticatedClient;
     private static readonly TimeSpan s_cacheDurationResources = CacheDurations.ServiceData;
     private bool _disposed;
@@ -290,13 +288,12 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
         return containers;
     }
 
-    public async Task<(List<JsonElement> Items, string? NextCursor)> QueryItems(
+    public async Task<List<JsonElement>> QueryItems(
         string accountName,
         string databaseName,
         string containerName,
         string? query,
         string subscription,
-        string? cursor = null,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         CancellationToken cancellationToken = default)
@@ -316,8 +313,22 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
             queryDef = queryDef.WithParameter(name, value);
         }
 
-        var page = await ReadQueryPageAsync(container, queryDef, cursor, ItemQueryPageSize, cancellationToken);
-        return ([page.Result], page.NextCursor);
+        var items = new List<JsonElement>();
+        var queryIterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new() { MaxItemCount = -1 }
+        );
+
+        while (queryIterator.HasMoreResults)
+        {
+            using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            using var document = JsonDocument.Parse(response.Content);
+            items.Add(document.RootElement.Clone());
+        }
+
+        return items;
     }
 
     public async Task<ContainerSchema> GetApproximateSchema(
@@ -403,12 +414,12 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
         return new ContainerSchema(sampled, schemaProperties);
     }
 
-    public async Task<(List<JsonElement> Items, string? NextCursor)> GetRecentItems(
+    public async Task<List<JsonElement>> GetRecentItems(
         string accountName,
         string databaseName,
         string containerName,
+        int count,
         string subscription,
-        string? cursor = null,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
         CancellationToken cancellationToken = default)
@@ -422,30 +433,35 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, cancellationToken: cancellationToken);
         var container = client.GetContainer(databaseName, containerName);
 
-        var queryDef = new QueryDefinition("SELECT * FROM c ORDER BY c._ts DESC");
-        var page = await ReadQueryPageAsync(container, queryDef, cursor, RecentItemsPageSize, cancellationToken);
-        var results = page.Result.GetProperty("Documents").EnumerateArray().Select(item => item.Clone()).ToList();
+        var queryDef = new QueryDefinition("SELECT TOP @topN * FROM c ORDER BY c._ts DESC")
+            .WithParameter("@topN", count);
+        var iterator = container.GetItemQueryStreamIterator(
+            queryDef,
+            requestOptions: new QueryRequestOptions { MaxItemCount = count });
 
-        return (results, page.NextCursor);
-    }
+        var results = new List<JsonElement>(count);
+        while (iterator.HasMoreResults && results.Count < count)
+        {
+            using var response = await iterator.ReadNextAsync(cancellationToken);
+            response.EnsureSuccessStatusCode();
 
-    private static async Task<(JsonElement Result, string? NextCursor)> ReadQueryPageAsync(
-        Container container,
-        QueryDefinition query,
-        string? cursor,
-        int pageSize,
-        CancellationToken cancellationToken)
-    {
-        using var iterator = container.GetItemQueryStreamIterator(
-            query,
-            continuationToken: cursor,
-            requestOptions: new QueryRequestOptions { MaxItemCount = pageSize });
-        using var response = await iterator.ReadNextAsync(cancellationToken);
-        response.EnsureSuccessStatusCode();
+            using var doc = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("Documents", out var docs))
+            {
+                continue;
+            }
 
-        using var document = await JsonDocument.ParseAsync(response.Content, cancellationToken: cancellationToken);
-        var nextCursor = response.Headers.ContinuationToken;
-        return (document.RootElement.Clone(), string.IsNullOrEmpty(nextCursor) ? null : nextCursor);
+            foreach (var item in docs.EnumerateArray())
+            {
+                results.Add(item.Clone());
+                if (results.Count >= count)
+                {
+                    break;
+                }
+            }
+        }
+
+        return results;
     }
 
     public async Task<JsonElement?> GetItem(

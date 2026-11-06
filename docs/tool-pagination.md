@@ -66,8 +66,6 @@ maximums, not caller-configurable options; a service may return fewer items, inc
 | `storage_blob_get` | 100 blobs | Listing without `blob` now returns one page. Specific-blob lookups are unchanged and cannot be combined with `cursor`. Repeat the same account, container, and prefix. |
 | `storage_blob_container_get` | 100 containers | Listing without `container` now returns one page. Specific-container lookups are unchanged and cannot be combined with `cursor`. Repeat the same account and prefix. |
 | `storage_table_list` | 100 table names | Returns one page rather than every table. Repeat the same account. |
-| `cosmos_database_container_item_query` | 100 documents | Returns one query response page rather than every page. Preserves `items` as a collection of Cosmos DB response envelopes containing `Documents`. Repeat the same account, database, container, and SQL query. SQL limits such as `TOP` still apply to the overall query. |
-| `cosmos_database_container_item_list-recent` | 10 documents | Removes `count` and the overall `TOP` limit. Returns successive pages ordered by `_ts` descending. Repeat the same account, database, and container. |
 
 These are intentional breaking pagination changes. Omit `cursor` for the first page. Pass root `nextCursor` unchanged
 as `cursor` with the same tenant, subscription/authentication context (where applicable), resource, and filters.
