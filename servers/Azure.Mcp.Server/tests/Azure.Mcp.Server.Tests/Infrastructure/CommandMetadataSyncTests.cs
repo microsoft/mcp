@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
@@ -23,8 +24,7 @@ public class CommandMetadataSyncTests
         Assert.True(File.Exists(updateScriptPath), $"Update script not found at {updateScriptPath}");
 
         // Determine the executable path (OS-specific) - assumes build has already happened
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 

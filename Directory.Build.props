@@ -24,6 +24,12 @@
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
+  <!-- These hosts load the entire Azure server in-process. Share its dependencies
+       while retaining project-local intermediates and separate production output. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Core.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == '' and '$(UseArtifactsOutput)' != 'true'">$(RepoRoot).work\test-runtime\Azure.Mcp.Server\</BaseOutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
