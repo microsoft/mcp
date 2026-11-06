@@ -556,6 +556,13 @@
     "List the Azure Monitor health models in my subscription",
     "What health models are in resource group <resource_group>?"
   ],
+  "monitor_healthmodels_inspect": [
+    "Why is health model <health_model_name> degraded? Trace it down to the signals that drive it",
+    "Which entities of health model <health_model_name> are not healthy?",
+    "Show the dependencies of health model <health_model_name>",
+    "List the entities of health model <health_model_name> and their health history",
+    "What are the thresholds of the signals on entity <entity_name> in health model <health_model_name>?"
+  ],
   "monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
     "Show me all available metrics and their definitions for storage account <account_name>",

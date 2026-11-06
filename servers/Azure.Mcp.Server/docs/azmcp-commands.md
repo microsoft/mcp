@@ -4036,6 +4036,22 @@ azmcp monitor healthmodels list --subscription <subscription> \
 azmcp monitor healthmodels get --subscription <subscription> \
                                --resource-group <resource-group> \
                                --health-model <health-model-name>
+
+# Inspect the entities of a health model: state, signals, what drives a state, dependencies, history, annotations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels inspect --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --health-model <health-model-name> \
+                                   [--entity <entity>] \
+                                   [--where-health <Healthy|Degraded|Unhealthy|Unknown|NotHealthy>] \
+                                   [--walk <Causes|Dependencies|Dependents>] \
+                                   [--include <Signals|History|SignalHistory|Annotations>] \
+                                   [--start-at <start-at>] \
+                                   [--end-at <end-at>] \
+                                   [--timestamp <timestamp>] \
+                                   [--fields <field-path>] \
+                                   [--top <top>] \
+                                   [--next-marker <next-marker>]
 ```
 
 #### Metrics

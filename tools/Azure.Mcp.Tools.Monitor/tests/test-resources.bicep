@@ -400,6 +400,7 @@ module tracesModule 'test-resources.traces.module.bicep' = {
 
 output healthModelParentName string = healthModelsModule.outputs.healthModelAName
 output healthModelChildName string = healthModelsModule.outputs.healthModelBName
+output healthModelTopologyName string = healthModelsModule.outputs.healthModelCName
 output logSearchWorkspaceName string = workspace.name
 output logSearchWorkspaceCustomerId string = workspace.properties.customerId
 output logSearchBasicTableName string = logSearchBasicTable.name

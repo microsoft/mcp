@@ -28,7 +28,7 @@ foreach ($key in $staticDeploymentOutputs.Keys) {
 }
 
 $PSBoundParameters['DeploymentOutputs'] = $DeploymentOutputs
-New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 $storageAccountName = "$($BaseName)mon"
 $containerName = 'foo'
@@ -39,6 +39,39 @@ foreach ($file in $files) {
     Set-AzStorageBlobContent -File $file.FullName -Container $containerName -Blob $file.Name -Context $context -Force -ProgressAction SilentlyContinue | Out-Null
 }
 
+# ---------------------------------------------------------------------------
+# Seed health state transitions on Model B's root entity for the health model inspect
+# recorded test Should_Inspect_HealthModel_EntityWithSignalsAndHistory, which reads a
+# non-empty history.
+#
+# Uses the official Entities_IngestHealthReport ARM action (a manual "push" signal,
+# worst-of'd with the entity's Resource Health): Degraded, then Unhealthy, gives two
+# transitions and a non-Healthy final state. The 35s gap keeps them distinct.
+# expires-in-minutes is set high so the reported state persists through recording.
+# These writes are test-setup only; the inspect tool stays read-only.
+# ---------------------------------------------------------------------------
+$subscriptionId = $testSettings.SubscriptionId
+$healthModelB   = "$($BaseName)-hm-b"
+$manualSignal   = 'mcp-fixture-manual'
+$apiVersion     = '2026-05-01-preview'
+$expiresMinutes = 1440
+
+function Invoke-HealthReport {
+    param([string] $EntityName, [string] $HealthState)
+    $path = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CloudHealth/healthmodels/$healthModelB/entities/$EntityName/ingestHealthReport?api-version=$apiVersion"
+    $payload = @{ signalName = $manualSignal; healthState = $HealthState; expiresInMinutes = $expiresMinutes } | ConvertTo-Json -Compress
+    Write-Host "IngestHealthReport: $EntityName -> $HealthState" -ForegroundColor Yellow
+    $response = Invoke-AzRestMethod -Method POST -Path $path -Payload $payload
+    if ($response.StatusCode -ge 300) {
+        throw "IngestHealthReport failed for $EntityName ($HealthState): HTTP $($response.StatusCode) $($response.Content)"
+    }
+}
+
+Invoke-HealthReport -EntityName $healthModelB -HealthState 'Degraded'
+Start-Sleep -Seconds 35
+Invoke-HealthReport -EntityName $healthModelB -HealthState 'Unhealthy'
+# Let the reported states settle into the entity rollup + history before recording.
+Start-Sleep -Seconds 45
 function Get-PlainTextAccessToken {
     param([Parameter(Mandatory)] [string] $ResourceUrl)
 
