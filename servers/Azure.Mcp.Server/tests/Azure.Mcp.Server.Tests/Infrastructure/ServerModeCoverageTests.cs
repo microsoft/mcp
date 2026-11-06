@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Server.Tests.Infrastructure;
@@ -16,8 +17,7 @@ public class ServerModeCoverageTests
     {
         get
         {
-            var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-            return Path.Combine(AppContext.BaseDirectory, exeName);
+            return McpTestUtilities.GetAzMcpExecutablePath();
         }
     }
 

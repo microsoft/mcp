@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Text.Json.Nodes;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
@@ -51,8 +52,7 @@ public class ConsolidatedModeTests
     [Fact]
     public async Task ConsolidatedMode_HttpTransport_Should_List_Tools_On_Root_Endpoint()
     {
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -107,8 +107,7 @@ public class ConsolidatedModeTests
     {
         // Phase 2 hardening (Workstream H): ensure request-scoped metadata in params._meta
         // does not break stateless tools/list requests.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -167,8 +166,7 @@ public class ConsolidatedModeTests
     public async Task ConsolidatedMode_HttpTransport_Should_Support_ServerDiscover_Without_Initialize()
     {
         // Phase 2 hardening (Workstream C): validate server/discover works on stateless HTTP path.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -222,8 +220,7 @@ public class ConsolidatedModeTests
     {
         // Phase 2 hardening (Workstream C items 4/5):
         // repeated tools/list should be stable while protocol-facing cache semantics remain explicit.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -297,8 +294,7 @@ public class ConsolidatedModeTests
     public async Task ConsolidatedMode_Should_List_Tools_Without_Initialize()
     {
         // Arrange
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -351,8 +347,7 @@ public class ConsolidatedModeTests
     {
         // Phase 2 hardening (Workstream H): Verify W3C trace context (traceparent, tracestate, baggage)
         // is accepted and propagated through _meta on stateless HTTP protocol.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -413,8 +408,7 @@ public class ConsolidatedModeTests
     public async Task ConsolidatedMode_Should_Interop_With_Legacy_Initialize_Handshake()
     {
         // Arrange
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
@@ -491,8 +485,7 @@ public class ConsolidatedModeTests
         // Workstream B item 2: Mcp-Method header disagrees with JSON body method.
         // The 2026-07-28 protocol requires header/body agreement for explicit gateway routing;
         // the server must not accept a request where Mcp-Method: tools/call but body says tools/list.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
@@ -542,8 +535,7 @@ public class ConsolidatedModeTests
     public async Task ConsolidatedMode_HttpTransport_Should_Reject_Request_Without_McpMethod_Header()
     {
         // Phase 2 hardening (Workstream B): Streamable HTTP routing requires Mcp-Method.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
@@ -593,8 +585,7 @@ public class ConsolidatedModeTests
         // Phase 2 hardening (Workstream B / SEP-2243): Mcp-Name is required only for methods
         // that name a tool, resource, or prompt (tools/call, resources/read, prompts/get).
         // A tools/call request without Mcp-Name must be rejected.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
@@ -643,8 +634,7 @@ public class ConsolidatedModeTests
     {
         // Phase 2 hardening (Workstream B / SEP-2243): non-named methods (e.g. tools/list)
         // require only Mcp-Method, not Mcp-Name. Omitting Mcp-Name must NOT be rejected.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
@@ -695,8 +685,7 @@ public class ConsolidatedModeTests
         // client declares MCP-Protocol-Version: 2026-07-28. A legacy client performing the
         // initialize handshake over HTTP (older/absent version) must NOT be rejected for missing
         // Mcp-Method/Mcp-Name, preserving backward-compatible interop from a single endpoint.
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
@@ -747,8 +736,7 @@ public class ConsolidatedModeTests
     [Fact]
     public async Task ConsolidatedMode_HttpTransport_Should_Reject_Request_Without_Accept_Header()
     {
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}.");
 
