@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Mcp.Tools.Storage.Table.Commands;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -16,6 +17,13 @@ namespace Azure.Mcp.Tools.Storage.Tests.Table;
 public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, IStorageService>
 {
     private readonly string _knownStorageAccount = "storage123";
+
+    [Fact]
+    public void Constructor_UsesStandardCursorDescription()
+    {
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.Equal(ICursorOption.CursorDescription, cursor.Description);
+    }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsStorageTables()

@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -23,6 +24,8 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.StartsWith(ICursorOption.CursorDescription, cursor.Description, StringComparison.Ordinal);
     }
 
     [Theory]

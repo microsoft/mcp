@@ -17,7 +17,7 @@ public sealed class RecordListOptions : ICursorOption
     [Option(Description = "The number of record ids to return in one page, from 1 through 100. Defaults to 10.")]
     public int? Limit { get; set; }
 
-    [Option(Description = "Opaque nextCursor from a previous record listing, copied unchanged. Omit for the first page; an absent nextCursor means there are no more pages.")]
+    [Option(Description = ICursorOption.CursorDescription)]
     public string? Cursor { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

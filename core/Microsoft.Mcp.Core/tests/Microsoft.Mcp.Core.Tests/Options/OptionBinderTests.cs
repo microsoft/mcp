@@ -334,6 +334,8 @@ public sealed class OptionBinderTests
 
         var option = Assert.Single(command.Options);
         Assert.Equal("--cursor", option.Name);
+        Assert.Equal(ICursorOption.CursorDescription, option.Description);
+        Assert.Contains("An empty or missing nextCursor means there are no additional pages to retrieve.", option.Description);
         Assert.Equal(typeof(string), option.ValueType);
         Assert.False(option.Required);
 

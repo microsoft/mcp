@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
@@ -17,6 +18,13 @@ namespace Azure.Mcp.Tools.Adme.Tests.Commands.Storage;
 public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListCommand, IStorageService>
 {
     private const string RecordId = "opendes:master-data--Well:W-99";
+
+    [Fact]
+    public void Constructor_UsesStandardCursorDescriptionPrefix()
+    {
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.StartsWith(ICursorOption.CursorDescription, cursor.Description, StringComparison.Ordinal);
+    }
 
     [Fact]
     public async Task Execute_WithPagingOptions_ForwardsRequestAndReturnsResponse()

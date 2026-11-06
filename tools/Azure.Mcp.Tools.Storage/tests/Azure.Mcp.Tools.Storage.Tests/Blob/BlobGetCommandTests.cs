@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -109,6 +110,8 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.Equal(ICursorOption.CursorDescription, cursor.Description);
     }
 
     [Theory]
