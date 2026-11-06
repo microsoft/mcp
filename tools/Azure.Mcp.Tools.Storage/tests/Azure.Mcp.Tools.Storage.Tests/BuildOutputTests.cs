@@ -9,11 +9,16 @@ namespace Azure.Mcp.Tools.Storage.Tests;
 public sealed class BuildOutputTests()
 {
     [Fact]
-    public void ServerRuntime_IsNotCopiedIntoToolTestOutput()
+    public void ServerRuntime_IsNotCopiedIntoSeparateToolTestOutput()
     {
-        Assert.True(File.Exists(McpTestUtilities.GetAzMcpExecutablePath()));
+        string serverExecutable = McpTestUtilities.GetAzMcpExecutablePath();
+        Assert.True(File.Exists(serverExecutable));
         Assert.True(File.Exists(Path.Combine(AppContext.BaseDirectory, "Azure.Mcp.Tools.Storage.dll")));
-        Assert.False(File.Exists(Path.Combine(AppContext.BaseDirectory, "Azure.Mcp.Tools.KeyVault.dll")));
-        Assert.Empty(Directory.GetFiles(AppContext.BaseDirectory, "azmcp*"));
+
+        if (Path.GetRelativePath(AppContext.BaseDirectory, Path.GetDirectoryName(serverExecutable)!) != ".")
+        {
+            Assert.False(File.Exists(Path.Combine(AppContext.BaseDirectory, "Azure.Mcp.Tools.KeyVault.dll")));
+            Assert.Empty(Directory.GetFiles(AppContext.BaseDirectory, "azmcp*"));
+        }
     }
 }

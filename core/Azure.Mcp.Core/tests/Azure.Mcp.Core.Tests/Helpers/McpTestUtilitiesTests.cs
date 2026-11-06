@@ -11,12 +11,15 @@ public sealed class McpTestUtilitiesTests() : IDisposable
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"Azure MCP output {Guid.NewGuid():N}");
 
     [Theory]
-    [InlineData("Debug", "")]
-    [InlineData("Release", "win-x64")]
-    public void GetAzMcpExecutablePath_ResolvesRelativeBuildOutput(string configuration, string runtimeIdentifier)
+    [InlineData("Debug", "", false)]
+    [InlineData("Release", "win-x64", false)]
+    [InlineData("Debug", "", true)]
+    public void GetAzMcpExecutablePath_ResolvesRelativeBuildOutput(string configuration, string runtimeIdentifier, bool colocated)
     {
         string testOutput = Path.Combine(_directory, "tests", configuration);
-        string serverOutput = Path.Combine(_directory, "server", configuration, "net10.0", runtimeIdentifier);
+        string serverOutput = colocated
+            ? testOutput
+            : Path.Combine(_directory, "server", configuration, "net10.0", runtimeIdentifier);
         Directory.CreateDirectory(testOutput);
         Directory.CreateDirectory(serverOutput);
         string executablePath = Path.Combine(serverOutput, OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp");
@@ -63,9 +66,12 @@ public sealed class McpTestUtilitiesTests() : IDisposable
     public void GetAzMcpExecutablePath_UsesEvaluatedServerOutput()
     {
         string path = McpTestUtilities.GetAzMcpExecutablePath();
+        string location = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "AzureMcpServer.path")).Trim();
+        string expectedDirectory = Path.GetFullPath(location, AppContext.BaseDirectory);
+        string executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
 
         Assert.True(File.Exists(path));
-        Assert.NotEqual(Path.GetFullPath(AppContext.BaseDirectory), Path.GetDirectoryName(path) + Path.DirectorySeparatorChar);
+        Assert.Equal(Path.Combine(expectedDirectory, executableName), path);
     }
 
     public void Dispose()
