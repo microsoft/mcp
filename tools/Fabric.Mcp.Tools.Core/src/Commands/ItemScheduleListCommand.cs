@@ -49,9 +49,9 @@ public sealed class ItemScheduleListCommand(
     {
         base.ValidateOptions(options, validationResult);
         ItemJobRunInput.ValidateContext(options.WorkspaceId, options.ItemId, options.JobType, validationResult);
-        if (!ItemJobInstanceListInput.IsValidContinuationToken(options.ContinuationToken))
+        if (!FabricContinuationToken.IsValidContinuationToken(options.ContinuationToken))
         {
-            validationResult.Errors.Add(ItemJobInstanceListInput.InvalidContinuationTokenMessage);
+            validationResult.Errors.Add(FabricContinuationToken.InvalidContinuationTokenMessage);
         }
     }
 

@@ -133,6 +133,10 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_list-capacities | List the Fabric capacities where I am an administrator or contributor. | none |
 | core_list-capacities | Show one page of my accessible Fabric capacity IDs, display names, SKUs, regions, and states. | none |
 | core_list-capacities | Get the next page of Fabric capacities using continuation token ABCsMTAwMDAwLDA%3D from the previous response. | none |
+| core_list-folders | List one page of logical folders in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, including nested folders and their parent IDs. Do not list OneLake paths or local directories. | none |
+| core_list-folders | List only the direct child folders of bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | none |
+| core_list-folders | Get the next page of Fabric folders using the unchanged token from the previous response, keeping the same workspace, root folder, and recursive settings even if the previous page was empty. | context-required |
+| core_list-folders | Through the read-only HTTP server, list folders in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb with one request and no folder creation or filesystem access. | none |
 | core_list-items | List Fabric item metadata in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, including nested folders. | none |
 | core_list-items | List the Lakehouse items in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | none |
 | core_list-items | Show only items directly in Fabric folder bbbbbbbb-1111-2222-3333-cccccccccccc within workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, not its nested folders. | none |

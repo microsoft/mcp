@@ -16,6 +16,19 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one complete page of logical workspace folders without walking folders or following continuation URLs.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="rootFolderId">An optional nonempty root folder UUID; null uses the workspace root.</param>
+    /// <param name="recursive">Whether to include nested folders; null preserves the API default of true.</param>
+    /// <param name="continuationToken">An unchanged token from a previous page with the same workspace and filters.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<FolderListCommandResult> ListFoldersAsync(
+        string workspaceId,
+        string? rootFolderId = null,
+        bool? recursive = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     Task<ItemCreateCommandResult> CreateItemAsync(
         string workspaceId,
         CreateItemRequest request,
