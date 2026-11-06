@@ -27,6 +27,11 @@ public interface IBaseCommand
     string Name { get; }
 
     /// <summary>
+    /// Gets an optional operation override used only by relative namespace routing.
+    /// </summary>
+    string? NamespaceOperationName => null;
+
+    /// <summary>
     /// Gets the description of the command
     /// </summary>
     string Description { get; }

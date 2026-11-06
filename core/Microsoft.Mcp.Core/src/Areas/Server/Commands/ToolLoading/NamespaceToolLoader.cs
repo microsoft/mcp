@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.CommandLine;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
@@ -30,6 +32,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="configuration">The server's filtering, transport, consent, and output settings.</param>
 /// <param name="logger">The logger for discovery, sampling, and command execution.</param>
 /// <param name="applyFilter">Whether to apply ignored-group and configured namespace filters.</param>
+/// <param name="useRelativeNames">Whether to advertise namespace-relative names with legacy aliases.</param>
 /// <remarks>
 /// Discovery, learn responses, sampling callbacks, and elicitation run without a new execution
 /// scope. When a request or sampling result selects a real command, the loader scopes that
@@ -40,7 +43,8 @@ public sealed class NamespaceToolLoader(
     ICommandFactory commandFactory,
     IOptions<ServerRuntimeConfiguration> configuration,
     ILogger<NamespaceToolLoader> logger,
-    bool applyFilter = true) : BaseToolLoader(logger)
+    bool applyFilter = true,
+    bool useRelativeNames = false) : BaseToolLoader(logger)
 {
     private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
@@ -64,10 +68,11 @@ public sealed class NamespaceToolLoader(
         IReadOnlyList<string> names = [.. allSubGroups.Select(group => group.Name)];
         return (names, names.ToFrozenDictionary(
             name => name,
-            name => CreateChildToolListAccessor(commandFactory, configuration, logger, name),
+            name => CreateChildToolListAccessor(commandFactory, configuration, logger, name, useRelativeNames),
             StringComparer.OrdinalIgnoreCase));
     });
 
+    private readonly ConcurrentDictionary<string, NamespaceCommandCatalog> _cachedCommandCatalogs = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
     private bool StructuredOutputEnabled => _configuration.Value.StructuredOutputMode != null;
 
@@ -316,24 +321,17 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        IReadOnlyDictionary<string, CommandRegistration> namespaceCommands;
+        NamespaceCommandCatalog catalog;
         try
         {
-            namespaceCommands = _commandFactory.GroupCommands([namespaceName]);
-            if (namespaceCommands == null)
-            {
-                activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
-                    .SetTag(TagName.ToolName, TagConstants.Unknown);
-                _logger.LogError("Failed to get commands for namespace: {Namespace}", namespaceName);
-                return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
-            }
+            catalog = GetCommandCatalog(namespaceName);
         }
         catch (Exception ex)
         {
             activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
             _logger.LogError(ex, "Exception thrown while getting commands for namespace: {Namespace}", namespaceName);
-            return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
+            throw;
         }
 
         try
@@ -349,7 +347,7 @@ public sealed class NamespaceToolLoader(
             }
 
             var requestedCommand = command;
-            var resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, command, StringComparison.OrdinalIgnoreCase));
+            var resolvedTool = ResolveAvailableTool(command, catalog, availableTools);
 
             // Try one supported sampling correction without falling back to the full learn response.
             if (resolvedTool == null)
@@ -362,7 +360,7 @@ public sealed class NamespaceToolLoader(
                 }
 
                 var samplingResult = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
-                resolvedTool = availableTools.FirstOrDefault(t => string.Equals(t.Name, samplingResult.commandName, StringComparison.OrdinalIgnoreCase));
+                resolvedTool = ResolveAvailableTool(samplingResult.commandName, catalog, availableTools);
                 if (resolvedTool == null)
                 {
                     return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
@@ -378,15 +376,11 @@ public sealed class NamespaceToolLoader(
 
             await NotifyProgressAsync(request, $"Calling {namespaceName} {command}...", cancellationToken);
 
-            if (!namespaceCommands.TryGetValue(command, out CommandRegistration? registration))
-            {
-                activity?.SetTag(TagName.ToolName, TagConstants.Unknown);
-                _logger.LogError("Command {Command} found in tools but missing from namespace {Namespace} commands.", command, namespaceName);
-                return CreateUnknownCommandResult(namespaceName, requestedCommand, availableTools.Select(t => t.Name));
-            }
+            var selectedCommand = catalog.Commands[command];
+            var registration = selectedCommand.Registration;
 
             IBaseCommand cmd = registration.Command;
-            activity?.SetTag(TagName.ToolName, command)
+            activity?.SetTag(TagName.ToolName, selectedCommand.RegisteredName)
                 .SetTag(TagName.ToolId, cmd.Id)
                 .SetTag(TagName.ToolSource, "internal")
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(cmd));
@@ -645,7 +639,8 @@ public sealed class NamespaceToolLoader(
         ICommandFactory commandFactory,
         IOptions<ServerRuntimeConfiguration> configuration,
         ILogger<NamespaceToolLoader> logger,
-        string namespaceName)
+        string namespaceName,
+        bool useRelativeNames)
     {
         IReadOnlyList<Tool>? cachedList = null;
         return () =>
@@ -663,10 +658,12 @@ public sealed class NamespaceToolLoader(
                 return [];
             }
 
-            IReadOnlyList<Tool> list = namespaceCommands
-                .Where(kvp => !configuration.Value.ReadOnly || kvp.Value.Command.Metadata.ReadOnly)
-                .Where(kvp => !configuration.Value.IsHttpMode || !kvp.Value.Command.Metadata.LocalRequired)
-                .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
+            var catalog = NamespaceCommandCatalog.Create(namespaceName, namespaceCommands,
+                useRelativeNames && configuration.Value.Mode == ModeTypes.NamespaceProxy);
+            IReadOnlyList<Tool> list = catalog.Commands.Values
+                .Where(command => !configuration.Value.ReadOnly || command.Registration.Command.Metadata.ReadOnly)
+                .Where(command => !configuration.Value.IsHttpMode || !command.Registration.Command.Metadata.LocalRequired)
+                .Select(command => CreateToolFromCommand(command.Name, command.Registration.Command))
                 .ToList()
                 .AsReadOnly();
 
@@ -675,6 +672,17 @@ public sealed class NamespaceToolLoader(
         };
     }
 
+    private NamespaceCommandCatalog GetCommandCatalog(string namespaceName)
+        => _cachedCommandCatalogs.GetOrAdd(namespaceName, name => NamespaceCommandCatalog.Create(
+            name, _commandFactory.GroupCommands([name]),
+            useRelativeNames && _configuration.Value.Mode == ModeTypes.NamespaceProxy));
+
+    private static Tool? ResolveAvailableTool(string? name, NamespaceCommandCatalog catalog, IReadOnlyList<Tool> availableTools)
+    {
+        var command = catalog.Resolve(name);
+        return command is null ? null : availableTools.FirstOrDefault(tool =>
+            string.Equals(tool.Name, command.Name, StringComparison.OrdinalIgnoreCase));
+    }
     internal static Dictionary<string, JsonElement> GetParametersFromArgs(IDictionary<string, JsonElement>? args)
     {
         if (args == null)
@@ -782,7 +790,9 @@ public sealed class NamespaceToolLoader(
                 }
             }
 
-            var resolvedCommandName = ResolveSampledCommandName(commandName, availableTools);
+            var resolvedCommandName = string.IsNullOrWhiteSpace(commandName) || commandName == "Unknown"
+                ? null
+                : ResolveAvailableTool(commandName, GetCommandCatalog(namespaceName), availableTools)?.Name;
             if (resolvedCommandName != null)
             {
                 return (resolvedCommandName, parameters);
@@ -799,4 +809,13 @@ public sealed class NamespaceToolLoader(
 #pragma warning restore MCP9005
     }
 
+    /// <summary>
+    /// Disposes resources owned by this tool loader.
+    /// Clears the cached command catalogs.
+    /// </summary>
+    protected override ValueTask DisposeAsyncCore()
+    {
+        _cachedCommandCatalogs.Clear();
+        return ValueTask.CompletedTask;
+    }
 }
