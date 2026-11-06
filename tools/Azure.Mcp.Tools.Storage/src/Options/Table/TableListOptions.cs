@@ -6,8 +6,11 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Table;
 
-public class TableListOptions
+public class TableListOptions : ICursorOption
 {
+    [Option(Description = ICursorOption.CursorDescription)]
+    public string? Cursor { get; set; }
+
     [Option(Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
 

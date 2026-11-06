@@ -31,11 +31,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | Fetch the next page of ADME record IDs using the previous response's nextCursor unchanged as cursor, keeping the same endpoint, data partition, kind, and limit | context-required |
 | adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Continue the previous ADME cursor search using nextCursor unchanged as cursor and resend all original criteria; stop when nextCursor is absent | context-required |
 | adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
@@ -1136,6 +1138,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | marketplace_product_get | Get details about marketplace product <product_name> | none |
 | marketplace_product_list | Search for Microsoft products in the marketplace | none |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> | none |
+| marketplace_product_list | Get the next page of the previous Marketplace product listing using nextCursor unchanged as cursor and the same subscription and filters | context-required |
 
 ## Azure MCP Best Practices
 
@@ -1690,11 +1693,13 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_blob_container_get | List all blob containers in the storage account \<account> | none |
 | storage_blob_container_get | List all blob containers in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_container_get | Show me the containers in the storage account \<account> | none |
+| storage_blob_container_get | Get the next page of containers using nextCursor \<cursor> with the same storage account and prefix | context-required |
 | storage_blob_get | Show me the properties for blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_blob_get | Get the details about blob \<blob> in the container \<container> in storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
+| storage_blob_get | Get the next page of blobs using nextCursor \<cursor> with the same storage account, container, and prefix | context-required |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
 | storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
@@ -1705,6 +1710,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
+| storage_table_list | Get the next page of table names using nextCursor \<cursor> with the same storage account | context-required |
 
 ## Azure Storage Sync
 

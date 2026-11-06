@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
@@ -22,6 +23,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Returns IDs only, in pages.
 
         Pagination parameters: limit (1-100, default 10) and cursor (continuation token).
+        Returns nextCursor when another page can be requested; pass it unchanged as cursor.
         Confirm how many records the user wants before paging through the whole set.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -32,7 +34,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     LocalRequired = false,
     Secret = false)]
 public sealed class RecordListCommand(IEndpointValidator endpointValidator, IStorageService storageService)
-    : AuthenticatedCommand<RecordListOptions, QueryRecordsResponse>
+    : AuthenticatedCommand<RecordListOptions, AdmeResponse<RecordListResult>>
 {
     private const int DefaultLimit = 10;
     private const int MaxLimit = 100;
@@ -59,7 +61,11 @@ public sealed class RecordListCommand(IEndpointValidator endpointValidator, ISto
                 options.Endpoint, options.DataPartition, options.Kind, options.Limit ?? DefaultLimit,
                 options.Cursor, options.Tenant, options.AuthAppId, cancellationToken);
             context.Response.Results = ResponseResult.Create(
-                result, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
+                new(new(result.Result.Results), result.CorrelationId)
+                {
+                    NextCursor = result.Result.Cursor,
+                },
+                AdmeJsonContext.Default.AdmeResponseRecordListResult);
         }
         catch (Exception ex)
         {

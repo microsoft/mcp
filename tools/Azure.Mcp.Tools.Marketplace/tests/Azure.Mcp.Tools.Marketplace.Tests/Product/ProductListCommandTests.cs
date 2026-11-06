@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,6 +24,52 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.StartsWith(ICursorOption.CursorDescription, cursor.Description, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_ContinuesPages(bool emptyFirstPage)
+    {
+        const string cursor = " opaque+/=%2F== ";
+        Service.ListProducts(
+                "test-sub", Arg.Any<string?>(), "azure", Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                new ProductListResponseWithNextCursor
+                {
+                    Items = emptyFirstPage ? [] : [new ProductSummary { UniqueProductId = "first-product" }],
+                    NextCursor = cursor,
+                },
+                new ProductListResponseWithNextCursor
+                {
+                    Items = [new ProductSummary { UniqueProductId = "final-product" }],
+                });
+
+        var firstResponse = await ExecuteCommandAsync("--subscription", "test-sub", "--search", "azure");
+        var first = ValidateAndDeserializeResponse(firstResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal(cursor, first.NextCursor);
+        Assert.Equal(emptyFirstPage ? 0 : 1, first.Products.Count);
+        var firstPayload = JsonSerializer.SerializeToElement(first, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal(cursor, firstPayload.GetProperty("nextCursor").GetString());
+
+        var finalResponse = await ExecuteCommandAsync(
+            "--subscription", "test-sub", "--search", "azure", "--cursor", first.NextCursor!);
+        var final = ValidateAndDeserializeResponse(finalResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal("final-product", Assert.Single(final.Products).UniqueProductId);
+        Assert.Null(final.NextCursor);
+        var finalPayload = JsonSerializer.SerializeToElement(final, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.False(finalPayload.TryGetProperty("nextCursor", out _));
+
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, null, null, null,
+            Arg.Any<CancellationToken>());
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, cursor, null, null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

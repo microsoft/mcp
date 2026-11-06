@@ -76,6 +76,11 @@ public abstract class AdmeRecordedTestsBase(
 
     protected async Task<JsonElement> CallToolResultsAsync(
         string tool,
+        Dictionary<string, object?> arguments) =>
+        (await CallToolResponseAsync(tool, arguments)).GetProperty("result");
+
+    protected async Task<JsonElement> CallToolResponseAsync(
+        string tool,
         Dictionary<string, object?> arguments)
     {
         var response = await CallToolAsync(tool, arguments);
@@ -84,7 +89,7 @@ public abstract class AdmeRecordedTestsBase(
         var correlationId = response.Value.GetProperty("correlationId").GetString();
         Assert.False(string.IsNullOrWhiteSpace(correlationId));
 
-        return response.Value.GetProperty("result");
+        return response.Value;
     }
 
     protected async Task<bool> CallToolReturnsErrorAsync(

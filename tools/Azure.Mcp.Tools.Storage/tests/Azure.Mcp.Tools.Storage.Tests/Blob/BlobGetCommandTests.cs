@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -33,8 +35,9 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedBlobs);
+            .Returns((expectedBlobs, null));
 
         // Act
         var response = await ExecuteCommandAsync("--account", account, "--container", container);
@@ -60,8 +63,9 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns([]);
+            .Returns(([], null));
 
         // Act
         var response = await ExecuteCommandAsync("--account", account, "--container", container);
@@ -86,6 +90,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -105,6 +110,8 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.Equal(ICursorOption.CursorDescription, cursor.Description);
     }
 
     [Theory]
@@ -131,8 +138,9 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
+                Arg.Any<string?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(expectedBlobs);
+                .Returns((expectedBlobs, null));
         }
 
         // Act
@@ -167,8 +175,9 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is(blob),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
-            .Returns([expected]);
+            .Returns(([expected], null));
 
         // Act
         var response = await ExecuteCommandAsync(
@@ -200,6 +209,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is(blob),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -227,6 +237,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is(account),
             Arg.Is(container),
             Arg.Is(blob),
+            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -257,6 +268,7 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
             Arg.Is(blob),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
@@ -269,5 +281,47 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Theory]
+    [InlineData(null, " next+/=% token ")]
+    [InlineData(" next+/=% token ", " last+/=% token ")]
+    [InlineData(" last+/=% token ", null)]
+    [InlineData(null, null)]
+    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    {
+        Service.GetBlobDetails("testaccount", "container", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], nextCursor));
+        var args = new List<string>
+        {
+            "--account", "testaccount", "--container", "container", "--prefix", "prefix", "--tenant", "tenant"
+        };
+        if (cursor is not null)
+        {
+            args.AddRange(["--cursor", cursor]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+        Assert.Empty(result.Blobs);
+        Assert.Equal(nextCursor, result.NextCursor);
+        var payload = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.BlobGetCommandResult);
+        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
+        await Service.Received(1).GetBlobDetails(
+            "testaccount", "container", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsCursorWithSpecificBlob()
+    {
+        var response = await ExecuteCommandAsync(
+            "--account", "testaccount", "--container", "container", "--blob", "blob", "--cursor", "opaque");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--cursor cannot be used with --blob", response.Message);
+        await Service.DidNotReceiveWithAnyArgs().GetBlobDetails(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }
