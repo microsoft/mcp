@@ -57,7 +57,7 @@ function runExecutable(args = []) {
       })
 
       child.on('exit', (code) => {
-        resolve(code || 0)
+        resolve(code ?? 1)
       })
     })
   } catch (err) {
