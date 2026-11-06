@@ -38,7 +38,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
     {
         try
         {
-            var bases = await _searchService.ListKnowledgeBases(options.Service, options.KnowledgeBase, cancellationToken);
+            var bases = await _searchService.ListKnowledgeBases(options.Service, options.KnowledgeBase, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)
@@ -49,6 +49,15 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException { Status: 401 } requestFailed when !requestFailed.Message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase) =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        RequestFailedException { Status: 403 } requestFailed =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        _ => base.GetErrorMessage(ex)
+    };
 
     public sealed record KnowledgeBaseGetCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

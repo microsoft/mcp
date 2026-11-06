@@ -152,6 +152,7 @@ public sealed class KnowledgeBaseRetrievalTests
             useMinimalReasoning ? "Find documents" : null,
             useMinimalReasoning ? null : [("user", "Find documents"), ("assistant", "With citations")],
             includeReferenceSourceData,
+            null,
             TestContext.Current.CancellationToken);
 
         Assert.NotNull(retrievalRequest);
@@ -220,7 +221,7 @@ public sealed class KnowledgeBaseRetrievalTests
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() =>
             service.RetrieveFromKnowledgeBase(
-                "test-search", "test-base", "Find documents", null, true, TestContext.Current.CancellationToken));
+                "test-search", "test-base", "Find documents", null, true, null, TestContext.Current.CancellationToken));
 
         Assert.Equal(status, exception.Status);
     }
@@ -259,7 +260,7 @@ public sealed class KnowledgeBaseRetrievalTests
         foreach (var includeSourceData in new[] { true, false })
         {
             await service.RetrieveFromKnowledgeBase(
-                "test-search", "test-base", "Find documents", null, includeSourceData, TestContext.Current.CancellationToken);
+                "test-search", "test-base", "Find documents", null, includeSourceData, null, TestContext.Current.CancellationToken);
         }
 
         Assert.Equal([true, true], referenceOptions[0]);
