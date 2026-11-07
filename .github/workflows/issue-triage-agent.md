@@ -24,7 +24,7 @@ permissions:
 
 engine:
   id: copilot
-  model: gpt-5.4
+  model: gpt-6.1-sol
 
 tools:
   bash: false
@@ -42,11 +42,14 @@ network:
 
 timeout-minutes: 15
 
+concurrency:
+  job-discriminator: ${{ github.event.issue.number || inputs.issue_number || github.run_id }}
+
 safe-outputs:
   threat-detection:
     engine:
       id: copilot
-      model: gpt-5.4
+      model: gpt-6.1-sol
       args: ["--reasoning-effort", "high"]
   add-comment:
     max: 1
