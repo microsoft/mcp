@@ -35,5 +35,18 @@ resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-0
   }
 }
 
-output DEVICE_PROVISIONING_SERVICE_NAME string = provisioningService.name
+resource dataReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '10745317-c249-44a1-a5ce-3a4353c0bbd8'
+}
 
+resource dataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(dataReaderRoleDefinition.id, testApplicationOid, provisioningService.id)
+  scope: provisioningService
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: dataReaderRoleDefinition.id
+  }
+}
+
+output DEVICE_PROVISIONING_SERVICE_NAME string = provisioningService.name
