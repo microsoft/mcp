@@ -811,6 +811,10 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
 | deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
 | deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+| deviceprovisioning_onboarding_validate | Validate the existing DPS individual enrollment <registration_id> in service <service_name> and explain blockers or unverified conditions | none |
+| deviceprovisioning_onboarding_validate | Check whether enrollment group <enrollment_group_id> is consistently configured with the linked IoT Hubs in DPS <service_name> | none |
+| deviceprovisioning_onboarding_validate | Compare this public device certificate chain with the selected DPS enrollment and explain compatibility limitations | none |
+| deviceprovisioning_onboarding_validate | Validate these 10 X.509 devices against enrollment group <enrollment_group_id> in DPS <service_name> before production rollout | context-required |
 
 ## Azure Device Registry
 

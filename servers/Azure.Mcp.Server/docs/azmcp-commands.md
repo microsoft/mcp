@@ -3174,6 +3174,31 @@ azmcp deploy plan get --project-name <project-name> \
 azmcp deviceprovisioning service get --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --service <device-provisioning-service-name>
+
+# Validate one existing individual enrollment or an enrollment group with an optional manifest of up to 10 devices.
+# X.509 validation resolves verified DPS CA references and checks the complete public chain, registration identity,
+# trust-anchor match, and supported RSA or ECDSA algorithms.
+# The command does not perform registration, retrieve keys, or establish authoritative enrollment selection.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceprovisioning onboarding validate --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --service <device-provisioning-service-name> \
+                                             [--enrollment-id <registration-id>] \
+                                             [--enrollment-group-id <enrollment-group-id>] \
+                                             [--registration-id <device-registration-id>] \
+                                             [--intended-hub <iot-hub-hostname>] \
+                                             [--certificate-chain <public-pem-chain>] \
+                                             [--tpm-endorsement-key <public-tpm-ek>] \
+                                             [--device-manifest <inline-json-for-1-to-10-devices>] \
+                                             [--include-registration-state <true-or-false>] \
+                                             [--include-device-details <true-or-false>]
+
+# Responses are compact by default. Set --include-device-details true only when full per-device
+# findings are needed; aggregate counts and exceptional devices remain available in compact mode.
+
+# Validate a larger fleet through an agent by using the
+# azure-device-provisioning-onboarding skill. The skill reads a customer manifest,
+# invokes this command in batches of at most 10, checkpoints progress, and aggregates results.
 ```
 
 ### Azure Device Registry Operations
