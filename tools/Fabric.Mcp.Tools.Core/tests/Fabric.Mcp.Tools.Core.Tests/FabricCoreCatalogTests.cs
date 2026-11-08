@@ -36,6 +36,7 @@ public sealed class FabricCoreCatalogTests()
         ("core_get-operation-state", typeof(OperationStateGetCommand), true),
         ("core_get-workspace", typeof(WorkspaceGetCommand), true),
         ("core_list-capacities", typeof(CapacityListCommand), true),
+        ("core_list-folders", typeof(FolderListCommand), true),
         ("core_list-items", typeof(ItemListCommand), true),
         ("core_list-workspaces", typeof(WorkspaceListCommand), true),
         ("core_search-catalog", typeof(CatalogSearchCommand), true),

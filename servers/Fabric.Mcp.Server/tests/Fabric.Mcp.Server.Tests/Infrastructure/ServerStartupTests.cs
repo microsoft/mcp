@@ -44,6 +44,7 @@ public class ServerStartupTests
     [InlineData(true, "core", false)]
     [InlineData(true, "jobs", false)]
     [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "core", true)]
     [InlineData(true, "jobs", true)]
     [InlineData(true, "core,jobs", true)]
     public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools, string? namespaces, bool readOnly)
@@ -120,6 +121,7 @@ public class ServerStartupTests
     [InlineData(true, "core", false)]
     [InlineData(true, "jobs", false)]
     [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "core", true)]
     [InlineData(true, "jobs", true)]
     [InlineData(true, "core,jobs", true)]
     public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools, string? namespaces, bool readOnly)
@@ -277,6 +279,22 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
+        Assert.DoesNotContain("jobs_list-folders", names);
+        if (namespaces != "jobs")
+        {
+            var folders = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-folders");
+            Assert.True(folders.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(folders.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(folders.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(folders.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            Assert.Equal("workspace-id", Assert.Single(folders.GetProperty("inputSchema").GetProperty("required").EnumerateArray()).GetString());
+            var options = folders.GetProperty("inputSchema").GetProperty("properties");
+            Assert.Equal(["continuation-token", "recursive", "root-folder-id", "workspace-id"],
+                options.EnumerateObject().Select(property => property.Name).Order());
+            Assert.Equal(["boolean", "null"], options.GetProperty("recursive").GetProperty("type").EnumerateArray().Select(value => value.GetString()));
+            Assert.False(options.GetProperty("recursive").TryGetProperty("default", out _));
+        }
         if (namespaces is not null)
         {
             Assert.All(names, name => Assert.Contains(name!.Split('_')[0], namespaces.Split(',')));

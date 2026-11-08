@@ -24,9 +24,9 @@ public partial class FabricCoreService
         {
             throw new ArgumentException("Item ID must be a nonempty UUID.", nameof(itemId));
         }
-        if (!ItemJobInstanceListInput.IsValidContinuationToken(continuationToken))
+        if (!FabricContinuationToken.IsValidContinuationToken(continuationToken))
         {
-            throw new ArgumentException(ItemJobInstanceListInput.InvalidContinuationTokenMessage, nameof(continuationToken));
+            throw new ArgumentException(FabricContinuationToken.InvalidContinuationTokenMessage, nameof(continuationToken));
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -72,7 +72,7 @@ public partial class FabricCoreService
                 AllowDuplicateProperties = false
             });
             var page = document.RootElement;
-            ValidateJobPageJson(page);
+            FabricCoreHttpHelpers.ValidateMetadataJson(page);
             if (page.ValueKind != JsonValueKind.Object ||
                 !page.TryGetProperty("value", out var value) || value.ValueKind != JsonValueKind.Array)
             {
@@ -95,34 +95,6 @@ public partial class FabricCoreService
         }
     }
 
-    private static void ValidateJobPageJson(JsonElement value)
-    {
-        if (value.ValueKind == JsonValueKind.Object)
-        {
-            HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
-            foreach (var property in value.EnumerateObject())
-            {
-                if (!names.Add(property.Name))
-                {
-                    throw new JsonException(InvalidJobPageMessage);
-                }
-                ValidateJobPageJson(property.Value);
-            }
-        }
-        else if (value.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var entry in value.EnumerateArray())
-            {
-                ValidateJobPageJson(entry);
-            }
-        }
-        else if (value.ValueKind == JsonValueKind.String)
-        {
-            // Validate even strings in fields omitted from the safe output projection.
-            _ = value.GetString();
-        }
-    }
-
     private static string? ReadJobPageContinuationToken(
         JsonElement page, Uri collection, StringComparison pathComparison = StringComparison.OrdinalIgnoreCase)
     {
@@ -137,7 +109,7 @@ public partial class FabricCoreService
             return null;
         }
         if (tokenValue.ValueKind != JsonValueKind.String || tokenValue.GetString() is not { } token ||
-            !ItemJobInstanceListInput.IsValidContinuationToken(token) ||
+            !FabricContinuationToken.IsValidContinuationToken(token) ||
             (hasUri && (uriValue.ValueKind != JsonValueKind.String ||
                 !IsJobPageContinuationUri(uriValue.GetString(), collection, token, pathComparison))))
         {
@@ -148,28 +120,8 @@ public partial class FabricCoreService
 
     private static bool IsJobPageContinuationUri(string? value, Uri collection, string token, StringComparison pathComparison)
     {
-        if (string.IsNullOrEmpty(value) || value.Any(static ch => char.IsWhiteSpace(ch) || char.IsControl(ch)) ||
-            value.Contains('\\'))
-        {
-            return false;
-        }
-        var queryStart = value.IndexOf('?');
-        if (queryStart < 0)
-        {
-            return false;
-        }
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != collection.Scheme ||
-            !string.Equals(uri.Host, collection.Host, StringComparison.OrdinalIgnoreCase) || uri.Port != collection.Port ||
-            uri.UserInfo.Length != 0 || uri.Fragment.Length != 0 ||
-            !string.Equals(uri.AbsolutePath, collection.AbsolutePath, pathComparison))
-        {
-            return false;
-        }
-        // Compare the unnormalized path, not opaque query data. The expected collection
-        // may contain an escaped job type; alternate escapes and dot-segment routes still fail.
-        var pathStart = value.IndexOf('/', value.IndexOf("://", StringComparison.Ordinal) + 3);
-        if (pathStart < 0 || pathStart >= queryStart || value.AsSpan(0, pathStart).Contains('%') ||
-            !value.AsSpan(pathStart, queryStart - pathStart).Equals(collection.AbsolutePath, pathComparison))
+        var uri = FabricCoreHttpHelpers.GetMatchingCollectionUri(value, collection, pathComparison);
+        if (uri is null)
         {
             return false;
         }

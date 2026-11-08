@@ -41,6 +41,7 @@ public class FabricCoreSetup : IAreaSetup
             });
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
+        services.AddSingleton<FolderListCommand>(CreateFolderListCommand);
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
         services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
@@ -66,6 +67,7 @@ public class FabricCoreSetup : IAreaSetup
             "Use this tool when you need to:\n" +
             "- Get metadata for a known Fabric capacity\n" +
             "- List accessible Fabric capacities and their metadata\n" +
+            "- List logical workspace folders and their parent relationships by explicit workspace ID\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
@@ -85,6 +87,7 @@ public class FabricCoreSetup : IAreaSetup
 
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
@@ -103,6 +106,34 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
+    }
+
+    private static FolderListCommand CreateFolderListCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderListCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderListCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        if (options.SingleOrDefault(static option => option.Name == "--recursive") is not Option<bool?> recursive ||
+            recursive.Required || recursive.HasDefaultValue)
+        {
+            throw new InvalidOperationException("The list-folders command requires optional Boolean --recursive without a default.");
+        }
+        recursive.Arity = ArgumentArity.ExactlyOne;
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each list-folders option at most once.");
+            }
+            if (result.GetResult(recursive) is { Implicit: false } value &&
+                (value.Tokens.Count != 1 || !bool.TryParse(value.Tokens[0].Value, out _)))
+            {
+                result.AddError("Specify --recursive with an explicit true or false value.");
+            }
+        });
+        return command;
     }
 
     private static ItemCreateCommand CreateItemCreateCommand(IServiceProvider serviceProvider)

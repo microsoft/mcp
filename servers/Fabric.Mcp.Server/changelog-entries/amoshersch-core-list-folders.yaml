@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_list-folders to read one complete page of logical workspace folders with optional root and recursive filters, parent relationships, and explicit continuation."

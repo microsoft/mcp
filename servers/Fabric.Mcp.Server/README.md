@@ -348,7 +348,8 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
+items, definitions, capacities, and Fabric `/operations` LROs, and lists logical workspace folders.
+Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
 token for each additional page. Schedule operations require an explicit job type.
@@ -358,7 +359,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: item/definition tools, but no Jobs commands.
+# Core-only: workspace, folder listing, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -466,6 +467,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_list-folders` | Lists one complete page of logical workspace folders, with optional root folder and recursive filters, parent relationships, and explicit continuation. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
@@ -901,7 +903,45 @@ The API supports users, service principals, and managed identities. Delegated ac
 
 Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
 
-**Workspace and folder inventory**
+**Folder listing**
+
+Fabric's [Folder REST APIs](https://learn.microsoft.com/rest/api/fabric/core/folders) are currently in Preview and may change.
+
+`core_list-folders` calls [List Folders](https://learn.microsoft.com/rest/api/fabric/core/folders/list-folders)
+with one `GET /v1/workspaces/{workspaceId}/folders` and no request body. These are logical Fabric workspace
+folders, not OneLake directories or local filesystem paths.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `root-folder-id` | No | Nonempty folder UUID. Omit to use the workspace root. |
+| `recursive` | No | Explicit `true` or `false`. Omission uses the API default of `true`; `false` lists direct children only. |
+| `continuation-token` | No | Unchanged token from a previous page with the same workspace, root folder, and recursive options. Omit for the first page. |
+
+```powershell
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --recursive false
+# Request another page explicitly, preserving the filters and the returned token.
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --recursive false --continuation-token '<returned-token>'
+```
+
+The result contains `folders` with `id`, `displayName`, `workspaceId`, and optional `parentFolderId`.
+Order and repeated entries are preserved; parents may be outside the page. No paths or ancestors
+are reconstructed. An empty page can still have a `continuationToken`. Absent or null terminal
+continuation fields are valid. Copy tokens without trimming, decoding, or changing percent escapes.
+Returned continuation URLs are neither exposed nor followed; if present, they must match the
+collection, token, and any supplied filter metadata. URI-only or contradictory metadata fails safely.
+There is no folder walking, automatic pagination, per-folder enrichment, retry, polling, or mutation.
+
+The caller needs workspace **Viewer or higher** access; delegated calls require `Workspace.Read.All`
+or `Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported,
+subject to the existing Fabric tenant and authentication settings. This read-only tool is available
+in stdio and HTTP modes without sensitive-content consent. Errors retain HTTP status and validated
+`Retry-After` guidance, not backend bodies. Pages are bounded to 1 MiB and 64 JSON nesting levels;
+tokens must be valid Unicode, not blank, without control characters, and at most 8,192 UTF-8 bytes.
+Invalid or oversized pages fail as a whole, with no row-count cap or partial result.
+
+**Workspace and folder item inventory**
 
 `core_list-items` calls the [Fabric Core List Items API](https://learn.microsoft.com/rest/api/fabric/core/items/list-items). Use it for a scoped metadata inventory, not for OneLake file/blob listing (`onelake_list-items`) or cross-workspace discovery (`core_search-catalog`).
 

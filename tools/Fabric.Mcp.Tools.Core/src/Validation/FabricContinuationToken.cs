@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Fabric.Mcp.Tools.Core.Validation;
 
-internal static class ItemJobInstanceListInput
+internal static class FabricContinuationToken
 {
     internal const int MaxContinuationTokenBytes = 8192;
     internal const string InvalidContinuationTokenMessage =
