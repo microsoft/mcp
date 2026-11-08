@@ -31,6 +31,7 @@ public sealed class FabricCoreCatalogTests()
         ("core_delete-item", typeof(ItemDeleteCommand), false),
         ("core_delete-workspace", typeof(WorkspaceDeleteCommand), false),
         ("core_get-capacity", typeof(CapacityGetCommand), true),
+        ("core_get-folder", typeof(FolderGetCommand), true),
         ("core_get-item", typeof(ItemGetCommand), true),
         ("core_get-item-definition", typeof(ItemDefinitionGetCommand), false),
         ("core_get-operation-result", typeof(OperationResultGetCommand), true),

@@ -348,7 +348,7 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs, and lists or creates logical workspace folders.
+items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, or retrieves logical workspace folders.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -359,7 +359,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing/creation, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace, folder listing/creation/lookup, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -462,6 +462,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-folder` | Gets one logical workspace folder's metadata and available parent relationship using explicit workspace and folder UUIDs, without related lookups. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
 | `core_get-item-definition` | Retrieves typed definition parts inline, optionally waits for completion, or resumes a completed definition operation. Can explicitly export to a new local directory without overwriting files. |
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
@@ -991,6 +992,37 @@ Fabric permissions and existing tenant/authentication settings. Like other addit
 this is non-destructive, non-idempotent, not secret-bearing, remote-capable, and **excluded from
 read-only mode**. It does not introduce an additional elicitation requirement. Offline tests do not
 establish live workspace, OBO, or RBAC authorization.
+
+**Get Folder (`core_get-folder`)**
+
+Calls [Get Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/get-folder) with exactly
+one `GET /v1/workspaces/{workspaceId}/folders/{folderId}` and no request body. Both `workspace-id`
+and `folder-id` are required nonempty UUIDs; names and paths are not resolved.
+
+```powershell
+fabmcp core get-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Only HTTP 200 returns a typed `folder` snapshot containing `id`, `displayName`, `workspaceId`,
+and `parentFolderId` when available, plus validated `retryAfterSeconds` or `retryAfterUtc` guidance
+when supplied. Returned folder and workspace IDs must match the request. Absent/null parent metadata
+stays omitted; a parent need not have been listed or fetched. Display names are preserved as returned
+strings, without applying creation naming rules, trimming, or filesystem interpretation.
+
+These are logical workspace folders, not OneLake directories or local paths. There is no List
+preflight, ancestor lookup, child/item enumeration, enrichment, pagination, automatic retry,
+mutation, or LRO/polling behavior. Location and operation headers are not followed. Unknown JSON
+fields are validated but not returned. Missing/invalid metadata is an error, not an empty success.
+Responses are bounded to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**; duplicate
+properties and invalid Unicode fail safely.
+
+The caller needs **Viewer or higher** workspace access; delegated calls require `Workspace.Read.All`
+or `Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported under
+Fabric's existing tenant and authentication settings. Like List Folders, this metadata read is
+available in read-only mode over stdio and HTTP without sensitive-content consent.
+Errors preserve known HTTP status and validated `Retry-After`, even if optional error metadata cannot
+be read. Only a safe error code is projected, never backend messages or nested details.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
 
 **Workspace and folder item inventory**
 

@@ -118,6 +118,10 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |
+| core_get-folder | Get metadata for folder bbbbbbbb-1111-2222-3333-cccccccccccc in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb with one GET. Do not list folders first. | none |
+| core_get-folder | Show the display name and available parent folder ID for folder bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. Do not fetch its parent or enumerate children or items. | none |
+| core_get-folder | Read the logical Fabric folder using my supplied workspace and folder UUIDs in read-only mode. This is not a OneLake directory or local filesystem lookup. | context-required |
+| core_get-folder | Inspect the folder once using the IDs I supplied. Leave missing parent metadata omitted, preserve its returned display name, and return throttling guidance without automatically retrying or polling. | context-required |
 | core_get-item | Get the metadata for Fabric item '<item-id>' in workspace '<workspace-id>' without reading its data or definition. | none |
 | core_get-item | Show the display name, description, and type of Fabric item '<item-id>' in workspace '<workspace-id>'. | none |
 | core_get-item | Inspect the existing Fabric item '<item-id>' in workspace '<workspace-id>' and return only its generic metadata. Do not modify it. | none |
