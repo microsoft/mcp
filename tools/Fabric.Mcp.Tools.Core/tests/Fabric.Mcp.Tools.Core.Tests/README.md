@@ -5,6 +5,10 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/FolderCreateCommandTests.cs**: Explicit workspace/name/parent binding, additive mutation metadata, typed 201 results, safe errors/logging, and distinct pre-send, uncertain-send, and confirmed-creation guidance
+- **Validation/FolderCreateInputTests.cs**: Fabric naming constraints, Unicode character boundaries, invalid surrogate rejection, UUID validation, unchanged names, and no host filesystem rules
+- **Services/FolderCreateServiceTests.cs**: Exactly one authenticated POST, parent omission, safe typed metadata, identity checks, absent optional parents, malformed/Unicode/duplicate data, exact byte/depth limits, status/retry preservation, cancellation/disposal, and concurrent caller isolation
+- **FolderCreateMcpTests.cs**: Actual registration, schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, additive creation without elicitation, zero-I/O invalid input, explicit null parents, CLI duplicate/valueless rejection, and confirmed-creation errors through the wire envelope
 - **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
 - **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
 - **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
@@ -129,6 +133,24 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 and existing operation responses. Callers keep their own media, empty-body, parsing, and error contracts.
 The existing operation reader still defaults to 1 MiB, and definition retrieval retains its explicit
 64 MiB limit. Existing operation/definition tests cover those unchanged contracts.
+
+## Folder Creation
+
+`core_create-folder` sends one POST for an explicit workspace UUID and unchanged display name.
+An optional parent UUID is normalized; absent/null input omits the body field and selects the
+workspace root. Local validation follows Fabric naming rules, not filesystem rules. Fabric alone
+checks uniqueness, supported workspaces, depth, and folder count. There are no lookups or retries.
+
+Only HTTP 201 confirms creation. The typed `FabricFolder` projection checks the workspace and
+available parent context without filling missing optional metadata. JSON is bounded to 1 MiB and
+64 levels; error-body failures retain the known status and retry guidance. Tests distinguish
+validation/authentication/pre-send failures from uncertain sends, and preserve confirmed creation
+when response reading, Unicode decoding, validation, or cancellation prevents returning metadata.
+
+Like existing additive Core-create tools, this command is non-destructive and not secret-bearing,
+so existing policy does not require elicitation. Read-only and excluded-namespace calls cannot
+execute it. Substituted credentials/HTTP and actual host discovery establish local wiring, not
+live Fabric permissions, OBO/RBAC behavior, or authorization to create a real folder.
 
 ## Folder Listing
 

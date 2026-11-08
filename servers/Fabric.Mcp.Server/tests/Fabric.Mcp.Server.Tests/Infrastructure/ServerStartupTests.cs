@@ -279,8 +279,24 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
+        Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
+        if (namespaces != "jobs" && !readOnly)
+        {
+            var createFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-folder");
+            var annotations = createFolder.GetProperty("annotations");
+            Assert.False(annotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.False(annotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(annotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(annotations.GetProperty("openWorldHint").GetBoolean());
+            var schema = createFolder.GetProperty("inputSchema");
+            Assert.Equal(["display-name", "workspace-id"], schema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["display-name", "parent-folder-id", "workspace-id"],
+                schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one POST", createFolder.GetProperty("description").GetString());
+        }
         if (namespaces != "jobs")
         {
             var folders = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-folders");

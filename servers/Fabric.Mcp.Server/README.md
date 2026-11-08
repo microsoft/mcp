@@ -348,7 +348,7 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs, and lists logical workspace folders.
+items, definitions, capacities, and Fabric `/operations` LROs, and lists or creates logical workspace folders.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -359,7 +359,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace, folder listing/creation, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -456,6 +456,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | Tool Name | Description |
 |-----------|-------------|
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
+| `core_create-folder` | Creates one logical workspace folder at the root or under an explicit parent folder UUID. Returns created metadata without lookups, retries, or polling. |
 | `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
@@ -903,9 +904,11 @@ The API supports users, service principals, and managed identities. Delegated ac
 
 Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
 
-**Folder listing**
+**Workspace folders**
 
 Fabric's [Folder REST APIs](https://learn.microsoft.com/rest/api/fabric/core/folders) are currently in Preview and may change.
+
+**List Folders (`core_list-folders`)**
 
 `core_list-folders` calls [List Folders](https://learn.microsoft.com/rest/api/fabric/core/folders/list-folders)
 with one `GET /v1/workspaces/{workspaceId}/folders` and no request body. These are logical Fabric workspace
@@ -940,6 +943,54 @@ in stdio and HTTP modes without sensitive-content consent. Errors retain HTTP st
 `Retry-After` guidance, not backend bodies. Pages are bounded to 1 MiB and 64 JSON nesting levels;
 tokens must be valid Unicode, not blank, without control characters, and at most 8,192 UTF-8 bytes.
 Invalid or oversized pages fail as a whole, with no row-count cap or partial result.
+
+**Create Folder (`core_create-folder`)**
+
+Calls [Create Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/create-folder) with exactly
+one `POST /v1/workspaces/{workspaceId}/folders`. It creates one logical workspace folder, not a local
+directory, OneLake path, or recursive folder hierarchy.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `display-name` | Yes | The unchanged name of one folder, subject to Fabric's naming rules. |
+| `parent-folder-id` | No | Existing nonempty folder UUID. Omission or JSON null omits `parentFolderId` from the POST and creates at the workspace root. |
+
+```powershell
+fabmcp core create-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --display-name "Sales"
+fabmcp core create-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --display-name "Q3" --parent-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Names must meet the [folder name requirements](https://learn.microsoft.com/fabric/get-started/workspaces-folders#folder-name-requirements):
+at most 255 Unicode characters, no leading/trailing spaces or C0/C1 control codes, none of
+`~ " # . & * : < > ? / { | }`, and no reserved `$recycle.bin`, `recycled`, or `recycler` names.
+Invalid inputs fail before authentication or HTTP. Names are never trimmed, sanitized, or interpreted
+using host filesystem rules. Fabric enforces name uniqueness, folder depth/count, and workspace support;
+the tool does not check these through extra requests. A duplicate-name error remains a failure, not
+get-or-create success with an existing folder ID.
+
+**Only HTTP 201 confirms creation.** The typed result contains `creationStatus: "Created"`, `folder`
+with `id`, `displayName`, `workspaceId`, and available `parentFolderId`, plus `guidance` and validated
+`Retry-After` metadata when supplied. Returned workspace and non-null parent IDs must match the request.
+Missing/null optional parent metadata stays omitted, not filled from the request. Unknown fields are
+not projected. Responses are limited to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**;
+malformed, duplicate, invalid-Unicode, or contradictory metadata fails safely.
+
+If HTTP 201 is received but its metadata cannot be read or validated, the error explicitly preserves
+**confirmed creation** and says not to resubmit. Authentication/pre-send failures report that the
+request was not sent. Network failures after sending may leave the outcome unknown: inspect the
+workspace separately before any new creation, never retry blindly. Error responses preserve HTTP
+status and validated `Retry-After` guidance even when optional error metadata is unusable, without
+exposing backend messages. There is no automatic retry, parent/name lookup, follow-up Get/List, or
+LRO handling; Location and operation headers are ignored. An agent may explicitly use
+`core_list-folders` separately, but that orchestration is not hidden inside creation.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported, subject to
+Fabric permissions and existing tenant/authentication settings. Like other additive Core-create tools,
+this is non-destructive, non-idempotent, not secret-bearing, remote-capable, and **excluded from
+read-only mode**. It does not introduce an additional elicitation requirement. Offline tests do not
+establish live workspace, OBO, or RBAC authorization.
 
 **Workspace and folder item inventory**
 
