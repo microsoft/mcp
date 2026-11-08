@@ -15,6 +15,10 @@ Offline tests for the Fabric Core toolset.
 - **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
 - **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
 - **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
+- **Commands/FolderMoveCommandTests.cs**: Required workspace/folder binding, optional target, hierarchy-mutation hints, typed 200 snapshots, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-movement guidance
+- **Validation/FolderMoveInputTests.cs**: Nonempty UUID validation, supported UUID formats, root omission, and normalized self-target rejection without hierarchy lookups
+- **Services/FolderMoveServiceTests.cs**: One exact POST with only optional targetFolderId, root omission, matching identities/destinations, optional parents and legacy names, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, concurrency, and separate explicit Get inspection
+- **FolderMoveMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, null/omitted root targets, shared string binding, CLI duplicate/valueless rejection, and confirmed-movement errors through the wire envelope
 - **Commands/FolderUpdateCommandTests.cs**: Required workspace/folder/name binding, metadata-replacement hints, typed 200 snapshots, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-update guidance
 - **Validation/FolderUpdateInputTests.cs**: Shared unchanged Create/Update naming rules, exact Unicode character boundaries, invalid surrogate rejection, UUID validation, and no host filesystem rules
 - **Services/FolderUpdateServiceTests.cs**: One exact PATCH with only displayName, authoritative snapshots and matching identities, optional parents, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, and concurrent caller isolation
@@ -796,6 +800,27 @@ mode excludes Update while retaining Get/List. All request fixtures are offline,
 credentials and HTTP; real host startup tests inspect discovery without calling Fabric. No live
 folder, customer-ID discovery, OBO/RBAC validation, or recorded playback is implied.
 
+## Folder Movement
+
+Move Folder sends one authenticated POST to the known folder's `/move` endpoint. A destination
+UUID sends only `targetFolderId`; omission or MCP null sends `{}` for the workspace root.
+Invalid IDs and self-targets fail before authentication. Fabric handles descendant, depth, and
+name constraints; there is no hierarchy preflight, hidden Get/List, destination creation, alternate
+target, or client-side subtree/item movement. A separate Get is exercised only after an explicit
+caller action to inspect an uncertain move.
+
+The existing bounded folder snapshot reader preserves legacy display names without creation
+validation. Returned folder/workspace identities and any non-null destination parent are checked;
+absent/null optional parents are not synthesized. HTTP 200 remains confirmed movement even if
+metadata fails, while known HTTP failures retain their original status and validated Retry-After.
+No automatic retry, Location following, or operation polling is introduced.
+
+Placement changes use destructive/idempotent metadata and normal host consent, not sensitive-data
+or transport-specific gates. Read-only mode excludes Move and retains Get/List. String schemas
+retain shared MCP coercion, including single-element string arrays, rather than redefining binding.
+Tests substitute credentials and HTTP; real host startup checks discovery without Fabric requests.
+No approved live fixture, real mutation, OBO/RBAC authorization, or recorded playback is implied.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
@@ -803,6 +828,9 @@ Run from the repository root using the SDK pinned in `global.json` and Microsoft
 ```powershell
 # Run all Core tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj
+
+# Run folder movement and its shared folder/catalog/HTTP regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*Folder*' '*FabricCoreCatalogTests' '*FabricCoreHttpHelpersTests'
 
 # Run assignment command, service, and registered-handler tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*WorkspaceAssignToCapacity*' '*WorkspaceCapacityAssignment*'

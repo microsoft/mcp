@@ -44,6 +44,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<FolderCreateCommand>(CreateFolderCreateCommand);
         services.AddSingleton<FolderGetCommand>(CreateFolderGetCommand);
         services.AddSingleton<FolderListCommand>(CreateFolderListCommand);
+        services.AddSingleton<FolderMoveCommand>(CreateFolderMoveCommand);
         services.AddSingleton<FolderUpdateCommand>(CreateFolderUpdateCommand);
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
         services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
@@ -73,6 +74,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List logical workspace folders and their parent relationships by explicit workspace ID\n" +
             "- Create one logical workspace folder at the root or under an explicitly identified parent\n" +
             "- Get metadata for one logical workspace folder by explicit workspace and folder IDs\n" +
+            "- Move one logical folder and its hierarchy within the same workspace, without enumerating descendants\n" +
             "- Rename one logical workspace folder by explicit workspace and folder IDs\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
@@ -96,6 +98,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<FolderCreateCommand>(serviceProvider);
         fabricCore.AddCommand<FolderGetCommand>(serviceProvider);
         fabricCore.AddCommand<FolderListCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderMoveCommand>(serviceProvider);
         fabricCore.AddCommand<FolderUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
@@ -174,6 +177,23 @@ public class FabricCoreSetup : IAreaSetup
                 (value.Tokens.Count != 1 || !bool.TryParse(value.Tokens[0].Value, out _)))
             {
                 result.AddError("Specify --recursive with an explicit true or false value.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderMoveCommand CreateFolderMoveCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderMoveCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderMoveCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each move-folder option at most once.");
             }
         });
         return command;

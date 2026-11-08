@@ -348,7 +348,7 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, retrieves, or renames logical workspace folders.
+items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, retrieves, renames, or moves logical workspace folders.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -359,7 +359,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing/creation/lookup/rename, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace, folder listing/creation/lookup/rename/movement, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -472,6 +472,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-folders` | Lists one complete page of logical workspace folders, with optional root folder and recursive filters, parent relationships, and explicit continuation. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
+| `core_move-folder` | Moves one known logical folder and its hierarchy within the same workspace, into an existing folder or to the workspace root. Returns observed metadata without lookups, descendant enumeration, retries, or polling. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
 | `core_update-folder` | Renames one known logical workspace folder with an explicit replacement display name. Returns updated metadata without moving the folder, lookups, retries, or polling. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
@@ -1063,6 +1064,58 @@ Fabric tenant and authentication settings. Like Core Item/Workspace Update, repl
 metadata is marked destructive and idempotent, not secret-bearing, remote-capable, and **excluded
 from read-only mode**. The host's normal mutation confirmation applies. Offline tests do not
 establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Move Folder (`core_move-folder`)**
+
+Calls [Move Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/move-folder) with exactly
+one `POST /v1/workspaces/{workspaceId}/folders/{folderId}/move`. This moves an existing logical folder
+within the **same workspace**. Fabric handles the folder hierarchy, including contained folders and
+items, server-side; the tool never enumerates descendants or sends individual item moves.
+These are workspace organizational folders, not OneLake directories or local filesystem paths.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty UUID of the containing workspace. |
+| `folder-id` | Yes | Nonempty UUID of the existing folder to move. |
+| `target-folder-id` | No | Existing nonempty folder UUID in the same workspace. Omission or MCP JSON null omits `targetFolderId` from the body and moves to the workspace root. |
+
+```powershell
+fabmcp core move-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --target-folder-id aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb
+# Omit the target to move to the workspace root; the request body is {}.
+fabmcp core move-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+The request contains only optional `targetFolderId`, never a replacement name or target workspace.
+Invalid UUIDs and a target equal to the folder being moved fail before authentication or HTTP.
+Names and paths are not resolved, and destinations are not created. Fabric enforces descendant-loop,
+depth, and duplicate-name constraints; failures remain failures, with no alternate target, rename,
+fallback to root, or preflight lookup. The tool does not copy items, alter their contents or permissions,
+or implement cross-workspace movement.
+
+**Only HTTP 200 confirms movement.** The typed result contains `moveStatus: "Moved"`, the returned
+`folder` snapshot, `guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when supplied.
+Folder and workspace identities must match the request. A non-null returned parent must match the
+requested destination and is invalid for a move to root. Absent/null optional parent metadata stays
+omitted, not filled from the request; confirmation comes from HTTP 200, not an inferred parent.
+Returned display names are preserved without applying creation naming restrictions.
+Unknown fields are validated but not returned. Responses are bounded to **1 MiB (1,048,576 bytes)**
+and **64 JSON nesting levels**; malformed, duplicate, invalid-Unicode, or contradictory metadata fails safely.
+
+If HTTP 200 is followed by unreadable or invalid metadata, the error preserves **confirmed movement**
+and says not to resubmit. Authentication/pre-send failures report that the request was not sent.
+An uncertain send can leave the folder moved: inspect the known folder separately before another
+move, never retry blindly. Error responses retain observed HTTP status and validated `Retry-After`
+even when optional error metadata is unusable, and expose only a safe error code, not backend messages.
+There is no automatic retry, hidden Get/List verification, or LRO/polling behavior; Location and
+operation headers are ignored. Existing List/Get tools can be used in separate explicit calls to
+choose IDs or inspect an uncertain result.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Changing an existing folder's placement is marked
+destructive and idempotent (repeating the same destination does not add another effect), not
+secret-bearing, remote-capable, and **excluded from read-only mode**. Normal mutation consent applies.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
 
 **Workspace and folder item inventory**
 
