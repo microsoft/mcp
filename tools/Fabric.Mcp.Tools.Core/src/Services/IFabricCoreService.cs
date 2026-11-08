@@ -49,6 +49,17 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Renames one logical workspace folder with one PATCH, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the existing folder.</param>
+    /// <param name="displayName">The unchanged required replacement name, subject to Fabric folder naming rules.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not an update that may already have occurred.</param>
+    Task<FolderUpdateCommandResult> UpdateFolderAsync(
+        string workspaceId,
+        string folderId,
+        string displayName,
+        CancellationToken cancellationToken = default);
+
     Task<ItemCreateCommandResult> CreateItemAsync(
         string workspaceId,
         CreateItemRequest request,

@@ -15,6 +15,13 @@ Workspace capacity assignment changes a live resource. Use only with an explicit
 
 Definition updates replace the complete definition of an existing item. Review the full selected parts and obtain authorization before a live update; these prompts are not permission to modify a workspace. Never upload only changed files, merge with a fetched definition, or retrieve an operation result after a no-result update succeeds.
 
+Folder updates require explicit workspace/folder UUIDs, a replacement display name, and normal
+mutation consent. Send one PATCH without moving the folder, fetching its old name, or checking
+uniqueness. Do not trim/sanitize names, invent a replacement after a duplicate-name error, or
+resubmit after confirmed update with unavailable metadata. After an uncertain send, a separate
+explicit Get Folder can inspect the known folder; no hidden verification or retry is authorized.
+These prompts do not authorize live mutations or fixture discovery.
+
 Job-instance lookup requires explicitly supplied workspace, item, and existing job-instance IDs. These prompts do not authorize starting a job or discovering a live fixture. Job-instance IDs are not Fabric operation IDs, and a successful snapshot read does not mean the job succeeded.
 
 Job-instance listing requires explicit workspace/item UUIDs and returns one complete page per call.
@@ -154,6 +161,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_list-workspaces | List my Fabric workspaces where I am an Admin or Member using the Core management API, not the OneLake storage listing. | none |
 | core_list-workspaces | List accessible Fabric workspaces and include their workspace-specific API endpoints. | none |
 | core_list-workspaces | Get the next page of accessible Fabric workspace management metadata using the continuation token from the preceding list, keeping the same role filter and endpoint preference. | context-required |
+| core_update-folder | Rename logical folder bbbbbbbb-1111-2222-3333-cccccccccccc in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb to Quarterly Sales. Send one PATCH after mutation consent; do not move the folder or inspect it first. | none |
+| core_update-folder | Update the display name of the Fabric folder using my supplied workspace UUID, folder UUID, and exact replacement name. Do not trim or sanitize it or change OneLake or local directories. | context-required |
+| core_update-folder | Rename the specified folder once and return its actual updated metadata, leaving unavailable parent metadata omitted. Do not resolve names, check duplicates, poll, or retry. | context-required |
+| core_update-folder | Update the known folder to my requested name. If Fabric reports FolderDisplayNameAlreadyInUse, keep that failure instead of generating another name. | context-required |
+| core_update-folder | Explain the confirmed folder update whose returned metadata was unreadable; do not repeat it. Any inspection of the supplied workspace and folder IDs must be a separate explicit get-folder call. | context-required |
 | core_update-item | Rename Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to ProjectNotebook, leaving its description unchanged. | none |
 | core_update-item | Set the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 to "Monthly reporting", without changing its name or definition. | none |
 | core_update-item | Clear only the description of Fabric item 5b218778-e7a5-4d73-8187-f10824047715 in workspace cfafbeb1-8037-4d0c-896e-a46fb27ff229 by setting it to an empty string. | none |

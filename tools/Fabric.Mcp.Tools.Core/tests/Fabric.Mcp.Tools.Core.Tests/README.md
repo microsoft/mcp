@@ -15,6 +15,10 @@ Offline tests for the Fabric Core toolset.
 - **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
 - **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
 - **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
+- **Commands/FolderUpdateCommandTests.cs**: Required workspace/folder/name binding, metadata-replacement hints, typed 200 snapshots, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-update guidance
+- **Validation/FolderUpdateInputTests.cs**: Shared unchanged Create/Update naming rules, exact Unicode character boundaries, invalid surrogate rejection, UUID validation, and no host filesystem rules
+- **Services/FolderUpdateServiceTests.cs**: One exact PATCH with only displayName, authoritative snapshots and matching identities, optional parents, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, and concurrent caller isolation
+- **FolderUpdateMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, CLI duplicate/valueless rejection, and confirmed-update errors through the wire envelope
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
@@ -774,6 +778,24 @@ Delete Workspace selects `ResponseHeadersRead` on the inherited authenticated se
 
 Workspace deletion tests substitute every credential and HTTP request. They never delete real workspaces. These tests do not establish live Fabric behavior, actual identity permissions, OBO authorization, or recorded playback. Approval to implement or run these offline tests does not authorize a real deletion.
 
+## Folder Updates
+
+Update Folder sends one authenticated PATCH with only the required replacement display name.
+Create and Update share unchanged Fabric name validation, while Get retains its separate read
+semantics. The service reuses the bounded folder snapshot reader and checks both requested
+identities; absent/null parent metadata stays omitted. HTTP 200 with unreadable metadata remains
+a confirmed update, not proof of failure to apply the mutation. Pre-send failures, known HTTP
+rejections, and uncertain sends are distinguished without exposing backend payloads or retrying.
+The advertised name schema is a string. The existing MCP argument binder can join a string array
+into one space-separated string; tests preserve this shared conversion rather than claiming strict
+original-JSON-type rejection or changing other tools. Repeated option keys are rejected.
+
+The replacement follows Core Item/Workspace Update's destructive/idempotent hints, not execution
+or schedule semantics. It is not secret-bearing and uses normal host mutation consent. Read-only
+mode excludes Update while retaining Get/List. All request fixtures are offline, with substituted
+credentials and HTTP; real host startup tests inspect discovery without calling Fabric. No live
+folder, customer-ID discovery, OBO/RBAC validation, or recorded playback is implied.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
@@ -829,6 +851,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run folder lookup command, service, and registered MCP tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderGet*"
+
+# Run folder updates and the shared naming/snapshot/catalog regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*Folder*" "*FabricCoreCatalogTests" "*FabricCoreSetupTests"
 
 # Run workspace listing tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
