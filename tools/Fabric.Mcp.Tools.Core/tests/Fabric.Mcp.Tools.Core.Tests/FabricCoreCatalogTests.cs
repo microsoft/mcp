@@ -25,6 +25,7 @@ public sealed class FabricCoreCatalogTests()
     private static readonly (string Name, Type CommandType, bool ReadOnly)[] ExpectedTools =
     [
         ("core_assign-workspace-to-capacity", typeof(WorkspaceAssignToCapacityCommand), false),
+        ("core_create-folder", typeof(FolderCreateCommand), false),
         ("core_create-item", typeof(ItemCreateCommand), false),
         ("core_create-workspace", typeof(WorkspaceCreateCommand), false),
         ("core_delete-item", typeof(ItemDeleteCommand), false),

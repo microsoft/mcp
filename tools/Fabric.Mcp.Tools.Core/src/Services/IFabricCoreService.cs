@@ -16,6 +16,17 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Creates one logical workspace folder with one POST, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="displayName">The unchanged display name, subject to Fabric folder naming rules.</param>
+    /// <param name="parentFolderId">An existing nonempty folder UUID; null creates at the workspace root.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a creation that may already have occurred.</param>
+    Task<FolderCreateCommandResult> CreateFolderAsync(
+        string workspaceId,
+        string displayName,
+        string? parentFolderId = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete page of logical workspace folders without walking folders or following continuation URLs.</summary>
     /// <param name="workspaceId">The nonempty workspace UUID.</param>
     /// <param name="rootFolderId">An optional nonempty root folder UUID; null uses the workspace root.</param>
