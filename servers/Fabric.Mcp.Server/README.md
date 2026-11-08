@@ -348,7 +348,7 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, or retrieves logical workspace folders.
+items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, retrieves, or renames logical workspace folders.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -359,7 +359,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing/creation/lookup, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace, folder listing/creation/lookup/rename, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -473,6 +473,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
+| `core_update-folder` | Renames one known logical workspace folder with an explicit replacement display name. Returns updated metadata without moving the folder, lookups, retries, or polling. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
 | `core_update-item-definition` | Replaces a known item's complete definition from inline content or explicitly selected saved files. Optionally applies supplied `.platform` metadata and waits for a no-result operation. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
@@ -1023,6 +1024,45 @@ available in read-only mode over stdio and HTTP without sensitive-content consen
 Errors preserve known HTTP status and validated `Retry-After`, even if optional error metadata cannot
 be read. Only a safe error code is projected, never backend messages or nested details.
 Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Update Folder (`core_update-folder`)**
+
+Calls [Update Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/update-folder) with exactly
+one `PATCH /v1/workspaces/{workspaceId}/folders/{folderId}`. The required `workspace-id` and `folder-id`
+are nonempty UUIDs; `display-name` is also required, not an optional PATCH field. The JSON body contains
+only `displayName`. This renames a logical workspace folder; it does not move it, change items or
+permissions, or act on OneLake directories or local paths.
+
+```powershell
+fabmcp core update-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --display-name "Quarterly Sales"
+```
+
+The replacement uses the same Fabric naming rules as Create Folder above: 1 to 255 Unicode
+characters, without trimming, sanitizing, or host filesystem rules. Invalid inputs fail before
+authentication or HTTP. Fabric enforces name uniqueness; a duplicate-name error remains a failure,
+with no fallback name. There is no description, parent, or path input, Get/List/name-resolution
+preflight, metadata merge, automatic retry, follow-up read, or LRO/polling behavior.
+
+**Only HTTP 200 confirms the update.** The typed result contains `updateStatus: "Updated"`, the
+returned `folder` snapshot, `guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when
+supplied. Folder and workspace identities must match the request. Available parent metadata is
+preserved; absent/null parents remain omitted, not inferred. Unknown fields are not returned.
+Responses are bounded to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**; malformed,
+duplicate, invalid-Unicode, or mismatched metadata is an error, not a synthesized successful snapshot.
+
+If HTTP 200 is followed by unreadable or invalid metadata, the error preserves **confirmed update**
+and says not to resubmit. Authentication/pre-send failures report that the request was not sent.
+An uncertain send can leave the update applied: inspect the known folder separately before another
+update, never retry blindly. Error responses retain observed HTTP status and validated `Retry-After`
+when optional error metadata is unusable, and expose only a safe error code, not backend messages.
+Location and operation headers are ignored.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Like Core Item/Workspace Update, replacing existing
+metadata is marked destructive and idempotent, not secret-bearing, remote-capable, and **excluded
+from read-only mode**. The host's normal mutation confirmation applies. Offline tests do not
+establish live Fabric, OBO/RBAC, or recorded-playback behavior.
 
 **Workspace and folder item inventory**
 

@@ -282,9 +282,11 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
         Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
+        Assert.DoesNotContain("jobs_update-folder", names);
         if (namespaces != "jobs" && !readOnly)
         {
             var createFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-folder");
@@ -298,6 +300,19 @@ public class ServerStartupTests
             Assert.Equal(["display-name", "parent-folder-id", "workspace-id"],
                 schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
             Assert.Contains("exactly one POST", createFolder.GetProperty("description").GetString());
+            var updateFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-folder");
+            var updateAnnotations = updateFolder.GetProperty("annotations");
+            Assert.False(updateAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(updateAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(updateAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(updateAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var updateSchema = updateFolder.GetProperty("inputSchema");
+            Assert.Equal(["display-name", "folder-id", "workspace-id"],
+                updateSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["display-name", "folder-id", "workspace-id"],
+                updateSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one PATCH", updateFolder.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", updateFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
         }
         if (namespaces != "jobs")
         {
