@@ -27,6 +27,15 @@ public interface IFabricCoreService
         string? parentFolderId = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one logical workspace folder snapshot with one GET, without related lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the existing folder.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<FolderGetCommandResult> GetFolderAsync(
+        string workspaceId,
+        string folderId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete page of logical workspace folders without walking folders or following continuation URLs.</summary>
     /// <param name="workspaceId">The nonempty workspace UUID.</param>
     /// <param name="rootFolderId">An optional nonempty root folder UUID; null uses the workspace root.</param>

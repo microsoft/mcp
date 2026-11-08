@@ -16,6 +16,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(CreateFolderRequest))]
 [JsonSerializable(typeof(FabricFolder))]
 [JsonSerializable(typeof(FolderCreateCommandResult))]
+[JsonSerializable(typeof(FolderGetCommandResult))]
 [JsonSerializable(typeof(FolderListCommandResult))]
 [JsonSerializable(typeof(FabricItem))]
 [JsonSerializable(typeof(FabricItemDefinition))]

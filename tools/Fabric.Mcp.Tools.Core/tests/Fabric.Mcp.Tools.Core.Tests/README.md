@@ -9,6 +9,9 @@ Offline tests for the Fabric Core toolset.
 - **Validation/FolderCreateInputTests.cs**: Fabric naming constraints, Unicode character boundaries, invalid surrogate rejection, UUID validation, unchanged names, and no host filesystem rules
 - **Services/FolderCreateServiceTests.cs**: Exactly one authenticated POST, parent omission, safe typed metadata, identity checks, absent optional parents, malformed/Unicode/duplicate data, exact byte/depth limits, status/retry preservation, cancellation/disposal, and concurrent caller isolation
 - **FolderCreateMcpTests.cs**: Actual registration, schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, additive creation without elicitation, zero-I/O invalid input, explicit null parents, CLI duplicate/valueless rejection, and confirmed-creation errors through the wire envelope
+- **Commands/FolderGetCommandTests.cs**: Explicit workspace/folder UUID binding, read-only remote metadata, typed snapshots, safe read-specific errors/logging, status/retry guidance, and cancellation forwarding
+- **Services/FolderGetServiceTests.cs**: One authenticated GET without a body or preflight, matching identities, absent/null parents, unchanged legacy names, unknown-field projection, malformed/Unicode/duplicate data, exact byte/depth budgets, bounded safe errors, authentication/cancellation/disposal, and concurrent caller isolation
+- **FolderGetMcpTests.cs**: Actual registration, schema/learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only catalogs, no disclosure consent, zero-I/O invalid inputs/authentication failures, CLI duplicate/valueless rejection, and shallow JSON-RPC output at the maximum input depth
 - **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
 - **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
 - **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
@@ -114,6 +117,20 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Folder Lookup
+
+`core_get-folder` requires explicit workspace and folder UUIDs and sends exactly one GET. It checks
+both returned IDs, requires a string display name without imposing creation naming rules, and
+preserves an available parent UUID without looking it up. Absent/null parent metadata stays omitted.
+Unknown fields are validated then dropped; malformed, duplicate, invalid-Unicode, oversized, or
+wrong-identity responses fail instead of returning partial/default metadata. Tests cover the 1 MiB
+byte limit and 64-level JSON depth boundary, including the final JSON-RPC envelope.
+
+The read-only tool is not secret-bearing and does not elicit disclosure consent. Known HTTP errors
+and Retry-After survive unusable optional error metadata, with only safe codes exposed. Tests
+substitute HTTP and credentials; real host startup tests cover discovery only, not live Fabric,
+OBO/RBAC, or recorded playback. No live fixture is assumed or discovered.
 
 ## Shared Core Building Blocks
 
@@ -810,6 +827,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 # Run only Get Workspace command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceGetCommandTests"
 
+# Run folder lookup command, service, and registered MCP tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderGet*"
+
 # Run workspace listing tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
 
@@ -864,4 +884,4 @@ Assignment uses the shared authenticated sender with `ResponseHeadersRead`, pres
 
 The assignment-specific Retry-After projection remains nullable `long` seconds and ignores dates. Its existing BCL parser accepts deltas up to `int.MaxValue`; returning a `long` does not widen those accepted inputs. The typed header getter can retain the first valid value when multiple values are supplied, whereas the shared helper rejects every multiple-valued header. The local projection preserves that behavior rather than changing the accepted input set. Boundary tests cover raw and typed deltas, dates, and multiple headers.
 
-Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback is unchanged, as are the Item Delete explicit Boolean safeguard and the six-tool read-only Core set.
+Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback and Item Delete explicit Boolean safeguard are unchanged; read-only Core membership is checked by the catalog manifest.

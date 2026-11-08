@@ -280,8 +280,10 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
         Assert.DoesNotContain("jobs_create-folder", names);
+        Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
         if (namespaces != "jobs" && !readOnly)
         {
@@ -299,6 +301,16 @@ public class ServerStartupTests
         }
         if (namespaces != "jobs")
         {
+            var getFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-folder");
+            var annotations = getFolder.GetProperty("annotations");
+            Assert.True(annotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(annotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(annotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(annotations.GetProperty("openWorldHint").GetBoolean());
+            var schema = getFolder.GetProperty("inputSchema");
+            Assert.Equal(["folder-id", "workspace-id"], schema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["folder-id", "workspace-id"], schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", getFolder.GetProperty("description").GetString());
             var folders = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-folders");
             Assert.True(folders.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
             Assert.True(folders.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());

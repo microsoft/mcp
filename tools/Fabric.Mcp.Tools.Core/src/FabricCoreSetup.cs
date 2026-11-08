@@ -42,6 +42,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<FolderCreateCommand>(CreateFolderCreateCommand);
+        services.AddSingleton<FolderGetCommand>(CreateFolderGetCommand);
         services.AddSingleton<FolderListCommand>(CreateFolderListCommand);
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
         services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
@@ -70,6 +71,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible Fabric capacities and their metadata\n" +
             "- List logical workspace folders and their parent relationships by explicit workspace ID\n" +
             "- Create one logical workspace folder at the root or under an explicitly identified parent\n" +
+            "- Get metadata for one logical workspace folder by explicit workspace and folder IDs\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
@@ -90,6 +92,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<FolderCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderGetCommand>(serviceProvider);
         fabricCore.AddCommand<FolderListCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
@@ -123,6 +126,23 @@ public class FabricCoreSetup : IAreaSetup
             if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each create-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderGetCommand CreateFolderGetCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderGetCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderGetCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each get-folder option at most once.");
             }
         });
         return command;
