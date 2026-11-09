@@ -104,6 +104,12 @@ CannotMoveChildOnly is a failure, not permission to discover or move a parent. D
 move across workspaces, create folders, verify with a hidden read, poll, or retry automatically.
 These prompts are not authorization to discover customer IDs or move live items.
 
+Workspace role-assignment listing requires an explicit workspace UUID and Member-or-higher access.
+Return one complete page and use only its unchanged continuation token for a separate call to the same
+workspace. Missing/null terminal metadata and empty pages follow the Fabric pagination contract.
+Do not look up identities in Graph, expand groups, infer effective permissions, enrich rows, or mutate roles.
+These prompts do not authorize live workspace discovery, permission changes, or live/recorded validation.
+
 Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
@@ -185,6 +191,10 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_list-items | List the Lakehouse items in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | none |
 | core_list-items | Show only items directly in Fabric folder bbbbbbbb-1111-2222-3333-cccccccccccc within workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, not its nested folders. | none |
 | core_list-items | Get the next page of Fabric items in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb using the continuation token from the previous listing and the same filters. | context-required |
+| core_list-workspace-role-assignments | List one page of role assignments in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. Return assignment IDs, roles, and the principal metadata supplied by Fabric without Graph lookups. | none |
+| core_list-workspace-role-assignments | Show workspace role assignments for my supplied workspace UUID through the read-only HTTP server. Do not expand group membership, infer effective permissions, or change any role. | context-required |
+| core_list-workspace-role-assignments | Request the next role-assignment page for the same workspace using the unchanged token from the preceding response, even if that page was empty. Do not follow its continuation URL or fetch rows individually. | context-required |
+| core_list-workspace-role-assignments | Explain the access-denied result when listing role assignments. Report Member-or-higher workspace access and delegated Workspace.Read.All or Workspace.ReadWrite.All requirements without modifying permissions or discovering another workspace. | context-required |
 | core_list-workspaces | List the Microsoft Fabric workspaces I can access and show their workspace IDs, types, capacity, and domain metadata. | none |
 | core_list-workspaces | List my Fabric workspaces where I am an Admin or Member using the Core management API, not the OneLake storage listing. | none |
 | core_list-workspaces | List accessible Fabric workspaces and include their workspace-specific API endpoints. | none |

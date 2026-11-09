@@ -283,6 +283,7 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_list-workspace-role-assignments"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
@@ -290,6 +291,7 @@ public class ServerStartupTests
         Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
+        Assert.DoesNotContain("jobs_list-workspace-role-assignments", names);
         Assert.DoesNotContain("jobs_move-folder", names);
         Assert.DoesNotContain("jobs_move-item", names);
         Assert.DoesNotContain("jobs_update-folder", names);
@@ -386,6 +388,17 @@ public class ServerStartupTests
                 options.EnumerateObject().Select(property => property.Name).Order());
             Assert.Equal(["boolean", "null"], options.GetProperty("recursive").GetProperty("type").EnumerateArray().Select(value => value.GetString()));
             Assert.False(options.GetProperty("recursive").TryGetProperty("default", out _));
+            var roles = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-workspace-role-assignments");
+            Assert.True(roles.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(roles.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(roles.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(roles.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            var roleSchema = roles.GetProperty("inputSchema");
+            Assert.Equal("workspace-id", Assert.Single(roleSchema.GetProperty("required").EnumerateArray()).GetString());
+            Assert.Equal(["continuation-token", "workspace-id"],
+                roleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", roles.GetProperty("description").GetString());
+            Assert.Contains("Member or higher", roles.GetProperty("description").GetString());
         }
         if (namespaces is not null)
         {
