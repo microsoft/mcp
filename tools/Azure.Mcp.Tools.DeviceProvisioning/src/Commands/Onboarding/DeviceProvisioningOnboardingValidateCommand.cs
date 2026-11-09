@@ -258,9 +258,7 @@ public sealed class DeviceProvisioningOnboardingValidateCommand(
     }
 
     private static bool IsAlphaNumeric(char value) =>
-        value is >= 'a' and <= 'z' or
-            >= 'A' and <= 'Z' or
-            >= '0' and <= '9';
+        char.IsAsciiLetterOrDigit(value);
 
     private static bool IsValidServiceName(string value)
     {
