@@ -9,11 +9,20 @@ These prompts describe tool selection, not live test execution. Delete Item is t
 
 Delete Workspace likewise uses substituted HTTP and credentials only. Its prompts describe deletion of the specified workspace and the items under it, not authorization to execute a real deletion.
 
-For every deletion prompt, explain the scope and request consent before sending one request. Omitted or false `hard-delete` uses the default behavior, with soft deletion dependent on item-type support; do not promise recovery or fall back to permanent deletion. Explicit true requests permanent deletion, which cannot be recovered and requires workspace Admin. Workspace deletion includes its items; do not promise recovery or permanent-deletion semantics, and do not prefetch, delete items individually, retry, or poll.
+For every deletion prompt, explain the scope and request consent before sending one request. For Delete Item, omitted or false `hard-delete` uses the default behavior, with soft deletion dependent on item-type support; do not promise recovery or fall back to permanent deletion. Explicit true requests permanent deletion, which cannot be recovered and requires workspace Admin. Workspace deletion includes its items; do not promise recovery or permanent-deletion semantics, and do not prefetch, delete items individually, retry, or poll.
 
 Workspace capacity assignment changes a live resource. Use only with an explicitly approved workspace, capacity, and identity; do not run these assignments as automated development checks.
 
 Definition updates replace the complete definition of an existing item. Review the full selected parts and obtain authorization before a live update; these prompts are not permission to modify a workspace. Never upload only changed files, merge with a fetched definition, or retrieve an operation result after a no-result update succeeds.
+
+Folder deletion requires explicit workspace/folder UUIDs and normal destructive-operation consent.
+Explain that only an empty logical folder is removed; items, including soft-deleted items, or
+nested folders prevent deletion. Send one DELETE without a body, flags, emptiness preflight,
+automatic emptying, retries, or verification. Return a receipt only for HTTP 200, not 202/204 or
+404. Keep FolderNotEmpty and FolderNotFound as failures; never move or delete contents to fix them.
+There is no recursive, force, or hard-delete option or documented folder recovery/retention guarantee.
+After an uncertain send, inspect separately only when explicitly requested. Do not resubmit
+confirmed deletion. These prompts do not authorize deleting real folders or discovering a live fixture.
 
 Folder updates require explicit workspace/folder UUIDs, a replacement display name, and normal
 mutation consent. Send one PATCH without moving the folder, fetching its old name, or checking
@@ -123,6 +132,11 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_create-workspace | Create a new Fabric workspace named Finance Sandbox with description Quarterly planning experiments. | none |
 | core_create-workspace | Create a Fabric workspace called Capacity Analytics and assign it to existing capacity f4031b2e-318f-4a14-9a3e-103e9bcfc953 during creation. | none |
 | core_create-workspace | Create a Microsoft Fabric workspace named Domain Analytics on capacity f4031b2e-318f-4a14-9a3e-103e9bcfc953 and assign it to domain 88d8f15b-5105-449b-98d3-681345f00326 in the same request. | none |
+| core_delete-folder | Delete empty logical folder bbbbbbbb-1111-2222-3333-cccccccccccc from Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb after explaining the scope and obtaining mutation consent. Send one DELETE without inspecting or changing its contents. | none |
+| core_delete-folder | Delete the empty Fabric folder using my supplied workspace and folder UUIDs. Return the HTTP 200 deletion receipt, not a folder snapshot or recovery promise; do not act on OneLake or local paths. | context-required |
+| core_delete-folder | Explain the FolderNotEmpty failure from deleting the specified folder. Do not move or delete items or nested folders, permanently delete retained items, invent a force flag, or retry. | context-required |
+| core_delete-folder | My repeated delete-folder call returned FolderNotFound. Keep it as a failure rather than claiming that this request deleted the folder. | context-required |
+| core_delete-folder | After my folder deletion returned an uncertain outcome, explain why it must not be blindly repeated. Use Get Folder only as a separate explicit inspection if I request it with the known IDs. | context-required |
 | core_delete-item | Delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb from workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa using the default deletion behavior. Do not request permanent deletion. | none |
 | core_delete-item | Delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb in workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa with hard-delete explicitly set to false. | none |
 | core_delete-item | Permanently delete Fabric item bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb from workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. Explicitly set hard-delete to true. | none |

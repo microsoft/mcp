@@ -280,11 +280,13 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
         Assert.DoesNotContain("jobs_create-folder", names);
+        Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
         Assert.DoesNotContain("jobs_move-folder", names);
@@ -302,6 +304,20 @@ public class ServerStartupTests
             Assert.Equal(["display-name", "parent-folder-id", "workspace-id"],
                 schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
             Assert.Contains("exactly one POST", createFolder.GetProperty("description").GetString());
+            var deleteFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-folder");
+            var deleteAnnotations = deleteFolder.GetProperty("annotations");
+            Assert.False(deleteAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(deleteAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(deleteAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(deleteAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var deleteSchema = deleteFolder.GetProperty("inputSchema");
+            Assert.Equal(["folder-id", "workspace-id"],
+                deleteSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["folder-id", "workspace-id"],
+                deleteSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one DELETE", deleteFolder.GetProperty("description").GetString());
+            Assert.Contains("empty logical", deleteFolder.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", deleteFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
             var moveFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_move-folder");
             var moveAnnotations = moveFolder.GetProperty("annotations");
             Assert.False(moveAnnotations.GetProperty("readOnlyHint").GetBoolean());

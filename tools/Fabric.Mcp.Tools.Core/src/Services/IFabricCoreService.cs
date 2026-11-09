@@ -27,6 +27,16 @@ public interface IFabricCoreService
         string? parentFolderId = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Deletes one empty logical workspace folder with one DELETE, without preflight, changing contents, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the empty folder to delete.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    /// <returns>A receipt only when HTTP 200 confirms deletion; no folder snapshot or recovery guarantee.</returns>
+    Task<FolderDeleteCommandResult> DeleteFolderAsync(
+        string workspaceId,
+        string folderId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one logical workspace folder snapshot with one GET, without related lookups, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="folderId">The nonempty UUID of the existing folder.</param>

@@ -9,6 +9,9 @@ Offline tests for the Fabric Core toolset.
 - **Validation/FolderCreateInputTests.cs**: Fabric naming constraints, Unicode character boundaries, invalid surrogate rejection, UUID validation, unchanged names, and no host filesystem rules
 - **Services/FolderCreateServiceTests.cs**: Exactly one authenticated POST, parent omission, safe typed metadata, identity checks, absent optional parents, malformed/Unicode/duplicate data, exact byte/depth limits, status/retry preservation, cancellation/disposal, and concurrent caller isolation
 - **FolderCreateMcpTests.cs**: Actual registration, schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, additive creation without elicitation, zero-I/O invalid input, explicit null parents, CLI duplicate/valueless rejection, and confirmed-creation errors through the wire envelope
+- **Commands/FolderDeleteCommandTests.cs**: Required UUID binding, destructive/idempotent metadata, typed deletion receipts, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-deletion guidance
+- **Services/FolderDeleteServiceTests.cs**: One exact DELETE without body/query/preflight, empty HTTP 200 receipts, no contents changes, explicit repeat 404 failures, bounded safe error/status/retry handling, cancellation/disposal/confirmed-outcome preservation, concurrency, and separate explicit Get inspection
+- **FolderDeleteMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, normal destructive consent, zero-I/O invalid/authentication/declined-consent cases, shared string binding, CLI duplicate/valueless rejection, and confirmed receipts/errors through the wire envelope
 - **Commands/FolderGetCommandTests.cs**: Explicit workspace/folder UUID binding, read-only remote metadata, typed snapshots, safe read-specific errors/logging, status/retry guidance, and cancellation forwarding
 - **Services/FolderGetServiceTests.cs**: One authenticated GET without a body or preflight, matching identities, absent/null parents, unchanged legacy names, unknown-field projection, malformed/Unicode/duplicate data, exact byte/depth budgets, bounded safe errors, authentication/cancellation/disposal, and concurrent caller isolation
 - **FolderGetMcpTests.cs**: Actual registration, schema/learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only catalogs, no disclosure consent, zero-I/O invalid inputs/authentication failures, CLI duplicate/valueless rejection, and shallow JSON-RPC output at the maximum input depth
@@ -125,6 +128,30 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Folder Deletion
+
+`core_delete-folder` sends one DELETE for explicit workspace and folder UUIDs, with no body or query.
+Fabric accepts only empty logical folders: any items or nested folders cause `FolderNotEmpty`.
+Retained soft-deleted items can also block deletion. No preflight, contents enumeration, automatic
+emptying, move, cascade, retry, verification, or LRO behavior is implemented. No recursive/force/
+hard-delete options or folder recovery/retention guarantees are invented.
+
+Only HTTP 200 confirms deletion, returning requested IDs and `deletionStatus: "Deleted"`, not a
+snapshot. The service never reads an irrelevant success body or lets late cancellation erase
+confirmation. A local disposal failure after 200 still reports confirmed deletion. Failures,
+including repeat 404/`FolderNotFound`, stay failures; unusable optional error JSON preserves the
+observed status and validated Retry-After. Tests cover exact byte/depth/error-code bounds and
+malformed escaped Unicode. Authentication/pre-send failures are distinct from uncertain sends.
+
+The tool is destructive, idempotent by effect, remote-capable, not secret-bearing, and excluded
+from read-only catalogs. Normal mutation consent is required; no new consent or gating policy is
+introduced. The existing single shared README note covers all Folder REST APIs. String schemas
+retain shared MCP binding behavior, including a one-element string array converted to a UUID
+string; tests do not claim strict validation of original JSON types.
+
+All responses and credentials are offline fixtures. No live folder may be discovered or deleted,
+and these tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
 
 ## Folder Lookup
 
@@ -879,6 +906,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run folder lookup command, service, and registered MCP tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderGet*"
+
+# Run empty-folder deletion command, HTTP, and registered MCP tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderDelete*"
 
 # Run folder updates and the shared naming/snapshot/catalog regressions
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*Folder*" "*FabricCoreCatalogTests" "*FabricCoreSetupTests"
