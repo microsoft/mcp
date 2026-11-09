@@ -22,6 +22,13 @@ resubmit after confirmed update with unavailable metadata. After an uncertain se
 explicit Get Folder can inspect the known folder; no hidden verification or retry is authorized.
 These prompts do not authorize live mutations or fixture discovery.
 
+Folder movement requires explicit workspace/folder UUIDs and normal mutation consent. A supplied
+target-folder-id selects an existing folder in the same workspace; omission or JSON null selects
+the workspace root. Send one POST without resolving names, creating a destination, walking the
+hierarchy, or moving items individually. Fabric handles the subtree and enforces hierarchy/depth/name
+conflicts. Do not retry an uncertain move blindly or resubmit confirmed movement with unavailable
+metadata. These prompts do not authorize moving real folders or discovering a live fixture.
+
 Job-instance lookup requires explicitly supplied workspace, item, and existing job-instance IDs. These prompts do not authorize starting a job or discovering a live fixture. Job-instance IDs are not Fabric operation IDs, and a successful snapshot read does not mean the job succeeded.
 
 Job-instance listing requires explicit workspace/item UUIDs and returns one complete page per call.
@@ -161,6 +168,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_list-workspaces | List my Fabric workspaces where I am an Admin or Member using the Core management API, not the OneLake storage listing. | none |
 | core_list-workspaces | List accessible Fabric workspaces and include their workspace-specific API endpoints. | none |
 | core_list-workspaces | Get the next page of accessible Fabric workspace management metadata using the continuation token from the preceding list, keeping the same role filter and endpoint preference. | context-required |
+| core_move-folder | Move logical folder bbbbbbbb-1111-2222-3333-cccccccccccc into existing folder aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb within Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. Send one POST after mutation consent; do not enumerate or move its children individually. | none |
+| core_move-folder | Move folder bbbbbbbb-1111-2222-3333-cccccccccccc to the root of workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb by omitting target-folder-id. Do not rename it or create a destination. | none |
+| core_move-folder | Move the known folder to the workspace root using my supplied workspace and folder UUIDs and target-folder-id null. Do not operate on OneLake paths or local directories. | context-required |
+| core_move-folder | Move the specified folder once within its workspace. If Fabric reports a hierarchy, depth, or duplicate-name conflict, retain the failure without trying another target or renaming anything. | context-required |
+| core_move-folder | Explain the confirmed folder movement whose metadata was unreadable; do not repeat it or infer a missing parent. Any inspection must be a separate explicit get-folder call. | context-required |
+| core_move-folder | After my earlier folder move returned an uncertain outcome, explain why it must not be blindly repeated. Use a separate explicit Get Folder only if I request inspection with the known IDs. | context-required |
 | core_update-folder | Rename logical folder bbbbbbbb-1111-2222-3333-cccccccccccc in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb to Quarterly Sales. Send one PATCH after mutation consent; do not move the folder or inspect it first. | none |
 | core_update-folder | Update the display name of the Fabric folder using my supplied workspace UUID, folder UUID, and exact replacement name. Do not trim or sanitize it or change OneLake or local directories. | context-required |
 | core_update-folder | Rename the specified folder once and return its actual updated metadata, leaving unavailable parent metadata omitted. Do not resolve names, check duplicates, poll, or retry. | context-required |
