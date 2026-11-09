@@ -11,5 +11,6 @@ public sealed class AzApiDocsResult
     public string ParentResourceType { get; set; } = string.Empty;
     public string WritableScopes { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string? Note { get; set; }
     public List<AzApiExample>? Examples { get; set; }
 }

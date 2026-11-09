@@ -4,7 +4,9 @@
 using System.Text;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Azure.Mcp.Tools.BicepSchema.Services;
+using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
+using Azure.Mcp.Tools.BicepSchema.Services.Support;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
@@ -18,9 +20,40 @@ public sealed class AzApiDocsService : IAzApiDocsService
         return services.BuildServiceProvider();
     });
 
+    private const int MaxSuggestions = 5;
+
     public AzApiDocsResult GetDocumentation(string resourceTypeName, string? apiVersion = null)
     {
         var serviceProvider = s_schemaServiceProvider.Value;
+        ResourceVisitor resourceVisitor = serviceProvider.GetRequiredService<ResourceVisitor>();
+
+        (resourceTypeName, apiVersion) = NormalizeInput(resourceTypeName, apiVersion);
+
+        if (!resourceTypeName.Contains('/'))
+        {
+            throw new InvalidDataException(
+                $"Invalid resource type \"{resourceTypeName}\". Use ARM format, e.g. Microsoft.Storage/storageAccounts.");
+        }
+
+        UniqueResourceType knownType = resourceVisitor.FindResourceTypeAndVersions(resourceTypeName)
+            ?? throw new InvalidDataException(BuildTypeNotFoundMessage(resourceTypeName, resourceVisitor));
+        resourceTypeName = knownType.ResourceType;
+
+        // Callers often ask for API versions that are not in the bundled type index (newer or mistyped versions).
+        // Fall back to the latest stable version and say so, rather than failing the call.
+        string? note = null;
+        if (!string.IsNullOrEmpty(apiVersion) && !knownType.ApiVersions.Contains(apiVersion, StringComparer.OrdinalIgnoreCase))
+        {
+            string fallback = ApiVersionSelector.SelectLatestStable(knownType.ApiVersions);
+            note = $"API version \"{apiVersion}\" is not available for {resourceTypeName}; showing {fallback} instead. "
+                + $"Available versions: {string.Join(", ", knownType.ApiVersions)}";
+            apiVersion = fallback;
+        }
+        else if (!string.IsNullOrEmpty(apiVersion))
+        {
+            apiVersion = knownType.ApiVersions.First(v => v.Equals(apiVersion, StringComparison.OrdinalIgnoreCase));
+        }
+
         TypesDefinitionResult typesResult = SchemaGenerator.GetResourceTypeDefinitions(serviceProvider, resourceTypeName, apiVersion);
         List<ComplexType> complexTypes = SchemaGenerator.GetResponse(typesResult);
 
@@ -38,8 +71,100 @@ public sealed class AzApiDocsService : IAzApiDocsService
             ParentResourceType = parentResourceType,
             WritableScopes = writableScopes,
             Summary = $"AzAPI resource schema for {fullName}",
+            Note = note,
             Examples = null
         };
+    }
+
+    // Accepts "Type@version" and trims whitespace / trailing slashes that models commonly send.
+    internal static (string ResourceType, string? ApiVersion) NormalizeInput(string resourceTypeName, string? apiVersion)
+    {
+        string type = resourceTypeName.Trim().Trim('/');
+        int at = type.IndexOf('@');
+        if (at >= 0)
+        {
+            string embedded = type[(at + 1)..].Trim();
+            type = type[..at].TrimEnd('/');
+            if (string.IsNullOrWhiteSpace(apiVersion) && embedded.Length > 0)
+            {
+                apiVersion = embedded;
+            }
+        }
+
+        return (type, string.IsNullOrWhiteSpace(apiVersion) ? null : apiVersion.Trim());
+    }
+
+    private static string BuildTypeNotFoundMessage(string resourceTypeName, ResourceVisitor resourceVisitor)
+    {
+        List<string> allTypes = [.. resourceVisitor.GetAllResourceTypesAndVersionsByProvider().Values
+            .SelectMany(p => p.ResourceTypes.Values)
+            .Select(t => t.ResourceType)];
+        List<string> suggestions = SuggestResourceTypes(resourceTypeName, allTypes);
+
+        return suggestions.Count > 0
+            ? $"Resource type {resourceTypeName} not found. Did you mean: {string.Join(", ", suggestions)}?"
+            : $"Resource type {resourceTypeName} not found.";
+    }
+
+    internal static List<string> SuggestResourceTypes(string requested, IEnumerable<string> knownTypes)
+    {
+        string lower = requested.ToLowerInvariant();
+        string provider = lower.Split('/')[0];
+        string lastSegment = lower.Split('/')[^1];
+
+        return [.. knownTypes
+            .Select(t => (Type: t, Lower: t.ToLowerInvariant()))
+            .Select(t => (t.Type, Score: ScoreCandidate(lower, provider, lastSegment, t.Lower)))
+            .Where(t => t.Score < int.MaxValue)
+            .OrderBy(t => t.Score)
+            .ThenBy(t => t.Type, StringComparer.OrdinalIgnoreCase)
+            .Take(MaxSuggestions)
+            .Select(t => t.Type)];
+    }
+
+    private static int ScoreCandidate(string requested, string provider, string lastSegment, string candidate)
+    {
+        int distance = LevenshteinDistance(requested, candidate);
+        if (distance <= Math.Max(3, requested.Length / 5))
+        {
+            return distance;
+        }
+
+        // Same provider and the requested leaf name appears in the candidate (e.g. a child type requested at the
+        // wrong level, or singular/plural mix-ups).
+        string candidateProvider = candidate.Split('/')[0];
+        string candidateLast = candidate.Split('/')[^1];
+        if (candidateProvider == provider
+            && (candidateLast.Contains(lastSegment.TrimEnd('s')) || lastSegment.Contains(candidateLast.TrimEnd('s'))))
+        {
+            return 100 + distance;
+        }
+
+        return int.MaxValue;
+    }
+
+    private static int LevenshteinDistance(string a, string b)
+    {
+        int[] previous = new int[b.Length + 1];
+        int[] current = new int[b.Length + 1];
+        for (int j = 0; j <= b.Length; j++)
+        {
+            previous[j] = j;
+        }
+
+        for (int i = 1; i <= a.Length; i++)
+        {
+            current[0] = i;
+            for (int j = 1; j <= b.Length; j++)
+            {
+                int cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                current[j] = Math.Min(Math.Min(current[j - 1] + 1, previous[j] + 1), previous[j - 1] + cost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[b.Length];
     }
 
     private static string EscapeHcl(string value) =>
