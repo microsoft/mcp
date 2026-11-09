@@ -511,11 +511,80 @@ public sealed class DeviceProvisioningOnboardingServiceTests
             StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ValidateOnboarding_BlocksConfigurationOnlyX509WhenReferencedCaIsMissing()
+    {
+        var service = CreateService(
+            _ => JsonResponse(
+                HttpStatusCode.OK,
+                CreateEnrollmentJson(
+                    attestationJson:
+                        """
+                        {
+                          "type": "x509",
+                          "x509": {
+                            "caReferences": {
+                              "primary": "missing-ca"
+                            }
+                          }
+                        }
+                        """)),
+            certificateFailureStatus: HttpStatusCode.NotFound);
+
+        var result = await service.ValidateOnboarding(
+            CreateRequest(includeRegistrationState: false),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("issuesFound", result.ValidationResult);
+        Assert.Contains(result.Findings, finding =>
+            finding.CheckId == "x509.caReferences.resolved" &&
+            finding.Status == "blocker" &&
+            finding.Message.Contains("missing-ca", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ValidateOnboarding_BlocksConfigurationOnlyX509WhenReferencedCaIsUnverified()
+    {
+        var certificate = new DeviceProvisioningCertificateDescription(
+            "unverified-ca",
+            string.Empty,
+            IsVerified: false,
+            "CN=unverified-ca",
+            "thumbprint");
+        var service = CreateService(
+            _ => JsonResponse(
+                HttpStatusCode.OK,
+                CreateEnrollmentJson(
+                    attestationJson:
+                        """
+                        {
+                          "type": "x509",
+                          "x509": {
+                            "caReferences": {
+                              "primary": "unverified-ca"
+                            }
+                          }
+                        }
+                        """)),
+            certificate: certificate);
+
+        var result = await service.ValidateOnboarding(
+            CreateRequest(includeRegistrationState: false),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("issuesFound", result.ValidationResult);
+        Assert.Contains(result.Findings, finding =>
+            finding.CheckId == "x509.caCertificates.verified" &&
+            finding.Status == "blocker" &&
+            finding.Message.Contains("unverified-ca", StringComparison.Ordinal));
+    }
+
     private static DeviceProvisioningOnboardingService CreateService(
         Func<HttpRequestMessage, HttpResponseMessage> responseFactory,
         string publicNetworkAccess = "Enabled",
         DeviceProvisioningCertificateDescription? certificate = null,
-        bool hub1AllocationEnabled = true)
+        bool hub1AllocationEnabled = true,
+        HttpStatusCode? certificateFailureStatus = null)
     {
         var managementService = Substitute.For<IDeviceProvisioningService>();
         managementService.GetService(
@@ -537,6 +606,20 @@ public sealed class DeviceProvisioningOnboardingServiceTests
                     Arg.Any<string?>(),
                     Arg.Any<CancellationToken>())
                 .Returns(certificate);
+        }
+        else if (certificateFailureStatus.HasValue)
+        {
+            managementService.GetCertificate(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<CancellationToken>())
+                .Returns(_ => Task.FromException<DeviceProvisioningCertificateDescription>(
+                    new RequestFailedException(
+                        (int)certificateFailureStatus.Value,
+                        "Certificate read failed.")));
         }
 
         var credential = Substitute.For<TokenCredential>();

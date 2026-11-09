@@ -167,6 +167,9 @@ public sealed class DeviceProvisioningOnboardingService(
             enrollment,
             result,
             cancellationToken);
+        PublicIdentityEvidenceValidator.ValidateCertificateAuthorityConfiguration(
+            enrollment,
+            result);
         OnboardingConfigurationValidator.Validate(
             service,
             enrollment,
@@ -193,7 +196,8 @@ public sealed class DeviceProvisioningOnboardingService(
                 request.CertificateChain,
                 registrationId,
                 enrollment,
-                result);
+                result,
+                validateCertificateAuthorityConfiguration: false);
         }
 
         if (request.Devices is not { Count: > 0 } &&
@@ -406,7 +410,8 @@ public sealed class DeviceProvisioningOnboardingService(
                 device.CertificateChain,
                 device.RegistrationId,
                 enrollment,
-                result);
+                result,
+                validateCertificateAuthorityConfiguration: false);
         }
         else if (!string.IsNullOrWhiteSpace(device.TpmEndorsementKey))
         {

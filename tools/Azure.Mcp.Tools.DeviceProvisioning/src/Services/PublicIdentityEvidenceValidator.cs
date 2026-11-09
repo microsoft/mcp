@@ -31,7 +31,8 @@ internal static class PublicIdentityEvidenceValidator
         string certificateChain,
         string? registrationId,
         DpsEnrollmentSnapshot enrollment,
-        IOnboardingValidationSink result)
+        IOnboardingValidationSink result,
+        bool validateCertificateAuthorityConfiguration = true)
     {
         if (ContainsPrivateKey(certificateChain))
         {
@@ -117,7 +118,11 @@ internal static class PublicIdentityEvidenceValidator
 
             if (enrollment.UsesX509CertificateAuthorityReferences)
             {
-                ValidateCertificateAuthorityReferences(certificates, enrollment, result);
+                ValidateCertificateAuthorityReferences(
+                    certificates,
+                    enrollment,
+                    result,
+                    validateCertificateAuthorityConfiguration);
                 return;
             }
 
@@ -177,11 +182,15 @@ internal static class PublicIdentityEvidenceValidator
     public static bool ContainsPrivateKey(string value) =>
         value.Contains("PRIVATE KEY", StringComparison.OrdinalIgnoreCase);
 
-    private static void ValidateCertificateAuthorityReferences(
-        X509Certificate2Collection certificates,
+    public static void ValidateCertificateAuthorityConfiguration(
         DpsEnrollmentSnapshot enrollment,
         IOnboardingValidationSink result)
     {
+        if (!enrollment.UsesX509CertificateAuthorityReferences)
+        {
+            return;
+        }
+
         var resolved = enrollment.X509CertificateAuthorities
             .Where(authority =>
                 string.Equals(authority.ResolutionStatus, "resolved", StringComparison.Ordinal) &&
@@ -250,6 +259,31 @@ internal static class PublicIdentityEvidenceValidator
             unverified.Count == 0
                 ? null
                 : "Verify the remaining configured CA certificate before relying on it for rollover.");
+    }
+
+    private static void ValidateCertificateAuthorityReferences(
+        X509Certificate2Collection certificates,
+        DpsEnrollmentSnapshot enrollment,
+        IOnboardingValidationSink result,
+        bool validateCertificateAuthorityConfiguration)
+    {
+        if (validateCertificateAuthorityConfiguration)
+        {
+            ValidateCertificateAuthorityConfiguration(enrollment, result);
+        }
+
+        var resolved = enrollment.X509CertificateAuthorities
+            .Where(authority =>
+                string.Equals(authority.ResolutionStatus, "resolved", StringComparison.Ordinal) &&
+                authority.Certificate is not null)
+            .ToList();
+        var verified = resolved
+            .Where(authority => authority.Certificate!.IsVerified)
+            .ToList();
+        if (verified.Count == 0)
+        {
+            return;
+        }
 
         var resolvedCertificates = ParseAuthorityCertificates(verified, result);
         try
