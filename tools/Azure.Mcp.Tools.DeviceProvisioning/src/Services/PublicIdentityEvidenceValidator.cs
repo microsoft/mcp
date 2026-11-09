@@ -386,8 +386,7 @@ internal static class PublicIdentityEvidenceValidator
                 "The supplied certificate chain is ordered from the device leaf through its issuers.");
         }
 
-        using var chain = new X509Chain();
-        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        using var chain = CreateChain();
         for (var index = 1; index <= anchorIndex; index++)
         {
             chain.ChainPolicy.ExtraStore.Add(certificates[index]);
@@ -497,6 +496,14 @@ internal static class PublicIdentityEvidenceValidator
             matches
                 ? null
                 : "Issue the leaf certificate with a CN that exactly matches the DPS registration ID.");
+    }
+
+    internal static X509Chain CreateChain()
+    {
+        var chain = new X509Chain();
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.DisableCertificateDownloads = true;
+        return chain;
     }
 
     private static void ValidateAlgorithms(

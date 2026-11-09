@@ -118,6 +118,51 @@ public class DeviceProvisioningOnboardingValidateCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_RejectsRegistrationIdThatDoesNotMatchIndividualEnrollment()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription",
+            "sub123",
+            "--resource-group",
+            "rg1",
+            "--service",
+            "dps1",
+            "--enrollment-id",
+            "device1",
+            "--registration-id",
+            "device2");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("must match", response.Message, StringComparison.OrdinalIgnoreCase);
+        await Service.DidNotReceive().ValidateOnboarding(
+            Arg.Any<DeviceProvisioningOnboardingValidationRequest>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AllowsInternalColonInRegistrationIds()
+    {
+        Service.ValidateOnboarding(
+                Arg.Any<DeviceProvisioningOnboardingValidationRequest>(),
+                Arg.Any<CancellationToken>())
+            .Returns(CreateResult());
+
+        var response = await ExecuteCommandAsync(
+            "--subscription",
+            "sub123",
+            "--resource-group",
+            "rg1",
+            "--service",
+            "dps1",
+            "--enrollment-id",
+            "device:01",
+            "--registration-id",
+            "device:01");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_DeserializesValidationResponse()
     {
         Service.ValidateOnboarding(

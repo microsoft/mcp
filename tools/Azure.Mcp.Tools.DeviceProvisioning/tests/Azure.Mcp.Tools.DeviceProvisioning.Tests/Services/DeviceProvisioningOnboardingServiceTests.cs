@@ -136,6 +136,41 @@ public sealed class DeviceProvisioningOnboardingServiceTests
     }
 
     [Fact]
+    public async Task ValidateOnboarding_RequiresAllocationEnabledHubForInheritedTargets()
+    {
+        var service = CreateService(
+            _ => JsonResponse(
+                HttpStatusCode.OK,
+                """
+                {
+                  "registrationId": "group1",
+                  "provisioningStatus": "enabled",
+                  "allocationPolicy": "hashed",
+                  "iotHubs": [],
+                  "attestation": {"type":"symmetricKey"},
+                  "reprovisionPolicy": {
+                    "updateHubAssignment": true,
+                    "migrateDeviceData": true
+                  }
+                }
+                """),
+            hub1AllocationEnabled: false,
+            hub2AllocationEnabled: false);
+
+        var result = await service.ValidateOnboarding(
+            CreateRequest(includeRegistrationState: false),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("issuesFound", result.ValidationResult);
+        Assert.Contains(result.Findings, finding =>
+            finding.CheckId == "allocation.linkedHubConsistency" &&
+            finding.Status == "blocker" &&
+            finding.Message.Contains(
+                "no linked IoT Hub is enabled",
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task ValidateOnboarding_DetectsUnlinkedIntendedHubWithoutRegistrationState()
     {
         var service = CreateService(_ =>
@@ -579,12 +614,32 @@ public sealed class DeviceProvisioningOnboardingServiceTests
             finding.Message.Contains("unverified-ca", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void DecodeCertificate_ConvertsBase64DerToPem()
+    {
+        var certificates = CreateDirectCertificateChain("device1");
+        using var certificate = certificates.Root;
+        using var leaf = certificates.Leaf;
+        var encodedDer = Convert.ToBase64String(
+            certificate.Export(X509ContentType.Cert));
+
+        var decoded = DeviceProvisioningService.DecodeCertificate(encodedDer);
+
+        Assert.Contains(
+            "-----BEGIN CERTIFICATE-----",
+            decoded,
+            StringComparison.Ordinal);
+        using var parsed = X509Certificate2.CreateFromPem(decoded);
+        Assert.Equal(certificate.RawData, parsed.RawData);
+    }
+
     private static DeviceProvisioningOnboardingService CreateService(
         Func<HttpRequestMessage, HttpResponseMessage> responseFactory,
         string publicNetworkAccess = "Enabled",
         DeviceProvisioningCertificateDescription? certificate = null,
         bool hub1AllocationEnabled = true,
-        HttpStatusCode? certificateFailureStatus = null)
+        HttpStatusCode? certificateFailureStatus = null,
+        bool hub2AllocationEnabled = true)
     {
         var managementService = Substitute.For<IDeviceProvisioningService>();
         managementService.GetService(
@@ -595,7 +650,8 @@ public sealed class DeviceProvisioningOnboardingServiceTests
                 Arg.Any<CancellationToken>())
             .Returns(CreateServiceDescription(
                 publicNetworkAccess,
-                hub1AllocationEnabled));
+                hub1AllocationEnabled,
+                hub2AllocationEnabled));
         if (certificate is not null)
         {
             managementService.GetCertificate(
@@ -681,7 +737,8 @@ public sealed class DeviceProvisioningOnboardingServiceTests
 
     private static DeviceProvisioningServiceDescription CreateServiceDescription(
         string publicNetworkAccess,
-        bool hub1AllocationEnabled = true) =>
+        bool hub1AllocationEnabled = true,
+        bool hub2AllocationEnabled = true) =>
         new(
             Id: "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Devices/provisioningServices/dps1",
             Name: "dps1",
@@ -708,7 +765,7 @@ public sealed class DeviceProvisioningOnboardingServiceTests
                 new LinkedIoTHubDescription(
                     "hub2.azure-devices.net",
                     "eastus",
-                    true,
+                    hub2AllocationEnabled,
                     1)
             ]);
 

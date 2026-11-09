@@ -832,7 +832,12 @@ def request_json(
         connection.request(method, path, body=encoded, headers=headers)
         response = connection.getresponse()
         payload = response.read()
-        parsed = json.loads(payload) if payload else None
+        try:
+            parsed = json.loads(payload) if payload else None
+        except json.JSONDecodeError:
+            if response.status < 400:
+                raise
+            parsed = payload.decode("utf-8", errors="replace")
         return response.status, {key.lower(): value for key, value in response.getheaders()}, parsed
     finally:
         connection.close()

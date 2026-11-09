@@ -191,6 +191,14 @@ internal static class OnboardingConfigurationValidator
                 $"The enrollment references IoT Hub(s) that are linked but disabled for DPS allocation: {string.Join(", ", allocationDisabledHubs)}.",
                 "Enable allocation for the referenced IoT Hub or update the enrollment to use an allocation-enabled linked Hub.");
         }
+        else if (referencedHubs.Count == 0 && allocationEnabledHubs.Count == 0)
+        {
+            result.AddFinding(
+                "allocation.linkedHubConsistency",
+                "blocker",
+                "The enrollment inherits DPS-level Hub targets, but no linked IoT Hub is enabled for allocation.",
+                "Link an IoT Hub with allocation enabled or configure an allocation-enabled Hub on the enrollment.");
+        }
         else
         {
             result.AddFinding(

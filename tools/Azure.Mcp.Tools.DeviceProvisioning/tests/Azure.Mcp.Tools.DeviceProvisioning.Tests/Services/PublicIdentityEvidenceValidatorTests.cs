@@ -270,6 +270,15 @@ public sealed class PublicIdentityEvidenceValidatorTests
     }
 
     [Fact]
+    public void CreateChain_DisablesCertificateDownloads()
+    {
+        using var chain = PublicIdentityEvidenceValidator.CreateChain();
+
+        Assert.Equal(X509RevocationMode.NoCheck, chain.ChainPolicy.RevocationMode);
+        Assert.True(chain.ChainPolicy.DisableCertificateDownloads);
+    }
+
+    [Fact]
     public void ValidateCertificateChain_LeafCnMismatchBlocksReadiness()
     {
         var certificates = CreateCertificateChain("different-device");

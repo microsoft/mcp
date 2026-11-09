@@ -79,6 +79,16 @@ public sealed class DeviceProvisioningOnboardingValidateCommand(
         ValidateIdentifier("--enrollment-id", options.EnrollmentId, validationResult);
         ValidateIdentifier("--enrollment-group-id", options.EnrollmentGroupId, validationResult);
         ValidateIdentifier("--registration-id", options.RegistrationId, validationResult);
+        if (hasEnrollmentId &&
+            !string.IsNullOrWhiteSpace(options.RegistrationId) &&
+            !string.Equals(
+                options.RegistrationId,
+                options.EnrollmentId,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add(
+                "--registration-id must match --enrollment-id when validating an individual enrollment.");
+        }
 
         if (!string.IsNullOrWhiteSpace(options.CertificateChain) &&
             PublicIdentityEvidenceValidator.ContainsPrivateKey(options.CertificateChain))
@@ -238,10 +248,12 @@ public sealed class DeviceProvisioningOnboardingValidateCommand(
         if (value.Length > 128 ||
             !IsAlphaNumeric(value[0]) ||
             !IsAlphaNumeric(value[^1]) ||
-            value.Any(ch => !IsAlphaNumeric(ch) && ch is not '.' and not '_' and not '-'))
+            value.Any(ch =>
+                !IsAlphaNumeric(ch) &&
+                ch is not '.' and not '_' and not '-' and not ':'))
         {
             validationResult.Errors.Add(
-                $"{optionName} must be at most 128 characters, use letters, numbers, '.', '_', or '-', and start and end with a letter or number.");
+                $"{optionName} must be at most 128 characters, use letters, numbers, '.', '_', '-', or ':', and start and end with a letter or number.");
         }
     }
 

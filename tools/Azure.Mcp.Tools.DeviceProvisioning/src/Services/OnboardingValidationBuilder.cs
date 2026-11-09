@@ -314,7 +314,10 @@ internal sealed class OnboardingValidationBuilder(
     private static string SummarizeFinding(OnboardingValidationFinding finding) =>
         finding.CheckId switch
         {
-            "x509.certificateValidity" =>
+            "x509.certificateValidity" when string.Equals(
+                finding.Status,
+                "warning",
+                StringComparison.OrdinalIgnoreCase) =>
                 "One or more certificates expire within 30 days.",
             "device.retryReadiness" =>
                 "Device SDK and firmware retry behavior was not assessed.",
@@ -325,8 +328,17 @@ internal sealed class OnboardingValidationBuilder(
 
     private static string FormatReadiness(
         string? overallReadiness,
-        string validationResult) =>
-        overallReadiness switch
+        string validationResult)
+    {
+        if (string.Equals(
+            validationResult,
+            "indeterminate",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return "INDETERMINATE";
+        }
+
+        return overallReadiness switch
         {
             "ready" => "READY",
             "readyWithWarnings" => "READY WITH WARNINGS",
@@ -335,10 +347,7 @@ internal sealed class OnboardingValidationBuilder(
                 validationResult,
                 "issuesFound",
                 StringComparison.OrdinalIgnoreCase) => "BLOCKED",
-            _ when string.Equals(
-                validationResult,
-                "indeterminate",
-                StringComparison.OrdinalIgnoreCase) => "INDETERMINATE",
             _ => "READY"
         };
+    }
 }

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
@@ -152,7 +154,7 @@ public class DeviceProvisioningService(
             linkedHubs);
     }
 
-    private static string DecodeCertificate(string? certificate)
+    internal static string DecodeCertificate(string? certificate)
     {
         if (string.IsNullOrWhiteSpace(certificate) ||
             certificate.Contains(
@@ -164,15 +166,20 @@ public class DeviceProvisioningService(
 
         try
         {
-            var decoded = Encoding.UTF8.GetString(
-                Convert.FromBase64String(certificate));
-            return decoded.Contains(
+            var decodedBytes = Convert.FromBase64String(certificate);
+            var decodedText = Encoding.UTF8.GetString(decodedBytes);
+            if (decodedText.Contains(
                 "-----BEGIN CERTIFICATE-----",
-                StringComparison.Ordinal)
-                ? decoded
-                : certificate;
+                StringComparison.Ordinal))
+            {
+                return decodedText;
+            }
+
+            using var decodedCertificate =
+                X509CertificateLoader.LoadCertificate(decodedBytes);
+            return decodedCertificate.ExportCertificatePem();
         }
-        catch (FormatException)
+        catch (Exception ex) when (ex is FormatException or CryptographicException)
         {
             return certificate;
         }
