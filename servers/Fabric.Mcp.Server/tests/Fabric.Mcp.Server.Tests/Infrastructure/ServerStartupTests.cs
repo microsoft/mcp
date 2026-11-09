@@ -284,12 +284,14 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
         Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_list-folders", names);
         Assert.DoesNotContain("jobs_move-folder", names);
+        Assert.DoesNotContain("jobs_move-item", names);
         Assert.DoesNotContain("jobs_update-folder", names);
         if (namespaces != "jobs" && !readOnly)
         {
@@ -332,6 +334,21 @@ public class ServerStartupTests
             Assert.False(moveSchema.GetProperty("properties").GetProperty("target-folder-id").TryGetProperty("default", out _));
             Assert.Contains("exactly one POST", moveFolder.GetProperty("description").GetString());
             Assert.DoesNotContain("Preview", moveFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
+            var moveItem = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_move-item");
+            var moveItemAnnotations = moveItem.GetProperty("annotations");
+            Assert.False(moveItemAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(moveItemAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(moveItemAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(moveItemAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var moveItemSchema = moveItem.GetProperty("inputSchema");
+            Assert.Equal(["item-id", "workspace-id"],
+                moveItemSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "target-folder-id", "workspace-id"],
+                moveItemSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.False(moveItemSchema.GetProperty("properties").GetProperty("target-folder-id").TryGetProperty("default", out _));
+            Assert.Contains("exactly one POST", moveItem.GetProperty("description").GetString());
+            Assert.Contains("child items", moveItem.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", moveItem.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
             var updateFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-folder");
             var updateAnnotations = updateFolder.GetProperty("annotations");
             Assert.False(updateAnnotations.GetProperty("readOnlyHint").GetBoolean());

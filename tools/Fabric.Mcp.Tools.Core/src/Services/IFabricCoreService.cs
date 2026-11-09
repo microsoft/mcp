@@ -70,6 +70,18 @@ public interface IFabricCoreService
         string? targetFolderId = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Moves one item and its child items within its workspace with one POST, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the existing item; a child cannot be moved independently.</param>
+    /// <param name="targetFolderId">An existing destination folder UUID in the same workspace; null sends an empty object to use the root.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a move that may already have occurred.</param>
+    /// <returns>The complete returned collection, including children in service order; unavailable metadata is not inferred.</returns>
+    Task<ItemMoveCommandResult> MoveItemAsync(
+        string workspaceId,
+        string itemId,
+        string? targetFolderId = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Renames one logical workspace folder with one PATCH, without lookups, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="folderId">The nonempty UUID of the existing folder.</param>

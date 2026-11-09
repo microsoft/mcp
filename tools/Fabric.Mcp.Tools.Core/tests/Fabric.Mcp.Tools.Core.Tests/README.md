@@ -99,6 +99,9 @@ Offline tests for the Fabric Core toolset.
 - **Commands/ItemListCommandTests.cs**: Input binding, UUID validation, recursive defaults, typed results, cancellation mapping, and sanitized failures for `list-items`
 - **Services/ItemListServiceTests.cs**: Substituted-HTTP tests for one-page listing, metadata whitelisting, optional filters, continuation encoding, invalid responses, throttling, cancellation, disposal, and create/search regressions
 - **ItemListMcpTests.cs**: Read-only discovery, input/output schemas, and calls through the real Core command factory, loader, and service with substituted HTTP and credentials
+- **Commands/ItemMoveCommandTests.cs**: Required item/workspace binding, optional destination, placement-mutation hints, collection output, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-movement guidance
+- **Services/ItemMoveServiceTests.cs**: One POST and exact target/root payloads, parent/child and empty/sparse/repeated collections, safe metadata projection, identity/destination validation, Unicode/duplicate/byte/depth bounds, status/retry preservation, authentication/cancellation/disposal, concurrency, and separate explicit Get inspection
+- **ItemMoveMcpTests.cs**: All/namespace/single routing, stdio/HTTP, namespace selection, output/schema/learn modes, read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, null/omitted root targets, shared string binding, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
 - **Commands/WorkspaceCreateCommandTests.cs**: Creation options, length/UUID validation, typed results, annotations, and sanitized failures
 - **Services/FabricCoreServiceWorkspaceCreateTests.cs**: Offline request/body omission, capacity/domain assignment, 201/Location handling, response validation, cancellation/disposal, concurrent credentials, no retries, and existing create/search regressions
 - **Models/WorkspaceCreateSerializationTests.cs**: Source-generated request/result contracts, optional metadata, and future type/region strings
@@ -848,6 +851,31 @@ retain shared MCP coercion, including single-element string arrays, rather than 
 Tests substitute credentials and HTTP; real host startup checks discovery without Fabric requests.
 No approved live fixture, real mutation, OBO/RBAC authorization, or recorded playback is implied.
 
+## Item Movement
+
+Move Item implements the separate Items API, not Folder Move or a client-side traversal.
+The required request object contains only targetFolderId when supplied; omission or MCP null
+sends `{}` to place the item at the workspace root. Unlike Folder Move, matching numeric item
+and destination-folder UUIDs do not imply a self-target: they identify different resource kinds.
+Fabric enforces resource existence and child-parent constraints; CannotMoveChildOnly never
+triggers parent discovery or an automatic parent move.
+
+The response requires `value` to be an array, without a minimum size or unique-ID constraint.
+Tests preserve the documented Lakehouse/SQL endpoint pair, child-first and repeated entries,
+future item types, more than 1,000 entries, empty collections, and type-only rows. Only `type`
+is required by the item schema. Available UUIDs, workspace/destination context, tag and label
+metadata are validated without fabricating missing fields or inferring child relationships.
+Default identities, data, definitions, and unknown fields are excluded from output.
+
+The shared reader bounds the entire response, not a row prefix, to exactly 1 MiB and 64 JSON
+levels. Projection keeps wire output shallow. Known HTTP status/Retry-After survive malformed
+optional error metadata, while invalid success metadata preserves confirmed movement.
+Per-request credentials, cancellation/disposal, safe logging, normal destructive consent,
+and read-only exclusion use the existing Core mechanisms. Single-element string arrays retain
+the shared MCP binder's coercion; these tests do not claim strict original-JSON-type rejection.
+All requests use offline credentials and HTTP fixtures. Actual host discovery makes no Fabric
+calls; no live item movement, OBO/RBAC authorization, or recorded playback is implied.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
@@ -858,6 +886,9 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run folder movement and its shared folder/catalog/HTTP regressions
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*Folder*' '*FabricCoreCatalogTests' '*FabricCoreHttpHelpersTests'
+
+# Run item movement and adjacent item/folder/registration/HTTP contracts
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemMove*' '*ItemList*' '*ItemGet*' '*ItemUpdate*' '*ItemDelete*' '*FolderMove*' '*FabricCoreCatalogTests' '*FabricCoreSetupTests' '*FabricCoreHttpHelpersTests'
 
 # Run assignment command, service, and registered-handler tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*WorkspaceAssignToCapacity*' '*WorkspaceCapacityAssignment*'

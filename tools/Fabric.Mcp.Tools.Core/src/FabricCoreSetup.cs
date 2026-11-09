@@ -53,6 +53,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<ItemDefinitionGetCommand>(CreateItemDefinitionGetCommand);
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
+        services.AddSingleton<ItemMoveCommand>(CreateItemMoveCommand);
         services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<OperationStateGetCommand>();
         services.AddSingleton<OperationResultGetCommand>();
@@ -84,6 +85,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
+            "- Move one item and its child items within the same workspace, returning the complete moved-item collection\n" +
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
             "- Replace a known item's complete definition from inline content or explicitly selected saved files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
@@ -109,6 +111,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<ItemDefinitionGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemMoveCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<OperationStateGetCommand>(serviceProvider);
         fabricCore.AddCommand<OperationResultGetCommand>(serviceProvider);
@@ -231,6 +234,23 @@ public class FabricCoreSetup : IAreaSetup
             if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each update-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ItemMoveCommand CreateItemMoveCommand(IServiceProvider serviceProvider)
+    {
+        var command = new ItemMoveCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemMoveCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each move-item option at most once.");
             }
         });
         return command;
