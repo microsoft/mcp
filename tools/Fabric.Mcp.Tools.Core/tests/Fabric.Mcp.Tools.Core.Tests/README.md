@@ -876,6 +876,13 @@ the shared MCP binder's coercion; these tests do not claim strict original-JSON-
 All requests use offline credentials and HTTP fixtures. Actual host discovery makes no Fabric
 calls; no live item movement, OBO/RBAC authorization, or recorded playback is implied.
 
+The Fabric server's `Infrastructure/ItemMoveAuthenticationTests.cs` also invokes the real host
+registration callback after installing its OBO provider. Even with only Core exposed, DataFactory's
+existing TokenCredential bridge delegates to the current request's MicrosoftIdentityTokenCredential.
+Offline token acquisition and a connection callback prove per-caller credentials reach Move Item,
+and denied acquisition never reaches transport or falls back to a host identity. No production
+authentication implementation is changed, and this is not live token exchange or RBAC evidence.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
