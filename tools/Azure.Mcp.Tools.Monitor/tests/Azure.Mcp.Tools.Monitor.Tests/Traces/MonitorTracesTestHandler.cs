@@ -12,7 +12,8 @@ internal sealed class MonitorTracesTestHandler(
     bool areResultsTruncated,
     string endpoint = "https://amw.data.monitor.azure.com",
     string cancelBody = """{"status":"Cancelled"}""",
-    IEnumerable<HttpResponseMessage>? resultPages = null) : HttpMessageHandler
+    IEnumerable<HttpResponseMessage>? resultPages = null,
+    HttpResponseMessage? submitResponse = null) : HttpMessageHandler
 {
     private readonly Queue<HttpResponseMessage> _resultPages = new(resultPages ?? []);
     internal const string Subscription = "00000000-0000-0000-0000-000000000001";
@@ -22,6 +23,7 @@ internal sealed class MonitorTracesTestHandler(
     public int SubmitCalls { get; private set; }
     public int PollCalls { get; private set; }
     public string? LastSubmitBody { get; private set; }
+    public Uri? LastSubmitUri { get; private set; }
     public string? LastGraphQuery { get; private set; }
     public Uri? LastDataPlaneUri { get; private set; }
     public Uri? LastWorkspaceUri { get; private set; }
@@ -32,11 +34,14 @@ internal sealed class MonitorTracesTestHandler(
         {
             DataPlaneCalls++;
             LastDataPlaneUri = request.RequestUri;
-            if (request.RequestUri.AbsolutePath.EndsWith("/traces:query", StringComparison.Ordinal))
+            if (request.RequestUri.AbsolutePath.EndsWith("/traces:query", StringComparison.Ordinal) ||
+                request.RequestUri.AbsolutePath.EndsWith("/traces:compare", StringComparison.Ordinal) ||
+                request.RequestUri.AbsolutePath.EndsWith("/traces:critical-path", StringComparison.Ordinal))
             {
                 SubmitCalls++;
+                LastSubmitUri = request.RequestUri;
                 LastSubmitBody = await request.Content!.ReadAsStringAsync(cancellationToken);
-                return new(HttpStatusCode.Accepted) { Content = new StringContent("""{"operationId":"op-1234"}""") };
+                return submitResponse ?? new(HttpStatusCode.Accepted) { Content = new StringContent("""{"operationId":"op-1234"}""") };
             }
 
             if (request.RequestUri.AbsolutePath.EndsWith("/results", StringComparison.Ordinal))
