@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
     Id = "0485e8f9-61bf-4baf-b914-7fa5530a6f78",
     Name = "list",
     Title = "List Marketplace Products",
-    Description = "Retrieves a page of marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans. If nextCursor is returned, pass it unchanged as cursor with the same filters to retrieve another page. The legacy next-cursor parameter is still supported.",
+    Description = "Retrieves a page of marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans. If nextCursor is returned, pass it unchanged as cursor with the same filters to retrieve another page.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,

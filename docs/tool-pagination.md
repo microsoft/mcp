@@ -41,10 +41,8 @@ payload, not the command response envelope.
 ## Verification
 
 Test first, continued, and terminal pages through option binding and source-generated result serialization. Verify
-opaque characters are preserved and empty-page behavior follows the tool's contract. Assert that raw ADME tool
-responses never expose `result.cursor`, while Marketplace's legacy continuation argument still works. Reject conflicting
-continuation inputs before service calls. Use recorded multi-page tests where available without changing the existing
-request sequence unnecessarily.
+opaque characters are preserved and empty-page behavior follows the tool's contract. Use recorded multi-page tests
+where available without changing the existing request sequence unnecessarily.
 
 For fixed-size migrations, also verify the exact SDK page-size request, that a call does not drain subsequent pages,
 and that continued calls preserve filters and return a terminal page. Test empty pages with continuation, invalid

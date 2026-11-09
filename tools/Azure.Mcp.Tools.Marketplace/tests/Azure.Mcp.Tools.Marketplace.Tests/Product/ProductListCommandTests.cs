@@ -24,8 +24,28 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
+        Assert.DoesNotContain("next-cursor", CommandDefinition.Description, StringComparison.Ordinal);
         var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
         Assert.StartsWith(ICursorOption.CursorDescription, cursor.Description, StringComparison.Ordinal);
+        Assert.DoesNotContain("next-cursor", cursor.Description, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_RejectsRemovedNextCursorOption(bool includeCursor)
+    {
+        var args = new List<string> { "--subscription", "test-sub", "--next-cursor", "legacy-token" };
+        if (includeCursor)
+        {
+            args.AddRange(["--cursor", "current-token"]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("next-cursor", response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Theory]
