@@ -350,6 +350,8 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
 items, definitions, capacities, and Fabric `/operations` LROs. It also supports logical workspace
 folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
+The separate Items Move operation places an item and its child items in an existing folder or
+at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -475,6 +477,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_move-folder` | Moves one known logical folder and its hierarchy within the same workspace, into an existing folder or to the workspace root. Returns observed metadata without lookups, descendant enumeration, retries, or polling. |
+| `core_move-item` | Moves one known item and its child items into an existing folder or to the root of the same workspace. Returns the complete ordered metadata collection without lookups, retries, or polling. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
 | `core_update-folder` | Renames one known logical workspace folder with an explicit replacement display name. Returns updated metadata without moving the folder, lookups, retries, or polling. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
@@ -1187,6 +1190,67 @@ Each invocation returns exactly one page: an `items` array and any `continuation
 Items contain ID, display name, type, workspace ID, and available description, folder ID, logical ID, tags, and sensitivity-label ID. Optional null properties are omitted. No item data, definitions, or workload-specific properties are returned. The optional REST `include=DefaultIdentity` expansion is intentionally unsupported: it is neither requested nor serialized.
 
 The caller needs workspace **Viewer** access. Delegated calls require `Workspace.Read.All` or `Workspace.ReadWrite.All`; the API supports user, service-principal, and managed identities. The tool preserves the server's configured authentication strategy, including its existing HTTP/OBO credential path. A `429` response retains its status and provides retry guidance when a valid `Retry-After` header is available; the tool does not retry automatically.
+
+**Move Item (`core_move-item`)**
+
+Calls the [Items Move Item API](https://learn.microsoft.com/rest/api/fabric/core/items/move-item)
+with exactly one `POST /v1/workspaces/{workspaceId}/items/{itemId}/move`. Supply nonempty
+`workspace-id` and `item-id` UUIDs and optionally `target-folder-id`, the UUID of an existing
+destination folder in that same workspace. UUIDs are normalized, not resolved from names or paths.
+Omitting the target or passing MCP `null` sends the required empty object `{}` for the workspace
+root; a supplied target sends only `{"targetFolderId":"<folder-id>"}`. Invalid targets fail before
+authentication, never fall back to root, and repeated option keys are rejected.
+
+Fabric moves **child items with their parent**, such as a Lakehouse and its SQL endpoint.
+A child cannot be moved independently; `CannotMoveChildOnly` remains a failure, without discovering
+or moving its parent automatically. This does not claim that arbitrary related items or dependencies
+move together. There is no client-side workload blacklist, cross-workspace move, data copy, rename,
+folder creation, OneLake operation, or local filesystem access. This operation is separate from
+`core_move-folder`.
+
+These examples mutate real item placement when invoked with authorized credentials:
+
+```powershell
+fabmcp core move-item --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --item-id cccccccc-2222-3333-4444-dddddddddddd --target-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+
+# Move the item and its child items to the workspace root.
+fabmcp core move-item --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --item-id cccccccc-2222-3333-4444-dddddddddddd
+```
+
+**Only HTTP 200 confirms movement.** The typed result contains `moveStatus: "Moved"`, `items`,
+`guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when returned. The API's
+`MovedItems.value` is a required array, not a single item. Every entry is preserved in service
+order, including child and repeated entries; nothing is deduplicated, truncated, or enriched.
+There is no minimum row count or requirement to find the requested item in the response.
+An empty array is valid, but a missing/null array or unusable entry is not.
+
+Only each item's extensible `type` is required by the API schema. Available ID, workspace ID,
+folder ID, logical ID, display name, description, tags, and sensitivity-label metadata are
+projected; omitted/null optional fields are not inferred. Present UUIDs must be nonempty,
+workspace IDs must match the request, and non-null folder IDs must match the destination
+(a non-null folder conflicts with a root move). Child IDs need not equal the requested item.
+No data, definitions, default identities, or arbitrary backend properties are exposed.
+The complete JSON response is bounded to **1 MiB and 64 levels** before projection; no arbitrary
+row cap is imposed and output remains shallow for the MCP envelope.
+
+If HTTP 200 is followed by malformed, oversized, unreadable, canceled, or conflicting metadata,
+the tool reports **confirmed movement with unusable metadata**, not that nothing moved.
+Do not resubmit it. Pre-send/authentication failures report no request sent; an uncertain send
+requires separate inspection before another move, never blind retry. Known HTTP failures retain
+their status and validated `Retry-After`, even when optional error metadata is unusable.
+Only safe error codes are exposed. Existing `core_get-item` and `core_list-items` support separate,
+explicit selection/inspection; no hidden Get/List, per-child request, verification, automatic
+retry, pagination, or LRO polling occurs.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities retain the server's
+configured authentication and applicable Fabric tenant controls. Placement changes are destructive,
+idempotent by their placement effect, not secret-bearing, remote-capable, and excluded from read-only
+mode. The host's normal mutation confirmation applies without an additional gate.
+In `all` mode, text contains `results.items`; compact/duplicated output also provides
+`structuredContent.items`. Namespace mode uses `core` with `command="core_move-item"` and `parameters`,
+and its structured payload is under `result`. Single mode uses `fabric` with `tool="core"`.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback coverage.
 
 **Creating a workspace**
 
@@ -2007,6 +2071,8 @@ The Fabric MCP Server is a **local-first** tool. Its documentation tools provide
 `core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
 
 `core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
+
+`core_move-item` changes placement within one workspace and also moves the item's child items. Review the exact item and destination before mutation consent.
 
 `core_delete-workspace` can delete a workspace and its items. Review the exact UUID, permissions, and destructive-operation controls before invoking it.
 

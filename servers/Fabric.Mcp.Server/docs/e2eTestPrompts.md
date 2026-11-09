@@ -97,6 +97,13 @@ rollback; cancellation remains a separate tool and separate authorization. These
 permission to discover or delete live schedules. After an uncertain send, inspect separately before
 considering another deletion; do not retry blindly.
 
+Item movement requires separate authorization for the explicit workspace/item UUIDs and the intended
+destination. Send one POST with only targetFolderId, or `{}` for an omitted/null root target.
+Preserve the complete returned item collection, including child items and optional metadata.
+CannotMoveChildOnly is a failure, not permission to discover or move a parent. Do not copy data,
+move across workspaces, create folders, verify with a hidden read, poll, or retry automatically.
+These prompts are not authorization to discover customer IDs or move live items.
+
 Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
@@ -188,6 +195,14 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_move-folder | Move the specified folder once within its workspace. If Fabric reports a hierarchy, depth, or duplicate-name conflict, retain the failure without trying another target or renaming anything. | context-required |
 | core_move-folder | Explain the confirmed folder movement whose metadata was unreadable; do not repeat it or infer a missing parent. Any inspection must be a separate explicit get-folder call. | context-required |
 | core_move-folder | After my earlier folder move returned an uncertain outcome, explain why it must not be blindly repeated. Use a separate explicit Get Folder only if I request inspection with the known IDs. | context-required |
+| core_move-item | Move item cccccccc-2222-3333-4444-dddddddddddd into existing folder bbbbbbbb-1111-2222-3333-cccccccccccc within Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. Obtain mutation consent and send one POST; return all entries, including children moved by Fabric. | none |
+| core_move-item | Move item cccccccc-2222-3333-4444-dddddddddddd and its child items to the root of workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb by omitting target-folder-id. Do not rename it or create folders. | none |
+| core_move-item | Move the authorized item to its workspace root using my supplied workspace/item UUIDs and target-folder-id null. Send an empty JSON object, not a null field, and do not operate on OneLake or local paths. | context-required |
+| core_move-item | Move my known item once. If Fabric returns CannotMoveChildOnly, preserve the failure without discovering or moving its parent automatically. | context-required |
+| core_move-item | Explain the Move Item response containing a Lakehouse and its SQL endpoint. Preserve both entries and their order; do not infer that unrelated dependencies were moved. | context-required |
+| core_move-item | Explain the confirmed item move with an empty returned collection or absent optional metadata. Do not invent item IDs, destinations, or an affected-item count, and do not repeat the move. | context-required |
+| core_move-item | Explain the confirmed item movement whose returned metadata was unreadable. Do not resubmit it; any inspection must be a separate explicit get-item or list-items call. | context-required |
+| core_move-item | After my earlier item move returned an uncertain outcome, explain why it must not be blindly repeated. Use a separate explicit Get Item only if I authorize inspection with known IDs. | context-required |
 | core_update-folder | Rename logical folder bbbbbbbb-1111-2222-3333-cccccccccccc in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb to Quarterly Sales. Send one PATCH after mutation consent; do not move the folder or inspect it first. | none |
 | core_update-folder | Update the display name of the Fabric folder using my supplied workspace UUID, folder UUID, and exact replacement name. Do not trim or sanitize it or change OneLake or local directories. | context-required |
 | core_update-folder | Rename the specified folder once and return its actual updated metadata, leaving unavailable parent metadata omitted. Do not resolve names, check duplicates, poll, or retry. | context-required |
