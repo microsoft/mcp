@@ -348,7 +348,8 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs, and lists, creates, retrieves, renames, or moves logical workspace folders.
+items, definitions, capacities, and Fabric `/operations` LROs. It also supports logical workspace
+folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
 Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
@@ -359,7 +360,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing/creation/lookup/rename/movement, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace, folder listing/creation/lookup/rename/movement/deletion, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -459,6 +460,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_create-folder` | Creates one logical workspace folder at the root or under an explicit parent folder UUID. Returns created metadata without lookups, retries, or polling. |
 | `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
+| `core_delete-folder` | Deletes one explicitly identified empty logical workspace folder. Returns a deletion receipt without changing contents, preflight, retries, or polling. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
@@ -1116,6 +1118,49 @@ Fabric tenant and authentication settings. Changing an existing folder's placeme
 destructive and idempotent (repeating the same destination does not add another effect), not
 secret-bearing, remote-capable, and **excluded from read-only mode**. Normal mutation consent applies.
 Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Delete Folder (`core_delete-folder`)**
+
+Calls [Delete Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/delete-folder) with exactly
+one `DELETE /v1/workspaces/{workspaceId}/folders/{folderId}`, no request body, and no query parameters.
+Both `workspace-id` and `folder-id` are required nonempty UUIDs; names and paths are not resolved.
+These are workspace organizational folders, not OneLake directories or local filesystem paths.
+
+**Only empty folders can be deleted.** Fabric rejects a folder containing items or nested folders
+with `FolderNotEmpty`; the tool returns that failure without emptying, moving, or deleting its
+contents. [Soft-deleted items also prevent folder deletion](https://learn.microsoft.com/fabric/admin/retention-recovery#limitations-of-soft-delete-and-recovery).
+There is no recursive, force, or hard-delete option, emptiness preflight, descendant enumeration,
+or fallback target. The API does not document folder recovery or a retention period; do not assume
+the item or workspace recovery rules apply, and do not promise rollback.
+
+```powershell
+fabmcp core delete-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+**Only HTTP 200 confirms deletion.** The typed receipt contains the requested `workspaceId` and
+`folderId`, `deletionStatus: "Deleted"`, and `guidance`; it is not a returned folder snapshot.
+An empty response is sufficient. Irrelevant response data is not read, and late request cancellation
+does not undo confirmed deletion. If local receipt completion fails after HTTP 200, the error still
+states that deletion was confirmed and must not be resubmitted.
+
+Authentication/pre-send failures report that no DELETE was sent. After an uncertain network failure,
+timeout, or cancellation during sending, inspect the folder separately before considering another
+deletion; never retry blindly. Existing `core_get-folder` and `core_list-folders` can be used in
+separate explicit calls to select IDs or inspect uncertainty, not as hidden preflight or verification.
+Repeating deletion targets the same resource but can fail: **404 and `FolderNotFound` are not
+converted to success**. Error responses retain observed HTTP status and validated `Retry-After`
+even when optional error metadata is malformed, unreadable, or exceeds the shared 1 MiB/64-level
+JSON budget. Only a safe error code is projected, not backend messages or nested details.
+There is no automatic retry or LRO/polling behavior; 202/204 are not documented success responses,
+and Location and operation headers are ignored.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Deletion is destructive, idempotent by its effect on
+the same folder, not secret-bearing, remote-capable, and **excluded from read-only mode**.
+Explain the empty-folder deletion scope before the host's normal mutation confirmation.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior; no live
+deletion fixture or mutation authorization is assumed.
 
 **Workspace and folder item inventory**
 

@@ -42,6 +42,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<FolderCreateCommand>(CreateFolderCreateCommand);
+        services.AddSingleton<FolderDeleteCommand>(CreateFolderDeleteCommand);
         services.AddSingleton<FolderGetCommand>(CreateFolderGetCommand);
         services.AddSingleton<FolderListCommand>(CreateFolderListCommand);
         services.AddSingleton<FolderMoveCommand>(CreateFolderMoveCommand);
@@ -73,6 +74,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible Fabric capacities and their metadata\n" +
             "- List logical workspace folders and their parent relationships by explicit workspace ID\n" +
             "- Create one logical workspace folder at the root or under an explicitly identified parent\n" +
+            "- Delete one explicitly identified empty logical workspace folder, without changing its contents\n" +
             "- Get metadata for one logical workspace folder by explicit workspace and folder IDs\n" +
             "- Move one logical folder and its hierarchy within the same workspace, without enumerating descendants\n" +
             "- Rename one logical workspace folder by explicit workspace and folder IDs\n" +
@@ -96,6 +98,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<FolderCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<FolderGetCommand>(serviceProvider);
         fabricCore.AddCommand<FolderListCommand>(serviceProvider);
         fabricCore.AddCommand<FolderMoveCommand>(serviceProvider);
@@ -132,6 +135,23 @@ public class FabricCoreSetup : IAreaSetup
             if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each create-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderDeleteCommand CreateFolderDeleteCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderDeleteCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderDeleteCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each delete-folder option at most once.");
             }
         });
         return command;
