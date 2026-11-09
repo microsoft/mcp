@@ -61,22 +61,31 @@ public sealed class MonitorTracesServiceTests()
     }
 
     [Theory]
-    [InlineData("rg-a")]
-    [InlineData("rg-b")]
-    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string resourceGroup)
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-a")]
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-b")]
+    [InlineData("subscription-name", "rg-a")]
+    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string subscription, string resourceGroup)
     {
         using var handler = new MonitorTracesTestHandler(1, false);
         (MonitorTracesService service, IAzureService azureService) = CreateService(handler);
+        const string tenant = "00000000-0000-0000-0000-000000000003";
+        azureService.GetSubscriptionIdByName("subscription-name", tenant, Arg.Any<CancellationToken>())
+            .Returns(MonitorTracesTestHandler.Subscription);
+
         await service.ListFieldNamesAsync(
-            MonitorTracesTestHandler.Subscription, resourceGroup, "amw0", cancellationToken: TestContext.Current.CancellationToken);
+            subscription, resourceGroup, "amw0", tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Null(handler.LastGraphQuery);
         Assert.Equal(
             $"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Monitor/accounts/amw0",
             handler.LastWorkspaceUri!.AbsolutePath);
         Assert.Contains("api-version=2025-10-03-preview", handler.LastWorkspaceUri.Query);
-        await azureService.Received(1).GetResourceGroupResource(
-            MonitorTracesTestHandler.Subscription, resourceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetResourceGroupResource(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetSubscription(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.Received(subscription == "subscription-name" ? 1 : 0).GetSubscriptionIdByName(
+            Arg.Any<string>(), tenant, TestContext.Current.CancellationToken);
         azureService.Received().ValidateAzureServiceEndpoint(
             "https://amw.data.monitor.azure.com", "monitor-traces");
         azureService.Received(1).ValidateAzureServiceEndpoint(
@@ -452,15 +461,10 @@ public sealed class MonitorTracesServiceTests()
             subscriptionId: MonitorTracesTestHandler.Subscription,
             tenantId: Guid.Parse("00000000-0000-0000-0000-000000000002")));
         azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(subscription);
+        azureService.IsSubscriptionId(Arg.Any<string>()).Returns(call => Guid.TryParse(call.Arg<string>(), out _));
         azureService.GetResourceGroupResource(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                string resourceGroup = call.ArgAt<string>(1);
-                ResourceGroupResource group = Substitute.For<ResourceGroupResource>();
-                group.Id.Returns(new ResourceIdentifier($"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}"));
-                return group;
-            });
+            .Returns(_ => Task.FromException<ResourceGroupResource?>(new RequestFailedException(403, "Resource group read denied.")));
 
         TokenCredential credential = Substitute.For<TokenCredential>();
         var token = new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1));

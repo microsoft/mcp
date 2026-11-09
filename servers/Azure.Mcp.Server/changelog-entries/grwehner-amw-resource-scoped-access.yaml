@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: Azure Monitor trace queries now resolve known workspaces without reading parent resource groups or subscription metadata when a subscription ID is supplied.
