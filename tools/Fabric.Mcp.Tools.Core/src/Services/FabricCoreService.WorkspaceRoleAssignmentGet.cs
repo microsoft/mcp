@@ -71,13 +71,7 @@ public partial class FabricCoreService
     {
         try
         {
-            using var document = JsonDocument.Parse(body, new JsonDocumentOptions
-            {
-                MaxDepth = 64,
-                AllowDuplicateProperties = false
-            });
-            FabricCoreHttpHelpers.ValidateMetadataJson(document.RootElement);
-            var assignment = ReadWorkspaceRoleAssignment(document.RootElement);
+            var assignment = ReadWorkspaceRoleAssignment(body);
             if (assignment.Id != assignmentId)
             {
                 throw new JsonException(InvalidWorkspaceRoleAssignmentMessage);

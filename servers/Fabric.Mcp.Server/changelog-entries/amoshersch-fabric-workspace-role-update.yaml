@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_update-workspace-role-assignment to update one explicitly identified workspace role assignment with one PATCH, preserving requested access and truthful mutation outcomes without lookups, creation fallback, retries, or polling."

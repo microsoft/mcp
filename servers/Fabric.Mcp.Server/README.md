@@ -355,6 +355,9 @@ and assignment IDs, returning available principal metadata without directory loo
 expansion, or role changes. Each additional page or assignment lookup is a separate explicit call.
 Add Workspace Role Assignment is a separate mutation requiring an explicit principal and role.
 It sends one grant request without default access, name resolution, preflight, or conflict updates.
+Update Workspace Role Assignment separately replaces the role on an explicitly identified existing
+assignment with one PATCH. It requires Admin access and an explicit role, without identity translation,
+preflight, create/upsert fallback, automatic retry, or polling.
 The separate Items Move operation places an item and its child items in an existing folder or
 at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
@@ -492,6 +495,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
 | `core_update-item-definition` | Replaces a known item's complete definition from inline content or explicitly selected saved files. Optionally applies supplied `.platform` metadata and waits for a no-result operation. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
+| `core_update-workspace-role-assignment` | Updates one existing assignment by workspace and assignment UUIDs with an explicit replacement role and one PATCH. Requires Admin access; no identity lookup, creation fallback, retry, or polling. |
 
 **Create Item (`core_create-item`)**
 
@@ -1075,6 +1079,63 @@ repository's normal additive permission-management annotations rather than a cus
 gate or invented destructive/secret classification. Read-only mode hides and denies it while retaining
 List/Get. No live grant, real token exchange/OBO/RBAC, or recorded coverage is claimed without an
 approved fixture and grant authorization.
+
+**Update Workspace Role Assignment (`core_update-workspace-role-assignment`)**
+
+Calls [Update Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/update-workspace-role-assignment)
+with one `PATCH /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}`.
+This changes an existing workspace permission assignment, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `workspace-role-assignment-id` | Yes | Nonempty existing assignment UUID, independent of its principal ID. |
+| `role` | Yes | Explicit replacement `Admin`, `Member`, `Contributor`, or `Viewer` role. No default, trimming, upgrade, or fallback. |
+
+```powershell
+# Example only: use a separately authorized workspace, existing assignment, and replacement role.
+fabmcp core update-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc --role Viewer
+```
+
+The request contains **only `role`**, not Add's principal JSON. The Update request requires this
+non-null, nonempty string; optional/null principal response metadata does not change that requirement.
+The API's role strings are extensible, so explicit nonempty future values are forwarded unchanged for
+Fabric to validate. Invalid Unicode and requests exceeding the 1 MiB (1,048,576 byte) serialized
+budget, including JSON escaping, are rejected before authentication. No principal ID, name, email,
+application ID, or group membership is resolved or translated into an assignment ID.
+
+The caller must have **workspace Admin** access, and delegated calls require **Workspace.ReadWrite.All**.
+**The last admin's assignment cannot be changed.** Fabric enforces these restrictions without a
+permission preflight. Users, service principals, and managed identities use the unchanged configured
+authentication; service principals and managed identities also need the tenant setting permitting
+Fabric API access. The tool does not alter settings, switch identities, choose a different role,
+create a missing assignment, or resolve conflicts automatically.
+
+Only **HTTP 200** confirms update. The result contains `updateStatus: "Updated"`, `roleAssignment`
+with the matching assignment `id` and requested `role`, available principal metadata, and validated
+`retryAfterSeconds` or `retryAfterUtc`. Assignment and principal IDs need not match. The existing
+List/Get response projection retains optional and future principal details, including recursive
+profile parents, without inventing missing/null fields, requiring a workspace field on the response,
+or exposing unknown extensions. No returned Location/operation URL is followed.
+This is not a documented standard LRO; there is no polling or result-retrieval option.
+
+Response JSON is limited to 1 MiB and 64 input levels. The complete result has a 61-level retained
+budget to accommodate namespace, tool-response, and JSON-RPC envelopes; no metadata is truncated.
+After HTTP 200, malformed, oversized, mismatched, unreadable, canceled, or unserializable metadata
+produces an error that **still reports confirmed update** and says not to resubmit. Validation and
+authentication failures before sending, explicit rejections, uncertain sends, and confirmed updates
+remain distinct. After an uncertain network failure, timeout, unexpected success status, or server
+error, inspect the known assignment with a separately authorized Get before considering another
+update; never replay blindly. Known HTTP status and validated retry timing survive unusable error
+metadata. Only safe error codes are projected, never backend messages or raw payloads.
+
+This remote-capable, destructive/idempotent permission replacement can increase or reduce access.
+It uses the repository's normal mutation confirmation, not a custom consent gate. Read-only mode
+hides and denies it while preserving List/Get. Idempotence is not authorization for automatic replay.
+Every invocation sends at most one initiating request, without hidden List/Get, enrichment, creation,
+verification, retry, or polling. Offline fixtures and discovery do not demonstrate live token exchange,
+OBO/RBAC authorization, or recorded coverage; no live update is run without an approved fixture and
+separate permission-change authorization.
 
 **Workspace folders**
 

@@ -121,6 +121,16 @@ require an Admin caller. A 201 confirms creation even if the returned metadata c
 resubmit. An uncertain send requires separate inspection, not blind replay. A rejected request is not
 an existing-assignment success. These prompts are not authorization for a live grant or tenant change.
 
+Update Workspace Role Assignment requires explicit workspace and existing assignment UUIDs, an
+explicit replacement role, and normal mutation confirmation. Assignment and principal IDs are
+independent. Send one PATCH containing only role; never copy Add's principal payload, translate an
+identity, preflight List/Get, create a missing assignment, select broader access, retry, or poll.
+The caller must be a workspace Admin; delegated calls require Workspace.ReadWrite.All. Fabric
+prevents changes to the last admin's assignment. A 200 confirms update even if returned metadata
+cannot be used; do not resubmit. After an uncertain send, a separately authorized Get can inspect
+the known assignment, but no hidden verification is authorized. These prompts do not authorize a
+live role change, customer-ID discovery, tenant changes, or live/recorded validation.
+
 Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
@@ -254,6 +264,13 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_update-workspace | Set the description of Fabric workspace \<workspace-id> to 'Quarterly reporting' and leave its name unchanged. | none |
 | core_update-workspace | Clear the description of Fabric workspace \<workspace-id> without renaming it. | none |
 | core_update-workspace | Update Fabric workspace \<workspace-id> to the name 'Team Reporting' and description 'Shared reporting workspace'. | none |
+| core_update-workspace-role-assignment | Change the existing assignment UUID I supply to Viewer in the separately authorized workspace. Explain the access reduction, obtain normal mutation confirmation, and send one PATCH containing only role. | context-required |
+| core_update-workspace-role-assignment | Update the assignment UUID and workspace UUID I supply to my explicit Contributor role. Do not treat the principal UUID as the assignment ID, resolve names, list assignments, or fetch the old role. | context-required |
+| core_update-workspace-role-assignment | Explain why updating a role requires workspace Admin access and delegated Workspace.ReadWrite.All, and why the last admin's assignment cannot be changed. Do not change tenant settings or choose another role or identity. | context-required |
+| core_update-workspace-role-assignment | An update returned 404 or a conflict. Report failure without creating an assignment, returning a fabricated success, performing an automatic conflict update, or retrying. | context-required |
+| core_update-workspace-role-assignment | An update returned HTTP 200 but its metadata was malformed, oversized, or too deeply nested. Report confirmed update with unavailable metadata, preserve safe retry timing, and do not resubmit. | context-required |
+| core_update-workspace-role-assignment | A role update timed out after sending. Report an uncertain outcome, never replay blindly, and use Get only as a separate explicitly authorized inspection of the known assignment. | context-required |
+| core_update-workspace-role-assignment | Reject an attempted permission update through the read-only server before authentication or HTTP while preserving role-assignment List/Get. Declined mutation consent must also send no request. | context-required |
 
 ## Jobs
 

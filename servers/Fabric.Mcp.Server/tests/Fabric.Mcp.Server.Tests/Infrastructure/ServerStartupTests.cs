@@ -289,6 +289,7 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-workspace-role-assignment"));
         Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_add-workspace-role-assignment", names);
         Assert.DoesNotContain("jobs_delete-folder", names);
@@ -299,8 +300,24 @@ public class ServerStartupTests
         Assert.DoesNotContain("jobs_move-folder", names);
         Assert.DoesNotContain("jobs_move-item", names);
         Assert.DoesNotContain("jobs_update-folder", names);
+        Assert.DoesNotContain("jobs_update-workspace-role-assignment", names);
+        Assert.DoesNotContain("core_delete-workspace-role-assignment", names);
         if (namespaces != "jobs" && !readOnly)
         {
+            var updateRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-workspace-role-assignment");
+            var updateRoleAnnotations = updateRole.GetProperty("annotations");
+            Assert.False(updateRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(updateRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(updateRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(updateRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var updateRoleSchema = updateRole.GetProperty("inputSchema");
+            Assert.Equal(["role", "workspace-id", "workspace-role-assignment-id"],
+                updateRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["role", "workspace-id", "workspace-role-assignment-id"],
+                updateRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one PATCH", updateRole.GetProperty("description").GetString());
+            Assert.Contains("workspace Admin access", updateRole.GetProperty("description").GetString());
+            Assert.Contains("last admin's assignment cannot be changed", updateRole.GetProperty("description").GetString());
             var addRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_add-workspace-role-assignment");
             var addRoleAnnotations = addRole.GetProperty("annotations");
             Assert.False(addRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());

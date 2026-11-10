@@ -51,7 +51,8 @@ public sealed class FabricCoreCatalogTests()
         ("core_update-folder", typeof(FolderUpdateCommand), false),
         ("core_update-item", typeof(ItemUpdateCommand), false),
         ("core_update-item-definition", typeof(ItemDefinitionUpdateCommand), false),
-        ("core_update-workspace", typeof(WorkspaceUpdateCommand), false)
+        ("core_update-workspace", typeof(WorkspaceUpdateCommand), false),
+        ("core_update-workspace-role-assignment", typeof(WorkspaceRoleAssignmentUpdateCommand), false)
     ];
 
     [Theory]
