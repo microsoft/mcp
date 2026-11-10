@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_move-item to move an existing Fabric item and its child items within one workspace, returning the complete moved-item metadata collection without lookups, polling, or automatic retries."

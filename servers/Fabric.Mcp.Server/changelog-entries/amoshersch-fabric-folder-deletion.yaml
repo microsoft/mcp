@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_delete-folder to delete one explicitly identified empty logical workspace folder with a confirmed deletion receipt, normal mutation consent, and no content changes, preflight, automatic retries, or polling."

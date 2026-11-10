@@ -193,7 +193,7 @@ public class PostgresServiceTests
             resourceGroupServers: []);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<Exception>(
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(
             () => sut.ListServersAsync(subscriptionId, resourceGroup, TestContext.Current.CancellationToken));
         Assert.Contains(resourceGroup, ex.Message);
     }
@@ -233,7 +233,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert — resource group lookup happens first; null triggers the exception
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.GetServerConfigAsync(subscriptionId, resourceGroup, server, tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
@@ -250,7 +250,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.GetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)
@@ -267,7 +267,7 @@ public class PostgresServiceTests
             .Returns((ResourceGroupResource?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() =>
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _postgresService.SetServerParameterAsync(subscriptionId, resourceGroup, server, "param123", "value123", tenant, TestContext.Current.CancellationToken));
 
         await _azureService.Received(1)

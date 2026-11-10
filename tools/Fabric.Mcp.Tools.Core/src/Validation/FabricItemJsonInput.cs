@@ -11,7 +11,13 @@ internal static class FabricItemJsonInput
     internal const int MaxObjectBytes = 1024 * 1024;
     internal const int MaxObjectDepth = 32;
 
-    internal static JsonElement? ParseObject(string? json, string option, int maxBytes = MaxObjectBytes)
+    internal static JsonElement? ParseObject(string? json, string option, int maxBytes = MaxObjectBytes) =>
+        Parse(json, option, JsonValueKind.Object, maxBytes);
+
+    internal static JsonElement? ParseArray(string? json, string option, int maxBytes = MaxObjectBytes) =>
+        Parse(json, option, JsonValueKind.Array, maxBytes);
+
+    private static JsonElement? Parse(string? json, string option, JsonValueKind kind, int maxBytes)
     {
         if (json is null)
         {
@@ -29,9 +35,11 @@ internal static class FabricItemJsonInput
                 MaxDepth = MaxObjectDepth,
                 AllowDuplicateProperties = false
             });
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            if (document.RootElement.ValueKind != kind)
             {
-                throw new FabricItemInputException($"{option} must be a JSON object, not null, an array, or a scalar.");
+                throw new FabricItemInputException(kind == JsonValueKind.Object
+                    ? $"{option} must be a JSON object, not null, an array, or a scalar."
+                    : $"{option} must be a JSON array, not null, an object, or a scalar.");
             }
             return document.RootElement.Clone();
         }

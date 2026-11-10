@@ -1,5 +1,39 @@
 # Release History
 
+## 4.0.6 (2026-11-05) (pre-release)
+
+### Added
+
+- Added `advisor_recommendation_prevalidate` for resource deletion safety checks, batch recommendation updates with `--recommendation-ids`, continuation-token pagination with `--continuation-token`, and Cost/IdleResources summary and list capabilities for savings, lifecycle status, and Service Group scopes. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+
+### Changed
+
+- **Breaking:** Renamed `subscription` to `subscriptions`, `recommendation-type-id` to `recommendation-type-ids`, and `resource-type` to `resource-types` for `advisor_recommendation_list` and `advisor_recommendation_summary`. The new inputs require arrays of strings, including one-element arrays for single selections. The singular input names are no longer accepted. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+#### Dependency Updates
+- Updated the .NET SDK to 10.0.403 and .NET base library packages to 10.0.14. [[#4096](https://github.com/microsoft/mcp/pull/4096)]
+
+### Fixed
+
+- Fixed Debug recording-proxy routing so loopback playback requests stay local instead of passing through outbound HTTP proxies. [[#4104](https://github.com/microsoft/mcp/pull/4104)]
+
+## 4.0.5 (2026-11-03) (pre-release)
+
+### Added
+
+- Added `azmcp advisor insight list` command to list Azure Advisor insights (idle resources, zonal resiliency, service retirement) with typed KPIs for a Service Group, a subscription, or all accessible Service Groups and subscriptions when no scope is given. Supports `--service-group` or `--subscription` (mutually exclusive), `--insight-name`, `--top`, and `--tenant`. [[#3938](https://github.com/microsoft/mcp/pull/3938)]
+
+### Changed
+
+- Added scheduled Azure MCP release-preparation pull requests at noon Pacific on Tuesdays and Thursdays outside Microsoft US holidays, with configurable release-owner mentions. [[#4067](https://github.com/microsoft/mcp/pull/4067)]
+
+### Fixed
+
+- Reduced repeated Kusto query latency by caching access tokens per client and refreshing them before expiration. [[#4027](https://github.com/microsoft/mcp/pull/4027)]
+- Improved exception handling to preserve authentication, cancellation, and service error details, and correctly identify missing resources and malformed AppLens responses. [[#3795](https://github.com/microsoft/mcp/pull/3795)]
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Fixed concurrent external MCP client initialization, single-tool discovery cache publication, and overlapping tool-loader disposal. Canceling a caller no longer cancels shared client initialization. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Honor remote MCP tool-list time-to-live values and refresh cached proxy tools when they expire. [[#3780](https://github.com/microsoft/mcp/pull/3780)]
+
 ## 4.0.4 (2026-10-29) (pre-release)
 
 ### Added

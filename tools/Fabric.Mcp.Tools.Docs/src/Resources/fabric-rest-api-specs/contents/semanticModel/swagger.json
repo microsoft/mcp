@@ -91,7 +91,7 @@
       },
       "post": {
         "summary": "Creates a semantic model in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n This API requires a [definition](/rest/api/fabric/articles/item-management/definitions/semantic-model-definition).\n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes \n\n SemanticModel.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a semantic model, the user must have the appropriate license. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe API supports three creation modes: (1) provide a `definition` for full control over the model structure, (2) provide a `creationPayload` with OneLake table URLs to create a DirectLake model, or (3) omit both to create an empty semantic model. Use `definition` or `creationPayload`. You can't use both at the same time.\n\n## Permissions\n\nThe caller must have a *contributor* workspace role. When creating a DirectLake model with a `creationPayload` that references OneLake tables, the caller must also have access to each referenced source Lakehouse or data item, including when those sources reside in a different workspace (cross-workspace sources).\n\n## Required Delegated Scopes\n\nSemanticModel.ReadWrite.All or Item.ReadWrite.All\n\n## Limitations\n\n- To create a semantic model, the user must have the appropriate license. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -161,7 +161,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid. \n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "description": "Common error codes:\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* MutuallyExclusiveProperties - The `definition` and `creationPayload` cannot both be provided. \n\n* InvalidOneLakeTableUrl - One or more OneLake table URLs are invalid. \n\n* DuplicateTableName - Duplicate table names are not allowed.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -170,6 +170,12 @@
         "x-ms-examples": {
           "Create a semantic model example": {
             "$ref": "./examples/CreateSemanticModel.json"
+          },
+          "Create an empty semantic model example": {
+            "$ref": "./examples/CreateSemanticModelEmpty.json"
+          },
+          "Create a semantic model with OneLake tables example": {
+            "$ref": "./examples/CreateSemanticModelWithOneLakeTables.json"
           }
         }
       }
@@ -381,7 +387,7 @@
     "/workspaces/{workspaceId}/semanticModels/{semanticModelId}/getDefinition": {
       "post": {
         "summary": "Returns the specified semantic model public definition.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a semantic model's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\nThe caller must have *read and write* permissions for the semantic model.\n\n## Required Delegated Scopes\n\n SemanticModel.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\n This API is blocked for a semantic model with an encrypted sensitivity label.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a semantic model's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\nThe caller must have *read and write* permissions for the semantic model.\n\n## Required Delegated Scopes\n\n SemanticModel.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\nTo retrieve the definition of a semantic model item protected by an encrypted sensitivity label, the caller must have sufficient [usage rights](/fabric/enterprise/powerbi/service-security-sensitivity-label-change-enforcement) to remove the label, as configured in [Microsoft Purview](/purview/purview).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],

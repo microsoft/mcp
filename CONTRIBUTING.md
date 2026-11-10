@@ -668,6 +668,7 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - Use descriptive variable and method names
 - Follow the exact file structure and naming conventions
 - Use proper error handling patterns
+- Throw specific exception types (CA2201 is enforced for production code). Preserve Azure SDK, authentication, HTTP, and cancellation exceptions so command handlers retain their status codes and diagnostics.
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
 

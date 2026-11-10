@@ -101,14 +101,18 @@ public class HttpClientFactoryConfiguratorTests
         Assert.Equal(new Uri("http://10.1.2.3:3128"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
     }
 
-    [Fact]
-    public void RecordingOptionsPreserveExplicitHttpProxyOnInnerHandler()
+    [Theory]
+    [InlineData("http://127.0.0.1:5000")]
+    [InlineData("http://localhost:5000")]
+    [InlineData("http://[::1]:5000")]
+    [InlineData("http://recording-proxy.example:5000")]
+    public void RecordingOptions_DisableOutboundProxyOnlyForLoopback(string recordingProxy)
     {
         var services = new ServiceCollection();
         services.Configure<HttpClientOptions>(options =>
         {
             options.AllProxy = "http://127.0.0.1:9000";
-            options.RecordingProxy = "http://127.0.0.1:5000";
+            options.RecordingProxy = recordingProxy;
         });
         services.ConfigureDefaultHttpClient();
         using ServiceProvider provider = services.BuildServiceProvider();
@@ -120,10 +124,97 @@ public class HttpClientFactoryConfiguratorTests
             current = delegating.InnerHandler!;
         }
         Assert.IsType<RecordingRedirectHandler>(current);
+        Assert.Equal(!new Uri(recordingProxy).IsLoopback, GetTerminalHandler(handler).UseProxy);
+#else
+        Assert.True(GetTerminalHandler(handler).UseProxy);
 #endif
         Assert.Equal(new Uri("http://127.0.0.1:9000"),
             GetTerminalHandler(handler).Proxy!.GetProxy(new Uri("https://management.azure.com")));
     }
+
+#if DEBUG
+    [Theory]
+    [InlineData("http://127.0.0.1:5000", false)]
+    [InlineData("http://localhost:5000", false)]
+    [InlineData("http://[::1]:5000", false)]
+    [InlineData("http://recording-proxy.example:5000", true)]
+    public void RecordingOptions_DisableRuntimeProxyOnlyForLoopback(string recordingProxy, bool useProxy)
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options => options.RecordingProxy = recordingProxy);
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        SocketsHttpHandler handler = GetTerminalHandler(
+            provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(string.Empty));
+
+        Assert.Equal(useProxy, handler.UseProxy);
+        Assert.False(handler.AllowAutoRedirect);
+    }
+
+    [Theory]
+    [InlineData("", false, false)]
+    [InlineData("", true, true)]
+    [InlineData("custom", false, true)]
+    [InlineData("custom", true, false)]
+    [InlineData(HttpClientFactoryConfigurator.ArmClientName, false, false)]
+    [InlineData(HttpClientFactoryConfigurator.ArmClientName, true, true)]
+    public async Task RecordingProxy_LoopbackRequestsDoNotReachOutboundProxy(
+        string clientName, bool useResolver, bool synchronous)
+    {
+        await using LoopbackHttpServer recordingProxy = LoopbackHttpServer.Start();
+        await using LoopbackHttpServer outboundProxy = LoopbackHttpServer.Start();
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = outboundProxy.Endpoint.AbsoluteUri;
+            options.RecordingProxy = useResolver ? null : recordingProxy.Endpoint.AbsoluteUri;
+        });
+        services.ConfigureArmHttpClient();
+        services.ConfigureDefaultHttpClient(useResolver ? () => recordingProxy.Endpoint : null);
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(clientName);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/test?api-version=1");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Empty(outboundProxy.Requests);
+        string received = Assert.Single(recordingProxy.Requests);
+        Assert.Contains("GET /test?api-version=1 ", received);
+        Assert.Contains("x-recording-upstream-base-uri: https://management.azure.com/", received, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("X-Forwarded-", received, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RecordingProxy_NonLoopbackRequestsStillReachOutboundProxy(bool synchronous)
+    {
+        await using LoopbackHttpServer outboundProxy = LoopbackHttpServer.Start();
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = outboundProxy.Endpoint.AbsoluteUri;
+            options.RecordingProxy = "http://recording-proxy.example:5000";
+        });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/test?api-version=1");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.True(response.IsSuccessStatusCode);
+        string received = Assert.Single(outboundProxy.Requests);
+        Assert.Contains("GET http://recording-proxy.example:5000/test?api-version=1 ", received);
+        Assert.Contains("x-recording-upstream-base-uri: https://management.azure.com/", received, StringComparison.OrdinalIgnoreCase);
+    }
+#endif
 
     [Fact]
     public void ConfigureDefaultHttpClient_RepeatedCallsDoNotDuplicateDefaults()

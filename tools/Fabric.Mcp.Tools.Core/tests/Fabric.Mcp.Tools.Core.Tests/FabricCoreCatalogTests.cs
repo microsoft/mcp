@@ -24,24 +24,36 @@ public sealed class FabricCoreCatalogTests()
 {
     private static readonly (string Name, Type CommandType, bool ReadOnly)[] ExpectedTools =
     [
+        ("core_add-workspace-role-assignment", typeof(WorkspaceRoleAssignmentAddCommand), false),
         ("core_assign-workspace-to-capacity", typeof(WorkspaceAssignToCapacityCommand), false),
+        ("core_create-folder", typeof(FolderCreateCommand), false),
         ("core_create-item", typeof(ItemCreateCommand), false),
         ("core_create-workspace", typeof(WorkspaceCreateCommand), false),
+        ("core_delete-folder", typeof(FolderDeleteCommand), false),
         ("core_delete-item", typeof(ItemDeleteCommand), false),
         ("core_delete-workspace", typeof(WorkspaceDeleteCommand), false),
+        ("core_delete-workspace-role-assignment", typeof(WorkspaceRoleAssignmentDeleteCommand), false),
         ("core_get-capacity", typeof(CapacityGetCommand), true),
+        ("core_get-folder", typeof(FolderGetCommand), true),
         ("core_get-item", typeof(ItemGetCommand), true),
         ("core_get-item-definition", typeof(ItemDefinitionGetCommand), false),
         ("core_get-operation-result", typeof(OperationResultGetCommand), true),
         ("core_get-operation-state", typeof(OperationStateGetCommand), true),
         ("core_get-workspace", typeof(WorkspaceGetCommand), true),
+        ("core_get-workspace-role-assignment", typeof(WorkspaceRoleAssignmentGetCommand), true),
         ("core_list-capacities", typeof(CapacityListCommand), true),
+        ("core_list-folders", typeof(FolderListCommand), true),
         ("core_list-items", typeof(ItemListCommand), true),
+        ("core_list-workspace-role-assignments", typeof(WorkspaceRoleAssignmentListCommand), true),
         ("core_list-workspaces", typeof(WorkspaceListCommand), true),
+        ("core_move-folder", typeof(FolderMoveCommand), false),
+        ("core_move-item", typeof(ItemMoveCommand), false),
         ("core_search-catalog", typeof(CatalogSearchCommand), true),
+        ("core_update-folder", typeof(FolderUpdateCommand), false),
         ("core_update-item", typeof(ItemUpdateCommand), false),
         ("core_update-item-definition", typeof(ItemDefinitionUpdateCommand), false),
-        ("core_update-workspace", typeof(WorkspaceUpdateCommand), false)
+        ("core_update-workspace", typeof(WorkspaceUpdateCommand), false),
+        ("core_update-workspace-role-assignment", typeof(WorkspaceRoleAssignmentUpdateCommand), false)
     ];
 
     [Theory]

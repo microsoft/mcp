@@ -26,7 +26,8 @@
                             "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
                             "myLastBoundDateTime": "2023-05-24T16:22:20Z",
                             "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
-                        }
+                        },
+                        "myRole": "Owner"
                     },
                     {
                         "id": "f6a39b76-9816-4e4b-b93a-f42e405017b7",
@@ -50,7 +51,8 @@
                             "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
                             "myLastBoundDateTime": "2023-05-24T16:22:20Z",
                             "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
-                        }
+                        },
+                        "myRole": "User"
                     },
                     {
                         "id": "a3b4c5d6-7e8f-4a5b-9c0d-1e2f3a4b5c6d",
@@ -67,7 +69,8 @@
                             "singleSignOnType": "None",
                             "connectionEncryption": "Encrypted",
                             "skipTestConnection": false
-                        }
+                        },
+                        "myRole": "PendingOwner"
                     }
                 ],
                 "continuationToken": "LDEsMTAwMDAwLDA%3D",

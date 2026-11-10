@@ -39,9 +39,15 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools)
+    [InlineData(false, null, false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "core", false)]
+    [InlineData(true, "jobs", false)]
+    [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "core", true)]
+    [InlineData(true, "jobs", true)]
+    [InlineData(true, "core,jobs", true)]
+    public async Task Server_Should_List_Tools_Over_Http_Root_Endpoint(bool listAllTools, string? namespaces, bool readOnly)
     {
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
         var fabmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
@@ -52,7 +58,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}",
+            Arguments = $"server start --transport http --dangerously-disable-http-incoming-auth{(listAllTools ? " --mode all" : "")}{NamespaceArguments(namespaces)}{(readOnly ? " --read-only" : "")}",
             UseShellExecute = false,
             RedirectStandardInput = false,
             RedirectStandardOutput = false,
@@ -97,8 +103,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", content, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(content, localFiles: false);
-                AssertListItemsTool(content);
+                AssertCoreAndJobsDiscovery(content, namespaces, localFiles: false, readOnly);
             }
         }
         finally
@@ -111,9 +116,15 @@ public class ServerStartupTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools)
+    [InlineData(false, null, false)]
+    [InlineData(true, null, false)]
+    [InlineData(true, "core", false)]
+    [InlineData(true, "jobs", false)]
+    [InlineData(true, "core,jobs", false)]
+    [InlineData(true, "core", true)]
+    [InlineData(true, "jobs", true)]
+    [InlineData(true, "core,jobs", true)]
+    public async Task Server_Should_List_Tools_Without_Initialize_And_Without_DI_Errors(bool listAllTools, string? namespaces, bool readOnly)
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "fabmcp.exe" : "fabmcp";
@@ -124,7 +135,7 @@ public class ServerStartupTests
         var processStartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = fabmcpPath,
-            Arguments = listAllTools ? "server start --mode all" : "server start",
+            Arguments = (listAllTools ? "server start --mode all" : "server start") + NamespaceArguments(namespaces) + (readOnly ? " --read-only" : ""),
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -171,8 +182,7 @@ public class ServerStartupTests
             Assert.Contains("\"tools\"", response, StringComparison.OrdinalIgnoreCase);
             if (listAllTools)
             {
-                AssertRepresentativeCoreTools(response, localFiles: true);
-                AssertListItemsTool(response);
+                AssertCoreAndJobsDiscovery(response, namespaces, localFiles: true, readOnly);
             }
         }
         finally
@@ -243,6 +253,319 @@ public class ServerStartupTests
             {
                 process.Kill();
             }
+        }
+    }
+
+    private static string NamespaceArguments(string? namespaces) =>
+        namespaces is null ? "" : string.Concat(namespaces.Split(',').Select(value => " --namespace " + value));
+
+    private static void AssertCoreAndJobsDiscovery(string response, string? namespaces, bool localFiles, bool readOnly)
+    {
+        using var document = JsonDocument.Parse(response);
+        var tools = document.RootElement.GetProperty("result").GetProperty("tools").EnumerateArray().ToArray();
+        var names = tools.Select(tool => tool.GetProperty("name").GetString()).ToArray();
+        Assert.Equal(names.Length, names.Distinct(StringComparer.Ordinal).Count());
+        Assert.DoesNotContain("core_get-item-job-instance", names);
+        Assert.DoesNotContain("core_get-item-schedule", names);
+        Assert.DoesNotContain("core_delete-item-schedule", names);
+        var expectedJobs = namespaces != "core";
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_cancel-item-job-instance"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_create-item-schedule"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_delete-item-schedule"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-job-instance"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_get-item-schedule"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_list-item-job-instances"));
+        Assert.Equal(expectedJobs, names.Contains("jobs_list-item-schedules"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
+        Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_add-workspace-role-assignment"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-workspace-role-assignment"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-workspace-role-assignment"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_list-workspace-role-assignments"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-item"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-workspace-role-assignment"));
+        Assert.DoesNotContain("jobs_create-folder", names);
+        Assert.DoesNotContain("jobs_add-workspace-role-assignment", names);
+        Assert.DoesNotContain("jobs_delete-workspace-role-assignment", names);
+        Assert.DoesNotContain("jobs_delete-folder", names);
+        Assert.DoesNotContain("jobs_get-folder", names);
+        Assert.DoesNotContain("jobs_get-workspace-role-assignment", names);
+        Assert.DoesNotContain("jobs_list-folders", names);
+        Assert.DoesNotContain("jobs_list-workspace-role-assignments", names);
+        Assert.DoesNotContain("jobs_move-folder", names);
+        Assert.DoesNotContain("jobs_move-item", names);
+        Assert.DoesNotContain("jobs_update-folder", names);
+        Assert.DoesNotContain("jobs_update-workspace-role-assignment", names);
+        if (namespaces != "jobs" && !readOnly)
+        {
+            var deleteRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-workspace-role-assignment");
+            var deleteRoleAnnotations = deleteRole.GetProperty("annotations");
+            Assert.False(deleteRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(deleteRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(deleteRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(deleteRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var deleteRoleSchema = deleteRole.GetProperty("inputSchema");
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                deleteRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                deleteRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one DELETE", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("workspace Admin access", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("last admin's assignment cannot be deleted", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("no remaining effective access", deleteRole.GetProperty("description").GetString());
+            var updateRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-workspace-role-assignment");
+            var updateRoleAnnotations = updateRole.GetProperty("annotations");
+            Assert.False(updateRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(updateRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(updateRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(updateRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var updateRoleSchema = updateRole.GetProperty("inputSchema");
+            Assert.Equal(["role", "workspace-id", "workspace-role-assignment-id"],
+                updateRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["role", "workspace-id", "workspace-role-assignment-id"],
+                updateRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one PATCH", updateRole.GetProperty("description").GetString());
+            Assert.Contains("workspace Admin access", updateRole.GetProperty("description").GetString());
+            Assert.Contains("last admin's assignment cannot be changed", updateRole.GetProperty("description").GetString());
+            var addRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_add-workspace-role-assignment");
+            var addRoleAnnotations = addRole.GetProperty("annotations");
+            Assert.False(addRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var addRoleSchema = addRole.GetProperty("inputSchema");
+            Assert.Equal(["principal", "role", "workspace-id"],
+                addRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["principal", "role", "workspace-id"],
+                addRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one POST", addRole.GetProperty("description").GetString());
+            Assert.Contains("Members can grant Member or lower", addRole.GetProperty("description").GetString());
+            Assert.Contains("EntireTenant explicitly grants access to all tenant users", addRole.GetProperty("description").GetString());
+            var createFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-folder");
+            var annotations = createFolder.GetProperty("annotations");
+            Assert.False(annotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.False(annotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(annotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(annotations.GetProperty("openWorldHint").GetBoolean());
+            var schema = createFolder.GetProperty("inputSchema");
+            Assert.Equal(["display-name", "workspace-id"], schema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["display-name", "parent-folder-id", "workspace-id"],
+                schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one POST", createFolder.GetProperty("description").GetString());
+            var deleteFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-folder");
+            var deleteAnnotations = deleteFolder.GetProperty("annotations");
+            Assert.False(deleteAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(deleteAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(deleteAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(deleteAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var deleteSchema = deleteFolder.GetProperty("inputSchema");
+            Assert.Equal(["folder-id", "workspace-id"],
+                deleteSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["folder-id", "workspace-id"],
+                deleteSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one DELETE", deleteFolder.GetProperty("description").GetString());
+            Assert.Contains("empty logical", deleteFolder.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", deleteFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
+            var moveFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_move-folder");
+            var moveAnnotations = moveFolder.GetProperty("annotations");
+            Assert.False(moveAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(moveAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(moveAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(moveAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var moveSchema = moveFolder.GetProperty("inputSchema");
+            Assert.Equal(["folder-id", "workspace-id"],
+                moveSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["folder-id", "target-folder-id", "workspace-id"],
+                moveSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.False(moveSchema.GetProperty("properties").GetProperty("target-folder-id").TryGetProperty("default", out _));
+            Assert.Contains("exactly one POST", moveFolder.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", moveFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
+            var moveItem = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_move-item");
+            var moveItemAnnotations = moveItem.GetProperty("annotations");
+            Assert.False(moveItemAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(moveItemAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(moveItemAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(moveItemAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var moveItemSchema = moveItem.GetProperty("inputSchema");
+            Assert.Equal(["item-id", "workspace-id"],
+                moveItemSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "target-folder-id", "workspace-id"],
+                moveItemSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.False(moveItemSchema.GetProperty("properties").GetProperty("target-folder-id").TryGetProperty("default", out _));
+            Assert.Contains("exactly one POST", moveItem.GetProperty("description").GetString());
+            Assert.Contains("child items", moveItem.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", moveItem.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
+            var updateFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-folder");
+            var updateAnnotations = updateFolder.GetProperty("annotations");
+            Assert.False(updateAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(updateAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(updateAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(updateAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var updateSchema = updateFolder.GetProperty("inputSchema");
+            Assert.Equal(["display-name", "folder-id", "workspace-id"],
+                updateSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["display-name", "folder-id", "workspace-id"],
+                updateSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one PATCH", updateFolder.GetProperty("description").GetString());
+            Assert.DoesNotContain("Preview", updateFolder.GetProperty("description").GetString(), StringComparison.OrdinalIgnoreCase);
+        }
+        if (namespaces != "jobs")
+        {
+            var getFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-folder");
+            var annotations = getFolder.GetProperty("annotations");
+            Assert.True(annotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(annotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(annotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(annotations.GetProperty("openWorldHint").GetBoolean());
+            var schema = getFolder.GetProperty("inputSchema");
+            Assert.Equal(["folder-id", "workspace-id"], schema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["folder-id", "workspace-id"], schema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", getFolder.GetProperty("description").GetString());
+            var folders = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-folders");
+            Assert.True(folders.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(folders.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(folders.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(folders.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            Assert.Equal("workspace-id", Assert.Single(folders.GetProperty("inputSchema").GetProperty("required").EnumerateArray()).GetString());
+            var options = folders.GetProperty("inputSchema").GetProperty("properties");
+            Assert.Equal(["continuation-token", "recursive", "root-folder-id", "workspace-id"],
+                options.EnumerateObject().Select(property => property.Name).Order());
+            Assert.Equal(["boolean", "null"], options.GetProperty("recursive").GetProperty("type").EnumerateArray().Select(value => value.GetString()));
+            Assert.False(options.GetProperty("recursive").TryGetProperty("default", out _));
+            var roles = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_list-workspace-role-assignments");
+            Assert.True(roles.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(roles.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(roles.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(roles.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            var roleSchema = roles.GetProperty("inputSchema");
+            Assert.Equal("workspace-id", Assert.Single(roleSchema.GetProperty("required").EnumerateArray()).GetString());
+            Assert.Equal(["continuation-token", "workspace-id"],
+                roleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", roles.GetProperty("description").GetString());
+            Assert.Contains("Member or higher", roles.GetProperty("description").GetString());
+            var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-workspace-role-assignment");
+            Assert.True(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(assignment.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(assignment.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            var assignmentSchema = assignment.GetProperty("inputSchema");
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                assignmentSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                assignmentSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", assignment.GetProperty("description").GetString());
+            Assert.Contains("Assignment and principal IDs are independent", assignment.GetProperty("description").GetString());
+            Assert.Contains("Member or higher", assignment.GetProperty("description").GetString());
+        }
+        if (namespaces is not null)
+        {
+            Assert.All(names, name => Assert.Contains(name!.Split('_')[0], namespaces.Split(',')));
+        }
+        if (namespaces != "jobs" && !readOnly)
+        {
+            AssertRepresentativeCoreTools(response, localFiles);
+            AssertListItemsTool(response);
+        }
+        if (expectedJobs)
+        {
+            if (!readOnly)
+            {
+                var delete = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_delete-item-schedule");
+                Assert.False(delete.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(delete.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.False(delete.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                    delete.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+                Assert.Contains("Only HTTP 200 confirms deletion", delete.GetProperty("description").GetString());
+                var create = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_create-item-schedule");
+                Assert.False(create.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(create.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(create.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "workspace-id"],
+                    create.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var createOptions = create.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "workspace-id"],
+                    createOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", createOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(createOptions.GetProperty("enabled").TryGetProperty("default", out _));
+                var update = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_update-item-schedule");
+                Assert.False(update.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(update.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(update.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["configuration", "enabled", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    update.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+                var updateOptions = update.GetProperty("inputSchema").GetProperty("properties");
+                Assert.Equal(["configuration", "enabled", "execution-data", "item-id", "job-type", "schedule-id", "workspace-id"],
+                    updateOptions.EnumerateObject().Select(property => property.Name).Order());
+                Assert.Equal("boolean", updateOptions.GetProperty("enabled").GetProperty("type").GetString());
+                Assert.False(updateOptions.GetProperty("enabled").TryGetProperty("default", out _));
+                var cancel = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_cancel-item-job-instance");
+                Assert.False(cancel.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.True(cancel.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(cancel.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                    .Select(value => value.GetString()).Order());
+                Assert.Equal(["item-id", "job-instance-id", "workspace-id"], cancel.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                    .Select(property => property.Name).Order());
+                var run = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_run-on-demand-item-job");
+                Assert.False(run.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+                Assert.False(run.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+                Assert.True(run.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+                Assert.Equal(["item-id", "job-type", "workspace-id"], run.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                    .Select(value => value.GetString()).Order());
+                Assert.Equal(["execution-data", "item-id", "job-parameters", "job-type", "workspace-id"],
+                    run.GetProperty("inputSchema").GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            }
+            var job = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-job-instance");
+            Assert.True(job.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(job.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(job.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["item-id", "job-instance-id", "workspace-id"], job.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
+            var list = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-job-instances");
+            Assert.True(list.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(list.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(list.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["continuation-token", "item-id", "workspace-id"], list.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
+            var schedule = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_get-item-schedule");
+            Assert.True(schedule.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(schedule.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(schedule.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            Assert.Contains("disclosure consent, even in read-only mode", schedule.GetProperty("description").GetString());
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                schedule.GetProperty("inputSchema").GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            var scheduleOptions = schedule.GetProperty("inputSchema").GetProperty("properties");
+            Assert.Equal(["item-id", "job-type", "schedule-id", "workspace-id"],
+                scheduleOptions.EnumerateObject().Select(property => property.Name).Order());
+            Assert.All(scheduleOptions.EnumerateObject(), property =>
+            {
+                Assert.Equal("string", property.Value.GetProperty("type").GetString());
+                Assert.False(property.Value.TryGetProperty("default", out _));
+            });
+            var schedules = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "jobs_list-item-schedules");
+            Assert.True(schedules.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(schedules.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(schedules.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.Equal(["item-id", "job-type", "workspace-id"], schedules.GetProperty("inputSchema").GetProperty("required").EnumerateArray()
+                .Select(value => value.GetString()).Order());
+            Assert.Equal(["continuation-token", "item-id", "job-type", "workspace-id"], schedules.GetProperty("inputSchema").GetProperty("properties").EnumerateObject()
+                .Select(property => property.Name).Order());
         }
     }
 

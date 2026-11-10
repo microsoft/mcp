@@ -153,6 +153,22 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 
 `Compress-ForSigning.ps1` doesn't have any use in local development other than to test that its output is correct for later signing in a CI pipeline.
 
+## Tool ID validation
+
+Run `.\eng\scripts\Test-ToolId.ps1` to validate production tool command IDs across toolsets. The check reads `Id`
+string literals from `[CommandMetadata]` attributes using the C# parser bundled with PowerShell, without building or
+starting a server. It scans each toolset's `src` directory and excludes tests, `bin`, and `obj`.
+
+The script reports the number of IDs checked and exits with code 1 for duplicate IDs, missing or unsupported ID
+declarations, or scans that find no command metadata. Duplicate comparison remains case-insensitive. `Analyze-Code.ps1`
+and `Preflight.ps1` invoke this check. Use `-ToolsDirectory` to check a different toolset root.
+
+Run its regression tests with:
+
+```powershell
+Invoke-Pester -Path .\eng\scripts\Test-ToolId.Tests.ps1
+```
+
 # Published artifact types
 
 ### npm/npx

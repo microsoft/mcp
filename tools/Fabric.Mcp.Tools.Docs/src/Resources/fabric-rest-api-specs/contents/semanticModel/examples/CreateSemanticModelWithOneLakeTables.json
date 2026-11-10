@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createSemanticModelRequest": {
+            "displayName": "Sales Analytics Model",
+            "description": "A semantic model connected to lakehouse tables.",
+            "creationPayload": {
+                "oneLakeTables": [
+                    "https://onelake.dfs.fabric.microsoft.com/aaaa0000-bb11-2222-33cc-444444dddddd/cccc0000-dd11-2222-33ee-444444ffffff/Tables/dim_customer",
+                    "https://onelake.dfs.fabric.microsoft.com/aaaa0000-bb11-2222-33cc-444444dddddd/cccc0000-dd11-2222-33ee-444444ffffff/Tables/sales/dim_product",
+                    "https://onelake.dfs.fabric.microsoft.com/1111aaaa-bb22-3333-44cc-555555eeeeee/2222bbbb-cc33-4444-55dd-666666ffffff/Tables/dim_region"
+                ]
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "Sales Analytics Model",
+                "description": "A semantic model connected to lakehouse tables.",
+                "type": "SemanticModel",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

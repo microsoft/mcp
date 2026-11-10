@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)tools\Azure.Mcp.Tools.Monitor\src\Azure.Mcp.Tools.Monitor.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" />

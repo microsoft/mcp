@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added jobs_update-item-schedule to update one Fabric item schedule with explicit enabled state, full configuration, and optional static execution data in a single PATCH, with safe update confirmation and no automatic retry or job execution."

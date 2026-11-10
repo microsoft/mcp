@@ -37,7 +37,7 @@
       },
       "CreateSemanticModelRequest": {
           "description": "Create semantic model request payload.",
-          "required": ["displayName", "definition"],
+          "required": ["displayName"],
           "properties": {
               "displayName": {
                   "description": "The semantic model display name. The display name must follow naming rules according to item type.",
@@ -56,8 +56,13 @@
                   "readOnly": false
               },
               "definition": {
-                  "description": "The semantic model public definition.",
+                  "description": "The semantic model public definition. Use `definition` or `creationPayload`. You can't use both at the same time.",
                   "$ref": "#/definitions/SemanticModelDefinition",
+                  "readOnly": false
+              },
+              "creationPayload": {
+                  "description": "The creation payload for creating a semantic model without a full definition. Provide OneLake table URLs to create a DirectLake model, or omit both `definition` and `creationPayload` to create an empty semantic model. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                  "$ref": "#/definitions/SemanticModelCreationPayload",
                   "readOnly": false
               },
               "sensitivityLabelSettings": {
@@ -154,6 +159,22 @@
               "allowPurgeData": {
                   "description": "Whether to allow purging the semantic model's existing data when applying the updated definition. Some definition changes require existing data to be cleared; set this to true to allow those changes to proceed, in which case any data that can't be retained under the new definition is purged. After the operation completes, refresh the semantic model to reload the data. Default value is false.",
                   "type": "boolean",
+                  "readOnly": false
+              }
+          }
+      },
+      "SemanticModelCreationPayload": {
+          "description": "Creation payload for creating a semantic model without a definition.",
+          "type": "object",
+          "required": ["oneLakeTables"],
+          "properties": {
+              "oneLakeTables": {
+                  "description": "A list of OneLake table URLs to connect the semantic model to (maximum 100). Each URL must follow one of two formats: `https://onelake.dfs.fabric.microsoft.com/{workspaceId}/{dataItemId}/Tables/{tableName}` for a table in the default `dbo` schema, or `https://onelake.dfs.fabric.microsoft.com/{workspaceId}/{dataItemId}/Tables/{schemaName}/{tableName}` for a table in an explicit custom schema. URLs may reference different workspaces and data items, and a single request may mix default-schema and custom-schema URLs. The system infers table names and columns from the OneLake source.",
+                  "type": "array",
+                  "items": {
+                      "type": "string",
+                      "format": "uri"
+                  },
                   "readOnly": false
               }
           }
