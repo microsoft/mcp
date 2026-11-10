@@ -5,6 +5,9 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentListCommandTests.cs**: Explicit workspace/token binding, read-only remote metadata, typed pages, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
+- **Services/WorkspaceRoleAssignmentListServiceTests.cs**: One GET per page, independent assignment/principal IDs, optional principal details and recursive profile parents, extensible strings, absent/null continuation, opaque token encoding, no enrichment or row-count cap, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, disposal/cancellation, and concurrent caller isolation
+- **WorkspaceRoleAssignmentListMcpTests.cs**: Real registration, input/output/learn schemas, all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no mutation consent, zero-I/O rejected input/authentication, explicit continuation, CLI duplicate/valueless rejection, and recursive metadata fitting JSON-RPC envelopes
 - **Commands/FolderCreateCommandTests.cs**: Explicit workspace/name/parent binding, additive mutation metadata, typed 201 results, safe errors/logging, and distinct pre-send, uncertain-send, and confirmed-creation guidance
 - **Validation/FolderCreateInputTests.cs**: Fabric naming constraints, Unicode character boundaries, invalid surrogate rejection, UUID validation, unchanged names, and no host filesystem rules
 - **Services/FolderCreateServiceTests.cs**: Exactly one authenticated POST, parent omission, safe typed metadata, identity checks, absent optional parents, malformed/Unicode/duplicate data, exact byte/depth limits, status/retry preservation, cancellation/disposal, and concurrent caller isolation
@@ -131,6 +134,36 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Workspace Role-assignment Listing
+
+`core_list-workspace-role-assignments` is one read-only Core operation. Its fixtures substitute HTTP
+and credentials; they make no Fabric or Graph calls. The request supplies a workspace UUID and,
+optionally, the unchanged token from a previous page. Each call sends one GET with no body and returns
+the complete ordered page, not expanded group membership or calculated effective access.
+
+The bundled `WorkspaceRoleAssignment` requires `id`, `principal`, and `role`; `Principal` requires
+`id` and `type`, not `displayName` or type-specific details. Assignment and principal IDs need not
+match, and no workspace field is required on a returned row. Optional absent/null metadata is
+omitted, empty names are retained, and role/principal/group types are extensible strings. Known
+principal details are projected without retaining arbitrary extension JSON.
+
+The public pagination article allows absent or null terminal fields despite the endpoint schema's
+string-only table. Tests cover every terminal combination on empty/nonempty pages, token-only pages,
+explicit second-call continuation, contradictory or unsafe URIs, and raw/already-escaped tokens.
+No URI is followed or returned. The existing consumed continuation helper is reused; no pagination
+framework is introduced.
+
+Response limits remain 1 MiB and 64 input JSON levels. A source-generated output depth check reserves
+three levels for namespace, tool-response, and JSON-RPC envelopes, allowing 61 retained payload levels
+without truncating recursive profile-parent metadata. Unknown input fields can reach the input limit
+without being retained. Invalid required data or an oversized/deep page produces no partial success.
+
+The contract requires Member-or-higher workspace access and delegated `Workspace.Read.All` or
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported by the API;
+service principals/managed identities need the corresponding Fabric tenant setting. Offline isolation
+and actual-host discovery are not real OBO/token-exchange or RBAC tests. No approved live workspace
+fixture or live authorization was supplied, so live/recorded coverage is not claimed.
 
 ## Folder Deletion
 

@@ -16,6 +16,15 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one complete page of workspace role assignments without directory lookups, group expansion, or implicit paging.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="continuationToken">An unchanged token from a preceding page for the same workspace, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<WorkspaceRoleAssignmentListCommandResult> ListWorkspaceRoleAssignmentsAsync(
+        string workspaceId,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Creates one logical workspace folder with one POST, without lookups, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty workspace UUID.</param>
     /// <param name="displayName">The unchanged display name, subject to Fabric folder naming rules.</param>

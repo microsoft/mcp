@@ -41,6 +41,7 @@ public sealed class FabricCoreCatalogTests()
         ("core_list-capacities", typeof(CapacityListCommand), true),
         ("core_list-folders", typeof(FolderListCommand), true),
         ("core_list-items", typeof(ItemListCommand), true),
+        ("core_list-workspace-role-assignments", typeof(WorkspaceRoleAssignmentListCommand), true),
         ("core_list-workspaces", typeof(WorkspaceListCommand), true),
         ("core_move-folder", typeof(FolderMoveCommand), false),
         ("core_move-item", typeof(ItemMoveCommand), false),

@@ -350,6 +350,8 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
 items, definitions, capacities, and Fabric `/operations` LROs. It also supports logical workspace
 folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
+Core also lists one page of workspace role assignments and returned principal metadata, without
+directory lookups, group-membership expansion, or role changes. Each additional page is a separate explicit call.
 The separate Items Move operation places an item and its child items in an existing folder or
 at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
@@ -362,7 +364,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace, folder listing/creation/lookup/rename/movement/deletion, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace management/role listing, folders, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -475,6 +477,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-folders` | Lists one complete page of logical workspace folders, with optional root folder and recursive filters, parent relationships, and explicit continuation. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
+| `core_list-workspace-role-assignments` | Lists one complete page of role assignments and available principal metadata for an explicit workspace UUID, with explicit continuation and no identity enrichment or role changes. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
 | `core_move-folder` | Moves one known logical folder and its hierarchy within the same workspace, into an existing folder or to the workspace root. Returns observed metadata without lookups, descendant enumeration, retries, or polling. |
 | `core_move-item` | Moves one known item and its child items into an existing folder or to the root of the same workspace. Returns the complete ordered metadata collection without lookups, retries, or polling. |
@@ -911,6 +914,53 @@ Workspace entries contain `id`, `displayName`, and `type`, with `description`, `
 The API supports users, service principals, and managed identities. Delegated access requires `Workspace.Read.All` or `Workspace.ReadWrite.All`; service principals and managed identities also require the Fabric tenant setting permitting service principals to use Fabric APIs. Results are limited to workspaces accessible to the configured calling identity, including the authenticated caller when using HTTP/OBO. The tool does not change authentication configuration.
 
 Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
+
+**List Workspace Role Assignments (`core_list-workspace-role-assignments`)**
+
+Calls [List Workspace Role Assignments](https://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspace-role-assignments)
+with one `GET /v1/workspaces/{workspaceId}/roleAssignments` and no request body. This lists workspace
+role assignments, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `continuation-token` | No | Unchanged token from a previous page for the same workspace. Omit for the first page. |
+
+```powershell
+fabmcp core list-workspace-role-assignments --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+fabmcp core list-workspace-role-assignments --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --continuation-token '<returned-token>'
+```
+
+Returns `roleAssignments` in service order, preserving repeated entries without a row-count cap.
+Each assignment has its own `id`, `role`, and `principal` with `id` and `type`; assignment and principal
+IDs are not assumed equal. The API does not include a required workspace ID on each row.
+Optional principal `displayName`, `userDetails.userPrincipalName`, `groupDetails.groupType`,
+`servicePrincipalDetails.aadAppId`, and `servicePrincipalProfileDetails.parentPrincipal` are retained
+when supplied, including documented parent-principal metadata. Missing/null optional fields are not
+invented; explicit empty display names and user principal names are preserved. Future role, principal
+type, and group type strings remain strings. Unknown extension fields are omitted.
+
+Each invocation returns **one complete page**, including an empty page with a continuation token.
+Following [Fabric pagination guidance](https://learn.microsoft.com/rest/api/fabric/articles/pagination),
+absent or JSON-null continuation fields mark a terminal page; a valid token with an absent/null URI
+still enables a separate call. A supplied URI must match the fixed origin, workspace collection, and
+token; URI-only, wrong-type, or contradictory metadata fails rather than silently ending enumeration.
+`continuationUri` is never returned or followed. Raw and already percent-escaped tokens are accepted
+unchanged, with no trimming or double encoding. Tokens must be valid Unicode, not blank, without
+control characters, and at most 8,192 UTF-8 bytes.
+
+The caller needs **workspace Member or higher** access. Delegated calls require **Workspace.Read.All**
+or **Workspace.ReadWrite.All**. The API supports users, service principals, and managed identities;
+the latter two also need the tenant setting permitting service principals to use Fabric APIs.
+The tool reuses the configured authentication and is available in read-only mode over stdio and HTTP.
+It performs no Graph/directory lookup, group-membership expansion, identity enrichment, per-row request,
+automatic paging, retry, polling, or role mutation.
+
+Only HTTP 200 is a successful page. Failures preserve HTTP status and validated `Retry-After` guidance
+without exposing raw backend errors. JSON is bounded to 1 MiB (1,048,576 bytes) and 64 input nesting levels;
+retained output is limited to 61 levels to leave room for MCP envelopes, including recursive profile
+parents. Malformed required fields, ambiguous duplicates, invalid Unicode, or an over-budget page fail
+safely without partial results or truncation. No live workspace, real OBO/RBAC, or recorded coverage is claimed.
 
 **Workspace folders**
 

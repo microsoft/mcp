@@ -63,6 +63,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<WorkspaceDeleteCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
+        services.AddSingleton<WorkspaceRoleAssignmentListCommand>(CreateWorkspaceRoleAssignmentListCommand);
         services.AddSingleton<WorkspaceUpdateCommand>();
     }
 
@@ -84,6 +85,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
             "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
+            "- List one page of workspace role assignments and returned principal metadata without directory lookups or group expansion\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Move one item and its child items within the same workspace, returning the complete moved-item collection\n" +
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
@@ -121,9 +123,27 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentListCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
+    }
+
+    private static WorkspaceRoleAssignmentListCommand CreateWorkspaceRoleAssignmentListCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentListCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentListCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each list-workspace-role-assignments option at most once.");
+            }
+        });
+        return command;
     }
 
     private static FolderCreateCommand CreateFolderCreateCommand(IServiceProvider serviceProvider)
