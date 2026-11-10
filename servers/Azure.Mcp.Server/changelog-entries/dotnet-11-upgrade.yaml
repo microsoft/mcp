@@ -1,3 +1,5 @@
 changes:
   - section: "Breaking Changes"
     description: "Upgraded to .NET 11 and .NET base library dependencies 11.0.0. .NET tool installations now require the .NET 11 SDK or later."
+  - section: "Other Changes"
+    description: "Scoped the ASP.NET Core 11.0.0 linker workaround to IL2101 in Microsoft.AspNetCore.Components.Endpoints. IL2101 diagnostics in other assemblies remain errors."

@@ -78,6 +78,11 @@ If you are contributing significant changes, or if the issue is already assigned
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
 5. **.NET SDK**: Install the [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0) version pinned in `global.json`
 
+> [!NOTE]
+> The ASP.NET Core 11.0.0 runtime pack contains malformed embedded linker metadata tracked in [dotnet/aspnetcore#70236](https://github.com/dotnet/aspnetcore/issues/70236).
+> Trimmed publishing suppresses `IL2101` only in `Microsoft.AspNetCore.Components.Endpoints`, using assembly-scoped linker attributes in `eng/ILLink.Suppressions.xml`.
+> Other assemblies retain `IL2101` as an error. This suppression is enabled only for the affected runtime pack version, not for later servicing releases.
+
 ### Central NuGet Feed
 
 This repository uses a single Azure DevOps package feed for all NuGet packages instead of nuget.org directly. The feed is configured in `nuget.config`.

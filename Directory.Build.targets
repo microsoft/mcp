@@ -1,4 +1,14 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="SuppressAspNetCore11EmbeddedXmlWarning"
+          BeforeTargets="PrepareForILLink"
+          DependsOnTargets="ResolveFrameworkReferences"
+          Condition="'$(TargetFramework)' == 'net11.0'">
+    <ItemGroup>
+      <_ILLinkSuppressions Include="$(RepoRoot)eng\ILLink.Suppressions.xml"
+                          Condition="'%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.AspNetCore.App' and '%(ResolvedRuntimePack.NuGetPackageVersion)' == '11.0.0'" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup Condition="'$(IsTestProject)' == 'true' or '$(IsPerfProject)' == 'true' or '$(IsStressProject)' == 'true'">
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>SourcePath</_Parameter1>
