@@ -1,0 +1,24 @@
+{
+  "parameters": {
+    "capacityId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "actorAutoDetectionRuleId": "a1f0c3e4-5b6d-7890-abcd-ef1234567890",
+    "updateActorAutoDetectionRuleRequest": {
+      "capacityUnitsConsumptionThresholdPercentage": 40
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "a1f0c3e4-5b6d-7890-abcd-ef1234567890",
+        "actorsSubjectToRule": {
+          "type": "AllWorkspaces"
+        },
+        "capacityUnitsConsumptionThresholdPercentage": 40,
+        "blockDuration": {
+          "type": "Hours",
+          "hours": 24
+        }
+      }
+    }
+  }
+}

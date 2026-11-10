@@ -27,6 +27,7 @@
                 "ConfluentCloud",
                 "Cribl",
                 "CustomEndpoint",
+                "CustomStreamConnector",
                 "FabricAnomalyDetectionEvents",
                 "FabricCapacityOperationEvents",
                 "FabricCapacityOverviewEvents",
@@ -120,6 +121,10 @@
                     {
                         "value": "CustomEndpoint",
                         "description": "The Custom Endpoint source type."
+                    },
+                    {
+                        "value": "CustomStreamConnector",
+                        "description": "The Custom Stream Connector source type."
                     },
                     {
                         "value": "FabricAnomalyDetectionEvents",
@@ -406,6 +411,25 @@
                 }
             ],
             "x-ms-discriminator-value": "CustomEndpoint"
+        },
+        "CustomStreamConnectorSourceResponse": {
+            "type": "object",
+            "description": "The response for a Custom Stream Connector source.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Custom Stream Connector source.",
+                    "$ref": "#/definitions/CustomStreamConnectorSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "CustomStreamConnector"
         },
         "SAPDatasphereSourceResponse": {
             "type": "object",
@@ -1266,6 +1290,48 @@
             "type": "object",
             "description": "Custom endpoint events source properties.",
             "properties": {}
+        },
+        "CustomStreamConnectorSourceProperties": {
+            "type": "object",
+            "description": "The properties of a Custom Stream Connector source.",
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The data connection identifier used to resolve runtime credentials and connectivity."
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace identifier of the referenced Custom Stream Connector item."
+                },
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The identifier of the referenced Custom Stream Connector item."
+                },
+                "configurations": {
+                    "type": "array",
+                    "description": "The connector configurations. Values may include placeholders (for example, ${password}) that are resolved server-side at runtime.",
+                    "items": {
+                        "$ref": "#/definitions/CustomConnectorConfiguration"
+                    }
+                }
+            }
+        },
+        "CustomConnectorConfiguration": {
+            "type": "object",
+            "description": "A Custom Stream Connector configuration entry.",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "The configuration key."
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The configuration value."
+                }
+            }
         },
         "CriblSourceProperties": {
             "type": "object",
