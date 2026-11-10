@@ -3174,6 +3174,31 @@ azmcp deploy plan get --project-name <project-name> \
 azmcp deviceprovisioning service get --subscription <subscription> \
                                         --resource-group <resource-group> \
                                         --service <device-provisioning-service-name>
+
+# Validate one existing individual enrollment or an enrollment group with an optional manifest of up to 10 devices.
+# X.509 validation resolves verified DPS CA references and checks the complete public chain, registration identity,
+# trust-anchor match, and supported RSA or ECDSA algorithms.
+# The command does not perform registration, retrieve keys, or establish authoritative enrollment selection.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp deviceprovisioning onboarding validate --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --service <device-provisioning-service-name> \
+                                             [--enrollment-id <registration-id>] \
+                                             [--enrollment-group-id <enrollment-group-id>] \
+                                             [--registration-id <device-registration-id>] \
+                                             [--intended-hub <iot-hub-hostname>] \
+                                             [--certificate-chain <public-pem-chain>] \
+                                             [--tpm-endorsement-key <public-tpm-ek>] \
+                                             [--device-manifest <inline-json-for-1-to-10-devices>] \
+                                             [--include-registration-state <true-or-false>] \
+                                             [--include-device-details <true-or-false>]
+
+# Responses are compact by default. Set --include-device-details true only when full per-device
+# findings are needed; aggregate counts and exceptional devices remain available in compact mode.
+
+# Validate a larger fleet through an agent by using the
+# azure-device-provisioning-onboarding skill. The skill reads a customer manifest,
+# invokes this command in batches of at most 10, checkpoints progress, and aggregates results.
 ```
 
 ### Azure Device Registry Operations
@@ -4203,6 +4228,8 @@ Resuming does not change the query or its submitted time range and row limit.
 Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
 If the status is `Running`, use `query resume` with the returned operation ID.
 Requested row limits are approximate; responses preserve truncation and partial-result indicators.
+For critical-path analysis, `--max-results` defaults to 10 and is clamped to 1-1000 requested rows.
+For top-attributes analysis, it defaults to 10000 and is clamped to 1-10000 sampled traces.
 Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
 
 ```bash
@@ -4210,6 +4237,23 @@ Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because e
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor traces account list --subscription <subscription> \
                                   [--resource-group <resource-group>]
+
+# Analyze the critical paths of explicit Trace Store trace IDs
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query analyze-critical-path --subscription <subscription> \
+                                                 --resource-group <resource-group> \
+                                                 --workspace <workspace> \
+                                                 --trace-ids <trace-id> [<trace-id> ...] \
+                                                 --start-time <iso-8601> \
+                                                 --end-time <iso-8601> \
+                                                 [--aggregate-by <field> [<field> ...]] \
+                                                 [--percentiles <n> [<n> ...]] \
+                                                 [--exclude-subtree-prefixes <prefix> [<prefix> ...]] \
+                                                 [--deprioritize-subtree-prefixes <prefix> [<prefix> ...]] \
+                                                 [--resolve-trace-links <true|false>] \
+                                                 [--include-samples <true|false>] \
+                                                 [--include-rollups <true|false>] \
+                                                 [--max-results <n>]
 
 # List the trace and span schema field names for a distributed-trace account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4244,6 +4288,22 @@ azmcp monitor traces query cancel --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --workspace <workspace> \
                                   --operation-id <operation-id>
+
+# Find the top attributes distinguishing anomalous Trace Store traces from the overall pool
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query analyze-top-attributes --subscription <subscription> \
+                                                  --resource-group <resource-group> \
+                                                  --workspace <workspace> \
+                                                  --overall-start-time <iso-8601> \
+                                                  --overall-end-time <iso-8601> \
+                                                  --selection-start-time <iso-8601> \
+                                                  --selection-end-time <iso-8601> \
+                                                  --selection-field <field> \
+                                                  --selection-op <operator> \
+                                                  --selection-value <literal> \
+                                                  [--overall-query <kql-query>] \
+                                                  [--top-n <n>] \
+                                                  [--max-results <n>]
 
 ```
 

@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.7 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 4.0.0-beta.7 (2026-11-10)
 
 ### Bugs Fixed
 
-### Other Changes
+- Azure Monitor trace queries now resolve known workspaces without reading parent resource groups or subscription metadata when a subscription ID is supplied. [[#4129](https://github.com/microsoft/mcp/pull/4129)]
 
 ## 4.0.0-beta.6 (2026-11-05)
 

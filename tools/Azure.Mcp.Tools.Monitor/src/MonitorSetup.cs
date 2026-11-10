@@ -112,6 +112,8 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<TraceQueryRunCommand>();
         services.AddSingleton<TraceQueryResumeCommand>();
         services.AddSingleton<TraceQueryCancelCommand>();
+        services.AddSingleton<TraceAnalyzeTopAttributesCommand>();
+        services.AddSingleton<TraceAnalyzeCriticalPathCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -215,6 +217,8 @@ public class MonitorSetup : IAreaSetup
 
         var traceQuery = new CommandGroup("query", "Distributed-trace query operations - Commands for running, resuming, and cancelling queries against Trace Store.");
         traces.AddSubGroup(traceQuery);
+        traceQuery.AddCommand<TraceAnalyzeTopAttributesCommand>(serviceProvider);
+        traceQuery.AddCommand<TraceAnalyzeCriticalPathCommand>(serviceProvider);
         traceQuery.AddCommand<TraceQueryRunCommand>(serviceProvider);
         traceQuery.AddCommand<TraceQueryResumeCommand>(serviceProvider);
         traceQuery.AddCommand<TraceQueryCancelCommand>(serviceProvider);

@@ -811,6 +811,10 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
 | deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
 | deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+| deviceprovisioning_onboarding_validate | Validate the existing DPS individual enrollment <registration_id> in service <service_name> and explain blockers or unverified conditions | none |
+| deviceprovisioning_onboarding_validate | Check whether enrollment group <enrollment_group_id> is consistently configured with the linked IoT Hubs in DPS <service_name> | none |
+| deviceprovisioning_onboarding_validate | Compare this public device certificate chain with the selected DPS enrollment and explain compatibility limitations | none |
+| deviceprovisioning_onboarding_validate | Validate these 10 X.509 devices against enrollment group <enrollment_group_id> in DPS <service_name> before production rollout | context-required |
 
 ## Azure Device Registry
 
@@ -1243,6 +1247,12 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
 | monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
+| monitor_traces_query_analyze-critical-path | Analyze the critical path for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time> | none |
+| monitor_traces_query_analyze-critical-path | Which services dominate end-to-end latency on the critical path of trace IDs <trace_ids> in Azure Monitor Workspace Trace Store <workspace_name> in resource group <resource_group> from <start_time> to <end_time>? | none |
+| monitor_traces_query_analyze-critical-path | Show p50, p95, and p99 critical-path latency grouped by service and operation for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time> | none |
+| monitor_traces_query_analyze-top-attributes | Find top attributes distinguishing traces where duration_nano > <threshold> during <selection_start_time> to <selection_end_time> from the pool of traces in Trace Store workspace <workspace_name> in resource group <resource_group> from <overall_start_time> to <overall_end_time> | none |
+| monitor_traces_query_analyze-top-attributes | What attributes distinguish traces where error_rate > <threshold> during <selection_start_time> to <selection_end_time> from the baseline in Trace Store workspace <workspace_name> in resource group <resource_group> over <overall_start_time> to <overall_end_time>? | none |
+| monitor_traces_query_analyze-top-attributes | Which attributes distinguish traces with more than <span_count> spans during <selection_start_time> to <selection_end_time> from the overall pool in Trace Store workspace <workspace_name> in resource group <resource_group> during <overall_start_time> to <overall_end_time>? Compare up to 10000 traces | none |
 | monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |

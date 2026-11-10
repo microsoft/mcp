@@ -8,6 +8,29 @@ namespace Azure.Mcp.Tools.Monitor.Services.Traces;
 
 public interface IMonitorTracesService
 {
+    Task<TraceQueryResult> CompareAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string query,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        int maxResults,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<TraceQueryResult> CriticalPathAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string query,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string[] traceIds,
+        TraceQueryOptionsBody options,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<ResourceQueryResults<TraceAccountInfo>> ListAccountsAsync(
         string subscription,
         string? resourceGroup = null,
