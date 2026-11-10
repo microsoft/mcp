@@ -358,6 +358,10 @@ It sends one grant request without default access, name resolution, preflight, o
 Update Workspace Role Assignment separately replaces the role on an explicitly identified existing
 assignment with one PATCH. It requires Admin access and an explicit role, without identity translation,
 preflight, create/upsert fallback, automatic retry, or polling.
+Delete Workspace Role Assignment removes only an explicitly identified assignment with one DELETE,
+not the principal, group membership, workspace, or all sources of effective access. It requires Admin
+access, protects the last admin assignment, and returns a receipt only for HTTP 200 without preflight,
+automatic retry, polling, or verification.
 The separate Items Move operation places an item and its child items in an existing folder or
 at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
@@ -370,7 +374,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace management/role listing, lookup and grants, folders, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace management and role assignments, folders, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -475,6 +479,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-folder` | Deletes one explicitly identified empty logical workspace folder. Returns a deletion receipt without changing contents, preflight, retries, or polling. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
+| `core_delete-workspace-role-assignment` | Deletes one existing assignment by workspace and assignment UUIDs. Requires Admin access; returns a deletion receipt without identity lookup, cascading removal, retry, or polling. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-folder` | Gets one logical workspace folder's metadata and available parent relationship using explicit workspace and folder UUIDs, without related lookups. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
@@ -1136,6 +1141,52 @@ Every invocation sends at most one initiating request, without hidden List/Get, 
 verification, retry, or polling. Offline fixtures and discovery do not demonstrate live token exchange,
 OBO/RBAC authorization, or recorded coverage; no live update is run without an approved fixture and
 separate permission-change authorization.
+
+**Delete Workspace Role Assignment (`core_delete-workspace-role-assignment`)**
+
+Calls [Delete Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/delete-workspace-role-assignment)
+with one `DELETE /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}`.
+There is **no request body or query option**. Supply the explicit nonempty `workspace-id` and
+`workspace-role-assignment-id` UUIDs. Assignment IDs and principal IDs are independent; names, email
+addresses, application IDs, or principal IDs are not resolved or translated into assignment IDs.
+
+```powershell
+# Example only: requires separate authorization to remove this specific assignment.
+fabmcp core delete-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+The caller must have **workspace Admin** access, and delegated calls require **Workspace.ReadWrite.All**.
+**The last admin's assignment cannot be deleted.** Fabric enforces these restrictions without a local
+permission preflight. Users, service principals, and managed identities use the unchanged configured
+authentication. Service principals and managed identities also need the tenant setting permitting
+Fabric API access; this tool does not change settings or select another identity on failure.
+
+Only **HTTP 200** confirms deletion. The result is a receipt with `deletionStatus: "Deleted"`,
+`workspaceId`, `workspaceRoleAssignmentId`, and `guidance`, not a returned assignment snapshot.
+The response body is irrelevant and is not read, even if malformed, oversized, or unavailable.
+Late cancellation cannot erase confirmation already received in the headers. If local receipt
+completion fails after 200, the error still reports **confirmed deletion** and says not to resubmit.
+HTTP 201, 202, 204, redirects, and other undocumented responses do not confirm deletion.
+A 404 remains a failure, including on an explicit repeated deletion.
+
+Deletion removes **only the specified assignment**, not the principal, group membership, workspace,
+or other assignments. It does not establish that the principal has no remaining effective access.
+There is no directory/Graph lookup, membership expansion, preflight List/Get, cascade, bulk removal,
+fallback, retry, or hidden verification. This is not a documented standard Fabric LRO; Location and
+operation headers are not followed, and no polling or result-retrieval option is exposed.
+
+Validation/authentication failures before sending, explicit rejections, uncertain sends, and confirmed
+deletions remain distinct. After an uncertain network failure, timeout, server error, or undocumented
+success status, inspect the known assignment separately before considering a new deletion; never
+replay blindly. Known HTTP status and validated `Retry-After` survive unusable optional error metadata.
+Only safe error codes are projected, never backend messages or raw payloads. Retry timing is not
+authorization to replay a permission change.
+
+This remote-capable, destructive/idempotent permission mutation uses normal repository confirmation,
+not a custom gate. Read-only mode hides and denies it while preserving List/Get. Idempotence does not
+authorize replay. Offline HTTP fixtures and actual-host discovery do not demonstrate live token
+exchange, OBO/RBAC authorization, or recorded coverage. No live removal is performed without an
+approved workspace/assignment fixture and separate revocation authorization.
 
 **Workspace folders**
 

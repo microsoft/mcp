@@ -280,6 +280,7 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_add-workspace-role-assignment"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-workspace-role-assignment"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
@@ -292,6 +293,7 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-workspace-role-assignment"));
         Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_add-workspace-role-assignment", names);
+        Assert.DoesNotContain("jobs_delete-workspace-role-assignment", names);
         Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_get-workspace-role-assignment", names);
@@ -301,9 +303,23 @@ public class ServerStartupTests
         Assert.DoesNotContain("jobs_move-item", names);
         Assert.DoesNotContain("jobs_update-folder", names);
         Assert.DoesNotContain("jobs_update-workspace-role-assignment", names);
-        Assert.DoesNotContain("core_delete-workspace-role-assignment", names);
         if (namespaces != "jobs" && !readOnly)
         {
+            var deleteRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_delete-workspace-role-assignment");
+            var deleteRoleAnnotations = deleteRole.GetProperty("annotations");
+            Assert.False(deleteRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(deleteRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.True(deleteRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(deleteRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var deleteRoleSchema = deleteRole.GetProperty("inputSchema");
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                deleteRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                deleteRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one DELETE", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("workspace Admin access", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("last admin's assignment cannot be deleted", deleteRole.GetProperty("description").GetString());
+            Assert.Contains("no remaining effective access", deleteRole.GetProperty("description").GetString());
             var updateRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_update-workspace-role-assignment");
             var updateRoleAnnotations = updateRole.GetProperty("annotations");
             Assert.False(updateRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());

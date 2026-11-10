@@ -131,6 +131,17 @@ cannot be used; do not resubmit. After an uncertain send, a separately authorize
 the known assignment, but no hidden verification is authorized. These prompts do not authorize a
 live role change, customer-ID discovery, tenant changes, or live/recorded validation.
 
+Delete Workspace Role Assignment requires explicit workspace and existing assignment UUIDs, normal
+mutation confirmation, and workspace Admin access; delegated calls require Workspace.ReadWrite.All.
+The last admin's assignment cannot be deleted. Assignment IDs and principal IDs are independent.
+Send one DELETE with no body or query, preflight List/Get, identity lookup/translation, membership
+expansion, cascade, bulk removal, fallback, retry, polling, or verification. Only HTTP 200 confirms
+deletion; ignore any irrelevant success body. A 404 or undocumented success status is not confirmation.
+Remove only that assignment, not the principal, group membership, workspace, or all effective access.
+After an uncertain send, inspect separately only when explicitly authorized; never blindly replay
+or resubmit confirmed deletion. These prompts do not authorize a live removal, customer-ID discovery,
+tenant changes, real token exchange/OBO/RBAC tests, or recorded coverage.
+
 Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
@@ -184,6 +195,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_delete-workspace | Delete Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff222 and the items under it. | none |
 | core_delete-workspace | Remove Microsoft Fabric workspace cfafbeb1-8037-4d0c-896e-a46fb27ff222, including its items. | none |
 | core_delete-workspace | Use workspace UUID cfafbeb1-8037-4d0c-896e-a46fb27ff222 to delete only that Fabric workspace and its contained items. | none |
+| core_delete-workspace-role-assignment | Remove only assignment bbbbbbbb-1111-2222-3333-cccccccccccc from workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb after explaining the scope and obtaining mutation consent. Send one DELETE without a preflight or follow-up read. | none |
+| core_delete-workspace-role-assignment | Delete the assignment using my supplied workspace and assignment UUIDs, not its principal ID. Do not remove the principal, expand groups, change membership, or claim that all effective access is gone. | context-required |
+| core_delete-workspace-role-assignment | Explain why deleting this assignment requires workspace Admin access and why the last admin assignment is protected. Do not change tenant settings, permissions, or identities to work around the rejection. | context-required |
+| core_delete-workspace-role-assignment | My assignment deletion returned an empty HTTP 200. Return the deletion receipt without reading metadata, following Location, polling, or resubmitting it. | context-required |
+| core_delete-workspace-role-assignment | A repeated assignment deletion returned 404. Keep it as a failure, not proof this request removed the assignment. | context-required |
+| core_delete-workspace-role-assignment | My assignment deletion timed out after sending. Explain the uncertain outcome and validated retry timing without replaying it. Use Get only if I separately authorize inspection of the known assignment. | context-required |
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |

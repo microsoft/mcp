@@ -27,6 +27,16 @@ public interface IFabricCoreService
         string role,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Deletes one existing workspace role assignment with one DELETE, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    /// <returns>A receipt only when HTTP 200 confirms deletion, not an assignment or effective-access snapshot.</returns>
+    Task<WorkspaceRoleAssignmentDeleteCommandResult> DeleteWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string workspaceRoleAssignmentId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Updates one existing workspace role assignment with one PATCH, without lookups, creation, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>

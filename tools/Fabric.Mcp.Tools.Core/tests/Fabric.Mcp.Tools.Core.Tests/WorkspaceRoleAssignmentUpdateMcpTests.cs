@@ -71,7 +71,7 @@ public sealed class WorkspaceRoleAssignmentUpdateMcpTests()
         Assert.Same(provider.GetRequiredService<WorkspaceRoleAssignmentUpdateCommand>(), factory.AllCommands[ToolName].Command);
         Assert.Single(provider.GetServices<WorkspaceRoleAssignmentUpdateCommand>());
         Assert.DoesNotContain("jobs_update-workspace-role-assignment", factory.AllCommands.Keys);
-        Assert.DoesNotContain("core_delete-workspace-role-assignment", factory.AllCommands.Keys);
+        Assert.Contains("core_delete-workspace-role-assignment", factory.AllCommands.Keys);
         var catalog = await Loader(provider, "all").ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
         var tool = Assert.Single(catalog.Tools, tool => tool.Name == ToolName);
         Assert.False(tool.Annotations?.ReadOnlyHint);
