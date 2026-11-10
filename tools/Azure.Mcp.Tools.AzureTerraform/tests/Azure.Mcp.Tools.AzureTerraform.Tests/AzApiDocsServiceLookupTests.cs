@@ -57,6 +57,16 @@ public class AzApiDocsServiceLookupTests
     }
 
     [Fact]
+    public void GetDocumentation_OversizedResourceType_ThrowsInvalidData()
+    {
+        string oversized = "Microsoft.Storage/" + new string('a', 100_000);
+
+        var ex = Assert.Throws<InvalidDataException>(() => _service.GetDocumentation(oversized));
+
+        Assert.Contains("too long", ex.Message);
+    }
+
+    [Fact]
     public void GetDocumentation_NoProviderSlash_ThrowsInvalidData()
     {
         Assert.Throws<InvalidDataException>(() => _service.GetDocumentation("storageAccounts"));

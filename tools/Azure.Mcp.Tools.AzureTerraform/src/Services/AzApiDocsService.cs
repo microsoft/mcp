@@ -22,12 +22,21 @@ public sealed class AzApiDocsService : IAzApiDocsService
 
     private const int MaxSuggestions = 5;
 
+    // Longest bundled ARM type names are well under this; it bounds the fuzzy-matching work for bad input.
+    private const int MaxResourceTypeLength = 256;
+
     public AzApiDocsResult GetDocumentation(string resourceTypeName, string? apiVersion = null)
     {
         var serviceProvider = s_schemaServiceProvider.Value;
         ResourceVisitor resourceVisitor = serviceProvider.GetRequiredService<ResourceVisitor>();
 
         (resourceTypeName, apiVersion) = NormalizeInput(resourceTypeName, apiVersion);
+
+        if (resourceTypeName.Length > MaxResourceTypeLength)
+        {
+            throw new InvalidDataException(
+                $"Resource type is too long ({resourceTypeName.Length} characters, maximum {MaxResourceTypeLength}).");
+        }
 
         if (!resourceTypeName.Contains('/'))
         {
@@ -124,8 +133,14 @@ public sealed class AzApiDocsService : IAzApiDocsService
 
     private static int ScoreCandidate(string requested, string provider, string lastSegment, string candidate)
     {
-        int distance = LevenshteinDistance(requested, candidate);
-        if (distance <= Math.Max(3, requested.Length / 5))
+        // The edit distance is at least the length difference, so skip the O(n*m) computation when it can't pass and
+        // use the length difference as the ranking score instead.
+        int maxDistance = Math.Max(3, requested.Length / 5);
+        int lengthDifference = Math.Abs(requested.Length - candidate.Length);
+        int distance = lengthDifference <= maxDistance
+            ? LevenshteinDistance(requested, candidate)
+            : lengthDifference;
+        if (distance <= maxDistance)
         {
             return distance;
         }
