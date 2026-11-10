@@ -87,4 +87,57 @@ internal static class FabricCoreHttpHelpers
         encoded.Append(Uri.EscapeDataString(token.AsSpan(segmentStart)));
         return encoded.ToString();
     }
+
+    internal static void ValidateMetadataJson(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in value.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                {
+                    throw new JsonException("Fabric returned ambiguous JSON metadata.");
+                }
+                ValidateMetadataJson(property.Value);
+            }
+        }
+        else if (value.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var entry in value.EnumerateArray())
+            {
+                ValidateMetadataJson(entry);
+            }
+        }
+        else if (value.ValueKind == JsonValueKind.String)
+        {
+            // Validate lazy Unicode decoding even in fields omitted from the output projection.
+            _ = value.GetString();
+        }
+    }
+
+    internal static Uri? GetMatchingCollectionUri(string? value, Uri collection, StringComparison pathComparison)
+    {
+        if (string.IsNullOrEmpty(value) || value.Any(static ch => char.IsWhiteSpace(ch) || char.IsControl(ch)) ||
+            value.Contains('\\'))
+        {
+            return null;
+        }
+        var queryStart = value.IndexOf('?');
+        if (queryStart < 0 ||
+            !Uri.TryCreate(value, UriKind.Absolute, out var uri) || uri.Scheme != collection.Scheme ||
+            !string.Equals(uri.Host, collection.Host, StringComparison.OrdinalIgnoreCase) || uri.Port != collection.Port ||
+            uri.UserInfo.Length != 0 || uri.Fragment.Length != 0 ||
+            !string.Equals(uri.AbsolutePath, collection.AbsolutePath, pathComparison))
+        {
+            return null;
+        }
+        // Check the unnormalized path, not opaque query data. Alternate path escapes and
+        // dot-segment routes must not be accepted just because Uri canonicalizes them.
+        var pathStart = value.IndexOf('/', value.IndexOf("://", StringComparison.Ordinal) + 3);
+        return pathStart < 0 || pathStart >= queryStart || value.AsSpan(0, pathStart).Contains('%') ||
+            !value.AsSpan(pathStart, queryStart - pathStart).Equals(collection.AbsolutePath, pathComparison)
+                ? null
+                : uri;
+    }
 }

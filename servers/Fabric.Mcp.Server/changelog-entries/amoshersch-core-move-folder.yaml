@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_move-folder to move one logical Fabric folder within its workspace using explicit IDs, with optional root placement and safe mutation outcomes."

@@ -41,12 +41,19 @@ public class FabricCoreSetup : IAreaSetup
             });
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
+        services.AddSingleton<FolderCreateCommand>(CreateFolderCreateCommand);
+        services.AddSingleton<FolderDeleteCommand>(CreateFolderDeleteCommand);
+        services.AddSingleton<FolderGetCommand>(CreateFolderGetCommand);
+        services.AddSingleton<FolderListCommand>(CreateFolderListCommand);
+        services.AddSingleton<FolderMoveCommand>(CreateFolderMoveCommand);
+        services.AddSingleton<FolderUpdateCommand>(CreateFolderUpdateCommand);
         services.AddSingleton<ItemCreateCommand>(CreateItemCreateCommand);
         services.AddSingleton<ItemDefinitionUpdateCommand>(CreateItemDefinitionUpdateCommand);
         services.AddSingleton<ItemDeleteCommand>(CreateItemDeleteCommand);
         services.AddSingleton<ItemDefinitionGetCommand>(CreateItemDefinitionGetCommand);
         services.AddSingleton<ItemGetCommand>();
         services.AddSingleton<ItemListCommand>();
+        services.AddSingleton<ItemMoveCommand>(CreateItemMoveCommand);
         services.AddSingleton<ItemUpdateCommand>();
         services.AddSingleton<OperationStateGetCommand>();
         services.AddSingleton<OperationResultGetCommand>();
@@ -56,6 +63,11 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<WorkspaceDeleteCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
+        services.AddSingleton<WorkspaceRoleAssignmentAddCommand>(CreateWorkspaceRoleAssignmentAddCommand);
+        services.AddSingleton<WorkspaceRoleAssignmentDeleteCommand>(CreateWorkspaceRoleAssignmentDeleteCommand);
+        services.AddSingleton<WorkspaceRoleAssignmentGetCommand>(CreateWorkspaceRoleAssignmentGetCommand);
+        services.AddSingleton<WorkspaceRoleAssignmentListCommand>(CreateWorkspaceRoleAssignmentListCommand);
+        services.AddSingleton<WorkspaceRoleAssignmentUpdateCommand>(CreateWorkspaceRoleAssignmentUpdateCommand);
         services.AddSingleton<WorkspaceUpdateCommand>();
     }
 
@@ -66,12 +78,24 @@ public class FabricCoreSetup : IAreaSetup
             "Use this tool when you need to:\n" +
             "- Get metadata for a known Fabric capacity\n" +
             "- List accessible Fabric capacities and their metadata\n" +
+            "- List logical workspace folders and their parent relationships by explicit workspace ID\n" +
+            "- Create one logical workspace folder at the root or under an explicitly identified parent\n" +
+            "- Delete one explicitly identified empty logical workspace folder, without changing its contents\n" +
+            "- Get metadata for one logical workspace folder by explicit workspace and folder IDs\n" +
+            "- Move one logical folder and its hierarchy within the same workspace, without enumerating descendants\n" +
+            "- Rename one logical workspace folder by explicit workspace and folder IDs\n" +
             "- Search the OneLake catalog to discover Fabric items across workspaces\n" +
             "- Get metadata for an existing Fabric workspace by ID\n" +
             "- Get metadata for one existing Fabric item by workspace ID and item ID\n" +
             "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
+            "- Get one workspace role assignment by explicit workspace and assignment IDs, without identity lookups\n" +
+            "- Add one workspace role assignment for an explicit principal and role, without lookups, defaults, or conflict updates\n" +
+            "- Delete one explicitly identified workspace role assignment, without removing the principal or assessing effective access\n" +
+            "- Update one existing workspace role assignment by workspace and assignment IDs with an explicit replacement role\n" +
+            "- List one page of workspace role assignments and returned principal metadata without directory lookups or group expansion\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
+            "- Move one item and its child items within the same workspace, returning the complete moved-item collection\n" +
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
             "- Replace a known item's complete definition from inline content or explicitly selected saved files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
@@ -85,12 +109,19 @@ public class FabricCoreSetup : IAreaSetup
 
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderCreateCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderDeleteCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderGetCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderListCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderMoveCommand>(serviceProvider);
+        fabricCore.AddCommand<FolderUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemCreateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<ItemDefinitionGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemGetCommand>(serviceProvider);
         fabricCore.AddCommand<ItemListCommand>(serviceProvider);
+        fabricCore.AddCommand<ItemMoveCommand>(serviceProvider);
         fabricCore.AddCommand<ItemUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<OperationStateGetCommand>(serviceProvider);
         fabricCore.AddCommand<OperationResultGetCommand>(serviceProvider);
@@ -100,9 +131,229 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentAddCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentDeleteCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentGetCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentListCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentUpdateCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
+    }
+
+    private static WorkspaceRoleAssignmentAddCommand CreateWorkspaceRoleAssignmentAddCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentAddCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentAddCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each add-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static WorkspaceRoleAssignmentDeleteCommand CreateWorkspaceRoleAssignmentDeleteCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentDeleteCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentDeleteCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each delete-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static WorkspaceRoleAssignmentUpdateCommand CreateWorkspaceRoleAssignmentUpdateCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentUpdateCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentUpdateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each update-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static WorkspaceRoleAssignmentGetCommand CreateWorkspaceRoleAssignmentGetCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentGetCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentGetCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each get-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static WorkspaceRoleAssignmentListCommand CreateWorkspaceRoleAssignmentListCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentListCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentListCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each list-workspace-role-assignments option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderCreateCommand CreateFolderCreateCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderCreateCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderCreateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each create-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderDeleteCommand CreateFolderDeleteCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderDeleteCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderDeleteCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each delete-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderGetCommand CreateFolderGetCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderGetCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderGetCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each get-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderListCommand CreateFolderListCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderListCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderListCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        if (options.SingleOrDefault(static option => option.Name == "--recursive") is not Option<bool?> recursive ||
+            recursive.Required || recursive.HasDefaultValue)
+        {
+            throw new InvalidOperationException("The list-folders command requires optional Boolean --recursive without a default.");
+        }
+        recursive.Arity = ArgumentArity.ExactlyOne;
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each list-folders option at most once.");
+            }
+            if (result.GetResult(recursive) is { Implicit: false } value &&
+                (value.Tokens.Count != 1 || !bool.TryParse(value.Tokens[0].Value, out _)))
+            {
+                result.AddError("Specify --recursive with an explicit true or false value.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderMoveCommand CreateFolderMoveCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderMoveCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderMoveCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each move-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static FolderUpdateCommand CreateFolderUpdateCommand(IServiceProvider serviceProvider)
+    {
+        var command = new FolderUpdateCommand(
+            serviceProvider.GetRequiredService<ILogger<FolderUpdateCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each update-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ItemMoveCommand CreateItemMoveCommand(IServiceProvider serviceProvider)
+    {
+        var command = new ItemMoveCommand(
+            serviceProvider.GetRequiredService<ILogger<ItemMoveCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each move-item option at most once.");
+            }
+        });
+        return command;
     }
 
     private static ItemCreateCommand CreateItemCreateCommand(IServiceProvider serviceProvider)

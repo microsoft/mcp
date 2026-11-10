@@ -16,6 +16,133 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Adds one workspace role assignment with one POST, without lookups, retries, conflict updates, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="principal">Explicit principal JSON with id, type, and optional documented writable details.</param>
+    /// <param name="role">The caller's unchanged, explicit workspace role intent.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a grant that may already have occurred.</param>
+    Task<WorkspaceRoleAssignmentAddCommandResult> AddWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string principal,
+        string role,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes one existing workspace role assignment with one DELETE, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    /// <returns>A receipt only when HTTP 200 confirms deletion, not an assignment or effective-access snapshot.</returns>
+    Task<WorkspaceRoleAssignmentDeleteCommandResult> DeleteWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string workspaceRoleAssignmentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Updates one existing workspace role assignment with one PATCH, without lookups, creation, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>
+    /// <param name="role">The caller's unchanged, explicit replacement workspace role.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not an update that may already have occurred.</param>
+    Task<WorkspaceRoleAssignmentUpdateCommandResult> UpdateWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string workspaceRoleAssignmentId,
+        string role,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one workspace role assignment with one GET, without listing assignments, identity lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<WorkspaceRoleAssignmentGetCommandResult> GetWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string workspaceRoleAssignmentId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one complete page of workspace role assignments without directory lookups, group expansion, or implicit paging.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="continuationToken">An unchanged token from a preceding page for the same workspace, or null for the first page.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<WorkspaceRoleAssignmentListCommandResult> ListWorkspaceRoleAssignmentsAsync(
+        string workspaceId,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Creates one logical workspace folder with one POST, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="displayName">The unchanged display name, subject to Fabric folder naming rules.</param>
+    /// <param name="parentFolderId">An existing nonempty folder UUID; null creates at the workspace root.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a creation that may already have occurred.</param>
+    Task<FolderCreateCommandResult> CreateFolderAsync(
+        string workspaceId,
+        string displayName,
+        string? parentFolderId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes one empty logical workspace folder with one DELETE, without preflight, changing contents, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the empty folder to delete.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a deletion that may already have occurred.</param>
+    /// <returns>A receipt only when HTTP 200 confirms deletion; no folder snapshot or recovery guarantee.</returns>
+    Task<FolderDeleteCommandResult> DeleteFolderAsync(
+        string workspaceId,
+        string folderId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one logical workspace folder snapshot with one GET, without related lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the existing folder.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<FolderGetCommandResult> GetFolderAsync(
+        string workspaceId,
+        string folderId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Reads one complete page of logical workspace folders without walking folders or following continuation URLs.</summary>
+    /// <param name="workspaceId">The nonempty workspace UUID.</param>
+    /// <param name="rootFolderId">An optional nonempty root folder UUID; null uses the workspace root.</param>
+    /// <param name="recursive">Whether to include nested folders; null preserves the API default of true.</param>
+    /// <param name="continuationToken">An unchanged token from a previous page with the same workspace and filters.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the request.</param>
+    Task<FolderListCommandResult> ListFoldersAsync(
+        string workspaceId,
+        string? rootFolderId = null,
+        bool? recursive = null,
+        string? continuationToken = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Moves one logical folder within its workspace with one POST, without lookups, descendant enumeration, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the existing folder.</param>
+    /// <param name="targetFolderId">An existing destination folder UUID in the same workspace; null moves to the workspace root.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a move that may already have occurred.</param>
+    Task<FolderMoveCommandResult> MoveFolderAsync(
+        string workspaceId,
+        string folderId,
+        string? targetFolderId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Moves one item and its child items within its workspace with one POST, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="itemId">The nonempty UUID of the existing item; a child cannot be moved independently.</param>
+    /// <param name="targetFolderId">An existing destination folder UUID in the same workspace; null sends an empty object to use the root.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a move that may already have occurred.</param>
+    /// <returns>The complete returned collection, including children in service order; unavailable metadata is not inferred.</returns>
+    Task<ItemMoveCommandResult> MoveItemAsync(
+        string workspaceId,
+        string itemId,
+        string? targetFolderId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Renames one logical workspace folder with one PATCH, without lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="folderId">The nonempty UUID of the existing folder.</param>
+    /// <param name="displayName">The unchanged required replacement name, subject to Fabric folder naming rules.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not an update that may already have occurred.</param>
+    Task<FolderUpdateCommandResult> UpdateFolderAsync(
+        string workspaceId,
+        string folderId,
+        string displayName,
+        CancellationToken cancellationToken = default);
+
     Task<ItemCreateCommandResult> CreateItemAsync(
         string workspaceId,
         CreateItemRequest request,

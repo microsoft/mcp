@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_list-workspace-role-assignments to read one complete page of workspace role assignments and available principal metadata, with explicit continuation and no directory lookups, group expansion, or role changes."

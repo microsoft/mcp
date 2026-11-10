@@ -55,9 +55,9 @@ public sealed class ItemJobInstanceListCommand(
         {
             validationResult.Errors.Add("--item-id must be a nonempty UUID.");
         }
-        if (!ItemJobInstanceListInput.IsValidContinuationToken(options.ContinuationToken))
+        if (!FabricContinuationToken.IsValidContinuationToken(options.ContinuationToken))
         {
-            validationResult.Errors.Add(ItemJobInstanceListInput.InvalidContinuationTokenMessage);
+            validationResult.Errors.Add(FabricContinuationToken.InvalidContinuationTokenMessage);
         }
     }
 

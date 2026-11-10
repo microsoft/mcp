@@ -348,7 +348,23 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 ### Namespace Filtering
 
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
-items, definitions, capacities, and Fabric `/operations` LROs. Jobs submits an on-demand item job,
+items, definitions, capacities, and Fabric `/operations` LROs. It also supports logical workspace
+folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
+Core also lists one page of workspace role assignments or gets one assignment by explicit workspace
+and assignment IDs, returning available principal metadata without directory lookups, group-membership
+expansion, or role changes. Each additional page or assignment lookup is a separate explicit call.
+Add Workspace Role Assignment is a separate mutation requiring an explicit principal and role.
+It sends one grant request without default access, name resolution, preflight, or conflict updates.
+Update Workspace Role Assignment separately replaces the role on an explicitly identified existing
+assignment with one PATCH. It requires Admin access and an explicit role, without identity translation,
+preflight, create/upsert fallback, automatic retry, or polling.
+Delete Workspace Role Assignment removes only an explicitly identified assignment with one DELETE,
+not the principal, group membership, workspace, or all sources of effective access. It requires Admin
+access, protects the last admin assignment, and returns a receipt only for HTTP 200 without preflight,
+automatic retry, polling, or verification.
+The separate Items Move operation places an item and its child items in an existing folder or
+at the root of the same workspace, returning the complete moved-item metadata collection.
+Jobs submits an on-demand item job,
 requests cancellation of an existing job, reads one job instance, lists one page of an item's jobs
 or schedules, or reads, creates, updates, or deletes one schedule in separate calls. Each listing requires an explicit continuation
 token for each additional page. Schedule operations require an explicit job type.
@@ -358,7 +374,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: item/definition tools, but no Jobs commands.
+# Core-only: workspace management and role assignments, folders, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -383,6 +399,7 @@ the commands for a selected area. Core-only selection never exposes or routes Jo
 Read-only mode hides and denies Run, Cancel, Create Schedule, Update Schedule, and Delete Schedule while retaining Get Job Instance,
 Get Schedule, and both listing tools. Schedule lookup and listing retain the host's sensitive-data confirmation
 because their output may include configuration, owner information, and job execution data.
+Read-only Core retains List/Get Workspace Role Assignment but hides and denies Add Workspace Role Assignment.
 
 ### API Documentation & Best Practices
 
@@ -454,24 +471,36 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 
 | Tool Name | Description |
 |-----------|-------------|
+| `core_add-workspace-role-assignment` | Adds one explicitly supplied principal and workspace role with one POST. Returns created assignment metadata without identity lookups, default access, conflict updates, retries, or polling. |
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
+| `core_create-folder` | Creates one logical workspace folder at the root or under an explicit parent folder UUID. Returns created metadata without lookups, retries, or polling. |
 | `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
 | `core_create-workspace` | Creates a Fabric workspace, optionally assigning an existing capacity and domain in the same request. |
+| `core_delete-folder` | Deletes one explicitly identified empty logical workspace folder. Returns a deletion receipt without changing contents, preflight, retries, or polling. |
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
+| `core_delete-workspace-role-assignment` | Deletes one existing assignment by workspace and assignment UUIDs. Requires Admin access; returns a deletion receipt without identity lookup, cascading removal, retry, or polling. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
+| `core_get-folder` | Gets one logical workspace folder's metadata and available parent relationship using explicit workspace and folder UUIDs, without related lookups. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
 | `core_get-item-definition` | Retrieves typed definition parts inline, optionally waits for completion, or resumes a completed definition operation. Can explicitly export to a new local directory without overwriting files. |
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
+| `core_get-workspace-role-assignment` | Gets one role assignment and available principal metadata using explicit workspace and assignment UUIDs, without listing assignments, identity lookups, or role changes. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
+| `core_list-folders` | Lists one complete page of logical workspace folders, with optional root folder and recursive filters, parent relationships, and explicit continuation. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
+| `core_list-workspace-role-assignments` | Lists one complete page of role assignments and available principal metadata for an explicit workspace UUID, with explicit continuation and no identity enrichment or role changes. |
 | `core_list-workspaces` | Lists one page of accessible workspace management metadata, optionally filtered by the caller's workspace roles. Returns continuation information and can request workspace-specific API endpoints. |
+| `core_move-folder` | Moves one known logical folder and its hierarchy within the same workspace, into an existing folder or to the workspace root. Returns observed metadata without lookups, descendant enumeration, retries, or polling. |
+| `core_move-item` | Moves one known item and its child items into an existing folder or to the root of the same workspace. Returns the complete ordered metadata collection without lookups, retries, or polling. |
 | `core_search-catalog` | Searches one page of OneLake catalog metadata across workspaces. Continue with the returned token without repeating search or filter. |
+| `core_update-folder` | Renames one known logical workspace folder with an explicit replacement display name. Returns updated metadata without moving the folder, lookups, retries, or polling. |
 | `core_update-item` | Updates an existing item's display name or description and returns metadata only. |
 | `core_update-item-definition` | Replaces a known item's complete definition from inline content or explicitly selected saved files. Optionally applies supplied `.platform` metadata and waits for a no-result operation. |
 | `core_update-workspace` | Renames a workspace or updates or clears its description by UUID, leaving omitted properties unchanged. Requires workspace Admin access. |
+| `core_update-workspace-role-assignment` | Updates one existing assignment by workspace and assignment UUIDs with an explicit replacement role and one PATCH. Requires Admin access; no identity lookup, creation fallback, retry, or polling. |
 
 **Create Item (`core_create-item`)**
 
@@ -901,7 +930,518 @@ The API supports users, service principals, and managed identities. Delegated ac
 
 Failures preserve the service's HTTP status without exposing raw backend error bodies. For HTTP 429, the tool returns parsed `Retry-After` guidance when available, or a generic wait-before-retrying message. It does not automatically retry or sleep.
 
-**Workspace and folder inventory**
+**List Workspace Role Assignments (`core_list-workspace-role-assignments`)**
+
+Calls [List Workspace Role Assignments](https://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspace-role-assignments)
+with one `GET /v1/workspaces/{workspaceId}/roleAssignments` and no request body. This lists workspace
+role assignments, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `continuation-token` | No | Unchanged token from a previous page for the same workspace. Omit for the first page. |
+
+```powershell
+fabmcp core list-workspace-role-assignments --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+fabmcp core list-workspace-role-assignments --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --continuation-token '<returned-token>'
+```
+
+Returns `roleAssignments` in service order, preserving repeated entries without a row-count cap.
+Each assignment has its own `id`, `role`, and `principal` with `id` and `type`; assignment and principal
+IDs are not assumed equal. The API does not include a required workspace ID on each row.
+Optional principal `displayName`, `userDetails.userPrincipalName`, `groupDetails.groupType`,
+`servicePrincipalDetails.aadAppId`, and `servicePrincipalProfileDetails.parentPrincipal` are retained
+when supplied, including documented parent-principal metadata. Missing/null optional fields are not
+invented; explicit empty display names and user principal names are preserved. Future role, principal
+type, and group type strings remain strings. Unknown extension fields are omitted.
+
+Each invocation returns **one complete page**, including an empty page with a continuation token.
+Following [Fabric pagination guidance](https://learn.microsoft.com/rest/api/fabric/articles/pagination),
+absent or JSON-null continuation fields mark a terminal page; a valid token with an absent/null URI
+still enables a separate call. A supplied URI must match the fixed origin, workspace collection, and
+token; URI-only, wrong-type, or contradictory metadata fails rather than silently ending enumeration.
+`continuationUri` is never returned or followed. Raw and already percent-escaped tokens are accepted
+unchanged, with no trimming or double encoding. Tokens must be valid Unicode, not blank, without
+control characters, and at most 8,192 UTF-8 bytes.
+
+The caller needs **workspace Member or higher** access. Delegated calls require **Workspace.Read.All**
+or **Workspace.ReadWrite.All**. The API supports users, service principals, and managed identities;
+the latter two also need the tenant setting permitting service principals to use Fabric APIs.
+The tool reuses the configured authentication and is available in read-only mode over stdio and HTTP.
+It performs no Graph/directory lookup, group-membership expansion, identity enrichment, per-row request,
+automatic paging, retry, polling, or role mutation.
+
+Only HTTP 200 is a successful page. Failures preserve HTTP status and validated `Retry-After` guidance
+without exposing raw backend errors. JSON is bounded to 1 MiB (1,048,576 bytes) and 64 input nesting levels;
+retained output is limited to 61 levels to leave room for MCP envelopes, including recursive profile
+parents. Malformed required fields, ambiguous duplicates, invalid Unicode, or an over-budget page fail
+safely without partial results or truncation. No live workspace, real OBO/RBAC, or recorded coverage is claimed.
+
+**Get Workspace Role Assignment (`core_get-workspace-role-assignment`)**
+
+Calls [Get Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace-role-assignment)
+with one `GET /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}` and no body or query.
+This reads an existing workspace role assignment, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `workspace-role-assignment-id` | Yes | Nonempty assignment UUID, not a principal-name or principal-ID lookup. |
+
+```powershell
+fabmcp core get-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Returns `roleAssignment` with its matching `id`, `role`, and `principal` (`id` and `type`), plus validated
+`retryAfterSeconds` or `retryAfterUtc` when available. Assignment IDs and principal IDs are independent;
+the tool neither requires them to match nor lists assignments to translate them. No workspace ID is
+required on the returned assignment. The same optional principal details as List are retained, including
+recursive profile parents. Missing/null optional metadata stays omitted, empty names stay empty, and
+future role, principal type, and group type strings are preserved. Unknown extension fields are omitted.
+
+The caller needs **workspace Member or higher** access and, for delegated calls, **Workspace.Read.All**
+or **Workspace.ReadWrite.All**. Users, service principals, and managed identities are supported;
+service principals and managed identities also need the tenant setting permitting Fabric API access.
+The existing configured authentication is unchanged. The tool is available in read-only mode over
+stdio and HTTP, with no preliminary List/Get, Graph or directory lookup, membership expansion,
+enrichment, pagination, retry, polling, or role mutation.
+
+Only HTTP 200 is a successful snapshot. Errors preserve HTTP status and validated `Retry-After`
+without reading or exposing backend error bodies. JSON is bounded to 1 MiB (1,048,576 bytes) and
+64 input levels. The single-result payload allows 61 retained levels, leaving three for the namespace,
+tool-response, and JSON-RPC envelopes. For example, 30 recursively nested principals without leaf
+detail objects fit; adding leaf details exceeds that budget and fails without truncating metadata.
+Malformed or missing required data, mismatched assignment IDs, duplicates, invalid Unicode, and
+over-budget responses fail without partial results. No live workspace, real OBO/RBAC, or recorded
+coverage is claimed without an approved fixture and authorization.
+
+**Add Workspace Role Assignment (`core_add-workspace-role-assignment`)**
+
+Calls [Add Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/add-workspace-role-assignment)
+with one `POST /v1/workspaces/{workspaceId}/roleAssignments`. This grants workspace access; it does not
+calculate effective permissions or manage OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `principal` | Yes | JSON object with explicit nonempty `id` UUID and `type`, plus any documented writable details below. |
+| `role` | Yes | Explicit `Admin`, `Member`, `Contributor`, or `Viewer` access intent. No default, trimming, upgrade, or fallback. |
+
+```powershell
+# Example only: use a separately authorized workspace, principal and role.
+fabmcp core add-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --principal '{"id":"cccccccc-2222-3333-4444-dddddddddddd","type":"User"}' --role Viewer
+```
+
+The request contains only `principal` and `role`. The documented principal types are `User`, `Group`,
+`ServicePrincipal`, `ServicePrincipalProfile`, and `EntireTenant`. Supply the identity's principal UUID:
+an Entra object ID for a user, group or service principal (not the application's client ID), or the
+profile ID for a service principal profile. **EntireTenant targets all tenant users** and must be an
+explicit caller choice with its principal UUID; the tool never infers it or substitutes a tenant ID.
+No email, display-name, application-ID, principal-to-assignment translation, or directory/Graph lookup
+is performed. Missing principal/type/role information must come from the caller.
+
+For `Group`, optional `groupDetails.groupType` accepts the documented `Unknown`, `SecurityGroup`,
+and `DistributionList` values. For `ServicePrincipalProfile`, optional
+`servicePrincipalProfileDetails.parentPrincipal` accepts another principal object with the same
+writable contract. Omitted fields remain omitted. When supplied, details and parent principals must
+be objects and groupType must be a nonempty string; explicit null is rejected because the Add
+request schema does not declare these fields nullable. This differs from optional response metadata.
+Principal, group-type, and role strings are extensible in the API:
+explicit nonempty future strings are passed unchanged for Fabric to validate, not interpreted locally.
+Read-only `displayName`, `userDetails`, and `servicePrincipalDetails` (including `aadAppId`), unknown
+fields, duplicates, malformed Unicode, and inapplicable details are rejected before authentication.
+Principal JSON is limited to 1 MiB and 32 nesting levels; the complete serialized request, including
+escaping and role, is also limited to 1 MiB. No input fields are stripped to make a rejected grant succeed.
+
+The caller needs **workspace Member or higher** and delegated **Workspace.ReadWrite.All**.
+Members can grant **Member, Contributor, or Viewer**; granting **Admin requires an Admin caller**.
+Members cannot change existing users' roles. Fabric enforces these restrictions and its documented
+maximum of 1,000 users/groups in workspace roles, including external guests; group membership size is
+not limited by that rule. The tool does not preflight permissions, count assignments, expand groups,
+change tenant settings, remove an existing assignment, or retry a conflict as an update.
+User, service-principal, and managed-identity callers use the existing authentication composition.
+Service principals and managed identities also require the tenant setting permitting Fabric API access.
+
+Only **HTTP 201** confirms creation. The result contains `creationStatus: "Created"`, `roleAssignment`
+with its new assignment `id`, matching requested `role` and principal `id`/`type`, available principal
+metadata, and validated retry guidance. **Assignment and principal IDs are independent**.
+The response reuses the same optional/future principal metadata projection as List/Get; no workspace
+field is required. Returned Location/operation headers are not followed or exposed as navigation.
+This endpoint has no documented standard LRO, so there is no polling or result-retrieval option.
+
+Response JSON is bounded to 1 MiB and 64 input levels, with 61 retained result levels reserved for
+the real namespace, tool-response, and JSON-RPC envelopes. No metadata is truncated to fit.
+If 201 is received but metadata is malformed, oversized, mismatched, unreadable, canceled, or too
+deep to serialize, the error **still says creation was confirmed**: do not resubmit the grant.
+Unsent validation/authentication failures, explicit rejections, and uncertain sends are distinct.
+After a timeout, network failure, unexpected success status, or server error with an uncertain
+outcome, inspect assignments separately before considering a new grant; never replay blindly.
+Known HTTP status and validated `Retry-After` survive unusable error metadata. Only safe error
+codes are projected, never backend messages or raw payloads. Retry timing is not replay authorization.
+
+This additive permission mutation is remote-capable and non-read-only/non-idempotent, using the
+repository's normal additive permission-management annotations rather than a custom confirmation
+gate or invented destructive/secret classification. Read-only mode hides and denies it while retaining
+List/Get. No live grant, real token exchange/OBO/RBAC, or recorded coverage is claimed without an
+approved fixture and grant authorization.
+
+**Update Workspace Role Assignment (`core_update-workspace-role-assignment`)**
+
+Calls [Update Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/update-workspace-role-assignment)
+with one `PATCH /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}`.
+This changes an existing workspace permission assignment, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `workspace-role-assignment-id` | Yes | Nonempty existing assignment UUID, independent of its principal ID. |
+| `role` | Yes | Explicit replacement `Admin`, `Member`, `Contributor`, or `Viewer` role. No default, trimming, upgrade, or fallback. |
+
+```powershell
+# Example only: use a separately authorized workspace, existing assignment, and replacement role.
+fabmcp core update-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc --role Viewer
+```
+
+The request contains **only `role`**, not Add's principal JSON. The Update request requires this
+non-null, nonempty string; optional/null principal response metadata does not change that requirement.
+The API's role strings are extensible, so explicit nonempty future values are forwarded unchanged for
+Fabric to validate. Invalid Unicode and requests exceeding the 1 MiB (1,048,576 byte) serialized
+budget, including JSON escaping, are rejected before authentication. No principal ID, name, email,
+application ID, or group membership is resolved or translated into an assignment ID.
+
+The caller must have **workspace Admin** access, and delegated calls require **Workspace.ReadWrite.All**.
+**The last admin's assignment cannot be changed.** Fabric enforces these restrictions without a
+permission preflight. Users, service principals, and managed identities use the unchanged configured
+authentication; service principals and managed identities also need the tenant setting permitting
+Fabric API access. The tool does not alter settings, switch identities, choose a different role,
+create a missing assignment, or resolve conflicts automatically.
+
+Only **HTTP 200** confirms update. The result contains `updateStatus: "Updated"`, `roleAssignment`
+with the matching assignment `id` and requested `role`, available principal metadata, and validated
+`retryAfterSeconds` or `retryAfterUtc`. Assignment and principal IDs need not match. The existing
+List/Get response projection retains optional and future principal details, including recursive
+profile parents, without inventing missing/null fields, requiring a workspace field on the response,
+or exposing unknown extensions. No returned Location/operation URL is followed.
+This is not a documented standard LRO; there is no polling or result-retrieval option.
+
+Response JSON is limited to 1 MiB and 64 input levels. The complete result has a 61-level retained
+budget to accommodate namespace, tool-response, and JSON-RPC envelopes; no metadata is truncated.
+After HTTP 200, malformed, oversized, mismatched, unreadable, canceled, or unserializable metadata
+produces an error that **still reports confirmed update** and says not to resubmit. Validation and
+authentication failures before sending, explicit rejections, uncertain sends, and confirmed updates
+remain distinct. After an uncertain network failure, timeout, unexpected success status, or server
+error, inspect the known assignment with a separately authorized Get before considering another
+update; never replay blindly. Known HTTP status and validated retry timing survive unusable error
+metadata. Only safe error codes are projected, never backend messages or raw payloads.
+
+This remote-capable, destructive/idempotent permission replacement can increase or reduce access.
+It uses the repository's normal mutation confirmation, not a custom consent gate. Read-only mode
+hides and denies it while preserving List/Get. Idempotence is not authorization for automatic replay.
+Every invocation sends at most one initiating request, without hidden List/Get, enrichment, creation,
+verification, retry, or polling. Offline fixtures and discovery do not demonstrate live token exchange,
+OBO/RBAC authorization, or recorded coverage; no live update is run without an approved fixture and
+separate permission-change authorization.
+
+**Delete Workspace Role Assignment (`core_delete-workspace-role-assignment`)**
+
+Calls [Delete Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/delete-workspace-role-assignment)
+with one `DELETE /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}`.
+There is **no request body or query option**. Supply the explicit nonempty `workspace-id` and
+`workspace-role-assignment-id` UUIDs. Assignment IDs and principal IDs are independent; names, email
+addresses, application IDs, or principal IDs are not resolved or translated into assignment IDs.
+
+```powershell
+# Example only: requires separate authorization to remove this specific assignment.
+fabmcp core delete-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+The caller must have **workspace Admin** access, and delegated calls require **Workspace.ReadWrite.All**.
+**The last admin's assignment cannot be deleted.** Fabric enforces these restrictions without a local
+permission preflight. Users, service principals, and managed identities use the unchanged configured
+authentication. Service principals and managed identities also need the tenant setting permitting
+Fabric API access; this tool does not change settings or select another identity on failure.
+
+Only **HTTP 200** confirms deletion. The result is a receipt with `deletionStatus: "Deleted"`,
+`workspaceId`, `workspaceRoleAssignmentId`, and `guidance`, not a returned assignment snapshot.
+The response body is irrelevant and is not read, even if malformed, oversized, or unavailable.
+Late cancellation cannot erase confirmation already received in the headers. If local receipt
+completion fails after 200, the error still reports **confirmed deletion** and says not to resubmit.
+HTTP 201, 202, 204, redirects, and other undocumented responses do not confirm deletion.
+A 404 remains a failure, including on an explicit repeated deletion.
+
+Deletion removes **only the specified assignment**, not the principal, group membership, workspace,
+or other assignments. It does not establish that the principal has no remaining effective access.
+There is no directory/Graph lookup, membership expansion, preflight List/Get, cascade, bulk removal,
+fallback, retry, or hidden verification. This is not a documented standard Fabric LRO; Location and
+operation headers are not followed, and no polling or result-retrieval option is exposed.
+
+Validation/authentication failures before sending, explicit rejections, uncertain sends, and confirmed
+deletions remain distinct. After an uncertain network failure, timeout, server error, or undocumented
+success status, inspect the known assignment separately before considering a new deletion; never
+replay blindly. Known HTTP status and validated `Retry-After` survive unusable optional error metadata.
+Only safe error codes are projected, never backend messages or raw payloads. Retry timing is not
+authorization to replay a permission change.
+
+This remote-capable, destructive/idempotent permission mutation uses normal repository confirmation,
+not a custom gate. Read-only mode hides and denies it while preserving List/Get. Idempotence does not
+authorize replay. Offline HTTP fixtures and actual-host discovery do not demonstrate live token
+exchange, OBO/RBAC authorization, or recorded coverage. No live removal is performed without an
+approved workspace/assignment fixture and separate revocation authorization.
+
+**Workspace folders**
+
+Fabric's [Folder REST APIs](https://learn.microsoft.com/rest/api/fabric/core/folders) are currently in Preview and may change.
+
+**List Folders (`core_list-folders`)**
+
+`core_list-folders` calls [List Folders](https://learn.microsoft.com/rest/api/fabric/core/folders/list-folders)
+with one `GET /v1/workspaces/{workspaceId}/folders` and no request body. These are logical Fabric workspace
+folders, not OneLake directories or local filesystem paths.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `root-folder-id` | No | Nonempty folder UUID. Omit to use the workspace root. |
+| `recursive` | No | Explicit `true` or `false`. Omission uses the API default of `true`; `false` lists direct children only. |
+| `continuation-token` | No | Unchanged token from a previous page with the same workspace, root folder, and recursive options. Omit for the first page. |
+
+```powershell
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --recursive false
+# Request another page explicitly, preserving the filters and the returned token.
+fabmcp core list-folders --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --root-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --recursive false --continuation-token '<returned-token>'
+```
+
+The result contains `folders` with `id`, `displayName`, `workspaceId`, and optional `parentFolderId`.
+Order and repeated entries are preserved; parents may be outside the page. No paths or ancestors
+are reconstructed. An empty page can still have a `continuationToken`. Absent or null terminal
+continuation fields are valid. Copy tokens without trimming, decoding, or changing percent escapes.
+Returned continuation URLs are neither exposed nor followed; if present, they must match the
+collection, token, and any supplied filter metadata. URI-only or contradictory metadata fails safely.
+There is no folder walking, automatic pagination, per-folder enrichment, retry, polling, or mutation.
+
+The caller needs workspace **Viewer or higher** access; delegated calls require `Workspace.Read.All`
+or `Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported,
+subject to the existing Fabric tenant and authentication settings. This read-only tool is available
+in stdio and HTTP modes without sensitive-content consent. Errors retain HTTP status and validated
+`Retry-After` guidance, not backend bodies. Pages are bounded to 1 MiB and 64 JSON nesting levels;
+tokens must be valid Unicode, not blank, without control characters, and at most 8,192 UTF-8 bytes.
+Invalid or oversized pages fail as a whole, with no row-count cap or partial result.
+
+**Create Folder (`core_create-folder`)**
+
+Calls [Create Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/create-folder) with exactly
+one `POST /v1/workspaces/{workspaceId}/folders`. It creates one logical workspace folder, not a local
+directory, OneLake path, or recursive folder hierarchy.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `display-name` | Yes | The unchanged name of one folder, subject to Fabric's naming rules. |
+| `parent-folder-id` | No | Existing nonempty folder UUID. Omission or JSON null omits `parentFolderId` from the POST and creates at the workspace root. |
+
+```powershell
+fabmcp core create-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --display-name "Sales"
+fabmcp core create-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --display-name "Q3" --parent-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Names must meet the [folder name requirements](https://learn.microsoft.com/fabric/get-started/workspaces-folders#folder-name-requirements):
+at most 255 Unicode characters, no leading/trailing spaces or C0/C1 control codes, none of
+`~ " # . & * : < > ? / { | }`, and no reserved `$recycle.bin`, `recycled`, or `recycler` names.
+Invalid inputs fail before authentication or HTTP. Names are never trimmed, sanitized, or interpreted
+using host filesystem rules. Fabric enforces name uniqueness, folder depth/count, and workspace support;
+the tool does not check these through extra requests. A duplicate-name error remains a failure, not
+get-or-create success with an existing folder ID.
+
+**Only HTTP 201 confirms creation.** The typed result contains `creationStatus: "Created"`, `folder`
+with `id`, `displayName`, `workspaceId`, and available `parentFolderId`, plus `guidance` and validated
+`Retry-After` metadata when supplied. Returned workspace and non-null parent IDs must match the request.
+Missing/null optional parent metadata stays omitted, not filled from the request. Unknown fields are
+not projected. Responses are limited to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**;
+malformed, duplicate, invalid-Unicode, or contradictory metadata fails safely.
+
+If HTTP 201 is received but its metadata cannot be read or validated, the error explicitly preserves
+**confirmed creation** and says not to resubmit. Authentication/pre-send failures report that the
+request was not sent. Network failures after sending may leave the outcome unknown: inspect the
+workspace separately before any new creation, never retry blindly. Error responses preserve HTTP
+status and validated `Retry-After` guidance even when optional error metadata is unusable, without
+exposing backend messages. There is no automatic retry, parent/name lookup, follow-up Get/List, or
+LRO handling; Location and operation headers are ignored. An agent may explicitly use
+`core_list-folders` separately, but that orchestration is not hidden inside creation.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported, subject to
+Fabric permissions and existing tenant/authentication settings. Like other additive Core-create tools,
+this is non-destructive, non-idempotent, not secret-bearing, remote-capable, and **excluded from
+read-only mode**. It does not introduce an additional elicitation requirement. Offline tests do not
+establish live workspace, OBO, or RBAC authorization.
+
+**Get Folder (`core_get-folder`)**
+
+Calls [Get Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/get-folder) with exactly
+one `GET /v1/workspaces/{workspaceId}/folders/{folderId}` and no request body. Both `workspace-id`
+and `folder-id` are required nonempty UUIDs; names and paths are not resolved.
+
+```powershell
+fabmcp core get-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Only HTTP 200 returns a typed `folder` snapshot containing `id`, `displayName`, `workspaceId`,
+and `parentFolderId` when available, plus validated `retryAfterSeconds` or `retryAfterUtc` guidance
+when supplied. Returned folder and workspace IDs must match the request. Absent/null parent metadata
+stays omitted; a parent need not have been listed or fetched. Display names are preserved as returned
+strings, without applying creation naming rules, trimming, or filesystem interpretation.
+
+These are logical workspace folders, not OneLake directories or local paths. There is no List
+preflight, ancestor lookup, child/item enumeration, enrichment, pagination, automatic retry,
+mutation, or LRO/polling behavior. Location and operation headers are not followed. Unknown JSON
+fields are validated but not returned. Missing/invalid metadata is an error, not an empty success.
+Responses are bounded to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**; duplicate
+properties and invalid Unicode fail safely.
+
+The caller needs **Viewer or higher** workspace access; delegated calls require `Workspace.Read.All`
+or `Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported under
+Fabric's existing tenant and authentication settings. Like List Folders, this metadata read is
+available in read-only mode over stdio and HTTP without sensitive-content consent.
+Errors preserve known HTTP status and validated `Retry-After`, even if optional error metadata cannot
+be read. Only a safe error code is projected, never backend messages or nested details.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Update Folder (`core_update-folder`)**
+
+Calls [Update Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/update-folder) with exactly
+one `PATCH /v1/workspaces/{workspaceId}/folders/{folderId}`. The required `workspace-id` and `folder-id`
+are nonempty UUIDs; `display-name` is also required, not an optional PATCH field. The JSON body contains
+only `displayName`. This renames a logical workspace folder; it does not move it, change items or
+permissions, or act on OneLake directories or local paths.
+
+```powershell
+fabmcp core update-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --display-name "Quarterly Sales"
+```
+
+The replacement uses the same Fabric naming rules as Create Folder above: 1 to 255 Unicode
+characters, without trimming, sanitizing, or host filesystem rules. Invalid inputs fail before
+authentication or HTTP. Fabric enforces name uniqueness; a duplicate-name error remains a failure,
+with no fallback name. There is no description, parent, or path input, Get/List/name-resolution
+preflight, metadata merge, automatic retry, follow-up read, or LRO/polling behavior.
+
+**Only HTTP 200 confirms the update.** The typed result contains `updateStatus: "Updated"`, the
+returned `folder` snapshot, `guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when
+supplied. Folder and workspace identities must match the request. Available parent metadata is
+preserved; absent/null parents remain omitted, not inferred. Unknown fields are not returned.
+Responses are bounded to **1 MiB (1,048,576 bytes)** and **64 JSON nesting levels**; malformed,
+duplicate, invalid-Unicode, or mismatched metadata is an error, not a synthesized successful snapshot.
+
+If HTTP 200 is followed by unreadable or invalid metadata, the error preserves **confirmed update**
+and says not to resubmit. Authentication/pre-send failures report that the request was not sent.
+An uncertain send can leave the update applied: inspect the known folder separately before another
+update, never retry blindly. Error responses retain observed HTTP status and validated `Retry-After`
+when optional error metadata is unusable, and expose only a safe error code, not backend messages.
+Location and operation headers are ignored.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Like Core Item/Workspace Update, replacing existing
+metadata is marked destructive and idempotent, not secret-bearing, remote-capable, and **excluded
+from read-only mode**. The host's normal mutation confirmation applies. Offline tests do not
+establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Move Folder (`core_move-folder`)**
+
+Calls [Move Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/move-folder) with exactly
+one `POST /v1/workspaces/{workspaceId}/folders/{folderId}/move`. This moves an existing logical folder
+within the **same workspace**. Fabric handles the folder hierarchy, including contained folders and
+items, server-side; the tool never enumerates descendants or sends individual item moves.
+These are workspace organizational folders, not OneLake directories or local filesystem paths.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty UUID of the containing workspace. |
+| `folder-id` | Yes | Nonempty UUID of the existing folder to move. |
+| `target-folder-id` | No | Existing nonempty folder UUID in the same workspace. Omission or MCP JSON null omits `targetFolderId` from the body and moves to the workspace root. |
+
+```powershell
+fabmcp core move-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc --target-folder-id aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb
+# Omit the target to move to the workspace root; the request body is {}.
+fabmcp core move-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+The request contains only optional `targetFolderId`, never a replacement name or target workspace.
+Invalid UUIDs and a target equal to the folder being moved fail before authentication or HTTP.
+Names and paths are not resolved, and destinations are not created. Fabric enforces descendant-loop,
+depth, and duplicate-name constraints; failures remain failures, with no alternate target, rename,
+fallback to root, or preflight lookup. The tool does not copy items, alter their contents or permissions,
+or implement cross-workspace movement.
+
+**Only HTTP 200 confirms movement.** The typed result contains `moveStatus: "Moved"`, the returned
+`folder` snapshot, `guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when supplied.
+Folder and workspace identities must match the request. A non-null returned parent must match the
+requested destination and is invalid for a move to root. Absent/null optional parent metadata stays
+omitted, not filled from the request; confirmation comes from HTTP 200, not an inferred parent.
+Returned display names are preserved without applying creation naming restrictions.
+Unknown fields are validated but not returned. Responses are bounded to **1 MiB (1,048,576 bytes)**
+and **64 JSON nesting levels**; malformed, duplicate, invalid-Unicode, or contradictory metadata fails safely.
+
+If HTTP 200 is followed by unreadable or invalid metadata, the error preserves **confirmed movement**
+and says not to resubmit. Authentication/pre-send failures report that the request was not sent.
+An uncertain send can leave the folder moved: inspect the known folder separately before another
+move, never retry blindly. Error responses retain observed HTTP status and validated `Retry-After`
+even when optional error metadata is unusable, and expose only a safe error code, not backend messages.
+There is no automatic retry, hidden Get/List verification, or LRO/polling behavior; Location and
+operation headers are ignored. Existing List/Get tools can be used in separate explicit calls to
+choose IDs or inspect an uncertain result.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Changing an existing folder's placement is marked
+destructive and idempotent (repeating the same destination does not add another effect), not
+secret-bearing, remote-capable, and **excluded from read-only mode**. Normal mutation consent applies.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+**Delete Folder (`core_delete-folder`)**
+
+Calls [Delete Folder](https://learn.microsoft.com/rest/api/fabric/core/folders/delete-folder) with exactly
+one `DELETE /v1/workspaces/{workspaceId}/folders/{folderId}`, no request body, and no query parameters.
+Both `workspace-id` and `folder-id` are required nonempty UUIDs; names and paths are not resolved.
+These are workspace organizational folders, not OneLake directories or local filesystem paths.
+
+**Only empty folders can be deleted.** Fabric rejects a folder containing items or nested folders
+with `FolderNotEmpty`; the tool returns that failure without emptying, moving, or deleting its
+contents. [Soft-deleted items also prevent folder deletion](https://learn.microsoft.com/fabric/admin/retention-recovery#limitations-of-soft-delete-and-recovery).
+There is no recursive, force, or hard-delete option, emptiness preflight, descendant enumeration,
+or fallback target. The API does not document folder recovery or a retention period; do not assume
+the item or workspace recovery rules apply, and do not promise rollback.
+
+```powershell
+fabmcp core delete-folder --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+**Only HTTP 200 confirms deletion.** The typed receipt contains the requested `workspaceId` and
+`folderId`, `deletionStatus: "Deleted"`, and `guidance`; it is not a returned folder snapshot.
+An empty response is sufficient. Irrelevant response data is not read, and late request cancellation
+does not undo confirmed deletion. If local receipt completion fails after HTTP 200, the error still
+states that deletion was confirmed and must not be resubmitted.
+
+Authentication/pre-send failures report that no DELETE was sent. After an uncertain network failure,
+timeout, or cancellation during sending, inspect the folder separately before considering another
+deletion; never retry blindly. Existing `core_get-folder` and `core_list-folders` can be used in
+separate explicit calls to select IDs or inspect uncertainty, not as hidden preflight or verification.
+Repeating deletion targets the same resource but can fail: **404 and `FolderNotFound` are not
+converted to success**. Error responses retain observed HTTP status and validated `Retry-After`
+even when optional error metadata is malformed, unreadable, or exceeds the shared 1 MiB/64-level
+JSON budget. Only a safe error code is projected, not backend messages or nested details.
+There is no automatic retry or LRO/polling behavior; 202/204 are not documented success responses,
+and Location and operation headers are ignored.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities use the existing
+Fabric tenant and authentication settings. Deletion is destructive, idempotent by its effect on
+the same folder, not secret-bearing, remote-capable, and **excluded from read-only mode**.
+Explain the empty-folder deletion scope before the host's normal mutation confirmation.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior; no live
+deletion fixture or mutation authorization is assumed.
+
+**Workspace and folder item inventory**
 
 `core_list-items` calls the [Fabric Core List Items API](https://learn.microsoft.com/rest/api/fabric/core/items/list-items). Use it for a scoped metadata inventory, not for OneLake file/blob listing (`onelake_list-items`) or cross-workspace discovery (`core_search-catalog`).
 
@@ -926,6 +1466,67 @@ Each invocation returns exactly one page: an `items` array and any `continuation
 Items contain ID, display name, type, workspace ID, and available description, folder ID, logical ID, tags, and sensitivity-label ID. Optional null properties are omitted. No item data, definitions, or workload-specific properties are returned. The optional REST `include=DefaultIdentity` expansion is intentionally unsupported: it is neither requested nor serialized.
 
 The caller needs workspace **Viewer** access. Delegated calls require `Workspace.Read.All` or `Workspace.ReadWrite.All`; the API supports user, service-principal, and managed identities. The tool preserves the server's configured authentication strategy, including its existing HTTP/OBO credential path. A `429` response retains its status and provides retry guidance when a valid `Retry-After` header is available; the tool does not retry automatically.
+
+**Move Item (`core_move-item`)**
+
+Calls the [Items Move Item API](https://learn.microsoft.com/rest/api/fabric/core/items/move-item)
+with exactly one `POST /v1/workspaces/{workspaceId}/items/{itemId}/move`. Supply nonempty
+`workspace-id` and `item-id` UUIDs and optionally `target-folder-id`, the UUID of an existing
+destination folder in that same workspace. UUIDs are normalized, not resolved from names or paths.
+Omitting the target or passing MCP `null` sends the required empty object `{}` for the workspace
+root; a supplied target sends only `{"targetFolderId":"<folder-id>"}`. Invalid targets fail before
+authentication, never fall back to root, and repeated option keys are rejected.
+
+Fabric moves **child items with their parent**, such as a Lakehouse and its SQL endpoint.
+A child cannot be moved independently; `CannotMoveChildOnly` remains a failure, without discovering
+or moving its parent automatically. This does not claim that arbitrary related items or dependencies
+move together. There is no client-side workload blacklist, cross-workspace move, data copy, rename,
+folder creation, OneLake operation, or local filesystem access. This operation is separate from
+`core_move-folder`.
+
+These examples mutate real item placement when invoked with authorized credentials:
+
+```powershell
+fabmcp core move-item --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --item-id cccccccc-2222-3333-4444-dddddddddddd --target-folder-id bbbbbbbb-1111-2222-3333-cccccccccccc
+
+# Move the item and its child items to the workspace root.
+fabmcp core move-item --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --item-id cccccccc-2222-3333-4444-dddddddddddd
+```
+
+**Only HTTP 200 confirms movement.** The typed result contains `moveStatus: "Moved"`, `items`,
+`guidance`, and validated `retryAfterSeconds` or `retryAfterUtc` when returned. The API's
+`MovedItems.value` is a required array, not a single item. Every entry is preserved in service
+order, including child and repeated entries; nothing is deduplicated, truncated, or enriched.
+There is no minimum row count or requirement to find the requested item in the response.
+An empty array is valid, but a missing/null array or unusable entry is not.
+
+Only each item's extensible `type` is required by the API schema. Available ID, workspace ID,
+folder ID, logical ID, display name, description, tags, and sensitivity-label metadata are
+projected; omitted/null optional fields are not inferred. Present UUIDs must be nonempty,
+workspace IDs must match the request, and non-null folder IDs must match the destination
+(a non-null folder conflicts with a root move). Child IDs need not equal the requested item.
+No data, definitions, default identities, or arbitrary backend properties are exposed.
+The complete JSON response is bounded to **1 MiB and 64 levels** before projection; no arbitrary
+row cap is imposed and output remains shallow for the MCP envelope.
+
+If HTTP 200 is followed by malformed, oversized, unreadable, canceled, or conflicting metadata,
+the tool reports **confirmed movement with unusable metadata**, not that nothing moved.
+Do not resubmit it. Pre-send/authentication failures report no request sent; an uncertain send
+requires separate inspection before another move, never blind retry. Known HTTP failures retain
+their status and validated `Retry-After`, even when optional error metadata is unusable.
+Only safe error codes are exposed. Existing `core_get-item` and `core_list-items` support separate,
+explicit selection/inspection; no hidden Get/List, per-child request, verification, automatic
+retry, pagination, or LRO polling occurs.
+
+The caller needs **Contributor or higher** workspace access; delegated callers require
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities retain the server's
+configured authentication and applicable Fabric tenant controls. Placement changes are destructive,
+idempotent by their placement effect, not secret-bearing, remote-capable, and excluded from read-only
+mode. The host's normal mutation confirmation applies without an additional gate.
+In `all` mode, text contains `results.items`; compact/duplicated output also provides
+`structuredContent.items`. Namespace mode uses `core` with `command="core_move-item"` and `parameters`,
+and its structured payload is under `result`. Single mode uses `fabric` with `tool="core"`.
+Offline tests do not establish live Fabric, OBO/RBAC, or recorded-playback coverage.
 
 **Creating a workspace**
 
@@ -1746,6 +2347,8 @@ The Fabric MCP Server is a **local-first** tool. Its documentation tools provide
 `core_create-workspace` creates a real workspace and can assign it to an existing capacity and domain; review those arguments and use an appropriately authorized identity before invoking it.
 
 `core_update-item` modifies an existing item's name or description; review its arguments and item permissions before use.
+
+`core_move-item` changes placement within one workspace and also moves the item's child items. Review the exact item and destination before mutation consent.
 
 `core_delete-workspace` can delete a workspace and its items. Review the exact UUID, permissions, and destructive-operation controls before invoking it.
 
