@@ -1091,6 +1091,8 @@
         "monitor_table_type_list",
         "monitor_traces_account_list",
         "monitor_traces_field_list",
+        "monitor_traces_query_analyze-critical-path",
+        "monitor_traces_query_analyze-top-attributes",
         "monitor_traces_query_run",
         "monitor_webtests_get",
         "monitor_workspace_log_query",
