@@ -29,7 +29,7 @@ public sealed class TraceAnalyzeCriticalPathOptions : ISubscriptionOption
     [Option(Description = "Query end time in UTC ISO 8601.")]
     public required DateTimeOffset EndTime { get; set; }
 
-    [Option(Description = "Up to 3 span fields or custom attribute names to group by, for example span.service.name or span.attributes.guid:x-request-id. Default span.name. No brackets or quotes.")]
+    [Option(Description = "Up to 3 bare field references (1-1024 characters): ASCII letters or underscore first, then ASCII letters, digits, underscores, or dots. For example span.service.name. Default span.name.")]
     public string[]? AggregateBy { get; set; }
 
     [Option(Description = "Up to 5 percentiles, each 1-99. Defaults to 50 95 99.")]
@@ -38,7 +38,7 @@ public sealed class TraceAnalyzeCriticalPathOptions : ISubscriptionOption
     [Option(Description = "Span-name prefixes whose subtrees are removed entirely before critical-path scoring.")]
     public string[]? ExcludeSubtreePrefixes { get; set; }
 
-    [Option(Description = "Span-name prefixes whose subtrees are demoted, not removed; they contribute only when no higher-priority work runs concurrently.")]
+    [Option(Description = "Span-name prefixes whose subtrees are demoted, not removed; they contribute only when no higher-priority work runs concurrently. The exact same prefix cannot appear in both this list and --exclude-subtree-prefixes.")]
     public string[]? DeprioritizeSubtreePrefixes { get; set; }
 
     [Option(Description = "Follow OpenTelemetry span links across trace boundaries. Default false.")]

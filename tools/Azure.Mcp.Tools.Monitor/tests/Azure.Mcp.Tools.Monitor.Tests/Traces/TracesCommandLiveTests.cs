@@ -57,7 +57,7 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             "$..spanId",
             "$..rootSpanResourceId",
             "$..uniqueRecordId",
-            "$..span.name",
+            "$..['span.name']",
             "$..attribute",
             "$..attributeValue",
             "$..insightsMetadata",
@@ -132,7 +132,7 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             ["trace-ids"] = new[] { traceId },
             ["start-time"] = start,
             ["end-time"] = end,
-        });
+        }, resultProcessor: envelope => envelope.TryGetProperty("results", out var results) ? results : envelope);
         if (!hasTraces)
         {
             // Freshly deployed workspaces have no spans; analysis must report that explicitly.

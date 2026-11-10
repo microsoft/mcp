@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.Mcp.Tools.Monitor.Options.Traces;
@@ -42,15 +41,26 @@ public sealed class TraceAnalyzeCriticalPathCommand(
     {
         base.ValidateOptions(options, validationResult);
         TraceQueryValidator.ValidateWindow(options.StartTime, options.EndTime, validationResult);
-        if (options.AggregateBy?.Any(dimension => !IsAggregationField(dimension)) == true)
+        if (options.AggregateBy?.Any(dimension => !TraceQueryValidator.IsFieldReference(dimension)) == true)
         {
-            validationResult.AddError("--aggregate-by accepts span field or custom attribute names without brackets or quotes.", "Invalid aggregate-by.");
+            validationResult.AddError("--aggregate-by accepts bare field references using ASCII letters, digits, underscores, and dots.", "Invalid aggregate-by.");
         }
         ValidateCriticalPathPercentiles(options.Percentiles, validationResult);
-        if (options.ExcludeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true ||
-            options.DeprioritizeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true)
+        if (options.ExcludeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true)
         {
-            validationResult.AddError("Subtree prefixes must not be empty or whitespace.", "Invalid subtree prefixes.");
+            validationResult.AddError("Exclude subtree prefixes must not be empty or whitespace.", "Invalid exclude subtree prefixes.");
+        }
+        if (options.DeprioritizeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true)
+        {
+            validationResult.AddError("Deprioritize subtree prefixes must not be empty or whitespace.", "Invalid deprioritize subtree prefixes.");
+        }
+        if (options.ExcludeSubtreePrefixes is { } excludePrefixes
+            && options.DeprioritizeSubtreePrefixes is { } deprioritizePrefixes
+            && !excludePrefixes.Any(string.IsNullOrWhiteSpace)
+            && !deprioritizePrefixes.Any(string.IsNullOrWhiteSpace)
+            && excludePrefixes.Intersect(deprioritizePrefixes, StringComparer.Ordinal).Any())
+        {
+            validationResult.AddError("The exact same subtree prefix cannot appear in both prefix lists.", "Conflicting subtree prefixes.");
         }
     }
 
@@ -99,9 +109,4 @@ public sealed class TraceAnalyzeCriticalPathCommand(
         var clauses = values.Select(p => FormattableString.Invariant($"p{p}=percentile(duration_nano, {p})"));
         return $"Traces | summarize {string.Join(", ", clauses)} by {string.Join(", ", dimensions.Select(d => $"['{d}']"))}";
     }
-
-    internal static bool IsAggregationField(string? value) =>
-        value is { Length: > 0 and <= 1024 } &&
-        // Custom attribute keys can contain colons and hyphens, but cannot escape the quoted KQL field.
-        Regex.IsMatch(value, @"\A[a-zA-Z_][a-zA-Z0-9_.:-]*\z", RegexOptions.NonBacktracking);
 }
