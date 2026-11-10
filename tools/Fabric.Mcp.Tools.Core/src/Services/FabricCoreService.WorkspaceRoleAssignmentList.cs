@@ -80,18 +80,12 @@ public partial class FabricCoreService
             foreach (var entry in value.EnumerateArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var assignment = entry.Deserialize(CoreJsonContext.Default.FabricWorkspaceRoleAssignment);
-                if (assignment is null || assignment.Id == Guid.Empty || string.IsNullOrWhiteSpace(assignment.Role))
-                {
-                    throw new JsonException(InvalidWorkspaceRoleAssignmentPageMessage);
-                }
-                ValidateRoleAssignmentPrincipal(assignment.Principal);
-                assignments.Add(assignment);
+                assignments.Add(ReadWorkspaceRoleAssignment(entry));
             }
             var result = new WorkspaceRoleAssignmentListCommandResult(assignments, token);
             // Profile parents can recursively contain principals. Reserve three levels for
             // namespace, tool-response, and JSON-RPC envelopes without truncating metadata.
-            using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = 61 });
+            using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = MaxRetainedRoleAssignmentDepth });
             JsonSerializer.Serialize(writer, result, CoreJsonContext.Default.WorkspaceRoleAssignmentListCommandResult);
             return result;
         }
@@ -100,20 +94,6 @@ public partial class FabricCoreService
             // JSON string/property decoding is lazy. Keep this boundary separate from
             // response reading and HTTP failures, whose status and retry guidance remain authoritative.
             throw new JsonException(InvalidWorkspaceRoleAssignmentPageMessage);
-        }
-    }
-
-    private static void ValidateRoleAssignmentPrincipal(FabricPrincipal? principal)
-    {
-        if (principal is null || principal.Id == Guid.Empty || string.IsNullOrWhiteSpace(principal.Type) ||
-            principal.ServicePrincipalDetails?.AadAppId == Guid.Empty ||
-            (principal.GroupDetails?.GroupType is { } groupType && string.IsNullOrWhiteSpace(groupType)))
-        {
-            throw new JsonException(InvalidWorkspaceRoleAssignmentPageMessage);
-        }
-        if (principal.ServicePrincipalProfileDetails?.ParentPrincipal is { } parent)
-        {
-            ValidateRoleAssignmentPrincipal(parent);
         }
     }
 }

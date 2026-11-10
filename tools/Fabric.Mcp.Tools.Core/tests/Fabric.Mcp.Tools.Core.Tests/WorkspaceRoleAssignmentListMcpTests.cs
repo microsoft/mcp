@@ -21,7 +21,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
-using static Fabric.Mcp.Tools.Core.Tests.TestSupport.WorkspaceRoleAssignmentListTestData;
+using static Fabric.Mcp.Tools.Core.Tests.TestSupport.WorkspaceRoleAssignmentTestData;
 
 namespace Fabric.Mcp.Tools.Core.Tests;
 
