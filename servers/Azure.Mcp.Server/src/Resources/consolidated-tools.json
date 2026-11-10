@@ -3321,6 +3321,39 @@
       ]
     },
     {
+      "name": "validate_azure_device_provisioning_onboarding",
+      "description": "Validate one existing Azure Device Provisioning Service individual enrollment or assess a manifest of up to 10 devices against one enrollment group. Checks enrollment status, attestation configuration, allocation policy, linked IoT Hub consistency, reprovisioning settings, optional stored registration state, and optional public X.509 or TPM evidence. X.509 checks resolve verified DPS CA references and validate chain signatures, ordering, validity, constraints, key usage, registration identity, trust-anchor matching, and RSA or ECDSA compatibility. Reports aggregate and per-device blockers, warnings, unverified conditions, and missing access without performing device registration or returning keys. Responses are compact by default: aggregate results and exceptional devices are returned while repetitive per-device evidence is omitted. Request include-device-details only when full per-device findings are needed. For a current-state request, return validation.customerSummary exactly with no added narrative. For an explicit comparison against an earlier preflight result available in the conversation, use one compact aggregate Preflight-versus-Current table instead. Do not add detailed timestamps, discarded attempts, temporary-file cleanup, wide tables, repeated identical findings, or internal count deltas unless explicitly requested.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool only reads DPS and enrollment configuration."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Calling this tool repeatedly does not modify DPS, enrollments, devices, or IoT Hubs."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool reads only the selected Azure DPS resource and its DPS service-plane records."
+        },
+        "readOnly": {
+          "value": true,
+          "description": "This tool performs read-only ARM and DPS service-plane operations."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not request or return DPS keys, symmetric keys, connection strings, or private keys."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
+      },
+      "mappedToolList": [
+        "deviceprovisioning_onboarding_validate"
+      ]
+    },
+    {
       "name": "get_azure_iot_hub",
       "description": "Get details about an Azure IoT Hub.",
       "toolMetadata": {
