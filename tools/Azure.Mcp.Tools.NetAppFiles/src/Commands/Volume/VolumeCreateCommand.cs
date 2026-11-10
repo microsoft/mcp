@@ -12,7 +12,6 @@ using Azure.Mcp.Tools.NetAppFiles.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
@@ -23,7 +22,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
     Description = "Creates an NFSv3 Azure NetApp Files volume in a capacity pool. Requires the account, pool, volume, location, delegated subnet resource ID, quota in GiB, service level, resource group, and subscription. Returns the created volume details.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
@@ -34,6 +33,7 @@ public sealed class VolumeCreateCommand(
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<VolumeCreateOptions, VolumeCreateCommand.VolumeCreateResult>(subscriptionResolver)
 {
+    // todo actually look up min and max quotas and make sure these are correct.
     private const long MinimumQuotaGib = 50;
     private const long MaximumQuotaGib = 100 * 1024;
     private static readonly HashSet<string> ServiceLevels = new(StringComparer.OrdinalIgnoreCase)

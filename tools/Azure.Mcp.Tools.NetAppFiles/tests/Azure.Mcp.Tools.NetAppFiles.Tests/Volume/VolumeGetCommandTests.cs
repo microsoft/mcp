@@ -15,13 +15,13 @@ namespace Azure.Mcp.Tools.NetAppFiles.Tests.Volume;
 
 public class VolumeGetCommandTests : SubscriptionCommandUnitTestsBase<VolumeGetCommand, INetAppFilesVolumeService>
 {
-    private static readonly NetAppFilesVolume ExistingVolume = new(
+    private static readonly IReadOnlyList<NetAppFilesVolume> ExistingVolume = [new(
         "volume1",
         "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.NetApp/netAppAccounts/account1/capacityPools/pool1/volumes/volume1",
         "eastus",
         "Succeeded",
         100,
-        "Standard");
+        "Standard")];
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -38,9 +38,9 @@ public class VolumeGetCommandTests : SubscriptionCommandUnitTestsBase<VolumeGetC
         Service.GetVolumeAsync(
             "account1",
             "pool1",
-            "volume1",
             "rg",
             "sub",
+            "volume1",
             "tenant",
             Arg.Any<CancellationToken>())
             .Returns(ExistingVolume);
@@ -56,7 +56,7 @@ public class VolumeGetCommandTests : SubscriptionCommandUnitTestsBase<VolumeGetC
         var result = ValidateAndDeserializeResponse(
             response,
             NetAppFilesJsonContext.Default.VolumeGetResult);
-        Assert.Equal(ExistingVolume, result.Volume);
+        Assert.Equal(ExistingVolume, result.Volumes);
     }
 
     [Theory]
@@ -75,7 +75,6 @@ public class VolumeGetCommandTests : SubscriptionCommandUnitTestsBase<VolumeGetC
     [Theory]
     [InlineData("--pool pool1 --volume volume1 --resource-group rg --subscription sub")]
     [InlineData("--account account1 --volume volume1 --resource-group rg --subscription sub")]
-    [InlineData("--account account1 --pool pool1 --resource-group rg --subscription sub")]
     [InlineData("--account account1 --pool pool1 --volume volume1 --subscription sub")]
     [InlineData("--account account1 --pool pool1 --volume volume1 --resource-group rg")]
     public async Task ExecuteAsync_MissingRequiredOption_ReturnsBadRequest(string args)

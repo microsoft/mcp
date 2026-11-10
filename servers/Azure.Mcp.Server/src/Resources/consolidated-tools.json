@@ -2943,8 +2943,8 @@
       ]
     },
     {
-      "name": "create_azure_netapp_files_accounts",
-      "description": "Create Azure NetApp Files accounts.",
+      "name": "create_azure_netapp_files_resources",
+      "description": "Create Azure NetApp Files accounts or volumes.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2972,12 +2972,13 @@
         }
       },
       "mappedToolList": [
-        "netappfiles_account_create"
+        "netappfiles_account_create",
+        "netappfiles_volume_create"
       ]
     },
     {
-      "name": "update_azure_netapp_files_accounts",
-      "description": "Update Azure Netapp Files accounts tags.",
+      "name": "update_azure_netapp_files_resources",
+      "description": "Update Azure Netapp Files resources tags or volumes quota",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -3006,7 +3007,6 @@
       },
       "mappedToolList": [
         "netappfiles_account_update",
-        "netappfiles_volume_create",
         "netappfiles_volume_update"
       ]
     },

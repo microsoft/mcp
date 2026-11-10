@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.NetAppFiles.Models;
@@ -14,12 +13,12 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
 {
     private const long BytesPerGib = 1024L * 1024L * 1024L;
 
-    public async Task<NetAppFilesVolume> GetVolumeAsync(
+    public async Task<IReadOnlyList<NetAppFilesVolume>> GetVolumeAsync(
         string account,
         string pool,
-        string volume,
         string resourceGroup,
         string subscription,
+        string? volume,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -32,9 +31,16 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
 
         var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
         var poolResource = accountResource.GetCapacityPool(pool, cancellationToken).Value;
-        var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
 
-        return Map(volumeResource);
+        if (volume is null)
+        {
+            var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
+
+            return [Map(volumeResource)];
+        }
+
+        var volumeResources = poolResource.GetNetAppVolumes().GetAll(cancellationToken);
+        return [.. volumeResources.Select(Map)];
     }
 
     public async Task<NetAppFilesVolume> CreateVolumeAsync(

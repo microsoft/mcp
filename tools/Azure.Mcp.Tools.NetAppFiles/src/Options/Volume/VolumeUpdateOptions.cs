@@ -6,6 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Options.Volume;
 
+// TODO make tags as an optional input and update tags as a result
 public sealed class VolumeUpdateOptions : ISubscriptionOption
 {
     [Option(Description = "The name of the Azure NetApp Files account that contains the capacity pool.")]

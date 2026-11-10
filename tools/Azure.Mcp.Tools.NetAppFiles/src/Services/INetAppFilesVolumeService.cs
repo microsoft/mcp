@@ -7,12 +7,12 @@ namespace Azure.Mcp.Tools.NetAppFiles.Services;
 
 public interface INetAppFilesVolumeService
 {
-    Task<NetAppFilesVolume> GetVolumeAsync(
+    Task<IReadOnlyList<NetAppFilesVolume>> GetVolumeAsync(
         string account,
         string pool,
-        string volume,
         string resourceGroup,
         string subscription,
+        string? volume,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 

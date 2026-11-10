@@ -11,10 +11,10 @@ using Azure.Mcp.Tools.NetAppFiles.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Commands.Volume;
 
+// todo change this to a listing call, look at AccountGetCommand to see how to do this
 [CommandMetadata(
     Id = "d0b98e20-395a-4af5-9bb2-515fcaf6372d",
     Name = "get",
@@ -46,9 +46,9 @@ public sealed class VolumeGetCommand(
             var volume = await _service.GetVolumeAsync(
                 options.Account,
                 options.Pool,
-                options.Volume,
                 options.ResourceGroup,
                 options.Subscription!,
+                options.Volume,
                 options.Tenant,
                 cancellationToken);
 
@@ -81,12 +81,14 @@ public sealed class VolumeGetCommand(
             validationResult.Errors.Add(AccountNameValidator.ErrorMessage);
         }
 
+
+        // todo that resource name validator is a terrible name and should be changed.
         if (!NetAppFilesChildResourceNameValidator.IsValid(options.Pool))
         {
             validationResult.Errors.Add("--pool must be 1-64 characters, start and end with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.");
         }
 
-        if (!NetAppFilesChildResourceNameValidator.IsValid(options.Volume))
+        if (options.Volume is not null && !NetAppFilesChildResourceNameValidator.IsValid(options.Volume))
         {
             validationResult.Errors.Add("--volume must be 1-64 characters, start and end with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.");
         }
@@ -102,5 +104,5 @@ public sealed class VolumeGetCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    public record VolumeGetResult(NetAppFilesVolume Volume);
+    public record VolumeGetResult(IReadOnlyList<NetAppFilesVolume> Volumes);
 }
