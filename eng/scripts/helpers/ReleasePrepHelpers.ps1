@@ -68,20 +68,20 @@ function Get-ReleasePrepSchedule {
     )
 
     $scheduledUtcHour = switch ($ScheduleName) {
-        'Release preparation (PDT)' { 19 }
-        'Release preparation (PST)' { 20 }
+        'Release preparation (PDT)' { 17 }
+        'Release preparation (PST)' { 18 }
         default { throw "Unrecognized release-preparation schedule: $ScheduleName" }
     }
     $pacificZone = [TimeZoneInfo]::FindSystemTimeZoneById('Pacific Standard Time')
     $pacificTime = [TimeZoneInfo]::ConvertTime($UtcNow, $pacificZone)
-    $noonUtc = [TimeZoneInfo]::ConvertTimeToUtc($pacificTime.Date.AddHours(12), $pacificZone)
+    $scheduledTimeUtc = [TimeZoneInfo]::ConvertTimeToUtc($pacificTime.Date.AddHours(10), $pacificZone)
     $holiday = Get-USFederalHoliday -Date $pacificTime.Date
     $shouldRun = $false
 
     if ($pacificTime.DayOfWeek -notin @([DayOfWeek]::Tuesday, [DayOfWeek]::Thursday)) {
         $reason = 'Skipping: the Pacific date is not a Tuesday or Thursday.'
     }
-    elseif ($noonUtc.Hour -ne $scheduledUtcHour) {
+    elseif ($scheduledTimeUtc.Hour -ne $scheduledUtcHour) {
         $reason = 'Skipping: this UTC schedule is inactive for the current Pacific daylight-saving offset.'
     }
     elseif ($holiday) {
@@ -89,7 +89,7 @@ function Get-ReleasePrepSchedule {
     }
     else {
         $shouldRun = $true
-        $reason = 'Preparing a release for the scheduled 12 PM Pacific run.'
+        $reason = 'Preparing a release for the scheduled 10 AM Pacific run.'
     }
 
     [PSCustomObject]@{
