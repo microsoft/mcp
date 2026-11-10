@@ -28,6 +28,13 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             Regex = "tenantId=[0-9a-fA-F-]+,objectId=[0-9a-fA-F-]+",
             Value = "Sanitized",
         }),
+        // The default resource-group sanitizer covers URIs, not ARM IDs in JSON bodies.
+        new(new()
+        {
+            Regex = @"(?i)/resourcegroups/(?<group>[\w\-.()]{1,90})",
+            GroupForReplace = "group",
+            Value = "Sanitized",
+        }),
         // Preserve valid GUID/trace-ID formats so sanitized values still replay in dependent requests.
         new(new()
         {
