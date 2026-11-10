@@ -2690,8 +2690,11 @@
         "managedlustre_fs_blob_import_get",
         "managedlustre_fs_expansion_get",
         "netappfiles_account_get",
+        "storage_account_get",
         "netappfiles_pool_get",
         "storage_blob_container_get",
+        "storage_blob_get",
+        "storage_disk_diagnose",
         "managedlustre_fs_subnetsize_ask",
         "managedlustre_fs_subnetsize_validate",
         "storage_table_list"

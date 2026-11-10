@@ -3025,7 +3025,7 @@ azmcp netappfiles account update --account <account> \
 # Creates a capacity pool in an Azure NetApp Files account.
 # Size is specified in TiB and must be a positive multiple of 4.
 # Returns the pool configuration and provisioning state.
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp netappfiles pool create --account <account> \
                               --pool <pool> \
                               --size <size-in-tib> \
@@ -3058,12 +3058,7 @@ azmcp netappfiles pool update --account <account> \
                               --resource-group <resource-group> \
                               --subscription <subscription> \
                               [--size <size-in-tib>] \
-                              [--qos-type <Auto|Manual>] \
-With the current cache implementations, cross-call reuse occurs in stdio mode
-when caching is enabled; HTTP mode does not retain clients across calls.
-Tokens remain scoped to the client's credential and cloud; they are not shared
-across tenants.
->>>>>>> origin/main
+                              [--qos-type <Auto|Manual>]
 
 ### Azure Database for MySQL Operations
 
