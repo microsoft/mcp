@@ -134,6 +134,7 @@ public class NetAppFilesPoolService(IAzureService azureService)
 
         if (tags is not null)
         {
+            patch.Tags.Clear();
             foreach (var tag in tags)
             {
                 patch.Tags[tag.Key] = tag.Value;

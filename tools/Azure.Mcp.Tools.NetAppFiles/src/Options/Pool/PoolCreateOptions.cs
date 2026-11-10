@@ -14,7 +14,7 @@ public sealed class PoolCreateOptions : ISubscriptionOption
     [Option(Description = "The name of the capacity pool to create. Must be 1-64 characters, start with an alphanumeric character, and contain only alphanumerics, underscores, and hyphens.")]
     public required string Pool { get; set; }
 
-    [Option(Description = "The provisioned pool size in tebibytes. Must be a positive multiple of 4.")]
+    [Option(Description = "The provisioned pool size in tebibytes. Must be a positive integer between 1 and 2048, inclusive.")]
     public required long Size { get; set; }
 
     [Option(Description = "The service level for the capacity pool. Accepted values: Flexible, Premium, Standard, StandardZRS, Ultra.")]

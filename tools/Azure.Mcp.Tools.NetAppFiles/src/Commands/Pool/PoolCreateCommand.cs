@@ -23,7 +23,7 @@ namespace Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
     Description = "Creates a capacity pool in an Azure NetApp Files account. Requires an account, pool name, size in TiB, service level, resource group, and subscription. Returns the created pool configuration and provisioning state.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
-    Idempotent = true,
+    Idempotent = false,
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
