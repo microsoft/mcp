@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Default the VS Code extension to consolidated mode in VS Code Insiders and namespace mode in stable VS Code, while preserving explicit server mode choices."

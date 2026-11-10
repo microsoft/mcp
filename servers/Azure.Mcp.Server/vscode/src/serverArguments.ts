@@ -1,10 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export function buildServerArguments(config: { get<T>(section: string): T | undefined }): string[] {
+export function buildServerArguments(
+    config: { get<T>(section: string): T | undefined },
+    uriScheme: string
+): string[] {
     const args = ['server', 'start'];
 
-    const mode = config.get<string>('serverMode') || 'namespace';
+    const configuredMode = config.get<string>('serverMode');
+    const mode = !configuredMode || configuredMode === 'auto'
+        ? (uriScheme === 'vscode-insiders' ? 'consolidated' : 'namespace')
+        : configuredMode;
     args.push('--mode', mode);
 
     const enabledServices = config.get<string[]>('enabledServices');
