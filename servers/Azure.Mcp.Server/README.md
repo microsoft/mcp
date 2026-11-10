@@ -1454,7 +1454,7 @@ for payloads and completion semantics. The tools use the released
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
 * "Generate the report for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
 * "Get a download link for the report of drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
-* "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
+* "Create a Standard resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
 ### Azure Resource Manager
