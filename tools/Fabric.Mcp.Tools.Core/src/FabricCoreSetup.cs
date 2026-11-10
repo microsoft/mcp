@@ -64,6 +64,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
         services.AddSingleton<WorkspaceRoleAssignmentAddCommand>(CreateWorkspaceRoleAssignmentAddCommand);
+        services.AddSingleton<WorkspaceRoleAssignmentDeleteCommand>(CreateWorkspaceRoleAssignmentDeleteCommand);
         services.AddSingleton<WorkspaceRoleAssignmentGetCommand>(CreateWorkspaceRoleAssignmentGetCommand);
         services.AddSingleton<WorkspaceRoleAssignmentListCommand>(CreateWorkspaceRoleAssignmentListCommand);
         services.AddSingleton<WorkspaceRoleAssignmentUpdateCommand>(CreateWorkspaceRoleAssignmentUpdateCommand);
@@ -90,6 +91,7 @@ public class FabricCoreSetup : IAreaSetup
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- Get one workspace role assignment by explicit workspace and assignment IDs, without identity lookups\n" +
             "- Add one workspace role assignment for an explicit principal and role, without lookups, defaults, or conflict updates\n" +
+            "- Delete one explicitly identified workspace role assignment, without removing the principal or assessing effective access\n" +
             "- Update one existing workspace role assignment by workspace and assignment IDs with an explicit replacement role\n" +
             "- List one page of workspace role assignments and returned principal metadata without directory lookups or group expansion\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
@@ -130,6 +132,7 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentAddCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentListCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentUpdateCommand>(serviceProvider);
@@ -150,6 +153,23 @@ public class FabricCoreSetup : IAreaSetup
             if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each add-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static WorkspaceRoleAssignmentDeleteCommand CreateWorkspaceRoleAssignmentDeleteCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentDeleteCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentDeleteCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each delete-workspace-role-assignment option at most once.");
             }
         });
         return command;

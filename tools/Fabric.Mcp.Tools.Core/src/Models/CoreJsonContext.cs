@@ -80,6 +80,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricServicePrincipalProfileDetails))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentGetCommandResult))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentAddCommandResult))]
+[JsonSerializable(typeof(WorkspaceRoleAssignmentDeleteCommandResult))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentListCommandResult))]
 [JsonSerializable(typeof(UpdateWorkspaceRoleAssignmentRequest))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentUpdateCommandResult))]

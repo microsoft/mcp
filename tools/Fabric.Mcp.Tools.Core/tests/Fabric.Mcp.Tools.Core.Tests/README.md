@@ -5,6 +5,9 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentDeleteCommandTests.cs**: Explicit assignment identity, permission-removal annotations, typed receipts, Admin/last-admin guidance, safe logging, and distinct unsent, rejected, uncertain, and confirmed-deletion outcomes
+- **Services/WorkspaceRoleAssignmentDeleteServiceTests.cs**: One DELETE without a body, independent assignment/principal IDs, only HTTP 200 confirmation without body reads, repeat 404 failures, exact error byte/depth/code limits, status/retry preservation, cancellation/disposal, concurrency, and separate explicit Get inspection
+- **WorkspaceRoleAssignmentDeleteMcpTests.cs**: Actual schemas and all/namespace/single routes across stdio/HTTP and output modes, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, CLI guards, and truthful receipts/errors through JSON-RPC envelopes
 - **Commands/WorkspaceRoleAssignmentUpdateCommandTests.cs**: Explicit existing-assignment/access intent, standard permission-replacement metadata, typed 200 output, Admin/last-admin guidance, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-update outcomes
 - **Validation/WorkspaceRoleAssignmentUpdateInputTests.cs**: Required role-only Update payload independent of nullable response metadata, assignment UUID semantics, unchanged extensible roles, strict Unicode, and exact serialized request budget
 - **Services/WorkspaceRoleAssignmentUpdateServiceTests.cs**: One PATCH without lookups or creation fallback, independent assignment/principal IDs, exact requested role, shared principal projection, confirmed update despite unusable metadata, exact byte/depth limits, safe status/retry guidance, cancellation/disposal, and concurrent caller isolation
@@ -145,6 +148,44 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Workspace Role-assignment Deletion
+
+`core_delete-workspace-role-assignment` follows the current public Delete contract and bundled
+`platform/swagger.json` and `common/definitions.json`. Explicit nonempty workspace and existing
+assignment UUIDs are required. The request is one DELETE without a body or query; an assignment ID
+is not a principal ID. No identity lookup/translation, directory/Graph calls, membership expansion,
+preflight List/Get, cascade, bulk removal, fallback, retry, polling, or hidden verification occurs.
+The caller needs workspace Admin access and delegated Workspace.ReadWrite.All. Fabric protects
+the last admin's assignment, without a local preflight or an invented protected-assignment error code.
+
+Only HTTP 200 confirms deletion. The shallow source-generated receipt contains `workspaceId`,
+`workspaceRoleAssignmentId`, `deletionStatus: "Deleted"`, and `guidance`. No success body is read,
+so irrelevant/unreadable content and late cancellation do not erase confirmation. Local disposal
+failures after 200 remain confirmed-deletion errors rather than invitations to resubmit. An explicit
+repeat 404 stays a failure, as do undocumented 201/202/204/206 and redirects. There is no documented
+standard LRO. Location and operation headers never trigger another request.
+
+The tool removes only the assignment, not a principal, group membership, workspace, or other
+assignments; it does not establish that the principal has no remaining effective access.
+Unsent, explicitly rejected, uncertain, and confirmed-deletion outcomes stay distinct. Retry timing
+is not authorization to replay. Safe error codes and known status/Retry-After survive malformed,
+duplicate, invalid-Unicode, oversized, canceled, or unreadable optional error metadata. Boundaries
+cover 1,048,576/1,048,577 bytes, 64/65 JSON levels, and 128/129-character error codes.
+
+Fixtures reuse `WorkspaceRoleAssignmentTestData`, `FabricCoreHttpMessageHandler`, existing streams,
+the shared authenticated transport, and bounded error/retry helpers. Tests assert zero requests
+before authentication/validation/consent succeeds and exactly one initiating request otherwise.
+They cover every all/namespace/single routing and legacy/compact/duplicated output combination,
+stdio/HTTP configurations, namespace filters, source-generated schemas, CLI duplicate/valueless
+guards, shared scalar binding, disposal, and concurrent caller isolation. Destructive/idempotent
+metadata uses standard elicitation; both action and decision must accept. Read-only mode retains
+List/Get but excludes this mutation. Separate explicit Get is tested, never hidden inside Delete.
+
+Real host discovery and the unchanged complete-host credential-composition regression remain
+applicable. All role removal is simulated offline. No approved live workspace/assignment fixture or
+revocation permission was supplied; no live Fabric, token-exchange/OBO/RBAC, or recorded coverage
+is claimed. Authentication composition, tenant settings, and upstream specifications are unchanged.
 
 ## Workspace Role-assignment Update
 
