@@ -353,6 +353,8 @@ folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
 Core also lists one page of workspace role assignments or gets one assignment by explicit workspace
 and assignment IDs, returning available principal metadata without directory lookups, group-membership
 expansion, or role changes. Each additional page or assignment lookup is a separate explicit call.
+Add Workspace Role Assignment is a separate mutation requiring an explicit principal and role.
+It sends one grant request without default access, name resolution, preflight, or conflict updates.
 The separate Items Move operation places an item and its child items in an existing folder or
 at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
@@ -365,7 +367,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace management/role listing and lookup, folders, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace management/role listing, lookup and grants, folders, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -390,6 +392,7 @@ the commands for a selected area. Core-only selection never exposes or routes Jo
 Read-only mode hides and denies Run, Cancel, Create Schedule, Update Schedule, and Delete Schedule while retaining Get Job Instance,
 Get Schedule, and both listing tools. Schedule lookup and listing retain the host's sensitive-data confirmation
 because their output may include configuration, owner information, and job execution data.
+Read-only Core retains List/Get Workspace Role Assignment but hides and denies Add Workspace Role Assignment.
 
 ### API Documentation & Best Practices
 
@@ -461,6 +464,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 
 | Tool Name | Description |
 |-----------|-------------|
+| `core_add-workspace-role-assignment` | Adds one explicitly supplied principal and workspace role with one POST. Returns created assignment metadata without identity lookups, default access, conflict updates, retries, or polling. |
 | `core_assign-workspace-to-capacity` | Submits one request to assign an existing workspace to a capacity. Returns an accepted/pending receipt, not confirmation of completion. |
 | `core_create-folder` | Creates one logical workspace folder at the root or under an explicit parent folder UUID. Returns created metadata without lookups, retries, or polling. |
 | `core_create-item` | Creates a Fabric item by workspace UUID, optionally with a definition or creation payload, an existing folder ID, definition options, and label settings. Returns completed metadata or an accepted operation receipt; optionally waits within a bounded budget. |
@@ -1001,6 +1005,76 @@ detail objects fit; adding leaf details exceeds that budget and fails without tr
 Malformed or missing required data, mismatched assignment IDs, duplicates, invalid Unicode, and
 over-budget responses fail without partial results. No live workspace, real OBO/RBAC, or recorded
 coverage is claimed without an approved fixture and authorization.
+
+**Add Workspace Role Assignment (`core_add-workspace-role-assignment`)**
+
+Calls [Add Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/add-workspace-role-assignment)
+with one `POST /v1/workspaces/{workspaceId}/roleAssignments`. This grants workspace access; it does not
+calculate effective permissions or manage OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `principal` | Yes | JSON object with explicit nonempty `id` UUID and `type`, plus any documented writable details below. |
+| `role` | Yes | Explicit `Admin`, `Member`, `Contributor`, or `Viewer` access intent. No default, trimming, upgrade, or fallback. |
+
+```powershell
+# Example only: use a separately authorized workspace, principal and role.
+fabmcp core add-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --principal '{"id":"cccccccc-2222-3333-4444-dddddddddddd","type":"User"}' --role Viewer
+```
+
+The request contains only `principal` and `role`. The documented principal types are `User`, `Group`,
+`ServicePrincipal`, `ServicePrincipalProfile`, and `EntireTenant`. Supply the identity's principal UUID:
+an Entra object ID for a user, group or service principal (not the application's client ID), or the
+profile ID for a service principal profile. **EntireTenant targets all tenant users** and must be an
+explicit caller choice with its principal UUID; the tool never infers it or substitutes a tenant ID.
+No email, display-name, application-ID, principal-to-assignment translation, or directory/Graph lookup
+is performed. Missing principal/type/role information must come from the caller.
+
+For `Group`, optional `groupDetails.groupType` accepts the documented `Unknown`, `SecurityGroup`,
+and `DistributionList` values. For `ServicePrincipalProfile`, optional
+`servicePrincipalProfileDetails.parentPrincipal` accepts another principal object with the same
+writable contract. Omitted fields remain omitted. When supplied, details and parent principals must
+be objects and groupType must be a nonempty string; explicit null is rejected because the Add
+request schema does not declare these fields nullable. This differs from optional response metadata.
+Principal, group-type, and role strings are extensible in the API:
+explicit nonempty future strings are passed unchanged for Fabric to validate, not interpreted locally.
+Read-only `displayName`, `userDetails`, and `servicePrincipalDetails` (including `aadAppId`), unknown
+fields, duplicates, malformed Unicode, and inapplicable details are rejected before authentication.
+Principal JSON is limited to 1 MiB and 32 nesting levels; the complete serialized request, including
+escaping and role, is also limited to 1 MiB. No input fields are stripped to make a rejected grant succeed.
+
+The caller needs **workspace Member or higher** and delegated **Workspace.ReadWrite.All**.
+Members can grant **Member, Contributor, or Viewer**; granting **Admin requires an Admin caller**.
+Members cannot change existing users' roles. Fabric enforces these restrictions and its documented
+maximum of 1,000 users/groups in workspace roles, including external guests; group membership size is
+not limited by that rule. The tool does not preflight permissions, count assignments, expand groups,
+change tenant settings, remove an existing assignment, or retry a conflict as an update.
+User, service-principal, and managed-identity callers use the existing authentication composition.
+Service principals and managed identities also require the tenant setting permitting Fabric API access.
+
+Only **HTTP 201** confirms creation. The result contains `creationStatus: "Created"`, `roleAssignment`
+with its new assignment `id`, matching requested `role` and principal `id`/`type`, available principal
+metadata, and validated retry guidance. **Assignment and principal IDs are independent**.
+The response reuses the same optional/future principal metadata projection as List/Get; no workspace
+field is required. Returned Location/operation headers are not followed or exposed as navigation.
+This endpoint has no documented standard LRO, so there is no polling or result-retrieval option.
+
+Response JSON is bounded to 1 MiB and 64 input levels, with 61 retained result levels reserved for
+the real namespace, tool-response, and JSON-RPC envelopes. No metadata is truncated to fit.
+If 201 is received but metadata is malformed, oversized, mismatched, unreadable, canceled, or too
+deep to serialize, the error **still says creation was confirmed**: do not resubmit the grant.
+Unsent validation/authentication failures, explicit rejections, and uncertain sends are distinct.
+After a timeout, network failure, unexpected success status, or server error with an uncertain
+outcome, inspect assignments separately before considering a new grant; never replay blindly.
+Known HTTP status and validated `Retry-After` survive unusable error metadata. Only safe error
+codes are projected, never backend messages or raw payloads. Retry timing is not replay authorization.
+
+This additive permission mutation is remote-capable and non-read-only/non-idempotent, using the
+repository's normal additive permission-management annotations rather than a custom confirmation
+gate or invented destructive/secret classification. Read-only mode hides and denies it while retaining
+List/Get. No live grant, real token exchange/OBO/RBAC, or recorded coverage is claimed without an
+approved fixture and grant authorization.
 
 **Workspace folders**
 

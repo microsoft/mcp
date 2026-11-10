@@ -16,6 +16,17 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Adds one workspace role assignment with one POST, without lookups, retries, conflict updates, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="principal">Explicit principal JSON with id, type, and optional documented writable details.</param>
+    /// <param name="role">The caller's unchanged, explicit workspace role intent.</param>
+    /// <param name="cancellationToken">Cancels authentication and the request, not a grant that may already have occurred.</param>
+    Task<WorkspaceRoleAssignmentAddCommandResult> AddWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string principal,
+        string role,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one workspace role assignment with one GET, without listing assignments, identity lookups, retries, or polling.</summary>
     /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
     /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>

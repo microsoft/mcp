@@ -279,6 +279,7 @@ public class ServerStartupTests
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_run-on-demand-item-job"));
         Assert.Equal(expectedJobs && !readOnly, names.Contains("jobs_update-item-schedule"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-item"));
+        Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_add-workspace-role-assignment"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
@@ -289,6 +290,7 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-item"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_update-folder"));
         Assert.DoesNotContain("jobs_create-folder", names);
+        Assert.DoesNotContain("jobs_add-workspace-role-assignment", names);
         Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
         Assert.DoesNotContain("jobs_get-workspace-role-assignment", names);
@@ -299,6 +301,20 @@ public class ServerStartupTests
         Assert.DoesNotContain("jobs_update-folder", names);
         if (namespaces != "jobs" && !readOnly)
         {
+            var addRole = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_add-workspace-role-assignment");
+            var addRoleAnnotations = addRole.GetProperty("annotations");
+            Assert.False(addRoleAnnotations.GetProperty("readOnlyHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("idempotentHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("destructiveHint").GetBoolean());
+            Assert.False(addRoleAnnotations.GetProperty("openWorldHint").GetBoolean());
+            var addRoleSchema = addRole.GetProperty("inputSchema");
+            Assert.Equal(["principal", "role", "workspace-id"],
+                addRoleSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["principal", "role", "workspace-id"],
+                addRoleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one POST", addRole.GetProperty("description").GetString());
+            Assert.Contains("Members can grant Member or lower", addRole.GetProperty("description").GetString());
+            Assert.Contains("EntireTenant explicitly grants access to all tenant users", addRole.GetProperty("description").GetString());
             var createFolder = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_create-folder");
             var annotations = createFolder.GetProperty("annotations");
             Assert.False(annotations.GetProperty("readOnlyHint").GetBoolean());

@@ -112,6 +112,15 @@ workspace. Missing/null terminal metadata and empty pages follow the Fabric pagi
 Do not look up identities in Graph, expand groups, infer effective permissions, enrich rows, or mutate roles.
 These prompts do not authorize live workspace discovery, permission changes, or live/recorded validation.
 
+Add Workspace Role Assignment is a separate permission mutation. Require an explicitly authorized
+workspace, principal JSON (id/type and any writable group/profile details), and role. EntireTenant
+must be explicit because it targets all tenant users. No role, principal type, or identity may be
+inferred, upgraded, or broadened. Send one POST without preflight, directory/Graph lookups, expansion,
+get-or-create, conflict updates, retries, or polling. Members can grant Member or lower; Admin grants
+require an Admin caller. A 201 confirms creation even if the returned metadata cannot be used; do not
+resubmit. An uncertain send requires separate inspection, not blind replay. A rejected request is not
+an existing-assignment success. These prompts are not authorization for a live grant or tenant change.
+
 Core-only filtering does not expose Jobs. Use `--namespace jobs --mode all` for job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion alone,
 or `--namespace core --namespace jobs --mode all` for workflows combining item/definition tools and job status.
 The same namespace selection applies with `--mode namespace` or `--mode single`.
@@ -122,6 +131,13 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
+| core_add-workspace-role-assignment | Grant Viewer in the separately authorized workspace to the User principal UUID I supply. Use principal JSON and one POST; do not look up the identity or list assignments first. | context-required |
+| core_add-workspace-role-assignment | Add the Group principal and explicit workspace role I supplied, preserving optional groupDetails.groupType. Do not expand membership or choose a more permissive role. | context-required |
+| core_add-workspace-role-assignment | Add my explicitly supplied ServicePrincipalProfile principal and role, preserving its writable parentPrincipal details without directory resolution. Treat the returned assignment ID independently from the principal ID. | context-required |
+| core_add-workspace-role-assignment | Explain the scope and risks of my explicit EntireTenant grant before a separately authorized invocation. Never infer tenant-wide access from a missing principal type or choose a tenant ID for me. | context-required |
+| core_add-workspace-role-assignment | Explain a forbidden, conflicting, or throttled grant without retrying, selecting another role or identity, updating an existing assignment, or changing tenant settings. Report Member/Admin restrictions and safe retry timing. | context-required |
+| core_add-workspace-role-assignment | A grant returned HTTP 201 but its metadata was unusable. Report confirmed creation and do not resubmit. If inspection is separately authorized, use List/Get as a distinct call. | context-required |
+| core_add-workspace-role-assignment | Reject an attempted grant through the read-only server before authentication or HTTP, while leaving role-assignment List/Get available. | context-required |
 | core_assign-workspace-to-capacity | Submit a request to assign existing Fabric workspace \<workspace-id> to capacity \<capacity-id>; return acceptance without waiting for completion. | context-required |
 | core_assign-workspace-to-capacity | Move workspace \<workspace-id> to Fabric capacity \<capacity-id> with one submission only, without polling or retries. | context-required |
 | core_assign-workspace-to-capacity | Assign workspace \<workspace-id> to capacity \<capacity-id> and return the requested IDs with an accepted/pending state, not a claim that assignment finished. | context-required |

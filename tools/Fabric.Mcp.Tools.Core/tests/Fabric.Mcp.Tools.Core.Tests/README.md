@@ -5,6 +5,10 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentAddCommandTests.cs**: Explicit principal/access intent, additive permission metadata, typed 201 output, no default role, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-creation guidance
+- **Validation/WorkspaceRoleAssignmentAddInputTests.cs**: The Add request contract independent of response models, writable group/profile details, rejection of read-only/unknown/duplicate fields, extensible strings, and exact UTF-8/serialized/depth budgets
+- **Services/WorkspaceRoleAssignmentAddServiceTests.cs**: One POST without lookups/conflict updates, independent assignment/principal IDs, matching requested access, shared response projection, confirmed creation on metadata failures, exact byte/depth limits, safe errors/retry, cancellation/disposal, and concurrent caller isolation
+- **WorkspaceRoleAssignmentAddMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard additive behavior, zero-I/O invalid/authentication cases, separate Add-to-Get handoff, CLI option guards, and exact JSON-RPC depth limits preserving confirmed 201
 - **Commands/WorkspaceRoleAssignmentGetCommandTests.cs**: Explicit workspace/assignment binding, read-only remote metadata, typed snapshots, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
 - **Services/WorkspaceRoleAssignmentGetServiceTests.cs**: One GET without lookups, matching assignment identity independent of principal ID, shared optional/future principal metadata, malformed/Unicode/duplicate data, exact byte/input/output depth limits, status/retry preservation, disposal/cancellation, and concurrent caller isolation
 - **WorkspaceRoleAssignmentGetMcpTests.cs**: Actual registration, schemas and all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no consent, rejected input/authentication before HTTP, explicit List-to-Get handoff, CLI option guards, and the exact single-result JSON-RPC depth boundary
@@ -137,6 +141,47 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Workspace Role-assignment Creation
+
+`core_add-workspace-role-assignment` uses the public Add contract and bundled
+`platform/swagger.json`, `platform/definitions/platform.json`, and `common/definitions.json`,
+not the List/Get response model as its request schema. Required inputs are workspace UUID, principal
+JSON, and role. Only `principal` and `role` are sent. Principal requires id/type and permits writable
+group details and recursive profile-parent details; read-only names, user details, and service-principal
+application metadata are rejected. Known principal types include EntireTenant (all tenant users);
+future nonempty principal/group/role strings pass unchanged. No access intent is inferred.
+Optional request fields may be omitted, but present details/parents must be objects and groupType
+must be a nonempty string. Unlike optional response metadata, the Add request schema does not
+declare these fields nullable, so explicit null fails before authentication rather than being forwarded.
+
+The caller needs Member-or-higher workspace access and delegated Workspace.ReadWrite.All.
+Members can grant Member or lower; Admin grants require Admin. The service, not a local preflight,
+enforces authorization and the workspace's 1,000 users/groups limit. A conflict stays a failure,
+never a get-or-create success or an automatic update. Add has no documented LRO.
+
+Every successful or rejected invocation makes exactly one initiating POST. Validation, pre-send
+cancellation/authentication failure, read-only denial, and namespace exclusion make zero requests.
+The mutation uses additive permission-management annotations, not destructive or secret flags to
+force an extra elicitation. Discovery and learn make no credential/HTTP calls.
+
+201 establishes creation before body reading, so malformed, oversized, mismatched, canceled,
+unreadable, or unserializable metadata cannot turn a confirmed grant into an uncertain-send message.
+Explicit 4xx rejections (except timeout) and unsent failures stay distinct from uncertain network,
+timeout, server-error, or unexpected-success outcomes. Status and safe Retry-After survive invalid
+error metadata; no raw messages or opaque response URLs escape. No automatic replay is performed.
+
+The principal input has exact 1 MiB UTF-8 and 32-level bounds; the serialized request has a separate
+1 MiB bound including escaping. Response input allows 1 MiB and 64 levels; the complete typed result
+allows 61 retained levels. Thirty nested principals without leaf details fit exactly; adding one
+leaf detail level fails within the confirmed-creation boundary. Real loader results across all
+output/routing shapes are serialized inside a 64-level JSON-RPC envelope without truncation.
+
+Fixtures reuse `WorkspaceRoleAssignmentTestData`, `FabricCoreHttpMessageHandler`, existing streams,
+response models, and the consumed shared role-assignment reader. The actual host discovery covers
+Core/default/combined/Jobs-only/read-only selections, and existing full-host authentication composition
+regressions remain applicable. All grants are simulated offline. No live workspace/principal fixture
+or grant authorization was supplied; no real OBO/token-exchange/RBAC or recorded coverage is claimed.
 
 ## Workspace Role-assignment Lookup
 

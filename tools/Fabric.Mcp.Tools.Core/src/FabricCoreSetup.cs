@@ -63,6 +63,7 @@ public class FabricCoreSetup : IAreaSetup
         services.AddSingleton<WorkspaceDeleteCommand>();
         services.AddSingleton<WorkspaceGetCommand>();
         services.AddSingleton<WorkspaceListCommand>();
+        services.AddSingleton<WorkspaceRoleAssignmentAddCommand>(CreateWorkspaceRoleAssignmentAddCommand);
         services.AddSingleton<WorkspaceRoleAssignmentGetCommand>(CreateWorkspaceRoleAssignmentGetCommand);
         services.AddSingleton<WorkspaceRoleAssignmentListCommand>(CreateWorkspaceRoleAssignmentListCommand);
         services.AddSingleton<WorkspaceUpdateCommand>();
@@ -87,6 +88,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Retrieve an item's definition inline or explicitly export completed parts to a new local directory\n" +
             "- List accessible workspaces and their management metadata, optionally filtered by the caller's workspace roles\n" +
             "- Get one workspace role assignment by explicit workspace and assignment IDs, without identity lookups\n" +
+            "- Add one workspace role assignment for an explicit principal and role, without lookups, defaults, or conflict updates\n" +
             "- List one page of workspace role assignments and returned principal metadata without directory lookups or group expansion\n" +
             "- List item metadata within a known workspace or folder, optionally filtered by type\n" +
             "- Move one item and its child items within the same workspace, returning the complete moved-item collection\n" +
@@ -125,11 +127,29 @@ public class FabricCoreSetup : IAreaSetup
         fabricCore.AddCommand<WorkspaceDeleteCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceListCommand>(serviceProvider);
+        fabricCore.AddCommand<WorkspaceRoleAssignmentAddCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentGetCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceRoleAssignmentListCommand>(serviceProvider);
         fabricCore.AddCommand<WorkspaceUpdateCommand>(serviceProvider);
 
         return fabricCore;
+    }
+
+    private static WorkspaceRoleAssignmentAddCommand CreateWorkspaceRoleAssignmentAddCommand(IServiceProvider serviceProvider)
+    {
+        var command = new WorkspaceRoleAssignmentAddCommand(
+            serviceProvider.GetRequiredService<ILogger<WorkspaceRoleAssignmentAddCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each add-workspace-role-assignment option at most once.");
+            }
+        });
+        return command;
     }
 
     private static WorkspaceRoleAssignmentGetCommand CreateWorkspaceRoleAssignmentGetCommand(IServiceProvider serviceProvider)
