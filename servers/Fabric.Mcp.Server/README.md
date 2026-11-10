@@ -1034,11 +1034,13 @@ is performed. Missing principal/type/role information must come from the caller.
 For `Group`, optional `groupDetails.groupType` accepts the documented `Unknown`, `SecurityGroup`,
 and `DistributionList` values. For `ServicePrincipalProfile`, optional
 `servicePrincipalProfileDetails.parentPrincipal` accepts another principal object with the same
-writable contract. These optional objects and their nullable fields are forwarded as supplied;
-omitted fields remain omitted. Principal, group-type, and role strings are extensible in the API:
+writable contract. Omitted fields remain omitted. When supplied, details and parent principals must
+be objects and groupType must be a nonempty string; explicit null is rejected because the Add
+request schema does not declare these fields nullable. This differs from optional response metadata.
+Principal, group-type, and role strings are extensible in the API:
 explicit nonempty future strings are passed unchanged for Fabric to validate, not interpreted locally.
 Read-only `displayName`, `userDetails`, and `servicePrincipalDetails` (including `aadAppId`), unknown
-fields, duplicates, malformed Unicode, and inapplicable non-null details are rejected before authentication.
+fields, duplicates, malformed Unicode, and inapplicable details are rejected before authentication.
 Principal JSON is limited to 1 MiB and 32 nesting levels; the complete serialized request, including
 escaping and role, is also limited to 1 MiB. No input fields are stripped to make a rejected grant succeed.
 

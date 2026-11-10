@@ -61,27 +61,27 @@ internal static class WorkspaceRoleAssignmentAddInput
         {
             throw new JsonException();
         }
-        if (value.TryGetProperty("groupDetails", out var group) && group.ValueKind != JsonValueKind.Null)
+        if (value.TryGetProperty("groupDetails", out var group))
         {
             if (!type.ValueEquals("Group"))
             {
                 throw new JsonException();
             }
             ValidateFields(group, ["groupType"]);
-            if (group.TryGetProperty("groupType", out var groupType) && groupType.ValueKind != JsonValueKind.Null &&
+            if (group.TryGetProperty("groupType", out var groupType) &&
                 (groupType.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(groupType.GetString())))
             {
                 throw new JsonException();
             }
         }
-        if (value.TryGetProperty("servicePrincipalProfileDetails", out var profile) && profile.ValueKind != JsonValueKind.Null)
+        if (value.TryGetProperty("servicePrincipalProfileDetails", out var profile))
         {
             if (!type.ValueEquals("ServicePrincipalProfile"))
             {
                 throw new JsonException();
             }
             ValidateFields(profile, ["parentPrincipal"]);
-            if (profile.TryGetProperty("parentPrincipal", out var parent) && parent.ValueKind != JsonValueKind.Null)
+            if (profile.TryGetProperty("parentPrincipal", out var parent))
             {
                 ValidatePrincipal(parent);
             }

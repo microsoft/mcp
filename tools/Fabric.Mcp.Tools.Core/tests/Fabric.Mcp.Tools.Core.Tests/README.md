@@ -151,6 +151,9 @@ JSON, and role. Only `principal` and `role` are sent. Principal requires id/type
 group details and recursive profile-parent details; read-only names, user details, and service-principal
 application metadata are rejected. Known principal types include EntireTenant (all tenant users);
 future nonempty principal/group/role strings pass unchanged. No access intent is inferred.
+Optional request fields may be omitted, but present details/parents must be objects and groupType
+must be a nonempty string. Unlike optional response metadata, the Add request schema does not
+declare these fields nullable, so explicit null fails before authentication rather than being forwarded.
 
 The caller needs Member-or-higher workspace access and delegated Workspace.ReadWrite.All.
 Members can grant Member or lower; Admin grants require Admin. The service, not a local preflight,

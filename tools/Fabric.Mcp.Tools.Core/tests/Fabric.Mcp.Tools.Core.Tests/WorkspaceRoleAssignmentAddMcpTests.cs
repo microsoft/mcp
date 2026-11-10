@@ -198,7 +198,15 @@ public sealed class WorkspaceRoleAssignmentAddMcpTests()
             missing.Remove(option);
             AssertInputFailure(await CallAsync(provider, route, missing, DecliningConsentServer()));
         }
-        foreach (var input in new[] { "{}", "null", "[]", "private", PrincipalJson[..^1] + ",\"displayName\":\"private\"}" })
+        foreach (var input in new[]
+        {
+            "{}", "null", "[]", "private",
+            PrincipalJson[..^1] + ",\"displayName\":\"private\"}",
+            PrincipalJson.Replace("User", "Group", StringComparison.Ordinal)[..^1] + ",\"groupDetails\":null}",
+            PrincipalJson.Replace("User", "Group", StringComparison.Ordinal)[..^1] + ",\"groupDetails\":{\"groupType\":null}}",
+            PrincipalJson.Replace("User", "ServicePrincipalProfile", StringComparison.Ordinal)[..^1] +
+                ",\"servicePrincipalProfileDetails\":{\"parentPrincipal\":null}}"
+        })
         {
             AssertSafeFailure(await CallAsync(provider, route, Arguments(input), DecliningConsentServer()), HttpStatusCode.BadRequest);
         }

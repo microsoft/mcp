@@ -42,9 +42,7 @@ public sealed class WorkspaceRoleAssignmentAddInputTests()
     [InlineData("""{"groupType":"DistributionList"}""")]
     [InlineData("""{"groupType":"Unknown"}""")]
     [InlineData("""{"groupType":"FutureGroup"}""")]
-    [InlineData("""{"groupType":null}""")]
     [InlineData("{}")]
-    [InlineData("null")]
     public static void CreateRequest_PreservesOptionalWritableGroupDetails(string details)
     {
         var principal = $$"""{"id":"{{PrincipalId}}","type":"Group","groupDetails":{{details}}}""";
@@ -114,10 +112,16 @@ public sealed class WorkspaceRoleAssignmentAddInputTests()
 
     [Theory]
     [InlineData("Group", "groupDetails", "[]")]
+    [InlineData("Group", "groupDetails", "null")]
+    [InlineData("User", "groupDetails", "null")]
+    [InlineData("Group", "groupDetails", """{"groupType":null}""")]
     [InlineData("Group", "groupDetails", """{"groupType":42}""")]
     [InlineData("Group", "groupDetails", """{"groupType":""}""")]
     [InlineData("Group", "groupDetails", """{"private":0}""")]
     [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", "42")]
+    [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", "null")]
+    [InlineData("User", "servicePrincipalProfileDetails", "null")]
+    [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", """{"parentPrincipal":null}""")]
     [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", """{"parentPrincipal":[]}""")]
     [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", """{"parentPrincipal":{}}""")]
     [InlineData("ServicePrincipalProfile", "servicePrincipalProfileDetails", """{"private":0}""")]
