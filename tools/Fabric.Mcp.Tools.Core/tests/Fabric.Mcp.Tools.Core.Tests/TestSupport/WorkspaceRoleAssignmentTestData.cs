@@ -22,6 +22,7 @@ internal static class WorkspaceRoleAssignmentTestData
     internal static string CollectionUrl => $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{WorkspaceId}/roleAssignments";
     internal static string AssignmentUrl => $"{CollectionUrl}/{AssignmentId}";
     internal static string AssignmentJson => JsonSerializer.Serialize(Assignment, CoreJsonContext.Default.FabricWorkspaceRoleAssignment);
+    internal static string PrincipalJson => $$"""{"id":"{{PrincipalId}}","type":"User"}""";
     internal static FabricWorkspaceRoleAssignment Assignment => new(
         Guid.Parse(AssignmentId),
         new(Guid.Parse(PrincipalId), "User", "Analyst", new("analyst@example.invalid")),

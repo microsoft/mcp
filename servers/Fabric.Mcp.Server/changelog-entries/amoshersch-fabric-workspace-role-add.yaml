@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_add-workspace-role-assignment to grant an explicit principal and workspace role with one request, safe creation-outcome guidance, and no identity lookups or automatic retries."

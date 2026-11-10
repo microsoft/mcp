@@ -10,6 +10,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(AssignWorkspaceToCapacityRequest))]
+[JsonSerializable(typeof(AddWorkspaceRoleAssignmentRequest))]
 [JsonSerializable(typeof(CapacityGetCommandResult))]
 [JsonSerializable(typeof(CapacityListCommandResult))]
 [JsonSerializable(typeof(CapacityListResponse))]
@@ -78,6 +79,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricServicePrincipalDetails))]
 [JsonSerializable(typeof(FabricServicePrincipalProfileDetails))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentGetCommandResult))]
+[JsonSerializable(typeof(WorkspaceRoleAssignmentAddCommandResult))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentListCommandResult))]
 [JsonSerializable(typeof(CreatedWorkspaceMetadata))]
 [JsonSerializable(typeof(CreatedWorkspaceTag))]
