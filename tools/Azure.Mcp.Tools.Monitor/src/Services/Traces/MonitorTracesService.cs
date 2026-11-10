@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.ResourceManager;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -306,10 +305,11 @@ public sealed class MonitorTracesService(
             return (cached.AmwResourceId, cached.Endpoint);
         }
 
-        ResourceGroupResource resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription, resourceGroup, tenant, cancellationToken).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
-        ResourceIdentifier workspaceId = new($"{resourceGroupResource.Id}/providers/{MonitorAccountResourceType}/{workspace}");
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken).ConfigureAwait(false);
+        // Construct the parent ID locally: fetching the RG would require permissions beyond the AMW.
+        ResourceIdentifier workspaceId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{MonitorAccountResourceType}/{workspace}");
         string amwResourceId = workspaceId.ToString();
         var armClient = await CreateArmClientWithApiVersionAsync(
             MonitorAccountResourceType, MonitorAccountApiVersion, tenant, cancellationToken).ConfigureAwait(false);
