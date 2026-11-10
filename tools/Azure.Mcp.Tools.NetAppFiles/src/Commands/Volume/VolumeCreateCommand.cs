@@ -33,7 +33,6 @@ public sealed class VolumeCreateCommand(
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<VolumeCreateOptions, VolumeCreateCommand.VolumeCreateResult>(subscriptionResolver)
 {
-    // todo actually look up min and max quotas and make sure these are correct.
     private const long MinimumQuotaGib = 50;
     private const long MaximumQuotaGib = 100 * 1024;
     private static readonly HashSet<string> ServiceLevels = new(StringComparer.OrdinalIgnoreCase)
