@@ -52,8 +52,8 @@
 #>
 
 param(
-    [string]   $Executable = './servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe',
-    [string]   $BenchmarkExe = './servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe',
+    [string]   $Executable = './servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe',
+    [string]   $BenchmarkExe = './servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks.exe',
     [ValidateSet('default', 'namespace', 'all')]
     [string[]] $Modes = @('default', 'all'),
     [int]      $Concurrency = 1,

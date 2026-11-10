@@ -1,5 +1,5 @@
 {
-    "image": "mcr.microsoft.com/devcontainers/dotnet:dev-10.0",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:dev-11.0",
     "name": "Microsoft MCP Codespace",
     "features": {
         "ghcr.io/devcontainers/features/node:1": {

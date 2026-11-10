@@ -110,7 +110,7 @@ We especially welcome feedback on:
 If you encounter an unexpected issue while working with the Fabric MCP Server, check out our comprehensive [Troubleshooting Guide][fabric-troubleshooting] for common solutions and diagnostic steps.
 
 **Quick troubleshooting checklist:**
-1. ✅ **Verify .NET 10 SDK** is installed: `dotnet --version`
+1. ✅ **Verify .NET 11 SDK** is installed: `dotnet --version`
 2. ✅ **Check MCP client configuration** syntax and file paths
 3. ✅ **Ensure server builds** without errors: `dotnet build`
 4. ✅ **Test with simple commands** first to isolate issues
@@ -120,7 +120,7 @@ If you encounter an unexpected issue while working with the Fabric MCP Server, c
 
 **Common Issues:**
 - Empty console window (this is normal - server uses stdio)
-- .NET 10 runtime not found
+- .NET 11 runtime not found
 - MCP client not detecting tools
 - Path resolution problems in configuration
 
@@ -146,7 +146,7 @@ We welcome contributions! The Fabric MCP Server is part of the broader Microsoft
 ### Development Setup
 
 **Prerequisites:**
-- [Latest .NET SDK LTS](https://dotnet.microsoft.com/download/dotnet)
+- [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0)
 - Git
 
 **Build steps:**

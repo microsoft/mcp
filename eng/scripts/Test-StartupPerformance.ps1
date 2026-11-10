@@ -34,7 +34,7 @@
 
 .EXAMPLE
     # Run against a Release build with more samples
-    ./eng/scripts/Test-StartupPerformance.ps1 -Executable ./servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe -Runs 10
+    ./eng/scripts/Test-StartupPerformance.ps1 -Executable ./servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe -Runs 10
 
 .EXAMPLE
     # Compare against a saved baseline and fail on regression
@@ -61,9 +61,9 @@ $RepoRoot = (Get-Item (Join-Path $ScriptDir '../..')).FullName
 . (Join-Path $ScriptDir 'StartupPerformance.Common.ps1')
 
 if (-not $Executable) {
-    $Executable = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe'
+    $Executable = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/src/bin/Debug/net11.0/azmcp.exe'
     if ($IsLinux -or $IsMacOS) {
-        $Executable = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp'
+        $Executable = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/src/bin/Debug/net11.0/azmcp'
     }
 }
 
@@ -83,9 +83,9 @@ $OutputPath = Resolve-PerfOutputPath -Path $OutputPath -BaseDirectory $RepoRoot
 # ---------------------------------------------------------------------------
 $BenchmarkExeSuffix = if ($IsWindows) { '.exe' } else { '' }
 $BenchmarkExeBase   = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin'
-$BenchmarkExe       = Join-Path $BenchmarkExeBase "Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks$BenchmarkExeSuffix"
+$BenchmarkExe       = Join-Path $BenchmarkExeBase "Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks$BenchmarkExeSuffix"
 if (-not (Test-Path $BenchmarkExe)) {
-    $BenchmarkExe = Join-Path $BenchmarkExeBase "Debug/net10.0/Azure.Mcp.Server.PerformanceBenchmarks$BenchmarkExeSuffix"
+    $BenchmarkExe = Join-Path $BenchmarkExeBase "Debug/net11.0/Azure.Mcp.Server.PerformanceBenchmarks$BenchmarkExeSuffix"
 }
 if (-not (Test-Path $BenchmarkExe)) {
     Write-Error "Benchmark exe not found. Build first: dotnet build -c Release servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks"

@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Upgraded to .NET 11 and .NET base library dependencies 11.0.0. .NET tool installations now require the .NET 11 SDK or later."

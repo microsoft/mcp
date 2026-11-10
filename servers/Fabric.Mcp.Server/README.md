@@ -115,7 +115,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using the .NET tool (NuGet)<!-- remove-section: end remove_dotnet_config_sub_header -->
-- Install the [.NET 10 SDK or later](https://dotnet.microsoft.com/download/dotnet). Verify it with `dotnet --version`.
+- Install the [.NET 11 SDK or later](https://dotnet.microsoft.com/download/dotnet/11.0). Verify it with `dotnet --version`.
 - Install the published [Microsoft.Fabric.Mcp](https://www.nuget.org/packages/Microsoft.Fabric.Mcp) tool:
 
     ```powershell
@@ -141,7 +141,7 @@ Use one of the following options to configure your `mcp.json`:
     }
     ```
 
-Alternatively, .NET 10 supports running the published package on demand with [`dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec), without a permanent tool installation:
+Alternatively, .NET 11 supports running the published package on demand with [`dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec), without a permanent tool installation:
 
 ```powershell
 dnx Microsoft.Fabric.Mcp --source https://api.nuget.org/v3/index.json -- server start --mode all

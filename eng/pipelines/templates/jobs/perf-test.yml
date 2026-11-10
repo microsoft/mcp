@@ -75,7 +75,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Test-StartupPerformance.ps1
       arguments: >
-        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe'
         -Runs ${{ parameters.Runs }}
         -OutputPath '$(Build.ArtifactStagingDirectory)/perf/startup-e2e.json'
 
@@ -97,8 +97,8 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-ResourceUsage.ps1
       arguments: >
-        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
-        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
         -Modes default,all
         -Concurrency ${{ parameters.ResourceConcurrency }}
         -SoakSeconds ${{ parameters.ResourceSoakSeconds }}
@@ -121,8 +121,8 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-DispatchOverhead.ps1
       arguments: >
-        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
-        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
         -OutputPath '$(Build.ArtifactStagingDirectory)/perf/dispatch-overhead.json'
 
   # Dispatch regression gate — only active when DispatchBaselinePath is provided.
@@ -142,8 +142,8 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Measure-ConcurrencyScaling.ps1
       arguments: >
-        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe'
-        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+        -Executable '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Release/net11.0/azmcp.exe'
+        -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
         -Levels 1,2,4,8,16
         -DurationSeconds 10
         -OutputPath '$(Build.ArtifactStagingDirectory)/perf/concurrency-scaling.json'
@@ -172,7 +172,7 @@ jobs:
         pwsh: true
         filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PerfMicroBenchmarks.ps1
         arguments: >
-          -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
+          -BenchmarkExe '$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net11.0/Azure.Mcp.Server.PerformanceBenchmarks.exe'
           -ArtifactsPath '$(Build.ArtifactStagingDirectory)/perf/benchmark-dotnet'
           -Filter '${{ parameters.MicroBenchmarkFilter }}'
 

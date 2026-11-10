@@ -249,7 +249,7 @@ Point your `mcp.json` at the freshly built binary:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<repo>/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<repo>/servers/Azure.Mcp.Server/src/bin/Debug/net11.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }

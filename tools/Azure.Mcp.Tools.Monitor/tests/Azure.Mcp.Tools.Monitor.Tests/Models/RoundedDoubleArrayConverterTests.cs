@@ -37,6 +37,13 @@ public class RoundedDoubleArrayConverterTests
     [InlineData(new double[] { 1.2351 }, "[1.24]")]
     [InlineData(new double[] { -1.234567 }, "[-1.23]")]
     [InlineData(new double[] { -1.235 }, "[-1.24]")]
+    [InlineData(new double[] { 0.005 }, "[0]")]
+    [InlineData(new double[] { -0.005 }, "[-0]")]
+    [InlineData(new double[] { 1.225 }, "[1.23]")]
+    [InlineData(new double[] { 2.225 }, "[2.22]")]
+    [InlineData(new double[] { 2.235 }, "[2.24]")]
+    [InlineData(new double[] { -2.225 }, "[-2.22]")]
+    [InlineData(new double[] { -2.235 }, "[-2.24]")]
     public void Serialize_RoundsDoublesToTwoDecimalPlaces(double[] input, string expectedJson)
     {
         // Arrange
