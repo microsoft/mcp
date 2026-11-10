@@ -303,7 +303,13 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return _cachedVersion;
         }
 
-        var versionFile = Path.Combine(GetRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
+        var rootDirectory = GetRootDirectory();
+        var versionFile = Path.Combine(rootDirectory, "eng", "test-proxy-version.txt");
+        if (!File.Exists(versionFile))
+        {
+            versionFile = Path.Combine(rootDirectory, "eng", "common", "testproxy", "target_version.txt");
+        }
+
         if (!File.Exists(versionFile))
         {
             throw new FileNotFoundException($"Test proxy version file not found: {versionFile}");
