@@ -5,6 +5,9 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentGetCommandTests.cs**: Explicit workspace/assignment binding, read-only remote metadata, typed snapshots, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
+- **Services/WorkspaceRoleAssignmentGetServiceTests.cs**: One GET without lookups, matching assignment identity independent of principal ID, shared optional/future principal metadata, malformed/Unicode/duplicate data, exact byte/input/output depth limits, status/retry preservation, disposal/cancellation, and concurrent caller isolation
+- **WorkspaceRoleAssignmentGetMcpTests.cs**: Actual registration, schemas and all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no consent, rejected input/authentication before HTTP, explicit List-to-Get handoff, CLI option guards, and the exact single-result JSON-RPC depth boundary
 - **Commands/WorkspaceRoleAssignmentListCommandTests.cs**: Explicit workspace/token binding, read-only remote metadata, typed pages, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
 - **Services/WorkspaceRoleAssignmentListServiceTests.cs**: One GET per page, independent assignment/principal IDs, optional principal details and recursive profile parents, extensible strings, absent/null continuation, opaque token encoding, no enrichment or row-count cap, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, disposal/cancellation, and concurrent caller isolation
 - **WorkspaceRoleAssignmentListMcpTests.cs**: Real registration, input/output/learn schemas, all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no mutation consent, zero-I/O rejected input/authentication, explicit continuation, CLI duplicate/valueless rejection, and recursive metadata fitting JSON-RPC envelopes
@@ -134,6 +137,34 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Workspace Role-assignment Lookup
+
+`core_get-workspace-role-assignment` reads one assignment by explicit workspace and assignment UUIDs.
+The tests reuse the role-assignment/principal models, shared response validation, HTTP handler, and
+`WorkspaceRoleAssignmentTestData` fixtures with List. Assignment IDs and principal IDs deliberately
+differ. No workspace field is required in the returned assignment; only its own ID must match the
+requested assignment. The request has no body or query and never lists assignments to translate IDs,
+expands membership, enriches identities, pages, retries, polls, or changes roles.
+
+The single-result shape is `{ roleAssignment: { id, principal, role } }`, plus optional validated
+retry guidance. Shared validation preserves absent/null details, empty names, extensible strings,
+and recursive parent metadata without projecting arbitrary extensions. Get rejects malformed data,
+wrong assignment identity, duplicates, invalid Unicode, and over-budget responses. Non-200 responses
+are never read, so malformed error bodies cannot replace their HTTP status or Retry-After.
+
+Byte limits are tested at 1,048,576 and 1,048,577 bytes with and without Content-Length. Input depth
+is tested at 64 and 65. Unlike List's collection, Get has no array: 30 principals without a leaf
+detail object use 60 input levels and exactly 61 retained payload levels. A leaf detail object adds
+one level and is rejected, not dropped. MCP tests measure all payload levels and serialize the actual
+result shape inside JSON-RPC; namespace structured output reaches exactly 64 levels. All routes and
+legacy/compact/duplicated output modes remain usable at the accepted boundary.
+
+The API requires Member-or-higher access and delegated `Workspace.Read.All` or `Workspace.ReadWrite.All`.
+Host authentication composition is unchanged; existing `ItemMoveAuthenticationTests` exercise the
+complete host's per-request OBO credential bridge without network access or fallback. New tests use
+substituted credentials and HTTP, not live token exchange or RBAC. No approved workspace/assignment
+fixture or live authorization was supplied, so no live or recorded coverage is claimed.
 
 ## Workspace Role-assignment Listing
 

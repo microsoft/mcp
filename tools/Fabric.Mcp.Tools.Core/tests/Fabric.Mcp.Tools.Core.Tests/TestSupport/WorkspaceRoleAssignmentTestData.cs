@@ -11,7 +11,7 @@ using NSubstitute;
 
 namespace Fabric.Mcp.Tools.Core.Tests.TestSupport;
 
-internal static class WorkspaceRoleAssignmentListTestData
+internal static class WorkspaceRoleAssignmentTestData
 {
     internal const string WorkspaceId = "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb";
     internal const string AssignmentId = "bbbbbbbb-1111-2222-3333-cccccccccccc";
@@ -20,6 +20,8 @@ internal static class WorkspaceRoleAssignmentListTestData
     // cspell:disable-next-line
     internal const string DocumentedToken = "LDEsMTAwMDAwLDA%3D";
     internal static string CollectionUrl => $"{FabricEndpoints.GetFabricApiBaseUrl()}/workspaces/{WorkspaceId}/roleAssignments";
+    internal static string AssignmentUrl => $"{CollectionUrl}/{AssignmentId}";
+    internal static string AssignmentJson => JsonSerializer.Serialize(Assignment, CoreJsonContext.Default.FabricWorkspaceRoleAssignment);
     internal static FabricWorkspaceRoleAssignment Assignment => new(
         Guid.Parse(AssignmentId),
         new(Guid.Parse(PrincipalId), "User", "Analyst", new("analyst@example.invalid")),
@@ -43,14 +45,20 @@ internal static class WorkspaceRoleAssignmentListTestData
         return page.ToJsonString();
     }
 
-    internal static string NestedPrincipalPage(int count)
+    internal static string NestedPrincipalPage(int count) =>
+        new JsonObject { ["value"] = new JsonArray(JsonNode.Parse(NestedPrincipalAssignment(count))) }.ToJsonString();
+
+    internal static string NestedPrincipalAssignment(int count, bool leafDetails = true)
     {
         var principal = new JsonObject
         {
             ["id"] = PrincipalId,
-            ["type"] = "User",
-            ["userDetails"] = new JsonObject { ["userPrincipalName"] = "" }
+            ["type"] = "User"
         };
+        if (leafDetails)
+        {
+            principal["userDetails"] = new JsonObject { ["userPrincipalName"] = "" };
+        }
         for (var index = 1; index < count; index++)
         {
             principal = new JsonObject
@@ -62,7 +70,9 @@ internal static class WorkspaceRoleAssignmentListTestData
         }
         return new JsonObject
         {
-            ["value"] = new JsonArray(new JsonObject { ["id"] = AssignmentId, ["role"] = "Member", ["principal"] = principal })
+            ["id"] = AssignmentId,
+            ["role"] = "Member",
+            ["principal"] = principal
         }.ToJsonString();
     }
 
@@ -73,6 +83,13 @@ internal static class WorkspaceRoleAssignmentListTestData
             .Returns(new AccessToken("role-list-test-token", DateTimeOffset.MaxValue));
         return credential;
     }
+
+    internal static int JsonDepth(JsonElement value) => value.ValueKind switch
+    {
+        JsonValueKind.Object => 1 + value.EnumerateObject().Select(property => JsonDepth(property.Value)).DefaultIfEmpty().Max(),
+        JsonValueKind.Array => 1 + value.EnumerateArray().Select(JsonDepth).DefaultIfEmpty().Max(),
+        _ => 0
+    };
 
     internal static HttpResponseMessage Response(string json, HttpStatusCode status = HttpStatusCode.OK, string? retryAfter = null)
     {

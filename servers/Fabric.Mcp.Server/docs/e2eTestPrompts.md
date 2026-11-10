@@ -104,8 +104,10 @@ CannotMoveChildOnly is a failure, not permission to discover or move a parent. D
 move across workspaces, create folders, verify with a hidden read, poll, or retry automatically.
 These prompts are not authorization to discover customer IDs or move live items.
 
-Workspace role-assignment listing requires an explicit workspace UUID and Member-or-higher access.
-Return one complete page and use only its unchanged continuation token for a separate call to the same
+Workspace role-assignment reads require an explicit workspace UUID and Member-or-higher access.
+Get also requires the assignment UUID, which is independent of the principal ID. It sends one GET
+without listing assignments or translating IDs. Missing assignment context must come from the caller.
+For listing, return one complete page and use only its unchanged continuation token for a separate call to the same
 workspace. Missing/null terminal metadata and empty pages follow the Fabric pagination contract.
 Do not look up identities in Graph, expand groups, infer effective permissions, enrich rows, or mutate roles.
 These prompts do not authorize live workspace discovery, permission changes, or live/recorded validation.
@@ -180,6 +182,10 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_get-workspace | Get metadata for Fabric workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. | none |
 | core_get-workspace | Show the capacity, domain, and workspace identity for Fabric workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa. | none |
 | core_get-workspace | Get Fabric workspace aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa with workspace-specific API and OneLake endpoints. | none |
+| core_get-workspace-role-assignment | Get role assignment bbbbbbbb-1111-2222-3333-cccccccccccc in Fabric workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb with one GET. Do not list assignments first. | none |
+| core_get-workspace-role-assignment | Read the role assignment using my supplied workspace and assignment UUIDs through the read-only HTTP server. Preserve the principal details returned by Fabric without directory lookups, group expansion, or role changes. | context-required |
+| core_get-workspace-role-assignment | Get the explicitly identified assignment even though its principal ID differs from its assignment ID. Do not translate between IDs or calculate effective permissions. | context-required |
+| core_get-workspace-role-assignment | Explain the access-denied or throttled response from getting my role assignment. Report the required Member-or-higher access, delegated scopes, and retry guidance without changing permissions or automatically retrying. | context-required |
 | core_list-capacities | List the Fabric capacities where I am an administrator or contributor. | none |
 | core_list-capacities | Show one page of my accessible Fabric capacity IDs, display names, SKUs, regions, and states. | none |
 | core_list-capacities | Get the next page of Fabric capacities using continuation token ABCsMTAwMDAwLDA%3D from the previous response. | none |

@@ -77,6 +77,7 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSerializable(typeof(FabricGroupDetails))]
 [JsonSerializable(typeof(FabricServicePrincipalDetails))]
 [JsonSerializable(typeof(FabricServicePrincipalProfileDetails))]
+[JsonSerializable(typeof(WorkspaceRoleAssignmentGetCommandResult))]
 [JsonSerializable(typeof(WorkspaceRoleAssignmentListCommandResult))]
 [JsonSerializable(typeof(CreatedWorkspaceMetadata))]
 [JsonSerializable(typeof(CreatedWorkspaceTag))]

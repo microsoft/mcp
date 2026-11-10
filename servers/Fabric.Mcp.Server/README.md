@@ -350,8 +350,9 @@ The Fabric MCP Server exposes `core`, `jobs`, `docs`, `onelake`, and `datafactor
 `core` and `jobs` are separate top-level areas in the same Fabric MCP server. Core manages workspaces,
 items, definitions, capacities, and Fabric `/operations` LROs. It also supports logical workspace
 folder listing, creation, lookup, renaming, movement, and empty-folder deletion.
-Core also lists one page of workspace role assignments and returned principal metadata, without
-directory lookups, group-membership expansion, or role changes. Each additional page is a separate explicit call.
+Core also lists one page of workspace role assignments or gets one assignment by explicit workspace
+and assignment IDs, returning available principal metadata without directory lookups, group-membership
+expansion, or role changes. Each additional page or assignment lookup is a separate explicit call.
 The separate Items Move operation places an item and its child items in an existing folder or
 at the root of the same workspace, returning the complete moved-item metadata collection.
 Jobs submits an on-demand item job,
@@ -364,7 +365,7 @@ and does not cancel already-running jobs.
 Both areas reuse the same configured Fabric authentication and HTTP transport.
 
 ```powershell
-# Core-only: workspace management/role listing, folders, item/definition, capacity, and operation tools, but no Jobs commands.
+# Core-only: workspace management/role listing and lookup, folders, item/definition, capacity, and operation tools, but no Jobs commands.
 fabmcp server start --mode all --namespace core
 
 # Jobs-only: job submission, cancellation, instance listing/lookup, and schedule lookup/listing/creation/updates/deletion.
@@ -474,6 +475,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_get-operation-result` | Reads one completed operation's JSON or empty result, up to 1 MiB. Binary results are unsupported. |
 | `core_get-operation-state` | Reads one operation's current state and polling guidance, without polling or resubmitting the original request. |
 | `core_get-workspace` | Gets one workspace's metadata by UUID, including optional capacity, domain, identity, tags, and endpoints. Does not read item data or modify resources. |
+| `core_get-workspace-role-assignment` | Gets one role assignment and available principal metadata using explicit workspace and assignment UUIDs, without listing assignments, identity lookups, or role changes. |
 | `core_list-capacities` | Lists one page of accessible Fabric capacity metadata: ID, display name, SKU, region, and state, plus available continuation information. |
 | `core_list-folders` | Lists one complete page of logical workspace folders, with optional root folder and recursive filters, parent relationships, and explicit continuation. |
 | `core_list-items` | Lists one page of Fabric Core item metadata in a known workspace or folder, with optional type filtering and continuation information. |
@@ -961,6 +963,44 @@ without exposing raw backend errors. JSON is bounded to 1 MiB (1,048,576 bytes) 
 retained output is limited to 61 levels to leave room for MCP envelopes, including recursive profile
 parents. Malformed required fields, ambiguous duplicates, invalid Unicode, or an over-budget page fail
 safely without partial results or truncation. No live workspace, real OBO/RBAC, or recorded coverage is claimed.
+
+**Get Workspace Role Assignment (`core_get-workspace-role-assignment`)**
+
+Calls [Get Workspace Role Assignment](https://learn.microsoft.com/rest/api/fabric/core/workspaces/get-workspace-role-assignment)
+with one `GET /v1/workspaces/{workspaceId}/roleAssignments/{workspaceRoleAssignmentId}` and no body or query.
+This reads an existing workspace role assignment, not effective permissions or OneLake data access roles.
+
+| Argument | Required | Behavior |
+|---|---|---|
+| `workspace-id` | Yes | Nonempty workspace UUID; names are not resolved. |
+| `workspace-role-assignment-id` | Yes | Nonempty assignment UUID, not a principal-name or principal-ID lookup. |
+
+```powershell
+fabmcp core get-workspace-role-assignment --workspace-id aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb --workspace-role-assignment-id bbbbbbbb-1111-2222-3333-cccccccccccc
+```
+
+Returns `roleAssignment` with its matching `id`, `role`, and `principal` (`id` and `type`), plus validated
+`retryAfterSeconds` or `retryAfterUtc` when available. Assignment IDs and principal IDs are independent;
+the tool neither requires them to match nor lists assignments to translate them. No workspace ID is
+required on the returned assignment. The same optional principal details as List are retained, including
+recursive profile parents. Missing/null optional metadata stays omitted, empty names stay empty, and
+future role, principal type, and group type strings are preserved. Unknown extension fields are omitted.
+
+The caller needs **workspace Member or higher** access and, for delegated calls, **Workspace.Read.All**
+or **Workspace.ReadWrite.All**. Users, service principals, and managed identities are supported;
+service principals and managed identities also need the tenant setting permitting Fabric API access.
+The existing configured authentication is unchanged. The tool is available in read-only mode over
+stdio and HTTP, with no preliminary List/Get, Graph or directory lookup, membership expansion,
+enrichment, pagination, retry, polling, or role mutation.
+
+Only HTTP 200 is a successful snapshot. Errors preserve HTTP status and validated `Retry-After`
+without reading or exposing backend error bodies. JSON is bounded to 1 MiB (1,048,576 bytes) and
+64 input levels. The single-result payload allows 61 retained levels, leaving three for the namespace,
+tool-response, and JSON-RPC envelopes. For example, 30 recursively nested principals without leaf
+detail objects fit; adding leaf details exceeds that budget and fails without truncating metadata.
+Malformed or missing required data, mismatched assignment IDs, duplicates, invalid Unicode, and
+over-budget responses fail without partial results. No live workspace, real OBO/RBAC, or recorded
+coverage is claimed without an approved fixture and authorization.
 
 **Workspace folders**
 

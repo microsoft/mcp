@@ -282,6 +282,7 @@ public class ServerStartupTests
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_create-folder"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_delete-folder"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_get-folder"));
+        Assert.Equal(namespaces != "jobs", names.Contains("core_get-workspace-role-assignment"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-folders"));
         Assert.Equal(namespaces != "jobs", names.Contains("core_list-workspace-role-assignments"));
         Assert.Equal(namespaces != "jobs" && !readOnly, names.Contains("core_move-folder"));
@@ -290,6 +291,7 @@ public class ServerStartupTests
         Assert.DoesNotContain("jobs_create-folder", names);
         Assert.DoesNotContain("jobs_delete-folder", names);
         Assert.DoesNotContain("jobs_get-folder", names);
+        Assert.DoesNotContain("jobs_get-workspace-role-assignment", names);
         Assert.DoesNotContain("jobs_list-folders", names);
         Assert.DoesNotContain("jobs_list-workspace-role-assignments", names);
         Assert.DoesNotContain("jobs_move-folder", names);
@@ -399,6 +401,19 @@ public class ServerStartupTests
                 roleSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
             Assert.Contains("exactly one GET", roles.GetProperty("description").GetString());
             Assert.Contains("Member or higher", roles.GetProperty("description").GetString());
+            var assignment = Assert.Single(tools, tool => tool.GetProperty("name").GetString() == "core_get-workspace-role-assignment");
+            Assert.True(assignment.GetProperty("annotations").GetProperty("readOnlyHint").GetBoolean());
+            Assert.True(assignment.GetProperty("annotations").GetProperty("idempotentHint").GetBoolean());
+            Assert.False(assignment.GetProperty("annotations").GetProperty("destructiveHint").GetBoolean());
+            Assert.False(assignment.GetProperty("annotations").GetProperty("openWorldHint").GetBoolean());
+            var assignmentSchema = assignment.GetProperty("inputSchema");
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                assignmentSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).Order());
+            Assert.Equal(["workspace-id", "workspace-role-assignment-id"],
+                assignmentSchema.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order());
+            Assert.Contains("exactly one GET", assignment.GetProperty("description").GetString());
+            Assert.Contains("Assignment and principal IDs are independent", assignment.GetProperty("description").GetString());
+            Assert.Contains("Member or higher", assignment.GetProperty("description").GetString());
         }
         if (namespaces is not null)
         {

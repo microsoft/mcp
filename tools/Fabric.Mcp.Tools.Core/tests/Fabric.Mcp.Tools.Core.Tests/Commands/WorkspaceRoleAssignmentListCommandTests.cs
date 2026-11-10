@@ -10,7 +10,7 @@ using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using Xunit;
-using static Fabric.Mcp.Tools.Core.Tests.TestSupport.WorkspaceRoleAssignmentListTestData;
+using static Fabric.Mcp.Tools.Core.Tests.TestSupport.WorkspaceRoleAssignmentTestData;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Commands;
 

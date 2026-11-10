@@ -16,6 +16,15 @@ public interface IFabricCoreService
         string? continuationToken = null,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one workspace role assignment with one GET, without listing assignments, identity lookups, retries, or polling.</summary>
+    /// <param name="workspaceId">The nonempty UUID of the containing workspace.</param>
+    /// <param name="workspaceRoleAssignmentId">The nonempty assignment UUID, independent of its principal ID.</param>
+    /// <param name="cancellationToken">The token that cancels authentication and the read request.</param>
+    Task<WorkspaceRoleAssignmentGetCommandResult> GetWorkspaceRoleAssignmentAsync(
+        string workspaceId,
+        string workspaceRoleAssignmentId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Reads one complete page of workspace role assignments without directory lookups, group expansion, or implicit paging.</summary>
     /// <param name="workspaceId">The nonempty workspace UUID.</param>
     /// <param name="continuationToken">An unchanged token from a preceding page for the same workspace, or null for the first page.</param>
