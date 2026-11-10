@@ -4,6 +4,12 @@
 
 This document describes best practices for authoring release pipelines, with a focus on the release flow. The pipeline stages progress through validation, signing, and finally publishing of artifacts.
 
+## MSBuild Server in CI
+
+The .NET 11 SDK enables [MSBuild Server](https://learn.microsoft.com/visualstudio/msbuild/msbuild-server) by default. CI disables it by setting `DOTNET_CLI_USE_MSBUILD_SERVER` to the string `'false'`.
+
+Azure Pipelines stages inherit this setting from `templates/variables/globals.yml`. GitHub Actions workflows that build .NET projects, such as `.github/workflows/vally-eval.yml`, set it at workflow scope. Local builds retain the SDK default.
+
 ## Release Flow Principles
 
 The release flow is guided by the following requirements, in reverse order of execution:
