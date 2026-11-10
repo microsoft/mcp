@@ -129,7 +129,7 @@ public sealed class WorkspaceRoleAssignmentDeleteCommand(
         else if (ex is not WorkspaceRoleAssignmentDeleteRequestException { DeletionConfirmed: true })
         {
             message += ex is WorkspaceRoleAssignmentDeleteRequestException
-                { ResponseStatusCode: >= HttpStatusCode.BadRequest and < HttpStatusCode.InternalServerError and not HttpStatusCode.RequestTimeout }
+            { ResponseStatusCode: >= HttpStatusCode.BadRequest and < HttpStatusCode.InternalServerError and not HttpStatusCode.RequestTimeout }
                 ? ". Fabric rejected the request; no fallback permission change was attempted"
                 : ". The assignment may already have been deleted; inspect it with core_get-workspace-role-assignment separately before any new deletion. Do not retry blindly";
         }
