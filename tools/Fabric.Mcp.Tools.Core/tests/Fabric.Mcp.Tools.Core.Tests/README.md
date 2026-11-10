@@ -5,6 +5,10 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentUpdateCommandTests.cs**: Explicit existing-assignment/access intent, standard permission-replacement metadata, typed 200 output, Admin/last-admin guidance, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-update outcomes
+- **Validation/WorkspaceRoleAssignmentUpdateInputTests.cs**: Required role-only Update payload independent of nullable response metadata, assignment UUID semantics, unchanged extensible roles, strict Unicode, and exact serialized request budget
+- **Services/WorkspaceRoleAssignmentUpdateServiceTests.cs**: One PATCH without lookups or creation fallback, independent assignment/principal IDs, exact requested role, shared principal projection, confirmed update despite unusable metadata, exact byte/depth limits, safe status/retry guidance, cancellation/disposal, and concurrent caller isolation
+- **WorkspaceRoleAssignmentUpdateMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, separate Update-to-Get inspection, CLI guards, and exact response/JSON-RPC limits preserving confirmed 200
 - **Commands/WorkspaceRoleAssignmentAddCommandTests.cs**: Explicit principal/access intent, additive permission metadata, typed 201 output, no default role, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-creation guidance
 - **Validation/WorkspaceRoleAssignmentAddInputTests.cs**: The Add request contract independent of response models, writable group/profile details, rejection of read-only/unknown/duplicate fields, extensible strings, and exact UTF-8/serialized/depth budgets
 - **Services/WorkspaceRoleAssignmentAddServiceTests.cs**: One POST without lookups/conflict updates, independent assignment/principal IDs, matching requested access, shared response projection, confirmed creation on metadata failures, exact byte/depth limits, safe errors/retry, cancellation/disposal, and concurrent caller isolation
@@ -141,6 +145,42 @@ Keep each tool's registration tests focused on its own options, input/output sch
 operation behavior, validation before I/O, and read-only/consent behavior. Do not copy complete Core
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
+
+## Workspace Role-assignment Update
+
+`core_update-workspace-role-assignment` follows the public Update contract and bundled
+`platform/swagger.json`, `platform/definitions/platform.json`, and `common/definitions.json`.
+Workspace UUID, existing assignment UUID, and a non-null/nonempty replacement role are required.
+The PATCH body contains only role, never Add's principal JSON. Assignment and principal IDs are
+independent. Documented and future role strings pass unchanged; no trimming, inferred access,
+upgrade, name resolution, preflight, enrichment, creation fallback, retry, or polling is performed.
+Admin workspace access and delegated Workspace.ReadWrite.All are required, and Fabric prevents
+changes to the last admin's assignment. There is no documented standard LRO.
+
+Offline fixtures cover exactly one initiating PATCH, with zero requests for invalid input,
+authentication/pre-send failures, denied mutation consent, read-only mode, or namespace exclusion.
+The tool's destructive/idempotent permission-replacement metadata uses standard elicitation,
+requiring both accepted form action and accepted decision. Idempotence does not authorize replay.
+All/namespace/single routes, stdio/HTTP configurations, and legacy/compact/duplicated output modes
+retain truthful unsent, rejected, uncertain, and confirmed-update outcomes. A separate explicit Get
+is tested, with no hidden inspection in Update.
+
+Role/request validation is shared with Add only where contracts actually agree: explicit valid
+Unicode, no defaults, and the 1 MiB serialized request budget including escaping. Response models
+and the consumed reader are shared with List/Get/Add. Update requires the returned assignment ID
+and role to match the request, while preserving available principal metadata and future values.
+Response limits are tested at 1,048,576/1,048,577 bytes, 64/65 input levels, and 61/62 retained
+result levels. Thirty nested principals without leaf details fit exactly; adding one leaf-detail
+level fails inside the confirmed-update boundary. The actual loader output is serialized in the
+JSON-RPC shape, reaching exactly 64 levels for namespace structured output.
+
+HTTP 200 confirms update before metadata is read. Unreadable, malformed, oversized, mismatched,
+canceled, or unserializable metadata cannot erase that confirmation or suggest resubmission.
+Safe status/error-code/Retry-After handling, response/stream disposal, and concurrent caller
+isolation use the existing HTTP/credential fixtures. Add/Get/List and catalog regressions cover
+the consumed shared helpers; real host discovery and existing full-host credential-composition
+tests remain applicable. No live update, tenant change, real token exchange/OBO/RBAC, or recorded
+coverage is claimed: no approved workspace/assignment fixture or role-change authorization exists.
 
 ## Workspace Role-assignment Creation
 

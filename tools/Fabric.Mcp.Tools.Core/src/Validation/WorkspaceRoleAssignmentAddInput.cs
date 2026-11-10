@@ -10,9 +10,6 @@ namespace Fabric.Mcp.Tools.Core.Validation;
 
 internal static class WorkspaceRoleAssignmentAddInput
 {
-    internal const int MaxRequestBytes = FabricItemJsonInput.MaxObjectBytes;
-    private static readonly UTF8Encoding StrictUtf8 = new(false, true);
-
     internal static (Guid WorkspaceId, Guid PrincipalId, string PrincipalType, string Body) CreateRequest(
         string workspaceId, string principal, string role, CancellationToken cancellationToken = default)
     {
@@ -21,26 +18,16 @@ internal static class WorkspaceRoleAssignmentAddInput
         {
             throw new FabricItemInputException("--workspace-id must be a nonempty UUID.");
         }
-        if (string.IsNullOrWhiteSpace(role))
-        {
-            throw new FabricItemInputException("--role is required and must be a nonempty string. No access level is inferred.");
-        }
+        WorkspaceRoleAssignmentInput.ValidateRole(role);
         try
         {
-            if (role.Length > MaxRequestBytes || StrictUtf8.GetByteCount(role) > MaxRequestBytes)
-            {
-                throw new FabricItemInputException("--role exceeds the 1 MiB request budget.");
-            }
             var value = FabricItemJsonInput.ParseObject(principal, "--principal")
                 ?? throw new FabricItemInputException("--principal is required. Supply the intended principal id and type explicitly.");
             FabricCoreHttpHelpers.ValidateMetadataJson(value);
             ValidatePrincipal(value);
             var body = JsonSerializer.Serialize(new AddWorkspaceRoleAssignmentRequest(value, role),
                 CoreJsonContext.Default.AddWorkspaceRoleAssignmentRequest);
-            if (Encoding.UTF8.GetByteCount(body) > MaxRequestBytes)
-            {
-                throw new FabricItemInputException("The serialized role-assignment request must not exceed the 1 MiB (1,048,576 byte) tool budget.");
-            }
+            WorkspaceRoleAssignmentInput.ValidateRequestSize(body);
             cancellationToken.ThrowIfCancellationRequested();
             return (workspace, value.GetProperty("id").GetGuid(), value.GetProperty("type").GetString()!, body);
         }

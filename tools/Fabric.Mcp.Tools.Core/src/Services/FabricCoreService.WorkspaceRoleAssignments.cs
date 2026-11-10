@@ -11,6 +11,13 @@ public partial class FabricCoreService
     private const int MaxRetainedRoleAssignmentDepth = 61;
     private const string InvalidWorkspaceRoleAssignmentMessage = "Fabric returned invalid workspace role-assignment metadata.";
 
+    private static FabricWorkspaceRoleAssignment ReadWorkspaceRoleAssignment(ReadOnlyMemory<byte> body)
+    {
+        using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 64, AllowDuplicateProperties = false });
+        FabricCoreHttpHelpers.ValidateMetadataJson(document.RootElement);
+        return ReadWorkspaceRoleAssignment(document.RootElement);
+    }
+
     private static FabricWorkspaceRoleAssignment ReadWorkspaceRoleAssignment(JsonElement value)
     {
         var assignment = value.Deserialize(CoreJsonContext.Default.FabricWorkspaceRoleAssignment);
