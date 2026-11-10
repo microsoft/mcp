@@ -24,6 +24,7 @@ permissions:
 
 env:
   DOTNET_CLI_USE_MSBUILD_SERVER: 'false'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

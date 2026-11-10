@@ -10,6 +10,8 @@ The .NET 11 SDK enables [MSBuild Server](https://learn.microsoft.com/visualstudi
 
 Azure Pipelines stages inherit this setting from `templates/variables/globals.yml`. GitHub Actions workflows that build .NET projects, such as `.github/workflows/vally-eval.yml`, set it at workflow scope. Local builds retain the SDK default.
 
+CI also sets `DOTNET_CLI_TELEMETRY_OPTOUT` to `'true'` so short-lived .NET metadata queries do not wait for SDK telemetry delivery on network-isolated agents. This setting is separate from MCP server telemetry and does not change local development defaults.
+
 ## Release Flow Principles
 
 The release flow is guided by the following requirements, in reverse order of execution:
