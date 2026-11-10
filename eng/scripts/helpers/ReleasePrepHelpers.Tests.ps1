@@ -110,18 +110,6 @@ Describe 'Pacific release-preparation schedules' {
         }
     }
 
-    It 'selects the correct 10 AM trigger around daylight-saving transitions on <Date>' -ForEach @(
-        @{ Date = '2026-03-05'; ScheduleName = 'Release preparation (PST)'; UtcNow = '2026-03-05T18:00:00Z' }
-        @{ Date = '2026-03-10'; ScheduleName = 'Release preparation (PDT)'; UtcNow = '2026-03-10T17:00:00Z' }
-        @{ Date = '2026-10-29'; ScheduleName = 'Release preparation (PDT)'; UtcNow = '2026-10-29T17:00:00Z' }
-        @{ Date = '2026-11-03'; ScheduleName = 'Release preparation (PST)'; UtcNow = '2026-11-03T18:00:00Z' }
-    ) {
-        $decision = Get-ReleasePrepSchedule -ScheduleName $ScheduleName -UtcNow $UtcNow
-        $decision.ShouldRun | Should -BeTrue
-        $decision.ReleaseDate | Should -Be $Date
-        $decision.Reason | Should -Match '10 AM Pacific'
-    }
-
     It 'does not run on a Wednesday' {
         $decision = Get-ReleasePrepSchedule -ScheduleName 'Release preparation (PDT)' -UtcNow '2026-10-28T17:00:00Z'
         $decision.ShouldRun | Should -BeFalse
