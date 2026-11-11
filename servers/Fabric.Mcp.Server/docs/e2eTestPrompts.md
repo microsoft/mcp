@@ -235,6 +235,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_get-workspace-role-assignment | Read the role assignment using my supplied workspace and assignment UUIDs through the read-only HTTP server. Preserve the principal details returned by Fabric without directory lookups, group expansion, or role changes. | context-required |
 | core_get-workspace-role-assignment | Get the explicitly identified assignment even though its principal ID differs from its assignment ID. Do not translate between IDs or calculate effective permissions. | context-required |
 | core_get-workspace-role-assignment | Explain the access-denied or throttled response from getting my role assignment. Report the required Member-or-higher access, delegated scopes, and retry guidance without changing permissions or automatically retrying. | context-required |
+| core_invoke-api-request | Start a full refresh of Power BI dataset bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. Confirm the request with me first. | context-required |
+| core_invoke-api-request | Enable Query Scale-Out with automatic replicas on Power BI semantic model bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | context-required |
+| core_invoke-api-request | Get the TMDL definition of semantic model bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb with getDefinition, waiting up to 2 minutes for the result. | context-required |
+| core_invoke-api-request | Load the file Files/sales.csv into table sales in Lakehouse bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb, and return the operation receipt without waiting. | context-required |
+| core_invoke-api-request | Delete deployment pipeline cccccccc-2222-3333-4444-dddddddddddd. Report a conflict or forbidden response without retrying. | context-required |
+| core_invoke-api-request | Rename Fabric connection dddddddd-3333-4444-5555-eeeeeeeeeeee to Sales SQL by sending a PATCH request. | context-required |
 | core_list-capacities | List the Fabric capacities where I am an administrator or contributor. | none |
 | core_list-capacities | Show one page of my accessible Fabric capacity IDs, display names, SKUs, regions, and states. | none |
 | core_list-capacities | Get the next page of Fabric capacities using continuation token ABCsMTAwMDAwLDA%3D from the previous response. | none |

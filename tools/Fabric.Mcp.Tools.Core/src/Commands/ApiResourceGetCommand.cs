@@ -90,7 +90,7 @@ public sealed class ApiResourceGetCommand(
 
     protected override string GetErrorMessage(Exception ex) => GetApiErrorMessage(ex, GetStatusCode(ex));
 
-    internal static string GetApiErrorMessage(Exception ex, HttpStatusCode statusCode)
+    internal static string GetApiErrorMessage(Exception ex, HttpStatusCode statusCode, bool isWrite = false)
     {
         if (ex is ApiRequestInputException)
         {
@@ -113,8 +113,12 @@ public sealed class ApiResourceGetCommand(
                 HttpStatusCode.NotFound => "The REST resource was not found. Check the path, IDs, and the caller's access",
                 HttpStatusCode.MethodNotAllowed => "The REST endpoint does not support this method for the path",
                 HttpStatusCode.TooManyRequests => "The service throttled the request. Wait before retrying",
+                HttpStatusCode.Conflict => "The request conflicts with the resource's current state. Check the resource before retrying",
+                HttpStatusCode.RequestTimeout when isWrite => "The REST request was canceled or timed out. Check the resource's state before retrying; the service may still apply the change",
                 HttpStatusCode.RequestTimeout => "The REST request was canceled or timed out",
+                HttpStatusCode.GatewayTimeout when isWrite => "The REST request timed out. Check the resource's state before retrying; the service may still apply the change",
                 HttpStatusCode.GatewayTimeout => "The REST request timed out",
+                _ when isWrite => "The REST request could not be confirmed. Check the resource's state before retrying; do not automatically resubmit",
                 _ => "The REST request failed. Retry the request or check service availability"
             };
 

@@ -222,6 +222,195 @@ public sealed class FabricCoreServiceApiRequestTests
         Assert.Equal(ApiRequestFailure.InvalidJson, exception.Failure);
     }
 
+    [Theory]
+    [InlineData(null, "POST", "/v1/workspaces/w/items/i/getDefinition", """{"format":"TMDL"}""", "https://api.fabric.microsoft.com/v1/workspaces/w/items/i/getDefinition", "https://api.fabric.microsoft.com/.default")]
+    [InlineData("fabric", "patch", "/v1/connections/c", """[ {"op":"x"} ]""", "https://api.fabric.microsoft.com/v1/connections/c", "https://api.fabric.microsoft.com/.default")]
+    [InlineData("powerbi", "PUT", "/v1.0/myorg/groups/g/datasets/d", """{"queryScaleOutSettings":{"maxReadOnlyReplicas":-1}}""", "https://api.powerbi.com/v1.0/myorg/groups/g/datasets/d", "https://analysis.windows.net/powerbi/api/.default")]
+    [InlineData("powerbi", "DELETE", "/v1.0/myorg/groups/g/datasets/d", null, "https://api.powerbi.com/v1.0/myorg/groups/g/datasets/d", "https://analysis.windows.net/powerbi/api/.default")]
+    public async Task Invoke_SendsOneWriteWithUnchangedJsonBodyAndMatchingScope(
+        string? api, string method, string path, string? body, string expectedUrl, string expectedScope)
+    {
+        using var handler = new FabricCoreHttpMessageHandler(async (request, token) =>
+        {
+            Assert.Equal(method.ToUpperInvariant(), request.Method.Method);
+            Assert.Equal(expectedUrl, request.RequestUri?.OriginalString);
+            Assert.Equal("operation-test-token", request.Headers.Authorization?.Parameter);
+            Assert.Equal("application/json", Assert.Single(request.Headers.Accept).MediaType);
+            if (body is null)
+            {
+                Assert.True(request.Content is null || (await request.Content.ReadAsByteArrayAsync(token)).Length == 0);
+            }
+            else
+            {
+                Assert.Equal("application/json", request.Content?.Headers.ContentType?.MediaType);
+                Assert.Equal(body, await request.Content!.ReadAsStringAsync(token));
+            }
+            return FabricOperationTestData.JsonResponse("""{"id":"1"}""");
+        });
+        using var client = new HttpClient(handler);
+        var credential = FabricOperationTestData.Credential();
+
+        var result = await new FabricCoreService(client, credential).InvokeApiRequestAsync(
+            api, path, method, body, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(api ?? "fabric", result.Response?.Api);
+        Assert.Equal(200, result.Response?.Status);
+        Assert.Equal("1", result.Response?.Value.GetProperty("id").GetString());
+        Assert.Null(result.Operation);
+        Assert.Null(result.OperationResult);
+        Assert.Equal(1, handler.CallCount);
+        await credential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context => context.Scopes.SequenceEqual(new[] { expectedScope })),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("fabric", "/v1/connections", "GET", null, false, 120, false)]
+    [InlineData("fabric", "/v1/connections", "HEAD", null, false, 120, false)]
+    [InlineData("fabric", "https://evil.example/v1/connections", "POST", null, false, 120, false)]
+    [InlineData("powerbi", "/v1/connections", "POST", null, false, 120, false)]
+    [InlineData("fabric", "/v1/connections", "POST", "42", false, 120, false)]
+    [InlineData("fabric", "/v1/connections", "POST", "{", false, 120, false)]
+    [InlineData("powerbi", "/v1.0/myorg/gateways", "POST", null, true, 120, false)]
+    [InlineData("fabric", "/v1/connections", "POST", null, false, 120, true)]
+    [InlineData("fabric", "/v1/connections", "POST", null, true, 601, false)]
+    public async Task Invoke_RejectsInvalidInputBeforeAuthentication(
+        string api, string path, string method, string? body, bool sync, double maxWaitSeconds, bool operationResult)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => throw new InvalidOperationException("Must not send."));
+        using var client = new HttpClient(handler);
+        var credential = FabricOperationTestData.Credential();
+
+        await Assert.ThrowsAsync<ApiRequestInputException>(() => new FabricCoreService(client, credential).InvokeApiRequestAsync(
+            api, path, method, body, null, new(sync, maxWaitSeconds), operationResult, TestContext.Current.CancellationToken));
+
+        Assert.Equal(0, handler.CallCount);
+        Assert.Empty(credential.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task Invoke_FabricAcceptedWithoutSync_ReturnsReceiptWithoutPolling()
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.Accepted()));
+        using var client = new HttpClient(handler);
+
+        var result = await new FabricCoreService(client, FabricOperationTestData.Credential()).InvokeApiRequestAsync(
+            "fabric", "/v1/workspaces/w/lakehouses/l/tables/t/load", "POST", "{}",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(202, result.Response?.Status);
+        Assert.Equal(FabricOperationStatus.Accepted, result.Operation?.Status);
+        Assert.Equal(Guid.Parse(FabricOperationTestData.OperationId), result.Operation?.OperationId);
+        Assert.Equal(20, result.Operation?.ServerRetryAfterSeconds);
+        Assert.Null(result.OperationResult);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Invoke_FabricAcceptedWithSync_WaitsAndReadsResultOnlyWhenRequested(bool operationResult)
+    {
+        var clock = new OperationTestTimeProvider();
+        var paths = new List<string>();
+        using var handler = new FabricCoreHttpMessageHandler((request, _) =>
+        {
+            paths.Add($"{request.Method} {request.RequestUri?.AbsolutePath}");
+            return Task.FromResult(paths.Count switch
+            {
+                1 => FabricOperationTestData.Accepted(),
+                2 => FabricOperationTestData.JsonResponse("""{"status":"Succeeded"}"""),
+                _ => FabricOperationTestData.JsonResponse("""{"definition":{"parts":[]}}""")
+            });
+        });
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
+
+        var task = service.InvokeApiRequestAsync(
+            "fabric", "/v1/workspaces/w/items/i/getDefinition", "POST", null, null,
+            new(Sync: true), operationResult, TestContext.Current.CancellationToken);
+        await clock.WaitForTimerAsync(3, TestContext.Current.CancellationToken);
+        clock.Advance(3);
+        var result = await task.WaitAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(FabricOperationStatus.Succeeded, result.Operation?.Status);
+        var operationPath = $"/v1/operations/{FabricOperationTestData.OperationId}";
+        Assert.Equal(
+            operationResult
+                ? ["POST /v1/workspaces/w/items/i/getDefinition", $"GET {operationPath}", $"GET {operationPath}/result"]
+                : ["POST /v1/workspaces/w/items/i/getDefinition", $"GET {operationPath}"],
+            paths);
+        if (operationResult)
+        {
+            Assert.Equal(Guid.Parse(FabricOperationTestData.OperationId), result.OperationResult?.OperationId);
+            Assert.Equal(JsonValueKind.Array, result.OperationResult?.Value.GetProperty("definition").GetProperty("parts").ValueKind);
+        }
+        else
+        {
+            Assert.Null(result.OperationResult);
+        }
+    }
+
+    [Fact]
+    public async Task Invoke_CallerCancellationDuringWait_ThrowsResumableReceiptWithoutResubmitting()
+    {
+        var clock = new OperationTestTimeProvider();
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.Accepted()));
+        using var client = new HttpClient(handler);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
+
+        var task = service.InvokeApiRequestAsync(
+            "fabric", "/v1/workspaces/w/items/i/getDefinition", "POST", null, null, new(Sync: true), true, cancellation.Token);
+        await clock.WaitForTimerAsync(3, TestContext.Current.CancellationToken);
+        await cancellation.CancelAsync();
+
+        var exception = await Assert.ThrowsAsync<FabricOperationCanceledException>(() => task);
+        Assert.Equal(Guid.Parse(FabricOperationTestData.OperationId), exception.Operation.OperationId);
+        Assert.Equal("CallerCanceled", exception.Operation.Issue?.Code);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task Invoke_PowerBIAccepted_ReturnsLocationWithoutPolling()
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.Accepted) { Content = new ByteArrayContent([]) };
+        response.Headers.TryAddWithoutValidation("Location", "https://api.powerbi.com/v1.0/myorg/groups/g/datasets/d/refreshes/r");
+        response.Headers.TryAddWithoutValidation("Retry-After", "15");
+        response.Headers.TryAddWithoutValidation("x-ms-operation-id", FabricOperationTestData.OperationId);
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+        using var client = new HttpClient(handler);
+
+        var result = await new FabricCoreService(client, FabricOperationTestData.Credential()).InvokeApiRequestAsync(
+            "powerbi", "/v1.0/myorg/groups/g/datasets/d/refreshes", "POST", """{"type":"Full"}""",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(202, result.Response?.Status);
+        Assert.Equal("/v1.0/myorg/groups/g/datasets/d/refreshes/r", result.Response?.Location);
+        Assert.Equal(15, result.Response?.RetryAfterSeconds);
+        Assert.Null(result.Operation);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Conflict)]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task Invoke_ThrowsSanitizedErrorsWithoutRetrying(HttpStatusCode status)
+    {
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(FabricOperationTestData.JsonResponse(
+            """{"errorCode":"Conflict","message":"private backend detail"}""", status, "5")));
+        using var client = new HttpClient(handler);
+
+        var exception = await Assert.ThrowsAsync<ApiRequestException>(() => new FabricCoreService(client, FabricOperationTestData.Credential())
+            .InvokeApiRequestAsync("fabric", "/v1/connections", "POST", "{}", cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(status, exception.StatusCode);
+        Assert.Equal("Conflict", exception.ErrorCode);
+        Assert.DoesNotContain("private", exception.Message);
+        Assert.Equal(1, handler.CallCount);
+    }
+
     private static async Task<FabricApiResponse> SendAsync(
         HttpResponseMessage response, string api, string path, int? maxResponseBytes = null, Action? onSend = null)
     {

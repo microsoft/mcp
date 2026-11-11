@@ -141,4 +141,71 @@ public sealed class ApiRequestInputTests
     [InlineData("powerbi", "https://api.fabric.microsoft.com/v1/workspaces")]
     public void GetRelativeLink_DropsOtherHostsAndUnsafePaths(string api, string? link) =>
         Assert.Null(ApiRequestInput.GetRelativeLink(ApiRequestInput.ParseApi(api), link));
+    [Theory]
+    [InlineData("POST", "POST")]
+    [InlineData(" put ", "PUT")]
+    [InlineData("Patch", "PATCH")]
+    [InlineData("delete", "DELETE")]
+    public void ParseWriteMethod_AcceptsWriteMethods(string method, string expected) =>
+        Assert.Equal(expected, ApiRequestInput.ParseWriteMethod(method).Method);
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("GET")]
+    [InlineData("HEAD")]
+    [InlineData("OPTIONS")]
+    [InlineData("TRACE")]
+    [InlineData("PO ST")]
+    public void ParseWriteMethod_RejectsOtherMethods(string? method)
+    {
+        var exception = Assert.Throws<ApiRequestInputException>(() => ApiRequestInput.ParseWriteMethod(method));
+        Assert.Equal(ApiRequestInput.MethodMessage, exception.Message);
+        Assert.Contains("core_get-api-resource", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    [InlineData("""{"type":"Full","commitMode":"transactional","objects":[{"table":"Sales"}]}""")]
+    [InlineData("""[{"id":"1"},{"id":"2"}]""")]
+    public void ParseBody_ReturnsJsonObjectsAndArraysUnchanged(string? body) =>
+        Assert.Same(body, ApiRequestInput.ParseBody(body));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("null")]
+    [InlineData("42")]
+    [InlineData("\"text\"")]
+    [InlineData("true")]
+    [InlineData("{")]
+    [InlineData("{\"a\":1}{}")]
+    public void ParseBody_RejectsScalarsAndInvalidJson(string body) =>
+        Assert.Equal(ApiRequestInput.BodyMessage, Assert.Throws<ApiRequestInputException>(() => ApiRequestInput.ParseBody(body)).Message);
+
+    [Fact]
+    public void ParseBody_EnforcesDepthAndSizeLimits()
+    {
+        Assert.NotNull(ApiRequestInput.ParseBody(new string('[', 32) + new string(']', 32)));
+        Assert.Throws<ApiRequestInputException>(() => ApiRequestInput.ParseBody(new string('[', 33) + new string(']', 33)));
+
+        var atLimit = "[\"" + new string('a', ApiRequestInput.MaxBodyBytes - 4) + "\"]";
+        Assert.NotNull(ApiRequestInput.ParseBody(atLimit));
+        Assert.Throws<ApiRequestInputException>(() => ApiRequestInput.ParseBody("[\"" + new string('a', ApiRequestInput.MaxBodyBytes - 3) + "\"]"));
+        // Size is measured in UTF-8 bytes, not characters.
+        Assert.Throws<ApiRequestInputException>(() => ApiRequestInput.ParseBody("[\"" + new string('\u00e9', ApiRequestInput.MaxBodyBytes / 2) + "\"]"));
+    }
+
+    [Theory]
+    [InlineData("fabric", false, 120, false, null)]
+    [InlineData("fabric", true, 600, true, null)]
+    [InlineData("powerbi", false, 120, false, null)]
+    [InlineData("fabric", false, 120, true, ApiRequestInput.OperationResultMessage)]
+    [InlineData("powerbi", true, 120, false, ApiRequestInput.SyncMessage)]
+    [InlineData("fabric", true, 0, false, ApiRequestInput.MaxWaitSecondsMessage)]
+    [InlineData("fabric", true, 600.5, false, ApiRequestInput.MaxWaitSecondsMessage)]
+    [InlineData("fabric", true, double.NaN, false, ApiRequestInput.MaxWaitSecondsMessage)]
+    public void GetWaitOptionsError_ValidatesCombinations(string api, bool sync, double maxWaitSeconds, bool operationResult, string? expected) =>
+        Assert.Equal(expected, ApiRequestInput.GetWaitOptionsError(ApiRequestInput.ParseApi(api), sync, maxWaitSeconds, operationResult));
 }
