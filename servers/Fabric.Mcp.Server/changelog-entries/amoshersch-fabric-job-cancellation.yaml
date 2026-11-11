@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added jobs_cancel-item-job-instance to request cancellation of one known Fabric item job, returning cancellation-request acceptance and retry guidance without polling or automatic retries."

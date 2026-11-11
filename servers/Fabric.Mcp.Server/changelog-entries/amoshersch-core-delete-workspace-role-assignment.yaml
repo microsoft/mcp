@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_delete-workspace-role-assignment to remove one explicitly identified workspace role assignment with a single request, standard mutation confirmation, and a deletion receipt without identity lookups or automatic retries."
