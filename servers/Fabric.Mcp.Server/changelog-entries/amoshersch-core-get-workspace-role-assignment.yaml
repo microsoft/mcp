@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_get-workspace-role-assignment to read one workspace role assignment and available principal metadata by explicit workspace and assignment IDs, without listing assignments, directory lookups, group expansion, or role changes."
