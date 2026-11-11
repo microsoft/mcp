@@ -12,6 +12,7 @@ using Azure.ResourceManager.RecoveryServices.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
@@ -334,59 +335,34 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
 
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-
-        if (string.IsNullOrEmpty(containerName))
+        if (RsvProtectedItemMatcher.RequiresResolution(protectedItemName, containerName))
         {
-            // Search by both internal RSV name and friendly/datasource name
+            // UX-1: friendly names (or no container) are resolved from the list, using --container as a hint.
             var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
-            var found = items.FirstOrDefault(i =>
-                (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
-                MatchesFriendlyName(i, protectedItemName));
-            return found ?? throw new KeyNotFoundException(
-                $"Protected item '{protectedItemName}' not found in vault '{vaultName}'. " +
-                "Use the full internal name from 'azurebackup protecteditem get' list output, " +
-                "or provide --container to look up by container/item path.");
+            return RsvProtectedItemMatcher.Resolve(items, protectedItemName, containerName, vaultName);
         }
 
+        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var itemId = BackupProtectedItemResource.CreateResourceIdentifier(
-            subscription, resourceGroup, vaultName, FabricName, containerName, protectedItemName);
+            subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName);
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
-        var item = await itemResource.GetAsync(cancellationToken: cancellationToken);
-
-        return MapToProtectedItemInfo(item.Value.Data);
-    }
-
-    /// <summary>
-    /// Checks whether a protected item matches a user-provided friendly name.
-    /// A friendly name can be the VM name, file share name, or database name extracted
-    /// from the full RSV internal name or the datasource resource ID.
-    /// </summary>
-    private static bool MatchesFriendlyName(ProtectedItemInfo item, string friendlyName)
-    {
-        // Check datasource ID ends with the friendly name (e.g., /virtualMachines/mcp-test-vm)
-        if (!string.IsNullOrEmpty(item.DatasourceId))
+        try
         {
-            var datasourceResourceName = item.DatasourceId.Split('/').LastOrDefault();
-            if (string.Equals(datasourceResourceName, friendlyName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            var item = await itemResource.GetAsync(cancellationToken: cancellationToken);
+            return MapToProtectedItemInfo(item.Value.Data);
         }
-
-        // Check if the RSV internal name contains the friendly name as the last segment
-        // RSV names follow patterns like: VM;iaasvmcontainerv2;rg;vmname
-        if (!string.IsNullOrEmpty(item.Name))
+        catch (RequestFailedException ex) when (RsvProtectedItemMatcher.IsItemLookupFailure(ex))
         {
-            var nameParts = item.Name.Split(';');
-            if (nameParts.Length > 0 &&
-                string.Equals(nameParts[^1], friendlyName, StringComparison.OrdinalIgnoreCase))
+            // UX-1: qualified-looking names that the service still rejects get one list-based resolution.
+            var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+            var candidates = RsvProtectedItemMatcher.FindCandidates(items, protectedItemName, containerName);
+            if (candidates.Count != 1)
             {
-                return true;
+                throw;
             }
-        }
 
-        return false;
+            return candidates[0];
+        }
     }
 
     public async Task<List<ProtectedItemInfo>> ListProtectedItemsAsync(
@@ -577,22 +553,35 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(protectedItemName), protectedItemName),
             (nameof(recoveryPointId), recoveryPointId));
 
-        if (string.IsNullOrEmpty(containerName))
+        var target = RsvProtectedItemMatcher.RequiresResolution(protectedItemName, containerName)
+            ? await ResolveProtectedItemTargetAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken)
+            : (Container: containerName!, Item: protectedItemName, Resolved: false);
+
+        try
         {
-            // Auto-discover container from protected items list
-            var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
-            containerName = resolvedItem.ContainerName;
-            protectedItemName = resolvedItem.Name;
+            return await GetRecoveryPointCoreAsync(target.Container, target.Item);
+        }
+        catch (RequestFailedException ex) when (!target.Resolved && RsvProtectedItemMatcher.IsItemLookupFailure(ex))
+        {
+            var retry = await TryResolveProtectedItemTargetAsync(
+                vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken);
+            if (retry is null || IsSameTarget(retry.Value, target.Container, target.Item))
+            {
+                throw;
+            }
+
+            return await GetRecoveryPointCoreAsync(retry.Value.Container, retry.Value.Item);
         }
 
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var rpId = BackupRecoveryPointResource.CreateResourceIdentifier(
-            subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName, recoveryPointId);
-        var rpResource = armClient.GetBackupRecoveryPointResource(rpId);
-        var rp = await rpResource.GetAsync(cancellationToken);
-
-        return MapToRecoveryPointInfo(rp.Value.Data);
+        async Task<RecoveryPointInfo> GetRecoveryPointCoreAsync(string container, string item)
+        {
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+            var rpId = BackupRecoveryPointResource.CreateResourceIdentifier(
+                subscription, resourceGroup, vaultName, FabricName, container, item, recoveryPointId);
+            var rpResource = armClient.GetBackupRecoveryPointResource(rpId);
+            var rp = await rpResource.GetAsync(cancellationToken);
+            return MapToRecoveryPointInfo(rp.Value.Data);
+        }
     }
 
     public async Task<List<RecoveryPointInfo>> ListRecoveryPointsAsync(
@@ -606,26 +595,40 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(protectedItemName), protectedItemName));
 
-        if (string.IsNullOrEmpty(containerName))
+        var target = RsvProtectedItemMatcher.RequiresResolution(protectedItemName, containerName)
+            ? await ResolveProtectedItemTargetAsync(vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken)
+            : (Container: containerName!, Item: protectedItemName, Resolved: false);
+
+        try
         {
-            // Auto-discover container from protected items list
-            var resolvedItem = await ResolveProtectedItemContainerAsync(
-                vaultName, resourceGroup, subscription, protectedItemName, tenant, cancellationToken);
-            containerName = resolvedItem.ContainerName;
-            protectedItemName = resolvedItem.Name;
+            return await ListRecoveryPointsCoreAsync(target.Container, target.Item);
+        }
+        catch (RequestFailedException ex) when (!target.Resolved && RsvProtectedItemMatcher.IsItemLookupFailure(ex))
+        {
+            var retry = await TryResolveProtectedItemTargetAsync(
+                vaultName, resourceGroup, subscription, protectedItemName, containerName, tenant, cancellationToken);
+            if (retry is null || IsSameTarget(retry.Value, target.Container, target.Item))
+            {
+                throw;
+            }
+
+            return await ListRecoveryPointsCoreAsync(retry.Value.Container, retry.Value.Item);
         }
 
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var itemId = BackupProtectedItemResource.CreateResourceIdentifier(
-            subscription, resourceGroup, vaultName, FabricName, containerName!, protectedItemName);
-        var itemResource = armClient.GetBackupProtectedItemResource(itemId);
-        var collection = itemResource.GetBackupRecoveryPoints();
+        async Task<List<RecoveryPointInfo>> ListRecoveryPointsCoreAsync(string container, string item)
+        {
+            var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
+            var itemId = BackupProtectedItemResource.CreateResourceIdentifier(
+                subscription, resourceGroup, vaultName, FabricName, container, item);
+            var itemResource = armClient.GetBackupProtectedItemResource(itemId);
+            var collection = itemResource.GetBackupRecoveryPoints();
 
-        // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
-        return await EnumerateTolerantAsync(
-            collection.GetAllAsync(cancellationToken: cancellationToken),
-            static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
-            cancellationToken);
+            // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
+            return await EnumerateTolerantAsync(
+                collection.GetAllAsync(cancellationToken: cancellationToken),
+                static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
+                cancellationToken);
+        }
     }
 
     /// <summary>
@@ -675,30 +678,42 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     }
 
     /// <summary>
-    /// Resolves the container name and internal protected item name for an RSV protected item.
-    /// When the user provides a friendly name (e.g., "mcp-test-vm"), this searches the protected
-    /// items list to find the matching item with its container information.
+    /// Resolves the container and internal item name for an RSV protected item from the protected item list (UX-1).
+    /// Friendly names such as a VM name are accepted, and <paramref name="containerHint"/> narrows the match.
     /// </summary>
-    private async Task<ProtectedItemInfo> ResolveProtectedItemContainerAsync(
+    /// <exception cref="KeyNotFoundException">No listed item matches.</exception>
+    /// <exception cref="CommandValidationException">More than one listed item matches.</exception>
+    private async Task<(string Container, string Item, bool Resolved)> ResolveProtectedItemTargetAsync(
         string vaultName, string resourceGroup, string subscription,
-        string protectedItemName, string? tenant,
+        string protectedItemName, string? containerHint, string? tenant,
         CancellationToken cancellationToken)
     {
         var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
-        var found = items.FirstOrDefault(i =>
-            (!string.IsNullOrEmpty(i.Name) && i.Name.Equals(protectedItemName, StringComparison.OrdinalIgnoreCase)) ||
-            MatchesFriendlyName(i, protectedItemName));
+        var match = RsvProtectedItemMatcher.Resolve(items, protectedItemName, containerHint, vaultName);
+        return (RsvProtectedItemMatcher.GetContainerName(match)!, match.Name, true);
+    }
 
-        if (found is null || string.IsNullOrEmpty(found.ContainerName))
+    /// <summary>
+    /// Like <see cref="ResolveProtectedItemTargetAsync"/>, but returns null instead of throwing when there is no unique match.
+    /// </summary>
+    private async Task<(string Container, string Item, bool Resolved)?> TryResolveProtectedItemTargetAsync(
+        string vaultName, string resourceGroup, string subscription,
+        string protectedItemName, string? containerHint, string? tenant,
+        CancellationToken cancellationToken)
+    {
+        var items = await ListProtectedItemsAsync(vaultName, resourceGroup, subscription, tenant, cancellationToken);
+        var candidates = RsvProtectedItemMatcher.FindCandidates(items, protectedItemName, containerHint);
+        if (candidates.Count != 1 || RsvProtectedItemMatcher.GetContainerName(candidates[0]) is not { } container)
         {
-            throw new ArgumentException(
-                $"Could not resolve container for protected item '{protectedItemName}' in vault '{vaultName}'. " +
-                "Provide --container explicitly (format: IaasVMContainer;iaasvmcontainerv2;{rg};{name}), " +
-                "or use the full internal name from 'azurebackup protecteditem get' list output.");
+            return null;
         }
 
-        return found;
+        return (container, candidates[0].Name, true);
     }
+
+    private static bool IsSameTarget((string Container, string Item, bool Resolved) target, string container, string item) =>
+        string.Equals(target.Container, container, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(target.Item, item, StringComparison.OrdinalIgnoreCase);
 
 
     public async Task<OperationResult> UpdateVaultAsync(
