@@ -8,6 +8,8 @@ using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -28,7 +30,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         A Fabric 202 returns an operation receipt; with sync=true, waits up to max-wait-seconds (default 120, maximum 600),
         and operation-result=true also returns the operation's JSON result. Resume pending operations with
         get-operation-state and get-operation-result, never by resubmitting. A Power BI 202 returns location and
-        retryAfterSeconds without polling. Requires the permissions the endpoint documents for the caller.
+        retryAfterSeconds without polling. Job and schedule endpoints are rejected unless the server exposes the jobs namespace.
+        Requires the permissions the endpoint documents for the caller.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -39,17 +42,19 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     Secret = true)]
 public sealed class ApiRequestInvokeCommand(
     ILogger<ApiRequestInvokeCommand> logger,
-    IFabricCoreService fabricCoreService) : FabricCoreCommand<ApiRequestInvokeOptions, ApiRequestInvokeCommandResult>
+    IFabricCoreService fabricCoreService,
+    IOptions<ServerRuntimeConfiguration> configuration) : FabricCoreCommand<ApiRequestInvokeOptions, ApiRequestInvokeCommandResult>
 {
     private readonly ILogger<ApiRequestInvokeCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     public override JsonTypeInfo<ApiRequestInvokeCommandResult> ResultTypeInfo => CoreJsonContext.Default.ApiRequestInvokeCommandResult;
 
     public override void ValidateOptions(ApiRequestInvokeOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        ApiResourceGetCommand.ValidateTarget(options.Api, options.Path, options.MaxResponseBytes, validationResult);
+        ApiResourceGetCommand.ValidateTarget(options.Api, options.Path, options.MaxResponseBytes, _configuration.Value, validationResult);
         if (ApiRequestInput.FindWriteMethod(options.Method) is null)
         {
             validationResult.Errors.Add(ApiRequestInput.MethodMessage);
@@ -99,23 +104,31 @@ public sealed class ApiRequestInvokeCommand(
     protected override void HandleException(CommandContext context, Exception ex)
     {
         base.HandleException(context, ex);
-        if (ex is FabricOperationCanceledException canceled)
+        var operation = ex switch
         {
-            SetResult(context, new(null, canceled.Operation));
-            context.Response.Message = canceled.Message;
+            FabricOperationCanceledException canceled => canceled.Operation,
+            FabricOperationReceiptException accepted => accepted.Operation,
+            _ => null
+        };
+        if (operation is not null)
+        {
+            // Fabric accepted the request, so return the receipt to resume tracking instead of resubmitting.
+            SetResult(context, new(null, operation));
+            context.Response.Message = ex.Message;
         }
     }
 
     protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ApiRequestInputException => HttpStatusCode.BadRequest,
+        FabricOperationReceiptException => HttpStatusCode.BadGateway,
         OperationCanceledException => HttpStatusCode.RequestTimeout,
         _ => base.GetStatusCode(ex)
     };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        FabricOperationCanceledException => ex.Message,
+        FabricOperationCanceledException or FabricOperationReceiptException => ex.Message,
         _ => ApiResourceGetCommand.GetApiErrorMessage(ex, GetStatusCode(ex), isWrite: true)
     };
 }

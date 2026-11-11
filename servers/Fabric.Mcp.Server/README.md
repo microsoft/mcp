@@ -400,8 +400,10 @@ Read-only mode hides and denies Run, Cancel, Create Schedule, Update Schedule, a
 Get Schedule, and both listing tools. Schedule lookup and listing retain the host's sensitive-data confirmation
 because their output may include configuration, owner information, and job execution data.
 Read-only Core retains List/Get Workspace Role Assignment but hides and denies Add Workspace Role Assignment.
-Read-only Core also retains `core_get-api-resource`, which only sends GET requests to the allowlisted Fabric and Power BI REST hosts,
-but hides and denies `core_invoke-api-request`, which sends POST, PUT, PATCH, or DELETE requests.
+Read-only Core also retains `core_get-api-resource`, which only sends GET requests to the allowlisted Fabric and Power BI REST hosts
+and keeps the host's sensitive-data confirmation, but hides and denies `core_invoke-api-request`, which sends POST, PUT, PATCH, or DELETE requests.
+Both generic REST tools reject job and schedule endpoints (any `jobs` path segment) unless the server also exposes the Jobs area,
+so Core-only selection cannot reach Jobs operations through them.
 
 ### API Documentation & Best Practices
 
@@ -482,7 +484,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_delete-workspace-role-assignment` | Deletes one existing assignment by workspace and assignment UUIDs. Requires Admin access; returns a deletion receipt without identity lookup, cascading removal, retry, or polling. |
-| `core_get-api-resource` | Sends one GET to an allowlisted Fabric (`/v1/...`) or Power BI (`/v1.0/myorg/...`) REST path that has no dedicated tool, such as gateways, connections, dataflows, deployment pipelines, refresh history, or admin APIs. Returns bounded JSON and a relative `nextPath` for paging. |
+| `core_get-api-resource` | Sends one GET to an allowlisted Fabric (`/v1/...`) or Power BI (`/v1.0/myorg/...`) REST path that has no dedicated tool, such as gateways, connections, dataflows, deployment pipelines, refresh history, or admin APIs. Returns bounded JSON and a relative `nextPath` for paging. Requires sensitive-data consent. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-folder` | Gets one logical workspace folder's metadata and available parent relationship using explicit workspace and folder UUIDs, without related lookups. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
@@ -1301,21 +1303,26 @@ fabmcp core get-api-resource --api powerbi --path "/v1.0/myorg/groups/aaaaaaaa-0
 
 The path is validated before authentication. Absolute URLs, other hosts, empty or `.`/`..` segments,
 encoded `/`, `\`, `.`, or `%` in the path, invalid escapes, non-ASCII characters, whitespace, and
-fragments are rejected, and the request URI must keep the exact validated path. The tool never sends a
-body, follows redirects, retries, or polls.
+fragments are rejected, and the request URI must keep the exact validated path. Paths with a `jobs`
+segment (job instances and schedules) are rejected unless the server exposes the `jobs` namespace; use the
+Jobs tools for those operations. The tool never sends a body, follows redirects, retries, or polls.
 
 The result contains `api`, `status`, `hasBody`, the JSON `value`, and the `requestId` when available.
 A same-host `continuationUri` (Fabric) or `@odata.nextLink` (Power BI) is returned as a relative
 `nextPath` that can be passed back as `path`; links to other hosts are dropped. A 202 response returns
 its same-host `location` and `retryAfterSeconds` without polling. Larger responses fail instead of being
-truncated, non-JSON responses are not downloaded, and a UTF-8 byte order mark is skipped. Errors return
+truncated, non-JSON responses are not downloaded, and a UTF-8 byte order mark is skipped. Response JSON is
+limited to **59 nesting levels** so the value still fits inside the MCP output envelopes; deeper JSON fails
+as invalid JSON instead of breaking the response. Errors return
 only the HTTP status, a validated error code (Fabric `errorCode` or Power BI `error.code`), the request
 ID, and Retry-After guidance; backend error messages are never returned.
 
 The caller needs the permissions the endpoint documents, such as Fabric administrator rights for admin
 APIs. Power BI calls work with local credentials (Azure CLI, VS Code, or browser sign-in). In remote
 HTTP mode with on-behalf-of authentication, the app registration also needs delegated permissions and
-consent for the **Power BI Service** API, in addition to Fabric.
+consent for the **Power BI Service** API, in addition to Fabric. Because REST responses can include
+sensitive data such as schedule configuration or owner details, the tool requires the host's
+sensitive-data confirmation, including in read-only mode.
 
 **Invoke API Request (`core_invoke-api-request`)**
 
@@ -1346,7 +1353,9 @@ The path, method, body, and option combination are validated before authenticati
 is sent; it is never retried or resubmitted, and redirects are not followed. The result contains the same
 `response` as `core_get-api-resource`. A Fabric 202 response also returns the standard `operation` receipt;
 with `sync`, the tool polls the operation state within the wait budget and, with `operation-result`, returns
-the `operationResult`. If the wait expires or the caller cancels it, the receipt is still returned; resume with
+the `operationResult`, which has the same 59-level JSON limit. If the wait expires, the caller cancels it,
+or the 202 response body cannot be read (for example malformed, oversized, or non-JSON), the receipt is still
+returned with a null `response`; resume with
 `core_get-operation-state` and `core_get-operation-result` instead of resubmitting the request. A Power BI
 202 response returns its relative `location` and `retryAfterSeconds` without polling. Errors are sanitized in
 the same way as `core_get-api-resource`. Because responses such as `getDefinition` can contain secrets,

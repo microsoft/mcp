@@ -8,6 +8,8 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Fabric.Mcp.Tools.Core.Validation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -33,8 +35,10 @@ public sealed class ApiRequestInvokeCommandTests() : CommandUnitTestsBase<ApiReq
         Assert.Contains("confirm the method, path, and body", Command.Description);
         Assert.Same(CoreJsonContext.Default.ApiRequestInvokeCommandResult, Command.ResultTypeInfo);
         Assert.Equal(["--method", "--path"], CommandDefinition.Options.Where(option => option.Required).Select(option => option.Name).Order());
-        Assert.Throws<ArgumentNullException>(() => new ApiRequestInvokeCommand(null!, Service));
-        Assert.Throws<ArgumentNullException>(() => new ApiRequestInvokeCommand(Logger, null!));
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        Assert.Throws<ArgumentNullException>(() => new ApiRequestInvokeCommand(null!, Service, configuration));
+        Assert.Throws<ArgumentNullException>(() => new ApiRequestInvokeCommand(Logger, null!, configuration));
+        Assert.Throws<ArgumentNullException>(() => new ApiRequestInvokeCommand(Logger, Service, null!));
     }
 
     [Fact]
@@ -121,6 +125,18 @@ public sealed class ApiRequestInvokeCommandTests() : CommandUnitTestsBase<ApiReq
     }
 
     [Fact]
+    public async Task ExecuteAsync_RejectsJobsEndpointsWhenJobsNamespaceIsHidden()
+    {
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["core"] }));
+
+        var response = await ExecuteCommandAsync("--path", "/v1/workspaces/w/items/i/jobs/instances?jobType=DefaultJob", "--method", "POST");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("jobs namespace", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_RejectsGetWithPointerToReadTool()
     {
         var response = await ExecuteCommandAsync("--path", "/v1/connections", "--method", "GET");
@@ -156,6 +172,25 @@ public sealed class ApiRequestInvokeCommandTests() : CommandUnitTestsBase<ApiReq
         var result = ValidateAndDeserializeResponse(response, CoreJsonContext.Default.ApiRequestInvokeCommandResult, HttpStatusCode.RequestTimeout);
         Assert.Null(result.Response);
         Assert.Equal(s_operationId, result.Operation?.OperationId);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsReceiptWhenAcceptedResponseCannotBeRead()
+    {
+        var receipt = new FabricOperationReceipt(FabricOperationStatus.TrackingStopped, s_operationId,
+            Issue: new("InvalidJson", "Fabric accepted the request, but its response could not be read. Do not resubmit the request.", 502));
+        Service.InvokeApiRequestAsync(Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<int?>(),
+                Arg.Any<FabricOperationWaitOptions?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new FabricOperationReceiptException(receipt));
+
+        var response = await ExecuteCommandAsync("--path", "/v1/workspaces/w/items/i/getDefinition", "--method", "POST");
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.Status);
+        Assert.Contains("do not resubmit", response.Message, StringComparison.OrdinalIgnoreCase);
+        var result = ValidateAndDeserializeResponse(response, CoreJsonContext.Default.ApiRequestInvokeCommandResult, HttpStatusCode.BadGateway);
+        Assert.Null(result.Response);
+        Assert.Equal(s_operationId, result.Operation?.OperationId);
+        Assert.Equal("InvalidJson", result.Operation?.Issue?.Code);
     }
 
     [Theory]

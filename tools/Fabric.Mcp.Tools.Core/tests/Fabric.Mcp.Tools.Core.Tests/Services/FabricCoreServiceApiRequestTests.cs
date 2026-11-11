@@ -371,6 +371,85 @@ public sealed class FabricCoreServiceApiRequestTests
         Assert.Equal(1, handler.CallCount);
     }
 
+    [Theory]
+    [InlineData("malformed", "InvalidJson")]
+    [InlineData("too-deep", "InvalidJson")]
+    [InlineData("oversized", "ResponseTooLarge")]
+    [InlineData("non-json", "UnsupportedMediaType")]
+    [InlineData("unreadable", "ResponseReadFailed")]
+    [InlineData("io", "ResponseReadFailed")]
+    public async Task Invoke_FabricAcceptedWithUnreadableBody_KeepsResumableReceipt(string body, string expectedCode)
+    {
+        foreach (var operationId in new[] { FabricOperationTestData.OperationId, null })
+        {
+            var response = FabricOperationTestData.Accepted(operationId);
+            response.Content = AcceptedContent(body);
+            using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(response));
+            using var client = new HttpClient(handler);
+
+            var exception = await Assert.ThrowsAsync<FabricOperationReceiptException>(() =>
+                new FabricCoreService(client, FabricOperationTestData.Credential()).InvokeApiRequestAsync(
+                    "fabric", "/v1/workspaces/w/items/i/getDefinition", "POST", null, 150, new(Sync: true), true,
+                    TestContext.Current.CancellationToken));
+
+            Assert.Equal(HttpStatusCode.BadGateway, exception.StatusCode);
+            Assert.Equal(expectedCode, exception.Operation.Issue?.Code);
+            Assert.Equal(502, exception.Operation.Issue?.HttpStatus);
+            Assert.Equal(20, exception.Operation.ServerRetryAfterSeconds);
+            Assert.DoesNotContain("private", exception.Message);
+            if (operationId is null)
+            {
+                Assert.Equal(FabricOperationStatus.AcceptedWithoutOperationId, exception.Operation.Status);
+                Assert.Null(exception.Operation.OperationId);
+            }
+            else
+            {
+                Assert.Equal(FabricOperationStatus.TrackingStopped, exception.Operation.Status);
+                Assert.Equal(Guid.Parse(operationId), exception.Operation.OperationId);
+                Assert.Contains("do not resubmit", exception.Message);
+            }
+            Assert.Equal(1, handler.CallCount);
+        }
+    }
+
+    [Theory]
+    [InlineData(FabricApiResponseReader.MaxRetainedJsonDepth, true)]
+    [InlineData(FabricApiResponseReader.MaxRetainedJsonDepth + 1, false)]
+    public async Task Invoke_OperationResult_EnforcesRetainedDepth(int depth, bool returned)
+    {
+        var clock = new OperationTestTimeProvider();
+        var result = new string('[', depth) + new string(']', depth);
+        var calls = 0;
+        using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(++calls switch
+        {
+            1 => FabricOperationTestData.Accepted(),
+            2 => FabricOperationTestData.JsonResponse("""{"status":"Succeeded"}"""),
+            _ => FabricOperationTestData.JsonResponse(result)
+        }));
+        using var client = new HttpClient(handler);
+        var service = new FabricCoreService(client, FabricOperationTestData.Credential(), clock);
+
+        var task = service.InvokeApiRequestAsync(
+            "fabric", "/v1/workspaces/w/items/i/getDefinition", "POST", null, null,
+            new(Sync: true), true, TestContext.Current.CancellationToken);
+        await clock.WaitForTimerAsync(3, TestContext.Current.CancellationToken);
+        clock.Advance(3);
+        var outcome = await task.WaitAsync(TestContext.Current.CancellationToken);
+
+        if (returned)
+        {
+            Assert.Equal(FabricOperationStatus.Succeeded, outcome.Operation?.Status);
+            Assert.Equal(JsonValueKind.Array, outcome.OperationResult?.Value.ValueKind);
+        }
+        else
+        {
+            Assert.Equal(FabricOperationStatus.ResultUnavailable, outcome.Operation?.Status);
+            Assert.Equal("InvalidJson", outcome.Operation?.Issue?.Code);
+            Assert.Null(outcome.OperationResult);
+        }
+        Assert.Equal(3, handler.CallCount);
+    }
+
     [Fact]
     public async Task Invoke_PowerBIAccepted_ReturnsLocationWithoutPolling()
     {
@@ -409,6 +488,34 @@ public sealed class FabricCoreServiceApiRequestTests
         Assert.Equal("Conflict", exception.ErrorCode);
         Assert.DoesNotContain("private", exception.Message);
         Assert.Equal(1, handler.CallCount);
+    }
+
+    private static HttpContent AcceptedContent(string body)
+    {
+        HttpContent content = body switch
+        {
+            "malformed" => new StringContent("{\"private\":", Encoding.UTF8, "application/json"),
+            "too-deep" => new StringContent(new string('[', 64) + new string(']', 64), Encoding.UTF8, "application/json"),
+            "oversized" => new StringContent("{\"value\":\"" + new string('a', 200) + "\"}", Encoding.UTF8, "application/json"),
+            "non-json" => new StringContent("private", Encoding.UTF8, "text/plain"),
+            "unreadable" => new UnreadableHttpContent(),
+            "io" => new StreamContent(FailingStream()),
+            _ => throw new ArgumentOutOfRangeException(nameof(body))
+        };
+        content.Headers.ContentType ??= new MediaTypeHeaderValue("application/json");
+        return content;
+    }
+
+    private static Stream FailingStream()
+    {
+        var stream = Substitute.For<Stream>();
+        stream.CanRead.Returns(true);
+        stream.Read(Arg.Any<byte[]>(), Arg.Any<int>(), Arg.Any<int>()).Returns(_ => throw new IOException("private"));
+        stream.ReadAsync(Arg.Any<byte[]>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns<Task<int>>(_ => throw new IOException("private"));
+        stream.ReadAsync(Arg.Any<Memory<byte>>(), Arg.Any<CancellationToken>())
+            .Returns<ValueTask<int>>(_ => throw new IOException("private"));
+        return stream;
     }
 
     private static async Task<FabricApiResponse> SendAsync(

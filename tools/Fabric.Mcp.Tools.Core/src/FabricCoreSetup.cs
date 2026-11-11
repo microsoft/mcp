@@ -6,7 +6,9 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Fabric.Mcp.Tools.Core;
@@ -270,7 +272,8 @@ public class FabricCoreSetup : IAreaSetup
     {
         var command = new ApiRequestInvokeCommand(
             serviceProvider.GetRequiredService<ILogger<ApiRequestInvokeCommand>>(),
-            serviceProvider.GetRequiredService<IFabricCoreService>());
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            serviceProvider.GetRequiredService<IOptions<ServerRuntimeConfiguration>>());
         var definition = command.GetCommand();
         var options = definition.Options.ToArray();
         definition.Validators.Add(result =>
@@ -287,7 +290,8 @@ public class FabricCoreSetup : IAreaSetup
     {
         var command = new ApiResourceGetCommand(
             serviceProvider.GetRequiredService<ILogger<ApiResourceGetCommand>>(),
-            serviceProvider.GetRequiredService<IFabricCoreService>());
+            serviceProvider.GetRequiredService<IFabricCoreService>(),
+            serviceProvider.GetRequiredService<IOptions<ServerRuntimeConfiguration>>());
         var definition = command.GetCommand();
         var options = definition.Options.ToArray();
         definition.Validators.Add(result =>

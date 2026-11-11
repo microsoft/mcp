@@ -9,6 +9,8 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Fabric.Mcp.Tools.Core.Validation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -28,14 +30,17 @@ public sealed class ApiResourceGetCommandTests() : CommandUnitTestsBase<ApiResou
         Assert.False(Command.Metadata.Destructive);
         Assert.False(Command.Metadata.LocalRequired);
         Assert.False(Command.Metadata.OpenWorld);
-        Assert.False(Command.Metadata.Secret);
+        Assert.True(Command.Metadata.Secret);
+        Assert.Contains("disclosure consent", Command.Description);
         Assert.Same(CoreJsonContext.Default.ApiResourceGetCommandResult, Command.ResultTypeInfo);
         Assert.Equal(["--path"], CommandDefinition.Options.Where(option => option.Required).Select(option => option.Name));
         Assert.Equal(
             ["--api", "--max-response-bytes", "--path"],
             CommandDefinition.Options.Select(option => option.Name).Where(name => name is "--api" or "--path" or "--max-response-bytes").Order());
-        Assert.Throws<ArgumentNullException>(() => new ApiResourceGetCommand(null!, Service));
-        Assert.Throws<ArgumentNullException>(() => new ApiResourceGetCommand(Logger, null!));
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration());
+        Assert.Throws<ArgumentNullException>(() => new ApiResourceGetCommand(null!, Service, configuration));
+        Assert.Throws<ArgumentNullException>(() => new ApiResourceGetCommand(Logger, null!, configuration));
+        Assert.Throws<ArgumentNullException>(() => new ApiResourceGetCommand(Logger, Service, null!));
     }
 
     [Fact]
@@ -71,6 +76,18 @@ public sealed class ApiResourceGetCommandTests() : CommandUnitTestsBase<ApiResou
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         FabricCoreErrorTestData.AssertSanitized(response);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsJobsEndpointsWhenJobsNamespaceIsHidden()
+    {
+        Services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Namespace = ["core"] }));
+
+        var response = await ExecuteCommandAsync("--path", "/v1/workspaces/w/items/i/jobs/DefaultJob/schedules");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("jobs namespace", response.Message);
         Assert.Empty(Service.ReceivedCalls());
     }
 

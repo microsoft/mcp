@@ -14,6 +14,13 @@ namespace Fabric.Mcp.Tools.Core.Services;
 internal static class FabricApiResponseReader
 {
     internal const int MaxJsonDepth = 64;
+
+    /// <summary>
+    /// The deepest JSON value that can be returned. Retained values sit inside five output envelopes
+    /// (JSON-RPC message, tool result, structured content, namespace result, and response or operation
+    /// result), so they are limited before the command succeeds instead of failing during serialization.
+    /// </summary>
+    internal const int MaxRetainedJsonDepth = MaxJsonDepth - 5;
     private static readonly byte[] s_utf8Bom = [0xEF, 0xBB, 0xBF];
 
     internal static async Task<FabricApiResponse> ReadAsync(
@@ -49,7 +56,7 @@ internal static class FabricApiResponseReader
         JsonElement value;
         try
         {
-            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = MaxJsonDepth });
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = MaxRetainedJsonDepth });
             ValidateStrings(document.RootElement);
             value = document.RootElement.Clone();
         }
@@ -58,6 +65,22 @@ internal static class FabricApiResponseReader
             throw new ApiRequestException(ApiRequestFailure.InvalidJson, HttpStatusCode.BadGateway, status, requestId: requestId);
         }
         return new(target.Name, status, true, value, GetNextPath(target, value), location, retryAfterSeconds, requestId);
+    }
+
+    /// <summary>Rejects an already parsed value that is too deep to return inside the output envelopes.</summary>
+    internal static JsonElement EnsureRetainedDepth(JsonElement value)
+    {
+        try
+        {
+            using var writer = new Utf8JsonWriter(Stream.Null, new JsonWriterOptions { MaxDepth = MaxRetainedJsonDepth });
+            value.WriteTo(writer);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new FabricOperationException("InvalidJson", FormattableString.Invariant(
+                $"Fabric returned an operation result deeper than {MaxRetainedJsonDepth} JSON nesting levels. The result was not returned; do not resubmit the original request."));
+        }
+        return value;
     }
 
     internal static string? GetRequestId(HttpResponseMessage response)

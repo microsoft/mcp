@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Validation;
 
@@ -55,6 +56,12 @@ public partial class FabricCoreService
             return new(await FabricApiResponseReader.ReadAsync(target, response, limit, _timeProvider, cancellationToken));
         }
 
+        // Fabric already accepted the request, so capture its tracking metadata before reading the body. Every
+        // body read failure keeps this receipt so the operation can be resumed instead of resubmitted.
+        var accepted = new FabricOperationReceipt(
+            FabricOperationStatus.Accepted,
+            FabricOperationHttp.GetOperationId(response),
+            ServerRetryAfterSeconds: FabricOperationHttp.GetRetryAfterSeconds(response, _timeProvider));
         FabricApiResponse apiResponse;
         try
         {
@@ -62,22 +69,49 @@ public partial class FabricCoreService
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Fabric already accepted the request; keep the operation ID so it can be resumed instead of resubmitted.
-            throw new FabricOperationCanceledException(new(FabricOperationStatus.TrackingStopped, FabricOperationHttp.GetOperationId(response),
-                Issue: new("CallerCanceled",
+            throw new FabricOperationCanceledException(accepted with
+            {
+                Status = FabricOperationStatus.TrackingStopped,
+                Issue = new("CallerCanceled",
                     "The caller canceled after Fabric accepted the request. Resume using the operation ID; do not resubmit the request.",
-                    (int)HttpStatusCode.RequestTimeout)), cancellationToken);
+                    (int)HttpStatusCode.RequestTimeout)
+            }, cancellationToken);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException or JsonException or InvalidOperationException or
+            TimeoutException or OperationCanceledException)
+        {
+            throw new FabricOperationReceiptException(UnreadableAcceptedResponse(accepted, ex));
         }
 
         // Only Fabric 202 responses are tracked through the shared operation runner; this response is always 202 here.
         var contract = new FabricOperationContract<OperationResult>(
             new HashSet<HttpStatusCode>(),
-            operationResult ? static value => new OperationResult(null, true, value) : null);
+            operationResult ? static value => new OperationResult(null, true, FabricApiResponseReader.EnsureRetainedDepth(value)) : null);
         var outcome = await new FabricOperationRunner(_timeProvider).HandleAsync(
             response, contract, waitOptions, GetOperationStateAsync,
             (id, token) => GetOperationResultAsync(id, limit, token), cancellationToken);
         return new(apiResponse, outcome.Operation,
             outcome.Result is { } result ? result with { OperationId = outcome.Operation?.OperationId } : null);
+    }
+
+    private static FabricOperationReceipt UnreadableAcceptedResponse(FabricOperationReceipt accepted, Exception exception)
+    {
+        var code = exception is ApiRequestException { Failure: var failure } ? failure.ToString() : "ResponseReadFailed";
+        return accepted.OperationId is null
+            ? accepted with
+            {
+                Status = FabricOperationStatus.AcceptedWithoutOperationId,
+                Issue = new(code,
+                    "Fabric accepted the request, but its response could not be read and it returned no usable operation ID. Completion is unconfirmed. Check whether the request completed; do not resubmit it automatically.",
+                    (int)HttpStatusCode.BadGateway)
+            }
+            : accepted with
+            {
+                Status = FabricOperationStatus.TrackingStopped,
+                Issue = new(code,
+                    "Fabric accepted the request, but its response could not be read. Resume with get-operation-state using the operation ID; do not resubmit the request.",
+                    (int)HttpStatusCode.BadGateway)
+            };
     }
 
     private Task<HttpResponseMessage> SendApiRequestAsync(

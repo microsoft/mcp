@@ -8,6 +8,8 @@ using Fabric.Mcp.Tools.Core.Options;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -23,6 +25,8 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Use api fabric (default) with a path starting with /v1/, or api powerbi with a path starting with /v1.0/myorg/.
         Only relative paths on these hosts are allowed. Returns the status, JSON value, request ID, and a relative nextPath for the next page.
         Never sends a body, follows redirects, retries, polls, or modifies resources. Prefer a dedicated tool when one exists.
+        Responses may contain sensitive data, so disclosure consent is required, even in read-only mode.
+        Job and schedule endpoints are rejected unless the server exposes the jobs namespace.
         Requires the permissions the endpoint documents for the caller.
         """,
     OperationPlane = ToolOperationPlane.Control,
@@ -31,20 +35,22 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     LocalRequired = false,
     OpenWorld = false,
     ReadOnly = true,
-    Secret = false)]
+    Secret = true)]
 public sealed class ApiResourceGetCommand(
     ILogger<ApiResourceGetCommand> logger,
-    IFabricCoreService fabricCoreService) : FabricCoreCommand<ApiResourceGetOptions, ApiResourceGetCommandResult>
+    IFabricCoreService fabricCoreService,
+    IOptions<ServerRuntimeConfiguration> configuration) : FabricCoreCommand<ApiResourceGetOptions, ApiResourceGetCommandResult>
 {
     private readonly ILogger<ApiResourceGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IFabricCoreService _fabricCoreService = fabricCoreService ?? throw new ArgumentNullException(nameof(fabricCoreService));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     public override JsonTypeInfo<ApiResourceGetCommandResult> ResultTypeInfo => CoreJsonContext.Default.ApiResourceGetCommandResult;
 
     public override void ValidateOptions(ApiResourceGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
-        ValidateTarget(options.Api, options.Path, options.MaxResponseBytes, validationResult);
+        ValidateTarget(options.Api, options.Path, options.MaxResponseBytes, _configuration.Value, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(
@@ -64,7 +70,8 @@ public sealed class ApiResourceGetCommand(
         return context.Response;
     }
 
-    internal static void ValidateTarget(string? api, string? path, int? maxResponseBytes, ValidationResult validationResult)
+    internal static void ValidateTarget(
+        string? api, string? path, int? maxResponseBytes, ServerRuntimeConfiguration configuration, ValidationResult validationResult)
     {
         var target = ApiRequestTarget.Find(api);
         if (target is null)
@@ -74,6 +81,10 @@ public sealed class ApiResourceGetCommand(
         else if (!ApiRequestInput.IsValidPath(target, path))
         {
             validationResult.Errors.Add(ApiRequestInput.PathMessage);
+        }
+        else if (ApiRequestAreaPolicy.GetDisabledAreaError(path, configuration) is { } areaError)
+        {
+            validationResult.Errors.Add(areaError);
         }
         if (maxResponseBytes is <= 0 or > ApiRequestInput.MaxResponseBytesLimit)
         {
@@ -103,7 +114,7 @@ public sealed class ApiResourceGetCommand(
                 ApiRequestFailure.Redirect => "The REST endpoint returned a redirect, which is not followed. Check the path",
                 ApiRequestFailure.UnsupportedMediaType => "The REST endpoint returned a non-JSON response, which was not downloaded",
                 ApiRequestFailure.ResponseTooLarge => "The JSON response exceeds --max-response-bytes and was not truncated. Narrow the request with query options such as $top, or raise the limit up to 16777216",
-                _ => "The REST endpoint returned invalid JSON. Expected JSON up to 64 nesting levels"
+                _ => FormattableString.Invariant($"The REST endpoint returned invalid JSON. Expected JSON up to {FabricApiResponseReader.MaxRetainedJsonDepth} nesting levels")
             }
             : statusCode switch
             {
