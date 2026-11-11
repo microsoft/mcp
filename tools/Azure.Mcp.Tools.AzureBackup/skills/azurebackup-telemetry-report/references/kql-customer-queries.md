@@ -4,7 +4,7 @@ All queries use the `getAzureMcpEvents_ToolCalls` function from the Azure MCP te
 
 - **Cluster URI:** `https://ddazureclients.kusto.windows.net`
 - **Database:** `AzureDevExp`
-- **Cross-cluster:** `mabprod1.kusto.windows.net` / `AzureBackup` and `icmdataro.centralus` / `Customer`
+- **Cross-cluster:** `mabprod1.kusto.windows.net` / `AzureBackup` (P360). C360 is no longer available.
 
 Replace `{DAYS}` with the desired time range (e.g., `15` for 15 days).
 
@@ -56,24 +56,24 @@ cluster('mabprod1.kusto.windows.net').database('AzureBackup').P360CustomerSubscr
 | distinct P360_CustomerName, CustomerName, SubscriptionName, SubscriptionId, UsageType, OfferType
 ```
 
-## 17. External vs Internal Classification (C360)
+## 17. External vs Internal Classification (P360)
+
+C360 is no longer available. Classify customers with P360 `UsageType` (`External`, `Internal`, `Fraud`)
+and `OfferType` (`Internal` for Microsoft-owned subscriptions). P360 can hold multiple rows per
+subscription, so keep the latest row per `SubscriptionId`.
 
 ```kql
-// External customers only
-cluster('icmdataro.centralus').database('Customer').C360_CustomerSubscriptions
+// Replace <subscription_ids> with dynamic array of sub IDs from query 15
+cluster('mabprod1.kusto.windows.net').database('AzureBackup').P360CustomerSubscriptions
 | where SubscriptionId in (<subscription_ids>)
-| where UsageType != "Internal"
-| where OfferType != "Internal"
-| distinct CustomerName, SubscriptionId, UsageType, OfferType
+| summarize arg_max(SubscriptionStartDate, P360_CustomerName, TPIDDisplayName, UsageType, OfferType, SegmentName, Strategic400Flag)
+    by SubscriptionId
+| extend Classification = iff(UsageType == "Internal" or OfferType == "Internal", "Internal", UsageType)
 ```
 
-```kql
-// Internal (Microsoft) customers
-cluster('icmdataro.centralus').database('Customer').C360_CustomerSubscriptions
-| where SubscriptionId in (<subscription_ids>)
-| where UsageType == "Internal" or OfferType == "Internal"
-| distinct CustomerName, SubscriptionId, UsageType, OfferType
-```
+> **PII-masked names:** Some individual and SMB customers have `P360_CustomerName` values like
+> `<guid> PII Masked`. Fall back to `TPIDDisplayName` when it is not masked or "Unmanaged ...";
+> otherwise group these rows under a single "PII-masked customers" bucket.
 
 ## 18. Non-GUID Subscription Name Resolution
 
@@ -171,7 +171,7 @@ When building the final customer table from queries 15–18:
 1. **Group by `P360_CustomerName`**, not by subscription ID — one row per customer
 2. **Merge multi-sub customers**: e.g., Prometeia SpA may have 15+ subscriptions
 3. **Merge non-GUID entries**: If a non-GUID value resolves to an existing customer's subscription via query 18, merge it
-4. **Categorize**: External (C360 UsageType=External) vs Internal (UsageType=Internal)
+4. **Categorize**: External (P360 `UsageType=External`) vs Internal (P360 `UsageType=Internal` or `OfferType=Internal`)
 5. **~74% of calls lack `azsubscriptionguid`** (pre-beta.14 clients) — note this in the report
 
 ## Known Data Quirks

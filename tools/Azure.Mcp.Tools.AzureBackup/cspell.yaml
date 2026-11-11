@@ -87,6 +87,7 @@ words:
   - toint
   - toolarea
   - toolname
+  - tpid
   - triaging
   - undeletes
   - undeleting
