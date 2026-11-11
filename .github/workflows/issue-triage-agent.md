@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: Issue number to triage manually.
-        required: false
-        type: string
+        description: Positive integer issue number to triage manually (not a pull request).
+        required: true
+        type: number
 
 # Skip the shared report-incomplete tracking issue that this workflow creates.
 if: github.event_name != 'issues' || !startsWith(github.event.issue.title, '[incomplete] Issue Triage Agent')
@@ -52,12 +52,16 @@ safe-outputs:
       model: gpt-6.1-sol
       args: ["--reasoning-effort", "high"]
   add-comment:
+    target: ${{ github.event.issue.number || inputs.issue_number }}
     max: 1
   add-labels:
+    target: ${{ github.event.issue.number || inputs.issue_number }}
     max: 10
   set-issue-type:
+    target: ${{ github.event.issue.number || inputs.issue_number }}
     max: 1
   set-issue-field:
+    target: ${{ github.event.issue.number || inputs.issue_number }}
     max: 2
   noop:
     report-as-issue: false
@@ -70,7 +74,15 @@ safe-outputs:
 
 <!-- After editing run 'gh aw compile issue-triage-agent' -->
 
-You triage exactly one issue, the issue from the triggering event.
+You triage exactly one issue in `microsoft/mcp`: the issue from the triggering event, or the issue selected for a manual run.
+
+## Target issue
+
+Target issue number: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+
+Use this number as the triage target for all outputs. On a manual run, it comes from the required `issue_number` input; the built-in event context may not contain an issue number.
+
+Before triaging, check that the target is a positive integer and fetch that issue from `microsoft/mcp` with the GitHub tools. If the target is missing or invalid, cannot be read, or identifies a pull request, use `noop` with a brief explanation and stop. Do not search for a replacement target or apply triage outputs to another issue.
 
 ## Guardrails
 
