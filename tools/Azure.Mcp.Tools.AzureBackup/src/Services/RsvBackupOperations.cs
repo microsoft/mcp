@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager;
@@ -11,6 +12,7 @@ using Azure.ResourceManager.RecoveryServices.Models;
 using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureBackup.Services;
 
@@ -18,6 +20,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 {
     private const string VaultType = VaultTypeResolver.Rsv;
     private const string FabricName = "Azure";
+    private const string ProtectedItemsApiVersion = "2025-02-01";
 
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
@@ -395,17 +398,87 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
 
-        var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
-        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
-        var rgResource = armClient.GetResourceGroupResource(rgId);
+        // NEW-8: the SDK pageable deserializes a whole page at once, so one malformed item (for
+        // example a classic VM with an empty resource ID) failed the entire listing. Page manually
+        // with the same request as the SDK and deserialize each item independently.
+        var pipeline = await CreateArmPipelineAsync(tenant, cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
 
         var items = new List<ProtectedItemInfo>();
-        await foreach (var item in rgResource.GetBackupProtectedItemsAsync(vaultName, cancellationToken: cancellationToken))
+        string? nextLink = null;
+        var visitedLinks = new HashSet<string>(StringComparer.Ordinal);
+        do
         {
-            items.Add(MapToProtectedItemInfo(item.Data));
+            using var request = pipeline.CreateRequest();
+            request.Method = RequestMethod.Get;
+            if (nextLink is null)
+            {
+                request.Uri.Reset(AzureService.CloudConfiguration.ArmEnvironment.Endpoint);
+                foreach (var segment in vaultId.ToString().Split('/', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    request.Uri.AppendPath("/", escape: false);
+                    request.Uri.AppendPath(segment, escape: true);
+                }
+                request.Uri.AppendPath("/backupProtectedItems", escape: false);
+                request.Uri.AppendQuery("api-version", ProtectedItemsApiVersion, true);
+            }
+            else
+            {
+                // The ARM endpoint allow-list is enforced on every send by the pipeline's ARM URI validation policy.
+                if (!Uri.TryCreate(nextLink, UriKind.Absolute, out var nextUri) || nextUri.Scheme != Uri.UriSchemeHttps)
+                {
+                    throw new InvalidDataException("The protected item listing returned an invalid next page link.");
+                }
+                request.Uri.Reset(nextUri);
+            }
+            request.Headers.Add("Accept", "application/json");
+
+            using var response = await pipeline.SendRequestAsync(request, cancellationToken);
+            if (response.Status != (int)HttpStatusCode.OK)
+            {
+                throw new RequestFailedException(response);
+            }
+
+            if (response.ContentStream is null)
+            {
+                break;
+            }
+
+            using var document = await System.Text.Json.JsonDocument.ParseAsync(response.ContentStream, cancellationToken: cancellationToken);
+            var page = RsvProtectedItemPageReader.ReadPage(document.RootElement, MapToProtectedItemInfo);
+            items.AddRange(page.Items);
+
+            nextLink = page.NextLink;
+            if (nextLink is not null && !visitedLinks.Add(nextLink))
+            {
+                throw new InvalidDataException("The protected item listing returned a repeated next page link.");
+            }
         }
+        while (nextLink is not null);
 
         return items;
+    }
+
+    /// <summary>
+    /// Creates an authenticated ARM pipeline configured like the shared <see cref="ArmClient"/>:
+    /// cloud-aware transport (recording-aware), ARM endpoint validation on every send, default
+    /// policies, and Azure SDK retry defaults.
+    /// </summary>
+    private async Task<HttpPipeline> CreateArmPipelineAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        var credential = await GetCredential(tenant, cancellationToken);
+        var options = new ArmClientOptions();
+        AzureService.ConfigureArmClientOptions(options);
+        AddDefaultPolicies(options);
+        if (EnvironmentHelpers.IsPlaybackTesting())
+        {
+            // Match AzureHelper.CreateArmClientAsync so playback never times out into a retry.
+            options.Retry.NetworkTimeout = TimeSpan.FromMinutes(10);
+        }
+
+        return HttpPipelineBuilder.Build(
+            options,
+            new BearerTokenAuthenticationPolicy(credential, AzureService.CloudConfiguration.ArmEnvironment.DefaultScope));
     }
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
@@ -1518,7 +1591,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             IdentityDetails: identityDetails);
     }
 
-    private static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
+    internal static ProtectedItemInfo MapToProtectedItemInfo(BackupProtectedItemData data)
     {
         string? protectionStatus = null;
         string? datasourceType = null;
