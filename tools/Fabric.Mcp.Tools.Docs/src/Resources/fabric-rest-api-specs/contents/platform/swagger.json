@@ -4462,6 +4462,339 @@
         }
       }
     },
+    "/capacities/{capacityId}/surgeProtection/actorAutoDetectionRules": {
+      "post": {
+        "summary": "Creates an actor auto-detection rule on the specified capacity.",
+        "description": "Creates an actor auto-detection rule on the specified capacity. If a rule with the same actors subject to the rule already exists on the capacity, the request returns a conflict response.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_CreateActorAutoDetectionRule",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createActorAutoDetectionRuleRequest",
+            "description": "The request payload for creating an actor auto-detection rule.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/CreateActorAutoDetectionRuleRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The actor auto-detection rule was created successfully.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/ActorAutoDetectionRule"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidParameter - The capacity unit consumption threshold is out of range or the block-duration variant is invalid.\n\n* InsufficientPermissions - The caller is not a capacity admin.\n\n* CapacityNotFound - The specified capacity does not exist.\n\n* ActorAutoDetectionRuleAlreadyExists - A rule with the same actors subject to the rule already exists on this capacity.\n\n* InvalidCapacitySKU - The capacity is not a Fabric SKU.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create an actor auto-detection rule with an hours block duration": {
+            "$ref": "./examples/actorAutoDetectionRules/CreateActorAutoDetectionRule.json"
+          },
+          "Create an actor auto-detection rule with an indefinite block duration": {
+            "$ref": "./examples/actorAutoDetectionRules/CreateActorAutoDetectionRuleWithIndefiniteBlock.json"
+          }
+        }
+      },
+      "get": {
+        "summary": "Lists actor auto-detection rules on the specified capacity.",
+        "description": "Returns all actor auto-detection rules on the specified capacity.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_ListActorAutoDetectionRules",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/ListActorAutoDetectionRulesResponse"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPermissions - The caller is not a capacity admin.\n\n* CapacityNotFound - The specified capacity does not exist.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List actor auto-detection rules example": {
+            "$ref": "./examples/actorAutoDetectionRules/ListActorAutoDetectionRules.json"
+          }
+        }
+      }
+    },
+    "/capacities/{capacityId}/surgeProtection/actorAutoDetectionRules/{actorAutoDetectionRuleId}": {
+      "get": {
+        "summary": "Gets the specified actor auto-detection rule.",
+        "description": "Returns the specified actor auto-detection rule on the capacity.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.Read.All or Capacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_GetActorAutoDetectionRule",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "actorAutoDetectionRuleId",
+            "description": "The actor auto-detection rule ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/ActorAutoDetectionRule"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPermissions - The caller is not a capacity admin.\n\n* CapacityNotFound - The specified capacity does not exist.\n\n* EntityNotFound - The specified actor auto-detection rule does not exist.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get an actor auto-detection rule example": {
+            "$ref": "./examples/actorAutoDetectionRules/GetActorAutoDetectionRule.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the specified actor auto-detection rule.",
+        "description": "Updates the specified actor auto-detection rule. Only the capacity unit consumption threshold percentage and block duration can be updated. The actors subject to the rule cannot be changed after creation. Omitting a property leaves it unchanged. When the block duration is provided, it replaces the entire existing block-duration configuration.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_UpdateActorAutoDetectionRule",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "actorAutoDetectionRuleId",
+            "description": "The actor auto-detection rule ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateActorAutoDetectionRuleRequest",
+            "description": "The request payload for updating an actor auto-detection rule.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/UpdateActorAutoDetectionRuleRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The actor auto-detection rule was updated successfully.",
+            "schema": {
+              "$ref": "./definitions/actorAutoDetectionRules.json#/definitions/ActorAutoDetectionRule"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidParameter - The capacity unit consumption threshold is out of range or the block-duration variant is invalid.\n\n* InsufficientPermissions - The caller is not a capacity admin.\n\n* CapacityNotFound - The specified capacity does not exist.\n\n* EntityNotFound - The specified actor auto-detection rule does not exist.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update an actor auto-detection rule example": {
+            "$ref": "./examples/actorAutoDetectionRules/UpdateActorAutoDetectionRule.json"
+          },
+          "Update only an actor auto-detection rule threshold": {
+            "$ref": "./examples/actorAutoDetectionRules/UpdateActorAutoDetectionRuleThresholdOnly.json"
+          },
+          "Update an actor auto-detection rule with an indefinite block duration": {
+            "$ref": "./examples/actorAutoDetectionRules/UpdateActorAutoDetectionRuleWithIndefiniteBlock.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified actor auto-detection rule.",
+        "description": "Deletes the specified actor auto-detection rule from the capacity. If this is the only rule, auto-detection is disabled for the capacity. Deleting a rule does not clear existing blocks. Actors blocked for a specified number of hours remain blocked until the originally scheduled expiration time, and actors blocked indefinitely remain blocked until an admin manually unblocks them.\n\n## Permissions\n\nThe caller must have *administrator* permissions on the capacity.\n\n## Required Delegated Scopes\n\nCapacity.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SurgeProtection"
+        ],
+        "operationId": "SurgeProtection_DeleteActorAutoDetectionRule",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capacityId",
+            "description": "The capacity ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "actorAutoDetectionRuleId",
+            "description": "The actor auto-detection rule ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The actor auto-detection rule was deleted successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPermissions - The caller is not a capacity admin.\n\n* CapacityNotFound - The specified capacity does not exist.\n\n* EntityNotFound - The specified actor auto-detection rule does not exist.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete an actor auto-detection rule example": {
+            "$ref": "./examples/actorAutoDetectionRules/DeleteActorAutoDetectionRule.json"
+          }
+        }
+      }
+    },
     "/operations/{operationId}": {
       "get": {
         "tags": [

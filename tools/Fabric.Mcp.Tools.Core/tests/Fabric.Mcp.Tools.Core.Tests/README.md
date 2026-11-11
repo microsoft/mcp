@@ -5,6 +5,44 @@ Offline tests for the Fabric Core toolset.
 
 ## Test Coverage
 
+- **Commands/WorkspaceRoleAssignmentDeleteCommandTests.cs**: Explicit assignment identity, permission-removal annotations, typed receipts, Admin/last-admin guidance, safe logging, and distinct unsent, rejected, uncertain, and confirmed-deletion outcomes
+- **Services/WorkspaceRoleAssignmentDeleteServiceTests.cs**: One DELETE without a body, independent assignment/principal IDs, only HTTP 200 confirmation without body reads, repeat 404 failures, exact error byte/depth/code limits, status/retry preservation, cancellation/disposal, concurrency, and separate explicit Get inspection
+- **WorkspaceRoleAssignmentDeleteMcpTests.cs**: Actual schemas and all/namespace/single routes across stdio/HTTP and output modes, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, CLI guards, and truthful receipts/errors through JSON-RPC envelopes
+- **Commands/WorkspaceRoleAssignmentUpdateCommandTests.cs**: Explicit existing-assignment/access intent, standard permission-replacement metadata, typed 200 output, Admin/last-admin guidance, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-update outcomes
+- **Validation/WorkspaceRoleAssignmentUpdateInputTests.cs**: Required role-only Update payload independent of nullable response metadata, assignment UUID semantics, unchanged extensible roles, strict Unicode, and exact serialized request budget
+- **Services/WorkspaceRoleAssignmentUpdateServiceTests.cs**: One PATCH without lookups or creation fallback, independent assignment/principal IDs, exact requested role, shared principal projection, confirmed update despite unusable metadata, exact byte/depth limits, safe status/retry guidance, cancellation/disposal, and concurrent caller isolation
+- **WorkspaceRoleAssignmentUpdateMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, separate Update-to-Get inspection, CLI guards, and exact response/JSON-RPC limits preserving confirmed 200
+- **Commands/WorkspaceRoleAssignmentAddCommandTests.cs**: Explicit principal/access intent, additive permission metadata, typed 201 output, no default role, safe errors/logging, and distinct unsent, rejected, uncertain, and confirmed-creation guidance
+- **Validation/WorkspaceRoleAssignmentAddInputTests.cs**: The Add request contract independent of response models, writable group/profile details, rejection of read-only/unknown/duplicate fields, extensible strings, and exact UTF-8/serialized/depth budgets
+- **Services/WorkspaceRoleAssignmentAddServiceTests.cs**: One POST without lookups/conflict updates, independent assignment/principal IDs, matching requested access, shared response projection, confirmed creation on metadata failures, exact byte/depth limits, safe errors/retry, cancellation/disposal, and concurrent caller isolation
+- **WorkspaceRoleAssignmentAddMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard additive behavior, zero-I/O invalid/authentication cases, separate Add-to-Get handoff, CLI option guards, and exact JSON-RPC depth limits preserving confirmed 201
+- **Commands/WorkspaceRoleAssignmentGetCommandTests.cs**: Explicit workspace/assignment binding, read-only remote metadata, typed snapshots, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
+- **Services/WorkspaceRoleAssignmentGetServiceTests.cs**: One GET without lookups, matching assignment identity independent of principal ID, shared optional/future principal metadata, malformed/Unicode/duplicate data, exact byte/input/output depth limits, status/retry preservation, disposal/cancellation, and concurrent caller isolation
+- **WorkspaceRoleAssignmentGetMcpTests.cs**: Actual registration, schemas and all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no consent, rejected input/authentication before HTTP, explicit List-to-Get handoff, CLI option guards, and the exact single-result JSON-RPC depth boundary
+- **Commands/WorkspaceRoleAssignmentListCommandTests.cs**: Explicit workspace/token binding, read-only remote metadata, typed pages, safe errors/logging, Member-or-higher guidance, and cancellation forwarding
+- **Services/WorkspaceRoleAssignmentListServiceTests.cs**: One GET per page, independent assignment/principal IDs, optional principal details and recursive profile parents, extensible strings, absent/null continuation, opaque token encoding, no enrichment or row-count cap, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, disposal/cancellation, and concurrent caller isolation
+- **WorkspaceRoleAssignmentListMcpTests.cs**: Real registration, input/output/learn schemas, all/namespace/single routes, stdio/HTTP, namespace/read-only filtering, no mutation consent, zero-I/O rejected input/authentication, explicit continuation, CLI duplicate/valueless rejection, and recursive metadata fitting JSON-RPC envelopes
+- **Commands/FolderCreateCommandTests.cs**: Explicit workspace/name/parent binding, additive mutation metadata, typed 201 results, safe errors/logging, and distinct pre-send, uncertain-send, and confirmed-creation guidance
+- **Validation/FolderCreateInputTests.cs**: Fabric naming constraints, Unicode character boundaries, invalid surrogate rejection, UUID validation, unchanged names, and no host filesystem rules
+- **Services/FolderCreateServiceTests.cs**: Exactly one authenticated POST, parent omission, safe typed metadata, identity checks, absent optional parents, malformed/Unicode/duplicate data, exact byte/depth limits, status/retry preservation, cancellation/disposal, and concurrent caller isolation
+- **FolderCreateMcpTests.cs**: Actual registration, schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, additive creation without elicitation, zero-I/O invalid input, explicit null parents, CLI duplicate/valueless rejection, and confirmed-creation errors through the wire envelope
+- **Commands/FolderDeleteCommandTests.cs**: Required UUID binding, destructive/idempotent metadata, typed deletion receipts, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-deletion guidance
+- **Services/FolderDeleteServiceTests.cs**: One exact DELETE without body/query/preflight, empty HTTP 200 receipts, no contents changes, explicit repeat 404 failures, bounded safe error/status/retry handling, cancellation/disposal/confirmed-outcome preservation, concurrency, and separate explicit Get inspection
+- **FolderDeleteMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, normal destructive consent, zero-I/O invalid/authentication/declined-consent cases, shared string binding, CLI duplicate/valueless rejection, and confirmed receipts/errors through the wire envelope
+- **Commands/FolderGetCommandTests.cs**: Explicit workspace/folder UUID binding, read-only remote metadata, typed snapshots, safe read-specific errors/logging, status/retry guidance, and cancellation forwarding
+- **Services/FolderGetServiceTests.cs**: One authenticated GET without a body or preflight, matching identities, absent/null parents, unchanged legacy names, unknown-field projection, malformed/Unicode/duplicate data, exact byte/depth budgets, bounded safe errors, authentication/cancellation/disposal, and concurrent caller isolation
+- **FolderGetMcpTests.cs**: Actual registration, schema/learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only catalogs, no disclosure consent, zero-I/O invalid inputs/authentication failures, CLI duplicate/valueless rejection, and shallow JSON-RPC output at the maximum input depth
+- **Commands/FolderListCommandTests.cs**: Explicit workspace/root UUIDs, optional recursive/token binding, read-only remote metadata, typed pages, safe errors/logging, and cancellation forwarding
+- **Services/FolderListServiceTests.cs**: One GET without a body, filter omission and retention, raw/escaped cursors, absent/null continuation, empty pages, matching continuation context, complete ordered/repeated entries, parents outside the page, malformed/Unicode/duplicate data, exact UTF-8/byte/depth budgets, status/retry guidance, disposal/cancellation, and concurrent caller isolation
+- **FolderListMcpTests.cs**: Actual registration and schema/learn/output modes across all/namespace/single, stdio/HTTP, namespace/read-only filtering, no disclosure consent, zero-I/O invalid inputs, explicit continuation, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
+- **Commands/FolderMoveCommandTests.cs**: Required workspace/folder binding, optional target, hierarchy-mutation hints, typed 200 snapshots, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-movement guidance
+- **Validation/FolderMoveInputTests.cs**: Nonempty UUID validation, supported UUID formats, root omission, and normalized self-target rejection without hierarchy lookups
+- **Services/FolderMoveServiceTests.cs**: One exact POST with only optional targetFolderId, root omission, matching identities/destinations, optional parents and legacy names, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, concurrency, and separate explicit Get inspection
+- **FolderMoveMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, null/omitted root targets, shared string binding, CLI duplicate/valueless rejection, and confirmed-movement errors through the wire envelope
+- **Commands/FolderUpdateCommandTests.cs**: Required workspace/folder/name binding, metadata-replacement hints, typed 200 snapshots, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-update guidance
+- **Validation/FolderUpdateInputTests.cs**: Shared unchanged Create/Update naming rules, exact Unicode character boundaries, invalid surrogate rejection, UUID validation, and no host filesystem rules
+- **Services/FolderUpdateServiceTests.cs**: One exact PATCH with only displayName, authoritative snapshots and matching identities, optional parents, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, and concurrent caller isolation
+- **FolderUpdateMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, CLI duplicate/valueless rejection, and confirmed-update errors through the wire envelope
 - **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
@@ -78,6 +116,9 @@ Offline tests for the Fabric Core toolset.
 - **Commands/ItemListCommandTests.cs**: Input binding, UUID validation, recursive defaults, typed results, cancellation mapping, and sanitized failures for `list-items`
 - **Services/ItemListServiceTests.cs**: Substituted-HTTP tests for one-page listing, metadata whitelisting, optional filters, continuation encoding, invalid responses, throttling, cancellation, disposal, and create/search regressions
 - **ItemListMcpTests.cs**: Read-only discovery, input/output schemas, and calls through the real Core command factory, loader, and service with substituted HTTP and credentials
+- **Commands/ItemMoveCommandTests.cs**: Required item/workspace binding, optional destination, placement-mutation hints, collection output, safe errors/logging, and distinct pre-send, rejected, uncertain-send, and confirmed-movement guidance
+- **Services/ItemMoveServiceTests.cs**: One POST and exact target/root payloads, parent/child and empty/sparse/repeated collections, safe metadata projection, identity/destination validation, Unicode/duplicate/byte/depth bounds, status/retry preservation, authentication/cancellation/disposal, concurrency, and separate explicit Get inspection
+- **ItemMoveMcpTests.cs**: All/namespace/single routing, stdio/HTTP, namespace selection, output/schema/learn modes, read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, null/omitted root targets, shared string binding, CLI duplicate/valueless rejection, and JSON-RPC envelope serialization
 - **Commands/WorkspaceCreateCommandTests.cs**: Creation options, length/UUID validation, typed results, annotations, and sanitized failures
 - **Services/FabricCoreServiceWorkspaceCreateTests.cs**: Offline request/body omission, capacity/domain assignment, 201/Location handling, response validation, cancellation/disposal, concurrent credentials, no retries, and existing create/search regressions
 - **Models/WorkspaceCreateSerializationTests.cs**: Source-generated request/result contracts, optional metadata, and future type/region strings
@@ -108,6 +149,217 @@ operation behavior, validation before I/O, and read-only/consent behavior. Do no
 catalogs or tool counts into those tests. `ServerStartupTests` checks actual host transports and
 representative Core schemas and annotations, not exhaustive membership or hard-coded totals.
 
+## Workspace Role-assignment Deletion
+
+`core_delete-workspace-role-assignment` follows the current public Delete contract and bundled
+`platform/swagger.json` and `common/definitions.json`. Explicit nonempty workspace and existing
+assignment UUIDs are required. The request is one DELETE without a body or query; an assignment ID
+is not a principal ID. No identity lookup/translation, directory/Graph calls, membership expansion,
+preflight List/Get, cascade, bulk removal, fallback, retry, polling, or hidden verification occurs.
+The caller needs workspace Admin access and delegated Workspace.ReadWrite.All. Fabric protects
+the last admin's assignment, without a local preflight or an invented protected-assignment error code.
+
+Only HTTP 200 confirms deletion. The shallow source-generated receipt contains `workspaceId`,
+`workspaceRoleAssignmentId`, `deletionStatus: "Deleted"`, and `guidance`. No success body is read,
+so irrelevant/unreadable content and late cancellation do not erase confirmation. Local disposal
+failures after 200 remain confirmed-deletion errors rather than invitations to resubmit. An explicit
+repeat 404 stays a failure, as do undocumented 201/202/204/206 and redirects. There is no documented
+standard LRO. Location and operation headers never trigger another request.
+
+The tool removes only the assignment, not a principal, group membership, workspace, or other
+assignments; it does not establish that the principal has no remaining effective access.
+Unsent, explicitly rejected, uncertain, and confirmed-deletion outcomes stay distinct. Retry timing
+is not authorization to replay. Safe error codes and known status/Retry-After survive malformed,
+duplicate, invalid-Unicode, oversized, canceled, or unreadable optional error metadata. Boundaries
+cover 1,048,576/1,048,577 bytes, 64/65 JSON levels, and 128/129-character error codes.
+
+Fixtures reuse `WorkspaceRoleAssignmentTestData`, `FabricCoreHttpMessageHandler`, existing streams,
+the shared authenticated transport, and bounded error/retry helpers. Tests assert zero requests
+before authentication/validation/consent succeeds and exactly one initiating request otherwise.
+They cover every all/namespace/single routing and legacy/compact/duplicated output combination,
+stdio/HTTP configurations, namespace filters, source-generated schemas, CLI duplicate/valueless
+guards, shared scalar binding, disposal, and concurrent caller isolation. Destructive/idempotent
+metadata uses standard elicitation; both action and decision must accept. Read-only mode retains
+List/Get but excludes this mutation. Separate explicit Get is tested, never hidden inside Delete.
+
+Real host discovery and the unchanged complete-host credential-composition regression remain
+applicable. All role removal is simulated offline. No approved live workspace/assignment fixture or
+revocation permission was supplied; no live Fabric, token-exchange/OBO/RBAC, or recorded coverage
+is claimed. Authentication composition, tenant settings, and upstream specifications are unchanged.
+
+## Workspace Role-assignment Update
+
+`core_update-workspace-role-assignment` follows the public Update contract and bundled
+`platform/swagger.json`, `platform/definitions/platform.json`, and `common/definitions.json`.
+Workspace UUID, existing assignment UUID, and a non-null/nonempty replacement role are required.
+The PATCH body contains only role, never Add's principal JSON. Assignment and principal IDs are
+independent. Documented and future role strings pass unchanged; no trimming, inferred access,
+upgrade, name resolution, preflight, enrichment, creation fallback, retry, or polling is performed.
+Admin workspace access and delegated Workspace.ReadWrite.All are required, and Fabric prevents
+changes to the last admin's assignment. There is no documented standard LRO.
+
+Offline fixtures cover exactly one initiating PATCH, with zero requests for invalid input,
+authentication/pre-send failures, denied mutation consent, read-only mode, or namespace exclusion.
+The tool's destructive/idempotent permission-replacement metadata uses standard elicitation,
+requiring both accepted form action and accepted decision. Idempotence does not authorize replay.
+All/namespace/single routes, stdio/HTTP configurations, and legacy/compact/duplicated output modes
+retain truthful unsent, rejected, uncertain, and confirmed-update outcomes. A separate explicit Get
+is tested, with no hidden inspection in Update.
+
+Role/request validation is shared with Add only where contracts actually agree: explicit valid
+Unicode, no defaults, and the 1 MiB serialized request budget including escaping. Response models
+and the consumed reader are shared with List/Get/Add. Update requires the returned assignment ID
+and role to match the request, while preserving available principal metadata and future values.
+Response limits are tested at 1,048,576/1,048,577 bytes, 64/65 input levels, and 61/62 retained
+result levels. Thirty nested principals without leaf details fit exactly; adding one leaf-detail
+level fails inside the confirmed-update boundary. The actual loader output is serialized in the
+JSON-RPC shape, reaching exactly 64 levels for namespace structured output.
+
+HTTP 200 confirms update before metadata is read. Unreadable, malformed, oversized, mismatched,
+canceled, or unserializable metadata cannot erase that confirmation or suggest resubmission.
+Safe status/error-code/Retry-After handling, response/stream disposal, and concurrent caller
+isolation use the existing HTTP/credential fixtures. Add/Get/List and catalog regressions cover
+the consumed shared helpers; real host discovery and existing full-host credential-composition
+tests remain applicable. No live update, tenant change, real token exchange/OBO/RBAC, or recorded
+coverage is claimed: no approved workspace/assignment fixture or role-change authorization exists.
+
+## Workspace Role-assignment Creation
+
+`core_add-workspace-role-assignment` uses the public Add contract and bundled
+`platform/swagger.json`, `platform/definitions/platform.json`, and `common/definitions.json`,
+not the List/Get response model as its request schema. Required inputs are workspace UUID, principal
+JSON, and role. Only `principal` and `role` are sent. Principal requires id/type and permits writable
+group details and recursive profile-parent details; read-only names, user details, and service-principal
+application metadata are rejected. Known principal types include EntireTenant (all tenant users);
+future nonempty principal/group/role strings pass unchanged. No access intent is inferred.
+Optional request fields may be omitted, but present details/parents must be objects and groupType
+must be a nonempty string. Unlike optional response metadata, the Add request schema does not
+declare these fields nullable, so explicit null fails before authentication rather than being forwarded.
+
+The caller needs Member-or-higher workspace access and delegated Workspace.ReadWrite.All.
+Members can grant Member or lower; Admin grants require Admin. The service, not a local preflight,
+enforces authorization and the workspace's 1,000 users/groups limit. A conflict stays a failure,
+never a get-or-create success or an automatic update. Add has no documented LRO.
+
+Every successful or rejected invocation makes exactly one initiating POST. Validation, pre-send
+cancellation/authentication failure, read-only denial, and namespace exclusion make zero requests.
+The mutation uses additive permission-management annotations, not destructive or secret flags to
+force an extra elicitation. Discovery and learn make no credential/HTTP calls.
+
+201 establishes creation before body reading, so malformed, oversized, mismatched, canceled,
+unreadable, or unserializable metadata cannot turn a confirmed grant into an uncertain-send message.
+Explicit 4xx rejections (except timeout) and unsent failures stay distinct from uncertain network,
+timeout, server-error, or unexpected-success outcomes. Status and safe Retry-After survive invalid
+error metadata; no raw messages or opaque response URLs escape. No automatic replay is performed.
+
+The principal input has exact 1 MiB UTF-8 and 32-level bounds; the serialized request has a separate
+1 MiB bound including escaping. Response input allows 1 MiB and 64 levels; the complete typed result
+allows 61 retained levels. Thirty nested principals without leaf details fit exactly; adding one
+leaf detail level fails within the confirmed-creation boundary. Real loader results across all
+output/routing shapes are serialized inside a 64-level JSON-RPC envelope without truncation.
+
+Fixtures reuse `WorkspaceRoleAssignmentTestData`, `FabricCoreHttpMessageHandler`, existing streams,
+response models, and the consumed shared role-assignment reader. The actual host discovery covers
+Core/default/combined/Jobs-only/read-only selections, and existing full-host authentication composition
+regressions remain applicable. All grants are simulated offline. No live workspace/principal fixture
+or grant authorization was supplied; no real OBO/token-exchange/RBAC or recorded coverage is claimed.
+
+## Workspace Role-assignment Lookup
+
+`core_get-workspace-role-assignment` reads one assignment by explicit workspace and assignment UUIDs.
+The tests reuse the role-assignment/principal models, shared response validation, HTTP handler, and
+`WorkspaceRoleAssignmentTestData` fixtures with List. Assignment IDs and principal IDs deliberately
+differ. No workspace field is required in the returned assignment; only its own ID must match the
+requested assignment. The request has no body or query and never lists assignments to translate IDs,
+expands membership, enriches identities, pages, retries, polls, or changes roles.
+
+The single-result shape is `{ roleAssignment: { id, principal, role } }`, plus optional validated
+retry guidance. Shared validation preserves absent/null details, empty names, extensible strings,
+and recursive parent metadata without projecting arbitrary extensions. Get rejects malformed data,
+wrong assignment identity, duplicates, invalid Unicode, and over-budget responses. Non-200 responses
+are never read, so malformed error bodies cannot replace their HTTP status or Retry-After.
+
+Byte limits are tested at 1,048,576 and 1,048,577 bytes with and without Content-Length. Input depth
+is tested at 64 and 65. Unlike List's collection, Get has no array: 30 principals without a leaf
+detail object use 60 input levels and exactly 61 retained payload levels. A leaf detail object adds
+one level and is rejected, not dropped. MCP tests measure all payload levels and serialize the actual
+result shape inside JSON-RPC; namespace structured output reaches exactly 64 levels. All routes and
+legacy/compact/duplicated output modes remain usable at the accepted boundary.
+
+The API requires Member-or-higher access and delegated `Workspace.Read.All` or `Workspace.ReadWrite.All`.
+Host authentication composition is unchanged; existing `ItemMoveAuthenticationTests` exercise the
+complete host's per-request OBO credential bridge without network access or fallback. New tests use
+substituted credentials and HTTP, not live token exchange or RBAC. No approved workspace/assignment
+fixture or live authorization was supplied, so no live or recorded coverage is claimed.
+
+## Workspace Role-assignment Listing
+
+`core_list-workspace-role-assignments` is one read-only Core operation. Its fixtures substitute HTTP
+and credentials; they make no Fabric or Graph calls. The request supplies a workspace UUID and,
+optionally, the unchanged token from a previous page. Each call sends one GET with no body and returns
+the complete ordered page, not expanded group membership or calculated effective access.
+
+The bundled `WorkspaceRoleAssignment` requires `id`, `principal`, and `role`; `Principal` requires
+`id` and `type`, not `displayName` or type-specific details. Assignment and principal IDs need not
+match, and no workspace field is required on a returned row. Optional absent/null metadata is
+omitted, empty names are retained, and role/principal/group types are extensible strings. Known
+principal details are projected without retaining arbitrary extension JSON.
+
+The public pagination article allows absent or null terminal fields despite the endpoint schema's
+string-only table. Tests cover every terminal combination on empty/nonempty pages, token-only pages,
+explicit second-call continuation, contradictory or unsafe URIs, and raw/already-escaped tokens.
+No URI is followed or returned. The existing consumed continuation helper is reused; no pagination
+framework is introduced.
+
+Response limits remain 1 MiB and 64 input JSON levels. A source-generated output depth check reserves
+three levels for namespace, tool-response, and JSON-RPC envelopes, allowing 61 retained payload levels
+without truncating recursive profile-parent metadata. Unknown input fields can reach the input limit
+without being retained. Invalid required data or an oversized/deep page produces no partial success.
+
+The contract requires Member-or-higher workspace access and delegated `Workspace.Read.All` or
+`Workspace.ReadWrite.All`. Users, service principals, and managed identities are supported by the API;
+service principals/managed identities need the corresponding Fabric tenant setting. Offline isolation
+and actual-host discovery are not real OBO/token-exchange or RBAC tests. No approved live workspace
+fixture or live authorization was supplied, so live/recorded coverage is not claimed.
+
+## Folder Deletion
+
+`core_delete-folder` sends one DELETE for explicit workspace and folder UUIDs, with no body or query.
+Fabric accepts only empty logical folders: any items or nested folders cause `FolderNotEmpty`.
+Retained soft-deleted items can also block deletion. No preflight, contents enumeration, automatic
+emptying, move, cascade, retry, verification, or LRO behavior is implemented. No recursive/force/
+hard-delete options or folder recovery/retention guarantees are invented.
+
+Only HTTP 200 confirms deletion, returning requested IDs and `deletionStatus: "Deleted"`, not a
+snapshot. The service never reads an irrelevant success body or lets late cancellation erase
+confirmation. A local disposal failure after 200 still reports confirmed deletion. Failures,
+including repeat 404/`FolderNotFound`, stay failures; unusable optional error JSON preserves the
+observed status and validated Retry-After. Tests cover exact byte/depth/error-code bounds and
+malformed escaped Unicode. Authentication/pre-send failures are distinct from uncertain sends.
+
+The tool is destructive, idempotent by effect, remote-capable, not secret-bearing, and excluded
+from read-only catalogs. Normal mutation consent is required; no new consent or gating policy is
+introduced. The existing single shared README note covers all Folder REST APIs. String schemas
+retain shared MCP binding behavior, including a one-element string array converted to a UUID
+string; tests do not claim strict validation of original JSON types.
+
+All responses and credentials are offline fixtures. No live folder may be discovered or deleted,
+and these tests do not establish live Fabric, OBO/RBAC, or recorded-playback behavior.
+
+## Folder Lookup
+
+`core_get-folder` requires explicit workspace and folder UUIDs and sends exactly one GET. It checks
+both returned IDs, requires a string display name without imposing creation naming rules, and
+preserves an available parent UUID without looking it up. Absent/null parent metadata stays omitted.
+Unknown fields are validated then dropped; malformed, duplicate, invalid-Unicode, oversized, or
+wrong-identity responses fail instead of returning partial/default metadata. Tests cover the 1 MiB
+byte limit and 64-level JSON depth boundary, including the final JSON-RPC envelope.
+
+The read-only tool is not secret-bearing and does not elicit disclosure consent. Known HTTP errors
+and Retry-After survive unusable optional error metadata, with only safe codes exposed. Tests
+substitute HTTP and credentials; real host startup tests cover discovery only, not live Fabric,
+OBO/RBAC, or recorded playback. No live fixture is assumed or discovered.
+
 ## Shared Core Building Blocks
 
 `FabricCoreCommand` replaces raw parser failures with fixed guidance and reports missing options only when their names exactly match registered required options. Get Workspace, List Items, and List Workspaces tests exercise real option binding with private invalid Boolean values and unknown options, verify sanitized public responses, and assert that the service is not called. Create Item and Catalog Search retain their command-specific validation guidance.
@@ -126,6 +378,45 @@ representative Core schemas and annotations, not exhaustive membership or hard-c
 and existing operation responses. Callers keep their own media, empty-body, parsing, and error contracts.
 The existing operation reader still defaults to 1 MiB, and definition retrieval retains its explicit
 64 MiB limit. Existing operation/definition tests cover those unchanged contracts.
+
+## Folder Creation
+
+`core_create-folder` sends one POST for an explicit workspace UUID and unchanged display name.
+An optional parent UUID is normalized; absent/null input omits the body field and selects the
+workspace root. Local validation follows Fabric naming rules, not filesystem rules. Fabric alone
+checks uniqueness, supported workspaces, depth, and folder count. There are no lookups or retries.
+
+Only HTTP 201 confirms creation. The typed `FabricFolder` projection checks the workspace and
+available parent context without filling missing optional metadata. JSON is bounded to 1 MiB and
+64 levels; error-body failures retain the known status and retry guidance. Tests distinguish
+validation/authentication/pre-send failures from uncertain sends, and preserve confirmed creation
+when response reading, Unicode decoding, validation, or cancellation prevents returning metadata.
+
+Like existing additive Core-create tools, this command is non-destructive and not secret-bearing,
+so existing policy does not require elicitation. Read-only and excluded-namespace calls cannot
+execute it. Substituted credentials/HTTP and actual host discovery establish local wiring, not
+live Fabric permissions, OBO/RBAC behavior, or authorization to create a real folder.
+
+## Folder Listing
+
+`core_list-folders` reads one complete page of logical workspace folder metadata. It preserves
+optional `root-folder-id` and `recursive` omission, normalizes explicit UUIDs, and never performs
+folder walking, enrichment, lookups, or automatic pagination. Empty pages may still have tokens.
+Missing or null terminal continuation fields are accepted; non-null URI-only, unsafe, wrong-type,
+or contradictory continuation metadata fails without a partial result. Optional URI filter values
+must agree with the requested context; cursor-only metadata is safe because the next explicit call
+always uses the caller's workspace/root/recursive options, never the returned URL.
+
+`FabricContinuationToken` is the unchanged Jobs cursor validator shared with folder listing.
+`FabricCoreHttpHelpers.ValidateMetadataJson` and `GetMatchingCollectionUri` contain only the existing
+Unicode/duplicate-property and collection-address guards extracted from Jobs. Endpoint-specific
+paging and filter checks stay with each operation. Jobs instance/schedule list regressions cover
+the extraction; no generic pagination engine or existing Core/Jobs contract changes are introduced.
+
+Offline HTTP/credential fixtures cover folder pages, auth failures, cancellation, per-call identities,
+and response disposal. The exact Core catalog and actual Fabric host discovery include the new
+read-only tool. These tests make no live Fabric calls and do not establish live OBO/RBAC behavior;
+that requires separately approved identities and workspace fixtures.
 
 ## Job-instance Cancellation
 
@@ -711,6 +1002,77 @@ Delete Workspace selects `ResponseHeadersRead` on the inherited authenticated se
 
 Workspace deletion tests substitute every credential and HTTP request. They never delete real workspaces. These tests do not establish live Fabric behavior, actual identity permissions, OBO authorization, or recorded playback. Approval to implement or run these offline tests does not authorize a real deletion.
 
+## Folder Updates
+
+Update Folder sends one authenticated PATCH with only the required replacement display name.
+Create and Update share unchanged Fabric name validation, while Get retains its separate read
+semantics. The service reuses the bounded folder snapshot reader and checks both requested
+identities; absent/null parent metadata stays omitted. HTTP 200 with unreadable metadata remains
+a confirmed update, not proof of failure to apply the mutation. Pre-send failures, known HTTP
+rejections, and uncertain sends are distinguished without exposing backend payloads or retrying.
+The advertised name schema is a string. The existing MCP argument binder can join a string array
+into one space-separated string; tests preserve this shared conversion rather than claiming strict
+original-JSON-type rejection or changing other tools. Repeated option keys are rejected.
+
+The replacement follows Core Item/Workspace Update's destructive/idempotent hints, not execution
+or schedule semantics. It is not secret-bearing and uses normal host mutation consent. Read-only
+mode excludes Update while retaining Get/List. All request fixtures are offline, with substituted
+credentials and HTTP; real host startup tests inspect discovery without calling Fabric. No live
+folder, customer-ID discovery, OBO/RBAC validation, or recorded playback is implied.
+
+## Folder Movement
+
+Move Folder sends one authenticated POST to the known folder's `/move` endpoint. A destination
+UUID sends only `targetFolderId`; omission or MCP null sends `{}` for the workspace root.
+Invalid IDs and self-targets fail before authentication. Fabric handles descendant, depth, and
+name constraints; there is no hierarchy preflight, hidden Get/List, destination creation, alternate
+target, or client-side subtree/item movement. A separate Get is exercised only after an explicit
+caller action to inspect an uncertain move.
+
+The existing bounded folder snapshot reader preserves legacy display names without creation
+validation. Returned folder/workspace identities and any non-null destination parent are checked;
+absent/null optional parents are not synthesized. HTTP 200 remains confirmed movement even if
+metadata fails, while known HTTP failures retain their original status and validated Retry-After.
+No automatic retry, Location following, or operation polling is introduced.
+
+Placement changes use destructive/idempotent metadata and normal host consent, not sensitive-data
+or transport-specific gates. Read-only mode excludes Move and retains Get/List. String schemas
+retain shared MCP coercion, including single-element string arrays, rather than redefining binding.
+Tests substitute credentials and HTTP; real host startup checks discovery without Fabric requests.
+No approved live fixture, real mutation, OBO/RBAC authorization, or recorded playback is implied.
+
+## Item Movement
+
+Move Item implements the separate Items API, not Folder Move or a client-side traversal.
+The required request object contains only targetFolderId when supplied; omission or MCP null
+sends `{}` to place the item at the workspace root. Unlike Folder Move, matching numeric item
+and destination-folder UUIDs do not imply a self-target: they identify different resource kinds.
+Fabric enforces resource existence and child-parent constraints; CannotMoveChildOnly never
+triggers parent discovery or an automatic parent move.
+
+The response requires `value` to be an array, without a minimum size or unique-ID constraint.
+Tests preserve the documented Lakehouse/SQL endpoint pair, child-first and repeated entries,
+future item types, more than 1,000 entries, empty collections, and type-only rows. Only `type`
+is required by the item schema. Available UUIDs, workspace/destination context, tag and label
+metadata are validated without fabricating missing fields or inferring child relationships.
+Default identities, data, definitions, and unknown fields are excluded from output.
+
+The shared reader bounds the entire response, not a row prefix, to exactly 1 MiB and 64 JSON
+levels. Projection keeps wire output shallow. Known HTTP status/Retry-After survive malformed
+optional error metadata, while invalid success metadata preserves confirmed movement.
+Per-request credentials, cancellation/disposal, safe logging, normal destructive consent,
+and read-only exclusion use the existing Core mechanisms. Single-element string arrays retain
+the shared MCP binder's coercion; these tests do not claim strict original-JSON-type rejection.
+All requests use offline credentials and HTTP fixtures. Actual host discovery makes no Fabric
+calls; no live item movement, OBO/RBAC authorization, or recorded playback is implied.
+
+The Fabric server's `Infrastructure/ItemMoveAuthenticationTests.cs` also invokes the real host
+registration callback after installing its OBO provider. Even with only Core exposed, DataFactory's
+existing TokenCredential bridge delegates to the current request's MicrosoftIdentityTokenCredential.
+Offline token acquisition and a connection callback prove per-caller credentials reach Move Item,
+and denied acquisition never reaches transport or falls back to a host identity. No production
+authentication implementation is changed, and this is not live token exchange or RBAC evidence.
+
 ## Running Tests
 
 Run from the repository root using the SDK pinned in `global.json` and Microsoft.Testing.Platform:
@@ -718,6 +1080,12 @@ Run from the repository root using the SDK pinned in `global.json` and Microsoft
 ```powershell
 # Run all Core tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj
+
+# Run folder movement and its shared folder/catalog/HTTP regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*Folder*' '*FabricCoreCatalogTests' '*FabricCoreHttpHelpersTests'
+
+# Run item movement and adjacent item/folder/registration/HTTP contracts
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*ItemMove*' '*ItemList*' '*ItemGet*' '*ItemUpdate*' '*ItemDelete*' '*FolderMove*' '*FabricCoreCatalogTests' '*FabricCoreSetupTests' '*FabricCoreHttpHelpersTests'
 
 # Run assignment command, service, and registered-handler tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class '*WorkspaceAssignToCapacity*' '*WorkspaceCapacityAssignment*'
@@ -763,6 +1131,15 @@ dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Te
 
 # Run only Get Workspace command tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceGetCommandTests"
+
+# Run folder lookup command, service, and registered MCP tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderGet*"
+
+# Run empty-folder deletion command, HTTP, and registered MCP tests
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*FolderDelete*"
+
+# Run folder updates and the shared naming/snapshot/catalog regressions
+dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*Folder*" "*FabricCoreCatalogTests" "*FabricCoreSetupTests"
 
 # Run workspace listing tests
 dotnet test --project tools\Fabric.Mcp.Tools.Core\tests\Fabric.Mcp.Tools.Core.Tests\Fabric.Mcp.Tools.Core.Tests.csproj --filter-class "*WorkspaceList*"
@@ -818,4 +1195,4 @@ Assignment uses the shared authenticated sender with `ResponseHeadersRead`, pres
 
 The assignment-specific Retry-After projection remains nullable `long` seconds and ignores dates. Its existing BCL parser accepts deltas up to `int.MaxValue`; returning a `long` does not widen those accepted inputs. The typed header getter can retain the first valid value when multiple values are supplied, whereas the shared helper rejects every multiple-valued header. The local projection preserves that behavior rather than changing the accepted input set. Boundary tests cover raw and typed deltas, dates, and multiple headers.
 
-Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback is unchanged, as are the Item Delete explicit Boolean safeguard and the six-tool read-only Core set.
+Tests reuse `FabricCoreHttpMessageHandler` and retain `UnreadableHttpContent`. All new and inherited operation suites remain offline; no actual assignment or other resource call is authorized. The existing single-proxy local-command text-only fallback and Item Delete explicit Boolean safeguard are unchanged; read-only Core membership is checked by the catalog manifest.

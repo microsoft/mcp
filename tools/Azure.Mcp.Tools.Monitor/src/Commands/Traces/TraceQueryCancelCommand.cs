@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
         abort, or terminate a query — do NOT use this to check status or to resume polling
         a still-running query (for that, call `monitor traces query resume` with
         `--operation-id <id>`). Requires the operationId returned by
-        `monitor traces query run` when it exited with status=Running.
+        a `monitor traces query` command when it exited with status=Running.
         """,
     OperationPlane = ToolOperationPlane.Data,
     Destructive = true,

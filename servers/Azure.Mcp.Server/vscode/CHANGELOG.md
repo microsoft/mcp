@@ -1,5 +1,27 @@
 # Release History
 
+## 4.0.7 (2026-11-10) (pre-release)
+
+### Fixed
+
+- Azure Monitor trace queries now resolve known workspaces without reading parent resource groups or subscription metadata when a subscription ID is supplied. [[#4129](https://github.com/microsoft/mcp/pull/4129)]
+
+## 4.0.6 (2026-11-05) (pre-release)
+
+### Added
+
+- Added `advisor_recommendation_prevalidate` for resource deletion safety checks, batch recommendation updates with `--recommendation-ids`, continuation-token pagination with `--continuation-token`, and Cost/IdleResources summary and list capabilities for savings, lifecycle status, and Service Group scopes. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+
+### Changed
+
+- **Breaking:** Renamed `subscription` to `subscriptions`, `recommendation-type-id` to `recommendation-type-ids`, and `resource-type` to `resource-types` for `advisor_recommendation_list` and `advisor_recommendation_summary`. The new inputs require arrays of strings, including one-element arrays for single selections. The singular input names are no longer accepted. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+#### Dependency Updates
+- Updated the .NET SDK to 10.0.403 and .NET base library packages to 10.0.14. [[#4096](https://github.com/microsoft/mcp/pull/4096)]
+
+### Fixed
+
+- Fixed Debug recording-proxy routing so loopback playback requests stay local instead of passing through outbound HTTP proxies. [[#4104](https://github.com/microsoft/mcp/pull/4104)]
+
 ## 4.0.5 (2026-11-03) (pre-release)
 
 ### Added
