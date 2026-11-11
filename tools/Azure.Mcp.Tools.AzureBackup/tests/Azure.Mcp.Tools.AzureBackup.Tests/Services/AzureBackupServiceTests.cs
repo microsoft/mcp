@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
@@ -852,6 +853,88 @@ public class AzureBackupServiceTests
 
         Assert.Contains("RSV SDK error", ex.Message);
         Assert.Contains("DPP SDK error", ex.Message);
+    }
+
+    // ------------------------------------------------------------------
+    // NEW-7 regression: when both vault listings fail without a
+    // RequestFailedException, sign-in failures and same-type failures must
+    // surface unchanged instead of becoming InvalidOperationException (422).
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithCredentialUnavailable_RethrowsCredentialUnavailable_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var rsvError = new CredentialUnavailableException("RSV: no credential available");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(rsvError);
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("DPP: no credential available"));
+
+        var ex = await Assert.ThrowsAsync<CredentialUnavailableException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(rsvError, ex);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_DppAuthFailedRsvGeneric_RethrowsAuthenticationFailed_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var dppError = new AuthenticationFailedException("DPP: token request failed");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("RSV: generic failure"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(dppError);
+
+        var ex = await Assert.ThrowsAsync<AuthenticationFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(dppError, ex);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_RfeTakesPrecedenceOverAuthFailure_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("RSV: no credential available"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden", "AuthorizationFailed", null));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(403, ex.Status);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithSameExceptionType_RethrowsOriginal_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var rsvError = new HttpRequestException("RSV: connection reset");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(rsvError);
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("DPP: connection reset"));
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(rsvError, ex);
+    }
+
+    [Fact]
+    public async Task FindUnprotectedResourcesAsync_BothVaultListingsFailWithCredentialUnavailable_RethrowsCredentialUnavailable_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("RSV: no credential available"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("DPP: no credential available"));
+
+        await Assert.ThrowsAsync<CredentialUnavailableException>(() =>
+            _service.FindUnprotectedResourcesAsync(sub, resourceTypeFilter: null, resourceGroup: null, tagFilter: null, tenant: null, cancellationToken: CancellationToken.None));
     }
 
     // ------------------------------------------------------------------
