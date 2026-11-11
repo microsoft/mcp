@@ -39,6 +39,7 @@ public class FabricCoreSetup : IAreaSetup
                     socketsHandler.AllowAutoRedirect = false;
                 }
             });
+        services.AddSingleton<ApiResourceGetCommand>(CreateApiResourceGetCommand);
         services.AddSingleton<CapacityGetCommand>();
         services.AddSingleton<CapacityListCommand>();
         services.AddSingleton<FolderCreateCommand>(CreateFolderCreateCommand);
@@ -99,6 +100,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Create new Fabric items, optionally from inline definitions or explicitly selected local definition files\n" +
             "- Replace a known item's complete definition from inline content or explicitly selected saved files\n" +
             "- Track accepted long-running operations and read their JSON or empty results\n" +
+            "- Read one allowlisted Fabric or Power BI REST GET endpoint that has no dedicated tool, such as gateways, connections, or refresh history\n" +
             "- Create Fabric workspaces, optionally assigning an existing capacity and domain\n" +
             "- Rename a known workspace or update or clear its description\n" +
             "- Delete a known Fabric item, with permanent deletion only by explicit opt-in\n" +
@@ -107,6 +109,7 @@ public class FabricCoreSetup : IAreaSetup
             "- Submit workspace capacity assignments without waiting for completion\n" +
             "This tool provides core operations for working with Fabric resources.");
 
+        fabricCore.AddCommand<ApiResourceGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityGetCommand>(serviceProvider);
         fabricCore.AddCommand<CapacityListCommand>(serviceProvider);
         fabricCore.AddCommand<FolderCreateCommand>(serviceProvider);
@@ -255,6 +258,23 @@ public class FabricCoreSetup : IAreaSetup
             if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
             {
                 result.AddError("Specify each delete-folder option at most once.");
+            }
+        });
+        return command;
+    }
+
+    private static ApiResourceGetCommand CreateApiResourceGetCommand(IServiceProvider serviceProvider)
+    {
+        var command = new ApiResourceGetCommand(
+            serviceProvider.GetRequiredService<ILogger<ApiResourceGetCommand>>(),
+            serviceProvider.GetRequiredService<IFabricCoreService>());
+        var definition = command.GetCommand();
+        var options = definition.Options.ToArray();
+        definition.Validators.Add(result =>
+        {
+            if (options.Any(option => result.GetResult(option) is { IdentifierTokenCount: > 1 }))
+            {
+                result.AddError("Specify each get-api-resource option at most once.");
             }
         });
         return command;

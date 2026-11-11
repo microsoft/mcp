@@ -201,6 +201,12 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_delete-workspace-role-assignment | My assignment deletion returned an empty HTTP 200. Return the deletion receipt without reading metadata, following Location, polling, or resubmitting it. | context-required |
 | core_delete-workspace-role-assignment | A repeated assignment deletion returned 404. Keep it as a failure, not proof this request removed the assignment. | context-required |
 | core_delete-workspace-role-assignment | My assignment deletion timed out after sending. Explain the uncertain outcome and validated retry timing without replaying it. Use Get only if I separately authorize inspection of the known assignment. | context-required |
+| core_get-api-resource | List the Fabric connections I can access by calling GET /v1/connections. | none |
+| core_get-api-resource | Using the Power BI API, list the on-premises data gateways I can access. | none |
+| core_get-api-resource | Show the last 10 refreshes of Power BI dataset bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | context-required |
+| core_get-api-resource | Get the Query Scale-Out settings of Power BI semantic model bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | context-required |
+| core_get-api-resource | List the deployment pipelines I can access, and fetch the next page with the returned nextPath. | none |
+| core_get-api-resource | Using the Fabric admin API, list the tenant's workspaces. Report a forbidden response without retrying. | context-required |
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |
