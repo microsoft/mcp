@@ -363,12 +363,21 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string jobId, string? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
+        // NEW-6: accept a GUID or a full ARM job resource ID. A full ID can also identify the vault type.
+        if (!BackupJobIdParser.TryParse(jobId, vaultName, resourceGroup, vaultType, out var jobReference, out var jobError))
+        {
+            throw new ArgumentException(jobError, nameof(jobId));
+        }
+
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+        var resolvedType = await ResolveVaultTypeAsync(
+            vaultName, resourceGroup, subscription,
+            string.IsNullOrEmpty(vaultType) ? jobReference.VaultType : vaultType,
+            tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken)
-            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken);
+            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference.JobName, tenant, cancellationToken)
+            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference.JobName, tenant, cancellationToken);
     }
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(

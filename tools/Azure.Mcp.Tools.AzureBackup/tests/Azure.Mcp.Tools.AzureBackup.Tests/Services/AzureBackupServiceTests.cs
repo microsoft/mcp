@@ -938,6 +938,57 @@ public class AzureBackupServiceTests
     }
 
     // ------------------------------------------------------------------
+    // NEW-6 regression: a full ARM job resource ID must be reduced to the job
+    // name before reaching the SDK, and can identify the vault type.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetJobAsync_FullRsvJobId_PassesJobNameToRsvOps_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        const string jobGuid = "9f1c2a3b-0000-4000-8000-123456789abc";
+        var jobId = $"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault/backupJobs/{jobGuid}";
+        _rsvOps.GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupJobInfo(jobId, jobGuid, "rsv", "Backup", "Completed", null, null, "VM", "vm1"));
+
+        var job = await _service.GetJobAsync("vault", "rg", sub, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(jobGuid, job.Name);
+        await _rsvOps.Received(1).GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>());
+        Assert.Single(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_FullDppJobId_InfersDppVaultType_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        const string jobGuid = "9f1c2a3b-0000-4000-8000-123456789abc";
+        var jobId = $"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.DataProtection/backupVaults/vault/backupJobs/{jobGuid}";
+        _dppOps.GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupJobInfo(jobId, jobGuid, "dpp", "Backup", "Completed", null, null, "Disk", "disk1"));
+
+        await _service.GetJobAsync("vault", "rg", sub, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken);
+
+        await _dppOps.Received(1).GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>());
+        Assert.Single(_dppOps.ReceivedCalls());
+        Assert.Empty(_rsvOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_MalformedJobId_ThrowsArgumentExceptionWithoutCallingAzure_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.GetJobAsync("vault", "rg", sub, "a/b/c", vaultType: "rsv", tenant: null, TestContext.Current.CancellationToken));
+
+        Assert.Contains("--job must be", ex.Message);
+        Assert.Empty(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    // ------------------------------------------------------------------
     // BUG-1 regression: MapArmResourceTypeToBackupDataSourceType must
     // return null (not throw ArgumentNullException) for DPP-only ARM
     // types. Pinned via GetBackupStatusAsync end-to-end: an unmapped
