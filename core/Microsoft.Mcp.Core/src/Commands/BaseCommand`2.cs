@@ -24,6 +24,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
+    /// <summary>
+    /// The telemetry exception type recorded when <see cref="ValidateOptions"/> rejects the options.
+    /// </summary>
+    private const string ValidationErrorExceptionType = "ValidationError";
+
     private readonly Command _command;
 
     [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
@@ -116,6 +121,10 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
             SetValidationError(context.Response, errorMessage, HttpStatusCode.BadRequest);
             context.Response.TelemetryFailureMessage = validationResult.TelemetrySafeMessage;
             CaptureTelemetryFailureMessage(context, context.Response);
+
+            // Without an exception type, McpRuntime records these customer input errors as the
+            // generic "ToolCallError", which hides them among unexplained failures.
+            context.Activity?.SetTagIfNotExists(TagName.ExceptionType, ValidationErrorExceptionType);
             return context.Response!;
         }
 

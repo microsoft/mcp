@@ -78,7 +78,33 @@ public sealed class CommandTelemetryTests
         Assert.Equal("Invalid option 'private value'.", response.Message);
         Assert.Equal("Invalid option.", response.TelemetryFailureMessage);
         Assert.Equal("Invalid option.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Equal("ValidationError", activity.GetTagItem(TagName.ExceptionType));
         Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ValidationError_PreservesExistingExceptionType()
+    {
+        using var activity = CreateActivity();
+        activity.SetTag(TagName.ExceptionType, "Existing.ExceptionType");
+
+        await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, null, failValidation: true),
+            activity);
+
+        Assert.Equal("Existing.ExceptionType", activity.GetTagItem(TagName.ExceptionType));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_FailedResponseWithoutValidationError_DoesNotSetValidationExceptionType()
+    {
+        using var activity = CreateActivity();
+
+        await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.BadRequest, "Sanitized failure details."),
+            activity);
+
+        Assert.Null(activity.GetTagItem(TagName.ExceptionType));
     }
 
     [Fact]
@@ -92,6 +118,7 @@ public sealed class CommandTelemetryTests
         Assert.Equal("Invalid option 'private value'.", response.Message);
         Assert.Equal("Invalid options.", response.TelemetryFailureMessage);
         Assert.Equal("Invalid options.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Equal("ValidationError", activity.GetTagItem(TagName.ExceptionType));
     }
 
     [Fact]
