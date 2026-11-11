@@ -13,13 +13,13 @@ parameters:
 
 # Azure DevOps schedules use UTC. The calendar check selects the active Pacific offset.
 schedules:
-- cron: '0 19 * * 2,4'
+- cron: '0 17 * * 2,4'
   displayName: Release preparation (PDT)
   branches:
     include:
     - main
   always: true
-- cron: '0 20 * * 2,4'
+- cron: '0 18 * * 2,4'
   displayName: Release preparation (PST)
   branches:
     include:

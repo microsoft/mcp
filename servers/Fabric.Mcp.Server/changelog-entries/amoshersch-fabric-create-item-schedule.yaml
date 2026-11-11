@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added jobs_create-item-schedule to create one Fabric schedule with explicit enabled state, UTC timing, time zone, configuration, and optional static execution data, with consent and no automatic retries or polling."

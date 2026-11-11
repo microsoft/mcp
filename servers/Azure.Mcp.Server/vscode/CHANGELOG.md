@@ -1,5 +1,11 @@
 # Release History
 
+## 4.0.7 (2026-11-10) (pre-release)
+
+### Fixed
+
+- Azure Monitor trace queries now resolve known workspaces without reading parent resource groups or subscription metadata when a subscription ID is supplied. [[#4129](https://github.com/microsoft/mcp/pull/4129)]
+
 ## 4.0.6 (2026-11-05) (pre-release)
 
 ### Added

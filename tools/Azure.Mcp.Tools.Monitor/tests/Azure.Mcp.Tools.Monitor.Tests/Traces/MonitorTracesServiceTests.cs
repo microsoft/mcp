@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Net;
 using System.Security;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tests.Helpers;
+using Azure.Mcp.Tools.Monitor.Commands.Traces;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.Mcp.Tools.Monitor.Services.Traces;
 using Azure.ResourceManager.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
@@ -22,6 +26,124 @@ namespace Azure.Mcp.Tools.Monitor.Tests.Traces;
 public sealed class MonitorTracesServiceTests()
 {
     private const string ResourceGroup = "rg";
+
+    [Fact]
+    public async Task CriticalPath_BackendBadRequestReachesCaller()
+    {
+        using var submitResponse = new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent("""{"error":{"code":"InvalidQuery","message":"Invalid trace ID format"}}""")
+        };
+        using var handler = new MonitorTracesTestHandler(1, false,
+            submitResponse: submitResponse);
+        var (service, _) = CreateService(handler);
+        var command = new TraceAnalyzeCriticalPathCommand(
+            NullLogger<TraceAnalyzeCriticalPathCommand>.Instance, service, new SubscriptionResolver());
+        var args = $"--subscription {MonitorTracesTestHandler.Subscription} --resource-group rg --workspace amw0 "
+            + "--trace-ids invalid --start-time 2026-10-12T00:00:00Z --end-time 2026-10-12T01:00:00Z";
+
+        var response = await ((IBaseCommand)command).ExecuteAsync(
+            new(), command.GetCommand().Parse(args), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid trace ID format", response.Message);
+        Assert.Contains("\"traceId\":\"invalid\"", handler.LastSubmitBody);
+        Assert.Equal(0, handler.PollCalls);
+    }
+
+    [Fact]
+    public async Task Compare_LowerTraceSampleDoesNotTruncateAttributeResults()
+    {
+        using var page = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"value":[{"attribute":"span.name"}],"nextLink":"more"}""")
+        };
+        using var finalPage = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"value":[{"attribute":"span.status"}]}""")
+        };
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [page, finalPage]);
+        var (service, _) = CreateService(handler);
+        var end = DateTimeOffset.Parse("2026-10-12T01:00:00.3456789Z", System.Globalization.CultureInfo.InvariantCulture);
+
+        var result = await service.CompareAsync(MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0",
+            "analysis KQL", end.AddHours(-1), end, 1, cancellationToken: TestContext.Current.CancellationToken);
+
+        using var body = JsonDocument.Parse(handler.LastSubmitBody!);
+        Assert.Equal(1, body.RootElement.GetProperty("options").GetProperty("maxResults").GetInt32());
+        Assert.Equal(2, result.Payload!.Value.GetProperty("value").GetArrayLength());
+        Assert.False(result.OutputLimitReached);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Analysis_SubmitsCorrectWireContractAndSharesResumeCancelLifecycle(bool criticalPath)
+    {
+        using var page = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"value":[{"id":1},{"id":2}]}""")
+        };
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [page]);
+        var (service, _) = CreateService(handler);
+        var end = DateTimeOffset.Parse("2026-10-12T01:00:00.3456789Z", System.Globalization.CultureInfo.InvariantCulture);
+        const string query = "analysis KQL";
+        var result = criticalPath
+            ? await service.CriticalPathAsync(MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0",
+                query, end.AddHours(-1), end,
+                ["abcdef1234567890abcdef1234567890", "01234567-89ab-cdef-0123-456789abcdef"],
+                new TraceQueryOptionsBody
+                {
+                    MaxResults = 1,
+                    ResolveTraceLinks = true,
+                    IncludeSamples = false,
+                    IncludeRollups = true,
+                    ExcludeSubtreePrefixes = ["sql.", "a'quoted\\prefix"],
+                    DeprioritizeSubtreePrefixes = ["background."],
+                }, cancellationToken: TestContext.Current.CancellationToken)
+            : await service.CompareAsync(MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0",
+                query, end.AddHours(-1), end, 10000, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.EndsWith(criticalPath ? "/traces:critical-path" : "/traces:compare", handler.LastSubmitUri!.AbsolutePath, StringComparison.Ordinal);
+        using var body = JsonDocument.Parse(handler.LastSubmitBody!);
+        var root = body.RootElement;
+        Assert.Equal("2026-10-12T00:00:00.3456789Z", root.GetProperty("timeRange").GetProperty("startTime").GetString());
+        Assert.Equal("2026-10-12T01:00:00.3456789Z", root.GetProperty("timeRange").GetProperty("endTime").GetString());
+        var options = root.GetProperty("options");
+        Assert.Equal(criticalPath ? 1 : 10000, options.GetProperty("maxResults").GetInt32());
+        Assert.Contains(criticalPath ? "top=1&" : "top=1000&", handler.LastDataPlaneUri!.Query);
+        if (criticalPath)
+        {
+            Assert.Equal("abcdef1234567890abcdef1234567890,01234567-89ab-cdef-0123-456789abcdef", root.GetProperty("traceId").GetString());
+            Assert.True(options.GetProperty("resolveTraceLinks").GetBoolean());
+            Assert.False(options.GetProperty("includeSamples").GetBoolean());
+            Assert.True(options.GetProperty("includeRollups").GetBoolean());
+            Assert.Equal("a'quoted\\prefix", options.GetProperty("excludeSubtreePrefixes")[1].GetString());
+            Assert.Equal("background.", options.GetProperty("deprioritizeSubtreePrefixes")[0].GetString());
+        }
+        else
+        {
+            Assert.False(root.TryGetProperty("traceId", out _));
+            Assert.False(options.TryGetProperty("resolveTraceLinks", out _));
+        }
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal(2, result.Payload!.Value.GetProperty("value").GetArrayLength());
+
+        var resumed = await service.ResumeQueryAsync(
+            MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", result.OperationId!,
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(result.OperationId, resumed.OperationId);
+        Assert.EndsWith($"/operations/{result.OperationId}/results", handler.LastDataPlaneUri!.AbsolutePath, StringComparison.Ordinal);
+        Assert.Equal(2, handler.PollCalls);
+
+        var cancelled = await service.CancelQueryAsync(
+            MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", result.OperationId!,
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(result.OperationId, cancelled.OperationId);
+        Assert.Equal("Cancelled", cancelled.Status);
+        Assert.EndsWith($"/operations/{result.OperationId}:cancel", handler.LastDataPlaneUri!.AbsolutePath, StringComparison.Ordinal);
+        Assert.Equal(1, handler.SubmitCalls);
+    }
 
     [Theory]
     [InlineData(0, false)]
@@ -61,22 +183,31 @@ public sealed class MonitorTracesServiceTests()
     }
 
     [Theory]
-    [InlineData("rg-a")]
-    [InlineData("rg-b")]
-    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string resourceGroup)
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-a")]
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-b")]
+    [InlineData("subscription-name", "rg-a")]
+    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string subscription, string resourceGroup)
     {
         using var handler = new MonitorTracesTestHandler(1, false);
         (MonitorTracesService service, IAzureService azureService) = CreateService(handler);
+        const string tenant = "00000000-0000-0000-0000-000000000003";
+        azureService.GetSubscriptionIdByName("subscription-name", tenant, Arg.Any<CancellationToken>())
+            .Returns(MonitorTracesTestHandler.Subscription);
+
         await service.ListFieldNamesAsync(
-            MonitorTracesTestHandler.Subscription, resourceGroup, "amw0", cancellationToken: TestContext.Current.CancellationToken);
+            subscription, resourceGroup, "amw0", tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Null(handler.LastGraphQuery);
         Assert.Equal(
             $"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Monitor/accounts/amw0",
             handler.LastWorkspaceUri!.AbsolutePath);
         Assert.Contains("api-version=2025-10-03-preview", handler.LastWorkspaceUri.Query);
-        await azureService.Received(1).GetResourceGroupResource(
-            MonitorTracesTestHandler.Subscription, resourceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetResourceGroupResource(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetSubscription(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.Received(subscription == "subscription-name" ? 1 : 0).GetSubscriptionIdByName(
+            Arg.Any<string>(), tenant, TestContext.Current.CancellationToken);
         azureService.Received().ValidateAzureServiceEndpoint(
             "https://amw.data.monitor.azure.com", "monitor-traces");
         azureService.Received(1).ValidateAzureServiceEndpoint(
@@ -144,11 +275,11 @@ public sealed class MonitorTracesServiceTests()
         const string query = "Traces | where trace_id == '\"quoted\"'";
 
         await service.RunQueryAsync(MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", query,
-            end.AddMinutes(-30), end, 1000, true, cancellationToken: TestContext.Current.CancellationToken);
+            end.AddMinutes(-30), end, 1234, true, cancellationToken: TestContext.Current.CancellationToken);
         using JsonDocument submit = JsonDocument.Parse(handler.LastSubmitBody!);
         Assert.Equal(query, submit.RootElement.GetProperty("query").GetString());
-        Assert.Equal(1000, submit.RootElement.GetProperty("options").GetProperty("maxResults").GetInt32());
-        Assert.Contains("top=1000&", handler.LastDataPlaneUri!.Query);
+        Assert.Equal(1234, submit.RootElement.GetProperty("options").GetProperty("maxResults").GetInt32());
+        Assert.Contains("top=1234&", handler.LastDataPlaneUri!.Query);
 
         await service.ResumeQueryAsync(MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", "op-1234",
             10, false,
@@ -452,15 +583,10 @@ public sealed class MonitorTracesServiceTests()
             subscriptionId: MonitorTracesTestHandler.Subscription,
             tenantId: Guid.Parse("00000000-0000-0000-0000-000000000002")));
         azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(subscription);
+        azureService.IsSubscriptionId(Arg.Any<string>()).Returns(call => Guid.TryParse(call.Arg<string>(), out _));
         azureService.GetResourceGroupResource(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                string resourceGroup = call.ArgAt<string>(1);
-                ResourceGroupResource group = Substitute.For<ResourceGroupResource>();
-                group.Id.Returns(new ResourceIdentifier($"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}"));
-                return group;
-            });
+            .Returns(_ => Task.FromException<ResourceGroupResource?>(new RequestFailedException(403, "Resource group read denied.")));
 
         TokenCredential credential = Substitute.For<TokenCredential>();
         var token = new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1));

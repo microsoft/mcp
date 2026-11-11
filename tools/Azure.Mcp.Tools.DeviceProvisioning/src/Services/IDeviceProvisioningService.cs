@@ -13,5 +13,12 @@ public interface IDeviceProvisioningService
         string subscription,
         string? tenant = null,
         CancellationToken cancellationToken = default);
-}
 
+    Task<DeviceProvisioningCertificateDescription> GetCertificate(
+        string serviceName,
+        string certificateName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+}

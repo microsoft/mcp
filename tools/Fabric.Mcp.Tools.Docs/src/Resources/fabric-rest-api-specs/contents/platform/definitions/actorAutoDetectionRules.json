@@ -1,0 +1,227 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "Actor auto-detection rules data types"
+  },
+  "paths": {},
+  "definitions": {
+    "ActorAutoDetectionRule": {
+      "description": "An actor auto-detection rule on a capacity.",
+      "type": "object",
+      "required": [
+        "id",
+        "actorsSubjectToRule",
+        "capacityUnitsConsumptionThresholdPercentage",
+        "blockDuration"
+      ],
+      "properties": {
+        "id": {
+          "description": "The actor auto-detection rule ID.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "actorsSubjectToRule": {
+          "description": "The actors that are subject to the rule.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleActorsSubjectToRule",
+          "readOnly": false
+        },
+        "capacityUnitsConsumptionThresholdPercentage": {
+          "description": "The capacity unit consumption threshold per actor as a percentage of total capacity units over a rolling 24-hour window.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "maximum": 100,
+          "readOnly": false
+        },
+        "blockDuration": {
+          "description": "The duration for which an automatically blocked actor remains blocked.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDuration",
+          "readOnly": false
+        }
+      }
+    },
+    "ActorAutoDetectionRuleActorsSubjectToRule": {
+      "description": "The base type that identifies which actors are subject to an actor auto-detection rule.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "description": "The kind of actors that are subject to the rule.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleActorsSubjectToRuleKind",
+          "readOnly": false
+        }
+      }
+    },
+    "ActorAutoDetectionRuleActorsSubjectToRuleKind": {
+      "description": "The kind of actors that are subject to an actor auto-detection rule. Additional actor auto-detection rule actors subject to rule kinds may be added over time.",
+      "type": "string",
+      "enum": [
+        "AllWorkspaces"
+      ],
+      "x-ms-enum": {
+        "name": "ActorAutoDetectionRuleActorsSubjectToRuleKind",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "AllWorkspaces",
+            "description": "All workspaces on the capacity are subject to the rule."
+          }
+        ]
+      }
+    },
+    "ActorAutoDetectionRuleAllWorkspaces": {
+      "description": "An actor selection that applies an actor auto-detection rule to all workspaces on the capacity.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ActorAutoDetectionRuleActorsSubjectToRule"
+        }
+      ],
+      "x-ms-discriminator-value": "AllWorkspaces"
+    },
+    "ActorAutoDetectionRuleBlockDuration": {
+      "description": "The base type that describes how long an automatically blocked actor remains blocked.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "description": "The kind of block duration.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDurationKind",
+          "readOnly": false
+        }
+      }
+    },
+    "ActorAutoDetectionRuleBlockDurationKind": {
+      "description": "The kind of block duration for an actor auto-detection rule. Additional actor auto-detection rule block duration kinds may be added over time.",
+      "type": "string",
+      "enum": [
+        "Indefinite",
+        "Hours"
+      ],
+      "x-ms-enum": {
+        "name": "ActorAutoDetectionRuleBlockDurationKind",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Indefinite",
+            "description": "The actor remains blocked until manually unblocked by an admin."
+          },
+          {
+            "value": "Hours",
+            "description": "The actor remains blocked for a specified number of hours."
+          }
+        ]
+      }
+    },
+    "ActorAutoDetectionRuleIndefiniteBlockDuration": {
+      "description": "An actor auto-detection rule block duration that remains in effect until an admin manually unblocks the actor.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDuration"
+        }
+      ],
+      "x-ms-discriminator-value": "Indefinite"
+    },
+    "ActorAutoDetectionRuleHoursBlockDuration": {
+      "description": "An actor auto-detection rule block duration measured in hours.",
+      "type": "object",
+      "required": [
+        "hours"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDuration"
+        }
+      ],
+      "x-ms-discriminator-value": "Hours",
+      "properties": {
+        "hours": {
+          "description": "The number of hours the actor remains blocked.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "readOnly": false
+        }
+      }
+    },
+    "CreateActorAutoDetectionRuleRequest": {
+      "description": "The request payload for creating an actor auto-detection rule.",
+      "type": "object",
+      "required": [
+        "actorsSubjectToRule",
+        "capacityUnitsConsumptionThresholdPercentage",
+        "blockDuration"
+      ],
+      "properties": {
+        "actorsSubjectToRule": {
+          "description": "The actors that are subject to the rule.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleActorsSubjectToRule",
+          "readOnly": false
+        },
+        "capacityUnitsConsumptionThresholdPercentage": {
+          "description": "The capacity unit consumption threshold per actor as a percentage of total capacity units over a rolling 24-hour window.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "maximum": 100,
+          "readOnly": false
+        },
+        "blockDuration": {
+          "description": "The duration for which an automatically blocked actor remains blocked.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDuration",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateActorAutoDetectionRuleRequest": {
+      "description": "The request payload for updating an actor auto-detection rule.",
+      "type": "object",
+      "properties": {
+        "capacityUnitsConsumptionThresholdPercentage": {
+          "description": "The capacity unit consumption threshold per actor as a percentage of total capacity units over a rolling 24-hour window. Omit this property to leave the existing value unchanged.",
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "maximum": 100,
+          "readOnly": false
+        },
+        "blockDuration": {
+          "description": "The duration for which an automatically blocked actor remains blocked. When provided, this property replaces the entire block-duration configuration. Omit this property to leave the existing value unchanged.",
+          "$ref": "#/definitions/ActorAutoDetectionRuleBlockDuration",
+          "readOnly": false
+        }
+      }
+    },
+    "ListActorAutoDetectionRulesResponse": {
+      "description": "A list of actor auto-detection rules.",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "description": "A list of actor auto-detection rules.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ActorAutoDetectionRule"
+          },
+          "readOnly": true
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    }
+  }
+}

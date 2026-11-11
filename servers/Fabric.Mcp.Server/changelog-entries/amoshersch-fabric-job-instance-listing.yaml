@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added jobs_list-item-job-instances to read one complete page of Fabric item job snapshots with safe failure metadata, explicit token continuation, and read-only mode support."
