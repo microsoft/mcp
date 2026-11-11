@@ -1808,6 +1808,359 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/staging/datasources/{datasourceId}/topics": {
+      "get": {
+        "summary": "Returns a list of staging topics for a datasource of the specified DataAgent.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\nReturns a paginated list of topic file names for the specified datasource. To retrieve the content of a specific topic, use the download endpoint with the `fileName`.\n\n## Permissions\n\nThe caller must have *read* permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or DataAgent.Read.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ListDatasourceTopics",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataAgentTopics"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List staging DataAgent datasource topics example": {
+            "$ref": "./examples/ListStagingDataAgentDatasourceTopics.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Uploads a staging topic file.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nCreates or replaces a topic file in the staging area. The file content must be markdown format. If a file with the same name already exists, it is replaced.\n\n## Permissions\n\nThe caller must have *contributor* or higher permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_UploadDatasourceTopic",
+        "consumes": [
+          "text/markdown"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "fileName",
+            "description": "The topic file name (e.g., \"company-policies.md\"). Must end with the .md extension.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "content",
+            "description": "The markdown content of the topic file. May include YAML frontmatter with name and description fields.",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.\n\n---\n**Headers:**\n\n**ETag** `string` - The ETag of the updated topic file."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InvalidRequest - Invalid request.\n\n* PreconditionFailed - The current resource ETag doesn't match the value specified in the If-Match header.",
+            "x-ms-error-response": true,
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload staging DataAgent datasource topic example": {
+            "$ref": "./examples/UploadStagingDataAgentDatasourceTopic.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes a staging topic file.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nRemoves a topic file from the staging area.\n\n## Permissions\n\nThe caller must have *contributor* or higher permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_DeleteDatasourceTopic",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "fileName",
+            "description": "The topic file name (e.g., \"company-policies.md\"). Must end with the .md extension.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* PreconditionFailed - The current resource ETag doesn't match the value specified in the If-Match header.",
+            "x-ms-error-response": true,
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete staging DataAgent datasource topic example": {
+            "$ref": "./examples/DeleteStagingDataAgentDatasourceTopic.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/staging/datasources/{datasourceId}/topics/format": {
+      "post": {
+        "summary": "Formats a staging topic file content.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nReturns a formatted version of the specified topic file content. The formatted content includes proper YAML frontmatter (name, description) and structured markdown. If no frontmatter exists, name and description are auto-generated from the content. The original file is not modified — the caller must upload the returned content using the PUT endpoint to apply the formatting.\n\n## Permissions\n\nThe caller must have *read* permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or DataAgent.Read.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_FormatDatasourceTopic",
+        "produces": [
+          "text/markdown"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "fileName",
+            "description": "The topic file name (e.g., \"company-policies.md\"). Must end with the .md extension.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. Response body contains the formatted markdown content.\n\n---\n**Headers:**\n\n**ETag** `string` - The ETag of the topic file.",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Formatting is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* InvalidRequest - The request is invalid. For example, the `fileName` query parameter is missing or does not end with the `.md` extension.",
+            "x-ms-error-response": true,
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Format staging DataAgent datasource topic example": {
+            "$ref": "./examples/FormatStagingDataAgentDatasourceTopic.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/settings": {
       "get": {
         "summary": "Returns the published settings for the specified DataAgent.",
@@ -2263,6 +2616,87 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/datasources/{datasourceId}/topics": {
+      "get": {
+        "summary": "Returns a list of published topics for a datasource of the specified DataAgent.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\nReturns a paginated list of topic file names for the specified datasource. To retrieve the content of a specific topic, use the download endpoint with the `fileName`.\n\n## Permissions\n\nThe caller must have *read* permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or DataAgent.Read.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_ListDatasourceTopics",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataAgentTopics"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List published DataAgent datasource topics example": {
+            "$ref": "./examples/ListPublishedDataAgentDatasourceTopics.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/staging/publish": {
       "post": {
         "summary": "Publishes the staging configuration of the specified DataAgent.",
@@ -2394,6 +2828,164 @@
         "x-ms-examples": {
           "Reset staging DataAgent example": {
             "$ref": "./examples/ResetStagingDataAgent.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/staging/datasources/{datasourceId}/topics/content": {
+      "get": {
+        "summary": "Downloads a staging topic file by file name.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nReturns the raw markdown content of the topic file.\n\n## Permissions\n\nThe caller must have *read* permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or DataAgent.Read.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_DownloadDatasourceTopic",
+        "produces": [
+          "text/markdown"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "fileName",
+            "description": "The topic file name (e.g., \"company-policies.md\"). Must end with the .md extension.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. Response body contains the raw markdown content.\n\n---\n**Headers:**\n\n**ETag** `string` - The ETag of the topic file.",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "x-ms-error-response": true,
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Download staging DataAgent datasource topic example": {
+            "$ref": "./examples/DownloadStagingDataAgentDatasourceTopic.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataAgents/{dataAgentId}/datasources/{datasourceId}/topics/content": {
+      "get": {
+        "summary": "Downloads a published topic file by file name.",
+        "description": "> [!NOTE]\n> Data Agent configuration management is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nReturns the raw markdown content of the topic file.\n\n## Permissions\n\nThe caller must have *read* permissions for the DataAgent.\n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or DataAgent.Read.All or DataAgent.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_DownloadDatasourceTopic",
+        "produces": [
+          "text/markdown"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataAgentId",
+            "description": "The DataAgent ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "datasourceId",
+            "description": "The datasource ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "fileName",
+            "description": "The topic file name (e.g., \"company-policies.md\"). Must end with the .md extension.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. Response body contains the raw markdown content.\n\n---\n**Headers:**\n\n**ETag** `string` - The ETag of the topic file.",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "x-ms-error-response": true,
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Download published DataAgent datasource topic example": {
+            "$ref": "./examples/DownloadPublishedDataAgentDatasourceTopic.json"
           }
         }
       }

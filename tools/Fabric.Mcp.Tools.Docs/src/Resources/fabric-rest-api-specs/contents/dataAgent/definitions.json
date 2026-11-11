@@ -26,7 +26,9 @@
         },
         "DataAgents": {
             "description": "A list of data agents.",
-            "required": ["value"],
+            "required": [
+                "value"
+            ],
             "type": "object",
             "properties": {
                 "value": {
@@ -788,6 +790,42 @@
                     }
                 ]
             }
+        },
+        "DataAgentTopic": {
+            "description": "The metadata for a DataAgent topic file.",
+            "type": "object",
+            "required": [
+                "fileName"
+            ],
+            "properties": {
+                "fileName": {
+                    "description": "The file name of the topic. Must end with the .md extension and be unique within the datasource.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "DataAgentTopics": {
+            "description": "A paginated list of DataAgent topics.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of topics.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAgentTopic"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
         },
         "FewshotValidationStatus": {
             "description": "The validation status of a fewshot.",

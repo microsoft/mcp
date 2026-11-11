@@ -1,0 +1,14 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "environmentId": "5b218778-e7a5-4d73-8187-f10824047715"
+  },
+  "responses": {
+    "200": {
+      "headers": {
+        "Content-Disposition": "attachment; filename=\"publish-log-5b218778-e7a5-4d73-8187-f10824047715.log\""
+      },
+      "body": "Starting Spark application...\nSpark context initialized.\nInstalling libraries from requirements...\nLibrary: numpy==1.24.0 - installed successfully\nLibrary: pandas==2.0.1 - installed successfully\nEnvironment configuration applied.\nSpark application finished with exit code 0.\n"
+    }
+  }
+}

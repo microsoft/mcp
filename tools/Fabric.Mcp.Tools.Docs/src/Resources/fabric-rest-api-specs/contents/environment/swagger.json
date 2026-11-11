@@ -2059,6 +2059,69 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish/log": {
+      "get": {
+        "summary": "Get environment publish log.",
+        "description": "Downloads the driver stdout log as UTF-8 plain text for the latest environment publish run — whether it succeeded or failed. The log is only available when the latest publish operation executed a Spark job and that job has completed.\n\n## Permissions\n\nThe caller must have *write* permissions for the environment item.\n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_GetPublishLog",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully. If the driver log exceeds 50 MB, the response is truncated at exactly 50 MB and the body ends with a single-line marker: `--- LOG TRUNCATED AT 50000000 BYTES ---`.\n\n---\n**Headers:**\n\n**Content-Disposition** `string` - Provides download semantics for the publish log file.\n\n**x-ms-log-truncated** `boolean` - Set to `true` when the log exceeds 50 MB and has been truncated.",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "429": {
+            "description": "The service rate limit was exceeded. The server returns a `Retry-After` header indicating, in seconds, how long the client must wait before sending additional requests.",
+            "x-ms-error-response": true,
+            "headers": {
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            },
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentNotFound - The specified environment does not exist or the caller lacks access.\n\n* NoSparkJobExecuted - The latest publish did not execute a Spark job. No driver stdout log is available.\n\n* PublishInProgress - The Spark job for the latest publish is still running. The log will be available once the job completes.\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment publish log example": {
+            "$ref": "./examples/GetPublishLog.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/environments/{environmentId}/staging/cancelPublish": {
       "post": {
         "summary": "Trigger an environment publish cancellation.",
