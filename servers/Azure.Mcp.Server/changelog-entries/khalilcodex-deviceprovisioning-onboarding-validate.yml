@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: Added read-only Device Provisioning Service onboarding validation for individual enrollments and enrollment-group cohorts of up to 10 devices, including verified CA resolution and complete public X.509 chain checks, plus an agent skill for checkpointed fleet orchestration.

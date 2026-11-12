@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: Added `monitor traces query analyze-top-attributes` for top distinguishing attributes from trace-cohort comparisons with up to 10000 requested traces and `monitor traces query analyze-critical-path` for aggregated critical-path analysis in Azure Monitor Workspace Trace Store.
