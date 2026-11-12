@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Reduced development build output by sharing Azure MCP server runtime dependencies across tests and performance benchmarks."
