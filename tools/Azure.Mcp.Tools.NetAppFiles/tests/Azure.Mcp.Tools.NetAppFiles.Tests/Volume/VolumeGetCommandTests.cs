@@ -21,7 +21,8 @@ public class VolumeGetCommandTests : SubscriptionCommandUnitTestsBase<VolumeGetC
         "eastus",
         "Succeeded",
         100,
-        "Standard")];
+        "Standard",
+        null)];
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
