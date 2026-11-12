@@ -8,4 +8,5 @@ namespace Azure.Mcp.Tools.AzureBackup.Services;
 /// </summary>
 /// <param name="JobName">The job name (typically a GUID) to pass to the SDK.</param>
 /// <param name="VaultType">The vault type inferred from a full ARM job resource ID ("rsv" or "dpp"), or null when not inferable.</param>
-internal sealed record BackupJobReference(string JobName, string? VaultType);
+/// <param name="SubscriptionId">The subscription from a full ARM job resource ID, or null when only a job name was supplied.</param>
+internal sealed record BackupJobReference(string JobName, string? VaultType, string? SubscriptionId);

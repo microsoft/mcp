@@ -13,6 +13,7 @@ using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
 using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
@@ -364,20 +365,33 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         CancellationToken cancellationToken)
     {
         // NEW-6: accept a GUID or a full ARM job resource ID. A full ID can also identify the vault type.
-        if (!BackupJobIdParser.TryParse(jobId, vaultName, resourceGroup, vaultType, out var jobReference, out var jobError))
-        {
-            throw new ArgumentException(jobError, nameof(jobId));
-        }
+        var jobValidation = new ValidationResult();
+        var jobReference = BackupJobIdParser.Parse(jobId, subscription, vaultName, resourceGroup, vaultType, jobValidation);
+        ThrowIfInvalid(jobValidation);
 
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
+        BackupJobIdParser.ValidateSubscription(jobReference!, subscription, jobValidation);
+        ThrowIfInvalid(jobValidation);
+
         var resolvedType = await ResolveVaultTypeAsync(
             vaultName, resourceGroup, subscription,
-            string.IsNullOrEmpty(vaultType) ? jobReference.VaultType : vaultType,
+            string.IsNullOrEmpty(vaultType) ? jobReference!.VaultType : vaultType,
             tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference.JobName, tenant, cancellationToken)
-            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference.JobName, tenant, cancellationToken);
+            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference!.JobName, tenant, cancellationToken)
+            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference!.JobName, tenant, cancellationToken);
+    }
+
+    private static void ThrowIfInvalid(ValidationResult validationResult)
+    {
+        if (!validationResult.IsValid)
+        {
+            throw new CommandValidationException(string.Join('\n', validationResult.Errors))
+            {
+                TelemetrySafeMessage = validationResult.TelemetrySafeMessage
+            };
+        }
     }
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(

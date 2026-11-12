@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -976,14 +977,44 @@ public class AzureBackupServiceTests
     }
 
     [Fact]
-    public async Task GetJobAsync_MalformedJobId_ThrowsArgumentExceptionWithoutCallingAzure_New6()
+    public async Task GetJobAsync_MalformedJobId_ThrowsValidationErrorWithoutCallingAzure_New6()
     {
         const string sub = "22222222-2222-2222-2222-222222222222";
 
-        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+        var ex = await Assert.ThrowsAsync<CommandValidationException>(() =>
             _service.GetJobAsync("vault", "rg", sub, "a/b/c", vaultType: "rsv", tenant: null, TestContext.Current.CancellationToken));
 
         Assert.Contains("--job must be", ex.Message);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, ex.StatusCode);
+        Assert.Equal(BackupJobIdParser.InvalidFormatMessage, ex.TelemetrySafeMessage);
+        Assert.Empty(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_FullJobIdFromOtherSubscription_ThrowsWithoutCallingOps_New6()
+    {
+        // The job ID belongs to a different subscription than the one --subscription resolves to.
+        const string name = "My Production Sub";
+        const string resolvedId = "33333333-3333-3333-3333-333333333333";
+        const string jobSubscription = "22222222-2222-2222-2222-222222222222";
+        var subData = ResourceManager.Models.ResourceManagerModelFactory.SubscriptionData(
+            id: new Azure.Core.ResourceIdentifier($"/subscriptions/{resolvedId}"),
+            subscriptionId: resolvedId,
+            displayName: name,
+            tenantId: null,
+            state: ResourceManager.Resources.Models.SubscriptionState.Enabled);
+        var subResource = Substitute.For<ResourceManager.Resources.SubscriptionResource>();
+        subResource.Data.Returns(subData);
+        _azureService.GetSubscription(name, null, Arg.Any<CancellationToken>()).Returns(subResource);
+        var jobId = $"/subscriptions/{jobSubscription}/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var ex = await Assert.ThrowsAsync<CommandValidationException>(() =>
+            _service.GetJobAsync("vault", "rg", name, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken));
+
+        Assert.Contains(jobSubscription, ex.Message);
+        Assert.Contains(resolvedId, ex.Message);
+        Assert.Equal(BackupJobIdParser.SubscriptionMismatchTelemetryMessage, ex.TelemetrySafeMessage);
         Assert.Empty(_rsvOps.ReceivedCalls());
         Assert.Empty(_dppOps.ReceivedCalls());
     }

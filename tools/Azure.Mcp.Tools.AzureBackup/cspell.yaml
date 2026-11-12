@@ -65,6 +65,7 @@ words:
   - saphanasystem
   - sched
   - segoe
+  - skiptoken
   - slowvm
   - smarch
   - someitem
@@ -96,3 +97,4 @@ words:
   - vaultconfig
   - vaultstorageconfig
   - vmappcontainer
+  - vmrsv

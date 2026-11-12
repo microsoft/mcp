@@ -1658,7 +1658,7 @@ azmcp azurebackup backup status --subscription <subscription> \
 
 ```bash
 # Retrieves backup job information. When --job is specified, returns detailed information about a single job. When omitted, lists all backup jobs in the vault.
-# --job accepts a job ID (GUID) or the full backup job resource ID returned by job listings; a resource ID must match --vault and --resource-group.
+# --job accepts a job ID (GUID) or the full backup job resource ID returned by job listings; a resource ID must match --subscription, --resource-group, --vault and, if specified, --vault-type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup job get --subscription <subscription> \
                           --resource-group <resource-group> \

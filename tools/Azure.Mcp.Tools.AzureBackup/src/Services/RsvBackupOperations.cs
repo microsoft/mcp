@@ -400,11 +400,14 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             }
             else
             {
-                // The ARM endpoint allow-list is enforced on every send by the pipeline's ARM URI validation policy.
                 if (!Uri.TryCreate(nextLink, UriKind.Absolute, out var nextUri) || nextUri.Scheme != Uri.UriSchemeHttps)
                 {
                     throw new InvalidDataException("The protected item listing returned an invalid next page link.");
                 }
+
+                // The service controls nextLink. Authorize it against the configured cloud's ARM endpoint
+                // before sending, independently of the pipeline's ARM URI validation policy.
+                AzureService.ValidateAzureServiceEndpoint(nextUri.AbsoluteUri, "arm");
                 request.Uri.Reset(nextUri);
             }
             request.Headers.Add("Accept", "application/json");

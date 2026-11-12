@@ -42,10 +42,9 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
     {
         base.ValidateOptions(options, validationResult);
 
-        if (!string.IsNullOrEmpty(options.Job) &&
-            !BackupJobIdParser.TryParse(options.Job, options.Vault, options.ResourceGroup, options.VaultType, out _, out var error))
+        if (!string.IsNullOrEmpty(options.Job))
         {
-            validationResult.Errors.Add(error);
+            BackupJobIdParser.Parse(options.Job, options.Subscription, options.Vault, options.ResourceGroup, options.VaultType, validationResult);
         }
     }
 

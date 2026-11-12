@@ -202,6 +202,45 @@ public class JobGetCommandTests : SubscriptionCommandUnitTestsBase<JobGetCommand
     }
 
     [Fact]
+    public async Task ExecuteAsync_JobIdMismatchingEveryOption_ReportsAllErrorsWithSafeTelemetry_New6()
+    {
+        const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/otherRg/providers/Microsoft.RecoveryServices/vaults/otherVault/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "11111111-1111-1111-1111-111111111111",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--vault-type", "dpp",
+            "--job", jobId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+        Assert.Contains("--resource-group", response.Message);
+        Assert.Contains("--vault '", response.Message);
+        Assert.Contains("--vault-type", response.Message);
+        Assert.DoesNotContain("otherVault", response.TelemetryFailureMessage);
+        Assert.DoesNotContain("otherRg", response.TelemetryFailureMessage);
+        Assert.Contains(BackupJobIdParser.VaultMismatchTelemetryMessage, response.TelemetryFailureMessage);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsJobIdFromOtherSubscription_New6()
+    {
+        const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "11111111-1111-1111-1111-111111111111",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--job", jobId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_AcceptsFullArmJobId_New6()
     {
         const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";

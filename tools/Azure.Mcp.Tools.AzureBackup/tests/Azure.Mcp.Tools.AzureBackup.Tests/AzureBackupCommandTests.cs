@@ -1522,13 +1522,13 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     /// <summary>
     /// UX-1: agents pass the VM name as --protected-item and --container where RSV expects
     /// 'VM;iaasvmcontainerv2;{rg};{vm}' and 'IaasVMContainer;iaasvmcontainerv2;{rg};{vm}'.
-    /// The SQL RSV vault protects the test SQL VM. The VM name is read from the listing so record
-    /// and playback use the same (sanitized) value.
+    /// test-resources-post.ps1 protects the dedicated Linux VM in the '-vmrsv' vault. The VM name is read
+    /// from the listing so record and playback use the same (sanitized) value.
     /// </summary>
     [Fact]
     public async Task ProtectedItemGet_RsvVault_VmNameAsItemAndContainer_ResolvesItem()
     {
-        var vaultName = $"{Settings.ResourceBaseName}-sqlrsv";
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
         var vm = await FindRsvVmItemAsync(vaultName);
 
         var result = await CallToolAsync(
@@ -1554,7 +1554,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task RecoveryPointGet_RsvVault_VmNameAsItemAndContainer_ListsRecoveryPoints()
     {
-        var vaultName = $"{Settings.ResourceBaseName}-sqlrsv";
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
         var vm = await FindRsvVmItemAsync(vaultName);
 
         var result = await CallToolAsync(
@@ -2380,8 +2380,8 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     [Fact]
     public async Task JobGet_RsvVault_ByFullJobResourceId_ReturnsJob()
     {
-        // The SQL RSV vault protects the test SQL VM, so it has backup jobs.
-        var vaultName = $"{Settings.ResourceBaseName}-sqlrsv";
+        // test-resources-post.ps1 protects a VM in the '-vmrsv' vault, which runs a ConfigureBackup job.
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
 
         var listResult = await CallToolAsync(
             "azurebackup_job_get",
