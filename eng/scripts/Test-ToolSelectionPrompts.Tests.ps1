@@ -1,7 +1,8 @@
 # Invoke-Pester -Path .\eng\scripts\Test-ToolSelectionPrompts.Tests.ps1
 
 BeforeAll {
-    $scriptPath = Join-Path $PSScriptRoot 'Test-ToolSelectionPrompts.ps1'
+    $scriptPath = Join-Path $PSScriptRoot 'helpers/PromptHelpers.ps1'
+    . $scriptPath
     $parseTokens = $null
     $parseErrors = $null
     $ast = [System.Management.Automation.Language.Parser]::ParseFile(
@@ -28,6 +29,25 @@ BeforeAll {
 
     function Invoke-TestToolServer {
         & $script:PowerShellPath -NoLogo -NoProfile -NonInteractive -Command $script:ServerCode
+    }
+}
+
+Describe 'Read-PromptFile' {
+    It 'reads interaction values and supports two-column prompts' {
+        $promptFile = Join-Path $TestDrive 'prompts.md'
+        @'
+## Storage
+| Tool Name | Test Prompt | Interaction |
+|---|---|---|
+| storage_list | List accounts | context-required |
+| storage_get | Get account |
+'@ | Set-Content -LiteralPath $promptFile
+
+        $prompts = @(Read-PromptFile -PromptsFile $promptFile)
+        $prompts | Should -HaveCount 2
+        $prompts[0].Interaction | Should -Be 'context-required'
+        $prompts[1].ToolName | Should -Be 'storage_get'
+        $prompts[1].Interaction | Should -BeNullOrEmpty
     }
 }
 
