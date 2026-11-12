@@ -10,6 +10,34 @@ param testApplicationOid string
 
 param location string = resourceGroup().location
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
+  name: '${baseName}-vnet'
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: 'anf'
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+          delegations: [
+            {
+              name: 'Microsoft.NetApp-volumes'
+              properties: {
+                serviceName: 'Microsoft.NetApp/volumes'
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
 resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
   name: '${baseName}-account'
   location: location
@@ -18,6 +46,26 @@ resource netAppAccount 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
 resource netAppAccount2 'Microsoft.NetApp/netAppAccounts@2026-01-01' = {
   name: '${baseName}-account2'
   location: location
+}
+
+resource capacityPool 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
+  parent: netAppAccount
+  name: '${baseName}-pool'
+  location: location
+  properties: {
+    serviceLevel: 'Standard'
+    size: 1099511627776
+  }
+}
+
+resource capacityPool2 'Microsoft.NetApp/netAppAccounts/capacityPools@2026-01-01' = {
+  parent: netAppAccount
+  name: '${baseName}-pool2'
+  location: location
+  properties: {
+    serviceLevel: 'Standard'
+    size: 2199023255552
+  }
 }
 
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
