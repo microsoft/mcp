@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
@@ -36,6 +37,13 @@ public class AzureMigrateSetup : IAreaSetup
         // Register platform landing zone service and command
         services.AddSingleton<IPlatformLandingZoneService, PlatformLandingZoneService>();
         services.AddSingleton<RequestCommand>();
+
+        // POC commands read the caller's token from the current HTTP request.
+        services.AddHttpContextAccessor();
+
+        // Inventory (POC): create or update an inventory, then check its status, on the Discovery Service.
+        services.AddSingleton<CreateOrUpdateInventoryCommand>();
+        services.AddSingleton<GetInventoryStatusCommand>();
     }
 
     /// <inheritdoc/>
@@ -61,6 +69,14 @@ public class AzureMigrateSetup : IAreaSetup
         // Register platform landing zone commands
         platformLandingZone.AddCommand<GetGuidanceCommand>(serviceProvider);
         platformLandingZone.AddCommand<RequestCommand>(serviceProvider);
+
+        var inventory = new CommandGroup(
+            "inventory",
+            "Azure Migrate inventory operations - Create or update a server inventory for the signed-in user from a file on the " +
+            "user's machine (the user uploads it with a returned azcopy command), and get the status of an inventory operation.");
+        azureMigrate.AddSubGroup(inventory);
+        inventory.AddCommand<CreateOrUpdateInventoryCommand>(serviceProvider);
+        inventory.AddCommand<GetInventoryStatusCommand>(serviceProvider);
 
         return azureMigrate;
     }
