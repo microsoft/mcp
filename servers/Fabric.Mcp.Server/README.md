@@ -1286,6 +1286,9 @@ for example gateways, connections, dataflows, deployment pipelines, Query Scale-
 refresh history, or Fabric and Power BI admin APIs. Use the `docs_*` tools to find an endpoint's path and
 query options. Prefer a dedicated tool when one exists.
 
+Responses may contain sensitive data. MCP calls require disclosure consent, even in read-only mode;
+declined, canceled, rejected, or unsupported consent prevents authentication and the HTTP request.
+
 ```powershell
 fabmcp core get-api-resource --path /v1/connections
 fabmcp core get-api-resource --api powerbi --path "/v1.0/myorg/groups/aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb/datasets/bbbbbbbb-1111-2222-3333-cccccccccccc/refreshes?`$top=10"
@@ -1309,6 +1312,8 @@ its same-host `location` and `retryAfterSeconds` without polling. Larger respons
 truncated, non-JSON responses are not downloaded, and a UTF-8 byte order mark is skipped. Errors return
 only the HTTP status, a validated error code (Fabric `errorCode` or Power BI `error.code`), the request
 ID, and Retry-After guidance; backend error messages are never returned.
+JSON bodies are limited to **59 nesting levels**, reserving five levels for response and MCP output
+envelopes. Deeper bodies fail with a sanitized error instead of failing during output serialization.
 
 The caller needs the permissions the endpoint documents, such as Fabric administrator rights for admin
 APIs. Power BI calls work with local credentials (Azure CLI, VS Code, or browser sign-in). In remote

@@ -33,7 +33,7 @@ public sealed class ApiRequestInputTests
 
     [Theory]
     [InlineData("fabric", "/v1/workspaces")]
-    [InlineData("fabric", "/v1/connections?continuationToken=abc%2Bdef%3D%3D")]
+    [InlineData("fabric", "/v1/connections?continuationToken=123%2B456%3D%3D")]
     [InlineData("fabric", "/v1/admin/workspaces?type=Workspace&state=Active")]
     [InlineData("fabric", "/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff229/items/a%20b")]
     [InlineData("fabric", "/v1/admin/items?q=a/b?c")]
@@ -72,8 +72,8 @@ public sealed class ApiRequestInputTests
     [InlineData("fabric", "/v1/../v2/workspaces")]
     [InlineData("fabric", "/v1/workspaces/..")]
     [InlineData("fabric", "/v1/%2e%2e/admin")]
-    [InlineData("fabric", "/v1/workspaces%2Fadmin")]
-    [InlineData("fabric", "/v1/workspaces%5Cadmin")]
+    [InlineData("fabric", "/v1/workspaces%2F123")]
+    [InlineData("fabric", "/v1/workspaces%5C123")]
     [InlineData("fabric", "/v1/workspaces%252F")]
     [InlineData("fabric", "/v1/workspaces%0A")]
     [InlineData("fabric", "/v1/workspaces%zz")]
@@ -82,8 +82,8 @@ public sealed class ApiRequestInputTests
     [InlineData("fabric", "/v1/work spaces")]
     [InlineData("fabric", "/v1/workspaces\t")]
     [InlineData("fabric", "/v1/workspaces#fragment")]
-    [InlineData("fabric", "/v1/wörkspaces")]
-    [InlineData("fabric", "/v1/workspaces?name=wörk")]
+    [InlineData("fabric", "/v1/\u00F6")]
+    [InlineData("fabric", "/v1/workspaces?name=\u00F6")]
     [InlineData("fabric", "/v1/workspaces\u0000")]
     public void BuildUri_RejectsUnsafePathsWithFixedMessage(string api, string? path)
     {

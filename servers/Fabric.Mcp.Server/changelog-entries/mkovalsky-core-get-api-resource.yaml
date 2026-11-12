@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added core_get-api-resource to send one read-only GET request to an allowlisted Fabric or Power BI REST path that has no dedicated tool, returning bounded JSON, relative paging links, and sanitized errors."
+    description: "Added core_get-api-resource to send one read-only GET request to an allowlisted Fabric or Power BI REST path that has no dedicated tool, requiring disclosure consent and returning bounded JSON up to 59 nesting levels, relative paging links, and sanitized errors."

@@ -207,6 +207,8 @@ The same namespace selection applies with `--mode namespace` or `--mode single`.
 | core_get-api-resource | Get the Query Scale-Out settings of Power BI semantic model bbbbbbbb-1111-2222-3333-cccccccccccc in workspace aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb. | context-required |
 | core_get-api-resource | List the deployment pipelines I can access, and fetch the next page with the returned nextPath. | none |
 | core_get-api-resource | Using the Fabric admin API, list the tenant's workspaces. Report a forbidden response without retrying. | context-required |
+| core_get-api-resource | In read-only mode, decline disclosure consent for GET /v1/connections. Do not authenticate or send the request. | none |
+| core_get-api-resource | Explain why a JSON response with 60 nesting levels fails safely without returning a partial body. | none |
 | core_get-capacity | Get metadata for Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | Show the SKU, region, and state of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357. | none |
 | core_get-capacity | What is the display name of Fabric capacity 96f3f0ff-4fe2-4712-b61b-05a456ba9357? | none |

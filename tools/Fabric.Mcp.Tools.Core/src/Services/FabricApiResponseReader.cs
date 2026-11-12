@@ -14,6 +14,8 @@ namespace Fabric.Mcp.Tools.Core.Services;
 internal static class FabricApiResponseReader
 {
     internal const int MaxJsonDepth = 64;
+    // Reserve five levels for response, result, namespace, tool-response, and JSON-RPC envelopes.
+    private const int MaxResponseJsonDepth = MaxJsonDepth - 5;
     private static readonly byte[] s_utf8Bom = [0xEF, 0xBB, 0xBF];
 
     internal static async Task<FabricApiResponse> ReadAsync(
@@ -49,7 +51,7 @@ internal static class FabricApiResponseReader
         JsonElement value;
         try
         {
-            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = MaxJsonDepth });
+            using var document = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = MaxResponseJsonDepth });
             ValidateStrings(document.RootElement);
             value = document.RootElement.Clone();
         }

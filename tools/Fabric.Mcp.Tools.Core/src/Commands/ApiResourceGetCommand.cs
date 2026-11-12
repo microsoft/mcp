@@ -23,6 +23,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
         Use api fabric (default) with a path starting with /v1/, or api powerbi with a path starting with /v1.0/myorg/.
         Only relative paths on these hosts are allowed. Returns the status, JSON value, request ID, and a relative nextPath for the next page.
         Never sends a body, follows redirects, retries, polls, or modifies resources. Prefer a dedicated tool when one exists.
+        Responses may contain sensitive data and require disclosure consent, even in read-only mode.
         Requires the permissions the endpoint documents for the caller.
         """,
     OperationPlane = ToolOperationPlane.Control,
@@ -31,7 +32,7 @@ namespace Fabric.Mcp.Tools.Core.Commands;
     LocalRequired = false,
     OpenWorld = false,
     ReadOnly = true,
-    Secret = false)]
+    Secret = true)]
 public sealed class ApiResourceGetCommand(
     ILogger<ApiResourceGetCommand> logger,
     IFabricCoreService fabricCoreService) : FabricCoreCommand<ApiResourceGetOptions, ApiResourceGetCommandResult>
@@ -103,7 +104,7 @@ public sealed class ApiResourceGetCommand(
                 ApiRequestFailure.Redirect => "The REST endpoint returned a redirect, which is not followed. Check the path",
                 ApiRequestFailure.UnsupportedMediaType => "The REST endpoint returned a non-JSON response, which was not downloaded",
                 ApiRequestFailure.ResponseTooLarge => "The JSON response exceeds --max-response-bytes and was not truncated. Narrow the request with query options such as $top, or raise the limit up to 16777216",
-                _ => "The REST endpoint returned invalid JSON. Expected JSON up to 64 nesting levels"
+                _ => "The REST endpoint returned invalid JSON. Expected JSON up to 59 nesting levels"
             }
             : statusCode switch
             {

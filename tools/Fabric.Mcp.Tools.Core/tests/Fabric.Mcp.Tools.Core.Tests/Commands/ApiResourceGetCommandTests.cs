@@ -28,7 +28,7 @@ public sealed class ApiResourceGetCommandTests() : CommandUnitTestsBase<ApiResou
         Assert.False(Command.Metadata.Destructive);
         Assert.False(Command.Metadata.LocalRequired);
         Assert.False(Command.Metadata.OpenWorld);
-        Assert.False(Command.Metadata.Secret);
+        Assert.True(Command.Metadata.Secret);
         Assert.Same(CoreJsonContext.Default.ApiResourceGetCommandResult, Command.ResultTypeInfo);
         Assert.Equal(["--path"], CommandDefinition.Options.Where(option => option.Required).Select(option => option.Name));
         Assert.Equal(
