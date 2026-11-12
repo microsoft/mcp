@@ -12,7 +12,7 @@ REQUIRED JSON STRUCTURE:
 {
   "<service-key>": {
     "serviceNameVariationsNormalized": ["<variation1>", "<variation2>", ...],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>"
+    "serviceGuideUrl": "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/<guide-slug>"
   }
 }
 
@@ -32,9 +32,9 @@ RULES FOR GENERATION:
      * "azure-kubernetes-service" → ["aks", "azurek8s", "azurekubernetes", "azurekubernetesservice", "k8s", "kubernetes"]
      * "application-insights" → ["applicationinsights", "appinsights", "insights"]
 
-3. **serviceGuideUrl**: Construct as:
-   - Base: "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/"
-   - Append the href value from TOC.yml (e.g., "service-guides/azure-blob-storage.md")
+3. **serviceGuideUrl**: Use the rendered Microsoft Learn guide URL, not a raw GitHub URL:
+   - Base: "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/"
+   - Append the service guide filename without the `.md` extension (e.g., "azure-blob-storage")
 
 SPECIAL HANDLING:
 - If a service has nested items (like Azure SQL Managed Instance with "reliability" and "operational excellence" sub-pages), skip it or handle it separately
@@ -49,11 +49,11 @@ EXAMPLE OUTPUT:
 {
   "application-insights": {
     "serviceNameVariationsNormalized": ["applicationinsights", "appinsights", "insights"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md"
+    "serviceGuideUrl": "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/application-insights"
   },
   "azure-blob-storage": {
     "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md"
+    "serviceGuideUrl": "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-blob-storage"
   }
 }
 
