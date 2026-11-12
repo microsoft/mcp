@@ -12,7 +12,7 @@ REQUIRED JSON STRUCTURE:
 {
   "<service-key>": {
     "serviceNameVariationsNormalized": ["<variation1>", "<variation2>", ...],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/<href-path>"
+    "serviceGuideUrl": "https://learn.microsoft.com/azure/well-architected/<href-path-without-extension>"
   }
 }
 
@@ -33,8 +33,8 @@ RULES FOR GENERATION:
      * "application-insights" → ["applicationinsights", "appinsights", "insights"]
 
 3. **serviceGuideUrl**: Construct as:
-   - Base: "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/"
-   - Append the href value from TOC.yml (e.g., "service-guides/azure-blob-storage.md")
+   - Base: "https://learn.microsoft.com/azure/well-architected/"
+   - Append the href value from TOC.yml with the trailing ".md" removed (e.g., "service-guides/azure-blob-storage.md" becomes "service-guides/azure-blob-storage")
 
 SPECIAL HANDLING:
 - If a service has nested items (like Azure SQL Managed Instance with "reliability" and "operational excellence" sub-pages), skip it or handle it separately
@@ -49,11 +49,11 @@ EXAMPLE OUTPUT:
 {
   "application-insights": {
     "serviceNameVariationsNormalized": ["applicationinsights", "appinsights", "insights"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/application-insights.md"
+    "serviceGuideUrl": "https://learn.microsoft.com/azure/well-architected/service-guides/application-insights"
   },
   "azure-blob-storage": {
     "serviceNameVariationsNormalized": ["azureblob", "azureblobstorage", "blob", "blobstorage"],
-    "serviceGuideUrl": "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-blob-storage.md"
+    "serviceGuideUrl": "https://learn.microsoft.com/azure/well-architected/service-guides/azure-blob-storage"
   }
 }
 
