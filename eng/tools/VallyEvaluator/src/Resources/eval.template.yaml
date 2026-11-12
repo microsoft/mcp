@@ -5,7 +5,7 @@ type: capability
 stimuli:
   - name: insert-name-here
     prompt: insert-prompt-here
-    agent_environment: azmcp_linux
+    environment: development
     graders:
       - type: tool-calls
         config:

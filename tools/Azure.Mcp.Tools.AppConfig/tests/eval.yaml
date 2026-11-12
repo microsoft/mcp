@@ -4,45 +4,41 @@ type: capability
 stimuli:
   - name: List stores
     prompt: List all App Configuration stores in my subscription
-    agent_environment: ${AGENT_ENVIRONMENT}
+    environment: ${ENVIRONMENT}
     tags: 
     graders:
       - type: tool-calls
         config:
           required:
             - name: appconfig
-              args:
-                command: appconfig_account_list
+              command: appconfig_account_list
   - name: List key-value settings
     prompt: List all key-value settings in App Configuration store AppConfigStore
-    agent_environment: ${AGENT_ENVIRONMENT}
+    environment: ${ENVIRONMENT}
     tags: 
     graders:
       - type: tool-calls
         config:
           required:
             - name: appconfig
-              args:
-                command: appconfig_kv_get
+              command: appconfig_kv_get
   - name: List key-value settings with key prefix 'prod-'
     prompt: List all key-value settings with key name starting with 'prod-' in App Configuration store AppConfigStore
-    agent_environment: ${AGENT_ENVIRONMENT}
+    environment: ${ENVIRONMENT}
     tags: 
     graders:
       - type: tool-calls
         config:
           required:
             - name: appconfig
-              args:
-                command: appconfig_kv_get
+              command: appconfig_kv_get
   - name: Lock key Foo
     prompt: Lock the key Foo in App Configuration store AppConfigStore
-    agent_environment: ${AGENT_ENVIRONMENT}
+    environment: ${ENVIRONMENT}
     tags: 
     graders:
       - type: tool-calls
         config:
           required:
             - name: appconfig
-              args:
-                command: appconfig_kv_lock_set
+              command: appconfig_kv_lock_set

@@ -4,7 +4,7 @@ paths:
   results: ".work/vally/vally-results/"
 
 environments:
-  azmcp_linux:
+  linux:
     mcpServers:
       azmcp:
         type: stdio
@@ -13,7 +13,7 @@ environments:
         timeout: "2m"
         env:
           AZURE_MCP_COLLECT_TELEMETRY: 'false'
-  azmcp_windows:
+  windows:
     mcpServers:
       azmcp:
         type: stdio
