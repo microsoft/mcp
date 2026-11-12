@@ -724,7 +724,6 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | investigation-required |
-| optimization_recommendation_list | Rank the top 5 individual cost-saving recommendations by impact and annual savings in subscription \<subscription> | none |
 | optimization_recommendation_list | What are my cost optimization recommendations? | none |
 | optimization_recommendation_list | Show cost optimization recommendations across all my accessible subscriptions | none |
 | optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
