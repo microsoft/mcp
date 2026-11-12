@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Reflection;
 using System.Text.Json;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -39,11 +38,32 @@ public static class McpTestUtilities
     /// Gets the path to the azmcp executable, handling OS-specific executable naming.
     /// </summary>
     /// <returns>The full path to the azmcp executable.</returns>
-    public static string GetAzMcpExecutablePath()
+    public static string GetAzMcpExecutablePath() => GetAzMcpExecutablePath(AppContext.BaseDirectory);
+
+    public static string GetAzMcpExecutablePath(string testOutputDirectory)
     {
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string locationFile = Path.Combine(testOutputDirectory, "AzureMcpServer.path");
+        if (!File.Exists(locationFile))
+        {
+            throw new FileNotFoundException(
+                "Azure MCP server location is missing. Build the consuming test project before running tests.", locationFile);
+        }
+
+        string serverDirectory = File.ReadAllText(locationFile).Trim();
+        if (string.IsNullOrWhiteSpace(serverDirectory))
+        {
+            throw new InvalidDataException($"Azure MCP server location file '{locationFile}' is empty. Rebuild the consuming test project.");
+        }
+
         string executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        return Path.Combine(testAssemblyPath, executableName);
+        string executablePath = Path.GetFullPath(Path.Combine(testOutputDirectory, serverDirectory, executableName));
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException(
+                "Azure MCP server executable is missing. Build the consuming test project to build its server dependency.", executablePath);
+        }
+
+        return executablePath;
     }
 
     /// <summary>
