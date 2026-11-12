@@ -52,6 +52,7 @@ public sealed class VolumeUpdateCommand(
                 options.QuotaGib,
                 options.ResourceGroup,
                 options.Subscription!,
+                options.ThroughputMibps,
                 options.Tenant,
                 cancellationToken);
 

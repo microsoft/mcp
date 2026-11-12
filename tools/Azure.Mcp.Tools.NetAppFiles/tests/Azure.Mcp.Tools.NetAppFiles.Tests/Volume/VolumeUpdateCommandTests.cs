@@ -21,7 +21,8 @@ public class VolumeUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeU
         "eastus",
         "Succeeded",
         200,
-        "Standard");
+        "Standard",
+        null);
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -42,6 +43,7 @@ public class VolumeUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeU
             200,
             "rg",
             "sub",
+            null,
             "tenant",
             Arg.Any<CancellationToken>())
             .Returns(UpdatedVolume);
@@ -101,6 +103,7 @@ public class VolumeUpdateCommandTests : SubscriptionCommandUnitTestsBase<VolumeU
             Arg.Any<long>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<float?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(

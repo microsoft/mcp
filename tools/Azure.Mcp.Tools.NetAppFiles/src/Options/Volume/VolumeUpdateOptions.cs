@@ -24,6 +24,9 @@ public sealed class VolumeUpdateOptions : ISubscriptionOption
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }
 
+    [Option(Description = "The volume throughput in MiB/s. Can only be manually set on volumes in a Manual QoS capacity pool.")]
+    public float? ThroughputMibps { get; set; }
+
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
 

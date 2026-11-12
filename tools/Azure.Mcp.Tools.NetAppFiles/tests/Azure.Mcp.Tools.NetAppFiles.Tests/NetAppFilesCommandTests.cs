@@ -8,6 +8,14 @@ using Microsoft.Mcp.Tests.Client;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Microsoft.Mcp.Tests.Generated.Models;
 using Xunit;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.ResourceManager.NetApp;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Tests.Helpers;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.NetAppFiles.Tests;
 
@@ -76,6 +84,12 @@ public class NetAppFilesCommandTests(
         new BodyKeySanitizer(new BodyKeySanitizerBody("$.error.message")
         {
             Regex = "resource group '(?<resourceGroup>[^']+)'",
+            GroupForReplace = "resourceGroup",
+            Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..properties.subnetId")
+        {
+            Regex = "/resourceGroups/(?<resourceGroup>[^/]+)",
             GroupForReplace = "resourceGroup",
             Value = "Sanitized"
         }),
@@ -162,23 +176,35 @@ public class NetAppFilesCommandTests(
         var accountName = RegisterOrRetrieveVariable("createdNetAppAccount", $"test-Account-{DateTime.UtcNow:MMddHHmmss}");
         var resourceGroupName = Settings.ResourceGroupName;
 
-        var result = await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
+        try
+        {
+            var result = await CallToolAsync(
+                "netappfiles_account_create",
+                new()
+                {
                 { "account", accountName },
                 { "location", "eastus" },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
-            });
+                });
 
-        var account = result.AssertProperty("account");
-        Assert.Equal(JsonValueKind.Object, account.ValueKind);
-        account.AssertProperty("name");
-        account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
-        Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+            var account = result.AssertProperty("account");
+            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            account.AssertProperty("name");
+            account.AssertProperty("id");
+            Assert.Equal("eastus", account.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+        }
+        finally
+        {
+            var resourceGroup = await GetResourceGroupAsync();
+            if (resourceGroup is not null)
+            {
+                var account = await resourceGroup.GetNetAppAccountAsync(accountName, TestContext.Current.CancellationToken);
+                await account.Value.DeleteAsync(WaitUntil.Completed, TestContext.Current.CancellationToken);
+            }
+        }
     }
 
     [Fact]
@@ -188,35 +214,47 @@ public class NetAppFilesCommandTests(
         var resourceGroupName = Settings.ResourceGroupName;
         var updatedTagsString = "{\"recorded-test\":\"account-update\"}";
 
-        await CallToolAsync(
-            "netappfiles_account_create",
-            new()
-            {
+        try
+        {
+            await CallToolAsync(
+                "netappfiles_account_create",
+                new()
+                {
                 { "account", accountName },
                 { "location", "eastus" },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
-            });
+                });
 
-        var result = await CallToolAsync(
-            "netappfiles_account_update",
-            new()
-            {
+            var result = await CallToolAsync(
+                "netappfiles_account_update",
+                new()
+                {
                 { "account", accountName },
                 { "resource-group", resourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId },
                 { "tags", updatedTagsString }
-            });
+                });
 
-        var account = result.AssertProperty("account");
-        Assert.Equal(JsonValueKind.Object, account.ValueKind);
-        account.AssertProperty("name");
-        account.AssertProperty("id");
-        Assert.Equal("eastus", account.AssertProperty("location").GetString());
-        Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
-        Assert.Equal("account-update", account.AssertProperty("tags").AssertProperty("recorded-test").GetString());
+            var account = result.AssertProperty("account");
+            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            account.AssertProperty("name");
+            account.AssertProperty("id");
+            Assert.Equal("eastus", account.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", account.AssertProperty("provisioningState").GetString());
+            Assert.Equal("account-update", account.AssertProperty("tags").AssertProperty("recorded-test").GetString());
+        }
+        finally
+        {
+            var resourceGroup = await GetResourceGroupAsync();
+            if (resourceGroup is not null)
+            {
+                var account = await resourceGroup.GetNetAppAccountAsync(accountName, TestContext.Current.CancellationToken);
+                await account.Value.DeleteAsync(WaitUntil.Completed, TestContext.Current.CancellationToken);
+            }
+        }
     }
 
     [Fact]
@@ -229,30 +267,44 @@ public class NetAppFilesCommandTests(
         var location = "westus";
         var volumeSizeGib = 50;
 
-        var result = await CallToolAsync(
-            "netappfiles_volume_create",
-            new()
-            {
-                { "account", accountName },
-                { "pool", poolName },
-                { "volume", volumeName },
-                { "location", location },
-                { "subnet-id", subnetId },
-                { "quota-gib", volumeSizeGib },
-                { "service-level", "Standard" },
-                { "resource-group", Settings.ResourceGroupName },
-                { "subscription", Settings.SubscriptionId },
-                { "tenant", Settings.TenantId }
-            });
+        try
+        {
+            var result = await CallToolAsync(
+                "netappfiles_volume_create",
+                new()
+                {
+                    { "account", accountName },
+                    { "pool", poolName },
+                    { "volume", volumeName },
+                    { "location", location },
+                    { "subnet-id", subnetId },
+                    { "quota-gib", volumeSizeGib },
+                    { "service-level", "Standard" },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "subscription", Settings.SubscriptionId },
+                    { "tenant", Settings.TenantId }
+                });
 
-        var volume = result.AssertProperty("volume");
-        Assert.Equal(JsonValueKind.Object, volume.ValueKind);
-        volume.AssertProperty("id");
-        Assert.Equal($"{accountName}/{poolName}/{volumeName}", volume.AssertProperty("name").GetString());
-        Assert.Equal(location, volume.AssertProperty("location").GetString());
-        Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
-        Assert.Equal(volumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
-        Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+            var volume = result.AssertProperty("volume");
+            Assert.Equal(JsonValueKind.Object, volume.ValueKind);
+            volume.AssertProperty("id");
+            Assert.Equal($"{accountName}/{poolName}/{volumeName}", volume.AssertProperty("name").GetString());
+            Assert.Equal(location, volume.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
+            Assert.Equal(volumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
+            Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+        }
+        finally
+        {
+            var resourceGroup = await GetResourceGroupAsync();
+            if (resourceGroup is not null)
+            {
+                var account = await resourceGroup.GetNetAppAccountAsync(accountName, TestContext.Current.CancellationToken);
+                var pool = await account.Value.GetCapacityPoolAsync(poolName, TestContext.Current.CancellationToken);
+                var volume = await pool.Value.GetNetAppVolumeAsync(volumeName, TestContext.Current.CancellationToken);
+                await volume.Value.DeleteAsync(WaitUntil.Completed, null, TestContext.Current.CancellationToken);
+            }
+        }
     }
 
     [Fact]
@@ -275,12 +327,47 @@ public class NetAppFilesCommandTests(
                 { "tenant", Settings.TenantId }
             });
 
-        var volume = result.AssertProperty("volume");
+        var volumes = result.AssertProperty("volumes");
+        Assert.Equal(JsonValueKind.Array, volumes.ValueKind);
+        var volume = volumes[0];
         Assert.Equal(JsonValueKind.Object, volume.ValueKind);
         volume.AssertProperty("id");
         Assert.Equal(location, volume.AssertProperty("location").GetString());
         Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
         Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+    }
+
+    // todo create a volumes test that tests without the volume name filter applied
+    [Fact]
+    public async Task VolumeGet_NoVolumeFilterReturnsAllVolumes()
+    {
+        string[] volumeNames = [$"{Settings.ResourceBaseName}-volume", $"{Settings.ResourceBaseName}-volume2"];
+        var accountName = $"{Settings.ResourceBaseName}-account";
+        var poolName = $"{Settings.ResourceBaseName}-pool";
+        var resourceGroupName = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "netappfiles_volume_get",
+            new()
+            {
+                { "account", accountName },
+                { "pool", poolName },
+                { "resource-group", resourceGroupName },
+                { "subscription", Settings.SubscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        var volumes = result.AssertProperty("volumes").EnumerateArray().ToArray();
+        foreach (var volumeName in volumeNames)
+        {
+            var foundVolume = volumes.FirstOrDefault(volume => volume.AssertProperty("id").GetString()?.EndsWith($"volumes/{volumeName}") ?? false);
+            Assert.Equal(JsonValueKind.Object, foundVolume.ValueKind);
+            foundVolume.AssertProperty("id");
+            Assert.Equal("westus", foundVolume.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", foundVolume.AssertProperty("provisioningState").GetString());
+        }
+
+        Assert.True(volumes.Length >= volumeNames.Length);
     }
 
     [Fact]
@@ -293,10 +380,13 @@ public class NetAppFilesCommandTests(
         var volumeSizeGib = 50;
         var updatedVolumeSizeGib = volumeSizeGib + 50;
         var volumeName = RegisterOrRetrieveVariable("updatedVolume", $"test-volume-update-{DateTime.UtcNow:MMddHHmmss}");
-        await CallToolAsync(
-            "netappfiles_volume_create",
-            new()
-            {
+
+        try
+        {
+            await CallToolAsync(
+                "netappfiles_volume_create",
+                new()
+                {
                 { "account", accountName },
                 { "pool", poolName },
                 { "volume", volumeName },
@@ -307,12 +397,12 @@ public class NetAppFilesCommandTests(
                 { "resource-group", Settings.ResourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
-            });
+                });
 
-        var result = await CallToolAsync(
-            "netappfiles_volume_update",
-            new()
-            {
+            var result = await CallToolAsync(
+                "netappfiles_volume_update",
+                new()
+                {
                 { "account", accountName },
                 { "pool", poolName },
                 { "volume", volumeName },
@@ -320,13 +410,52 @@ public class NetAppFilesCommandTests(
                 { "resource-group", Settings.ResourceGroupName },
                 { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId }
-            });
-        var volume = result.AssertProperty("volume");
-        Assert.Equal(JsonValueKind.Object, volume.ValueKind);
-        volume.AssertProperty("id");
-        Assert.Equal(location, volume.AssertProperty("location").GetString());
-        Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
-        Assert.Equal(updatedVolumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
-        Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+                });
+            var volume = result.AssertProperty("volume");
+            Assert.Equal(JsonValueKind.Object, volume.ValueKind);
+            volume.AssertProperty("id");
+            Assert.Equal(location, volume.AssertProperty("location").GetString());
+            Assert.Equal("Succeeded", volume.AssertProperty("provisioningState").GetString());
+            Assert.Equal(updatedVolumeSizeGib, volume.AssertProperty("quotaGib").GetInt64());
+            Assert.Equal("Standard", volume.AssertProperty("serviceLevel").GetString());
+        }
+        finally
+        {
+            var resourceGroup = await GetResourceGroupAsync();
+            if (resourceGroup is not null)
+            {
+                var account = await resourceGroup.GetNetAppAccountAsync(accountName, TestContext.Current.CancellationToken);
+                var pool = await account.Value.GetCapacityPoolAsync(poolName, TestContext.Current.CancellationToken);
+                var volume = await pool.Value.GetNetAppVolumeAsync(volumeName, TestContext.Current.CancellationToken);
+                await volume.Value.DeleteAsync(WaitUntil.Completed, null, TestContext.Current.CancellationToken);
+            }
+        }
+    }
+
+    private async Task<ResourceGroupResource?> GetResourceGroupAsync()
+    {
+        if (TestMode == TestMode.Playback)
+        {
+            return null;
+        }
+
+        using var provider = TestHttpClientFactoryProvider.Create(
+        configureServices: services =>
+        {
+            services.AddSingleton<IConfiguration>(
+                new ConfigurationBuilder().Build());
+            services.AddSingleUserCliCacheService(disabled: true);
+            services.AddSingleton<ISubscriptionResolver, SubscriptionResolver>();
+            services.AddAzureService();
+        });
+
+        var azureService = provider.GetRequiredService<IAzureService>();
+        var resourceGroup = await azureService.GetResourceGroupResource(
+            Settings.SubscriptionId,
+            Settings.ResourceGroupName,
+            Settings.TenantId);
+
+        Assert.NotNull(resourceGroup);
+        return resourceGroup;
     }
 }

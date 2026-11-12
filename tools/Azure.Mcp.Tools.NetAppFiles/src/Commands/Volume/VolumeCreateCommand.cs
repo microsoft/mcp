@@ -62,6 +62,7 @@ public sealed class VolumeCreateCommand(
                 options.ServiceLevel,
                 options.ResourceGroup,
                 options.Subscription!,
+                options.ThroughputMibps,
                 options.Tenant,
                 cancellationToken);
 

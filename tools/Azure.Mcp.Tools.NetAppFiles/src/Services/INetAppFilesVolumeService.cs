@@ -26,6 +26,7 @@ public interface INetAppFilesVolumeService
         string serviceLevel,
         string resourceGroup,
         string subscription,
+        float? throughputMibps = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -36,6 +37,7 @@ public interface INetAppFilesVolumeService
         long quotaGib,
         string resourceGroup,
         string subscription,
+        float? throughputMibps = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

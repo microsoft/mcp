@@ -23,7 +23,8 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
         "eastus",
         "Succeeded",
         100,
-        "Premium");
+        "Premium",
+        null);
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
@@ -47,6 +48,7 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
             "Premium",
             "rg",
             "sub",
+            null,
             "tenant",
             Arg.Any<CancellationToken>())
             .Returns(CreatedVolume);
@@ -117,6 +119,7 @@ public class VolumeCreateCommandTests : SubscriptionCommandUnitTestsBase<VolumeC
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<float?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException(

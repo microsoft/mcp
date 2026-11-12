@@ -70,6 +70,18 @@ resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2026-01-0
   }
 }
 
+resource volume2 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2026-01-01' = {
+  parent: capacityPool
+  name: '${baseName}-volume2'
+  location: location
+  properties: {
+    subnetId: virtualNetwork.properties.subnets[0].id
+    serviceLevel: 'Standard'
+    usageThreshold: 214748364800
+    creationToken: '${baseName}-volume2'
+  }
+}
+
 resource contributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'

@@ -32,7 +32,7 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
         var accountResource = resourceGroupResource.GetNetAppAccount(account, cancellationToken).Value;
         var poolResource = accountResource.GetCapacityPool(pool, cancellationToken).Value;
 
-        if (volume is null)
+        if (volume is not null)
         {
             var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
 
@@ -53,6 +53,7 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
         string serviceLevel,
         string resourceGroup,
         string subscription,
+        float? throughputMibps = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -71,7 +72,8 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
             checked(quotaGib * BytesPerGib),
             new ResourceIdentifier(subnetId))
         {
-            ServiceLevel = ParseServiceLevel(serviceLevel)
+            ServiceLevel = ParseServiceLevel(serviceLevel),
+            ThroughputMibps = throughputMibps
         };
 
         var operation = await poolResource
@@ -90,6 +92,7 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
         long quotaGib,
         string resourceGroup,
         string subscription,
+        float? throughputMibps = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -105,7 +108,8 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
         var volumeResource = poolResource.GetNetAppVolume(volume, cancellationToken).Value;
         var patch = new NetAppVolumePatch(volumeResource.Data.Location)
         {
-            UsageThreshold = checked(quotaGib * BytesPerGib)
+            UsageThreshold = checked(quotaGib * BytesPerGib),
+            ThroughputMibps = throughputMibps
         };
 
         var operation = await volumeResource.UpdateAsync(WaitUntil.Started, patch, cancellationToken);
@@ -128,5 +132,6 @@ public class NetAppFilesVolumeService(IAzureService azureService) : BaseAzureSer
         volume.Data.Location.ToString(),
         volume.Data.ProvisioningState,
         volume.Data.UsageThreshold / BytesPerGib,
-        volume.Data.ServiceLevel?.ToString());
+        volume.Data.ServiceLevel?.ToString(),
+        volume.Data.ThroughputMibps);
 }
