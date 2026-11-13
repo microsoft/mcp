@@ -840,7 +840,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
     /// <summary>
     /// Initializes the URL for ASP.NET Core to bind to.
     /// </summary>
-    private static void InitializeListingUrls(WebApplicationBuilder builder, ServerStartOptions options)
+    internal static void InitializeListingUrls(WebApplicationBuilder builder, ServerStartOptions options)
     {
         if (!options.DangerouslyDisableHttpIncomingAuth)
         {
@@ -856,7 +856,19 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             throw new InvalidOperationException("Multiple endpoints in ASPNETCORE_URLS are not supported. Provide a single URL.");
         }
 
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        // ASP.NET Core accepts "*" and "+" as wildcard hosts (e.g. "http://+:8080"), but System.Uri cannot
+        // parse them. Substitute the equivalent wildcard IP address so the URL can be validated below.
+        string parsableUrl = url;
+        int hostStart = url.IndexOf("://", StringComparison.Ordinal) + 3;
+        if (hostStart >= 3
+            && hostStart < url.Length
+            && url[hostStart] is '*' or '+'
+            && (hostStart + 1 == url.Length || url[hostStart + 1] is ':' or '/'))
+        {
+            parsableUrl = string.Concat(url.AsSpan(0, hostStart), IPAddress.Any.ToString(), url.AsSpan(hostStart + 1));
+        }
+
+        if (!Uri.TryCreate(parsableUrl, UriKind.Absolute, out var uri))
         {
             throw new InvalidOperationException($"Invalid URL: '{url}'");
         }
@@ -870,8 +882,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         // loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
         bool isLoopback = uri.IsLoopback;
 
-        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in.
-        bool isWildcard = uri.Host is "*" or "+" or "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
+        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in. A "*" or "+" host
+        // was substituted with 0.0.0.0 above.
+        bool isWildcard = uri.Host is "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
 
         if (!isLoopback && !isWildcard)
         {
