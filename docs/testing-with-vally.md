@@ -75,6 +75,6 @@ Before invoking Vally, `Invoke-VallyEvalTests.ps1` temporarily replaces `<WorkDi
 
 ## Automated workflow
 
-A GitHub workflow runs Vally evaluations for pull requests that modify files matching `tools/Azure.Mcp.*/**`. It uses `.work/build_info.json` to generate and run evaluations for affected Azure tool namespaces. The workflow can also be started manually with a configurable run count and verbose logging.
+A GitHub workflow runs Vally evaluations after pull requests that modify Azure tool code or eval specifications are merged into main. It uses `.work/build_info.json` to generate and run evaluations for affected tool namespaces. Manual runs evaluate all Azure MCP Server tools and support verbose logging.
 
-Runs are available in [GitHub Actions](https://github.com/microsoft/mcp/actions). To diagnose failures, open the **Upload vally results** step and download the `vally-results` artifact.
+Runs are available in [GitHub Actions](https://github.com/microsoft/mcp/actions). To diagnose failures, download the `results-<run-id>` artifact, which includes evaluation results and `build_info.json`.
