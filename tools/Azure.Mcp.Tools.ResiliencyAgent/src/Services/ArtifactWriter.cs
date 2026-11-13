@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ResiliencyAgent.Models;
-using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Text;
+using Azure.Mcp.Tools.ResiliencyAgent.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 

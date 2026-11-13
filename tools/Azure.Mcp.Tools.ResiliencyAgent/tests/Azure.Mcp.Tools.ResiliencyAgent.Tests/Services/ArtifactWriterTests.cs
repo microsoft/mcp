@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 // cspell:ignore Résilience
 
+using System.Text;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Text;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Tests.Services;
