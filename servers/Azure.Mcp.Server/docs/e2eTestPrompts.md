@@ -801,6 +801,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | deploy_app_logs_get | Show me the log of the application deployed by azd | context-required |
 | deploy_architecture_diagram_generate | Generate the Azure architecture diagram for this application | context-required |
 | deploy_iac_rules_get | Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep | none |
+| deploy_iac_rules_get | Show me the Terraform deployment rules for Azure Developer CLI and Azure Container Apps | none |
 | deploy_pipeline_guidance_get | Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices | context-required |
 | deploy_plan_get | Generate an Azure deployment plan for this project using Azure CLI and IaC templates | context-required |
 
@@ -1113,6 +1114,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | managedlustre_fs_blob_autoexport_get | Show the list of autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_cancel | Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_create | Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
+| managedlustre_fs_blob_autoimport_create | Create a continuous import job for Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>, skip conflicting files, and enable the job | none |
 | managedlustre_fs_blob_autoimport_delete | Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_get | Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
 | managedlustre_fs_blob_autoimport_get | Get the details of all the autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> | none |
@@ -1132,6 +1134,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU \<sku> | none |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU \<sku> | none |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> | none |
+| managedlustre_fs_update | Set the maintenance window of Managed Lustre filesystem <filesystem_name> to Friday at 22:00 and disable root squashing | none |
 
 ## Azure Marketplace
 
@@ -1425,6 +1428,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliency_recoveryplan_validateforfailover | Validate which resources in recoveryplan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons | none |
 | resiliency_recoveryplan_validateforfailover | Use Azure Resiliency Management failover qualification validation to check recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> without executing failover | none |
 | resiliency_recoveryplan_validateforfailover | Validate Azure Resiliency Management recoveryplan <recoveryplan_name> in service group <service_group> for failover from <source_location>; user consent is Allowed, and return per-resource qualification results without updating resources | none |
+| resiliency_recoveryplan_validateforfailover | Check failover qualification for recoveryplan <recoveryplan_name> in service group <service_group> from <source_location> with my explicit execution consent, without executing failover | none |
 | resiliency_recoveryplan_validateforreprotect | Validate all qualified resources in recoveryplan <recoveryplan_name> in service group <service_group> for reprotect after failover and report blocking reasons | none |
 | resiliency_recoveryplan_validateforreprotect | Check whether recovery resource <recovery_resource_id> in Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group> is qualified for reprotect without executing reprotect or updating resources | none |
 | resiliency_recoveryplan_validateforoperation | Run operation-level pre-validation for Failover on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check whether the plan's current state, readiness, and permissions support the operation, not per-resource failover qualification | none |

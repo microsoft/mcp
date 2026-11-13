@@ -4,6 +4,7 @@
 using System.CommandLine;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Options;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -28,6 +29,10 @@ internal static class OptionExtensions
             description: option.Description ?? string.Empty,
             type: OptionTypeNameHelper.GetJsonSchemaType(option.ValueType),
             elementType: OptionTypeNameHelper.GetElementJsonSchemaType(option.ValueType),
-            required: option.Required);
+            required: option.Required)
+        {
+            EnumValues = option.ValueType.IsArray ? null : OptionTypeHandler.GetEnumValues(option),
+            ElementEnumValues = option.ValueType.IsArray ? OptionTypeHandler.GetEnumValues(option) : null,
+        };
     }
 }

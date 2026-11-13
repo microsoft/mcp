@@ -101,7 +101,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
-            "--maintenance-day", "Monday",
+            "--maintenance-day", "mOnDaY",
             "--maintenance-time", "01:00");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -144,7 +144,7 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
-            "--root-squash-mode", "All",
+            "--root-squash-mode", "aLl",
             "--no-squash-nid-list", "nid1,nid2",
             "--squash-uid", "1000",
             "--squash-gid", "1000");
@@ -162,6 +162,26 @@ public class FileSystemUpdateCommandTests : SubscriptionCommandUnitTestsBase<Fil
             1000,
             null,
             Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--maintenance-day", "InvalidDay")]
+    [InlineData("--maintenance-day", "0")]
+    [InlineData("--root-squash-mode", "Invalid")]
+    [InlineData("--root-squash-mode", "0")]
+    public async Task ExecuteAsync_RejectsInvalidEnumBeforeCallingService(string option, string value)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--resource-group", Rg,
+            "--name", Name,
+            "--maintenance-time", "01:00",
+            option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(option, response.Message);
+        Assert.DoesNotContain(Service.ReceivedCalls(),
+            call => call.GetMethodInfo().Name == nameof(IManagedLustreService.UpdateFileSystemAsync));
     }
 
     [Fact]

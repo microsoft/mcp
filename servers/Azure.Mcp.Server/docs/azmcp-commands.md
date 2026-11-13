@@ -3143,7 +3143,7 @@ azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 
 # Get the iac generation rules for the resource types
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy iac rules get --deployment-tool <deployment-tool> \
+azmcp deploy iac rules get --deployment-tool <AzCli|AZD> \
                            [--iac-type <iac-type>] \
                            [--resource-types <resource-types>]
 
@@ -4354,13 +4354,14 @@ azmcp managedlustre fs create --subscription <subscription> \
                               [--user-assigned-identity-id <user-assigned-identity-id>]
 
 # Update an existing Azure Managed Lustre filesystem
+# Maintenance day and root squash mode are JSON Schema enums; maintenance day and time must be supplied together.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs update --subscription <subscription> \
                               --resource-group <resource-group> \
                               --name <filesystem-name> \
-                              [--maintenance-day <maintenance-day>] \
+                              [--maintenance-day <Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday>] \
                               [--maintenance-time <HH:mm>] \
-                              [--root-squash-mode <mode>] \
+                              [--root-squash-mode <All|RootOnly|None>] \
                               [--no-squash-nid-list <nid1,nid2,...>] \
                               [--squash-uid <uid>] \
                               [--squash-gid <gid>]
@@ -4446,6 +4447,7 @@ azmcp managedlustre fs blob autoimport get --subscription <subscription> \
                                            [--job-name <job-name>]
 
 # Create an autoimport job for an Azure Managed Lustre filesystem
+# Conflict resolution and administrative status are JSON Schema enums; omission preserves Skip and Enable defaults.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs blob autoimport create --subscription <subscription> \
                                              --resource-group <resource-group> \
@@ -4998,6 +5000,7 @@ azmcp resiliency recoveryplan reprotect --service-group <service-group> \
 
 # Validate which recoveryplan resources are qualified for failover from the specified source locations.
 # Optionally limit validation to selected full recovery-resource IDs and provide execution consent.
+# --user-consent is a JSON Schema enum; omit it when the customer has not supplied consent.
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan validateforfailover --service-group <service-group> \
                                                    --recoveryplan <recoveryplan> \
@@ -5091,6 +5094,7 @@ azmcp resiliency drill get --service-group <service-group> \
                            [--name <name>]
 
 # Start a new execution of a resilience drill in Failover or TestFailover mode
+# --mode is a required JSON Schema enum; ask the customer when the execution mode is unspecified.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency drill start --service-group <service-group> \
                              --drill <drill> \

@@ -1,0 +1,85 @@
+{
+  "baselineRevision": "e666257b715965b549a88c3996114ec182506a07",
+  "seed": "20261103",
+  "sampling": "Order eligible tool names by SHA256(UTF8(seed + LF + name)), ascending hexadecimal digest; take the first five without replacement.",
+  "eligibleTools": [
+    "advisor_metadata_list",
+    "advisor_recommendation_summary",
+    "appservice_webapp_change-state",
+    "appservice_webapp_settings_update-appsettings",
+    "azuremigrate_platformlandingzone_request",
+    "compute_disk_create",
+    "compute_disk_update",
+    "compute_vm_create",
+    "compute_vm_power-state",
+    "compute_vmss_create",
+    "deploy_iac_rules_get",
+    "deploy_plan_get",
+    "extension_cli_install",
+    "iothub_query_run",
+    "iothub_routing_endpoint-diagnostics",
+    "managedlustre_fs_blob_autoexport_create",
+    "managedlustre_fs_blob_autoimport_create",
+    "managedlustre_fs_blob_import_create",
+    "managedlustre_fs_create",
+    "managedlustre_fs_update",
+    "postgres_database_query",
+    "postgres_list",
+    "postgres_table_schema_get",
+    "resiliency_drill_end",
+    "resiliency_drill_resource_add-or-update",
+    "resiliency_drill_run_mark-complete",
+    "resiliency_drill_start",
+    "resiliency_recoveryplan_failover",
+    "resiliency_recoveryplan_validateforfailover",
+    "resiliency_recoveryplan_validateforoperation"
+  ],
+  "tools": [
+    {
+      "name": "managedlustre_fs_blob_autoimport_create",
+      "arguments": {
+        "filesystem-name": "examplefs",
+        "resource-group": "example-rg",
+        "subscription": "00000000-0000-0000-0000-000000000001",
+        "conflict-resolution-mode": "Skip",
+        "admin-status": "Enable"
+      }
+    },
+    {
+      "name": "resiliency_recoveryplan_validateforfailover",
+      "arguments": {
+        "service-group": "example-service-group",
+        "recoveryplan": "example-plan",
+        "source-locations": ["eastus"],
+        "user-consent": "Allowed"
+      }
+    },
+    {
+      "name": "deploy_iac_rules_get",
+      "arguments": {
+        "deployment-tool": "AzCli",
+        "iac-type": "bicep",
+        "resource-types": "appservice"
+      }
+    },
+    {
+      "name": "managedlustre_fs_update",
+      "arguments": {
+        "name": "examplefs",
+        "resource-group": "example-rg",
+        "subscription": "00000000-0000-0000-0000-000000000001",
+        "maintenance-day": "Monday",
+        "maintenance-time": "22:00",
+        "root-squash-mode": "None"
+      }
+    },
+    {
+      "name": "resiliency_drill_start",
+      "arguments": {
+        "service-group": "example-service-group",
+        "drill": "example-drill",
+        "mode": "TestFailover"
+      }
+    }
+  ]
+}

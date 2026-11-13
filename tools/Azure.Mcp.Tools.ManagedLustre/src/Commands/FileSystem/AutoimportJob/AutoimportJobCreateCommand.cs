@@ -16,18 +16,9 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
     Name = "create",
     Title = "Create Azure Managed Lustre Autoimport Job",
     Description = """
-        Creates an auto import job for an Azure Managed Lustre filesystem to continuously import new or modified files from the linked blob storage container. The auto import job syncs changes from the configured HSM blob container to the Lustre filesystem. Use this to keep the filesystem updated with changes in blob storage.
-        Required options:
-        - filesystem-name: The name of the AMLFS filesystem
-        - resource-group: The resource group containing the filesystem
-        - subscription: The subscription containing the filesystem
-        Optional parameters:
-        - job-name: Custom name for the job (default: autoimport-{timestamp})
-        - conflict-resolution-mode: How to handle conflicts (Fail/Skip/OverwriteIfDirty/OverwriteAlways, default: Skip)
-        - autoimport-prefixes: Array of blob paths/prefixes to auto import (default: '/', max: 100)
-        - admin-status: Administrative status (Enable/Disable, default: Enable)
-        - enable-deletions: Enable deletions during auto import (default: false)
-        - maximum-errors: Max errors before failure (-1: infinite, 0: immediate exit, default: none)
+        Creates a continuous autoimport job that syncs new or modified blobs from the linked hierarchical
+        storage management (HSM) container to an Azure Managed Lustre filesystem. Configure conflict handling,
+        imported prefixes, and deletions through the parameters. Returns the job name.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -61,9 +52,9 @@ public sealed class AutoimportJobCreateCommand(IManagedLustreService service, IL
                 options.ResourceGroup,
                 options.FilesystemName,
                 options.JobName,
-                options.ConflictResolutionMode,
+                options.ConflictResolutionMode?.ToString(),
                 options.AutoimportPrefixes,
-                options.AdminStatus,
+                options.AdminStatus?.ToString(),
                 options.EnableDeletions,
                 options.MaximumErrors,
                 options.Tenant,
