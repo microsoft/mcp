@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Mcp.Tests.Helpers;
@@ -34,9 +35,11 @@ public class LiveTestSettings
     public Dictionary<string, string> DeploymentOutputs { get; set; } = [];
     public Dictionary<string, string> EnvironmentVariables { get; set; } = [];
 
-    public static bool TryFindTestSettingsFile([NotNullWhen(true)] out string? path)
+    public static bool TryFindTestSettingsFile([NotNullWhen(true)] out string? path, string? directory = null)
     {
-        var directory = AppContext.BaseDirectory;
+        // Shared runtime hosts are no longer below their test project directories.
+        directory ??= Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .SingleOrDefault(attribute => attribute.Key == "SourcePath")?.Value ?? AppContext.BaseDirectory;
 
         while (!string.IsNullOrEmpty(directory))
         {

@@ -2,6 +2,18 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 4.0.0-beta.8 (2026-11-12)
+
+### Features Added
+
+- Added `monitor traces query analyze-top-attributes` for top distinguishing attributes from trace-cohort comparisons with up to 10000 requested traces and `monitor traces query analyze-critical-path` for aggregated critical-path analysis in Azure Monitor Workspace Trace Store. [[#4130](https://github.com/microsoft/mcp/pull/4130)]
+- Added read-only Device Provisioning Service onboarding validation for individual enrollments and enrollment-group cohorts of up to 10 devices, including verified CA resolution and complete public X.509 chain checks, plus an agent skill for checkpointed fleet orchestration. [[#4119](https://github.com/microsoft/mcp/pull/4119)]
+
+### Other Changes
+
+- Moved scheduled Azure MCP release-preparation pull requests to 10 AM Pacific on Tuesdays and Thursdays. [[#4143](https://github.com/microsoft/mcp/pull/4143)]
+- Reduced development build output by sharing Azure MCP server runtime dependencies across tests and performance benchmarks. [[#4115](https://github.com/microsoft/mcp/pull/4115)]
+
 ## 4.0.0-beta.7 (2026-11-10)
 
 ### Bugs Fixed

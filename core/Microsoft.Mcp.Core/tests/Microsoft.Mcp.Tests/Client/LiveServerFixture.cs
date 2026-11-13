@@ -37,7 +37,9 @@ public sealed class LiveServerFixture() : IAsyncLifetime
                 return;
             }
 
-            string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+            bool useNpx = !string.IsNullOrEmpty(Settings?.TestPackage) &&
+                !string.Equals(Environment.GetEnvironmentVariable("MCP_TEST_TRANSPORT"), "http", StringComparison.OrdinalIgnoreCase);
+            string executablePath = useNpx ? "npx" : McpTestUtilities.GetAzMcpExecutablePath();
 
             var (client, serverUrl) = await McpTestUtilities.CreateMcpClientAsync(
                 executablePath,

@@ -46,6 +46,27 @@
                         "status": "Running"
                     },
                     {
+                        "id": "6e731a67-4fe0-47e4-9d1a-f1e8bbdd74a4",
+                        "name": "CustomStreamConnectorSource",
+                        "type": "CustomStreamConnector",
+                        "properties": {
+                            "dataConnectionId": "67a65f1d-6f20-4f80-aef0-a67730de7a2f",
+                            "workspaceId": "9625b495-17b3-4d6c-aeea-a81ae76ba369",
+                            "itemId": "ee579458-85ea-4652-bd77-5c7d7c298b2a",
+                            "configurations": [
+                                {
+                                    "key": "topic",
+                                    "value": "orders"
+                                },
+                                {
+                                    "key": "api.key",
+                                    "value": "${key}"
+                                }
+                            ]
+                        },
+                        "status": "Running"
+                    },
+                    {
                         "id": "e2886002-d696-4c05-969c-51361365cc24",
                         "name": "AzureIoTHubSource",
                         "type": "AzureIoTHub",

@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added jobs_delete-item-schedule to delete one explicitly identified Fabric item schedule with consent, a request without a body, and a confirmed deletion receipt without retries or job cancellation."
