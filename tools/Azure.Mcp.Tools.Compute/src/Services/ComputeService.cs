@@ -1349,7 +1349,8 @@ public class ComputeService(
             OsType: data.StorageProfile?.OSDisk?.OSType?.ToString(),
             LicenseType: data.LicenseType,
             Zones: data.Zones?.ToList(),
-            Tags: data.Tags as IReadOnlyDictionary<string, string>);
+            Tags: data.Tags as IReadOnlyDictionary<string, string>,
+            TimeCreated: data.TimeCreated);
     }
 
     private static VmInstanceView MapToVmInstanceView(string vmName, VirtualMachineInstanceView instanceView)
