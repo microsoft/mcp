@@ -400,6 +400,7 @@ Read-only mode hides and denies Run, Cancel, Create Schedule, Update Schedule, a
 Get Schedule, and both listing tools. Schedule lookup and listing retain the host's sensitive-data confirmation
 because their output may include configuration, owner information, and job execution data.
 Read-only Core retains List/Get Workspace Role Assignment but hides and denies Add Workspace Role Assignment.
+Read-only Core also retains `core_get-api-resource`, which only sends GET requests to the allowlisted Fabric and Power BI REST hosts.
 
 ### API Documentation & Best Practices
 
@@ -480,6 +481,7 @@ The configured Fabric Core HTTP client does not automatically follow redirects. 
 | `core_delete-item` | Deletes one known Fabric item using workspace and item UUIDs. Permanent deletion requires explicitly setting `hard-delete` to `true`. |
 | `core_delete-workspace` | Deletes one explicitly identified Fabric workspace **and the items under it**. Requires a workspace UUID and workspace Admin access. |
 | `core_delete-workspace-role-assignment` | Deletes one existing assignment by workspace and assignment UUIDs. Requires Admin access; returns a deletion receipt without identity lookup, cascading removal, retry, or polling. |
+| `core_get-api-resource` | Sends one GET to an allowlisted Fabric (`/v1/...`) or Power BI (`/v1.0/myorg/...`) REST path that has no dedicated tool, such as gateways, connections, dataflows, deployment pipelines, refresh history, or admin APIs. Returns bounded JSON and a relative `nextPath` for paging. |
 | `core_get-capacity` | Gets one Fabric capacity's ID, display name, SKU, region, and state using its capacity UUID. |
 | `core_get-folder` | Gets one logical workspace folder's metadata and available parent relationship using explicit workspace and folder UUIDs, without related lookups. |
 | `core_get-item` | Gets generic metadata for one existing Fabric item using its workspace ID and item ID. Does not read item data or definitions. |
@@ -1275,6 +1277,48 @@ Fabric permissions and existing tenant/authentication settings. Like other addit
 this is non-destructive, non-idempotent, not secret-bearing, remote-capable, and **excluded from
 read-only mode**. It does not introduce an additional elicitation requirement. Offline tests do not
 establish live workspace, OBO, or RBAC authorization.
+
+**Get API Resource (`core_get-api-resource`)**
+
+Sends exactly one GET to a [Fabric REST API](https://learn.microsoft.com/rest/api/fabric/articles/) or
+[Power BI REST API](https://learn.microsoft.com/rest/api/power-bi/) endpoint that has no dedicated tool,
+for example gateways, connections, dataflows, deployment pipelines, Query Scale-Out settings, dataset
+refresh history, or Fabric and Power BI admin APIs. Use the `docs_*` tools to find an endpoint's path and
+query options. Prefer a dedicated tool when one exists.
+
+Responses may contain sensitive data. MCP calls require disclosure consent, even in read-only mode;
+declined, canceled, rejected, or unsupported consent prevents authentication and the HTTP request.
+
+```powershell
+fabmcp core get-api-resource --path /v1/connections
+fabmcp core get-api-resource --api powerbi --path "/v1.0/myorg/groups/aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb/datasets/bbbbbbbb-1111-2222-3333-cccccccccccc/refreshes?`$top=10"
+```
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `api` | No | `fabric` (default) sends to `https://api.fabric.microsoft.com` with scope `https://api.fabric.microsoft.com/.default`. `powerbi` sends to `https://api.powerbi.com` with scope `https://analysis.windows.net/powerbi/api/.default`. No other hosts are allowed. |
+| `path` | Yes | A relative path with an optional query string. It must start with `/v1/` for `fabric` or `/v1.0/myorg/` for `powerbi`. |
+| `max-response-bytes` | No | The JSON response limit. Defaults to 1,048,576 (1 MiB); maximum 16,777,216 (16 MiB). |
+
+The path is validated before authentication. Absolute URLs, other hosts, empty or `.`/`..` segments,
+encoded `/`, `\`, `.`, or `%` in the path, invalid escapes, non-ASCII characters, whitespace, and
+fragments are rejected, and the request URI must keep the exact validated path. The tool never sends a
+body, follows redirects, retries, or polls.
+
+The result contains `api`, `status`, `hasBody`, the JSON `value`, and the `requestId` when available.
+A same-host `continuationUri` (Fabric) or `@odata.nextLink` (Power BI) is returned as a relative
+`nextPath` that can be passed back as `path`; links to other hosts are dropped. A 202 response returns
+its same-host `location` and `retryAfterSeconds` without polling. Larger responses fail instead of being
+truncated, non-JSON responses are not downloaded, and a UTF-8 byte order mark is skipped. Errors return
+only the HTTP status, a validated error code (Fabric `errorCode` or Power BI `error.code`), the request
+ID, and Retry-After guidance; backend error messages are never returned.
+JSON bodies are limited to **59 nesting levels**, reserving five levels for response and MCP output
+envelopes. Deeper bodies fail with a sanitized error instead of failing during output serialization.
+
+The caller needs the permissions the endpoint documents, such as Fabric administrator rights for admin
+APIs. Power BI calls work with local credentials (Azure CLI, VS Code, or browser sign-in). In remote
+HTTP mode with on-behalf-of authentication, the app registration also needs delegated permissions and
+consent for the **Power BI Service** API, in addition to Fabric.
 
 **Get Folder (`core_get-folder`)**
 

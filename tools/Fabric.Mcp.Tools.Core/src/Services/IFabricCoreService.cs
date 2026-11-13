@@ -7,6 +7,20 @@ namespace Fabric.Mcp.Tools.Core.Services;
 
 public interface IFabricCoreService
 {
+    /// <summary>
+    /// Sends one GET to an allowlisted Fabric or Power BI REST path and returns its bounded JSON response,
+    /// without retries, redirects, or polling.
+    /// </summary>
+    /// <param name="api">fabric (default) or powerbi; selects both the host and the token scope.</param>
+    /// <param name="path">A relative path starting with /v1/ (Fabric) or /v1.0/myorg/ (Power BI), with an optional query.</param>
+    /// <param name="maxResponseBytes">The response size limit; defaults to 1 MiB, maximum 16 MiB.</param>
+    /// <param name="cancellationToken">The cancellation token for the request.</param>
+    Task<ApiResourceGetCommandResult> GetApiResourceAsync(
+        string? api,
+        string path,
+        int? maxResponseBytes = null,
+        CancellationToken cancellationToken = default);
+
     Task AssignWorkspaceToCapacityAsync(Guid workspaceId, Guid capacityId, CancellationToken cancellationToken = default);
 
     /// <summary>Retrieves one page of capacities where the principal is an administrator or contributor.</summary>
