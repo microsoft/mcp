@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_get-api-resource to send one read-only GET request to an allowlisted Fabric or Power BI REST path that has no dedicated tool, returning bounded JSON, relative paging links, and sanitized errors. Requires sensitive-data consent and rejects job and schedule endpoints unless the Jobs area is exposed."

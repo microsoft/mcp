@@ -7,6 +7,42 @@ namespace Fabric.Mcp.Tools.Core.Services;
 
 public interface IFabricCoreService
 {
+    /// <summary>
+    /// Sends one GET to an allowlisted Fabric or Power BI REST path and returns its bounded JSON response,
+    /// without retries, redirects, or polling.
+    /// </summary>
+    /// <param name="api">fabric (default) or powerbi; selects both the host and the token scope.</param>
+    /// <param name="path">A relative path starting with /v1/ (Fabric) or /v1.0/myorg/ (Power BI), with an optional query.</param>
+    /// <param name="maxResponseBytes">The response size limit; defaults to 1 MiB, maximum 16 MiB.</param>
+    /// <param name="cancellationToken">The cancellation token for the request.</param>
+    Task<ApiResourceGetCommandResult> GetApiResourceAsync(
+        string? api,
+        string path,
+        int? maxResponseBytes = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends one POST, PUT, PATCH, or DELETE to an allowlisted Fabric or Power BI REST path, without retries or redirects.
+    /// Fabric 202 responses return an operation receipt and can be waited on; Power BI 202 responses are never polled.
+    /// </summary>
+    /// <param name="api">fabric (default) or powerbi; selects both the host and the token scope.</param>
+    /// <param name="path">A relative path starting with /v1/ (Fabric) or /v1.0/myorg/ (Power BI), with an optional query.</param>
+    /// <param name="method">POST, PUT, PATCH, or DELETE.</param>
+    /// <param name="body">An optional JSON object or array, sent unchanged as application/json.</param>
+    /// <param name="maxResponseBytes">The response size limit; defaults to 1 MiB, maximum 16 MiB.</param>
+    /// <param name="waitOptions">Fabric operation wait options; sync is rejected for Power BI.</param>
+    /// <param name="operationResult">Whether to return a waited Fabric operation's JSON result; requires sync.</param>
+    /// <param name="cancellationToken">Cancels authentication, the request, or the local wait, not an accepted operation.</param>
+    Task<ApiRequestInvokeCommandResult> InvokeApiRequestAsync(
+        string? api,
+        string path,
+        string method,
+        string? body = null,
+        int? maxResponseBytes = null,
+        FabricOperationWaitOptions? waitOptions = null,
+        bool operationResult = false,
+        CancellationToken cancellationToken = default);
+
     Task AssignWorkspaceToCapacityAsync(Guid workspaceId, Guid capacityId, CancellationToken cancellationToken = default);
 
     /// <summary>Retrieves one page of capacities where the principal is an administrator or contributor.</summary>
