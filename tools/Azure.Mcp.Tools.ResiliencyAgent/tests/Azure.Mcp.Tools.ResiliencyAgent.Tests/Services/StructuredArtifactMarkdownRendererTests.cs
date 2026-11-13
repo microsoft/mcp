@@ -199,4 +199,41 @@ public sealed class StructuredArtifactMarkdownRendererTests
         Assert.Contains("**Total resources:** 2", artifact.Content, StringComparison.Ordinal);
         Assert.Contains("| [vm1](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void ReadArtifact_GroupsNestedAndExtensionResourcesByFullType()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Resource criteria resolution",
+              "metadata": { "type": "resiliencyagent" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "resiliencyAgentArtifactType": "ResourceCriteriaResolution",
+                  "data": {
+                    "summary": {},
+                    "resources": [
+                      "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/sql1/databases/db1",
+                      "/subscriptions/sub/resourceGroups/rg/providers/Contoso.Provider/parents/providers/children/child1",
+                      "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1/providers/Microsoft.Insights/diagnosticSettings/default"
+                    ]
+                  }
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Contains("## SQL Databases", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("## Children", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("## Diagnostic Settings", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("## Servers", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("## Parents", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| [db1](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| [child1](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| [default](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
+    }
 }

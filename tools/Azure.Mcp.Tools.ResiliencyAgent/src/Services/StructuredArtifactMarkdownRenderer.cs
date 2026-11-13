@@ -394,12 +394,19 @@ internal static class StructuredArtifactMarkdownRenderer
 
         string subscriptionId = SegmentAfter(segments, "subscriptions") ?? "Not provided";
         string resourceGroup = SegmentAfter(segments, "resourceGroups") ?? "Not provided";
-        int providerIndex = Array.FindIndex(
-            segments,
-            segment => string.Equals(segment, "providers", StringComparison.OrdinalIgnoreCase));
-        string resourceType = providerIndex >= 0 && providerIndex + 2 < segments.Length
-            ? $"{segments[providerIndex + 1]}/{segments[providerIndex + 2]}"
-            : "Other";
+        int providerIndex = FindFinalProviderIndex(segments);
+        string resourceType = "Other";
+        if (providerIndex >= 0)
+        {
+            List<string> typeSegments = [segments[providerIndex + 1]];
+            for (int index = providerIndex + 2; index < segments.Length; index += 2)
+            {
+                typeSegments.Add(segments[index]);
+            }
+
+            resourceType = string.Join("/", typeSegments);
+        }
+
         resource = new ParsedResource(
             "/" + string.Join("/", segments),
             segments[^1],
@@ -407,6 +414,22 @@ internal static class StructuredArtifactMarkdownRenderer
             resourceGroup,
             resourceType);
         return true;
+    }
+
+    private static int FindFinalProviderIndex(string[] segments)
+    {
+        for (int index = segments.Length - 1; index >= 0; index--)
+        {
+            int remainingSegments = segments.Length - index - 1;
+            if (string.Equals(segments[index], "providers", StringComparison.OrdinalIgnoreCase)
+                && remainingSegments >= 3
+                && remainingSegments % 2 == 1)
+            {
+                return index;
+            }
+        }
+
+        return -1;
     }
 
     private static string? SegmentAfter(string[] segments, string name)
