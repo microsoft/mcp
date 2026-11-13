@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Storage.Table.Commands;
     Id = "1236ad1d-baf1-4b95-8c1d-420637ce08da",
     Name = "list",
     Title = "List Tables in Azure Storage",
-    Description = "List all tables in an Azure Storage account. Shows table names for the specified storage account. Required: account. Optional: tenant. Returns: table names. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
+    Description = "List one page of up to 100 table names in an Azure Storage account. The page size is fixed. Pass nextCursor unchanged as --cursor with the same account to retrieve another page, even if the current page is empty. Required: account. Optional: tenant, cursor. Returns: table names and nextCursor when more pages are available. Do not use this tool for Cosmos DB tables or Kusto/Data Explorer tables.",
     OperationPlane = ToolOperationPlane.Data,
     Destructive = false,
     Idempotent = true,
@@ -36,10 +36,11 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         {
             var tables = await _storageService.ListTables(
                 options.Account,
+                options.Cursor,
                 options.Tenant,
                 cancellationToken);
 
-            context.Response.Results = ResponseResult.Create(new TableListCommandResult(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
+            context.Response.Results = ResponseResult.Create(new TableListCommandResult(tables.Tables ?? [], tables.NextCursor), StorageJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {
@@ -62,5 +63,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageS
         _ => base.GetErrorMessage(ex)
     };
 
-    public record TableListCommandResult(List<string> Tables);
+    public record TableListCommandResult(List<string> Tables, string? NextCursor = null);
 }

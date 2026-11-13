@@ -1,0 +1,8 @@
+changes:
+  - section: "Breaking Changes"
+    description: >-
+      Standardized pagination using ICursorOption, opaque cursor input, and root nextCursor output for Marketplace
+      product listing, ADME search and record listing, Storage blob and container listing, and Storage table listing.
+      ADME result.cursor is replaced by nextCursor, and Marketplace uses cursor in place of next-cursor.
+      Storage listings now return fixed pages of up to 100 items.
+      Pass nextCursor unchanged as cursor to continue. Specific blob and container lookups are unchanged and reject cursor.
