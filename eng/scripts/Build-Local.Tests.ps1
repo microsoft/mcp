@@ -50,13 +50,13 @@ Describe 'Build-Local NPX verification' {
             param($Command, $DoNotExitOnFailedExitCode)
 
             $DoNotExitOnFailedExitCode | Should -BeTrue
-            $match = [regex]::Match($Command, '^npx --cache "([^"]+)" -y "(file://[^"]+)" tools list$')
+            $match = [regex]::Match($Command, "^npx --cache '((?:[^']|'')+)' -y 'file:((?:[^']|'')+)' tools list$")
             $match.Success | Should -BeTrue
-            $cache = $match.Groups[1].Value
+            $cache = $match.Groups[1].Value.Replace("''", "'")
             Test-Path -LiteralPath $cache -PathType Container | Should -BeTrue
             $cache | Should -Not -Be $env:NPM_CONFIG_CACHE
-            $package = [Uri]$match.Groups[2].Value
-            Test-Path -LiteralPath $package.LocalPath | Should -BeTrue
+            $package = $match.Groups[2].Value.Replace("''", "'")
+            Test-Path -LiteralPath $package | Should -BeTrue
             Set-Content -LiteralPath (Join-Path $cache 'downloaded.dat') -Value 'cache fixture'
             $script:observedCaches.Add($cache)
             if ($script:verificationThrows) {
@@ -86,6 +86,35 @@ Describe 'Build-Local NPX verification' {
         $script:observedCaches.Count | Should -Be 2
         @($script:observedCaches | Sort-Object -Unique).Count | Should -Be 2
         Should -Invoke Invoke-LoggedCommand -Times 2 -Exactly
+    }
+
+    It 'passes a quoted file package spec for <packagePath>' -TestCases @(
+        @{
+            packagePath = "/mnt/vss/_work/1/s/package space #100% 'quoted'.tgz"
+            packageSpec = "file:/mnt/vss/_work/1/s/package space #100% ''quoted''.tgz"
+        }
+        @{
+            packagePath = "C:\work\package space #100% 'quoted'.tgz"
+            packageSpec = "file:C:\work\package space #100% ''quoted''.tgz"
+        }
+    ) {
+        param($packagePath, $packageSpec)
+
+        Mock Get-ChildItem {
+            [pscustomobject]@{
+                FullName = $packagePath
+                Directory = [pscustomobject]@{ Name = 'wrapper' }
+            }
+        }
+        Mock Invoke-LoggedCommand {
+            param($Command, $DoNotExitOnFailedExitCode)
+            $Command | Should -Match (" -y '" + [regex]::Escape($packageSpec) + "' tools list$")
+            $global:LASTEXITCODE = 0
+        }
+
+        & $verifyPackages
+
+        Should -Invoke Invoke-LoggedCommand -Times 1 -Exactly
     }
 
     It 'reports a failed package invocation and still cleans up' {

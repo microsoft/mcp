@@ -84,8 +84,9 @@ if ($VerifyNpx -and !$NoUsePaths) {
         try {
             $cachePath = Join-Path ([IO.Path]::GetTempPath()) "mcp-npx-$([Guid]::NewGuid().ToString('N'))"
             $cacheDirectory = New-Item -ItemType Directory -Path $cachePath
-            $packageUri = ([Uri]$tgzFile.FullName).AbsoluteUri
-            Invoke-LoggedCommand "npx --cache `"$($cacheDirectory.FullName)`" -y `"$packageUri`" tools list" -DoNotExitOnFailedExitCode
+            $cacheArgument = $cacheDirectory.FullName.Replace("'", "''")
+            $packageArgument = $tgzFile.FullName.Replace("'", "''")
+            Invoke-LoggedCommand "npx --cache '$cacheArgument' -y 'file:$packageArgument' tools list" -DoNotExitOnFailedExitCode
             if ($LASTEXITCODE -ne 0) {
                 throw "NPX verification failed for '$($tgzFile.FullName)' with exit code $LASTEXITCODE."
             }
