@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added the Azure Monitor dashboards with Grafana remote MCP server (`https://mcp.dashboard.azure.com`) to the registry, exposing its dashboard, Azure Monitor, Prometheus, Kusto, and health model tools through the `dashboards` namespace."
