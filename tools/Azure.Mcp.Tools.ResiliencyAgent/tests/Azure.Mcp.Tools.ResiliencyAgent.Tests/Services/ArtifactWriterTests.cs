@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore Résilience
 
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
