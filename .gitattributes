@@ -7,4 +7,4 @@
 *.{sln,slnx} text=auto eol=crlf
 *.sh text=auto eol=lf
 
-.github/workflows/*.lock.yml linguist-generated=true merge=ours
+.github/workflows/*.lock.yml linguist-generated=true

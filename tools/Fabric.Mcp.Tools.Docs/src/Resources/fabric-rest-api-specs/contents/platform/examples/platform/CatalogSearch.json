@@ -1,9 +1,9 @@
 {
     "parameters": {
         "catalogQueryRequest": {
-            "search": "Sales Revenue",
-            "pageSize": 2,
-            "filter": "Type eq 'Report' or Type eq 'Lakehouse'"
+            "search": "sales",
+            "pageSize": 3,
+            "filter": "Type eq 'Report' or Type eq 'Lakehouse' or Type eq 'Workspace'"
         }
     },
     "responses": {
@@ -35,9 +35,16 @@
                                 "displayName": "Finance Platform"
                             }
                         }
+                    },
+                    {
+                        "id": "7f2c8a91-3b4d-4e5f-a6b7-c8d9e0f1a2b3",
+                        "type": "Workspace",
+                        "catalogEntryType": "Workspace",
+                        "displayName": "Sales Analytics",
+                        "description": "Workspace for the sales analytics team."
                     }
                 ],
-                "continuationToken": "eyJza2lwIjoyLCJ0YWtl..."
+                "continuationToken": "eyJza2lwIjozLCJ0YWtl..."
             }
         }
     }

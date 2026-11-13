@@ -62,11 +62,13 @@ public sealed class KustoClientTests
         const string resolvedTenant = "00000000-0000-0000-0000-000000000001";
         const string scope = "https://custom-kusto.contoso.example/.default";
         Uri? requestUri = null;
+        var tokens = new List<string?>();
         var azureService = Substitute.For<IAzureService>();
         azureService.GetClient(KustoClient.HttpClientName).Returns(_ =>
             new HttpClient(new CallbackHttpMessageHandler(request =>
             {
                 requestUri = request.RequestUri;
+                tokens.Add(request.Headers.Authorization?.Parameter);
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("""{"Tables": []}""")
@@ -97,6 +99,7 @@ public sealed class KustoClientTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(new Uri("https://cluster.kusto.windows.net/v1/rest/query"), requestUri);
+        Assert.Equal(new[] { "first-token", "second-token" }, tokens);
         await azureService.Received(2).GetTokenCredentialAsync(
             resolvedTenant,
             TestContext.Current.CancellationToken);
@@ -106,6 +109,217 @@ public sealed class KustoClientTests
         await secondCredential.Received(1).GetTokenAsync(
             Arg.Is<TokenRequestContext>(context => Assert.Single(context.Scopes) == scope),
             TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_RequestTimeCredential_ReusesTokenWhenCredentialIsUnchanged()
+    {
+        const string tenant = "tenant";
+        const string resolvedTenant = "resolved-tenant";
+        using var handler = new MockHttpMessageHandler();
+        _azureService.GetClient(KustoClient.HttpClientName)
+            .Returns(_ => new HttpClient(handler, disposeHandler: false));
+        _azureService.ResolveTenantIdAsync(tenant, Arg.Any<CancellationToken>()).Returns(resolvedTenant);
+        _azureService.GetTokenCredentialAsync(resolvedTenant, Arg.Any<CancellationToken>()).Returns(_tokenCredential);
+        var endpoint = KustoEndpoint.Create("https://test.kusto.windows.net", _azureService.CloudConfiguration);
+        var client = new KustoClient(endpoint, tenant, "azmcp", _azureService);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await client.ExecuteControlCommandAsync("testdb", ".show tables", cancellationToken);
+
+        await _azureService.Received(2).GetTokenCredentialAsync(resolvedTenant, cancellationToken);
+        await _tokenCredential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context => Assert.Single(context.Scopes) == endpoint.Scope),
+            cancellationToken);
+    }
+
+    [Theory]
+    [InlineData("https://test.kusto.windows.net", "https://kusto.kusto.windows.net/.default")]
+    [InlineData("https://test.kusto.chinacloudapi.cn", "https://kusto.kusto.chinacloudapi.cn/.default")]
+    [InlineData("https://test.kusto.usgovcloudapi.net", "https://kusto.kusto.usgovcloudapi.net/.default")]
+    public async Task ExecuteCommandAsync_ReusesTokenForQueryAndControlRequests(string clusterUri, string scope)
+    {
+        var requestIds = new HashSet<string>();
+        using var handler = new MockHttpMessageHandler(request =>
+        {
+            Assert.Equal("noop-token", request.Headers.Authorization?.Parameter);
+            Assert.True(requestIds.Add(Assert.Single(request.Headers.GetValues("x-ms-client-request-id"))));
+        });
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient(clusterUri);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await client.ExecuteQueryCommandAsync("testdb", "print value=2", cancellationToken);
+        await client.ExecuteControlCommandAsync("testdb", ".show tables", cancellationToken);
+
+        Assert.Equal(3, requestIds.Count);
+        await _tokenCredential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context => context.Scopes.SequenceEqual(new[] { scope })),
+            cancellationToken);
+    }
+
+    [Theory]
+    [InlineData(-1, false)]
+    [InlineData(2, false)]
+    [InlineData(60, true)]
+    public async Task ExecuteCommandAsync_RefreshesExpiredOrExpiringToken(int expiresInMinutes, bool refreshRequested)
+    {
+        _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(
+                new AccessToken(
+                    "old-token",
+                    DateTimeOffset.UtcNow.AddMinutes(expiresInMinutes),
+                    refreshRequested ? DateTimeOffset.UtcNow.AddMinutes(-1) : null),
+                new AccessToken("new-token", DateTimeOffset.UtcNow.AddHours(1)));
+        var tokens = new List<string?>();
+        using var handler = new MockHttpMessageHandler(request => tokens.Add(request.Headers.Authorization?.Parameter));
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient("https://test.kusto.windows.net");
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+
+        Assert.Equal(new[] { "old-token", "new-token", "new-token" }, tokens);
+        await _tokenCredential.Received(2).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_ConcurrentRequestsShareTokenAcquisition()
+    {
+        var tokenSource = new TaskCompletionSource<AccessToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(_ => new ValueTask<AccessToken>(tokenSource.Task));
+        using var handler = new MockHttpMessageHandler(request =>
+            Assert.Equal("shared-token", request.Headers.Authorization?.Parameter));
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient("https://test.kusto.windows.net");
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        var requests = Enumerable.Range(0, 10)
+            .Select(_ => client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken))
+            .ToArray();
+        tokenSource.SetResult(new AccessToken("shared-token", DateTimeOffset.UtcNow.AddHours(1)));
+        await Task.WhenAll(requests);
+
+        await _tokenCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_TokenFailurePropagatesAndAllowsRetry()
+    {
+        var failure = new InvalidOperationException("Token acquisition failed.");
+        _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(
+                _ => throw failure,
+                _ => new AccessToken("retry-token", DateTimeOffset.UtcNow.AddHours(1)));
+        using var handler = new MockHttpMessageHandler(request =>
+            Assert.Equal("retry-token", request.Headers.Authorization?.Parameter));
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient("https://test.kusto.windows.net");
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken)));
+        _azureService.DidNotReceive().GetClient(Arg.Any<string>());
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+
+        await _tokenCredential.Received(2).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_CancelledWaitDoesNotCancelSharedAcquisition()
+    {
+        var tokenSource = new TaskCompletionSource<AccessToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(_ => new ValueTask<AccessToken>(tokenSource.Task));
+        using var handler = new MockHttpMessageHandler();
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient("https://test.kusto.windows.net");
+        var cancellationToken = TestContext.Current.CancellationToken;
+        using var cancelled = new CancellationTokenSource();
+
+        var firstRequest = client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        var waitingRequest = client.ExecuteQueryCommandAsync("testdb", "print value=1", cancelled.Token);
+        await cancelled.CancelAsync();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => waitingRequest);
+        tokenSource.SetResult(new AccessToken("shared-token", DateTimeOffset.UtcNow.AddHours(1)));
+        await firstRequest;
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+
+        await _tokenCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_CancelledTokenAcquisitionAllowsRetry()
+    {
+        using var cancelled = new CancellationTokenSource();
+        _tokenCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), cancelled.Token)
+            .Returns(async call =>
+            {
+                await cancelled.CancelAsync();
+                call.Arg<CancellationToken>().ThrowIfCancellationRequested();
+                return default;
+            });
+        using var handler = new MockHttpMessageHandler();
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var client = CreateClient("https://test.kusto.windows.net");
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            client.ExecuteQueryCommandAsync("testdb", "print value=1", cancelled.Token));
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await client.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+
+        await _tokenCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancelled.Token);
+        await _tokenCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteCommandAsync_DifferentClientsDoNotShareTokens()
+    {
+        var otherCredential = Substitute.For<TokenCredential>();
+        otherCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("other-token", DateTimeOffset.UtcNow.AddHours(1)));
+        var tokens = new List<string?>();
+        using var handler = new MockHttpMessageHandler(request => tokens.Add(request.Headers.Authorization?.Parameter));
+        _azureService.GetClient(Arg.Any<string>()).Returns(_ => new HttpClient(handler, disposeHandler: false));
+        var endpoint = KustoEndpoint.Create("https://test.kusto.windows.net", _azureService.CloudConfiguration);
+        var firstClient = new KustoClient(endpoint, _tokenCredential, "azmcp", _azureService);
+        var secondClient = new KustoClient(endpoint, otherCredential, "azmcp", _azureService);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await firstClient.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await secondClient.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+        await firstClient.ExecuteQueryCommandAsync("testdb", "print value=1", cancellationToken);
+
+        Assert.Equal(new[] { "noop-token", "other-token", "noop-token" }, tokens);
+        await _tokenCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+        await otherCredential.Received(1).GetTokenAsync(Arg.Any<TokenRequestContext>(), cancellationToken);
+    }
+
+    [Fact]
+    public async Task ExecuteQueryCommandAsync_KeepsPathAndUsesKustoScope()
+    {
+        // Arrange - any cluster URI that passes the allow-list works here; this one includes a path to show it's preserved
+        const string clusterUri = "https://mycluster.arg.core.windows.net/providers/Microsoft.ResourceGraph/connector/kusto/sample";
+        var handler = new MockHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
+        _azureService.GetClient(Arg.Any<string>()).Returns(httpClient);
+        var kustoClient = CreateClient(clusterUri);
+
+        // Act
+        await kustoClient.ExecuteQueryCommandAsync("testdb", "test query", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(new Uri($"{clusterUri}/v1/rest/query"), handler.LastRequestUri);
+        await _tokenCredential.Received(1).GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context =>
+                context.Scopes.Length == 1 && context.Scopes[0] == "https://kusto.kusto.windows.net/.default"),
+            Arg.Any<CancellationToken>());
     }
 
     #region SSRF Protection Tests
@@ -118,6 +332,8 @@ public sealed class KustoClientTests
     [InlineData("https://test.kusto.windows.net.example.com/path")]
     [InlineData("https://169.254.169.254/metadata/instance")] // Azure IMDS
     [InlineData("https://management.azure.com/subscriptions")]
+    [InlineData("https://arg.core.windows.net")] // Resource Graph suffix without an endpoint name
+    [InlineData("https://mycluster.arg.core.windows.net.example.com")]
     public void Constructor_RejectsInvalidClusterUris(string invalidClusterUri)
     {
         // Act & Assert
@@ -170,6 +386,9 @@ public sealed class KustoClientTests
     [InlineData("https://mycluster.adx.applicationinsights.azure.com")]
     // Germany
     [InlineData("https://mycluster.kusto.sovcloud-api.de")]
+    // Azure Resource Graph
+    [InlineData("https://mycluster.arg.core.windows.net")]
+    [InlineData("https://mycluster.arg.core.windows.net/providers/Microsoft.ResourceGraph/connector/kusto/sample")]
     public void Constructor_AcceptsValidKustoClusterUris(string validClusterUri)
     {
         // Act - should not throw
@@ -271,10 +490,15 @@ public sealed class KustoClientTests
         return credential;
     }
 
-    private sealed class MockHttpMessageHandler : HttpMessageHandler
+    private sealed class MockHttpMessageHandler(Action<HttpRequestMessage>? onRequest = null) : HttpMessageHandler
     {
+        public Uri? LastRequestUri { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            onRequest?.Invoke(request);
+            LastRequestUri = request.RequestUri;
+
             // The caller (HttpClient.SendAsync) takes ownership and is responsible for disposal HttpResponseMessage.
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {

@@ -1,14 +1,417 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+using System.Security;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Http;
+using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Services.Http;
 
 public class HttpClientFactoryConfiguratorTests
 {
+    [Theory]
+    [InlineData("http")]
+    [InlineData("https")]
+    [InlineData("all")]
+    public void ProxyConfiguration_PreservesRoutingAndLogsDebugMessage(string setting)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            switch (setting)
+            {
+                case "http":
+                    options.HttpProxy = "http://127.0.0.1:9000";
+                    break;
+                case "https":
+                    options.HttpsProxy = "http://127.0.0.1:9000";
+                    break;
+                case "all":
+                    options.AllProxy = "http://127.0.0.1:9000";
+                    break;
+            }
+            options.NoProxy = "*.internal";
+        });
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        ILogger logger = Substitute.For<ILogger>();
+        ILoggerFactory loggerFactory = Substitute.For<ILoggerFactory>();
+        loggerFactory.CreateLogger(Arg.Any<string>()).Returns(logger);
+        services.AddSingleton(loggerFactory);
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        SocketsHttpHandler handler = GetTerminalHandler(provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("custom"));
+        Assert.False(handler.AllowAutoRedirect);
+        Assert.Equal(new Uri("http://127.0.0.1:9000"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
+        Assert.True(handler.Proxy.IsBypassed(new Uri("https://host.internal")));
+        Assert.Contains(logger.ReceivedCalls(), call =>
+            call.GetMethodInfo().Name == nameof(ILogger.Log) &&
+            Equals(call.GetArguments()[0], LogLevel.Debug));
+    }
+
+    [Fact]
+    public void InvalidProxyConfiguration_FailsExplicitly()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options => options.AllProxy = "http://[invalid");
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        Assert.Throws<ArgumentException>(() => provider.GetRequiredService<IHttpClientFactory>().CreateClient());
+    }
+
+    [Theory]
+    [InlineData("http")]
+    [InlineData("https")]
+    [InlineData("all")]
+    public void SchemeLessProxyConfiguration_UsesHttpProxyUri(string setting)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            switch (setting)
+            {
+                case "http":
+                    options.HttpProxy = "10.1.2.3:3128";
+                    break;
+                case "https":
+                    options.HttpsProxy = "10.1.2.3:3128";
+                    break;
+                case "all":
+                    options.AllProxy = "10.1.2.3:3128";
+                    break;
+            }
+        });
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        SocketsHttpHandler handler = GetTerminalHandler(
+            provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler("custom"));
+
+        Assert.Equal(new Uri("http://10.1.2.3:3128"), handler.Proxy!.GetProxy(new Uri("https://management.azure.com")));
+    }
+
+    [Theory]
+    [InlineData("http://127.0.0.1:5000")]
+    [InlineData("http://localhost:5000")]
+    [InlineData("http://[::1]:5000")]
+    [InlineData("http://recording-proxy.example:5000")]
+    public void RecordingOptions_DisableOutboundProxyOnlyForLoopback(string recordingProxy)
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://127.0.0.1:9000";
+            options.RecordingProxy = recordingProxy;
+        });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(string.Empty);
+#if DEBUG
+        HttpMessageHandler current = handler;
+        while (current is DelegatingHandler delegating && current is not RecordingRedirectHandler)
+        {
+            current = delegating.InnerHandler!;
+        }
+        Assert.IsType<RecordingRedirectHandler>(current);
+        Assert.Equal(!new Uri(recordingProxy).IsLoopback, GetTerminalHandler(handler).UseProxy);
+#else
+        Assert.True(GetTerminalHandler(handler).UseProxy);
+#endif
+        Assert.Equal(new Uri("http://127.0.0.1:9000"),
+            GetTerminalHandler(handler).Proxy!.GetProxy(new Uri("https://management.azure.com")));
+    }
+
+#if DEBUG
+    [Theory]
+    [InlineData("http://127.0.0.1:5000", false)]
+    [InlineData("http://localhost:5000", false)]
+    [InlineData("http://[::1]:5000", false)]
+    [InlineData("http://recording-proxy.example:5000", true)]
+    public void RecordingOptions_DisableRuntimeProxyOnlyForLoopback(string recordingProxy, bool useProxy)
+    {
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options => options.RecordingProxy = recordingProxy);
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        SocketsHttpHandler handler = GetTerminalHandler(
+            provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(string.Empty));
+
+        Assert.Equal(useProxy, handler.UseProxy);
+        Assert.False(handler.AllowAutoRedirect);
+    }
+
+    [Theory]
+    [InlineData("", false, false)]
+    [InlineData("", true, true)]
+    [InlineData("custom", false, true)]
+    [InlineData("custom", true, false)]
+    [InlineData(HttpClientFactoryConfigurator.ArmClientName, false, false)]
+    [InlineData(HttpClientFactoryConfigurator.ArmClientName, true, true)]
+    public async Task RecordingProxy_LoopbackRequestsDoNotReachOutboundProxy(
+        string clientName, bool useResolver, bool synchronous)
+    {
+        await using LoopbackHttpServer recordingProxy = LoopbackHttpServer.Start();
+        await using LoopbackHttpServer outboundProxy = LoopbackHttpServer.Start();
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = outboundProxy.Endpoint.AbsoluteUri;
+            options.RecordingProxy = useResolver ? null : recordingProxy.Endpoint.AbsoluteUri;
+        });
+        services.ConfigureArmHttpClient();
+        services.ConfigureDefaultHttpClient(useResolver ? () => recordingProxy.Endpoint : null);
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(clientName);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/test?api-version=1");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Empty(outboundProxy.Requests);
+        string received = Assert.Single(recordingProxy.Requests);
+        Assert.Contains("GET /test?api-version=1 ", received);
+        Assert.Contains("x-recording-upstream-base-uri: https://management.azure.com/", received, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("X-Forwarded-", received, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RecordingProxy_NonLoopbackRequestsStillReachOutboundProxy(bool synchronous)
+    {
+        await using LoopbackHttpServer outboundProxy = LoopbackHttpServer.Start();
+        var services = new ServiceCollection();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = outboundProxy.Endpoint.AbsoluteUri;
+            options.RecordingProxy = "http://recording-proxy.example:5000";
+        });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient();
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://management.azure.com/test?api-version=1");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.True(response.IsSuccessStatusCode);
+        string received = Assert.Single(outboundProxy.Requests);
+        Assert.Contains("GET http://recording-proxy.example:5000/test?api-version=1 ", received);
+        Assert.Contains("x-recording-upstream-base-uri: https://management.azure.com/", received, StringComparison.OrdinalIgnoreCase);
+    }
+#endif
+
+    [Fact]
+    public void ConfigureDefaultHttpClient_RepeatedCallsDoNotDuplicateDefaults()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        services.ConfigureDefaultHttpClient();
+        int laterResolverCalls = 0;
+        services.ConfigureDefaultHttpClient(() =>
+        {
+            laterResolverCalls++;
+            return new Uri("http://127.0.0.1:5000");
+        });
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("custom");
+        string[] userAgentValues = client.DefaultRequestHeaders.UserAgent
+            .Select(static value => value.ToString())
+            .ToArray();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>()
+            .CreateHandler("custom");
+        while (handler is DelegatingHandler delegatingHandler)
+        {
+            handler = delegatingHandler.InnerHandler!;
+        }
+
+        Assert.NotEmpty(userAgentValues);
+        Assert.Equal(userAgentValues.Length, userAgentValues.Distinct().Count());
+        Assert.IsType<ProxyRoutingHandler>(handler);
+        Assert.Equal(0, laterResolverCalls);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SystemProxy_IsEvaluatedPerRequestAndDirectDestinationsStayProtected(bool synchronous)
+    {
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start();
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.AddSingleton(new SystemProxyProvider(new WebProxy(server.Endpoint)
+        {
+            BypassList = [@"127\.0\.0\.1"]
+        }));
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient("custom");
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "http://example.com/proxied");
+        using HttpResponseMessage response = synchronous
+            ? client.Send(request, TestContext.Current.CancellationToken)
+            : await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Contains("GET http://example.com/proxied ", Assert.Single(server.Requests));
+        await Assert.ThrowsAsync<Microsoft.Security.AntiSSRF.AntiSSRFException>(() =>
+            client.GetAsync(server.Endpoint, TestContext.Current.CancellationToken));
+        Assert.Single(server.Requests);
+    }
+
+    [Fact]
+    public void SystemProxy_DoesNotBypassPublicTargetValidation()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.AddSingleton(new SystemProxyProvider(new WebProxy("http://127.0.0.1:9000")));
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        IEndpointValidator validator = provider.GetRequiredService<IEndpointValidator>();
+
+        Assert.Throws<SecurityException>(() =>
+            validator.ValidatePublicTargetUrl("http://127.0.0.1"));
+    }
+
+    [Fact]
+    public void ConfigureDefaultHttpClient_DisablesRedirectsForAllClientNamesAndPreservesDefaults()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options =>
+        {
+            options.AllProxy = "http://127.0.0.1:9000";
+            options.DefaultTimeout = TimeSpan.FromSeconds(42);
+        });
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        services.ConfigureArmHttpClient();
+
+        // Defaults may be registered later by a recording fixture.
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IHttpMessageHandlerFactory handlers = provider.GetRequiredService<IHttpMessageHandlerFactory>();
+        SocketsHttpHandler armHandler = GetTerminalHandler(handlers.CreateHandler(HttpClientFactoryConfigurator.ArmClientName));
+        SocketsHttpHandler defaultHandler = GetTerminalHandler(handlers.CreateHandler(string.Empty));
+        SocketsHttpHandler customHandler = GetTerminalHandler(handlers.CreateHandler("custom"));
+        Assert.False(armHandler.AllowAutoRedirect);
+        Assert.False(defaultHandler.AllowAutoRedirect);
+        Assert.False(customHandler.AllowAutoRedirect);
+        Assert.Equal(new Uri("http://127.0.0.1:9000"), armHandler.Proxy?.GetProxy(new Uri("https://management.azure.com")));
+
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient(HttpClientFactoryConfigurator.ArmClientName);
+        Assert.Equal(TimeSpan.FromSeconds(42), client.Timeout);
+        Assert.NotEmpty(client.DefaultRequestHeaders.UserAgent);
+    }
+
+    [Fact]
+    public void ConfigureDefaultHttpClient_CachesIndependentHandlerGraphsPerClientName()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        IHttpMessageHandlerFactory handlers = provider.GetRequiredService<IHttpMessageHandlerFactory>();
+
+        HttpMessageHandler first = handlers.CreateHandler("first");
+        HttpMessageHandler firstAgain = handlers.CreateHandler("first");
+        HttpMessageHandler second = handlers.CreateHandler("second");
+
+        Assert.Same(first, firstAgain);
+        Assert.NotSame(first, second);
+
+        ProxyRoutingHandler firstRouter = Assert.IsType<ProxyRoutingHandler>(GetPrimaryHandler(first));
+        ProxyRoutingHandler secondRouter = Assert.IsType<ProxyRoutingHandler>(GetPrimaryHandler(second));
+        Assert.NotSame(firstRouter, secondRouter);
+        Assert.NotSame(firstRouter.ProxiedHandler, secondRouter.ProxiedHandler);
+    }
+
+    [Fact]
+    public async Task ConfigureDefaultHttpClient_DisablesRedirectsForSystemProxyPool()
+    {
+        await using LoopbackHttpServer server = LoopbackHttpServer.Start(redirect: true);
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.AddSingleton(new SystemProxyProvider(new WebProxy(server.Endpoint)));
+        services.Configure<ServerRuntimeConfiguration>(options => options.Transport = "stdio");
+        services.ConfigureDefaultHttpClient();
+        using ServiceProvider provider = services.BuildServiceProvider();
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>()
+            .CreateClient("custom");
+
+        using HttpResponseMessage response = await client.GetAsync(
+            "http://example.com/first", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Single(server.Requests);
+    }
+
+    [Fact]
+    public void ConfigureDefaultHttpClient_DisablesRedirectsAndPreservesRecordingProxyResolver()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging().AddHttpClient();
+        services.Configure<HttpClientOptions>(options => options.AllProxy = "http://127.0.0.1:9000");
+        services.Configure<ServerRuntimeConfiguration>(_ => { });
+        bool resolved = false;
+        services.ConfigureDefaultHttpClient(() =>
+        {
+            resolved = true;
+            return new Uri("http://127.0.0.1:5000");
+        });
+        using ServiceProvider provider = services.BuildServiceProvider();
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>()
+            .CreateHandler("custom");
+        Assert.False(GetTerminalHandler(handler).AllowAutoRedirect);
+#if DEBUG
+        Assert.True(resolved);
+#else
+        Assert.False(resolved);
+#endif
+    }
+
+    private static SocketsHttpHandler GetTerminalHandler(HttpMessageHandler handler)
+    {
+        handler = GetPrimaryHandler(handler);
+
+        return handler switch
+        {
+            ProxyRoutingHandler proxyRoutingHandler => proxyRoutingHandler.ProxiedHandler,
+            _ => Assert.IsType<SocketsHttpHandler>(handler)
+        };
+    }
+
+    private static HttpMessageHandler GetPrimaryHandler(HttpMessageHandler handler)
+    {
+        while (handler is DelegatingHandler delegating)
+        {
+            handler = delegating.InnerHandler!;
+        }
+
+        return handler;
+    }
+
     [Theory]
     [InlineData("api.loganalytics.io", "https://api.loganalytics.io/v1/workspaces", true)]
     [InlineData("api.loganalytics.io", "http://api.loganalytics.io:8080/v1/workspaces", true)]

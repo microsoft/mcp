@@ -80,12 +80,21 @@ if ($VerifyNpx -and !$NoUsePaths) {
 
     foreach($tgzFile in $tgzFiles) {
         Push-Location -Path $RepoRoot
+        $cacheDirectory = $null
         try {
-            Invoke-LoggedCommand "npx -y clear-npx-cache"
-            Invoke-LoggedCommand "npx -y `"file://$tgzFile`" tools list"
+            $cachePath = Join-Path ([IO.Path]::GetTempPath()) "mcp-npx-$([Guid]::NewGuid().ToString('N'))"
+            $cacheDirectory = New-Item -ItemType Directory -Path $cachePath
+            $packageUri = ([Uri]$tgzFile.FullName).AbsoluteUri
+            Invoke-LoggedCommand "npx --cache `"$($cacheDirectory.FullName)`" -y `"$packageUri`" tools list" -DoNotExitOnFailedExitCode
+            if ($LASTEXITCODE -ne 0) {
+                throw "NPX verification failed for '$($tgzFile.FullName)' with exit code $LASTEXITCODE."
+            }
         }
         finally {
             Pop-Location
+            if ($cacheDirectory) {
+                Remove-Item -LiteralPath $cacheDirectory.FullName -Recurse -Force
+            }
         }
     }
 }

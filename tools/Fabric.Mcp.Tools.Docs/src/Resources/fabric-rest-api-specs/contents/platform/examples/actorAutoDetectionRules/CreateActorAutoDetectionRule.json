@@ -1,0 +1,37 @@
+{
+  "parameters": {
+    "capacityId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createActorAutoDetectionRuleRequest": {
+      "actorsSubjectToRule": {
+        "type": "AllWorkspaces"
+      },
+      "capacityUnitsConsumptionThresholdPercentage": 25,
+      "blockDuration": {
+        "type": "Hours",
+        "hours": 24
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "a1f0c3e4-5b6d-7890-abcd-ef1234567890",
+        "actorsSubjectToRule": {
+          "type": "AllWorkspaces"
+        },
+        "capacityUnitsConsumptionThresholdPercentage": 25,
+        "blockDuration": {
+          "type": "Hours",
+          "hours": 24
+        }
+      }
+    },
+    "409": {
+      "body": {
+        "errorCode": "ActorAutoDetectionRuleAlreadyExists",
+        "message": "An actor auto-detection rule with 'AllWorkspaces' already exists on this capacity.",
+        "requestId": "d3e4f5a6-b7c8-9012-d345-e6f7890abcde"
+      }
+    }
+  }
+}

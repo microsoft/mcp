@@ -17,6 +17,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Http;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -42,8 +43,13 @@ public static partial class ServiceCollectionExtensions
     /// <returns>The service collection with MCP server services added.</returns>
     public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serverStartOptions)
     {
+        services.AddSingleton(new SsrfProtectionPolicy(serverStartOptions.DangerouslyDisableSsrfProtectionsByNamespace));
+        services.AddEndpointValidation();
+
         // Register HTTP client services
         services.AddHttpClientServices();
+        services.ConfigureArmHttpClient();
+        services.AddCommandContextAccessor();
 
         // Register ServerRuntimeConfiguration
         var serverRuntimeConfiguration = new ServerRuntimeConfiguration()
@@ -124,6 +130,7 @@ public static partial class ServiceCollectionExtensions
                 };
 
                 toolLoaders.Add(new CommandFactoryToolLoader(
+                    sp.GetRequiredService<ICommandContextAccessor>(),
                     sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(additionalToolsServerRuntimeConfiguration),
                     loggerFactory.CreateLogger<CommandFactoryToolLoader>(),
@@ -160,6 +167,7 @@ public static partial class ServiceCollectionExtensions
 
                 // NamespaceToolLoader enables direct in-process execution for consolidated tools
                 toolLoaders.Add(new NamespaceToolLoader(
+                    sp.GetRequiredService<ICommandContextAccessor>(),
                     consolidatedCommandFactory,
                     sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                     loggerFactory.CreateLogger<NamespaceToolLoader>(),

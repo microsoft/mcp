@@ -3,11 +3,13 @@
 
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
 
 public sealed class SearchService(
+    IEndpointValidator endpointValidator,
     IAzureTokenCredentialProvider credentialProvider,
     IHttpClientFactory httpClientFactory) : ISearchService
 {
@@ -21,14 +23,16 @@ public sealed class SearchService(
         string dataPartition,
         SearchQueryRequest request,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
+        return AdmeServiceHelper.PostAsync(endpointValidator,
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query", request, AdmeJsonContext.Default.SearchQueryRequest,
-            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, cancellationToken);
+            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, authAppId,
+            cancellationToken: cancellationToken);
     }
 
     public Task<AdmeResponse<SearchCursorResponse>> QueryWithCursorAsync(
@@ -37,16 +41,18 @@ public sealed class SearchService(
         SearchCursorRequest request,
         bool searchAfter,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
+        return AdmeServiceHelper.PostAsync(endpointValidator,
             _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
             request, AdmeJsonContext.Default.SearchCursorRequest,
-            AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, cancellationToken,
-            disableRetries: !string.IsNullOrWhiteSpace(request.Cursor));
+            AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, authAppId,
+            disableRetries: !string.IsNullOrWhiteSpace(request.Cursor),
+            cancellationToken);
     }
 
     private static void ValidateKinds(IReadOnlyList<string> kinds)

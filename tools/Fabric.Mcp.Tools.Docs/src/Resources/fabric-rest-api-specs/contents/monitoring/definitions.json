@@ -1,0 +1,204 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Monitoring data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "Monitoring": {
+            "description": "A Monitoring object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The Monitoring properties.",
+                    "$ref": "#/definitions/MonitoringProperties",
+                    "readOnly": true
+                }
+            }
+        },
+        "MonitoringProperties": {
+            "description": "The Monitoring properties.",
+            "type": "object",
+            "properties": {
+                "dataCollectionState": {
+                    "description": "The data collection state of the Monitoring item. This property is read-only and is transitioned only through the enable and disable data collection operations. Additional data collection states may be added over time.",
+                    "type": "string",
+                    "readOnly": true,
+                    "enum": [
+                        "Enabled",
+                        "Disabled"
+                    ],
+                    "x-ms-enum": {
+                        "name": "DataCollectionState",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Enabled",
+                                "description": "Data collection is active for the Monitoring item."
+                            },
+                            {
+                                "value": "Disabled",
+                                "description": "Data collection is not active for the Monitoring item."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "MonitoringItems": {
+            "description": "A list of Monitoring items.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Monitoring items.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Monitoring"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateMonitoringRequest": {
+            "description": "The request payload for creating a Monitoring.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Monitoring display name. Must contain 2 to 128 characters using only ASCII letters, digits, underscores (_), periods (.), and hyphens (-), with no spaces and no leading or trailing double underscore (__).",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 128,
+                    "pattern": "^(?!__)(?!.*__$)[0-9a-zA-Z_.-]+(?![\\s\\S])",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Monitoring description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "maxLength": 256,
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the Monitoring is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The Monitoring public definition.",
+                    "$ref": "#/definitions/MonitoringPublicDefinition",
+                    "readOnly": false
+                },
+                "sensitivityLabelSettings": {
+                    "description": "The sensitivity label settings for the Monitoring.",
+                    "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMonitoringDefinitionRequest": {
+            "description": "The request payload for updating a Monitoring public definition.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MonitoringPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "MonitoringDefinitionResponse": {
+            "description": "The response payload for a Monitoring public definition.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MonitoringPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "MonitoringPublicDefinition" : {
+            "description": "The Monitoring public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/monitoring-definition) for more details on the structure of the Monitoring definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the Monitoring definition. Additional `format` types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "MonitoringV1"
+                    ],
+                    "x-ms-enum": {
+                        "name": "MonitoringDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "MonitoringV1",
+                                "description": "The format for Monitoring definitions, designed to support CI/CD scenarios in Fabric. See [Monitoring - MonitoringV1 specification](/rest/api/fabric/articles/item-management/definitions/monitoring-definition) for more details."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MonitoringPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "MonitoringPublicDefinitionPart": {
+            "description": "The Monitoring definition part object.",
+            "type": "object",
+            "required": ["path", "payload", "payloadType"],
+            "properties": {
+                "path": {
+                    "description": "The Monitoring public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The Monitoring public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMonitoringRequest": {
+            "description": "The request payload for updating a Monitoring.",
+            "properties": {
+                "displayName": {
+                    "description": "The Monitoring display name. Maximum length is 128 characters.",
+                    "type": "string",
+                    "maxLength": 128,
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Monitoring description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "maxLength": 256,
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

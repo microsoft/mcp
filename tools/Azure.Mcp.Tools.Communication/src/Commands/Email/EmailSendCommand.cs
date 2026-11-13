@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Communication.Commands.Email;
     Destructive = false,
     Idempotent = false,
     OpenWorld = true,
-    ReadOnly = true,
+    ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
 public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger, ICommunicationService communicationService)

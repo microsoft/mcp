@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AzureMigrate.Constants;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
@@ -109,8 +110,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
             OrganizationName = parameters.OrganizationName
         };
 
-        logger.LogInformation("Generating landing zone: {Payload}",
-            JsonSerializer.Serialize(payload, AzureMigrateJsonContext.Default.PlatformLandingZoneGenerationPayload));
+        logger.LogInformation("Generating landing zone.");
 
         var response = await httpHelper.PostAsync(url, payload, AzureMigrateJsonContext.Default, cancellationToken);
         ThrowIfFailed(response);
@@ -125,7 +125,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
         var response = await httpHelper.PostAsync(url, cancellationToken);
         ThrowIfFailed(response);
 
-        var downloadUrl = TryParseDownloadUrl(response);
+        var downloadUrl = TryGetValidatedDownloadUrl(AzureService, response);
         if (string.IsNullOrEmpty(downloadUrl))
             throw new InvalidOperationException("Download URL not yet available. The landing zone may still be generating. Please try again in 1-2 minutes.");
 
@@ -163,7 +163,33 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     public List<string> GetMissingParameters(PlatformLandingZoneContext context) => [];
 
     private string BuildUrl(PlatformLandingZoneContext ctx, string action) =>
-        $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}/providers/Microsoft.Migrate/MigrateProjects/{ctx.MigrateProjectName}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
+        $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint}subscriptions/{Uri.EscapeDataString(ctx.SubscriptionId)}/resourceGroups/{Uri.EscapeDataString(ctx.ResourceGroupName)}/providers/Microsoft.Migrate/MigrateProjects/{Uri.EscapeDataString(ctx.MigrateProjectName)}/{action}?api-version={PlatformLandingZoneConstants.ApiVersion}";
+
+    /// <summary>
+    /// Parses the download URL from a landing-zone generation response and validates it as a public,
+    /// non-reserved target before returning. Parsing and validation are intentionally joined so that no
+    /// caller can obtain an unvalidated download URL.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="response">The raw landing-zone generation response body to parse the download URL from.</param>
+    /// <returns>
+    /// The validated download URL, or <see langword="null"/> when the response does not yet contain one.
+    /// </returns>
+    /// <remarks>
+    /// This method is <see langword="internal"/> <see langword="static"/> only to enable unit testing. Use
+    /// within the class is expected; do not call it from anything else.
+    /// </remarks>
+    internal static string? TryGetValidatedDownloadUrl(IAzureService azureService, string response)
+    {
+        var downloadUrl = TryParseDownloadUrl(response);
+        if (string.IsNullOrEmpty(downloadUrl))
+        {
+            return null;
+        }
+
+        azureService.ValidatePublicTargetUrl(downloadUrl);
+        return downloadUrl;
+    }
 
     private static string GetCacheKey(PlatformLandingZoneContext ctx) =>
         $"{ctx.SubscriptionId}:{ctx.ResourceGroupName}:{ctx.MigrateProjectName}";

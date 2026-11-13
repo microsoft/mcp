@@ -3,6 +3,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Core.Services.Azure;
@@ -48,6 +50,8 @@ public static class AzureServiceCollectionExtensions
         // container to be populated with the correct authentication strategy, such as OBO for
         // running as a remote HTTP MCP service.
         services.AddSingleIdentityTokenCredentialProvider();
+        services.AddCommandContextAccessor();
+        services.AddEndpointValidation();
 
         services.TryAddSingleton<IAzureService, AzureService>();
         return services;

@@ -46,14 +46,12 @@ public class DataFactoryAreaSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var group = new CommandGroup(Name,
-            """
-            Microsoft Fabric Data Factory Operations - Manage pipelines, dataflows, and workspaces.
-            Use this tool when you need to:
-            - List and manage workspaces
-            - Create, get, list, and run pipelines
-            - Work with dataflows and data transformations
-            - Execute M (Power Query) expressions against dataflows
-            """);
+            "Microsoft Fabric Data Factory Operations - Manage pipelines, dataflows, and workspaces.\n" +
+            "Use this tool when you need to:\n" +
+            "- List and manage workspaces\n" +
+            "- Create, get, list, and run pipelines\n" +
+            "- Work with dataflows and data transformations\n" +
+            "- Execute M (Power Query) expressions against dataflows");
 
         group.AddCommand<ListPipelinesCommand>(serviceProvider);
         group.AddCommand<CreatePipelineCommand>(serviceProvider);

@@ -18,6 +18,7 @@ internal sealed record KustoEndpoint(string ClusterUri, string Scope)
         ".kustomfa.windows.net",
         ".kusto.data.microsoft.com",
         ".kusto.fabric.microsoft.com",
+        ".arg.core.windows.net",
         ".adx.loganalytics.azure.com",
         ".adx.applicationinsights.azure.com",
         ".adx.monitor.azure.com",
@@ -62,13 +63,14 @@ internal sealed record KustoEndpoint(string ClusterUri, string Scope)
         ArgumentNullException.ThrowIfNull(cloudConfiguration);
         EnsureCustomCloudConfigured(cloudConfiguration);
 
-        var uri = ParseClusterUri(clusterUri);
+        var isCustomCloud = cloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud;
+        var uri = ParseClusterUri(clusterUri, isCustomCloud);
         var host = uri.Host.ToLowerInvariant();
         var scope = cloudConfiguration.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud
             ? GetCustomCloudScope(host, cloudConfiguration.Kusto!)
             : GetBuiltInScope(host);
 
-        return new($"https://{host}", scope);
+        return new(uri.AbsoluteUri.TrimEnd('/'), scope);
     }
 
     public static void EnsureCustomCloudConfigured(IAzureCloudConfiguration cloudConfiguration)
@@ -83,7 +85,7 @@ internal sealed record KustoEndpoint(string ClusterUri, string Scope)
         }
     }
 
-    private static Uri ParseClusterUri(string clusterUri)
+    private static Uri ParseClusterUri(string clusterUri, bool requireOrigin)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(clusterUri);
 
@@ -98,11 +100,13 @@ internal sealed record KustoEndpoint(string ClusterUri, string Scope)
             !string.IsNullOrEmpty(uri.Query) ||
             !string.IsNullOrEmpty(uri.Fragment) ||
             HasExplicitPort(clusterUri) ||
-            (uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath)) ||
+            (requireOrigin && uri.AbsolutePath != "/" && !string.IsNullOrEmpty(uri.AbsolutePath)) ||
             uri.Host.EndsWith(".", StringComparison.Ordinal))
         {
             throw new ArgumentException(
-                "Kusto cluster URI must be a canonical HTTPS origin.",
+                requireOrigin
+                    ? "Kusto cluster URI must be a canonical HTTPS origin."
+                    : "Kusto cluster URI must be a canonical HTTPS endpoint.",
                 nameof(clusterUri));
         }
 

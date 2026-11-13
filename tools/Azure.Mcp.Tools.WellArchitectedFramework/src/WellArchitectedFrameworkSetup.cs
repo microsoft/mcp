@@ -23,7 +23,11 @@ public class WellArchitectedFrameworkSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var wellArchitectedCommandGroup = new CommandGroup(Name, "Azure Well-Architected Framework operations - Commands for accessing guidance, best practices, and recommendations based on the Azure Well-Architected Framework pillars (reliability, security, cost optimization, operational excellence, and performance efficiency).", Title);
+        var wellArchitectedCommandGroup = new CommandGroup(Name,
+            "Azure Well-Architected Framework operations - Commands for accessing guidance, best practices, and " +
+            "recommendations based on the Azure Well-Architected Framework pillars (reliability, security, cost " +
+            "optimization, operational excellence, and performance efficiency).",
+            Title);
 
         // Register serviceguide command group
         var serviceGuide = new CommandGroup("serviceguide", "Service guide operations - Commands for retrieving Azure Well-Architected Framework service-specific guidance and recommendations.");

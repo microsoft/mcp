@@ -1,0 +1,16 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using System.Net.Http.Headers;
+
+namespace Fabric.Mcp.Tools.Core.Services;
+
+internal sealed class WorkspaceUpdateThrottledException(RetryConditionHeaderValue retryAfter)
+    : HttpRequestException(CreateMessage(retryAfter), null, HttpStatusCode.TooManyRequests)
+{
+    private static string CreateMessage(RetryConditionHeaderValue retryAfter) =>
+        retryAfter.Delta is { } delay
+            ? FormattableString.Invariant($"Fabric throttled the update. Wait at least {delay.TotalSeconds:0} seconds before retrying")
+            : FormattableString.Invariant($"Fabric throttled the update. Retry after {retryAfter.Date?.UtcDateTime:yyyy-MM-dd HH:mm:ss} UTC");
+}

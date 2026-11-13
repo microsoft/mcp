@@ -13,7 +13,13 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
   - Registers any behavior changes from default for the auto-started proxy
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
-- **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `IHttpClientFactory`.
+- **HTTP Redirect** – In Debug builds the server-side `IHttpClientFactory.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set before HTTP services are registered. Its fallback is captured into `HttpClientOptions.RecordingProxy` for that provider; handler creation does not reread the environment. In-process tests should configure this option or supply the deferred fixture resolver instead of changing process-wide environment variables. Tests must ensure the tool is correctly injecting and utilizing `IHttpClientFactory`.
+- **Loopback routing** – Debug recording transports contact loopback recording endpoints directly, bypassing configured and runtime outbound HTTP proxies independently of `NO_PROXY`. This prevents infrastructure proxies from injecting `X-Forwarded-*` headers that are absent from recordings and cause playback matching failures. Non-loopback recording endpoints and normal, non-recording requests retain their existing proxy routing. Network isolation remains enabled.
+
+> **Security warning:** A recording proxy configured through `TEST_PROXY_URL` or a
+> fixture takes precedence over transport-level AntiSSRF protection so the local
+> proxy can be reached. Endpoint validation still applies to the original endpoint
+> before redirection. Use recording proxies only in a trusted test environment.
 
 ## Test Proxy Primer (Relevant Bits)
 
@@ -38,6 +44,15 @@ core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting inf
 ```
 
 The `.proxy` directory is recreated whenever a recorded test run needs the Test Proxy. This folder is gitignored by default. Do not commit these binaries.
+
+Local server processes use the server output identified by the build-generated
+`AzureMcpServer.path` file, not a server copy beside each tool test. Building a
+test project also builds its server dependency. Azure core/server tests share a
+runtime directory under `.work/test-runtime`; their settings are located using the
+test executable's `SourcePath` assembly metadata. Keep `.testsettings.json`,
+`assets.json`, and recordings in their existing test project locations, not in
+the shared runtime directory. NPX-based stdio tests do not require a local server
+executable.
 
 ## Migration Guide (Live ➜ Recorded)
 
@@ -259,4 +274,3 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo
 - [Azure SDK Test Proxy Discussions](https://teams.microsoft.com/l/channel/19%3Ab7c3eda7e0864d059721517174502bdb%40thread.skype/Test-Proxy%20-%20Questions%2C%20Help%2C%20and%20Discussion?groupId=3e17dcb0-4257-4a30-b843-77f47f1d4121&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47)
   - Feel free to post any questions about the test-proxy here in addition to the standard MCP channels.
-

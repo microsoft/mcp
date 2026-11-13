@@ -768,18 +768,15 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
 
     private void ValidateOpenAIEndpoint(string endpoint)
     {
-        var armEnvironment = AzureService.CloudConfiguration.ArmEnvironment;
         Exception? lastError = null;
 
         foreach (var serviceType in s_openAIEndpointServiceTypes)
         {
             try
             {
-                EndpointValidator.ValidateAzureServiceEndpoint(
+                AzureService.ValidateAzureServiceEndpoint(
                     endpoint: endpoint,
-                    serviceType: serviceType,
-                    armEnvironment: armEnvironment,
-                    executingToolNamespaceName: "cosmos");
+                    serviceType: serviceType);
                 return;
             }
             catch (Exception ex) when (ex is SecurityException or ArgumentException)

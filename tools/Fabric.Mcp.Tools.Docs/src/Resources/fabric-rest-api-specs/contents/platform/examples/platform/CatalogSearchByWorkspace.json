@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "catalogQueryRequest": {
+            "search": "revenue",
+            "filter": "(Type eq 'Report' or Type eq 'SemanticModel') and WorkspaceId eq '7f2c8a91-3b4d-4e5f-a6b7-c8d9e0f1a2b3'",
+            "pageSize": 2
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "0acd697c-1550-43cd-b998-91bfb12347c6",
+                        "type": "Report",
+                        "catalogEntryType": "FabricItem",
+                        "displayName": "Monthly Sales Revenue",
+                        "description": "Consolidated revenue report for the current fiscal year.",
+                        "hierarchy": {
+                            "workspace": {
+                                "id": "7f2c8a91-3b4d-4e5f-a6b7-c8d9e0f1a2b3",
+                                "displayName": "Sales Analytics"
+                            }
+                        }
+                    },
+                    {
+                        "id": "c41d9f2e-7b60-4a15-8d3c-2f6e9a0b7c48",
+                        "type": "SemanticModel",
+                        "catalogEntryType": "FabricItem",
+                        "displayName": "Revenue Semantic Model",
+                        "description": "Shared revenue model backing the sales reports.",
+                        "hierarchy": {
+                            "workspace": {
+                                "id": "7f2c8a91-3b4d-4e5f-a6b7-c8d9e0f1a2b3",
+                                "displayName": "Sales Analytics"
+                            }
+                        }
+                    }
+                ],
+                "continuationToken": "eyJza2lwIjoyLCJ0YWtl..."
+            }
+        }
+    }
+}

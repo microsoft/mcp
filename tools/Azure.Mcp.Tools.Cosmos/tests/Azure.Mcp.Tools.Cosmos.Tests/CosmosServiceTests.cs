@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Cosmos.Models;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Azure.ResourceManager;
@@ -28,7 +29,7 @@ public class CosmosServiceTests : IAsyncDisposable
 
     public CosmosServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _cacheService = Substitute.For<ICacheService>();
         _logger = Substitute.For<ILogger<CosmosService>>();
 

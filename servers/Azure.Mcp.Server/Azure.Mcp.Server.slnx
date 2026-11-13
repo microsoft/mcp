@@ -187,6 +187,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.Deploy/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.Deploy/tests/Azure.Mcp.Tools.Deploy.Tests/Azure.Mcp.Tools.Deploy.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceProvisioning/src/Azure.Mcp.Tools.DeviceProvisioning.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.DeviceProvisioning/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.DeviceProvisioning/tests/Azure.Mcp.Tools.DeviceProvisioning.Tests/Azure.Mcp.Tools.DeviceProvisioning.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/" />
   <Folder Name="/tools/Azure.Mcp.Tools.DeviceRegistry/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.DeviceRegistry/src/Azure.Mcp.Tools.DeviceRegistry.csproj" />
@@ -320,6 +327,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.MySql/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.MySql/tests/Azure.Mcp.Tools.MySql.Tests/Azure.Mcp.Tools.MySql.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.NetAppFiles/src/Azure.Mcp.Tools.NetAppFiles.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.NetAppFiles/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.NetAppFiles/tests/Azure.Mcp.Tools.NetAppFiles.Tests/Azure.Mcp.Tools.NetAppFiles.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.Optimization/" />
   <Folder Name="/tools/Azure.Mcp.Tools.Optimization/src/">
     <Project Path="../../tools/Azure.Mcp.Tools.Optimization/src/Azure.Mcp.Tools.Optimization.csproj" />
@@ -368,6 +382,13 @@
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResilienceManagement/tests/">
     <Project Path="../../tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/src/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResiliencyAgent/src/Azure.Mcp.Tools.ResiliencyAgent.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.ResiliencyAgent/tests/">
+    <Project Path="../../tools/Azure.Mcp.Tools.ResiliencyAgent/tests/Azure.Mcp.Tools.ResiliencyAgent.Tests/Azure.Mcp.Tools.ResiliencyAgent.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/" />
   <Folder Name="/tools/Azure.Mcp.Tools.ResourceHealth/src/">

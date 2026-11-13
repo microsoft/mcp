@@ -1,15 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -80,6 +85,384 @@ public class RegistryToolLoaderTests
         Assert.Equal(2, result.Tools.Count);
         Assert.Contains(result.Tools, t => t.Name == "test-tool-1");
         Assert.Contains(result.Tools, t => t.Name == "test-tool-2");
+    }
+
+    [Theory]
+    [InlineData(null, "allowed_tool_extra", "allowed_tool_extra")]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool_extra")]
+    [InlineData(null, "allowed_tool", "allowed_tool")]
+    [InlineData("server_", "server_allowed_tool_extra", "server_allowed_tool_extra")]
+    [InlineData("server_", "SERVER_ALLOWED_TOOL_EXTRA", "server_allowed_tool_extra")]
+    [InlineData("server_", "server_allowed_tool", "server_allowed_tool")]
+    [InlineData("server_", "allowed_tool", null)]
+    public async Task ListToolsHandler_WithOverlappingToolNames_ReturnsOnlyExactExposedMatch(string? prefix, string configuredTool, string? expectedTool)
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("allowed_tool", "Short name", "Short response")
+            .AddTool("allowed_tool_extra", "Long name", "Long response");
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration { Tool = [configuredTool] });
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        if (expectedTool == null)
+        {
+            Assert.Empty(result.Tools);
+        }
+        else
+        {
+            Assert.Equal(expectedTool, Assert.Single(result.Tools).Name);
+        }
+    }
+
+    [Theory]
+    [InlineData(null, "allowed_tool_extra", "allowed_tool", false)]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool", false)]
+    [InlineData(null, "allowed_tool", "allowed_tool_extra", false)]
+    [InlineData(null, "ALLOWED_TOOL_EXTRA", "allowed_tool_extra", true)]
+    [InlineData("server_", "server_allowed_tool_extra", "server_allowed_tool", false)]
+    [InlineData("server_", "server_allowed_tool", "server_allowed_tool_extra", false)]
+    [InlineData("server_", "SERVER_ALLOWED_TOOL_EXTRA", "server_allowed_tool_extra", true)]
+    public async Task CallToolHandler_WithOverlappingToolNames_DispatchesOnlyExactExposedMatch(string? prefix, string configuredTool, string requestedTool, bool allowed)
+    {
+        var executedTools = new List<string>();
+        var clientBuilder = new MockMcpClientBuilder();
+        foreach (var name in new[] { "allowed_tool", "allowed_tool_extra" })
+        {
+            clientBuilder.AddTool(name, "Test tool", () =>
+            {
+                executedTools.Add(name);
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        }
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration { Tool = [configuredTool] });
+
+        var result = await toolLoader.CallToolHandler(McpTestUtilities.CreateToolCallRequest(requestedTool), TestContext.Current.CancellationToken);
+
+        Assert.Equal(!allowed, result.IsError);
+        if (allowed)
+        {
+            Assert.Equal(requestedTool[(prefix?.Length ?? 0)..], Assert.Single(executedTools));
+        }
+        else
+        {
+            Assert.Contains($"Tool '{requestedTool}' is not available", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+            Assert.Empty(executedTools);
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("server_")]
+    public async Task ListToolsHandler_WithMultipleOverlappingToolNames_ReturnsOnlyExactExposedMatches(string? prefix)
+    {
+        var clientBuilder = new MockMcpClientBuilder();
+        foreach (var name in new[] { "tool", "tool_a", "tool_b", "prefix_tool_a", "tool_a_extra", "prefix_tool_b" })
+        {
+            clientBuilder.AddTool(name, "Test tool", "Response");
+        }
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder, toolPrefix: prefix)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy, new ServerRuntimeConfiguration
+        {
+            Tool = [(prefix + "tool_a").ToUpperInvariant(), prefix + "tool_b"]
+        });
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(new[] { prefix + "tool_a", prefix + "tool_b" }, result.Tools.Select(t => t.Name).OrderBy(name => name));
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleServerTimeToLives_UsesShortest()
+    {
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("first", "first", "First server", new MockMcpClientBuilder()
+                .AddTool("first-tool", "First tool", "First result")
+                .WithTimeToLive(TimeSpan.FromMinutes(30)))
+            .AddServer("second", "second", "Second server", new MockMcpClientBuilder()
+                .AddTool("second-tool", "Second tool", "Second result")
+                .WithTimeToLive(TimeSpan.FromMinutes(10)))
+            .AddServer("third", "third", "Third server", new MockMcpClientBuilder()
+                .AddTool("third-tool", "Third tool", "Third result"))
+            .Build();
+
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(3, result.Tools.Count);
+        Assert.Equal(TimeSpan.FromMinutes(10), result.TimeToLive);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithPaginatedServer_UsesShortestPageTimeToLive()
+    {
+        var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            var isSecondPage = request.Params?["cursor"]?.GetValue<string>() == "next";
+            var response = new JsonObject
+            {
+                ["tools"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["name"] = isSecondPage ? "second-tool" : "first-tool",
+                        ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                    }
+                },
+                ["ttlMs"] = isSecondPage ? 300_000 : 1_800_000
+            };
+            if (!isSecondPage)
+            {
+                response["nextCursor"] = "next";
+            }
+
+            return new JsonRpcResponse { Result = response };
+        });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", client)
+            .Build();
+        var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        var result = await toolLoader.ListToolsHandler(McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, tool => tool.Name == "first-tool");
+        Assert.Contains(result.Tools, tool => tool.Name == "second-tool");
+        Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task ListRemoteToolsAsync_WithMultiplePages_ReturnsToolsFromEveryPage(string? finalCursor)
+    {
+        var listRequestCount = 0;
+        await using var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            listRequestCount++;
+            var cursor = request.Params?["cursor"]?.GetValue<string>();
+            var response = new JsonObject
+            {
+                ["tools"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["name"] = cursor switch
+                        {
+                            "next" => "second-tool",
+                            "NEXT" => "third-tool",
+                            _ => "first-tool"
+                        },
+                        ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                    }
+                },
+                ["ttlMs"] = cursor == "next" ? 300_000 : 1_800_000
+            };
+            response["nextCursor"] = cursor switch
+            {
+                null => "next",
+                "next" => "NEXT",
+                _ => finalCursor
+            };
+
+            return new JsonRpcResponse { Result = response };
+        });
+
+        var result = await ToolListCache.ListRemoteToolsAsync(client, TestContext.Current.CancellationToken);
+
+        Assert.Collection(result.Tools,
+            tool => Assert.Equal("first-tool", tool.Name),
+            tool => Assert.Equal("second-tool", tool.Name),
+            tool => Assert.Equal("third-tool", tool.Name));
+        Assert.Equal(TimeSpan.FromMinutes(5), result.TimeToLive);
+        Assert.Equal(3, listRequestCount);
+    }
+
+    [Theory]
+    [InlineData(new[] { "repeat", "repeat" }, true, false)]
+    [InlineData(new[] { "repeat", "repeat" }, false, false)]
+    [InlineData(new[] { "first", "second", "first" }, true, false)]
+    [InlineData(new[] { "first", "second", "first" }, false, false)]
+    [InlineData(new[] { "first", "second", "third", "second" }, true, false)]
+    [InlineData(new[] { "repeat", "repeat" }, true, true)]
+    [InlineData(new[] { "first", "second", "first" }, true, true)]
+    public async Task ListToolsHandler_WithRepeatedCursor_Throws(string[] nextCursors, bool includeTools, bool initializeFirst)
+    {
+        var requestedCursors = new List<string?>();
+        var repeatCursors = !initializeFirst;
+        await using var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            requestedCursors.Add(request.Params?["cursor"]?.GetValue<string>());
+            var tools = new JsonArray();
+            if (includeTools)
+            {
+                tools.Add(new JsonObject
+                {
+                    ["name"] = "test-tool",
+                    ["inputSchema"] = new JsonObject { ["type"] = "object" }
+                });
+            }
+
+            return new JsonRpcResponse
+            {
+                Result = new JsonObject
+                {
+                    ["tools"] = tools,
+                    ["nextCursor"] = repeatCursors && requestedCursors.Count <= nextCursors.Length
+                        ? nextCursors[requestedCursors.Count - 1]
+                        : null,
+                    ["ttlMs"] = 0
+                }
+            };
+        });
+
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", client)
+            .Build();
+        await using var toolLoader = new CompositeToolLoader(
+            [CreateToolLoader(discoveryStrategy)], Substitute.For<ILogger<CompositeToolLoader>>());
+
+        if (initializeFirst)
+        {
+            var initialResult = await toolLoader.ListToolsHandler(
+                McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+            Assert.Equal(includeTools ? 1 : 0, initialResult.Tools.Count);
+            requestedCursors.Clear();
+            repeatCursors = true;
+        }
+
+        var exception = await Assert.ThrowsAsync<ToolListPaginationException>(
+            () => toolLoader.ListToolsHandler(
+                McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken).AsTask());
+
+        Assert.Equal(
+            "The remote MCP server loopback-test-server returned a repeated pagination cursor while listing tools.",
+            exception.Message);
+        Assert.Equal(McpErrorCode.InternalError, exception.ErrorCode);
+        Assert.Equal(nextCursors.Length, requestedCursors.Count);
+        Assert.Null(requestedCursors[0]);
+        Assert.Equal(nextCursors[..^1], requestedCursors.Skip(1));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ListToolsHandler_WithOtherListingErrors_ContinuesWithHealthyServers(bool protocolError)
+    {
+        await using var failedClient = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            if (protocolError)
+            {
+                throw new McpProtocolException("Tool listing failed.", McpErrorCode.InternalError);
+            }
+
+            throw new InvalidOperationException("Tool listing failed.");
+        });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("failed-server", "failed-server", "Failed server", failedClient)
+            .AddServer("healthy-server", "healthy-server", "Healthy server",
+                new MockMcpClientBuilder().AddTool("healthy-tool", "Healthy tool", "Response"))
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy);
+
+        var result = await toolLoader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+
+        Assert.Equal("healthy-tool", Assert.Single(result.Tools).Name);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ListRemoteToolsAsync_WhenCancelled_PropagatesCancellation(bool cancelBeforeListing)
+    {
+        using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var listRequestCount = 0;
+        await using var client = LoopbackMcpClient.Create(request =>
+        {
+            if (request.Method != RequestMethods.ToolsList)
+            {
+                return null;
+            }
+
+            listRequestCount++;
+            if (!cancelBeforeListing && listRequestCount == 2)
+            {
+                cancellationSource.Cancel();
+            }
+
+            return new JsonRpcResponse
+            {
+                Result = new JsonObject
+                {
+                    ["tools"] = new JsonArray(),
+                    ["nextCursor"] = $"page-{listRequestCount}"
+                }
+            };
+        });
+
+        if (cancelBeforeListing)
+        {
+            await cancellationSource.CancelAsync();
+        }
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => ToolListCache.ListRemoteToolsAsync(client, cancellationSource.Token));
+
+        Assert.Equal(cancellationSource.Token, exception.CancellationToken);
+        Assert.Equal(cancelBeforeListing ? 0 : 2, listRequestCount);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_AfterRemoteTimeToLiveExpires_UsesUpdatedToolMap()
+    {
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("old-tool", "Old tool", "Old result")
+            .WithTimeToLive(TimeSpan.Zero);
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        var toolLoader = new CompositeToolLoader(
+            [CreateToolLoader(discoveryStrategy)], Substitute.For<ILogger<CompositeToolLoader>>());
+        var request = McpTestUtilities.CreateToolListRequest();
+
+        var initial = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        clientBuilder.RemoveTool("old-tool").AddTool("new-tool", "New tool", "New result");
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("new-tool"), TestContext.Current.CancellationToken);
+        var refreshed = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal("old-tool", Assert.Single(initial.Tools).Name);
+        Assert.Equal("new-tool", Assert.Single(refreshed.Tools).Name);
+        Assert.False(result.IsError);
+        Assert.Equal("New result", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
     }
 
     [Fact]
@@ -295,12 +678,15 @@ public class RegistryToolLoaderTests
         Assert.False(McpHelper.HasHint(notLocalRequiredToolResult, McpHelper.LocalRequiredHintMetaKey));
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult()
+    [Theory]
+    [InlineData("unknown-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithUnknownTool_ReturnsErrorResult(string toolName)
     {
         // Arrange
         var (toolLoader, _) = CreateToolLoaderAndDiscoveryStrategy();
-        var request = McpTestUtilities.CreateToolCallRequest("unknown-tool");
+        var request = McpTestUtilities.CreateToolCallRequest(toolName);
+        using var activity = new Activity("test-activity").Start();
 
         // Act
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -314,8 +700,40 @@ public class RegistryToolLoaderTests
         // Verify the error message
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
-        Assert.Contains("unknown-tool", textContent.Text);
+        Assert.Contains(toolName, textContent.Text);
         Assert.Contains("was not found", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
+    }
+
+    [Theory]
+    [InlineData("blocked-tool")]
+    [InlineData("user@example.com")]
+    public async Task CallToolHandler_WithToolFilter_RejectsToolOutsideAllowList(string toolName)
+    {
+        var executions = 0;
+        var clientBuilder = new MockMcpClientBuilder()
+            .AddTool("blocked-tool", "Blocked tool", () =>
+            {
+                executions++;
+                return new CallToolResult { Content = [], IsError = false };
+            });
+        var discoveryStrategy = new MockMcpDiscoveryStrategyBuilder()
+            .AddServer("test-server", "test-server", "Test server", clientBuilder)
+            .Build();
+        await using var toolLoader = CreateToolLoader(discoveryStrategy,
+            new ServerRuntimeConfiguration { Tool = ["allowed-tool"] });
+        using var activity = new Activity("test-activity").Start();
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest(toolName), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        Assert.Equal(0, executions);
+        activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
     }
 
     [Fact]
@@ -373,6 +791,7 @@ public class RegistryToolLoaderTests
         {
             { "question", "how to implement mcp server in azure" }
         });
+        using var activity = new Activity("test-activity").Start();
 
         // Act - Call CallToolHandler, which should initialize tools first
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
@@ -387,6 +806,9 @@ public class RegistryToolLoaderTests
         var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(textContent);
         Assert.Equal("Tool executed successfully", textContent.Text);
+        activity.AssertTagEquals(TagName.ToolName, "microsoft_docs_search");
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.IsServerCommandInvoked, true);
     }
 
     [Fact]
@@ -664,6 +1086,49 @@ public class RegistryToolLoaderTests
     }
 
     [Fact]
+    public async Task ListAndCallTools_ConcurrentInitialization_PublishesCompleteMap()
+    {
+        await using var client = new MockMcpClientBuilder()
+            .AddTool("test-tool", "Test tool", "Tool response")
+            .Build();
+        var creation = new TaskCompletionSource<McpClient>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var provider = Substitute.For<IMcpServerProvider>();
+        provider.CreateMetadata().Returns(new McpServerMetadata("external", "external", "External server"));
+        var discovery = Substitute.For<IMcpDiscoveryStrategy>();
+        discovery.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns([provider]);
+        discovery.GetOrCreateClientAsync("external", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>())
+            .Returns(creation.Task);
+        await using var loader = CreateToolLoader(discovery);
+        var lists = Enumerable.Range(0, 8).Select(_ => loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken).AsTask()).ToArray();
+        var calls = Enumerable.Range(0, 8).Select(_ => loader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("test-tool"), TestContext.Current.CancellationToken).AsTask()).ToArray();
+
+        try
+        {
+            Assert.All(lists, task => Assert.False(task.IsCompleted));
+            Assert.All(calls, task => Assert.False(task.IsCompleted));
+        }
+        finally
+        {
+            creation.TrySetResult(client);
+        }
+
+        var listResults = await Task.WhenAll(lists);
+        var callResults = await Task.WhenAll(calls);
+
+        Assert.All(listResults, result => Assert.Equal("test-tool", Assert.Single(result.Tools).Name));
+        Assert.All(callResults, result =>
+        {
+            Assert.NotEqual(true, result.IsError);
+            Assert.Equal("Tool response", Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text);
+        });
+        await discovery.Received(1).DiscoverServersAsync(Arg.Any<CancellationToken>());
+        await discovery.Received(1).GetOrCreateClientAsync(
+            "external", Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ListToolsHandler_WhenCancellationOccursDuringInitialization_AllowsRetry()
     {
         // Arrange - Create a server with controlled cancellation
@@ -791,8 +1256,10 @@ public class RegistryToolLoaderTests
         Assert.Equal("search_docs", result.Tools[0].Name);
     }
 
-    [Fact]
-    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CallToolHandler_WithReadOnlyMode_RejectsNonReadOnlyTool(bool filterReadOnlyTool)
     {
         // Arrange
         var readOnlyTool = new Tool
@@ -820,16 +1287,23 @@ public class RegistryToolLoaderTests
             .Build();
 
         var configuration = new ServerRuntimeConfiguration { ReadOnly = true };
+        if (filterReadOnlyTool)
+        {
+            configuration.Tool = ["write-tool"];
+        }
 
         var toolLoader = CreateToolLoader(discoveryStrategy, configuration);
 
         // Act - Try to call the non-read-only tool directly
         var request = McpTestUtilities.CreateToolCallRequest("write-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to read-only mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "write-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);
@@ -915,11 +1389,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call the local-required tool in HTTP mode
         var request = McpTestUtilities.CreateToolCallRequest("local-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject the tool call due to HTTP mode
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "local-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("HTTP mode", errorText.Text);
@@ -950,11 +1427,14 @@ public class RegistryToolLoaderTests
 
         // Act - Try to call a tool with null annotations in read-only mode
         var request = McpTestUtilities.CreateToolCallRequest("no-annotations-tool");
+        using var activity = new Activity("test-activity").Start();
         var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should reject since null annotations means ReadOnlyHint is not true
         Assert.NotNull(result);
         Assert.True(result.IsError);
+        activity.AssertTagEquals(TagName.ToolArea, "test-server");
+        activity.AssertTagEquals(TagName.ToolName, "no-annotations-tool");
         var errorText = result.Content.OfType<TextContentBlock>().FirstOrDefault();
         Assert.NotNull(errorText);
         Assert.Contains("read-only mode", errorText.Text);

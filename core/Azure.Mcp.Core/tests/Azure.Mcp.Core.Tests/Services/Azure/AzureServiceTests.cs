@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
@@ -26,7 +27,8 @@ public sealed class AzureServiceTests
             Substitute.For<ISubscriptionResolver>(),
             Substitute.For<IAzureTokenCredentialProvider>(),
             Substitute.For<IHttpClientFactory>(),
-            Substitute.For<IAzureCloudConfiguration>());
+            Substitute.For<IAzureCloudConfiguration>(),
+            Substitute.For<IEndpointValidator>());
 
         var result = await service.ResolveTenantIdAsync(tenant, TestContext.Current.CancellationToken);
 

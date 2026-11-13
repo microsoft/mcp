@@ -11,7 +11,7 @@ KQLDatabaseDefinition items support the `JSON` format.
 The definition of a KQL Database item is constructed from three parts: the item part, the platform part, and the KQL database schema. Each part contains the following:
 
 * **Path**: The path to the file that contains the JSON definition.
-* **Payload**: For the platform part, see [Platform part](#platform-part). For the DatabaseProperties part, see [Example of DatabaseProperties.json part decoded from Base64](#example-of-databasepropertiesjson-part-decoded-from-base64). For the DatabaseSchema part, see [Example of DatabaseSchema.kql part decoded from Base64](#example-of-databaseschemakql-part-decoded-from-base64).
+* **Payload**: For the platform part, see [Platform part](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/kql-database-definition#platform-part). For the DatabaseProperties part, see [Example of DatabaseProperties.json part decoded from Base64](#example-of-databasepropertiesjson-part-decoded-from-base64). For the DatabaseSchema part, see [Example of DatabaseSchema.kql part decoded from Base64](#example-of-databaseschemakql-part-decoded-from-base64).
 * **PayloadType**: InlineBase64
 
 ## Example of DatabaseProperties.json part decoded from Base64
@@ -33,7 +33,6 @@ The JSON file describing the KQL database has the following properties:
   "oneLakeStandardStoragePeriod": "P365000D" 
 }
 ```
-
 
 ## Example of DatabaseSchema.kql part decoded from Base64
 

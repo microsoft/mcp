@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Options.Vault;
@@ -17,7 +16,8 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Vault;
     Name = "create",
     Title = "Create Backup Vault",
     Description = """
-        Creates a new backup vault. Specify --vault-type as 'rsv' for a Recovery Services vault
+        Creates a new backup vault. Rejects vaults found to already exist; use 'azurebackup vault update'
+        to modify an existing vault. Specify --vault-type as 'rsv' for a Recovery Services vault
         or 'dpp' for a Backup vault (Data Protection). For DPP vaults a System-Assigned
         Managed Identity is enabled by default so the vault can authenticate to protected
         datasources (storage accounts, disks, PG Flex, etc.) - change later with
@@ -40,6 +40,11 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
     public override void ValidateOptions(VaultCreateOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        if (options.EnablePublicNetworkAccess && !string.Equals(options.VaultType, "rsv", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--enable-public-network-access is only supported with --vault-type rsv.");
+        }
 
         if (string.IsNullOrEmpty(options.VaultType) ||
             (!options.VaultType.Equals("rsv", StringComparison.OrdinalIgnoreCase) &&
@@ -73,6 +78,7 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
                 options.Sku,
                 options.StorageType,
                 options.Tenant,
+                options.EnablePublicNetworkAccess,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -88,17 +94,6 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => argEx.Message,
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
-            "A vault with this name already exists. Choose a different name.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed creating the vault. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
 
     public sealed record VaultCreateCommandResult(VaultCreateResult Vault);
 }

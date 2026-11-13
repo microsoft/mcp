@@ -15,6 +15,13 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Helpers;
 public sealed class MockMcpClientBuilder
 {
     private readonly Dictionary<string, MockTool> _tools = new();
+    private TimeSpan? _timeToLive;
+
+    public MockMcpClientBuilder WithTimeToLive(TimeSpan timeToLive)
+    {
+        _timeToLive = timeToLive;
+        return this;
+    }
 
     /// <summary>
     /// Adds a mock tool with a custom Tool object and handler using fluent API.
@@ -136,9 +143,12 @@ public sealed class MockMcpClientBuilder
     {
         var tools = _tools.Values.Select(mockTool => mockTool.Tool).ToList();
 
-        // Serialize tools list using source-generated context, then wrap in a result envelope
         var toolsNode = JsonSerializer.SerializeToNode(tools, ServerJsonContext.Default.IEnumerableTool);
         var json = new System.Text.Json.Nodes.JsonObject { ["tools"] = toolsNode };
+        if (_timeToLive.HasValue)
+        {
+            json["ttlMs"] = System.Text.Json.Nodes.JsonValue.Create((long)_timeToLive.Value.TotalMilliseconds);
+        }
 
         return Task.FromResult(new JsonRpcResponse
         {

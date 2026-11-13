@@ -42,7 +42,8 @@ public sealed class SubnetSizeValidateCommand(IManagedLustreService service, ILo
 
         if (!s_allowedSkus.Contains(options.Sku))
         {
-            validationResult.Errors.Add($"Invalid SKU '{options.Sku}'. Allowed values: {string.Join(", ", s_allowedSkus)}");
+            validationResult.AddError($"Invalid SKU '{options.Sku}'. Allowed values: {string.Join(", ", s_allowedSkus)}",
+                "Invalid Managed Lustre SKU.");
         }
     }
 

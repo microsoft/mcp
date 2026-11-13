@@ -43,7 +43,8 @@ public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetu
         var apiKey = Environment.GetEnvironmentVariable(options.ApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            validationResult.Errors.Add($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.");
+            validationResult.AddError($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.",
+                "PagerDuty API key environment variable not set.");
         }
     }
 

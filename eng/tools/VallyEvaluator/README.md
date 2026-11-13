@@ -14,7 +14,7 @@ The evaluator generates specifications; it does not execute them. Use `eng/scrip
 CI installs the Vally CLI with:
 
 ```powershell
-npm install --global @microsoft/vally-cli@0.13.0
+npm install --global @microsoft/vally-cli@0.17.0
 ```
 
 See [Testing with Vally](../../../docs/testing-with-vally.md) for repository-wide setup and eval authoring guidance.
@@ -102,4 +102,4 @@ Useful wrapper options include:
   -OutputPath ./.work/vally/custom-results
 ```
 
-For deterministic agent behavior, the wrapper temporarily replaces `<WorkDirectory>/AGENTS.md` with `src/Resources/eval.instructions.md` and restores the original file after Vally exits. A custom `-WorkDirectory` must already contain an `AGENTS.md` file. If no generated or checked-in specifications are found, the wrapper exits successfully without invoking Vally.
+For deterministic agent behavior, the wrapper temporarily replaces `<WorkDirectory>/AGENTS.md` with `src/Resources/eval.instructions.md` and restores the original file after Vally exits. The instructions treat these runs as tool-routing evaluations: after invoking the intended Azure MCP command, the agent stops instead of continuing with local scaffolding, package installation, file changes, or builds. A custom `-WorkDirectory` must already contain an `AGENTS.md` file. If no generated or checked-in specifications are found, the wrapper exits successfully without invoking Vally.

@@ -149,7 +149,7 @@ try {
     if ($LASTEXITCODE -eq 0) {
         Write-StepResult "Tool ID uniqueness" $true
     } else {
-        Write-StepResult "Tool ID uniqueness" $false "$($toolIdResult.ViolationCount) duplicate ID(s)"
+        Write-StepResult "Tool ID uniqueness" $false "$($toolIdResult.ViolationCount) tool ID validation violation(s)"
     }
 
     # ── 5. Documentation Validation ────────────────────────────────

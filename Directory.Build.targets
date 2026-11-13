@@ -4,5 +4,87 @@
       <_Parameter1>SourcePath</_Parameter1>
       <_Parameter2>$(MSBuildProjectDirectory)</_Parameter2>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.SuppressMessageAttribute">
+      <_Parameter1>Usage</_Parameter1>
+      <_Parameter2>CA2201:Do not raise reserved exception types</_Parameter2>
+      <Justification>Non-production assemblies don't need to follow generic exception rules.</Justification>
+    </AssemblyAttribute>
   </ItemGroup>
+
+  <!-- Tool tests launch the server out-of-process and only need it built, not
+       its complete dependency graph copied into every tool's test output. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and $(MSBuildProjectName.StartsWith('Azure.Mcp.Tools.'))">
+    <ProjectReference Update="$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_AzureMcpServerReference Include="@(ProjectReference->WithMetadataValue('Filename', 'Azure.Mcp.Server'))" />
+  </ItemGroup>
+
+  <!-- The SDK already treats copied assemblies outside a project's directory as
+       shared. Apply the same ownership rule to copied content and the location
+       marker, including entries recorded before the shared layout was enabled. -->
+  <Target Name="KeepAzureMcpSharedRuntimeFiles"
+          BeforeTargets="_CleanGetCurrentAndPriorFileWrites;CoreClean"
+          Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Core.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
+    <FindUnderPath Path="$(RepoRoot).work\test-runtime\Azure.Mcp.Server"
+                   Files="$(TargetPath)">
+      <Output TaskParameter="InPath" ItemName="_AzureMcpSharedRuntimeTarget" />
+    </FindUnderPath>
+    <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)"
+                       Condition="'@(_AzureMcpSharedRuntimeTarget)' != ''">
+      <Output TaskParameter="Lines" ItemName="_AzureMcpPriorRuntimeWrites" />
+    </ReadLinesFromFile>
+    <FindUnderPath Path="$(TargetDir)"
+                   Files="@(_AzureMcpPriorRuntimeWrites);@(FileWrites);@(FileWritesShareable)"
+                   UpdateToAbsolutePaths="true"
+                   Condition="'@(_AzureMcpSharedRuntimeTarget)' != ''">
+      <Output TaskParameter="InPath" ItemName="_AzureMcpSharedRuntimeWrites" />
+    </FindUnderPath>
+    <ItemGroup>
+      <_AzureMcpOwnedRuntimeWrites Include="@(_AzureMcpSharedRuntimeWrites)"
+                                  Condition="'%(_AzureMcpSharedRuntimeWrites.Filename)' == '$(TargetName)' or $([System.String]::Copy('%(_AzureMcpSharedRuntimeWrites.Filename)').StartsWith('$(TargetName).'))" />
+      <_AzureMcpSharedRuntimeWrites Remove="@(_AzureMcpOwnedRuntimeWrites)" />
+      <FileWrites Remove="@(_AzureMcpSharedRuntimeWrites)" />
+      <FileWritesShareable Remove="@(_AzureMcpSharedRuntimeWrites)" />
+      <_AzureMcpPriorRuntimeWrites Remove="@(_AzureMcpSharedRuntimeWrites)" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)$(CleanFile)"
+                      Lines="@(_AzureMcpPriorRuntimeWrites)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true"
+                      Condition="'@(_AzureMcpSharedRuntimeTarget)' != '' and Exists('$(IntermediateOutputPath)$(CleanFile)')" />
+  </Target>
+
+  <!-- Query the referenced project's evaluated output instead of assuming a
+       configuration, framework, RID, or output directory in the test client. -->
+  <Target Name="WriteAzureMcpServerLocation"
+          AfterTargets="CopyFilesToOutputDirectory"
+          DependsOnTargets="ResolveProjectReferences"
+          Condition="'@(_AzureMcpServerReference)' != '' and '$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_AzureMcpServerBuildReference Include="@(_MSBuildProjectReferenceExistent->WithMetadataValue('Filename', 'Azure.Mcp.Server'))" />
+    </ItemGroup>
+    <MSBuild Projects="@(_AzureMcpServerBuildReference)"
+             Targets="GetTargetPath"
+             Properties="%(_AzureMcpServerBuildReference.SetConfiguration);%(_AzureMcpServerBuildReference.SetPlatform);%(_AzureMcpServerBuildReference.SetTargetFramework)"
+             RemoveProperties="%(_AzureMcpServerBuildReference.GlobalPropertiesToRemove)">
+      <Output TaskParameter="TargetOutputs" ItemName="_AzureMcpServerTargetPath" />
+    </MSBuild>
+    <Error Condition="'@(_AzureMcpServerTargetPath->Count())' != '1'"
+           Text="Expected one Azure MCP server output for $(MSBuildProjectName). Check the server project reference and its configuration." />
+    <PropertyGroup>
+      <_AzureMcpServerDirectory>@(_AzureMcpServerTargetPath->'%(RootDir)%(Directory)')</_AzureMcpServerDirectory>
+      <_AzureMcpServerRelativeDirectory>$([MSBuild]::MakeRelative('$(TargetDir)', '$(_AzureMcpServerDirectory)'))</_AzureMcpServerRelativeDirectory>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(TargetDir)AzureMcpServer.path"
+                      Lines="$(_AzureMcpServerRelativeDirectory)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(TargetDir)AzureMcpServer.path" />
+    </ItemGroup>
+  </Target>
 </Project>

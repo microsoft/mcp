@@ -5,7 +5,7 @@ All notable changes to the Microsoft Fabric MCP Server will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.5.0 (Unreleased)
+## 1.9.0 (Unreleased)
 
 ### Features Added
 
@@ -14,6 +14,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bugs Fixed
 
 ### Other Changes
+
+## 1.8.0 (2026-11-11)
+
+### Features Added
+
+- Added `core_add-workspace-role-assignment` to grant an explicit principal and workspace role with one request, safe creation-outcome guidance, and no identity lookups or automatic retries. [[#4133](https://github.com/microsoft/mcp/pull/4133)]
+- Added `core_create-folder` to create one logical workspace folder at the root or under an explicit parent UUID, with validated names, typed created metadata, safe creation-outcome guidance, and no lookups, retries, or polling. [[#4121](https://github.com/microsoft/mcp/pull/4121)]
+- Added `core_delete-folder` to delete one explicitly identified empty logical workspace folder with a confirmed deletion receipt, normal mutation consent, and no content changes, preflight, automatic retries, or polling. [[#4126](https://github.com/microsoft/mcp/pull/4126)]
+- Added `core_delete-workspace-role-assignment` to remove one explicitly identified workspace role assignment with a single request, standard mutation confirmation, and a deletion receipt without identity lookups or automatic retries. [[#4135](https://github.com/microsoft/mcp/pull/4135)]
+- Added `core_get-folder` to read one logical workspace folder by explicit workspace and folder IDs, returning safe metadata and available parent information without lookups, retries, or polling. [[#4122](https://github.com/microsoft/mcp/pull/4122)]
+- Added `core_get-workspace-role-assignment` to read one workspace role assignment and available principal metadata by explicit workspace and assignment IDs, without listing assignments, directory lookups, group expansion, or role changes. [[#4132](https://github.com/microsoft/mcp/pull/4132)]
+- Added `core_list-folders` to read one complete page of logical workspace folders with optional root and recursive filters, parent relationships, and explicit continuation. [[#4113](https://github.com/microsoft/mcp/pull/4113)]
+- Added `core_list-workspace-role-assignments` to read one complete page of workspace role assignments and available principal metadata, with explicit continuation and no directory lookups, group expansion, or role changes. [[#4128](https://github.com/microsoft/mcp/pull/4128)]
+- Added `core_move-folder` to move one logical Fabric folder within its workspace using explicit IDs, with optional root placement and safe mutation outcomes. [[#4124](https://github.com/microsoft/mcp/pull/4124)]
+- Added `core_move-item` to move an existing Fabric item and its child items within one workspace, returning the complete moved-item metadata collection without lookups, polling, or automatic retries. [[#4127](https://github.com/microsoft/mcp/pull/4127)]
+- Added `core_update-folder` to rename one logical workspace folder by explicit workspace and folder IDs with a required display name, typed updated metadata, and safe mutation-outcome guidance. [[#4123](https://github.com/microsoft/mcp/pull/4123)]
+- Added `core_update-workspace-role-assignment` to update one explicitly identified workspace role assignment with one PATCH, preserving requested access and truthful mutation outcomes without lookups, creation fallback, retries, or polling. [[#4134](https://github.com/microsoft/mcp/pull/4134)]
+- Added the `jobs` namespace with `jobs_get-item-job-instance` to read one existing Fabric item job instance with status, timing, safe failure metadata, and available retry guidance, without polling or starting jobs. [[#4076](https://github.com/microsoft/mcp/pull/4076)]
+- Added `jobs_cancel-item-job-instance` to request cancellation of one known Fabric item job, returning cancellation-request acceptance and retry guidance without polling or automatic retries. [[#4101](https://github.com/microsoft/mcp/pull/4101)]
+- Added `jobs_create-item-schedule` to create one Fabric schedule with explicit enabled state, UTC timing, time zone, configuration, and optional static execution data, with consent and no automatic retries or polling. [[#4106](https://github.com/microsoft/mcp/pull/4106)]
+- Added `jobs_delete-item-schedule` to delete one explicitly identified Fabric item schedule with consent, a request without a body, and a confirmed deletion receipt without retries or job cancellation. [[#4112](https://github.com/microsoft/mcp/pull/4112)]
+- Added `jobs_get-item-schedule` to read one explicitly identified Fabric schedule with sensitive-data consent, extensible settings, identity validation, and safe retry guidance without discovery, polling, or mutations. [[#4111](https://github.com/microsoft/mcp/pull/4111)]
+- Added `jobs_list-item-job-instances` to read one complete page of Fabric item job snapshots with safe failure metadata, explicit token continuation, and read-only mode support. [[#4102](https://github.com/microsoft/mcp/pull/4102)]
+- Added `jobs_list-item-schedules` to read one complete schedule page for an explicit workspace, item, and job type, with extensible settings and explicit continuation. [[#4103](https://github.com/microsoft/mcp/pull/4103)]
+- Added `jobs_run-on-demand-item-job` to submit one Fabric item job with explicit context and optional execution data and parameters, returning an accepted receipt and validated status-read guidance without polling or automatic retries. [[#4092](https://github.com/microsoft/mcp/pull/4092)]
+- Added `jobs_update-item-schedule` to update one Fabric item schedule with explicit enabled state, full configuration, and optional static execution data in a single PATCH, with safe update confirmation and no automatic retry or job execution. [[#4110](https://github.com/microsoft/mcp/pull/4110)]
+
+### Bugs Fixed
+
+- Failed Data Factory pipeline and dataflow operation results now report command status `422` (Unprocessable Entity) instead of generic `500` (Internal Server Error). [[#3795](https://github.com/microsoft/mcp/pull/3795)]
+
+### Other Changes
+
+- Updated bundled Fabric REST API specifications. [[#4136](https://github.com/microsoft/mcp/pull/4136)]
+
+#### Dependency Updates
+
+- Updated the .NET SDK to 10.0.403 and .NET base library packages to 10.0.14. [[#4096](https://github.com/microsoft/mcp/pull/4096)]
+
+## 1.7.0 (2026-11-01)
+
+### Features Added
+
+- Extended `core_create-item` with inline definitions or explicitly selected local definition files, existing folder IDs, item-specific creation payloads and definition options, and sensitivity label settings. Generic safety and request-contract checks run locally; Fabric validates item-specific layouts and content. Supplied label settings require a nonempty label ID. HTTP inline creation and bounded operation waiting remain supported. [[#4051](https://github.com/microsoft/mcp/pull/4051)]
+- Added `core_get-item-definition` with typed inline results, bounded LRO waiting and one-GET resumption, and explicit local-only, no-overwrite definition export. [[#4064](https://github.com/microsoft/mcp/pull/4064)]
+- Added `core_update-item-definition` to replace complete item definitions from inline content or explicitly selected saved files, with generic safety validation, unchanged definition formats and bytes, optional metadata application, and bounded no-result operation polling. [[#4065](https://github.com/microsoft/mcp/pull/4065)]
+
+### Bugs Fixed
+
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+
+### Other Changes
+
+- Updated bundled Fabric REST API specifications and examples, and added item-definition documentation for deployment plans, monitoring, and warehouses. [[#4078](https://github.com/microsoft/mcp/pull/4078)]
+
+## 1.6.0 (2026-10-18)
+
+### Other Changes
+
+- Updated bundled Fabric REST API specifications and examples, including CopyJob execution, Reflex activation queries, Warehouse SQL pool configuration, and item-definition links. [[#3978](https://github.com/microsoft/mcp/pull/3978)]
+
+## 1.5.0 (2026-10-12)
+
+### Features Added
+
+- Added the `--disable-proxy-tools` server start option to disable tools loaded via `registry.json`. [[#3287](https://github.com/microsoft/mcp/pull/3287)]
+- Added `core_assign-workspace-to-capacity` to submit workspace capacity assignments and return a 202 accepted/pending receipt without polling or automatic retries. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_create-workspace` to create a Fabric workspace with optional existing capacity and domain assignment in one request. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_delete-workspace` to delete one explicitly identified Fabric workspace and the items under it, with required UUID validation, destructive-operation metadata, and a typed deletion acknowledgement. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added the read-only `core_get-capacity` tool to retrieve a Fabric capacity by UUID, returning its display name, SKU, region, and state. [[#3846](https://github.com/microsoft/mcp/pull/3846)]
+- Added the read-only `core_get-workspace` tool to retrieve workspace metadata by UUID, including optional capacity, domain, identity, tags, and workspace-specific endpoint information. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_list-capacities` to return one page of accessible Fabric capacity metadata and continuation information. [[#3852](https://github.com/microsoft/mcp/pull/3852)]
+- Added `core_list-items` to list one page of Fabric item metadata within a workspace or folder, with item-type filtering, recursive listing, and continuation information. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_list-workspaces` to list one page of accessible Fabric workspace management metadata, with role filtering, continuation information, and optional workspace-specific API endpoints. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_update-item` to update a Fabric item display name or description, preserve omitted properties, and clear descriptions with an empty string. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_update-workspace` to rename Fabric workspaces and update or clear descriptions without overwriting omitted properties. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added the `core_delete-item` tool with explicit permanent-deletion opt-in, validated workspace and item UUIDs, and minimal deletion confirmation. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Added `core_get-operation-state` and `core_get-operation-result` for single-read operation tracking and bounded JSON or empty results, plus optional asynchronous waiting for Create Item with configurable early polling, a 120-second default budget, and a server-enforced 600-second maximum. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
+- Added the read-only `core_get-item` tool to retrieve generic Fabric item metadata by workspace ID and item ID, with input validation and typed output. [[#3701](https://github.com/microsoft/mcp/pull/3701)]
+
+### Breaking Changes
+
+- Normalized result payloads for the following tools: [[#3165](https://github.com/microsoft/mcp/pull/3165)]
+  - `docs best-practices` now returns the resulting best practices in a `{ bestPractices }` object.
+  - `docs item-definitions` now returns the resulting definition string in a `{ definition }` object.
+  - `docs platform-api-spec` and `docs item-api-spec` now return the produced public API in a `{ publicApi }` object.
+  - `onelake create-or-update-data-access-role` and `onelake get-data-access-role` now return the produced role in a `{ role }` object.
+  - `onelake list-data-access-roles` now returns `{ roles }` instead of `{ value }`.
+  - `onelake get settings` now returns the produced settings in a `{ settings }` object.
+  - `onelake create shortcut` and `onelake get shortcut` now return the produced shortcut in a `{ shortcut }` object.
+  - `onelake list shortcuts` now returns `{ shortcuts }` instead of `{ value }`.
+- Removed the unused `target-table-name` parameter from the `onelake create-shortcut-dataverse` tool. [[#3650](https://github.com/microsoft/mcp/pull/3650)]
+
+### Bugs Fixed
+
+- `--mode single` no longer spawns child processes for tools managed in the repository. [[#3466](https://github.com/microsoft/mcp/pull/3466)]
+- Fixed the VS Code extension namespace selector to offer `core`, `docs`, `onelake`, and `datafactory` instead of the obsolete `publicapis` option. [[#3916](https://github.com/microsoft/mcp/pull/3916)]
+- Create Item now returns a resumable operation receipt for HTTP 202 responses instead of treating an accepted operation as a completed item. [[#3892](https://github.com/microsoft/mcp/pull/3892)]
+- Preserved HTTP error statuses and sanitized public errors for Create Item and Catalog Search, including invalid or missing options, with actionable feature-availability and throttling guidance. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Validated Create Item workspace UUIDs while retaining the workspace alias, and corrected Catalog Search continuation handling so continuation tokens are not combined with search or filter values. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- Disabled automatic HTTP redirects for Create Item and Catalog Search. [[#3887](https://github.com/microsoft/mcp/pull/3887)]
+- The npm wrapper no longer writes its platform package into the calling project's `package.json` and lockfile when it auto-installs a missing platform package. The install now targets a private directory inside the wrapper package, or a per-user cache directory when that is not writable. Later runs reuse that install, and npm output no longer goes to stdout, which carries the MCP protocol stream during server startup. [[#3184](https://github.com/microsoft/mcp/pull/3184)]
+
+### Other Changes
+
+- Updated Fabric REST API specifications and item definition documentation. [[#3914](https://github.com/microsoft/mcp/pull/3914)]
 
 ## 1.4.0 (2026-08-27)
 

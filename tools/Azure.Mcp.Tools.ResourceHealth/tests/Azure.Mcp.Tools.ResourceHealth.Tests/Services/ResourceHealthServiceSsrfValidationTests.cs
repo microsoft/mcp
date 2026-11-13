@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Security;
 using System.Text;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
+using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
@@ -15,9 +18,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.ResourceHealth.Tests.Services;
 
 /// <summary>
-/// Tests to verify resource ID validation in ResourceHealthService.
-/// These tests ensure that malicious resource IDs containing URLs are rejected.
-/// Uses Azure.Core.ResourceIdentifier.Parse() for validation.
+/// Verifies Resource Health resource ID validation and authorization of completed ARM request URIs.
 /// </summary>
 public class ResourceHealthServiceSsrfValidationTests
 {
@@ -26,11 +27,38 @@ public class ResourceHealthServiceSsrfValidationTests
 
     public ResourceHealthServiceSsrfValidationTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _service = new ResourceHealthService(_azureService);
     }
 
-    private void SetupMocksForValidRequest(HttpResponseMessage response, string subscriptionId = "12345678-1234-1234-1234-123456789012")
+    [Theory]
+    [InlineData("Public", "management.azure.com")]
+    [InlineData("China", "management.chinacloudapi.cn")]
+    [InlineData("Government", "management.usgovcloudapi.net")]
+    public void CreateAndValidateRequestUri_UsesConfiguredCloudEndpoint(string cloud, string expectedHost)
+    {
+        Uri requestUri = ResourceHealthService.CreateAndValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: GetArmEnvironment(cloud)),
+            "/subscriptions/test/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01");
+
+        Assert.Equal(expectedHost, requestUri.Host);
+    }
+
+    [Theory]
+    [InlineData("https://evil.example/steal-token")]
+    [InlineData("//evil.example/steal-token")]
+    [InlineData("http://management.azure.com/subscriptions/test")]
+    [InlineData("https://management.azure.com.evil.example/subscriptions/test")]
+    [InlineData("https://management.chinacloudapi.cn/subscriptions/test")]
+    public void CreateAndValidateRequestUri_RejectsDisallowedEndpoint(string requestPath)
+    {
+        Assert.Throws<SecurityException>(() =>
+            ResourceHealthService.CreateAndValidateRequestUri(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud),
+                requestPath));
+    }
+
+    private MockHttpMessageHandler SetupMocksForValidRequest(
+        HttpResponseMessage response,
+        string subscriptionId = "12345678-1234-1234-1234-123456789012")
     {
         // Mock CloudConfiguration to return a valid ArmEnvironment
         var cloudConfig = Substitute.For<IAzureCloudConfiguration>();
@@ -56,6 +84,8 @@ public class ResourceHealthServiceSsrfValidationTests
         var mockHttpMessageHandler = new MockHttpMessageHandler(response);
         var httpClient = new HttpClient(mockHttpMessageHandler);
         _azureService.GetClient().Returns(httpClient);
+
+        return mockHttpMessageHandler;
     }
 
     [Theory]
@@ -256,12 +286,40 @@ public class ResourceHealthServiceSsrfValidationTests
         Assert.Equal("TRACK123", result[0].TrackingId);
     }
 
+    [Fact]
+    public async Task ListServiceHealthEventsAsync_EscapesGeneratedODataStringLiterals()
+    {
+        const string subscriptionId = "12345678-1234-1234-1234-123456789012";
+        HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"value":[]}""", Encoding.UTF8, "application/json")
+        };
+        MockHttpMessageHandler handler = SetupMocksForValidRequest(response, subscriptionId);
+
+        List<ServiceHealthEvent> result = await _service.ListServiceHealthEventsAsync(
+            subscriptionId,
+            eventType: "Service'Issue&Unexpected",
+            status: "Act'ive",
+            trackingId: "TRACK'123",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Empty(result);
+        Uri requestUri = Assert.IsType<Uri>(handler.RequestUri);
+        Assert.DoesNotContain("&Unexpected", requestUri.Query, StringComparison.Ordinal);
+        Assert.Equal(
+            "?api-version=2025-05-01&$filter=properties/eventType eq 'Service''Issue&Unexpected' and properties/status eq 'Act''ive' and properties/trackingId eq 'TRACK''123'",
+            Uri.UnescapeDataString(requestUri.Query));
+    }
+
     private sealed class MockHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler
     {
         private readonly HttpResponseMessage _response = response;
 
+        public Uri? RequestUri { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestUri = request.RequestUri;
             return Task.FromResult(_response);
         }
     }
@@ -282,4 +340,12 @@ public class ResourceHealthServiceSsrfValidationTests
             return true;
         }
     }
+
+    private static ArmEnvironment GetArmEnvironment(string cloud) => cloud switch
+    {
+        "Public" => ArmEnvironment.AzurePublicCloud,
+        "China" => ArmEnvironment.AzureChina,
+        "Government" => ArmEnvironment.AzureGovernment,
+        _ => throw new ArgumentOutOfRangeException(nameof(cloud))
+    };
 }

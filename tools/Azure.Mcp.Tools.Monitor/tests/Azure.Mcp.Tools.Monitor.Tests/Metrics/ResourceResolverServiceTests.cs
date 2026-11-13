@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.Resources;
 using NSubstitute;
@@ -22,7 +23,7 @@ public class ResourceResolverServiceTests
 
     public ResourceResolverServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _service = new ResourceResolverService(_azureService);
 
         _azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), cancellationToken: Arg.Any<CancellationToken>())
@@ -107,7 +108,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(emptyAsyncPageable);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() =>
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Resource '{resourceName}' not found in subscription '{subscription}'", exception.Message);
@@ -128,7 +129,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() =>
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Multiple resources named '{resourceName}' found", exception.Message);

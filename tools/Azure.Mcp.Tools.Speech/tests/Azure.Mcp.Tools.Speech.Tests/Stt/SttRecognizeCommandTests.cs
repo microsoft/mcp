@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
@@ -13,7 +14,9 @@ using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -41,14 +44,14 @@ public class SttRecognizeCommandTests : IDisposable
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
         _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
-        _command = new(_logger, _speechService);
+        _command = new(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()));
         _commandDefinition = _command.GetCommand();
     }
 
@@ -155,7 +158,7 @@ public class SttRecognizeCommandTests : IDisposable
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
     {
-        var command = new SttRecognizeCommand(_logger, _speechService);
+        var command = new SttRecognizeCommand(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()));
         Assert.NotNull(command);
         Assert.Equal("recognize", command.Name);
     }
@@ -1110,4 +1113,3 @@ public class SttRecognizeCommandTests : IDisposable
         Assert.Contains("Audio file not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
-

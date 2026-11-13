@@ -25,12 +25,10 @@ public class IoTOperationsSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var iotOperations = new CommandGroup(Name,
-            """
-            Azure IoT Operations operations - Commands to manage Azure IoT Operations resources.
-            Azure IoT Operations is a suite of data services that run on Azure Arc-enabled edge Kubernetes clusters.
-            An instance is the top-level resource that acts as a logical container for a deployment of Azure IoT
-            Operations. Supports listing and getting instances in your Azure subscription.
-            """,
+            "Azure IoT Operations operations - Commands to manage Azure IoT Operations resources. Azure IoT " +
+            "Operations is a suite of data services that run on Azure Arc-enabled edge Kubernetes clusters. An " +
+            "instance is the top-level resource that acts as a logical container for a deployment of Azure IoT " +
+            "Operations. Supports listing and getting instances in your Azure subscription.",
             Title);
 
         var instanceGroup = new CommandGroup("instance",

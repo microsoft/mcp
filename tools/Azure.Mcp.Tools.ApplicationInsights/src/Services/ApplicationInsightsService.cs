@@ -56,7 +56,7 @@ public class ApplicationInsightsService(IAzureService azureService, IProfilerDat
 
         // Otherwise, query by resource group
         var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            ?? throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
         return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 

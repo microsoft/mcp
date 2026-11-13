@@ -78,7 +78,7 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Tool id validation failed"
-        Write-Host "$($toolIdResult.ViolationCount) duplicated tool id(s) found. Review the above output for details."
+        Write-Host "$($toolIdResult.ViolationCount) tool ID validation violation(s) found. Review the above output for details."
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool id validation passed."

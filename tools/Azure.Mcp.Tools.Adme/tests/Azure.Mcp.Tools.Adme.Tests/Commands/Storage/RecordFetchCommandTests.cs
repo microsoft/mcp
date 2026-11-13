@@ -25,7 +25,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
                 TestConstants.Endpoint, TestConstants.DataPartition,
                 Arg.Is<IReadOnlyList<string>>(ids => ids.SequenceEqual(new[] { RecordId })),
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), false,
-                TestConstants.Tenant, Arg.Any<CancellationToken>())
+                TestConstants.Tenant, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<FetchRecordsResponse>(
                 new FetchRecordsResponse { Records = [new StorageRecord { Id = RecordId }] },
                 "test-correlation-id"));
@@ -48,7 +48,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
                 TestConstants.Endpoint, TestConstants.DataPartition,
                 Arg.Is<IReadOnlyList<string>>(ids => ids.SequenceEqual(new[] { RecordId })),
                 Arg.Is<IReadOnlyList<string>>(attributes => attributes.SequenceEqual(new[] { "data.Name" })),
-                false, null, Arg.Any<CancellationToken>())
+                false, null, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<FetchRecordsResponse>(new FetchRecordsResponse { Records = [] }, null));
 
         var response = await ExecuteCommandAsync(
@@ -67,6 +67,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
         Service.FetchRecordsAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<IReadOnlyList<string>>(),
                 Arg.Is<IReadOnlyList<string>?>(attributes => attributes == null), true, null,
+            null,
                 Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<FetchRecordsResponse>(new FetchRecordsResponse
             {
@@ -93,7 +94,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -112,7 +113,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 
@@ -128,7 +129,7 @@ public sealed class RecordFetchCommandTests : CommandUnitTestsBase<RecordFetchCo
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await Service.DidNotReceiveWithAnyArgs().FetchRecordsAsync(
-            default!, default!, default!, default, default, default,
+            default!, default!, default!, default, default, default, default,
             TestContext.Current.CancellationToken);
     }
 

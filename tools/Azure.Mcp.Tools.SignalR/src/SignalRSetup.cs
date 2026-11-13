@@ -25,7 +25,9 @@ public class SignalRSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var signalr = new CommandGroup(Name,
-            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.", Title);
+            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes " +
+            "operations for listing SignalR services.",
+            Title);
 
         var runtime = new CommandGroup("runtime",
             "Runtime operations - Commands for managing Azure SignalR Service resources.");

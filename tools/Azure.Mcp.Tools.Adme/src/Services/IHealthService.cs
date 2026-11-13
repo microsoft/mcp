@@ -17,5 +17,6 @@ public interface IHealthService
         string endpoint,
         string dataPartition,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

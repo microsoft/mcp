@@ -16,7 +16,7 @@ variables:
   - name: LINUXVMIMAGE
     value: ubuntu-24.04
   - name: LINUXARM64VMIMAGE
-    value: azsdk-azure-linux3-arm64-1espt
+    value: azure-linux-3-arm64
   - name: WINDOWSVMIMAGE
     value: windows-2022
   - name: MACVMIMAGE

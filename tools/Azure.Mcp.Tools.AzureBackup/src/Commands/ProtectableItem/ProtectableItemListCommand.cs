@@ -52,7 +52,8 @@ public sealed class ProtectableItemListCommand(ILogger<ProtectableItemListComman
         // here instead of slipping past and being rejected by the service layer.
         if (options.WorkloadType != null && !WorkloadTypeNormalizer.IsSupported(options.WorkloadType))
         {
-            validationResult.Errors.Add(WorkloadTypeNormalizer.FormatUnknownMessage(options.WorkloadType));
+            validationResult.AddError(WorkloadTypeNormalizer.FormatUnknownMessage(options.WorkloadType),
+                "Invalid Azure Backup workload type.");
         }
     }
 

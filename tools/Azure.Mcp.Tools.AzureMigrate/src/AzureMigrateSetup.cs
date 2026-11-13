@@ -43,9 +43,13 @@ public class AzureMigrateSetup : IAreaSetup
     {
         var azureMigrate = new CommandGroup(
             Name,
-            """
-            Azure Platform Landing Zone operations - Provides best-practice guidance and Terraform-ready generation for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module customization aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform landing zone with configurable parameters (regions, connectivity, security, subscriptions). Use this tool any time a user mentions the words "Platform Landing Zone" or needs guidance on modifying or generating Azure Platform Landing Zones.
-            """,
+            "Azure Platform Landing Zone operations - Provides best-practice guidance and Terraform-ready generation " +
+            "for Azure Platform Landing Zones. Supports policy and governance changes, naming standards, network " +
+            "topology (hub/spoke/vWAN), identity and subscription design, firewall patterns, and starter module " +
+            "customization aligned to Microsoft's Cloud Adoption Framework. Can generate a complete platform " +
+            "landing zone with configurable parameters (regions, connectivity, security, subscriptions). Use this " +
+            "tool any time a user mentions the words \"Platform Landing Zone\" or needs guidance on modifying or " +
+            "generating Azure Platform Landing Zones.",
             Title);
 
         // Create platform landing zone subgroup

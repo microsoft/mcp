@@ -33,7 +33,11 @@ public class AppConfigSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AppConfig command group
-        var appConfig = new CommandGroup(Name, "App Configuration operations - Commands for managing Azure App Configuration stores and key-value settings. Includes operations for listing configuration stores, managing key-value pairs, setting labels, locking/unlocking settings, and retrieving configuration data.", Title);
+        var appConfig = new CommandGroup(Name,
+            "App Configuration operations - Commands for managing Azure App Configuration stores and key-value " +
+            "settings. Includes operations for listing configuration stores, managing key-value pairs, setting " +
+            "labels, locking/unlocking settings, and retrieving configuration data.",
+            Title);
 
         // Create AppConfig subgroups
         var accounts = new CommandGroup("account", "App Configuration store operations");

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Models;
@@ -12,9 +13,10 @@ public sealed record GoalAssignmentInfo(
     [property: JsonPropertyName("systemData")] GoalAssignmentInfoSystemData? SystemData = null);
 
 public sealed record GoalAssignmentInfoProperties(
-    [property: JsonPropertyName("goalAssignmentType")] string GoalAssignmentType,
-    [property: JsonPropertyName("goalTemplateId")] string GoalTemplateId,
-    [property: JsonPropertyName("provisioningState")] string ProvisioningState);
+    [property: JsonPropertyName("provisioningState")] string ProvisioningState,
+    [property: JsonPropertyName("requireZonalResiliency")] bool? RequireZonalResiliency = null,
+    [property: JsonPropertyName("serviceLevelResources")] IReadOnlyList<GoalServiceLevelTargetInfo>? ServiceLevelResources = null,
+    [property: JsonPropertyName("errorDetails")] JsonElement? ErrorDetails = null);
 
 public sealed record GoalAssignmentInfoSystemData(
     [property: JsonPropertyName("createdAt")] string CreatedAt,

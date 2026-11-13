@@ -26,7 +26,9 @@ public class ServiceFabricSetup : IAreaSetup
     {
         var serviceFabric = new CommandGroup(
             Name,
-            "Azure Service Fabric operations - Manage and query Azure Service Fabric managed cluster resources across subscriptions. Use when you need visibility into managed cluster nodes, including node status, node types, IP addresses, and fault/upgrade domains.",
+            "Azure Service Fabric operations - Manage and query Azure Service Fabric managed cluster resources " +
+            "across subscriptions. Use when you need visibility into managed cluster nodes, including node " +
+            "status, node types, IP addresses, and fault/upgrade domains.",
             Title);
 
         var managedCluster = new CommandGroup(

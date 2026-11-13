@@ -14,4 +14,19 @@ public interface IRecommendationSummaryService
         RecommendationFilters? filters = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
+
+    Task<RecommendationSummary> SummarizeRecommendationsAsync(
+        IReadOnlyCollection<string> subscriptions,
+        string? resourceGroup,
+        string groupBy,
+        RecommendationFilters? filters = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<RecommendationSummary> SummarizeServiceGroupRecommendationsAsync(
+        string serviceGroup,
+        string groupBy,
+        RecommendationFilters? filters = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }

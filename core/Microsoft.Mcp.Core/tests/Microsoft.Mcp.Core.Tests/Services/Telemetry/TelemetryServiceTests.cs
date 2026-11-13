@@ -94,6 +94,34 @@ public class TelemetryServiceTests
     }
 
     [Fact]
+    public async Task StartActivity_WithoutClientContext_DoesNotSetClientTags()
+    {
+        using var listener = CreateActivityListener();
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockConfiguration, _logger, _mockCloudConfiguration);
+        await service.InitializeAsync();
+
+        using var activity = service.StartActivity(ActivityName.ServerStarted);
+
+        Assert.NotNull(activity);
+        Assert.Null(activity.GetTagItem(TagName.ClientName));
+        Assert.Null(activity.GetTagItem(TagName.ClientVersion));
+    }
+
+    [Fact]
+    public async Task StartActivity_WithMissingClientContext_SetsUnknownClientTags()
+    {
+        using var listener = CreateActivityListener();
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockConfiguration, _logger, _mockCloudConfiguration);
+        await service.InitializeAsync();
+
+        using var activity = service.StartActivity(ActivityName.ToolExecuted, null, null);
+
+        Assert.NotNull(activity);
+        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientName));
+        Assert.Equal(TagConstants.Unknown, activity.GetTagItem(TagName.ClientVersion));
+    }
+
+    [Fact]
     public void Dispose_WithNullLogForwarder_ShouldNotThrow()
     {
         // Arrange
@@ -537,6 +565,18 @@ public class TelemetryServiceTests
         Assert.Equal(expectedValue, tags[tagName]?.ToString());
     }
 
+    private ActivityListener CreateActivityListener()
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == _testConfiguration.Name,
+            Sample = static (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            SampleUsingParentId = static (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllDataAndRecorded
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
+    }
+
     private class ExceptionalInformationProvider : IMachineInformationProvider
     {
         public Task<string> GetMacAddressHash() => Task.FromResult("test-mac-address");
@@ -548,12 +588,12 @@ public class TelemetryServiceTests
     // ── SetClientNameAndVersion tests ──────────────────────────────────────────
 
     [Fact]
-    public void SetClientNameAndVersion_NullBoth_SetsNoTags()
+    public void SetClientNameAndVersion_NullBoth_SetsUnknownClientName()
     {
         var activity = new Activity("test").Start();
         TelemetryService.SetClientNameAndVersion(activity, null, null);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 
@@ -624,19 +664,50 @@ public class TelemetryServiceTests
         };
         var requestParams = new ListToolsRequestParams { Meta = meta };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 
     [Fact]
-    public void SetClientNameAndVersion_RequestMetaMissingClientInfoKey_SetsNoTags()
+    public void SetClientNameAndVersion_RequestMetaMissingClientInfoKey_SetsUnknownClientName()
     {
         var activity = new Activity("test").Start();
         var requestParams = new ListToolsRequestParams { Meta = new JsonObject() };
         TelemetryService.SetClientNameAndVersion(activity, null, requestParams);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientName);
-        Assert.DoesNotContain(activity.TagObjects, t => t.Key == TagName.ClientVersion);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_WhitespaceSessionClientInfo_SetsUnknownClientName()
+    {
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = " ", Version = " " };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, null);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal(TagConstants.Unknown, activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
+        activity.Stop();
+    }
+
+    [Fact]
+    public void SetClientNameAndVersion_RequestMetaWhitespaceValues_DoNotOverrideSessionClientInfo()
+    {
+        var activity = new Activity("test").Start();
+        var clientInfo = new Implementation { Name = "LegacyClient", Version = "1.0.0" };
+        var meta = new JsonObject
+        {
+            [McpHelper.ClientInfoMetaKey] = new JsonObject
+            {
+                [McpHelper.ClientInfoNameKey] = " ",
+                [McpHelper.ClientInfoVersionKey] = " "
+            }
+        };
+        var requestParams = new ListToolsRequestParams { Meta = meta };
+        TelemetryService.SetClientNameAndVersion(activity, clientInfo, requestParams);
+        Assert.Equal("LegacyClient", activity.TagObjects.Single(t => t.Key == TagName.ClientName).Value);
+        Assert.Equal("1.0.0", activity.TagObjects.Single(t => t.Key == TagName.ClientVersion).Value);
         activity.Stop();
     }
 }

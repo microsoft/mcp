@@ -27,7 +27,9 @@ public class CommunicationSetup : IAreaSetup
     {
         // Create Communication command group
         var communication = new CommandGroup(Name,
-            "Communication services operations - Commands for managing Azure Communication Services - supports sending SMS", Title);
+            "Communication services operations - Commands for managing Azure Communication Services - supports " +
+            "sending SMS",
+            Title);
         // Create SMS subgroup
         var sms = new CommandGroup("sms", "SMS messaging operations - sending SMS messages to one or more recipients using Azure Communication Services.");
         communication.AddSubGroup(sms);

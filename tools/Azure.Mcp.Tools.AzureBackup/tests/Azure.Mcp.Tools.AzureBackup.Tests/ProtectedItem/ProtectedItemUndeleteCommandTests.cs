@@ -71,6 +71,35 @@ public class ProtectedItemUndeleteCommandTests : SubscriptionCommandUnitTestsBas
     }
 
     [Fact]
+    public async Task ExecuteAsync_OperationIdOnly_SurfacesOperationIdAndLeavesJobIdNull()
+    {
+        // Arrange: undelete returns an async operation id (never a backup job id). The operation
+        // id must surface in its own field and must NOT be reported as a jobId.
+        const string operationId = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+        Service.UndeleteProtectedItemAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is("ds1"),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult(
+                "Accepted", JobId: null,
+                $"Restore started. Operation id '{operationId}' tracks the request.",
+                OperationId: operationId));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", "ds1");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ProtectedItemUndeleteCommandResult);
+
+        Assert.Equal("Accepted", result.Result.Status);
+        Assert.Null(result.Result.JobId);
+        Assert.Equal(operationId, result.Result.OperationId);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
