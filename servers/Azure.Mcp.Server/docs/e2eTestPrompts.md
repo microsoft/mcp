@@ -775,6 +775,12 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | netappfiles_account_get | Get the Azure NetApp Files accounts in resource group \<resource_group> | none |
 | netappfiles_account_get | Show me details for NetApp Files accounts in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_volume_create | Create a 100 GiB Standard Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account>, using delegated subnet \<subnet_id> in \<location> | none |
+| netappfiles_volume_create | Create an NFSv3 NetApp Files volume called \<volume> with a 100 GiB quota in pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Get the Azure NetApp Files volume named \<volume> in capacity pool \<pool> under account \<account> | none |
+| netappfiles_volume_get | Show me details for NetApp Files volume \<volume> in pool \<pool> under account \<account> | none |
+| netappfiles_volume_update | Update Azure NetApp Files volume \<volume> in capacity pool \<pool> under account \<account> to a 200 GiB quota | none |
+| netappfiles_volume_update | Resize NetApp Files volume \<volume> in pool \<pool> under account \<account> to 200 GiB | none |
 
 ## Azure Database for PostgreSQL
 

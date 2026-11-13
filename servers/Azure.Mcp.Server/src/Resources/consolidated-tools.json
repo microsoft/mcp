@@ -1196,7 +1196,6 @@
           "description": "This tool is available in both local and remote server modes."
         }
       },
-
       "mappedToolList": [
         "monitor_traces_query_cancel"
       ]
@@ -2658,7 +2657,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts, blob containers, blob data, and tables. Diagnose Azure VM and managed disk performance through Storage Intelligence, including configuration, throttling, per-LUN analysis, and recommendations. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, Azure NetApp Files accounts and volumes, blob containers, blob data, and tables. Diagnose Azure VM and managed disk performance through Storage Intelligence, including configuration, throttling, per-LUN analysis, and recommendations. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -2693,6 +2692,7 @@
         "managedlustre_fs_blob_import_get",
         "managedlustre_fs_expansion_get",
         "netappfiles_account_get",
+        "netappfiles_volume_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -2945,8 +2945,8 @@
       ]
     },
     {
-      "name": "create_azure_netapp_files_accounts",
-      "description": "Create Azure NetApp Files accounts.",
+      "name": "create_azure_netapp_files_resources",
+      "description": "Create Azure NetApp Files accounts or volumes.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -2974,12 +2974,13 @@
         }
       },
       "mappedToolList": [
-        "netappfiles_account_create"
+        "netappfiles_account_create",
+        "netappfiles_volume_create"
       ]
     },
     {
-      "name": "update_azure_netapp_files_accounts",
-      "description": "Update Azure Netapp Files accounts tags.",
+      "name": "update_azure_netapp_files_resources",
+      "description": "Update Azure Netapp Files resources tags or volumes quota",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -3007,7 +3008,8 @@
         }
       },
       "mappedToolList": [
-        "netappfiles_account_update"
+        "netappfiles_account_update",
+        "netappfiles_volume_update"
       ]
     },
     {
