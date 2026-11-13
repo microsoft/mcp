@@ -40,12 +40,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
         query = BuildQuery(query, table, limit);
         KqlQueryValidator.ValidateQuerySafety(query);
 
-        var credential = await GetCredential(tenant, cancellationToken);
-        var options = AddDefaultPolicies(new LogsQueryClientOptions());
-        options.Audience = GetLogsQueryAudience();
-
-        options.Transport = new HttpClientTransport(AzureService.GetClient());
-        var client = new LogsQueryClient(credential, options);
+        var client = await CreateLogsQueryClientAsync(tenant, cancellationToken);
         var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
         try
@@ -96,15 +91,9 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
         KqlQueryValidator.ValidateQuerySafety(query);
-
-        var credential = await GetCredential(tenant, cancellationToken);
-        var options = AddDefaultPolicies(new LogsQueryClientOptions());
-        options.Audience = GetLogsQueryAudience();
-
-        options.Transport = new HttpClientTransport(AzureService.GetClient());
-        var client = new LogsQueryClient(credential, options);
-
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, cancellationToken);
+
+        var client = await CreateLogsQueryClientAsync(tenant, cancellationToken);
 
         var response = await client.QueryWorkspaceAsync(
             workspaceId,
@@ -229,12 +218,7 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
 
         try
         {
-            var credential = await GetCredential(tenant, cancellationToken);
-            var options = AddDefaultPolicies(new LogsQueryClientOptions());
-            options.Audience = GetLogsQueryAudience();
-
-            options.Transport = new HttpClientTransport(AzureService.GetClient());
-            var client = new LogsQueryClient(credential, options);
+            var client = await CreateLogsQueryClientAsync(tenant, cancellationToken);
             var timeRange = new LogsQueryTimeRange(TimeSpan.FromHours(hours ?? 24));
 
             var response = await client.QueryWorkspaceAsync(
@@ -482,24 +466,22 @@ public class MonitorService(IAzureService azureService, IResourceResolverService
     private string GetLogActivityEndpointString(string subscriptionId)
     {
         string subscriptionPath = $"subscriptions/{subscriptionId}/providers/Microsoft.Insights/eventtypes/management/values";
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
-            _ => $"https://management.azure.com/{subscriptionPath}"
-        };
+        return $"{AzureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri.TrimEnd('/')}/{subscriptionPath}";
     }
 
-    private LogsQueryAudience GetLogsQueryAudience()
+    private async Task<LogsQueryClient> CreateLogsQueryClientAsync(
+        string? tenant,
+        CancellationToken cancellationToken)
     {
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => LogsQueryAudience.AzurePublicCloud,
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => LogsQueryAudience.AzureChina,
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => LogsQueryAudience.AzureGovernment,
-            _ => LogsQueryAudience.AzurePublicCloud
-        };
+        var logAnalytics = AzureService.CloudConfiguration.LogAnalytics
+            ?? throw new InvalidOperationException(
+                "Log Analytics queries are not configured for the current Azure cloud.");
+        var credential = await GetCredential(tenant, cancellationToken);
+        var options = AddDefaultPolicies(new LogsQueryClientOptions());
+        options.Audience = new LogsQueryAudience(logAnalytics.Audience);
+        options.Transport = new HttpClientTransport(AzureService.GetClient());
+
+        return new LogsQueryClient(logAnalytics.Endpoint, credential, options);
     }
 
 }

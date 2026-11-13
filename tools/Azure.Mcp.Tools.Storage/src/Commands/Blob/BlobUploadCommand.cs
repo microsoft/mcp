@@ -26,7 +26,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = true)]
+    LocalRequired = true,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger, IStorageService storageService)
     : AuthenticatedCommand<BlobUploadOptions, BlobUploadResult>
 {

@@ -26,7 +26,8 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger, IAppLensService appLensService)
     : BaseCommand<ResourceDiagnoseOptions, ResourceDiagnoseCommandResult>
 {

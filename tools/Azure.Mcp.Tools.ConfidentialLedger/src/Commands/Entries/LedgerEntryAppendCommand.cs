@@ -21,7 +21,8 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service, ILogger<LedgerEntryAppendCommand> logger)
     : AuthenticatedCommand<AppendEntryOptions, AppendEntryResult>
 {

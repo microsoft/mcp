@@ -52,6 +52,9 @@ public sealed class CommandMetadataAttribute : Attribute
     /// <summary>Whether the tool requires local execution.</summary>
     public required bool LocalRequired { get; init; }
 
+    /// <summary>The custom-cloud capability required to expose the tool.</summary>
+    public CustomCloudRequirement CustomCloudRequirement { get; init; }
+
     internal bool IsValid() => !string.IsNullOrWhiteSpace(Id) &&
         !string.IsNullOrWhiteSpace(Name) &&
         !string.IsNullOrWhiteSpace(Description) &&
@@ -65,6 +68,7 @@ public sealed class CommandMetadataAttribute : Attribute
         OpenWorld = OpenWorld,
         ReadOnly = ReadOnly,
         Secret = Secret,
-        LocalRequired = LocalRequired
+        LocalRequired = LocalRequired,
+        CustomCloudRequirement = CustomCloudRequirement
     };
 }

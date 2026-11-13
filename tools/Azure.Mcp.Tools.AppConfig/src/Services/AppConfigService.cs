@@ -278,7 +278,7 @@ public sealed class AppConfigService(IAzureService azureService)
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => AppConfigurationAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => AppConfigurationAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => AppConfigurationAudience.AzureGovernment,
-            _ => AppConfigurationAudience.AzurePublicCloud
+            _ => throw new InvalidOperationException("Azure App Configuration data-plane operations are not supported for custom clouds.")
         };
     }
 }

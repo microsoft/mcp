@@ -27,7 +27,8 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<KeyValueDeleteOptions, KeyValueDeleteCommand.KeyValueDeleteCommandResult>(subscriptionResolver)
 {

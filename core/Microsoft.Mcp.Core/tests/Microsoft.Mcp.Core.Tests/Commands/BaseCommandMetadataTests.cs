@@ -26,7 +26,8 @@ public sealed class BaseCommandMetadataTests
         OpenWorld = false,
         ReadOnly = true,
         Secret = true,
-        LocalRequired = true)]
+        LocalRequired = true,
+        CustomCloudRequirement = CustomCloudRequirement.Kusto)]
     private sealed class AttributeBasedCommand : BaseCommand<EmptyOptions, string>
     {
         public override Task<CommandResponse> ExecuteAsync(
@@ -132,6 +133,13 @@ public sealed class BaseCommandMetadataTests
     }
 
     [Fact]
+    public void ToToolMetadata_MapsCustomCloudRequirement()
+    {
+        var command = new AttributeBasedCommand();
+        Assert.Equal(CustomCloudRequirement.Kusto, command.Metadata.CustomCloudRequirement);
+    }
+
+    [Fact]
     public void ToToolMetadata_ExplicitDefaultValues_AreCorrect()
     {
         var attr = new CommandMetadataAttribute
@@ -157,6 +165,7 @@ public sealed class BaseCommandMetadataTests
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.Secret);
         Assert.False(metadata.LocalRequired);
+        Assert.Equal(CustomCloudRequirement.None, metadata.CustomCloudRequirement);
     }
 
     [Fact]

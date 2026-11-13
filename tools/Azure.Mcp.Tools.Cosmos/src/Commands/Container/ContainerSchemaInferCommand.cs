@@ -22,7 +22,8 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Container;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ContainerSchemaInferCommand(ILogger<ContainerSchemaInferCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
     : BaseCosmosCommand<ContainerSchemaInferOptions, ContainerSchemaInferCommand.ContainerSchemaInferCommandResult>(subscriptionResolver)
 {

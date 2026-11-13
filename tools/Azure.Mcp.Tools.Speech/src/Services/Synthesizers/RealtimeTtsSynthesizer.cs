@@ -283,7 +283,7 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://cognitiveservices.azure.com/.default",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://cognitiveservices.azure.us/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://cognitiveservices.azure.cn/.default",
-            _ => "https://cognitiveservices.azure.com/.default"
+            _ => throw new InvalidOperationException("Azure Speech data-plane operations are not supported for custom clouds.")
         };
     }
 }

@@ -156,7 +156,7 @@ public sealed class AcrService(IAzureService azureService)
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => ContainerRegistryAudience.AzureResourceManagerPublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => ContainerRegistryAudience.AzureResourceManagerChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => ContainerRegistryAudience.AzureResourceManagerGovernment,
-            _ => ContainerRegistryAudience.AzureResourceManagerPublicCloud
+            _ => throw new InvalidOperationException("Azure Container Registry data-plane operations are not supported for custom clouds.")
         };
     }
 }

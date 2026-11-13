@@ -21,7 +21,8 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class DatabaseQueryCommand(IPostgresService postgresService, ILogger<DatabaseQueryCommand> logger)
     : AuthenticatedCommand<DatabaseQueryOptions, DatabaseQueryCommand.DatabaseQueryCommandResult>
 {

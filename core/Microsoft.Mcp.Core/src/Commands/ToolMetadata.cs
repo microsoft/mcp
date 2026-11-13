@@ -169,6 +169,12 @@ public sealed class ToolMetadata
     public bool LocalRequired { get; init; } = false;
 
     /// <summary>
+    /// Gets the custom-cloud capability required to expose this tool.
+    /// </summary>
+    [JsonIgnore]
+    public CustomCloudRequirement CustomCloudRequirement { get; init; }
+
+    /// <summary>
     /// Gets the localRequired metadata property with value and description for serialization.
     /// </summary>
     [JsonPropertyName("localRequired")]

@@ -742,6 +742,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | kusto_database_list | List all databases in the Data Explorer cluster <cluster_name> | none |
 | kusto_database_list | Show me the databases in the Data Explorer cluster <cluster_name> | none |
 | kusto_query | Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name> | none |
+| kusto_query | Query <database_name> in the Data Explorer cluster at <cluster_uri> using <kql_query> | none |
 | kusto_query | Run `print value=1` three times in database <database_name> at cluster URI <cluster_uri> using the same server session and report each call's elapsed time | none |
 | kusto_sample | Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name> | none |
 | kusto_table_list | List all tables in the Data Explorer database <database_name> in cluster <cluster_name> | none |

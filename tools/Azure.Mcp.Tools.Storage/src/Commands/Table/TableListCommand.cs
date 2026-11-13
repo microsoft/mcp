@@ -23,7 +23,8 @@ namespace Azure.Mcp.Tools.Storage.Table.Commands;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class TableListCommand(ILogger<TableListCommand> logger, IStorageService storageService)
     : AuthenticatedCommand<TableListOptions, TableListCommand.TableListCommandResult>
 {

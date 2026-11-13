@@ -27,7 +27,7 @@ internal class EntraTokenProvider(IAzureCloudConfiguration cloudConfiguration) :
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
                 "https://ossrdbms-aad.database.chinacloudapi.cn/.default",
             _ =>
-                "https://ossrdbms-aad.database.windows.net/.default"
+                throw new InvalidOperationException("Azure Database for PostgreSQL authentication is not supported for custom clouds.")
         };
     }
 }

@@ -1,0 +1,3 @@
+changes:
+  - section: "Breaking Changes"
+    description: "Replace flat custom-cloud endpoint settings with required ARM and optional service capability sections, hide unavailable commands from MCP discovery, and reject stale or direct unsupported invocations instead of using Azure Public Cloud endpoints."

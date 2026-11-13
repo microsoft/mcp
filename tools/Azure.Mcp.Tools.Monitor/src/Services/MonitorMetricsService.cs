@@ -505,7 +505,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => MetricsClientAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => MetricsClientAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => MetricsClientAudience.AzureGovernment,
-            _ => MetricsClientAudience.AzurePublicCloud
+            _ => throw new InvalidOperationException("Batch metrics queries are not supported for custom clouds.")
         };
 
     private string GetMetricsEndpointHostSuffix() =>
@@ -514,7 +514,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "metrics.monitor.azure.com",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "metrics.monitor.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "metrics.monitor.azure.us",
-            _ => "metrics.monitor.azure.com"
+            _ => throw new InvalidOperationException("Batch metrics queries are not supported for custom clouds.")
         };
 
     private static string ToIsoString(DateTimeOffset dto)

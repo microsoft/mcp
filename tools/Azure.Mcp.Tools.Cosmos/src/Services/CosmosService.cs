@@ -121,7 +121,7 @@ public sealed class CosmosService(IAzureService azureService, ICacheService cach
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{accountName}.documents.azure.com:443/",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{accountName}.documents.azure.us:443/",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{accountName}.documents.azure.cn:443/",
-            _ => $"https://{accountName}.documents.azure.com:443/"
+            _ => throw new InvalidOperationException("Azure Cosmos DB data-plane operations are not supported for custom clouds.")
         };
     }
 

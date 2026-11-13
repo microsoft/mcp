@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Use the Azure Monitor Logs Query SDK for Log Analytics queries in custom clouds."

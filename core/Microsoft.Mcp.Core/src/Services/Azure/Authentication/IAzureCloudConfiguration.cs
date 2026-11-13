@@ -25,4 +25,14 @@ public interface IAzureCloudConfiguration
     /// Gets the type of Azure cloud environment.
     /// </summary>
     AzureCloudConfiguration.AzureCloud CloudType { get; }
+
+    /// <summary>
+    /// Gets the Log Analytics capability for the configured cloud.
+    /// </summary>
+    CloudServiceConfiguration? LogAnalytics { get; }
+
+    /// <summary>
+    /// Gets the Azure Data Explorer capability for the configured cloud.
+    /// </summary>
+    KustoCloudConfiguration? Kusto { get; }
 }

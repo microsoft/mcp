@@ -7,79 +7,20 @@ using Azure.Mcp.Core.Services.Azure;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
-public sealed class KustoClient(
-    string clusterUri,
-    TokenCredential tokenCredential,
+internal sealed class KustoClient(
+    KustoEndpoint endpoint,
+    string? tenant,
     string userAgent,
     IAzureService azureService)
 {
-    // Valid Kusto cluster domain suffixes from official Kusto endpoints configuration
-    private static readonly string[] s_validKustoDomainSuffixes =
-    [
-        // Public cloud
-        ".dxp.aad.azure.com",
-        ".dxp-dev.aad.azure.com",
-        ".kusto.azuresynapse.net",
-        ".kusto.windows.net",
-        ".kustodev.azuresynapse-dogfood.net",
-        ".kustodev.windows.net",
-        ".kustomfa.windows.net",
-        ".kusto.data.microsoft.com",
-        ".kusto.fabric.microsoft.com",
-        ".arg.core.windows.net", // Azure Resource Graph Kusto endpoints: https://github.com/microsoft/mcp/issues/4028
-        ".adx.loganalytics.azure.com",
-        ".adx.applicationinsights.azure.com",
-        ".adx.monitor.azure.com",
-        // US Government
-        ".kusto.usgovcloudapi.net",
-        ".kustomfa.usgovcloudapi.net",
-        ".adx.loganalytics.azure.us",
-        ".adx.applicationinsights.azure.us",
-        ".adx.monitor.azure.us",
-        // China
-        ".kusto.azuresynapse.azure.cn",
-        ".kusto.chinacloudapi.cn",
-        ".kustomfa.chinacloudapi.cn",
-        ".adx.loganalytics.azure.cn",
-        ".adx.applicationinsights.azure.cn",
-        ".adx.monitor.azure.cn",
-        // Germany
-        ".kusto.sovcloud-api.de",
-        ".kustomfa.sovcloud-api.de"
-    ];
+    internal const string HttpClientName = "Azure.Mcp.Tools.Kusto";
 
-    // Exact hostnames that are valid Kusto endpoints
-    private static readonly HashSet<string> s_validKustoHostnames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        // Public cloud
-        "kusto.aria.microsoft.com",
-        "eu.kusto.aria.microsoft.com",
-        "ade.applicationinsights.io",
-        "ade.loganalytics.io",
-        "adx.aimon.applicationinsights.azure.com",
-        "adx.applicationinsights.azure.com",
-        "adx.loganalytics.azure.com",
-        "adx.monitor.azure.com",
-        // US Government
-        "adx.applicationinsights.azure.us",
-        "adx.loganalytics.azure.us",
-        "adx.monitor.azure.us",
-        // China
-        "adx.applicationinsights.azure.cn",
-        "adx.loganalytics.azure.cn",
-        "adx.monitor.azure.cn",
-        // Germany
-        "adx.applicationinsights.azure.de",
-        "adx.loganalytics.azure.de",
-        "adx.monitor.azure.de"
-    };
-
-    private readonly string _clusterUri = ValidateAndNormalizeClusterUri(clusterUri);
-    private readonly TokenCredential _tokenCredential = tokenCredential;
-    // Tokens are cached only within this client instance. Cross-call reuse depends
-    // on KustoService's ICacheService: stdio retains clients when caching is enabled;
-    // the current HTTP cache is a no-op, so clients are not reused across calls.
+    private readonly KustoEndpoint _endpoint = endpoint;
+    private readonly string? _tenant = tenant;
+    private readonly TokenCredential? _testTokenCredential;
+    // Resolve credentials per request and reuse tokens only for the same credential instance.
     private readonly SemaphoreSlim _tokenLock = new(1, 1);
+    private TokenCredential? _cachedTokenCredential;
     private AccessToken _accessToken;
     private readonly string _userAgent = userAgent;
     private readonly IAzureService _azureService = azureService;
@@ -88,139 +29,14 @@ public sealed class KustoClient(
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
 
-    /// <summary>
-    /// Validates that the cluster URI is a valid Azure Data Explorer endpoint.
-    /// Prevents SSRF attacks by rejecting arbitrary URLs.
-    /// </summary>
-    private static string ValidateAndNormalizeClusterUri(string clusterUri)
+    internal KustoClient(
+        KustoEndpoint endpoint,
+        TokenCredential testTokenCredential,
+        string userAgent,
+        IAzureService azureService)
+        : this(endpoint, (string?)null, userAgent, azureService)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(clusterUri, nameof(clusterUri));
-
-        // Normalize: remove trailing slash
-        var normalizedUri = clusterUri.TrimEnd('/');
-
-        if (!Uri.TryCreate(normalizedUri, UriKind.Absolute, out var uri))
-        {
-            throw new ArgumentException(
-                $"Invalid Kusto cluster URI format: '{clusterUri}'",
-                nameof(clusterUri));
-        }
-
-        // Must be HTTPS
-        if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                "Kusto cluster URI must use HTTPS scheme.",
-                nameof(clusterUri));
-        }
-
-        // Validate it's a legitimate Kusto cluster domain using simple string matching
-        if (!IsValidKustoHost(uri.Host))
-        {
-            throw new ArgumentException(
-                $"Invalid Kusto cluster URI. Must be a valid Azure Data Explorer cluster endpoint (e.g., https://clustername.region.kusto.windows.net). Received host: '{uri.Host}'",
-                nameof(clusterUri));
-        }
-
-        return normalizedUri;
-    }
-
-    /// <summary>
-    /// Checks if the host is a valid Kusto cluster domain.
-    /// Uses simple string matching instead of regex to avoid ReDoS attacks.
-    /// </summary>
-    private static bool IsValidKustoHost(string host)
-    {
-        // Check for exact hostname match first (O(1) lookup with HashSet)
-        if (s_validKustoHostnames.Contains(host))
-        {
-            return true;
-        }
-
-        // Check if host ends with one of the valid Kusto domain suffixes
-        var matchedSuffix = Array.Find(s_validKustoDomainSuffixes,
-            suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-
-        if (matchedSuffix == null)
-        {
-            return false;
-        }
-
-        // Extract the cluster name part (everything before the suffix)
-        var clusterPart = host[..^matchedSuffix.Length];
-
-        // Cluster part must not be empty
-        if (string.IsNullOrEmpty(clusterPart))
-        {
-            return false;
-        }
-
-        // Validate cluster part contains only valid hostname characters
-        // Split by dots and validate each segment
-        var segments = clusterPart.Split('.');
-
-        // Validate each segment contains only valid characters
-        foreach (var segment in segments)
-        {
-            if (!IsValidHostnameSegment(segment))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Validates a hostname segment contains only alphanumeric characters and hyphens,
-    /// starts with an alphanumeric character, and is not empty.
-    /// </summary>
-    private static bool IsValidHostnameSegment(string segment)
-    {
-        if (string.IsNullOrEmpty(segment))
-        {
-            return false;
-        }
-
-        // Must start with alphanumeric
-        if (!char.IsLetterOrDigit(segment[0]))
-        {
-            return false;
-        }
-
-        // All characters must be alphanumeric or hyphen
-        foreach (var c in segment)
-        {
-            if (!char.IsLetterOrDigit(c) && c != '-')
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Determines the appropriate Kusto token scope based on the cluster URI domain.
-    /// </summary>
-    private string GetKustoScope()
-    {
-        var uri = new Uri(_clusterUri);
-        var host = uri.Host;
-
-        if (host.EndsWith(".chinacloudapi.cn", StringComparison.OrdinalIgnoreCase) ||
-            host.EndsWith(".azure.cn", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://kusto.kusto.chinacloudapi.cn/.default";
-        }
-
-        if (host.EndsWith(".usgovcloudapi.net", StringComparison.OrdinalIgnoreCase) ||
-            host.EndsWith(".azure.us", StringComparison.OrdinalIgnoreCase))
-        {
-            return "https://kusto.kusto.usgovcloudapi.net/.default";
-        }
-
-        return "https://kusto.kusto.windows.net/.default";
+        _testTokenCredential = testTokenCredential;
     }
 
     public Task<KustoResult> ExecuteQueryCommandAsync(string database, string text, CancellationToken cancellationToken)
@@ -231,9 +47,9 @@ public sealed class KustoClient(
 
     private async Task<KustoResult> ExecuteCommandAsync(string endpoint, string database, string text, CancellationToken cancellationToken)
     {
-        var uri = _clusterUri + endpoint;
-        var httpRequest = await GenerateRequestAsync(uri, database, text, cancellationToken).ConfigureAwait(false);
-        var client = _azureService.GetClient();
+        var uri = _endpoint.ClusterUri + endpoint;
+        using var httpRequest = await GenerateRequestAsync(uri, database, text, cancellationToken).ConfigureAwait(false);
+        using var client = _azureService.GetClient(HttpClientName);
         client.Timeout = s_httpClientTimeout;
         return await SendRequestAsync(client, httpRequest, cancellationToken).ConfigureAwait(false);
     }
@@ -268,15 +84,24 @@ public sealed class KustoClient(
 
     private async Task<AccessToken> GetAccessTokenAsync(string clientRequestId, CancellationToken cancellationToken)
     {
+        var tokenCredential = _testTokenCredential;
+        if (tokenCredential == null)
+        {
+            var resolvedTenant = await _azureService.ResolveTenantIdAsync(_tenant, cancellationToken).ConfigureAwait(false);
+            tokenCredential = await _azureService.GetTokenCredentialAsync(resolvedTenant, cancellationToken).ConfigureAwait(false);
+        }
+
         await _tokenLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             var now = DateTimeOffset.UtcNow;
-            if (_accessToken.ExpiresOn <= now + s_tokenRefreshBuffer ||
+            if (!ReferenceEquals(_cachedTokenCredential, tokenCredential) ||
+                _accessToken.ExpiresOn <= now + s_tokenRefreshBuffer ||
                 _accessToken.RefreshOn <= now)
             {
-                var tokenRequestContext = new TokenRequestContext([GetKustoScope()], clientRequestId);
-                _accessToken = await _tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
+                var tokenRequestContext = new TokenRequestContext([_endpoint.Scope], clientRequestId);
+                _accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
+                _cachedTokenCredential = tokenCredential;
             }
 
             return _accessToken;

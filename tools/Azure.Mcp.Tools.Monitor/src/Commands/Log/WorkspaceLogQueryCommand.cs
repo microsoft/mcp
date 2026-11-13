@@ -32,7 +32,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.LogAnalytics)]
 public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<WorkspaceLogQueryOptions, WorkspaceLogQueryCommand.WorkspaceLogQueryCommandResult>(subscriptionResolver)
 {

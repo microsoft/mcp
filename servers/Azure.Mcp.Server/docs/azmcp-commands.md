@@ -285,7 +285,8 @@ The `azmcp server start` command supports the following options:
 | `--dangerously-disable-ssrf-protections-by-namespace` | No | None | **⚠️ DANGEROUS**: Disable endpoint SSRF validation for a tool namespace. Repeat the option for multiple namespaces, or specify `ALL` to disable it for every namespace. |
 | `--outgoing-auth-strategy` | No | `NotSet` | Outgoing authentication strategy for service requests. Valid values: `NotSet`, `UseHostingEnvironmentIdentity`, `UseOnBehalfOf`. |
 | `--dangerously-write-support-logs-to-dir` | No | - | **⚠️ DANGEROUS**: Enables detailed debug-level logging for support and troubleshooting. Specify a folder path where log files will be created with timestamp-based filenames. May include sensitive information in logs. |
-| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or a custom authority host URL starting with `https://`. When a custom authority host URL is used, only the authentication authority host is changed; ARM and other service endpoints continue to use the Azure public cloud. |
+| `--cloud` | No | `AzureCloud` | Azure cloud environment for authentication. Valid values: `AzureCloud` (default), `AzureChinaCloud`, `AzureUSGovernment`, or `custom`. |
+| `--custom-cloud-config` | No | | Path to a JSON file describing a custom cloud. Required when `--cloud custom` is used. |
 | `--disable-caching` | No | `false` | Disable caching of resource responses, requiring repeated requests to fetch fresh data each time. |
 | `--structured-output-mode` | No | Disabled | Enables `outputSchema` and `structuredContent` in `all`, `namespace`, `consolidated`, and `single` modes. `duplicated` retains the complete original `content`; `compact` returns concise `content`. Both return the complete structured result. Enable this only when the client supports these fields. |
 | `--disable-proxy-tools` | No | `false` | Disable tools that are proxied from sources configured in `/Resources/registry.json`. |
@@ -368,7 +369,7 @@ The `azmcp server start` command supports the following options:
 > - `AzureCloud` (default): Azure public cloud
 > - `AzureChinaCloud`: Azure China (operated by 21Vianet)
 > - `AzureUSGovernment`: Azure US Government
-> - Custom URL: A custom authority host URL starting with `https://`
+> - `custom`: Uses capability metadata from the file passed to `--custom-cloud-config`. ARM and Resource Graph are required; Log Analytics and Azure Data Explorer data-plane access are optional capabilities. MCP discovery omits commands that are unavailable for the configured capabilities.
 >
 > **Example usage:**
 > ```bash
@@ -2938,6 +2939,8 @@ azmcp optimization recommendation explain --subscription <subscription> \
 ```
 
 ### Azure Data Explorer Operations
+
+When the server uses `--cloud custom`, data-plane operations require a `kusto` capability containing `endpointSuffix` and `audience`. Cluster URIs must use HTTPS and belong to the configured suffix. See `docs/sovereign-clouds.md` for the complete configuration contract.
 
 ```bash
 # Get details for a Azure Data Explorer cluster

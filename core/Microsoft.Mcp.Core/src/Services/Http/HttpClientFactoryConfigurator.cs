@@ -112,6 +112,18 @@ public static class HttpClientFactoryConfigurator
         return services;
     }
 
+    public static IHttpClientBuilder DisableAutomaticRedirects(
+        this IHttpClientBuilder builder,
+        Func<Uri?>? recordingProxyResolver = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
+            CreateHttpMessageHandler(serviceProvider, recordingProxyResolver, builder.Name));
+
+        return builder;
+    }
+
     private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder, Func<Uri?>? recordingProxyResolver)
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>

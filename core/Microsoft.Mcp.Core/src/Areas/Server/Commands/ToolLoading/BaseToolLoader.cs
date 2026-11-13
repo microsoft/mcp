@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -462,14 +463,55 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// <param name="command">The command to check.</param>
     /// <param name="configuration">The server runtime configuration.</param>
     /// <returns>True if the command should be kept, false if it should be filtered.</returns>
-    public static bool ShouldKeepBaseCommand(IBaseCommand command, ServerRuntimeConfiguration configuration)
+    public static bool ShouldKeepBaseCommand(
+        IBaseCommand command,
+        ServerRuntimeConfiguration configuration,
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         // Keep the command if and only if:
         // - The server isn't running in read-only mode or the command is read-only.
         // - The server isn't running in HTTP (remote) mode or the command doesn't require local resources. 
         return (!configuration.ReadOnly || command.Metadata.ReadOnly) &&
-            (!configuration.IsHttpMode || !command.Metadata.LocalRequired);
+            (!configuration.IsHttpMode || !command.Metadata.LocalRequired) &&
+            GetCustomCloudUnavailabilityReason(command, cloudConfiguration) == null;
     }
+
+    /// <summary>
+    /// Gets the reason a command is unavailable in the configured custom cloud.
+    /// </summary>
+    public static string? GetCustomCloudUnavailabilityReason(
+        IBaseCommand command,
+        IAzureCloudConfiguration? cloudConfiguration) =>
+        GetCustomCloudUnavailabilityReason(command.Metadata, cloudConfiguration);
+
+    private static string? GetCustomCloudUnavailabilityReason(
+        ToolMetadata metadata,
+        IAzureCloudConfiguration? cloudConfiguration)
+    {
+        if (cloudConfiguration?.CloudType != AzureCloudConfiguration.AzureCloud.CustomCloud)
+        {
+            return null;
+        }
+
+        return metadata.CustomCloudRequirement switch
+        {
+            CustomCloudRequirement.None => null,
+            CustomCloudRequirement.Unsupported => "This tool is not supported for custom clouds.",
+            CustomCloudRequirement.LogAnalytics when cloudConfiguration.LogAnalytics == null =>
+                "This tool requires the logAnalytics capability in the custom-cloud configuration.",
+            CustomCloudRequirement.Kusto when cloudConfiguration.Kusto == null =>
+                "This tool requires the kusto capability in the custom-cloud configuration.",
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Checks whether tool metadata is available in the configured custom cloud.
+    /// </summary>
+    public static bool IsAvailableInCustomCloud(
+        ToolMetadata metadata,
+        IAzureCloudConfiguration? cloudConfiguration) =>
+        GetCustomCloudUnavailabilityReason(metadata, cloudConfiguration) == null;
 
     public static bool ShouldKeepTool(Tool tool, ServerRuntimeConfiguration configuration)
     {

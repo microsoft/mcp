@@ -23,7 +23,8 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ItemGetCommand(ILogger<ItemGetCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
     : BaseCosmosCommand<ItemGetOptions, ItemGetCommand.ItemGetCommandResult>(subscriptionResolver)
 {

@@ -109,7 +109,8 @@ public class KustoCommandTests(ITestOutputHelper output, TestProxyFixture fixtur
 
             var azureService = _serviceProvider.GetRequiredService<IAzureService>();
 
-            var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", azureService);
+            var endpoint = KustoEndpoint.Create(clusterUri ?? string.Empty, azureService.CloudConfiguration);
+            var kustoClient = new KustoClient(endpoint, credentials, "ua", azureService);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
