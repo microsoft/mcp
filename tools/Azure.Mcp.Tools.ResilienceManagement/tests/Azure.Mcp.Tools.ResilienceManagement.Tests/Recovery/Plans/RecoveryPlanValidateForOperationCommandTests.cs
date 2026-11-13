@@ -46,7 +46,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             "plan1",
             Arg.Is<RecoveryOperationName>(value => value.ToString() == operationName),
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -71,7 +71,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("must be Failover", response.Message, StringComparison.OrdinalIgnoreCase);
         await Service.DidNotReceiveWithAnyArgs().ValidateRecoveryPlanForOperationAsync(
-            default!, default!, default, default, TestContext.Current.CancellationToken);
+            default!, default!, default, default, default, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             "plan1",
             Arg.Is<RecoveryOperationName>(value => value == RecoveryOperationName.Reprotect),
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -116,7 +116,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<RecoveryOperationName>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(
@@ -138,7 +138,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<RecoveryOperationName>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
         var response = await ExecuteCommandAsync(

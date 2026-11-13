@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Jobs;
     Id = "260f87af-e70d-45fb-9458-3ecbc9543458",
     Name = "resume",
     Title = "Resume Resilience Recovery Job",
-    Description = "Resumes or continues a paused resilience recovery job for a recoveryplan in an Azure service group. Use when asked to resume a paused recovery job, optionally with a description containing user input for the paused action. This destructive operation returns after the resume is accepted with an operation ID. Use recoveryjob get to monitor the existing job. The recovery job must currently be Paused.",
+    Description = "Resumes or continues a paused resilience recovery job for a recoveryplan in an Azure service group. Use when asked to resume a paused recovery job, optionally with a description containing user input for the paused action. This destructive operation returns after the resume is accepted with an operation ID. Use recoveryjob get to monitor the existing job. The recovery job must currently be Paused. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -35,6 +35,7 @@ public sealed class RecoveryJobResumeCommand(
     public override void ValidateOptions(RecoveryJobResumeOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
         RecoveryJobValidation.ValidateName(options.RecoveryJob, validationResult);
@@ -48,7 +49,7 @@ public sealed class RecoveryJobResumeCommand(
     {
         try
         {
-            RecoveryJobResumeResult result = await _resilienceManagementService.ResumeRecoveryJobAsync(options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Description, options.Tenant, cancellationToken);
+            RecoveryJobResumeResult result = await _resilienceManagementService.ResumeRecoveryJobAsync(options.ServiceGroup, options.RecoveryPlan, options.RecoveryJob, options.Description, options.Tenant, ResilienceManagementOperationIdValidation.Normalize(options.OperationId), cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryJobResumeResult);
         }
         catch (Exception ex)

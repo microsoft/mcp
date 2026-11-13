@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Drills;
 
-public sealed class DrillCheckResyncReadinessOptions
+public sealed class DrillCheckResyncReadinessOptions : ResilienceManagementOperationOptions
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }

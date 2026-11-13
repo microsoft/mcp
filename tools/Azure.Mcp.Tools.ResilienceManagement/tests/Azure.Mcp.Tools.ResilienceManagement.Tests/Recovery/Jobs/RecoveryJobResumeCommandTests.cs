@@ -37,7 +37,7 @@ public sealed class RecoveryJobResumeCommandTests : CommandUnitTestsBase<Recover
             "11111111-1111-1111-1111-111111111111",
             "Accepted",
             "Recovery job resume was accepted.");
-        Service.ResumeRecoveryJobAsync("sg1", "plan1", RecoveryJob, "Approved", null, Arg.Any<CancellationToken>()).Returns(expected);
+        Service.ResumeRecoveryJobAsync("sg1", "plan1", RecoveryJob, "Approved", null, Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(expected);
 
         var response = await ExecuteCommandAsync(
             "--service-group", "sg1",
@@ -52,7 +52,7 @@ public sealed class RecoveryJobResumeCommandTests : CommandUnitTestsBase<Recover
     [Fact]
     public async Task ExecuteAsync_ExplainsPausedStatePrecondition()
     {
-        Service.ResumeRecoveryJobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<CancellationToken>())
+        Service.ResumeRecoveryJobAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), null, Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.PreconditionFailed, "provider details"));
 
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--recoveryplan", "plan1", "--recoveryjob", RecoveryJob);

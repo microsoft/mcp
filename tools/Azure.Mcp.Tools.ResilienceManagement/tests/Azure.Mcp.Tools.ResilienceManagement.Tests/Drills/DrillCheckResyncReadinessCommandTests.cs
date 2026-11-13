@@ -44,7 +44,7 @@ public sealed class DrillCheckResyncReadinessCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new DrillResyncReadinessResult("operation1", false));
         }
 
@@ -60,7 +60,7 @@ public sealed class DrillCheckResyncReadinessCommandTests
             ServiceGroup,
             Drill,
             "tenant1",
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new DrillResyncReadinessResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -93,7 +93,7 @@ public sealed class DrillCheckResyncReadinessCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>());
+            Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -108,7 +108,7 @@ public sealed class DrillCheckResyncReadinessCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(ValidArgs);

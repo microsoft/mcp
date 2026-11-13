@@ -6,12 +6,12 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Assignments;
 
-public sealed class GoalAssignmentRefreshResourcesOptions : IGoalAssignmentOptions
+public sealed class GoalAssignmentRefreshResourcesOptions
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }
 
-    [Option(Description = ResilienceManagementOptionDescriptions.GoalAssignment)]
+    [Option(Description = "The name of the existing resilience goal assignment whose resources should be rediscovered.")]
     public required string GoalAssignment { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]

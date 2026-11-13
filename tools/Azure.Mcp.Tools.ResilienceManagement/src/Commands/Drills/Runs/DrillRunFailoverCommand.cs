@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Runs;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Runs;
     Id = "8fe94d6f-feb1-468c-bdbd-c93384e4639a",
     Name = "failover",
     Title = "Fail Over a Resilience Drill Run",
-    Description = "Fails over an existing, already-started resilience drill run in a service group from physical source zones; use drill start to begin a new drill. Optional selected drill resources limit fault injection and failover; auto-failover continues automatically to failover instead of pausing for manual input after fault injection; user consent Allowed lets failover proceed when the recovery plan is not Ready.",
+    Description = "Fails over an existing resilience drill run from Azure regions or physical zones. Optional selected drill or recovery resources limit failover; auto-failover and user consent control continuation. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -31,20 +32,28 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
     public override void ValidateOptions(DrillRunFailoverOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         ValidatePathSegment(options.ServiceGroup, "service group", validationResult);
         ValidatePathSegment(options.Drill, "drill", validationResult);
         ValidatePathSegment(options.DrillRun, "drill run", validationResult);
 
-        if (options.SourceLocations is null or { Length: 0 })
+        if (options.SourceLocations.Length == 0)
         {
             validationResult.Errors.Add("At least one source location is required.");
         }
-        else if (options.SourceLocations.Any(location => string.IsNullOrWhiteSpace(location) || !IsValidPhysicalZone(location)))
+        else if (options.SourceLocations.Any(location => !IsValidSourceLocation(location)))
         {
-            validationResult.Errors.Add("Each source location must use the physical Azure zone format '<region>-az<zone-number>', such as 'eastus-az1'.");
+            validationResult.Errors.Add("Each source location must be an Azure region such as 'eastus2' or a physical Azure zone such as 'eastus2-az1'.");
         }
 
-        DrillActionValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, validationResult, drill: options.Drill);
+        if (options.SelectedResourceIds?.Any(resourceId =>
+                !DrillRunSelectedResourceValidation.IsSupportedResourceId(
+                    resourceId,
+                    options.ServiceGroup,
+                    options.Drill)) == true)
+        {
+            validationResult.Errors.Add("Each selected resource ID must be a full drill-resource ID under the requested drill or a recovery-resource ID under a recovery plan in the requested service group, with a GUID resource name.");
+        }
 
         if (options.UserConsent is not null &&
             !string.Equals(options.UserConsent, "Unspecified", StringComparison.OrdinalIgnoreCase) &&
@@ -65,10 +74,9 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
                 options.SourceLocations,
                 options.SelectedResourceIds,
                 options.AutoFailover,
-                options.UserConsent is null
-                    ? null
-                    : string.Equals(options.UserConsent, "Allowed", StringComparison.OrdinalIgnoreCase) ? "Allowed" : "Unspecified",
+                options.UserConsent,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             var result = new DrillRunFailoverCommandResult(operationId, options.DrillRun, Accepted: true);
@@ -108,8 +116,13 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
         }
     }
 
-    private static bool IsValidPhysicalZone(string location)
+    private static bool IsValidSourceLocation(string location)
     {
+        if (IsAsciiAlphanumeric(location))
+        {
+            return true;
+        }
+
         const string separator = "-az";
         int separatorIndex = location.LastIndexOf(separator, StringComparison.OrdinalIgnoreCase);
         if (separatorIndex <= 0 || separatorIndex + separator.Length >= location.Length)
@@ -126,6 +139,11 @@ public sealed class DrillRunFailoverCommand(ILogger<DrillRunFailoverCommand> log
 
     private static bool IsAsciiAlphanumeric(ReadOnlySpan<char> value)
     {
+        if (value.IsEmpty)
+        {
+            return false;
+        }
+
         foreach (char character in value)
         {
             if (!char.IsAsciiLetterOrDigit(character))

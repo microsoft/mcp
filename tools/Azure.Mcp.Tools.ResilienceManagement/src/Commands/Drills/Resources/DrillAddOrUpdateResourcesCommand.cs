@@ -5,7 +5,6 @@ using System.ClientModel.Primitives;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Azure.Core;
 using Azure.Mcp.Tools.ResilienceManagement.Models;
 using Azure.Mcp.Tools.ResilienceManagement.Options.Drills.Resources;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
@@ -21,7 +20,12 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills.Resources;
     Id = "3f0c8d4e-6b2a-4f9d-8f1c-2a7b6d1e94c5",
     Name = "add-or-update",
     Title = "Add or Update Resilience Drill Resources",
-    Description = "Updates or excludes the resources of a resilience drill in a service group, or adds new drill resources. Configure fault duration and target inclusions/exclusions using drill-resource ARM IDs, not VM IDs. Starts the resource update and returns its operation ID.",
+    Description = """
+        Adds, updates, or excludes resilience drill resources in a service group. Configure fault duration and
+        target inclusions or exclusions using drill-resource ARM IDs, not underlying resource IDs. Starts the
+        operation and returns its operation ID. Accepts an optional caller-owned operation ID in canonical GUID
+        format; reuse it for the same logical request, or omit it to generate a new GUID.
+        """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = true,
@@ -39,6 +43,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
     public override void ValidateOptions(DrillAddOrUpdateResourcesOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
 
         ValidatePathSegment(options.ServiceGroup, "--service-group", validationResult);
         ValidatePathSegment(options.Drill, "--drill", validationResult);
@@ -68,6 +73,7 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 options.Drill,
                 content,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
@@ -120,9 +126,9 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
             using JsonDocument include = JsonDocument.Parse(options.IncludeResources ?? "[]");
             using JsonDocument update = JsonDocument.Parse(options.UpdateResources ?? "[]");
             using JsonDocument exclude = JsonDocument.Parse(options.ExcludeResources ?? "[]");
-            ValidateIncludeOrUpdate(include.RootElement, "--include-resources", options);
-            ValidateIncludeOrUpdate(update.RootElement, "--update-resources", options);
-            ValidateExclude(exclude.RootElement, options);
+            ValidateIncludeOrUpdate(include.RootElement, "--include-resources", options.ServiceGroup, options.Drill);
+            ValidateIncludeOrUpdate(update.RootElement, "--update-resources", options.ServiceGroup, options.Drill);
+            ValidateExclude(exclude.RootElement, options.ServiceGroup, options.Drill);
 
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream))
@@ -158,7 +164,11 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
         }
     }
 
-    private static void ValidateIncludeOrUpdate(JsonElement resources, string optionName, DrillAddOrUpdateResourcesOptions options)
+    private static void ValidateIncludeOrUpdate(
+        JsonElement resources,
+        string optionName,
+        string serviceGroup,
+        string drill)
     {
         if (resources.ValueKind != JsonValueKind.Array)
         {
@@ -175,14 +185,11 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
                 throw new ArgumentException($"Each resource in {optionName} must be an object with a non-empty \"id\" string.");
             }
 
-            if (!DrillActionValidation.IsDrillResourceId(idElement.GetString()!, options.ServiceGroup, options.Drill))
-            {
-                throw new ArgumentException($"{optionName} requires full drill-resource IDs under the requested service group and drill, not underlying Azure resource IDs.");
-            }
+            ValidateDrillResourceId(idElement.GetString()!, serviceGroup, drill, "drill-resource IDs");
         }
     }
 
-    private static void ValidateExclude(JsonElement resources, DrillAddOrUpdateResourcesOptions options)
+    private static void ValidateExclude(JsonElement resources, string serviceGroup, string drill)
     {
         if (resources.ValueKind != JsonValueKind.Array)
         {
@@ -191,11 +198,32 @@ public sealed class DrillAddOrUpdateResourcesCommand(ILogger<DrillAddOrUpdateRes
 
         foreach (JsonElement resource in resources.EnumerateArray())
         {
-            if (resource.ValueKind != JsonValueKind.String ||
-                !DrillActionValidation.IsDrillResourceId(resource.GetString()!, options.ServiceGroup, options.Drill))
+            if (resource.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(resource.GetString()))
             {
-                throw new ArgumentException("--exclude-resources requires full drill-resource ID strings under the requested service group and drill, not underlying Azure resource IDs.");
+                throw new ArgumentException("Each value in --exclude-resources must be a non-empty drill-resource ID string.");
             }
+
+            ValidateDrillResourceId(
+                resource.GetString()!,
+                serviceGroup,
+                drill,
+                "Each value in --exclude-resources must be a drill-resource ID and");
+        }
+    }
+
+    private static void ValidateDrillResourceId(
+        string id,
+        string serviceGroup,
+        string drill,
+        string subject)
+    {
+        string expectedPrefix =
+            $"/providers/Microsoft.Management/serviceGroups/{serviceGroup}/providers/Microsoft.AzureResilienceManagement/drills/{drill}/drillResources/";
+        if (!id.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase) ||
+            !Guid.TryParseExact(id[expectedPrefix.Length..], "D", out _))
+        {
+            throw new ArgumentException(
+                $"{subject} must identify resources in service group '{serviceGroup}' and drill '{drill}' using a GUID resource name.");
         }
     }
 

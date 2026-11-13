@@ -1,0 +1,3 @@
+changes:
+  - section: Bugs Fixed
+    description: "Use the current Drill contract when getting an individual resilience drill so Health Model, SLI monitoring and attention properties remain available after creation."

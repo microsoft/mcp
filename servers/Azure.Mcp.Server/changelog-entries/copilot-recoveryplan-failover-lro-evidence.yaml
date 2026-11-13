@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Recovery-plan failover now returns provider LRO tracking URIs, HTTP completion state, and ARM request identifiers for accepted-operation reconciliation."

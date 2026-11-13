@@ -31,7 +31,7 @@ public class DrillValidateForExecutionCommandTests
     {
         Service.ValidateDrillForExecutionAsync(ServiceGroup, Drill,
                 Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { "westus2-az1" })),
-                new DrillRunTask(operation), null, Arg.Any<CancellationToken>())
+                new DrillRunTask(operation), null, null, Arg.Any<CancellationToken>())
             .Returns(new DrillValidateForExecutionResult("ga-operation", false));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
@@ -45,7 +45,7 @@ public class DrillValidateForExecutionCommandTests
     [Fact]
     public async Task ExecuteAsync_AllowsReprotectWithoutSourceLocations()
     {
-        Service.ValidateDrillForExecutionAsync(ServiceGroup, Drill, null, DrillRunTask.Reprotect, null, Arg.Any<CancellationToken>())
+        Service.ValidateDrillForExecutionAsync(ServiceGroup, Drill, null, DrillRunTask.Reprotect, null, null, Arg.Any<CancellationToken>())
             .Returns(new DrillValidateForExecutionResult("ga-operation", false));
 
         var response = await ExecuteCommandAsync("--service-group", ServiceGroup, "--drill", Drill,
@@ -103,12 +103,12 @@ public class DrillValidateForExecutionCommandTests
         if (shouldSucceed)
         {
             Service.ValidateDrillForExecutionAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<IEnumerable<string>?>(),
-                Arg.Any<DrillRunTask?>(),
-                Arg.Any<string?>(),
-                Arg.Any<CancellationToken>())
+                ServiceGroup,
+                Drill,
+                Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { "eastus-az1", "westus-az2" })),
+                null,
+                "tenant1",
+                Arg.Any<string?>(), Arg.Any<CancellationToken>())
                 .Returns(new DrillValidateForExecutionResult("operation1", false));
         }
 
@@ -121,12 +121,12 @@ public class DrillValidateForExecutionCommandTests
     public async Task ExecuteAsync_StartsValidationAndReturnsOperation()
     {
         Service.ValidateDrillForExecutionAsync(
-            ServiceGroup,
-            Drill,
-            Arg.Is<IEnumerable<string>>(locations => locations.SequenceEqual(new[] { "eastus-az1", "westus-az2" })),
-            null,
-            "tenant1",
-            Arg.Any<CancellationToken>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<IEnumerable<string>?>(),
+            Arg.Any<DrillRunTask?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(new DrillValidateForExecutionResult("operation1", false));
 
         var response = await ExecuteCommandAsync(
@@ -135,7 +135,6 @@ public class DrillValidateForExecutionCommandTests
             "--source-locations", "eastus-az1",
             "--source-locations", "westus-az2",
             "--tenant", "tenant1");
-
         var result = ValidateAndDeserializeResponse(
             response,
             ResilienceManagementJsonContext.Default.DrillValidateForExecutionCommandResult);
@@ -169,7 +168,7 @@ public class DrillValidateForExecutionCommandTests
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<DrillRunTask?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var response = await ExecuteCommandAsync(
@@ -190,7 +189,7 @@ public class DrillValidateForExecutionCommandTests
             Arg.Any<IEnumerable<string>>(),
             Arg.Any<DrillRunTask?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Not found"));
 
         var response = await ExecuteCommandAsync(

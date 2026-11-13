@@ -5,5 +5,6 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Models;
 
 public enum RecoveryPlanKind
 {
-    Zonal
+    Zonal,
+    Regional
 }

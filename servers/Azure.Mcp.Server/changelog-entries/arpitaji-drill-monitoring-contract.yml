@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: "Required explicit Azure Health Model or Microsoft.Monitor SLI selection for Drill create, added monitoring updates, and validated exact source, identity, and read-back contracts."

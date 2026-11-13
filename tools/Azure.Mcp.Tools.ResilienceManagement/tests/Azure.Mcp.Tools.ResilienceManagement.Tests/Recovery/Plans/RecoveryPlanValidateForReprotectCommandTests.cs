@@ -39,7 +39,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             "plan1",
             null,
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -75,7 +75,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             "plan1",
             Arg.Is<IReadOnlyList<string>>(resourceIds => resourceIds.SequenceEqual(new[] { RecoveryResourceId })),
             null,
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var response = await ExecuteCommandAsync(
@@ -117,7 +117,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
 
         var response = await ExecuteCommandAsync(
@@ -138,7 +138,7 @@ public sealed class RecoveryPlanValidateForReprotectCommandTests : CommandUnitTe
             Arg.Any<string>(),
             Arg.Any<IReadOnlyList<string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));
 
         var response = await ExecuteCommandAsync(

@@ -113,7 +113,41 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<ManagedServiceIdentity?>(),
             Arg.Any<string?>(),
             null,
-            Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>(),
+            null);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsExplicitSliMonitoringSource()
+    {
+        const string sliId =
+            "/providers/Microsoft.Management/serviceGroups/sg1/providers/Microsoft.Monitor/slis/availability";
+        ConfigureUpdatedDrill();
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--drill", "drill1",
+            "--monitoring-source-type", "Sli",
+            "--monitoring-source-id", sliId,
+            "--monitoring-identity-type", "SystemAssigned",
+            "--monitoring-sli-type", "Availability");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdateDrillAsync(
+            "sg1",
+            "drill1",
+            null,
+            null,
+            null,
+            Arg.Any<DrillUpdateProperties>(),
+            null,
+            null,
+            null,
+            Arg.Any<CancellationToken>(),
+            Arg.Is<DrillMonitoringSource>(source =>
+                source.Kind == DrillMonitoringSourceKind.Sli &&
+                source.ResourceId == sliId &&
+                source.SliKind == DrillSliKind.Availability));
     }
 
     [Theory]
@@ -133,7 +167,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<ManagedServiceIdentity?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<DrillMonitoringSource?>())
             .ThrowsAsync(new RequestFailedException((int)status, "Sensitive provider details"));
 
         var response = await ExecuteCommandAsync(ValidArgs);
@@ -155,7 +190,8 @@ public sealed class DrillUpdateCommandTests : CommandUnitTestsBase<DrillUpdateCo
             Arg.Any<ManagedServiceIdentity?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<CancellationToken>())
+            Arg.Any<CancellationToken>(),
+            Arg.Any<DrillMonitoringSource?>())
             .Returns(new DrillInfo("id1", "drill1"));
     }
 

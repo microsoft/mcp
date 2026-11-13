@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "96622339-b89f-4764-b15f-793bd52d11bf",
     Name = "validateforfailover",
     Title = "Validate Resilience Recoveryplan for Failover",
-    Description = "Validates a resilience recoveryplan for failover using customer-provided source locations, selected recovery-resource IDs, or both. If the customer provides neither selector, ask which source locations or recovery-resource IDs to validate; never infer them from prior context or resource metadata. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources.",
+    Description = "Validates a resilience recoveryplan for failover using customer-provided source locations, selected recovery-resource IDs, or both. If the customer provides neither selector, ask which source locations or recovery-resource IDs to validate; never infer them from prior context or resource metadata. Use this tool to check failover qualification or readiness, identify blocking reasons per recovery resource, or supply user consent. This validation-only operation does not execute failover or update recovery resources. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = false,
@@ -34,6 +34,7 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
     public override void ValidateOptions(RecoveryPlanValidateForFailoverOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
 
@@ -74,6 +75,7 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
                 options.SelectedResourceIds,
                 options.UserConsent,
                 options.Tenant,
+                ResilienceManagementOperationIdValidation.Normalize(options.OperationId),
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(

@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
     Id = "4de82b03-68f7-45b2-8a57-925411cc89d6",
     Name = "reprotect",
     Title = "Reprotect Resilience Recoveryplan",
-    Description = "Starts reprotection after failover for all qualified resources in a recoveryplan or for explicitly selected recovery-resource IDs. This destructive operation returns after reprotection is accepted, with an operation ID and a recovery job ID when available. Use recoveryjob get to monitor progress. Use validateforreprotect first when qualification is unknown.",
+    Description = "Starts reprotection after failover for all qualified resources in a recoveryplan or for explicitly selected recovery-resource IDs. This destructive operation returns after reprotection is accepted, with an operation ID and a recovery job ID when available. Use recoveryjob get to monitor progress. Use validateforreprotect first when qualification is unknown. Accepts an optional caller-owned operation ID in canonical GUID format; reuse it for the same logical request, or omit it to generate a new GUID.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
     Idempotent = false,
@@ -34,6 +34,7 @@ public sealed class RecoveryPlanReprotectCommand(
     public override void ValidateOptions(RecoveryPlanReprotectOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        ResilienceManagementOperationIdValidation.Validate(options.OperationId, validationResult);
         RecoveryPlanValidation.ValidateServiceGroup(options.ServiceGroup, validationResult);
         RecoveryPlanValidation.ValidateName(options.RecoveryPlan, validationResult);
         RecoveryPlanValidation.ValidateSelectedResourceIds(options.SelectedResourceIds, options.ServiceGroup, options.RecoveryPlan, validationResult);
@@ -43,7 +44,7 @@ public sealed class RecoveryPlanReprotectCommand(
     {
         try
         {
-            RecoveryPlanReprotectResult result = await _resilienceManagementService.ReprotectRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.SelectedResourceIds, options.Tenant, cancellationToken);
+            RecoveryPlanReprotectResult result = await _resilienceManagementService.ReprotectRecoveryPlanAsync(options.ServiceGroup, options.RecoveryPlan, options.SelectedResourceIds, options.Tenant, ResilienceManagementOperationIdValidation.Normalize(options.OperationId), cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ResilienceManagementJsonContext.Default.RecoveryPlanReprotectResult);
         }
         catch (Exception ex)

@@ -14,17 +14,15 @@ public interface IResilienceManagementService
 
     Task<GoalAssignmentInfo> GetGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(string serviceGroup, string goalAssignment, bool requireZonalResiliency, IReadOnlyList<string>? serviceLevelResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
-
     Task<GoalAssignmentInfo> UpdateGoalAssignmentAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string> serviceLevelResourceIds, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteGoalAssignmentAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<GoalAssignmentOperationResult> RecommendGoalAssignmentCapacityAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string> resourceIds, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<GoalAssignmentOperationResult> RecommendGoalAssignmentCapacityAsync(string serviceGroup, string goalAssignment, IReadOnlyList<string>? resourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<GoalAssignmentOperationResult> RefreshGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<GoalAssignmentOperationResult> UpdateGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, UpdateGoalResourceContent content, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<GoalAssignmentOperationResult> UpdateGoalAssignmentResourcesAsync(string serviceGroup, string goalAssignment, string resources, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ResourceSummary>> ListUsagePlansAsync(string resourceGroup, string subscription, string? tenant = null, CancellationToken cancellationToken = default);
 
@@ -48,21 +46,21 @@ public interface IResilienceManagementService
 
     Task<bool> DeleteRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanUpdateResourcesResult> UpdateRecoveryPlanResourcesAsync(string serviceGroup, string recoveryPlan, UpdateRecoveryResourcesContent content, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanUpdateResourcesResult> UpdateRecoveryPlanResourcesAsync(string serviceGroup, string recoveryPlan, UpdateRecoveryResourcesContent content, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanFailoverResult> FailoverRecoveryPlanAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanFailoverResult> FailoverRecoveryPlanAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanFinalizeResult> FinalizeRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanFinalizeResult> FinalizeRecoveryPlanAsync(string serviceGroup, string recoveryPlan, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanReprotectResult> ReprotectRecoveryPlanAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanReprotectResult> ReprotectRecoveryPlanAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanValidateForFailoverResult> ValidateRecoveryPlanForFailoverAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string> sourceLocations, IReadOnlyList<string>? selectedResourceIds = null, string? userConsent = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanValidateForReprotectResult> ValidateRecoveryPlanForReprotectAsync(string serviceGroup, string recoveryPlan, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationName operationName, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanValidateForOperationResult> ValidateRecoveryPlanForOperationAsync(string serviceGroup, string recoveryPlan, RecoveryOperationName operationName, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryPlanReadinessResult> CheckRecoveryPlanReadinessAsync(string serviceGroup, string recoveryPlan, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ResourceSummary>> ListRecoveryResourcesAsync(string serviceGroup, string recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default);
 
@@ -72,9 +70,9 @@ public interface IResilienceManagementService
 
     Task<JsonElement> GetRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryJobRetryResult> RetryRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryJobRetryResult> RetryRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<RecoveryJobResumeResult> ResumeRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? description = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<RecoveryJobResumeResult> ResumeRecoveryJobAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? description = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<ResourceSummary>> ListRecoveryJobResourcesAsync(string serviceGroup, string recoveryPlan, string recoveryJob, string? tenant = null, CancellationToken cancellationToken = default);
 
@@ -84,33 +82,37 @@ public interface IResilienceManagementService
 
     Task<DrillInfo> GetDrillAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<DrillResyncReadinessResult> CheckDrillResyncReadinessAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillResyncReadinessResult> CheckDrillResyncReadinessAsync(string serviceGroup, string drill, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<DrillValidateForExecutionResult> ValidateDrillForExecutionAsync(string serviceGroup, string drill, IEnumerable<string>? sourceLocations = null, DrillRunTask? operationName = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillValidateForExecutionResult> ValidateDrillForExecutionAsync(string serviceGroup, string drill, IEnumerable<string>? sourceLocations = null, DrillRunTask? operationName = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<DrillAddOrUpdateResourcesResult> AddOrUpdateDrillResourcesAsync(string serviceGroup, string drill, AddOrUpdateResourcesContent content, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillAddOrUpdateResourcesResult> AddOrUpdateDrillResourcesAsync(string serviceGroup, string drill, AddOrUpdateResourcesContent content, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> StartDrillAsync(string serviceGroup, string drill, string mode, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> AddDrillRunNotesAsync(string serviceGroup, string drill, string drillRun, string notes, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? userConsent = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> FailoverDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string> sourceLocations, IEnumerable<string>? selectedResourceIds = null, bool autoFailover = false, string? userConsent = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> ResumeDrillRunAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillRunMarkCompleteResult> MarkDrillRunCompleteAsync(string serviceGroup, string drill, string drillRun, string stage, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<string> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IReadOnlyList<string>? selectedResourceIds = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillRunReprotectResult> ReprotectDrillRunAsync(string serviceGroup, string drill, string drillRun, IEnumerable<string>? selectedResourceIds = null, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
     Task<DrillRunGenerateReportResult> GenerateDrillRunReportAsync(string serviceGroup, string drill, string drillRun, string? tenant = null, CancellationToken cancellationToken = default);
 
     Task<DrillRunReportDownloadInfo> GetDrillRunReportDownloadUrlAsync(string serviceGroup, string drill, string drillRun, string? format = null, string? tenant = null, CancellationToken cancellationToken = default);
 
-    Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<string> EndDrillAsync(string serviceGroup, string drill, string attestation, string attestationNotes, string? tenant = null, string? operationId = null, CancellationToken cancellationToken = default);
 
-    Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, DrillUpdateProperties? properties = null, ManagedServiceIdentity? identity = null, string? resourceGroup = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription = null, string? region = null, DrillRbacSetupMode? rbacSetupMode = null, DrillUpdateProperties? properties = null, ManagedServiceIdentity? identity = null, string? resourceGroup = null, string? tenant = null, CancellationToken cancellationToken = default, DrillMonitoringSource? monitoringSource = null);
 
-    Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, DrillProperties? properties = null, ManagedServiceIdentity? identity = null, string? tenant = null, CancellationToken cancellationToken = default);
+    Task<DrillInfo> UpdateDrillAsync(string serviceGroup, string drill, string? subscription, string? region, DrillRbacSetupMode? rbacSetupMode, string? recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default, DrillMonitoringSource? monitoringSource = null);
+
+    Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, DrillProperties? properties = null, ManagedServiceIdentity? identity = null, string? tenant = null, CancellationToken cancellationToken = default, DrillMonitoringSource? monitoringSource = null);
+
+    Task<DrillInfo> CreateDrillAsync(string serviceGroup, string drill, string subscription, string region, string? resourceGroup, DrillKind drillType, DrillRbacSetupMode rbacSetupMode, string? recoveryPlan, string? tenant = null, CancellationToken cancellationToken = default, DrillMonitoringSource? monitoringSource = null);
 
     Task DeleteDrillAsync(string serviceGroup, string drill, string? tenant = null, CancellationToken cancellationToken = default);
 
