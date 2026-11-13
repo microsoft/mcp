@@ -40,7 +40,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
     {
         try
         {
-            var sources = await _searchService.ListKnowledgeSources(options.Service, options.KnowledgeSource, cancellationToken);
+            var sources = await _searchService.ListKnowledgeSources(options.Service, options.KnowledgeSource, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
         }
         catch (Exception ex)
@@ -51,6 +51,15 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException { Status: 401 } requestFailed when !requestFailed.Message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase) =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        RequestFailedException { Status: 403 } requestFailed =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        _ => base.GetErrorMessage(ex)
+    };
 
     public sealed record KnowledgeSourceGetCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
 }
