@@ -23,6 +23,13 @@ node_modules/
 .env.*.local
 
 generated/
+!eng/generated/
+!eng/generated/**/
+!eng/generated/**/*.cs
+!eng/generated/**/*.csproj
+!eng/generated/**/*.json
+eng/generated/**/bin/
+eng/generated/**/obj/
 /docs/commandline
 .DS_Store
 .vscode/mcp.json
