@@ -1082,6 +1082,7 @@
         "monitor_activitylog_list",
         "monitor_healthmodels_list",
         "monitor_healthmodels_get",
+        "monitor_healthmodels_inspect",
         "monitor_ingestion_validate",
         "monitor_metrics_definitions",
         "monitor_metrics_query",

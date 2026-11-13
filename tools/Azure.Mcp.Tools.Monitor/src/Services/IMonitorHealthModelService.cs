@@ -36,4 +36,22 @@ public interface IMonitorHealthModelService
         string healthModelName,
         string? tenant = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads the entities of one health model that a request selects, and adds what it includes to each.
+    /// </summary>
+    /// <param name="subscription">Subscription ID or name.</param>
+    /// <param name="resourceGroup">The resource group containing the health model.</param>
+    /// <param name="healthModel">The health model name.</param>
+    /// <param name="request">Which entities to read and what to add to them.</param>
+    /// <param name="tenant">Optional tenant ID.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The selected entities.</returns>
+    Task<HealthModelInspectResult> InspectHealthModel(
+        string subscription,
+        string resourceGroup,
+        string healthModel,
+        HealthModelInspectRequest request,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
 }

@@ -1194,6 +1194,14 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 |:----------|:------------|:------------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> | none |
 | monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> | none |
+| monitor_healthmodels_inspect | Get the signal history of entity <entity_name> in health model <health_model_name> for the last day | none |
+| monitor_healthmodels_inspect | List the entities of health model <health_model_name> and their health history | none |
+| monitor_healthmodels_inspect | Show the dependencies of health model <health_model_name>: which entities roll up into which | none |
+| monitor_healthmodels_inspect | Show what depends on entity <entity_name> in health model <health_model_name> | none |
+| monitor_healthmodels_inspect | What are the degraded and unhealthy thresholds of the signals on entity <entity_name> in health model <health_model_name>? | none |
+| monitor_healthmodels_inspect | Which entities of health model <health_model_name> are not healthy? | none |
+| monitor_healthmodels_inspect | Why is health model <health_model_name> degraded? Trace it down to the signals that drive it | none |
+| monitor_healthmodels_inspect | Why was health model <health_model_name> degraded at <time>? Trace it down to the signals that drove it then | none |
 | monitor_healthmodels_list | List the Azure Monitor health models in my subscription | none |
 | monitor_healthmodels_list | What health models are in resource group <resource_group>? | none |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> | investigation-required |

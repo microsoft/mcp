@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Azure.ResourceManager.CloudHealth.Models;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Attributes;
@@ -23,6 +24,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
     private string? _bingWebTestName;
     private string? _healthModelParentName;
     private string? _healthModelChildName;
+    private string? _healthModelTopologyName;
     private string? _storageAccountName;
 
     private static readonly string[] s_validHealthStates =
@@ -31,7 +33,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         EntityHealthState.Degraded.ToString(),
         EntityHealthState.Unhealthy.ToString(),
         EntityHealthState.Unknown.ToString(),
-        EntityHealthState.Deleted.ToString(),
+        "Deleted",
     ];
 
     private static readonly string[] s_sanitizedHeaders =
@@ -42,6 +44,24 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         "x-ms-served-by",
         "X-MSEdge-Ref"
     ];
+
+    private List<GeneralRegexSanitizer>? _generalRegexSanitizers;
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
+        _generalRegexSanitizers ??=
+        [
+            .. base.GeneralRegexSanitizers,
+            new(new GeneralRegexSanitizerBody
+            {
+                Regex = @"ResourceHealth-[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}",
+                Value = "ResourceHealth-Sanitized"
+            }),
+            new(new GeneralRegexSanitizerBody
+            {
+                Regex = Regex.Escape(Settings.ResourceGroupName),
+                Value = "Sanitized"
+            })
+        ];
 
     public override List<UriRegexSanitizer> UriRegexSanitizers { get; } =
     [
@@ -77,6 +97,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..TimeZone")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..Owners")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..customerId")
         {
             Value = EmptyGuid
@@ -94,6 +115,14 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         .. s_sanitizedHeaders.Select(h => new HeaderRegexSanitizer(new HeaderRegexSanitizerBody(h)))
     ];
 
+    // The default body-key sanitizers AZSDK3430 ($..id) and AZSDK3493 ($..name) replace the WHOLE
+    // value with "Sanitized". Both are disabled so CloudHealth ids and entity names are only
+    // base-name-sanitized (via the ResourceBaseName GeneralRegexSanitizer) and stay distinct: the
+    // health model inspect tests read entity names and walk paths built from them. Subscription id,
+    // tenant id, createdBy/lastModifiedBy (email), resource group and displayName remain sanitized by
+    // their own dedicated rules.
+    public override List<string> DisabledDefaultSanitizers { get; } = ["AZSDK3430", "AZSDK3493"];
+
     public override CustomDefaultMatcher? TestMatcher => new()
     {
         CompareBodies = false
@@ -107,6 +136,19 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         _healthModelParentName = $"{Settings.ResourceBaseName}-hm-a";
         _healthModelChildName = $"{Settings.ResourceBaseName}-hm-b";
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
+        _healthModelTopologyName = $"{Settings.ResourceBaseName}-hm-c";
+    }
+
+    // Web test recordings made before AZSDK3493 was disabled hold the name "Sanitized". Recordings made since hold the
+    // base-name-sanitized name, and a timestamped name keeps the time it was recorded at.
+    private void AssertWebTestName(string? expected, string? actual)
+    {
+        if (TestMode != TestMode.Playback)
+        {
+            Assert.Equal(expected, actual);
+            return;
+        }
+        Assert.True(actual == "Sanitized" || actual?.StartsWith(expected!.TrimEnd("0123456789".ToCharArray()), StringComparison.Ordinal) == true, actual);
     }
 
     #region Workspace Log Search Integration Tests
@@ -884,7 +926,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
 
         // Verify required properties exist
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
+        AssertWebTestName(webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("location", out var location));
         Assert.Equal(JsonValueKind.String, location.ValueKind);
@@ -927,7 +969,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
 
         // Verify the created web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
+        AssertWebTestName(webTestName, resourceName.GetString());
 
         Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
         Assert.True(enabled.GetBoolean());
@@ -961,7 +1003,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
 
         // Verify the updated web test
         Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
-        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : webTestName, resourceName.GetString());
+        AssertWebTestName(webTestName, resourceName.GetString());
 
         // Verify that the updates were applied
         Assert.True(webTest.TryGetProperty("webTestName", out var updatedName));
@@ -1042,6 +1084,95 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         var healthState = healthModel.AssertProperty("healthState");
         Assert.Equal(JsonValueKind.String, healthState.ValueKind);
         Assert.Contains(healthState.GetString(), s_validHealthStates);
+    }
+
+    // Model C is the topology fixture: a root with two leaf children (see test-resources.healthmodels.module.bicep).
+    [Fact]
+    public async Task Should_Inspect_HealthModel_WalksDependencies()
+    {
+        var model = _healthModelTopologyName!;
+
+        var result = await CallToolAsync(
+            "monitor_healthmodels_inspect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", model },
+                { "walk", "Dependencies" }
+            });
+
+        var entities = result.AssertProperty("entities").EnumerateArray().ToList();
+        Assert.Equal(
+            [model, $"{model}/{model}-leaf-backend", $"{model}/{model}-leaf-frontend"],
+            entities.Select(entity => entity.AssertProperty("path").GetString()!).Order(StringComparer.Ordinal));
+        Assert.All(entities, entity => Assert.Contains(entity.AssertProperty("entity").AssertProperty("properties").AssertProperty("healthState").GetString(), s_validHealthStates));
+        Assert.False(result!.Value.TryGetProperty("truncated", out _));
+        Assert.Equal(3, result.AssertProperty("total").GetInt32());
+        Assert.EndsWith($"/providers/Microsoft.CloudHealth/healthmodels/{model}", result.AssertProperty("id").GetString(), StringComparison.OrdinalIgnoreCase);
+        Assert.True(result.AssertProperty("readAt").TryGetDateTimeOffset(out _));
+    }
+
+    // Model B's root has seeded health state transitions (see test-resources-post.ps1). They age out of the default
+    // 24 h window, so the history window covers the last 29 days (the service reach is 30).
+    [Fact]
+    public async Task Should_Inspect_HealthModel_EntityWithSignalsAndHistory()
+    {
+        var model = _healthModelChildName!;
+        var historyFrom = RegisterOrRetrieveVariable("historyFrom", DateTime.UtcNow.AddDays(-29).ToString("o"));
+
+        var result = await CallToolAsync(
+            "monitor_healthmodels_inspect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", model },
+                { "entity", model },
+                { "include", new[] { "Signals", "History", "Annotations" } },
+                { "start-at", historyFrom }
+            });
+
+        // Each payload is the CloudHealth API object, passed through.
+        var item = Assert.Single(result.AssertProperty("entities").EnumerateArray());
+        Assert.False(item.TryGetProperty("errors", out var errors), errors.ToString());
+        var entity = item.AssertProperty("entity");
+        Assert.Equal(model, entity.AssertProperty("name").GetString());
+        var properties = entity.AssertProperty("properties");
+        Assert.Contains(properties.AssertProperty("healthState").GetString(), s_validHealthStates);
+        Assert.Equal(JsonValueKind.Object, properties.AssertProperty("signalGroups").ValueKind);
+
+        var history = item.AssertProperty("history").AssertProperty("history").EnumerateArray().ToList();
+        Assert.NotEmpty(history);
+        Assert.All(history, transition => Assert.Contains(transition.AssertProperty("newState").GetString(), s_validHealthStates));
+        Assert.Equal(JsonValueKind.Object, item.AssertProperty("annotations").ValueKind);
+    }
+
+    // Model B's root has an enabled Resource Health signal, which reports every few minutes, so its history in the
+    // default 24 h window is not empty.
+    [Fact]
+    public async Task Should_Inspect_HealthModel_EntitySignalHistory()
+    {
+        var model = _healthModelChildName!;
+
+        var result = await CallToolAsync(
+            "monitor_healthmodels_inspect",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "health-model", model },
+                { "entity", model },
+                { "include", new[] { "SignalHistory" } }
+            });
+
+        // One getSignalHistory response per signal of the entity, each passed through.
+        var item = Assert.Single(result.AssertProperty("entities").EnumerateArray());
+        Assert.False(item.TryGetProperty("errors", out var errors), errors.ToString());
+        var reads = item.AssertProperty("signalHistory").EnumerateArray().ToList();
+        Assert.NotEmpty(reads);
+        Assert.All(reads, read => Assert.False(string.IsNullOrEmpty(read.AssertProperty("signalName").GetString())));
+        Assert.Contains(reads, read => read.AssertProperty("history").GetArrayLength() > 0);
     }
 
     #endregion
