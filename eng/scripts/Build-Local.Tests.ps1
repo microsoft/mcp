@@ -90,25 +90,32 @@ Describe 'Build-Local NPX verification' {
 
     It 'passes a quoted file package spec for <packagePath>' -TestCases @(
         @{
-            packagePath = "/mnt/vss/_work/1/s/package space #100% 'quoted'.tgz"
-            packageSpec = "file:/mnt/vss/_work/1/s/package space #100% ''quoted''.tgz"
+            packagePath = "/mnt/vss/_work/1/s/package space #100% 'quoted' $([char]0x2018)curly$([char]0x2019).tgz"
         }
         @{
-            packagePath = "C:\work\package space #100% 'quoted'.tgz"
-            packageSpec = "file:C:\work\package space #100% ''quoted''.tgz"
+            packagePath = "C:\work\package space #100% 'quoted' $([char]0x2018)curly$([char]0x2019).tgz"
         }
     ) {
-        param($packagePath, $packageSpec)
+        param($packagePath)
 
+        $expectedCachePath = "cache 'quoted' $([char]0x2018)curly$([char]0x2019)"
         Mock Get-ChildItem {
             [pscustomobject]@{
                 FullName = $packagePath
                 Directory = [pscustomobject]@{ Name = 'wrapper' }
             }
         }
+        Mock New-Item { [pscustomobject]@{ FullName = $expectedCachePath } }
+        Mock Remove-Item {}
         Mock Invoke-LoggedCommand {
             param($Command, $DoNotExitOnFailedExitCode)
-            $Command | Should -Match (" -y '" + [regex]::Escape($packageSpec) + "' tools list$")
+            $parseErrors = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+                $Command, [ref]$null, [ref]$parseErrors)
+            $parseErrors | Should -BeNullOrEmpty
+            $elements = $ast.EndBlock.Statements[0].PipelineElements[0].CommandElements
+            $elements[2].Value | Should -BeExactly $expectedCachePath
+            $elements[4].Value | Should -BeExactly "file:$packagePath"
             $global:LASTEXITCODE = 0
         }
 
