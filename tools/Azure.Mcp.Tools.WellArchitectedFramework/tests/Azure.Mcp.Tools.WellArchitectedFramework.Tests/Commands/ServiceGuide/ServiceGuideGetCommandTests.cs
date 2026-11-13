@@ -106,7 +106,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         Assert.Single(result.Guidance);
         // Check for the key parts of the multi-line response
         Assert.Contains($"For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
-        Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
+        Assert.Contains("please refer to the Microsoft Learn guide at this URL:", result.Guidance[0]);
         var serviceGuideUrlPrefix = "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/";
         Assert.Contains(serviceGuideUrlPrefix, result.Guidance[0]);
     }
@@ -162,7 +162,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
 
         // Should return guidance URL (not the "not available" message)
         Assert.Contains("For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
-        Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
+        Assert.Contains("please refer to the Microsoft Learn guide at this URL:", result.Guidance[0]);
         // The canonical Azure SQL Database guide should be present regardless of input variation.
         Assert.Contains("https://learn.microsoft.com/en-us/azure/well-architected/service-guides/azure-sql-database", result.Guidance[0]);
     }

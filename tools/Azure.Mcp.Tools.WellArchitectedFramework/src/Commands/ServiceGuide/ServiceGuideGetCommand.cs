@@ -101,7 +101,7 @@ public sealed class ServiceGuideGetCommand(ILogger<ServiceGuideGetCommand> logge
     private static string GetGuidanceAvailable(string serviceName, string serviceGuideUrl)
     {
         return $"For detailed Azure Well-Architected Framework guidance on '{serviceName}' service, " +
-            $"please refer to the markdown file at this URL: {serviceGuideUrl}";
+            $"please refer to the Microsoft Learn guide at this URL: {serviceGuideUrl}";
     }
 
     private static string GetGuidanceNotAvailable(string serviceName, string supportedServicesBulletList)
