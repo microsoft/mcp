@@ -7,8 +7,11 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.ServiceGroup;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -55,6 +58,12 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         services.AddSingleton<BicepReviewCommand>();
         services.AddSingleton<ArmReviewCommand>();
         services.AddSingleton<TerraformReviewCommand>();
+        services.AddSingleton<GoalsGetCommand>();
+        services.AddSingleton<GoalsManageCommand>();
+        services.AddSingleton<UsagePlanGetCommand>();
+        services.AddSingleton<UsagePlanManageCommand>();
+        services.AddSingleton<ServiceGroupGetCommand>();
+        services.AddSingleton<ServiceGroupManageCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -69,7 +78,13 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             correction of existing infrastructure-as-code. Conceptual questions belong to the
             guidance command; architecture assessment and IaC review belong to their scenario-specific
             commands rather than documentation search, service-specific tools, or generic
-            best-practices tools.
+            best-practices tools. Goals commands inspect and manage one Service Group's zonal-
+            resiliency goals, participation, and SLIs, with cross-Service Group status supported as a
+            read. Usage Plan commands inspect, create, and attach Standard plans. Service Group
+            commands inspect ordinary group metadata and members or perform confirmed creation,
+            resource addition, nesting, and criticality updates. Automatic application discovery,
+            Discovery Agents, saved discoveries, arrangements, and discovery-plan execution are not
+            exposed by this tool area.
             Prefer file attachments for complete templates and multi-file configurations: prepare
             local files through the file attachment command and pass their opaque attachment IDs.
             Templates pasted directly in the user's current prompt are also supported without
@@ -103,6 +118,15 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var terraform = new CommandGroup(
             "terraform",
             "Review and correct existing Terraform.");
+        var goals = new CommandGroup(
+            "goals",
+            "Inspect or manage zonal-resiliency goals and goal-resource participation for Azure Service Groups.");
+        var usagePlan = new CommandGroup(
+            "usage-plan",
+            "Inspect, create, or attach Azure Resilience Management Standard Usage Plans.");
+        var serviceGroup = new CommandGroup(
+            "service-group",
+            "Inspect, create, or update ordinary Azure Service Groups without automatic application discovery.");
 
         guidance.AddCommand<GuidanceGetCommand>(serviceProvider);
         file.AddCommand<FileAttachCommand>(serviceProvider);
@@ -111,6 +135,12 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         bicep.AddCommand<BicepReviewCommand>(serviceProvider);
         arm.AddCommand<ArmReviewCommand>(serviceProvider);
         terraform.AddCommand<TerraformReviewCommand>(serviceProvider);
+        goals.AddCommand<GoalsGetCommand>(serviceProvider);
+        goals.AddCommand<GoalsManageCommand>(serviceProvider);
+        usagePlan.AddCommand<UsagePlanGetCommand>(serviceProvider);
+        usagePlan.AddCommand<UsagePlanManageCommand>(serviceProvider);
+        serviceGroup.AddCommand<ServiceGroupGetCommand>(serviceProvider);
+        serviceGroup.AddCommand<ServiceGroupManageCommand>(serviceProvider);
         resiliencyAgent.AddSubGroup(guidance);
         resiliencyAgent.AddSubGroup(file);
         resiliencyAgent.AddSubGroup(architecture);
@@ -118,6 +148,9 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         resiliencyAgent.AddSubGroup(bicep);
         resiliencyAgent.AddSubGroup(arm);
         resiliencyAgent.AddSubGroup(terraform);
+        resiliencyAgent.AddSubGroup(goals);
+        resiliencyAgent.AddSubGroup(usagePlan);
+        resiliencyAgent.AddSubGroup(serviceGroup);
         return resiliencyAgent;
     }
 }

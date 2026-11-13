@@ -1501,6 +1501,19 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_terraform_review | Review this Terraform for availability-zone resiliency while preserving the resource address: `resource "azurerm_service_plan" "api" { name = "contoso-plan" location = "East US 2" resource_group_name = "contoso-rg" os_type = "Linux" sku_name = "P1v3" zone_balancing_enabled = false }` | none |
 | resiliencyagent_terraform_review | Review the attached Terraform root module and local child modules for zone resiliency | context-required |
 | resiliencyagent_terraform_review | Correct the attached Terraform while preserving resource addresses, variables, and provider constraints | context-required |
+| resiliencyagent_goals_get | Show the zonal-resiliency goal assignment for Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_goals_get | List the resources included in or excluded from the goal for Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_goals_get | Show which visible Service Groups have a zonal-resiliency goal assigned | none |
+| resiliencyagent_goals_manage | Assign a zonal-resiliency goal to Service Group `ContosoAppFleetSG` and ask for confirmation before changing Azure | confirmation-required |
+| resiliencyagent_goals_manage | Exclude storage account `<storage-account-name>` from the goal for Service Group `ContosoAppFleetSG` with the reason that a custom resiliency solution is used | confirmation-required |
+| resiliencyagent_usage-plan_get | List the available Standard Azure Resilience Management Usage Plans | none |
+| resiliencyagent_usage-plan_get | Check whether Service Group `ContosoAppFleetSG` is enrolled in a Standard Usage Plan | context-required |
+| resiliencyagent_usage-plan_manage | Create a Standard Azure Resilience Management Usage Plan and ask me for every required value before confirmation | clarification-required |
+| resiliencyagent_usage-plan_manage | Attach an existing Standard Usage Plan to Service Group `ContosoAppFleetSG` only after explicit confirmation | confirmation-required |
+| resiliencyagent_service-group_get | List the members of Azure Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_service-group_get | Show the parent, criticality, and resource-type summary for Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_service-group_manage | Create a nested Azure Service Group under `ContosoAppFleetSG` and ask for confirmation before writing | confirmation-required |
+| resiliencyagent_service-group_manage | Add resource group `contoso-rg` as a direct scope member of Service Group `ContosoAppFleetSG` | confirmation-required |
 
 ## Azure Resource Health
 

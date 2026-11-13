@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using System.Text;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Tests.Services;
@@ -13,7 +14,9 @@ public sealed class ArtifactWriterTests : IDisposable
 {
     private readonly string _workingDirectory;
     private readonly string _originalDirectory;
-    private readonly ArtifactWriter _writer = new(Substitute.For<ILogger<ArtifactWriter>>());
+    private readonly FixedTimeProvider _timeProvider =
+        new(new DateTimeOffset(2026, 11, 12, 9, 30, 45, 123, TimeSpan.Zero));
+    private readonly ArtifactWriter _writer;
 
     public ArtifactWriterTests()
     {
@@ -23,6 +26,9 @@ public sealed class ArtifactWriterTests : IDisposable
         Directory.CreateDirectory(requestedWorkingDirectory);
         Environment.CurrentDirectory = requestedWorkingDirectory;
         _workingDirectory = Environment.CurrentDirectory;
+        _writer = new ArtifactWriter(
+            Substitute.For<ILogger<ArtifactWriter>>(),
+            _timeProvider);
     }
 
     [Fact]
@@ -38,9 +44,28 @@ public sealed class ArtifactWriterTests : IDisposable
         Assert.True(File.Exists(only.Path));
         Assert.Equal("param a string", File.ReadAllText(only.Path));
         Assert.StartsWith(_workingDirectory, only.Path, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            Path.Combine("azure-resiliency", "bicep-20261112T093045123Z"),
+            only.Path,
+            StringComparison.OrdinalIgnoreCase);
         Assert.Equal(
             ArtifactWriter.CreateMarkdownLink(only.Name, only.Path),
             only.MarkdownLink);
+    }
+
+    [Fact]
+    public void Write_UsesStrictUtf8WithoutBom()
+    {
+        const string content = "# Résilience\n\n東京 — ✅";
+        var artifact = new AgentArtifact("report.md", null, "text/markdown", content, "md");
+
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-1"));
+        byte[] bytes = File.ReadAllBytes(written.Path);
+        byte[] expected = new UTF8Encoding(false, true).GetBytes(content);
+
+        Assert.Equal(expected, bytes);
+        Assert.False(bytes.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }));
+        Assert.Equal(content, new UTF8Encoding(false, true).GetString(bytes));
     }
 
     [Theory]
@@ -113,18 +138,18 @@ public sealed class ArtifactWriterTests : IDisposable
         "Zone-Resilient Posture Report",
         "text/markdown",
         null,
-        "Zone-Resilient-Posture-Report.md")]
+        "Zone-Resilient Posture Report.md")]
     [InlineData(
-        "  report\t \u2003name.md  ",
+        "  report name.md  ",
         "text/markdown",
         null,
-        "report-name.md")]
+        "report name.md")]
     [InlineData(
         "already-safe_name.v1.md",
         "text/markdown",
         null,
         "already-safe_name.v1.md")]
-    public void Write_NormalizesWhitespaceWithoutChangingContent(
+    public void Write_PreservesSafeWhitespaceWithoutChangingContent(
         string name,
         string mimeType,
         string? format,
@@ -140,14 +165,13 @@ public sealed class ArtifactWriterTests : IDisposable
         Assert.Equal(
             ArtifactWriter.CreateMarkdownLink(expectedName, written.Path),
             written.MarkdownLink);
-        Assert.DoesNotContain(written.Name, character => char.IsWhiteSpace(character));
     }
 
     [Fact]
-    public void Write_DeduplicatesNamesAfterWhitespaceNormalization()
+    public void Write_PreservesDistinctBackendNamesThatDifferByWhitespace()
     {
         var first = new AgentArtifact("Zone Report.md", null, "text/markdown", "first", null);
-        var second = new AgentArtifact("Zone\t \u2003Report.md", null, "text/markdown", "second", null);
+        var second = new AgentArtifact("Zone  Report.md", null, "text/markdown", "second", null);
 
         var written = _writer.Write([first, second], "conv-1");
 
@@ -156,43 +180,31 @@ public sealed class ArtifactWriterTests : IDisposable
             result =>
             {
                 WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("Zone-Report.md", artifact.Name);
+                Assert.Equal("Zone Report.md", artifact.Name);
                 Assert.Equal("first", File.ReadAllText(artifact.Path));
             },
             result =>
             {
                 WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("Zone-Report-2.md", artifact.Name);
+                Assert.Equal("Zone  Report.md", artifact.Name);
                 Assert.Equal("second", File.ReadAllText(artifact.Path));
             });
     }
 
     [Fact]
-    public void Write_DeduplicatesArtifactNamesWithoutOverwritingContent()
+    public void Write_RejectsDuplicateArtifactNamesWithoutWritingAPartialSet()
     {
         var first = new AgentArtifact("main.bicep", null, "text/plain", "param first string", "bicep");
         var second = new AgentArtifact("main.bicep", null, "text/plain", "param second string", "bicep");
 
         var written = _writer.Write([first, second], "conv-1");
 
-        Assert.Collection(
-            written,
-            result =>
-            {
-                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("main.bicep", artifact.Name);
-                Assert.Equal("param first string", File.ReadAllText(artifact.Path));
-            },
-            result =>
-            {
-                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("main-2.bicep", artifact.Name);
-                Assert.Equal("param second string", File.ReadAllText(artifact.Path));
-            });
+        Assert.All(written, result => Assert.Null(result.WorkspaceArtifact));
+        Assert.False(Directory.Exists(Path.Combine(_workingDirectory, "azure-resiliency")));
     }
 
     [Fact]
-    public void Write_PreservesExistingArtifactAndAllocatesNextName()
+    public void Write_PreservesExistingRootArtifactAndUsesCanonicalNameInTimestampedSet()
     {
         string outputDirectory = Path.Combine(_workingDirectory, "azure-resiliency");
         Directory.CreateDirectory(outputDirectory);
@@ -203,12 +215,13 @@ public sealed class ArtifactWriterTests : IDisposable
         WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-1"));
 
         Assert.Equal("existing", File.ReadAllText(existingPath));
-        Assert.Equal("main-2.bicep", written.Name);
+        Assert.Equal("main.bicep", written.Name);
         Assert.Equal("new", File.ReadAllText(written.Path));
+        Assert.NotEqual(existingPath, written.Path);
     }
 
     [Fact]
-    public void Write_UsesNextAvailableNameAcrossInvocations()
+    public void Write_UsesNextMillisecondFolderAcrossInvocations()
     {
         var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
 
@@ -216,9 +229,18 @@ public sealed class ArtifactWriterTests : IDisposable
         WrittenArtifact second = AssertWritten(_writer.Write([artifact], "conv-2"));
 
         Assert.Equal("main.bicep", first.Name);
-        Assert.Equal("main-2.bicep", second.Name);
+        Assert.Equal("main.bicep", second.Name);
         Assert.Equal("content", File.ReadAllText(first.Path));
         Assert.Equal("content", File.ReadAllText(second.Path));
+        Assert.NotEqual(Path.GetDirectoryName(first.Path), Path.GetDirectoryName(second.Path));
+        Assert.EndsWith(
+            "bicep-20261112T093045123Z",
+            Path.GetDirectoryName(first.Path),
+            StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith(
+            "bicep-20261112T093045124Z",
+            Path.GetDirectoryName(second.Path),
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -232,6 +254,10 @@ public sealed class ArtifactWriterTests : IDisposable
         Assert.Same(artifact, result.Artifact);
         Assert.Equal("main.bicep", result.Name);
         Assert.Null(result.WorkspaceArtifact);
+        Assert.EndsWith(
+            Path.Combine("bicep-20261112T093045123Z", "main.bicep"),
+            result.IntendedRelativePath,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -326,5 +352,10 @@ public sealed class ArtifactWriterTests : IDisposable
 
         public override void Write(ReadOnlySpan<byte> buffer) =>
             throw new IOException("Simulated write failure.");
+    }
+
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

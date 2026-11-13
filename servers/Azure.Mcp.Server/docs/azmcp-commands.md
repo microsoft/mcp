@@ -5257,6 +5257,36 @@ azmcp resiliencyagent arm review --request <request> \
 azmcp resiliencyagent terraform review --request <request> \
                                         [--attachment-ids <attachment-id>] \
                                         [--conversation-id <conversation-id>]
+
+# Inspect zonal-resiliency goals and goal-resource participation
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent goals get --request <request> \
+                                 [--conversation-id <conversation-id>]
+
+# Assign or delete a goal, attach SLIs, or change goal-resource participation
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent goals manage --request <request> \
+                                    [--conversation-id <conversation-id>]
+
+# Inspect Standard Usage Plans and Service Group enrollment
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent usage-plan get --request <request> \
+                                      [--conversation-id <conversation-id>]
+
+# Create or attach a Standard Usage Plan
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent usage-plan manage --request <request> \
+                                         [--conversation-id <conversation-id>]
+
+# Inspect Service Group metadata, criticality, hierarchy, and members
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent service-group get --request <request> \
+                                         [--conversation-id <conversation-id>]
+
+# Create or update an ordinary Azure Service Group
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent service-group manage --request <request> \
+                                            [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations

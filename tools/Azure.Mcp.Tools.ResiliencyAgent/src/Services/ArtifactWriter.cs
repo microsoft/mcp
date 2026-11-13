@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Text;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 
@@ -10,13 +12,17 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 public sealed class ArtifactWriter : IArtifactWriter
 {
     /// <summary>
-    /// Folder created under the caller's working directory. Artifacts are grouped rather than written
-    /// loose so a turn that produces several templates does not scatter files across the workspace.
+    /// Root folder created under the caller's working directory. Each completed result is published
+    /// beneath it as one UTC-stamped artifact set.
     /// </summary>
     private const string OutputFolderName = "azure-resiliency";
+    private static readonly UTF8Encoding s_utf8NoBom = new(
+        encoderShouldEmitUTF8Identifier: false,
+        throwOnInvalidBytes: true);
 
     private readonly ILogger<ArtifactWriter> _logger;
     private readonly Func<string, Stream> _createFile;
+    private readonly TimeProvider _timeProvider;
 
     public ArtifactWriter(ILogger<ArtifactWriter> logger)
         : this(
@@ -25,27 +31,40 @@ public sealed class ArtifactWriter : IArtifactWriter
                 path,
                 FileMode.CreateNew,
                 FileAccess.Write,
-                FileShare.None))
+                FileShare.None),
+            TimeProvider.System)
+    {
+    }
+
+    public ArtifactWriter(
+        ILogger<ArtifactWriter> logger,
+        TimeProvider timeProvider)
+        : this(
+            logger,
+            static path => new FileStream(
+                path,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None),
+            timeProvider)
     {
     }
 
     internal ArtifactWriter(
         ILogger<ArtifactWriter> logger,
-        Func<string, Stream> createFile)
+        Func<string, Stream> createFile,
+        TimeProvider? timeProvider = null)
     {
         _logger = logger;
         _createFile = createFile;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public IReadOnlyList<ArtifactWriteResult> Write(
         IEnumerable<AgentArtifact> artifacts,
         string conversationId)
     {
-        List<ArtifactWriteResult> results = [];
-        string root = Path.Combine(Environment.CurrentDirectory, OutputFolderName);
-
-        HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
-
+        List<(AgentArtifact Artifact, string FileName)> prepared = [];
         foreach (AgentArtifact artifact in artifacts)
         {
             if (string.IsNullOrWhiteSpace(artifact.Content))
@@ -60,36 +79,149 @@ public sealed class ArtifactWriter : IArtifactWriter
                 continue;
             }
 
-            try
-            {
-                Directory.CreateDirectory(root);
-                (fileName, string path) = WriteUniqueFile(root, fileName, artifact.Content, usedNames);
-                results.Add(new ArtifactWriteResult(
-                    artifact,
-                    fileName,
-                    new WrittenArtifact(
-                        fileName,
-                        path,
-                        CreateMarkdownLink(fileName, path),
-                        artifact.Format,
-                        artifact.Description)));
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                _logger.LogWarning(ex, "Could not write artifact {Name}.", fileName);
-                results.Add(new ArtifactWriteResult(artifact, fileName, null));
-            }
+            prepared.Add((artifact, fileName));
         }
 
-        int writtenCount = results.Count(static result => result.WorkspaceArtifact is not null);
-        if (writtenCount > 0)
+        if (prepared.Count == 0)
         {
-            _logger.LogInformation(
-                "Wrote {Count} artifact(s) to {Root}. ConversationId: {ConversationId}",
-                writtenCount, root, conversationId);
+            return [];
         }
 
-        return results;
+        string root = Path.Combine(Environment.CurrentDirectory, OutputFolderName);
+        string family = ArtifactSetFamily(prepared.Select(item => item.Artifact));
+        DateTimeOffset timestamp = _timeProvider.GetUtcNow();
+        string finalDirectory = BuildFinalDirectory(root, family, timestamp);
+        string relativeDirectory = Path.GetRelativePath(Environment.CurrentDirectory, finalDirectory);
+        string temporaryDirectory = Path.Combine(
+            root,
+            $".{family}-{Guid.NewGuid():N}.tmp");
+
+        if (prepared.Select(item => item.FileName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != prepared.Count)
+        {
+            _logger.LogWarning(
+                "Could not materialize artifact set because two artifacts resolve to the same file name.");
+            return FailureResults(prepared, relativeDirectory);
+        }
+
+        try
+        {
+            Directory.CreateDirectory(root);
+            Directory.CreateDirectory(temporaryDirectory);
+            foreach ((AgentArtifact artifact, string fileName) in prepared)
+            {
+                string path = Path.Combine(temporaryDirectory, fileName);
+                WriteFile(path, artifact.Content!);
+            }
+
+            while (true)
+            {
+                try
+                {
+                    Directory.Move(temporaryDirectory, finalDirectory);
+                    break;
+                }
+                catch (IOException) when (Directory.Exists(finalDirectory))
+                {
+                    timestamp = timestamp.AddMilliseconds(1);
+                    finalDirectory = BuildFinalDirectory(root, family, timestamp);
+                    relativeDirectory = Path.GetRelativePath(Environment.CurrentDirectory, finalDirectory);
+                }
+            }
+
+            ArtifactWriteResult[] results = prepared
+                .Select(item =>
+                {
+                    string path = Path.Combine(finalDirectory, item.FileName);
+                    return new ArtifactWriteResult(
+                        item.Artifact,
+                        item.FileName,
+                    new WrittenArtifact(
+                        item.FileName,
+                        path,
+                        CreateMarkdownLink(item.FileName, path),
+                        item.Artifact.Format,
+                        item.Artifact.Description),
+                        Path.Combine(relativeDirectory, item.FileName));
+                })
+                .ToArray();
+            _logger.LogInformation(
+                "Wrote {Count} artifact(s) to {Directory}. ConversationId: {ConversationId}",
+                results.Length, finalDirectory, conversationId);
+            return results;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or EncoderFallbackException)
+        {
+            _logger.LogWarning(ex, "Could not materialize artifact set under {Root}.", root);
+            TryDeleteDirectory(temporaryDirectory);
+            return FailureResults(prepared, relativeDirectory);
+        }
+    }
+
+    private static string BuildFinalDirectory(
+        string root,
+        string family,
+        DateTimeOffset timestamp)
+    {
+        string timestampSegment = timestamp.UtcDateTime.ToString(
+            "yyyyMMdd'T'HHmmssfff'Z'",
+            CultureInfo.InvariantCulture);
+        return Path.Combine(root, $"{family}-{timestampSegment}");
+    }
+
+    private static ArtifactWriteResult[] FailureResults(
+        IEnumerable<(AgentArtifact Artifact, string FileName)> artifacts,
+        string relativeDirectory) =>
+        artifacts
+            .Select(item => new ArtifactWriteResult(
+                item.Artifact,
+                item.FileName,
+                null,
+                Path.Combine(relativeDirectory, item.FileName)))
+            .ToArray();
+
+    private static string ArtifactSetFamily(IEnumerable<AgentArtifact> artifacts)
+    {
+        AgentArtifact[] values = [.. artifacts];
+        if (values.Any(artifact => string.Equals(artifact.Format, "bicep", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "bicep";
+        }
+
+        if (values.Any(artifact => string.Equals(artifact.Format, "arm", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "arm";
+        }
+
+        if (values.Any(artifact =>
+                string.Equals(artifact.Format, "terraform", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(artifact.Format, "tf", StringComparison.OrdinalIgnoreCase)))
+        {
+            return "terraform";
+        }
+
+        string? family = values
+            .Select(artifact => artifact.Family)
+            .FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate));
+        return SafeFolderSegment(family ?? "reports");
+    }
+
+    private static string SafeFolderSegment(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        foreach (char character in value.Trim().ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Append(character);
+            }
+            else if (builder.Length > 0 && builder[^1] != '-')
+            {
+                builder.Append('-');
+            }
+        }
+
+        string result = builder.ToString().Trim('-');
+        return result.Length == 0 ? "artifacts" : result;
     }
 
     internal static string CreateMarkdownLink(string displayName, string path)
@@ -143,8 +275,6 @@ public sealed class ArtifactWriter : IArtifactWriter
             return null;
         }
 
-        candidate = NormalizeWhitespace(candidate);
-
         foreach (char invalid in Path.GetInvalidFileNameChars())
         {
             candidate = candidate.Replace(invalid, '_');
@@ -157,31 +287,6 @@ public sealed class ArtifactWriter : IArtifactWriter
         }
 
         return EnsureUsefulExtension(cleaned, artifact);
-    }
-
-    private static string NormalizeWhitespace(string value)
-    {
-        var builder = new System.Text.StringBuilder(value.Length);
-        bool whitespaceRun = false;
-
-        foreach (char character in value)
-        {
-            if (char.IsWhiteSpace(character))
-            {
-                if (!whitespaceRun && builder.Length > 0)
-                {
-                    builder.Append('-');
-                }
-
-                whitespaceRun = true;
-                continue;
-            }
-
-            builder.Append(character);
-            whitespaceRun = false;
-        }
-
-        return builder.ToString().Trim('-', '.', ' ');
     }
 
     private static string EnsureUsefulExtension(string fileName, AgentArtifact artifact)
@@ -229,60 +334,46 @@ public sealed class ArtifactWriter : IArtifactWriter
         return fileName;
     }
 
-    private (string FileName, string Path) WriteUniqueFile(
-        string root,
-        string fileName,
-        string content,
-        HashSet<string> usedNames)
+    private void WriteFile(string path, string content)
     {
-        string extension = Path.GetExtension(fileName);
-        string stem = Path.GetFileNameWithoutExtension(fileName);
-
-        for (int suffix = 1; ; suffix++)
+        Stream stream = _createFile(path);
+        try
         {
-            string candidate = suffix == 1 ? fileName : $"{stem}-{suffix}{extension}";
-            if (!usedNames.Add(candidate))
+            using (stream)
+            using (var writer = new StreamWriter(stream, s_utf8NoBom))
             {
-                continue;
+                writer.Write(content);
             }
-
-            string path = Path.Combine(root, candidate);
-            Stream stream;
+        }
+        catch
+        {
             try
             {
-                stream = _createFile(path);
+                File.Delete(path);
             }
-            catch (IOException) when (File.Exists(path))
+            catch (Exception cleanupException) when (
+                cleanupException is IOException or UnauthorizedAccessException)
             {
-                // Another response or process already owns this name. Keep the existing file and
-                // atomically try the next suffix rather than overwriting user-visible output.
-                continue;
+                // Preserve the original write failure; cleanup is best effort.
             }
 
-            try
-            {
-                using (stream)
-                using (var writer = new StreamWriter(stream))
-                {
-                    writer.Write(content);
-                }
+            throw;
+        }
+    }
 
-                return (candidate, path);
-            }
-            catch
+    private static void TryDeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
             {
-                try
-                {
-                    File.Delete(path);
-                }
-                catch (Exception cleanupException) when (
-                    cleanupException is IOException or UnauthorizedAccessException)
-                {
-                    // Preserve the original write failure; cleanup is best effort.
-                }
-
-                throw;
+                Directory.Delete(path, recursive: true);
             }
+        }
+        catch (Exception cleanupException) when (
+            cleanupException is IOException or UnauthorizedAccessException)
+        {
+            // Preserve the original materialization failure; cleanup is best effort.
         }
     }
 }

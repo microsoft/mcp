@@ -129,12 +129,32 @@ public sealed class ConsolidatedToolMetadataTests()
         var definitionProvider = services.GetRequiredService<IConsolidatedToolDefinitionProvider>();
         var definitions = definitionProvider.GetToolDefinitions();
 
-        foreach (string name in new[] { "prepare_azure_resiliency_file", "use_azure_resiliency_agent" })
+        foreach (string name in new[]
+                 {
+                     "prepare_azure_resiliency_file",
+                     "use_azure_resiliency_agent",
+                     "manage_azure_resiliency_goals",
+                 })
         {
             var definition = Assert.Single(definitions, candidate => candidate.Name == name);
             Assert.True(definition.ToolMetadata.LocalRequired);
             Assert.False(definition.ToolMetadata.ReadOnly);
         }
+
+        var scenarioTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "use_azure_resiliency_agent");
+        Assert.Contains("resiliencyagent_goals_get", scenarioTool.MappedToolList);
+        Assert.Contains("resiliencyagent_usage-plan_get", scenarioTool.MappedToolList);
+        Assert.Contains("resiliencyagent_usage-plan_manage", scenarioTool.MappedToolList);
+        Assert.Contains("resiliencyagent_service-group_get", scenarioTool.MappedToolList);
+        Assert.Contains("resiliencyagent_service-group_manage", scenarioTool.MappedToolList);
+
+        var goalManagementTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "manage_azure_resiliency_goals");
+        Assert.True(goalManagementTool.ToolMetadata.Destructive);
+        Assert.Equal(["resiliencyagent_goals_manage"], goalManagementTool.MappedToolList);
     }
 
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>
