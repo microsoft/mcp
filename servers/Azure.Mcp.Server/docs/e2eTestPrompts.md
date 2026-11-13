@@ -47,11 +47,11 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | advisor_metadata_get | Get the Advisor metadata for recommendation type id \<recommendation-type-id> | none |
-| advisor_metadata_get | What does Advisor recommendation type \<recommendation-type-id> mean? | none |
+| advisor_metadata_get | What does Advisor recommendation type \<recommendation-type-id> mean? | investigation-required |
 | advisor_metadata_get | Show me the catalog details for Advisor recommendation type \<recommendation-type-id> | none |
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type \<recommendation-type-id> | none |
-| advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | none |
-| advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | none |
+| advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | investigation-required |
+| advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | investigation-required |
 | advisor_metadata_get | Use Advisor recommendation metadata get to explain what recommendation type \<recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
 | advisor_metadata_list | Retrieve the next page of the Advisor metadata catalog using the returned continuation token, keeping the language and filters unchanged | none |
@@ -78,6 +78,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_recommendation_list | Show High Availability Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List Operational Excellence Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
+| advisor_recommendation_list | Return up to 10 individual medium-impact Azure Advisor Cost recommendation records in subscription \<subscription>; no priority ranking is needed | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
@@ -101,7 +102,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
-| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
+| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | investigation-required |
 | advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show Advisor's unused-resource recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
@@ -124,7 +125,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
 | advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
 | advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
-| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | investigation-required |
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
 | advisor_recommendation_list | List unused-resource recommendations across subscriptions \<subscription-1> and \<subscription-2> | none |
 | advisor_recommendation_list | List unused-resource recommendations in resource group \<resource-group> in subscription \<subscription> | none |
@@ -233,22 +234,22 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | advisor_insight_list | Show Advisor insights for subscription \<subscription>, including each insight's name, domain, scope type and ID, last updated time, and typed KPI values with units for USD amounts | none |
 | advisor_insight_list | Show pre-aggregated Advisor insight KPIs for service group \<service-group>, not individual resources, recommendation records, or recommendation summaries | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Show cleanup steps and scripts for unused-resource recommendation type \<recommendation-type-id> | none |
+| advisor_remediation_get | Show cleanup steps and scripts for unused-resource recommendation type \<recommendation-type-id> | investigation-required |
 | advisor_remediation_get | Show cleanup guidance for those unused disks | context-required |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
-| advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | investigation-required |
 | advisor_remediation_get | Show me the remediation actions for recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its ARM template and Bicep remediation artifacts; do not apply or list recommendations | none |
 | advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its Terraform remediation artifact; do not apply or list recommendations | none |
-| advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | investigation-required |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its step-by-step remediation instructions | none |
 | advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the executable automation artifacts to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the deployment artifacts to fix Advisor recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
+| advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | investigation-required |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
-| advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | investigation-required |
 | advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
 | advisor_servicegroupintelligence_get | How is the Advisor status of service group commerce calculated? | none |
 | advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
@@ -358,7 +359,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> | none |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> | none |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> | none |
-| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> | investigation-required |
 | appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval \<interval> | investigation-required |
 | appservice_webapp_diagnostic_list | List the Azure App Service diagnostic detectors for web app \<webapp> in resource group <resource_group> | investigation-required |
 | appservice_webapp_change-state | Start the web app \<app> in resource group <resource_group> | none |
@@ -722,7 +723,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
+| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | investigation-required |
 | optimization_recommendation_list | What are my cost optimization recommendations? | none |
 | optimization_recommendation_list | Show cost optimization recommendations across all my accessible subscriptions | none |
 | optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
@@ -884,7 +885,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
-| fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | none |
+| fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | investigation-required |
 | fileshares_limits | Get the Azure Files share service limits in my subscription for location \<location> | none |
 | fileshares_limits | Use Azure File Shares service limits to show provisioning constants for location \<location>; do not use Azure resource quota usage | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in \<location> in subscription \<subscription> | none |
@@ -1206,7 +1207,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | monitor_instrumentation_orchestrator-next | Continue Azure Monitor instrumentation onboarding by returning the next orchestrator action for session <session_id> after completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
-| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
+| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | investigation-required |
 | monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested | investigation-required |
 | monitor_instrumentation_send-brownfield-analysis | Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id> | none |
 | monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> to Azure Monitor instrumentation onboarding session <session_id> | none |
@@ -1236,7 +1237,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_traces_account_list | List the distributed trace accounts in my subscription | none |
 | monitor_traces_account_list | Show me the Azure Monitor Workspaces enabled for Trace Store | none |
-| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
+| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | investigation-required |
 | monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
 | monitor_traces_query_analyze-critical-path | Analyze the critical path for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time> | none |
@@ -1249,7 +1250,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
 | monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
-| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | investigation-required |
 | monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
 | monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
@@ -1346,7 +1347,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliency_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
-| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | none |
+| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | investigation-required |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> using default validation from source location <source_location> | none |
 | resiliency_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
 | resiliency_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
@@ -1362,7 +1363,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliency_drill_run_failover | Fail over drill run <drill_run_name> of drill <drill_name> in service group <service_group> from <source_location> with user consent allowed even though the recovery plan is not Ready | none |
 | resiliency_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resiliency_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
-| resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
+| resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | investigation-required |
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
@@ -1387,12 +1388,12 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliency_goal_assignment_update-resources | Exclude resource <resource_arm_id> from zonal goal participation in assignment <goal_assignment_name> in service group <service_group> without deleting the resource | none |
 | resiliency_goal_assignment_update-resources | Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience | none |
 | resiliency_goal_assignment_update-resources | In resilience goal assignment <goal_assignment_name> in service group <service_group>, confirm that I approve the ZonePinnedVmWithZrsDisk zonal resilience solution for goal resource <resource_arm_id> | none |
-| resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | investigation-required |
 | resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group> | investigation-required |
 | resiliency_recoveryjob_resume | Resume paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> with description \<description> | none |
 | resiliency_recoveryjob_resume | Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
@@ -1440,7 +1441,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliency_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but exclude it from recovery operations | none |
 | resiliency_recoveryplan_resource_update | Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources | none |
 | resiliency_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> using CrossZoneVMRecovery with target zone <target_zone> | none |
-| resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | investigation-required |
 | resiliency_recoveryplan_resource_get | Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name> | none |
 | resiliency_usageplan_create | Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
@@ -1485,11 +1486,11 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_guidance_get | How should I begin improving the resiliency of a new Azure application? | none |
 | resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` as a local attachment and return an attachment ID; do not assess the architecture yet | context-required |
 | resiliencyagent_file_attach | Prepare `C:\workspace\infra\main.bicep` for review | context-required |
-| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | none |
+| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | context-required |
 | resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
 | resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
-| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | none |
-| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | none |
+| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | context-required |
+| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | context-required |
 | resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
 | resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
 | resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
@@ -1809,7 +1810,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | wellarchitectedframework_serviceguide_get | List the Azure services available in the Well-Architected Framework service-guide catalog | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
-| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
+| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | investigation-required |
 
 ## Azure Workbooks
 
