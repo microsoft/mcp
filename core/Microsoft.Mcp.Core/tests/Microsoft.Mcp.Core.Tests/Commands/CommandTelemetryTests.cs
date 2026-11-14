@@ -5,6 +5,8 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
@@ -150,6 +152,45 @@ public sealed class CommandTelemetryTests
 
         Assert.Equal("Command-specific failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Equal("Generic failure details.", activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [CommandMetadata(
+        Id = "00000000-0000-0000-0000-0000000000d0",
+        Name = "test-throwing",
+        Title = "Test Throwing Command",
+        Description = "A command used only to exercise exception telemetry in tests.",
+        OperationPlane = ToolOperationPlane.NotApplicable,
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false)]
+    private sealed class ThrowingTestCommand(Exception exception) : BaseCommand<EmptyOptions, string>
+    {
+        public override Task<CommandResponse> ExecuteAsync(
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
+        {
+            HandleException(context, exception);
+            return Task.FromResult(context.Response);
+        }
+    }
+
+    [Theory]
+    [InlineData("AADSTS50013: Assertion failed signature validation. Trace ID: 1234", "AADSTS50013")]
+    [InlineData("A configuration issue is preventing authentication.", null)]
+    public async Task ExecuteAsync_MsalServiceException_CapturesAadStsErrorCode(string errorMessage, string? expectedAadStsCode)
+    {
+        using var activity = CreateActivity();
+        var command = new ThrowingTestCommand(new MsalServiceException("invalid_request", errorMessage));
+
+        Assert.True(command.GetCommand().TryParseFromDictionary(null, out ParseResult? parseResult, out _));
+        await ((IBaseCommand)command).ExecuteAsync(new CommandContext(activity), parseResult!, TestContext.Current.CancellationToken);
+
+        var exceptionDetails = Assert.IsType<JsonObject>(activity.GetTagItem(TagName.ExceptionMessage));
+        Assert.Equal("invalid_request", exceptionDetails["ErrorCode"]!.GetValue<string>());
+        Assert.Equal(expectedAadStsCode, exceptionDetails["AadStsErrorCode"]?.GetValue<string>());
+        Assert.DoesNotContain("Trace ID", exceptionDetails.ToJsonString(), StringComparison.Ordinal);
     }
 
     [Fact]

@@ -2,12 +2,15 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Models.Command;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -291,6 +294,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         if (!request.Server.SupportsElicitation())
         {
             logger.LogWarning("Tool '{Tool}' {Reason} but client does not support elicitation. Operation rejected.", toolName, reason);
+            RecordToolFailure(Activity.Current, ToolFailureReason.ElicitationNotSupported);
             return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = $"This tool {reason} and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
@@ -361,6 +365,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
                 logger.LogInformation(
                     "User did not approve the elicitation for tool '{Tool}' (action: '{Action}', decision: '{Decision}'). Operation not executed.",
                     toolName, protocolResponse.Action, decision ?? "none");
+                RecordToolFailure(Activity.Current, ToolFailureReason.ElicitationRejected);
                 return McpHelper.InjectToolIdMetadata(new CallToolResult
                 {
                     Content = [new TextContentBlock { Text = "Operation cancelled by user." }],
@@ -374,11 +379,37 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+            RecordToolFailure(Activity.Current, ToolFailureReason.ElicitationFailed);
             return McpHelper.InjectToolIdMetadata(new CallToolResult
             {
                 Content = [new TextContentBlock { Text = $"Elicitation failed for tool '{toolName}': {ex.Message}. Operation not executed for security." }],
                 IsError = true
             }, command.Id);
+        }
+    }
+
+    /// <summary>
+    /// Records a telemetry-safe reason for a tool call that was rejected before the command produced a response.
+    /// Without this, <see cref="Runtime.McpRuntime"/> can only report a generic "ToolCallError".
+    /// </summary>
+    /// <param name="activity">The activity for the tool call.</param>
+    /// <param name="reason">A <see cref="ToolFailureReason"/> value.</param>
+    protected internal static void RecordToolFailure(Activity? activity, string reason)
+    {
+        activity?.SetTagIfNotExists(TagName.ToolFailureMessage, reason);
+    }
+
+    /// <summary>
+    /// Records the status code of a failed command response when the command did not already record exception details.
+    /// </summary>
+    /// <param name="activity">The activity for the tool call.</param>
+    /// <param name="response">The command response.</param>
+    protected internal static void RecordCommandResponseFailure(Activity? activity, CommandResponse response)
+    {
+        var isError = response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous;
+        if (isError)
+        {
+            activity?.SetTagIfNotExists(TagName.ExceptionMessage, new JsonObject([new("StatusCode", (int)response.Status)]));
         }
     }
 
