@@ -1005,7 +1005,7 @@ dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests
 ./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # 6. AOT/Native build (required for AOT-compatible toolsets)
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 ```
 
 If AOT fails (common for new Azure SDK dependencies):
@@ -1188,7 +1188,7 @@ Before creating the PR, verify all of these:
 - [ ] Recordings pushed and `assets.json` committed
 - [ ] Spell check passes (`.\eng\common\spelling\Invoke-Cspell.ps1`)
 - [ ] ToolDescriptionEvaluator score ≥ 0.4
-- [ ] AOT compilation verified (`./eng/scripts/Build-Local.ps1 -BuildNative`)
+- [ ] AOT compilation verified (`./eng/scripts/Build-Local.ps1 -IncludeNative`)
 - [ ] One tool per PR
 
 ### Azure SDK Integration
