@@ -38,6 +38,16 @@ public sealed class JobGetCommand(ILogger<JobGetCommand> logger, IAzureBackupSer
     private readonly ILogger<JobGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
+    public override void ValidateOptions(JobGetOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        if (!string.IsNullOrEmpty(options.Job))
+        {
+            BackupJobIdParser.Parse(options.Job, options.Subscription, options.Vault, options.ResourceGroup, options.VaultType, validationResult);
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, JobGetOptions options, CancellationToken cancellationToken)
     {
         AzureBackupTelemetryTags.AddSubscriptionTag(context.Activity, options.Subscription);

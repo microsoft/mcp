@@ -1556,6 +1556,7 @@ azmcp azurebackup policy get --subscription <subscription> \
 
 ```bash
 # Retrieves protected item information. When --protected-item is specified, returns detailed information about a single backup instance including protection status, datasource details, policy assignment, lifecycle and recovery metadata, and workload-specific extended properties returned by Azure Backup. When --protected-item is omitted, lists all protected items in the vault. The explicit response contract mirrors the current Azure Backup SDK surface and must be revisited when the SDK version changes.
+# For Recovery Services vaults, --protected-item and --container also accept friendly names (for example, a VM or storage account name); they are resolved to the full names from the protected item list.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup protecteditem get --subscription <subscription> \
                                     --resource-group <resource-group> \
@@ -1657,6 +1658,7 @@ azmcp azurebackup backup status --subscription <subscription> \
 
 ```bash
 # Retrieves backup job information. When --job is specified, returns detailed information about a single job. When omitted, lists all backup jobs in the vault.
+# --job accepts a job ID (GUID) or the full backup job resource ID returned by job listings; a resource ID must match --subscription, --resource-group, --vault and, if specified, --vault-type.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup job get --subscription <subscription> \
                           --resource-group <resource-group> \
@@ -1697,6 +1699,7 @@ azmcp azurebackup container list-available --subscription <subscription> \
 
 ```bash
 # Retrieves recovery point information for a protected item. When --recovery-point is specified, returns a single recovery point. When omitted, lists all available recovery points.
+# For Recovery Services vaults, --protected-item and --container also accept friendly names (for example, a VM or storage account name); they are resolved to the full names from the protected item list.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup recoverypoint get --subscription <subscription> \
                                     --resource-group <resource-group> \

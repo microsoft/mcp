@@ -416,6 +416,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_governance_soft-delete | Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Get backup job <job_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_job_get | Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_job_get | Get the backup job with resource ID <job_resource_id> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_operation_get | Get asynchronous operation <operation_id> at vault scope for Recovery Services vault <vault_name> in resource group <resource_group> and subscription <subscription> | none |
 | azurebackup_operation_get | Check operation <operation_id> for protected item <protected_item> in container <container> and Azure fabric of RSV vault <vault_name>, resource group <resource_group>, subscription <subscription> and tenant <tenant> | none |
 | azurebackup_operation_get | Show the status and actual job IDs, if any, for RSV operation <operation_id> in vault <vault_name>, resource group <resource_group> and subscription <subscription>; do not treat the operation ID as a job | none |
@@ -463,6 +464,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_protecteditem_get | Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_get | Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
+| azurebackup_protecteditem_get | Get the backup protection details for virtual machine <vm_name> in Recovery Services vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_protecteditem_protect | Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including cluster-scoped resources | investigation-required |
@@ -475,6 +477,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_protecteditem_undelete | Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_recoverypoint_get | List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
+| azurebackup_recoverypoint_get | List recovery points for virtual machine <vm_name> in Recovery Services vault <vault_name> and resource group <resource_group> | investigation-required |
 | azurebackup_resourceguard_create | Create a Resource Guard named <resource_guard> in resource group <resource_group> in region \<location> | investigation-required |
 | azurebackup_resourceguard_create | Set up a new MUA Resource Guard called <resource_guard> in \<location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy | investigation-required |
 | azurebackup_resourceguard_create | Create Resource Guard <resource_guard> in \<location> under resource group <resource_group> with tags env=prod,team=backup | investigation-required |

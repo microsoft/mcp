@@ -21,6 +21,13 @@ param sqlVmAdminPwd string = 'P${newGuid()}!'
 @description('The VM size for the SQL VM used in testing.')
 param sqlVmSize string = 'Standard_B2als_v2'
 
+@description('Admin password for the Linux VM protected in the VM backup vault.')
+@secure()
+param backupVmAdminPwd string = 'P${newGuid()}!'
+
+@description('The VM size for the Linux VM protected in the VM backup vault.')
+param backupVmSize string = 'Standard_B1ls'
+
 // Recovery Services Vault (RSV) - GeoRedundant for CRR support
 resource rsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
   name: '${baseName}-rsv'
@@ -388,6 +395,113 @@ resource sqlVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 output sqlVmId string = sqlVm.id
 output sqlVmName string = sqlVm.name
 output resourceGroupLocation string = location
+
+// ─── Protected IaaS VM for Read-Path Tests ───
+// A small Linux VM protected (by test-resources-post.ps1) in a dedicated RSV, so read tests have a real
+// protected item, container and backup jobs. Kept separate from the SQL VM, which must stay unprotected
+// for ARM discovery tests and is protected in '-rsv' by the selective disk backup test.
+resource backupVmNic 'Microsoft.Network/networkInterfaces@2024-01-01' = {
+  name: '${baseName}-backup-vm-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: testVnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource backupVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
+  name: '${baseName}-backup-vm'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: backupVmSize
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts-gen2'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'Standard_LRS'
+        }
+      }
+    }
+    osProfile: {
+      computerName: '${baseName}-backup-vm'
+      adminUsername: 'mcptestadmin'
+      adminPassword: backupVmAdminPwd
+      linuxConfiguration: {
+        disablePasswordAuthentication: false
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: backupVmNic.id
+        }
+      ]
+    }
+  }
+  tags: {
+    Owner: 'azurebackup-mcp-tests'
+    ServiceName: 'AzureBackup'
+    Environment: 'Test'
+  }
+}
+
+resource vmRsvVault 'Microsoft.RecoveryServices/vaults@2024-04-01' = {
+  name: '${baseName}-vmrsv'
+  location: location
+  sku: {
+    name: 'RS0'
+    tier: 'Standard'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource vmRsvBackupConfig 'Microsoft.RecoveryServices/vaults/backupconfig@2024-04-01' = {
+  parent: vmRsvVault
+  name: 'vaultconfig'
+  properties: {
+    storageModelType: 'LocallyRedundant'
+  }
+}
+
+resource appBackupContributorRoleAssignmentVmRsv 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(backupContributorRoleDefinition.id, testApplicationOid, vmRsvVault.id)
+  scope: vmRsvVault
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: backupContributorRoleDefinition.id
+    description: 'Backup Contributor for ${testApplicationOid} on VM RSV vault'
+  }
+}
+
+output backupVmName string = backupVm.name
+output vmRsvVaultName string = vmRsvVault.name
 
 // ─── Private Endpoint Test Resources (PR 4) ───
 // Dedicated VNet + PE-compatible subnet and a fresh RSV with no protected items,

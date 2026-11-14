@@ -1,0 +1,11 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Backup `vault get` and `governance find-unprotected` returning HTTP 422 instead of an actionable 401 sign-in error when both Recovery Services and Backup vault listings fail to authenticate."
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Backup `job get` failing when `--job` is the full backup job resource ID returned by job listings. Malformed job IDs are now rejected with a clear validation error."
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Backup Recovery Services protected item listing failing entirely when a single item (for example, a classic VM with empty resource IDs) cannot be deserialized."
+  - section: "Bugs Fixed"
+    description: "Fixed Azure Backup `protecteditem get` and `recoverypoint get` rejecting friendly names (such as a VM name) passed as `--protected-item` or `--container`, and recovery point lookups failing for IaaS VMs when the container was auto-discovered."
+  - section: "Bugs Fixed"
+    description: "Fixed option validation failures being recorded in telemetry as generic tool errors instead of validation errors."

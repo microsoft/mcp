@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using Azure.Core;
+using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.ResourceManager.DataProtectionBackup;
@@ -11,6 +13,7 @@ using Azure.ResourceManager.RecoveryServicesBackup;
 using Azure.ResourceManager.RecoveryServicesBackup.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
 using SdkBackupStatusResult = Azure.ResourceManager.RecoveryServicesBackup.Models.BackupStatusResult;
@@ -41,11 +44,16 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
     /// <summary>
     /// NEW-1 fix: when both RSV and DPP vault listings fail, surface a single meaningful
-    /// exception rather than an opaque <see cref="AggregateException"/>. If both inner
-    /// exceptions are <see cref="RequestFailedException"/> with the same HTTP status
-    /// (e.g. 401/403), throw the RSV one directly so the customer gets the actual HTTP
-    /// status code, error code, and service message. Otherwise wrap both inner messages
-    /// in a single <see cref="InvalidOperationException"/>.
+    /// exception rather than an opaque <see cref="AggregateException"/>. Selection order:
+    /// <list type="number">
+    /// <item>A <see cref="RequestFailedException"/> from either side (BUG-A) so the HTTP status is preserved.</item>
+    /// <item>An <see cref="AuthenticationFailedException"/> (including <see cref="CredentialUnavailableException"/>)
+    /// from either side, rethrown unchanged so the caller gets a 401 and sign-in guidance (NEW-7).</item>
+    /// <item>The original exception when both sides failed with the same exception type (NEW-7).</item>
+    /// <item>Otherwise an <see cref="InvalidOperationException"/> combining both inner messages.</item>
+    /// </list>
+    /// Callers must throw the result with <see cref="ExceptionDispatchInfo.Throw(Exception)"/> so an
+    /// original inner exception keeps its stack trace.
     /// </summary>
     private static Exception BuildBothVaultListingsFailedException(
         AggregateException rsvFault,
@@ -75,6 +83,24 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
                 : (dppRfe?.Status is > 0) ? dppRfe
                 : rsvRfe ?? dppRfe!;
             return new RequestFailedException(primary!.Status, combinedMessage, primary.ErrorCode, primary);
+        }
+
+        // NEW-7: both sides commonly fail with the same sign-in error when no credential is
+        // available. Wrapping it in InvalidOperationException produced a 422 that hid the
+        // actionable "run az login" guidance and was misclassified as a tool bug.
+        if (rsvInner is AuthenticationFailedException rsvAuth)
+        {
+            return rsvAuth;
+        }
+
+        if (dppInner is AuthenticationFailedException dppAuth)
+        {
+            return dppAuth;
+        }
+
+        if (rsvInner.GetType() == dppInner.GetType())
+        {
+            return rsvInner;
         }
 
         return new InvalidOperationException(combinedMessage, rsvInner);
@@ -197,7 +223,7 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (rsvTask.IsFaulted && dppTask.IsFaulted)
         {
-            throw BuildBothVaultListingsFailedException(rsvTask.Exception!, dppTask.Exception!, "vault listing");
+            ExceptionDispatchInfo.Throw(BuildBothVaultListingsFailedException(rsvTask.Exception!, dppTask.Exception!, "vault listing"));
         }
 
         return FilterByResourceGroup(merged);
@@ -338,12 +364,34 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
         string jobId, string? vaultType, string? tenant,
         CancellationToken cancellationToken)
     {
+        // NEW-6: accept a GUID or a full ARM job resource ID. A full ID can also identify the vault type.
+        var jobValidation = new ValidationResult();
+        var jobReference = BackupJobIdParser.Parse(jobId, subscription, vaultName, resourceGroup, vaultType, jobValidation);
+        ThrowIfInvalid(jobValidation);
+
         subscription = await ResolveSubscriptionIdAsync(subscription, tenant, cancellationToken);
-        var resolvedType = await ResolveVaultTypeAsync(vaultName, resourceGroup, subscription, vaultType, tenant, cancellationToken);
+        BackupJobIdParser.ValidateSubscription(jobReference!, subscription, jobValidation);
+        ThrowIfInvalid(jobValidation);
+
+        var resolvedType = await ResolveVaultTypeAsync(
+            vaultName, resourceGroup, subscription,
+            string.IsNullOrEmpty(vaultType) ? jobReference!.VaultType : vaultType,
+            tenant, cancellationToken);
 
         return VaultTypeResolver.IsRsv(resolvedType)
-            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken)
-            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobId, tenant, cancellationToken);
+            ? await rsvOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference!.JobName, tenant, cancellationToken)
+            : await dppOps.GetJobAsync(vaultName, resourceGroup, subscription, jobReference!.JobName, tenant, cancellationToken);
+    }
+
+    private static void ThrowIfInvalid(ValidationResult validationResult)
+    {
+        if (!validationResult.IsValid)
+        {
+            throw new CommandValidationException(string.Join('\n', validationResult.Errors))
+            {
+                TelemetrySafeMessage = validationResult.TelemetrySafeMessage
+            };
+        }
     }
 
     public async Task<List<BackupJobInfo>> ListJobsAsync(
@@ -724,10 +772,10 @@ public sealed partial class AzureBackupService(IRsvBackupOperations rsvOps, IDpp
 
         if (rsvVaultsTask.IsFaulted && dppVaultsTask.IsFaulted)
         {
-            throw BuildBothVaultListingsFailedException(
+            ExceptionDispatchInfo.Throw(BuildBothVaultListingsFailedException(
                 rsvVaultsTask.Exception!,
                 dppVaultsTask.Exception!,
-                "vault listing during unprotected resource scan");
+                "vault listing during unprotected resource scan"));
         }
 
         // Step 2: Collect all protected datasource ARM IDs from every vault

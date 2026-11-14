@@ -1519,6 +1519,78 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     // Stage 2: Add tests when test-resources.bicep includes a VM for backup status,
     // friendly-name lookup, container auto-discovery, and recovery point tests.
 
+    /// <summary>
+    /// UX-1: agents pass the VM name as --protected-item and --container where RSV expects
+    /// 'VM;iaasvmcontainerv2;{rg};{vm}' and 'IaasVMContainer;iaasvmcontainerv2;{rg};{vm}'.
+    /// test-resources-post.ps1 protects the dedicated Linux VM in the '-vmrsv' vault. The VM name is read
+    /// from the listing so record and playback use the same (sanitized) value.
+    /// </summary>
+    [Fact]
+    public async Task ProtectedItemGet_RsvVault_VmNameAsItemAndContainer_ResolvesItem()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
+        var vm = await FindRsvVmItemAsync(vaultName);
+
+        var result = await CallToolAsync(
+            "azurebackup_protecteditem_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "protected-item", vm.VmName },
+                { "container", vm.VmName }
+            });
+
+        var item = Assert.Single(result.AssertProperty("protectedItems").EnumerateArray());
+        Assert.Equal(vm.Name, item.AssertProperty("name").GetString());
+        Assert.Equal(vm.ContainerName, item.AssertProperty("containerName").GetString());
+    }
+
+    /// <summary>
+    /// UX-1: recovery point listing with the VM name as --container resolves the RSV container and
+    /// item before calling the service, instead of failing with BMSUserErrorContainerNameIncorrectFormat.
+    /// </summary>
+    [Fact]
+    public async Task RecoveryPointGet_RsvVault_VmNameAsItemAndContainer_ListsRecoveryPoints()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
+        var vm = await FindRsvVmItemAsync(vaultName);
+
+        var result = await CallToolAsync(
+            "azurebackup_recoverypoint_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "protected-item", vm.VmName },
+                { "container", vm.VmName }
+            });
+
+        var recoveryPoints = result.AssertProperty("recoveryPoints");
+        Assert.Equal(JsonValueKind.Array, recoveryPoints.ValueKind);
+    }
+
+    private async Task<(string Name, string VmName, string ContainerName)> FindRsvVmItemAsync(string vaultName)
+    {
+        var listResult = await CallToolAsync(
+            "azurebackup_protecteditem_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var vmItem = listResult.AssertProperty("protectedItems").EnumerateArray().First(item =>
+            item.TryGetProperty("containerName", out var container) &&
+            container.GetString()?.StartsWith("iaasvmcontainer", StringComparison.OrdinalIgnoreCase) == true);
+
+        var name = vmItem.AssertProperty("name").GetString()!;
+        return (name, name.Split(';')[^1], vmItem.AssertProperty("containerName").GetString()!);
+    }
+
     #endregion
 
     #region Protected Item Tests (DPP)
@@ -2300,6 +2372,45 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
 
         var jobs = result.AssertProperty("jobs");
         Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
+    }
+
+    /// <summary>
+    /// NEW-6: agents pass the full ARM job resource ID returned by job listings as --job.
+    /// </summary>
+    [Fact]
+    public async Task JobGet_RsvVault_ByFullJobResourceId_ReturnsJob()
+    {
+        // test-resources-post.ps1 protects a VM in the '-vmrsv' vault, which runs a ConfigureBackup job.
+        var vaultName = $"{Settings.ResourceBaseName}-vmrsv";
+
+        var listResult = await CallToolAsync(
+            "azurebackup_job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName }
+            });
+
+        var listedJob = listResult.AssertProperty("jobs").EnumerateArray().FirstOrDefault(job =>
+            job.TryGetProperty("id", out var id) && !string.IsNullOrEmpty(id.GetString()));
+        Assert.NotEqual(JsonValueKind.Undefined, listedJob.ValueKind);
+
+        var jobResourceId = listedJob.AssertProperty("id").GetString()!;
+        Assert.StartsWith("/subscriptions/", jobResourceId, StringComparison.OrdinalIgnoreCase);
+
+        var result = await CallToolAsync(
+            "azurebackup_job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "job", jobResourceId }
+            });
+
+        var job = Assert.Single(result.AssertProperty("jobs").EnumerateArray());
+        Assert.Equal(listedJob.AssertProperty("name").GetString(), job.AssertProperty("name").GetString());
     }
 
     #endregion
