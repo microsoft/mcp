@@ -103,6 +103,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         string location,
         Dictionary<string, string>? tags = null,
         string? tenant = null,
+        string? incomingTrafficPolicy = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
@@ -114,8 +115,19 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
         var armClient = await CreateArmClientAsync(tenantIdOrName: tenant, cancellationToken: cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+        var services = resourceGroupResource.Value.GetStorageSyncServices();
+        if (await services.ExistsAsync(storageSyncServiceName, cancellationToken))
+        {
+            throw new InvalidOperationException(
+                $"Storage Sync service '{storageSyncServiceName}' already exists in resource group '{resourceGroup}' and subscription '{subscription}'.");
+        }
 
-        var content = new StorageSyncServiceCreateOrUpdateContent(new(location));
+        var content = new StorageSyncServiceCreateOrUpdateContent(new(location))
+        {
+            IncomingTrafficPolicy = incomingTrafficPolicy == null ?
+                IncomingTrafficPolicy.AllowAllTraffic
+                : new(incomingTrafficPolicy)
+        };
         if (tags != null)
         {
             foreach (var tag in tags)
@@ -124,7 +136,7 @@ public sealed class StorageSyncService(IAzureService azureService, ILogger<Stora
             }
         }
 
-        var operation = await resourceGroupResource.Value.GetStorageSyncServices().CreateOrUpdateAsync(
+        var operation = await services.CreateOrUpdateAsync(
             WaitUntil.Started,
             storageSyncServiceName,
             content,
