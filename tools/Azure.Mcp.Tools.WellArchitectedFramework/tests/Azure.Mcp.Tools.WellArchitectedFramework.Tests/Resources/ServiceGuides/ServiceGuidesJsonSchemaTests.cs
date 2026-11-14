@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.WellArchitectedFramework.Tests.Resources.ServiceGuides
 
 public class ServiceGuidesJsonSchemaTests
 {
-    private const string ExpectedBaseUrl = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/";
+    private const string ExpectedBaseUrl = "https://learn.microsoft.com/en-us/azure/well-architected/service-guides/";
     private readonly Dictionary<string, ServiceGuide> _serviceGuides;
     private readonly string _jsonContent;
 
@@ -87,7 +87,7 @@ public class ServiceGuidesJsonSchemaTests
             var url = kvp.Value.ServiceGuideUrl;
 
             // Verify URL matches expected format
-            var expectedUrl = $"{ExpectedBaseUrl}{kvp.Key}.md";
+            var expectedUrl = $"{ExpectedBaseUrl}{kvp.Key}";
             Assert.Equal(expectedUrl, url);
 
             // Should be a valid URI
