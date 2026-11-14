@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Minor modification to Azure endpoint validation for App Configuration, Azure OpenAI, Communication Services, and Speech, and added clear errors for unsupported Communication Services clouds before sending requests."

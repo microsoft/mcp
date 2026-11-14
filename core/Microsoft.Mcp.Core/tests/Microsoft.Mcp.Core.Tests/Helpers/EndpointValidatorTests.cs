@@ -211,6 +211,9 @@ public class EndpointValidatorTests
     }
 
     [Theory]
+    [InlineData("appconfig")]
+    [InlineData("azure-openai")]
+    [InlineData("communication")]
     [InlineData("eventgrid")]
     [InlineData("deviceprovisioning")]
     [InlineData("foundry")]
@@ -221,6 +224,7 @@ public class EndpointValidatorTests
     [InlineData("monitor-metrics")]
     [InlineData("monitor-ingestion")]
     [InlineData("mysql")]
+    [InlineData("speech")]
     [InlineData("sreagent")]
     [InlineData("storage-table")]
     public void ValidateAzureServiceEndpoint_ReviewedToolServices_AreRegistered(string serviceType)
@@ -233,6 +237,9 @@ public class EndpointValidatorTests
     }
 
     [Theory]
+    [InlineData("https://myconfig.azconfig.io.evil.example", "appconfig")]
+    [InlineData("https://my-resource.openai.azure.com.evil.example", "azure-openai")]
+    [InlineData("https://mycomm.communication.azure.com.evil.example", "communication")]
     [InlineData("https://topic.eventgrid.azure.net.evil.example", "eventgrid")]
     [InlineData("https://mydps.azure-devices-provisioning.net.evil.example", "deviceprovisioning")]
     [InlineData("https://my-foundry.services.ai.azure.com.evil.example", "foundry")]
@@ -244,6 +251,7 @@ public class EndpointValidatorTests
     [InlineData("https://eastus.ingest.monitor.azure.com.evil.example", "monitor-ingestion")]
     [InlineData("https://workspace.data.monitor.azure.com.evil.example", "monitor-traces")]
     [InlineData("https://server.mysql.database.azure.com.evil.example", "mysql")]
+    [InlineData("https://my-speech.cognitiveservices.azure.com.evil.example", "speech")]
     [InlineData("https://agent1.azuresre.ai.evil.example", "sreagent")]
     [InlineData("https://mystorage.table.core.windows.net.evil.example", "storage-table")]
     public void ValidateAzureServiceEndpoint_ReviewedServiceSuffixes_RejectSpoofedHosts(
@@ -386,7 +394,6 @@ public class EndpointValidatorTests
     [InlineData("https://myregistry.azurecr.cn", "acr")]
     [InlineData("https://myconfig.azconfig.azure.cn", "appconfig")]
     [InlineData("https://management.chinacloudapi.cn/subscriptions/00000000-0000-0000-0000-000000000000", "arm")]
-    [InlineData("https://mycomm.communication.azure.cn", "communication")]
     [InlineData("https://my-resource.openai.azure.cn", "azure-openai")]
     [InlineData("https://my-resource.cognitiveservices.azure.cn", "azure-openai")]
     [InlineData("https://topic.chinanorth3-1.eventgrid.azure.cn", "eventgrid")]
@@ -455,6 +462,7 @@ public class EndpointValidatorTests
     // Public cloud endpoint should fail in China cloud
     [InlineData("https://myregistry.azurecr.io", "acr")]
     [InlineData("https://myconfig.azconfig.io", "appconfig")]
+    [InlineData("https://mycomm.communication.azure.com", "communication")]
     [InlineData("https://management.azure.com", "arm")]
     [InlineData("https://myserver.postgres.database.azure.com", "postgres")]
     [InlineData("https://prices.azure.com", "pricing")]

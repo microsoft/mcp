@@ -78,11 +78,12 @@ public class FoundryExtensionsService(IAzureService azureService)
             }
 
             // Validate the resource name portion of the host
-            // This set of values must be kept in sync with the allowed 'azure-openai' suffixes defined in EndpointValidator.AllowLists.
+            // EndpointValidator.AllowLists.cs contains the authorization copy of these Azure OpenAI suffixes.
+            // This copy identifies the resource-name label for narrower structural checks; keep both copies and
+            // their tests synchronized when Azure cloud endpoint domains change.
             string[] knownSuffixes = [".openai.azure.com", ".cognitiveservices.azure.com",
                 ".openai.azure.cn", ".cognitiveservices.azure.cn",
-                ".openai.azure.us", ".cognitiveservices.azure.us",
-                ".openai.azure.de", ".cognitiveservices.azure.de"];
+                ".openai.azure.us", ".cognitiveservices.azure.us"];
             var host = uri.Host;
             var matchedSuffix = knownSuffixes.FirstOrDefault(suffix => host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
             if (matchedSuffix != null)
