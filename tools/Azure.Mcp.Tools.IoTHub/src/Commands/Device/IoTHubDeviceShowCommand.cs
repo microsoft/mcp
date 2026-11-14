@@ -14,6 +14,7 @@ namespace Azure.Mcp.Tools.IoTHub.Commands.Device;
 [CommandMetadata(
     Id = "63c331ab-3848-4d2b-86b2-4d17d187d5cf",
     Name = "show",
+    NamespaceOperationName = "get",
     Title = "Show IoT Hub Device",
     Description = """
         Show the device identity for a device in an IoT Hub device registry.
