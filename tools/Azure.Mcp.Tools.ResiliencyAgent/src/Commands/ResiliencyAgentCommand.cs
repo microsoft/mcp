@@ -32,6 +32,11 @@ public abstract class ResiliencyAgentCommand<
     : AuthenticatedCommand<TOptions, ResiliencyAgentCommandResult>
     where TOptions : class, IResiliencyAgentRequestOptions
 {
+    internal const string NativeContentMarkerToken =
+        "AZURE_RESILIENCY_NATIVE_CONTENT_V1";
+    internal const string NativeContentMarker =
+        NativeContentMarkerToken + " encoding=utf-8";
+
     private static readonly TimeSpan s_pollBudget = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan s_backendProcessingTimeout = TimeSpan.FromMinutes(20);
     private const int MaxClarificationRounds = 20;
@@ -324,8 +329,12 @@ public abstract class ResiliencyAgentCommand<
     private static string BuildArtifactPresentation(IReadOnlyList<ArtifactWriteResult> artifacts)
     {
         var builder = new StringBuilder(
+            NativeContentMarker + "\n" +
             "The Azure Resiliency Agent returned the following authoritative file artifacts. " +
-            "Explicitly name each attached file when responding to the user.\n");
+            "Explicitly name each attached file when responding to the user. Unless command-specific " +
+            "instructions direct applying an artifact to an existing workspace file, treat returned " +
+            "workspace paths as destinations, not confirmation that files exist. If a destination is " +
+            "absent, place the exact attached content there before continuing.\n");
 
         foreach (ArtifactWriteResult artifact in artifacts)
         {
@@ -334,12 +343,34 @@ public abstract class ResiliencyAgentCommand<
             builder.Append(escapedName);
             builder.Append('`');
 
-            if (artifact.WorkspaceArtifact is null)
+            if (artifact.WorkspaceArtifact is not null
+                && !string.IsNullOrWhiteSpace(artifact.IntendedRelativePath))
+            {
+                builder.Append(" — workspace destination: `")
+                    .Append(EscapeMarkdownInlineCode(
+                        artifact.IntendedRelativePath.Replace('\\', '/')))
+                    .Append('`');
+            }
+            else if (artifact.WorkspaceArtifact is null)
             {
                 builder.Append(
-                    " — automatic workspace materialization failed. The exact authoritative content " +
-                    "remains attached as an MCP resource. Use the host's native file-edit workflow " +
-                    "to create the intended workspace file without changing its content.");
+                    " — the exact authoritative content remains attached as an MCP resource. " +
+                    "Internally recover any spilled composite tool output by reading it as UTF-8 and " +
+                    "parsing only the JSON prefix before the AZURE_RESILIENCY_NATIVE_CONTENT_V1 " +
+                    "marker. Ensure the intended workspace file exists");
+                if (!string.IsNullOrWhiteSpace(artifact.IntendedRelativePath))
+                {
+                    builder.Append(" at `")
+                        .Append(EscapeMarkdownInlineCode(
+                            artifact.IntendedRelativePath.Replace('\\', '/')))
+                        .Append('`');
+                }
+
+                builder.Append(
+                    " without changing its content, using the host's native file-edit workflow when " +
+                    "necessary. When the file is produced successfully, do not mention " +
+                    "materialization, fallback, composite parsing, markers, encoding, or line-ending " +
+                    "handling to the user.");
             }
 
             if (IsDetailedRecommendationReport(artifact))
@@ -348,14 +379,12 @@ public abstract class ResiliencyAgentCommand<
                     " — full detailed recommendation report. Tell the user that this attached report " +
                     "contains the complete findings, alternatives, cost considerations, and " +
                     "per-resource recommendations. A chat summary is abbreviated and must not replace " +
-                    "notifying the user about this report. Materialize the exact report content as a " +
-                    "normal workspace file under `azure-resiliency/" + escapedName + "`. An MCP " +
-                    "attachment, embedded resource, temporary session file, or tool-call path does not " +
-                    "satisfy this workspace-file requirement. Reuse the intended workspace file when " +
-                    "it already contains the exact returned content. If it does not exist, create it " +
-                    "with the host's native file-edit workflow. If that name exists with different " +
-                    "content, do not overwrite it; use a collision-safe suffix. Preserve the report " +
-                    "content exactly and tell the user the resulting workspace-relative path. After " +
+                    "notifying the user about this report. Use the timestamped artifact-set workspace " +
+                    "file returned by this tool. An MCP attachment, embedded resource, temporary " +
+                    "session file, or tool-call path does not satisfy this workspace-file requirement. " +
+                    "If the workspace file is absent, create the exact intended path stated above with " +
+                    "the host's native file-edit workflow. Preserve the report content exactly and tell " +
+                    "the user only the resulting workspace-relative path and its purpose. After " +
                     "verifying that workspace file exists, include a Markdown link to it using its " +
                     "canonical absolute `file:///` URI. Never link an MCP session, tool-call, cache, " +
                     "or temporary path.");

@@ -306,6 +306,9 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         string? format = artifact.TryGetProperty("metadata", out JsonElement artifactMetadata)
             ? ReadString(artifactMetadata, "type")
             : null;
+        string? metadataJson = artifactMetadata.ValueKind == JsonValueKind.Object
+            ? artifactMetadata.GetRawText()
+            : null;
 
         if (!artifact.TryGetProperty("parts", out JsonElement parts) || parts.ValueKind != JsonValueKind.Array)
         {
@@ -323,32 +326,55 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                         description,
                         ReadString(file, "mimeType") ?? "text/plain",
                         DecodeFile(file),
-                        format));
+                        format,
+                        SourceKind: "file",
+                        MetadataJson: metadataJson));
                     break;
 
                 case "text":
                     {
                         string text = ReadString(part, "text") ?? string.Empty;
-                        List<AgentArtifact>? envelope = UnpackFileEnvelope(text, description, format);
+                        List<AgentArtifact>? envelope = UnpackFileEnvelope(
+                            text,
+                            description,
+                            format,
+                            metadataJson);
                         if (envelope is not null)
                         {
                             decoded.AddRange(envelope);
                         }
                         else
                         {
-                            decoded.Add(new AgentArtifact(name, description, "text/markdown", text, format));
+                            decoded.Add(new AgentArtifact(
+                                name,
+                                description,
+                                "text/markdown",
+                                text,
+                                format,
+                                SourceKind: "text",
+                                MetadataJson: metadataJson));
                         }
 
                         break;
                     }
 
                 case "data" when part.TryGetProperty("data", out JsonElement data):
-                    decoded.Add(new AgentArtifact(
-                        name,
-                        description,
-                        "text/markdown",
-                        TranscodeDataToMarkdown(data),
-                        format));
+                    AgentArtifact rendered =
+                        StructuredArtifactMarkdownRenderer.Render(name, description, format, data)
+                        ?? new AgentArtifact(
+                            name,
+                            description,
+                            "text/markdown",
+                            TranscodeDataToMarkdown(data),
+                            format,
+                            "structured-data");
+                    decoded.Add(
+                        rendered with
+                        {
+                            SourceKind = "data",
+                            SourceDataJson = data.GetRawText(),
+                            MetadataJson = metadataJson,
+                        });
                     break;
             }
         }
@@ -633,7 +659,11 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
     /// Some generators emit <c>{"files":[{"file_name":...,"content":...}]}</c> as a single text part.
     /// Unpack it so each file arrives under its real name instead of one opaque blob.
     /// </summary>
-    private static List<AgentArtifact>? UnpackFileEnvelope(string text, string? description, string? format)
+    private static List<AgentArtifact>? UnpackFileEnvelope(
+        string text,
+        string? description,
+        string? format,
+        string? metadataJson)
     {
         if (!text.TrimStart().StartsWith('{'))
         {
@@ -657,7 +687,9 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                     description,
                     "text/plain",
                     ReadString(file, "content"),
-                    format));
+                    format,
+                    SourceKind: "text",
+                    MetadataJson: metadataJson));
             }
 
             return unpacked.Count > 0 ? unpacked : null;

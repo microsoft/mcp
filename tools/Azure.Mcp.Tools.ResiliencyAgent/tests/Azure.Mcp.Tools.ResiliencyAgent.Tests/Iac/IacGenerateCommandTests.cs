@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore Résilience
 
 using System.Net;
 using System.Text.Json;
@@ -140,11 +141,19 @@ public sealed class IacGenerateCommandTests
         Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
             .Returns(Completed("Generated.", artifact));
         _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
-            .Returns([Written(
-                artifact,
-                "registry.bicep",
-                artifactPath,
-                $"[registry.bicep]({artifactUri})")]);
+            .Returns(
+            [
+                new ArtifactWriteResult(
+                    artifact,
+                    "registry.bicep",
+                    new WrittenArtifact(
+                        "registry.bicep",
+                        artifactPath,
+                        $"[registry.bicep]({artifactUri})",
+                        artifact.Format,
+                        artifact.Description),
+                    "azure-resiliency/bicep-20261113T170639844Z/registry.bicep"),
+            ]);
 
         var response = await ExecuteCommandAsync("--request", "generate a template");
 
@@ -157,6 +166,16 @@ public sealed class IacGenerateCommandTests
             "\"files\"",
             JsonSerializer.Serialize(response.Results),
             StringComparison.OrdinalIgnoreCase);
+        var presentation = Assert.IsType<TextContentBlock>(response.McpContent![0]);
+        Assert.Contains(
+            "Unless command-specific instructions direct applying an artifact to an existing workspace file",
+            presentation.Text,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "workspace destination: `azure-resiliency/bicep-20261113T170639844Z/registry.bicep`",
+            presentation.Text,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("materialized at", presentation.Text, StringComparison.Ordinal);
         var embedded = Assert.IsType<EmbeddedResourceBlock>(response.McpContent![1]);
         var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
         Assert.Equal("resource r ...", resource.Text);
@@ -195,7 +214,15 @@ public sealed class IacGenerateCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.McpContent);
         var presentation = Assert.IsType<TextContentBlock>(response.McpContent[0]);
-        Assert.Contains("automatic workspace materialization failed", presentation.Text, StringComparison.Ordinal);
+        Assert.StartsWith(
+            ResiliencyAgentCommand<ResiliencyAgentRequestOptions>.NativeContentMarker,
+            presentation.Text,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("automatic workspace materialization failed", presentation.Text, StringComparison.Ordinal);
+        Assert.Contains(
+            "do not mention materialization, fallback, composite parsing, markers, encoding, or line-ending handling",
+            presentation.Text,
+            StringComparison.Ordinal);
         var embedded = Assert.IsType<EmbeddedResourceBlock>(response.McpContent[1]);
         var resource = Assert.IsType<TextResourceContents>(embedded.Resource);
         Assert.Equal(
@@ -319,11 +346,8 @@ public sealed class IacGenerateCommandTests
                     Assert.Contains("DetailedRecommendationReport-2.md", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("full detailed recommendation report", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("chat summary is abbreviated", presentation.Text, StringComparison.OrdinalIgnoreCase);
-                    Assert.Contains("azure-resiliency/DetailedRecommendationReport-2.md", presentation.Text, StringComparison.Ordinal);
                     Assert.Contains("does not satisfy this workspace-file requirement", presentation.Text, StringComparison.OrdinalIgnoreCase);
-                    Assert.Contains("already contains the exact returned content", presentation.Text, StringComparison.OrdinalIgnoreCase);
-                    Assert.Contains("do not overwrite it", presentation.Text, StringComparison.OrdinalIgnoreCase);
-                    Assert.Contains("collision-safe suffix", presentation.Text, StringComparison.OrdinalIgnoreCase);
+                    Assert.Contains("timestamped artifact-set workspace file", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("preserve the report content exactly", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("workspace-relative path", presentation.Text, StringComparison.OrdinalIgnoreCase);
                     Assert.Contains("Markdown link", presentation.Text, StringComparison.Ordinal);
@@ -352,6 +376,57 @@ public sealed class IacGenerateCommandTests
         {
             Directory.Delete(directory, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_MarksTheBoundaryBetweenJsonAndUtf8NativeContent()
+    {
+        const string unicodeContent = "# Résilience\n\n東京 — ✅";
+        var artifact = new AgentArtifact(
+            "report.md",
+            "Unicode report",
+            "text/markdown",
+            unicodeContent,
+            "md");
+        Service.SendAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<IReadOnlyList<AgentAttachment>>(), Arg.Any<CancellationToken>())
+            .Returns(Completed("Generated.", artifact));
+        _artifactWriter.Write(Arg.Any<IEnumerable<AgentArtifact>>(), Arg.Any<string>())
+            .Returns(
+            [
+                new ArtifactWriteResult(
+                    artifact,
+                    "report.md",
+                    null,
+                    "azure-resiliency/reports-20261112T093045123Z/report.md"),
+            ]);
+
+        CommandResponse response = await ExecuteCommandAsync("--request", "generate a report");
+
+        var presentation = Assert.IsType<TextContentBlock>(response.McpContent![0]);
+        var resource = Assert.IsType<TextResourceContents>(
+            Assert.IsType<EmbeddedResourceBlock>(response.McpContent[1]).Resource);
+        const string commandJson = """{"status":200,"results":{"state":"completed"},"duration":0}""";
+        string flattened = commandJson + presentation.Text + resource.Text;
+        int markerIndex = flattened.IndexOf(
+            ResiliencyAgentCommand<ResiliencyAgentRequestOptions>.NativeContentMarker,
+            StringComparison.Ordinal);
+        int bareMarkerIndex = flattened.IndexOf(
+            ResiliencyAgentCommand<ResiliencyAgentRequestOptions>.NativeContentMarkerToken,
+            StringComparison.Ordinal);
+
+        Assert.True(markerIndex > 0);
+        Assert.Equal(markerIndex, bareMarkerIndex);
+        using JsonDocument parsedPrefix = JsonDocument.Parse(flattened[..markerIndex]);
+        using JsonDocument parsedBarePrefix = JsonDocument.Parse(flattened[..bareMarkerIndex]);
+        Assert.Equal(200, parsedPrefix.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal(200, parsedBarePrefix.RootElement.GetProperty("status").GetInt32());
+        Assert.ThrowsAny<JsonException>(() => JsonDocument.Parse(flattened));
+        Assert.Contains(
+            "recover any spilled composite tool output by reading it as UTF-8",
+            presentation.Text,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("azure-resiliency/reports-20261112T093045123Z/report.md", presentation.Text, StringComparison.Ordinal);
+        Assert.Equal(unicodeContent, resource.Text);
     }
 
     [Fact]

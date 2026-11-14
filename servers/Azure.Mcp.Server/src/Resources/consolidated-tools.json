@@ -6050,7 +6050,7 @@
     },
     {
       "name": "use_azure_resiliency_agent",
-      "description": "Use the Azure Resiliency Agent for general Azure resiliency guidance, application architecture assessment, new resilient Bicep, ARM JSON, or Terraform generation, and review of existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
+      "description": "Use the Azure Resiliency Agent to assess Azure application architectures; generate or review resilient Bicep, ARM JSON, and Terraform; list ordinary Azure Service Group members, metadata, parent hierarchy, criticality, and resource-type summaries; inspect or non-destructively manage Standard Usage Plans and Service Groups; inspect zonal-resiliency goals; or answer Azure resiliency guidance questions. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -6083,7 +6083,45 @@
         "resiliencyagent_iac_generate",
         "resiliencyagent_bicep_review",
         "resiliencyagent_arm_review",
-        "resiliencyagent_terraform_review"
+        "resiliencyagent_terraform_review",
+        "resiliencyagent_goals_get",
+        "resiliencyagent_usage-plan_get",
+        "resiliencyagent_usage-plan_manage",
+        "resiliencyagent_service-group_get",
+        "resiliencyagent_service-group_manage"
+      ]
+    },
+    {
+      "name": "manage_azure_resiliency_goals",
+      "description": "Use the Azure Resiliency Agent to assign or delete one Azure Service Group's zonal-resiliency goal, attach Availability or Latency SLIs, include or exclude goal resources, or refresh goal resources. The agent validates the request and asks for explicit confirmation before destructive changes.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can delete a goal assignment or change which resources participate in a goal."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can mutate Azure goal state and may materialize artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_goals_manage"
       ]
     }
   ]

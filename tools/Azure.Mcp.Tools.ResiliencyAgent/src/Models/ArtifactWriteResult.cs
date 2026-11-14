@@ -11,7 +11,11 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Models;
 /// <param name="WorkspaceArtifact">
 /// The workspace file when materialization succeeded; otherwise <see langword="null"/>.
 /// </param>
+/// <param name="IntendedRelativePath">
+/// The workspace-relative path assigned to this artifact set, including when materialization fails.
+/// </param>
 public sealed record ArtifactWriteResult(
     AgentArtifact Artifact,
     string Name,
-    WrittenArtifact? WorkspaceArtifact);
+    WrittenArtifact? WorkspaceArtifact,
+    string? IntendedRelativePath = null);
