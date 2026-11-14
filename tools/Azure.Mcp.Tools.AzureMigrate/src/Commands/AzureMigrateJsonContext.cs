@@ -9,6 +9,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands;
 
 [JsonSerializable(typeof(GetGuidanceCommand.GetGuidanceCommandResult))]
 [JsonSerializable(typeof(RequestCommand.RequestCommandResult))]
+[JsonSerializable(typeof(Inventory.CreateOrUpdateInventoryCommand.CreateOrUpdateInventoryCommandResult))]
+[JsonSerializable(typeof(Inventory.GetInventoryStatusCommand.GetInventoryStatusCommandResult))]
 [JsonSerializable(typeof(PlatformLandingZoneParameters))]
 [JsonSerializable(typeof(PlatformLandingZoneGenerationPayload))]
 [JsonSourceGenerationOptions(
