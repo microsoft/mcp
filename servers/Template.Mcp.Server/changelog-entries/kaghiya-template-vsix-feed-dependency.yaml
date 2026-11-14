@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    description: "Aligned the Template VS Code extension electron-to-chromium dependency with Azure and Fabric to restore anonymous npm feed installs during VSIX packaging."
+    subsection: "Dependency Updates"
