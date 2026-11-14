@@ -460,6 +460,7 @@ public sealed class NamespaceToolLoader(
             {
                 if (!realCommand.TryParseFromDictionary(parameters, out commandOptions, out var parseErrors))
                 {
+                    RecordToolFailure(activity, ToolFailureReason.InvalidArguments);
                     return new CallToolResult
                     {
                         Content =
@@ -487,6 +488,7 @@ public sealed class NamespaceToolLoader(
             {
                 commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             }
+            RecordCommandResponseFailure(activity, commandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
             if (commandResponse.Message.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))

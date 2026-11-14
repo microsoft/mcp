@@ -195,12 +195,14 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
             // For MsalServiceException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalServiceException.ErrorCode);
             exceptionDetails.Add("CorrelationId", msalServiceException.CorrelationId);
+            AddAadStsErrorCode(exceptionDetails, msalServiceException.Message);
         }
         else if (ex is MsalClientException msalClientException)
         {
             // For MsalClientException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
             exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
+            AddAadStsErrorCode(exceptionDetails, msalClientException.Message);
         }
 
         context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
@@ -217,6 +219,15 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         response.Status = GetStatusCode(ex);
         response.Message = GetErrorMessage(ex) + $". To mitigate this issue, please refer to the troubleshooting guidelines here at {TroubleshootingUrl}.";
         response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ExceptionResult);
+    }
+
+    private static void AddAadStsErrorCode(JsonObject exceptionDetails, string? message)
+    {
+        // MSAL error codes like "invalid_request" are generic; the AADSTS code identifies the actual cause.
+        if (MsalErrorHelper.GetAadStsErrorCode(message) is string aadStsErrorCode)
+        {
+            exceptionDetails.Add("AadStsErrorCode", aadStsErrorCode);
+        }
     }
 
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;

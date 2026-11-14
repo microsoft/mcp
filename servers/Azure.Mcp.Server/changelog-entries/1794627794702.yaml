@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved diagnostics for remote HTTP tool failures: on-behalf-of (OBO) requests authenticated with application-only tokens now fail fast with an actionable error, MSAL failures record the Microsoft Entra ID AADSTS error code in telemetry, and tool calls rejected before execution record a sanitized failure reason and status code."
