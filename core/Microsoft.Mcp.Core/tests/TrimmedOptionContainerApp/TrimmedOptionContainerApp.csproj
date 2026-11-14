@@ -12,5 +12,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Mcp.Core.csproj" />
     <TrimmerRootAssembly Include="System.Net.Primitives" />
+    <EmbeddedResource Include="MalformedLinkerSubstitutions.xml"
+                      LogicalName="ILLink.Substitutions.xml"
+                      Condition="'$(IncludeMalformedLinkerXml)' == 'true'" />
   </ItemGroup>
 </Project>

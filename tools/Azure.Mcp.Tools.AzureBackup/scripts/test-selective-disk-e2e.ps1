@@ -39,7 +39,7 @@ $RsvName   = "sdrsv$RgSuffix"
 $AdminUser = 'sdtestadmin'
 # Deterministic-but-strong password
 $AdminPass = 'Sd!' + ([Guid]::NewGuid().ToString('N').Substring(0, 16)) + 'Aa1@'
-$AzMcp     = Join-Path $PSScriptRoot '..\..\..\servers\Azure.Mcp.Server\src\bin\Debug\net10.0\azmcp.exe' | Resolve-Path | Select-Object -ExpandProperty Path
+$AzMcp     = Join-Path $PSScriptRoot '..\..\..\servers\Azure.Mcp.Server\src\bin\Debug\net11.0\azmcp.exe' | Resolve-Path | Select-Object -ExpandProperty Path
 $Bicep     = Join-Path $PSScriptRoot 'selective-disk-e2e.bicep'
 $Sub       = (az account show --query id -o tsv).Trim()
 $Tenant    = (az account show --query tenantId -o tsv).Trim()

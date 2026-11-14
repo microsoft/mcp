@@ -65,7 +65,7 @@ internal static class Program
         {
             var executableName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
             executablePath = Path.Combine(
-                repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net10.0", executableName);
+                repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net11.0", executableName);
         }
 
         if (!File.Exists(executablePath))
@@ -128,7 +128,7 @@ internal static class Program
 
             Options:
               --executable <path>  Path to the azmcp(.exe) executable to measure.
-                                   Defaults to servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp(.exe).
+                                   Defaults to servers/Azure.Mcp.Server/src/bin/Debug/net11.0/azmcp(.exe).
               --report <path>      Path to write the JSON measurement report.
                                    Defaults to TestResults/mcp-output-size.json.
               --mode <name>        Server mode to measure (repeatable). Defaults to

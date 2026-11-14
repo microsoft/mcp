@@ -153,6 +153,13 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 
 `Compress-ForSigning.ps1` doesn't have any use in local development other than to test that its output is correct for later signing in a CI pipeline.
 
+## Solution generation
+
+Run `.\eng\scripts\Update-Solution.ps1 -All -Verify` to check the root and server solutions without modifying them.
+Server solutions include evaluated transitive project references and their tests. The generator deduplicates these projects and disables recursive reference addition in `dotnet sln add` to avoid .NET 11 duplicate-project collisions.
+
+Run `Invoke-Pester -Path .\eng\scripts\Update-Solution.Tests.ps1` to test dependency discovery.
+
 ## Tool ID validation
 
 Run `.\eng\scripts\Test-ToolId.ps1` to validate production tool command IDs across toolsets. The check reads `Id`

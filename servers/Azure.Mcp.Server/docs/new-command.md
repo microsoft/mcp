@@ -2772,7 +2772,7 @@ Every new command needs to be added to the consolidated mode. Here are the instr
 - Update `servers/Azure.Mcp.Server/README.md` with at least one representative prompt for the new command and update the supported-service description when the command adds a new resource or capability.
 - Use the following command to find out the correct tool name for your new tool
     ```
-    cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
+    cd servers/Azure.Mcp.Server/src/bin/Debug/net11.0
     ./azmcp[.exe] tools list --name --namespace <tool_area>
     ```
 
