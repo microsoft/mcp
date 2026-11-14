@@ -28,7 +28,7 @@ public class ServiceGuideServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal($"https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/{serviceKey}.md", result);
+        Assert.Equal($"https://learn.microsoft.com/azure/well-architected/service-guides/{serviceKey}", result);
     }
 
     [Theory]
@@ -53,7 +53,7 @@ public class ServiceGuideServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/cosmos-db.md", result);
+        Assert.Equal("https://learn.microsoft.com/azure/well-architected/service-guides/cosmos-db", result);
     }
 
     [Theory]
