@@ -266,8 +266,8 @@ the performance pipeline and scripts expect the benchmarks under their project's
 Run tests through `dotnet test --project <test-project>` or `Test-Code.ps1` rather
 than assuming that every test executable lives under its project's `bin` directory.
 
-Cleaning the server tests removes their own files, not dependencies, content, or
-other projects' files in that runtime directory. Dependency copies remain as a
+Cleaning the server tests removes their own files, not dependencies or content in
+that runtime directory. Dependency copies remain as a
 development cache, like the SDK's shared assembly copies. To reclaim the entire
 runtime directory, stop its test processes before removing it, then rebuild the
 projects you need. A normal project clean can also clean referenced projects,
