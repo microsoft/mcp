@@ -97,8 +97,10 @@ The HA skill works on two inputs, both passed as read SAS URIs:
 | `inventorySasUri` | The inventory the user supplied to `assessment_create` (`inventory-sas-uri`). | Set by whoever issued it. |
 | `assessmentSasUri` | The `output` of the succeeded Business Case operation (recommendations JSON). | One hour from the last poll. |
 
-Instead of the user zipping and uploading the files, `assessment_create` passes both URIs in the HA
-invoke body, and the HA skill reads them directly:
+Instead of the user zipping and uploading the files, `assessment_create` first creates the HA session
+(`PUT /mcprestapi/sessions/{sessionId}` with `skillType: HA`, reusing the user's active HA session on
+`409 ActiveSessionAlreadyExists`), then passes both URIs in the HA invoke body, and the HA skill reads
+them directly:
 
 ```json
 POST /mcprestapi/sessions/{sessionId}/invoke
