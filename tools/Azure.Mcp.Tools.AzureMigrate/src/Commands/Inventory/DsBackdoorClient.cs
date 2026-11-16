@@ -46,8 +46,8 @@ internal static partial class DsBackdoorClient
     internal static string InvokeUrl(string baseUrl, string sessionId) =>
         $"{baseUrl}/mcprestapi/sessions/{sessionId}/invoke?api-version={ApiVersion}";
 
-    internal static string ExportUrl(string baseUrl, string sessionId) =>
-        $"{baseUrl}/mcprestapi/sessions/{sessionId}/export?api-version={ApiVersion}";
+    internal static string ExportUrl(string baseUrl, string sessionId, string artifacts = "external") =>
+        $"{baseUrl}/mcprestapi/sessions/{sessionId}/export?api-version={ApiVersion}&artifacts={artifacts}";
 
     internal static string OperationStatusUrl(string baseUrl, string sessionId, Guid operationId) =>
         $"{baseUrl}/mcprestapi/sessions/{sessionId}/operationstatus/{operationId:D}?api-version={ApiVersion}";

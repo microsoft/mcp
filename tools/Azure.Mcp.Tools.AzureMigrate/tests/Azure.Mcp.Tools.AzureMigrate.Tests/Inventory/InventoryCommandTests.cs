@@ -107,8 +107,8 @@ public class InventoryCommandTests
     [Fact]
     public void ExportUrl_IsBuiltFromSession() =>
         Assert.Equal(
-            "https://ds/mcprestapi/sessions/s1/export?api-version=2026-11-11-preview",
-            DsBackdoorClient.ExportUrl("https://ds", "s1"));
+            "https://ds/mcprestapi/sessions/s1/export?api-version=2026-11-11-preview&artifacts=internal",
+            DsBackdoorClient.ExportUrl("https://ds", "s1", "internal"));
 
     [Fact]
     public void BuildDownloadCommand_QuotesSas()
@@ -131,7 +131,7 @@ public class InventoryCommandTests
     [InlineData("Uri")]
     public void ParseExport_Success_ReturnsLinkAndCommand(string propertyName)
     {
-        var r = ExportInventoryCommand.Parse("s1", new(200, $"{{\"{propertyName}\":\"{ReadSas}\"}}", null, null));
+        var r = ExportInventoryCommand.Parse("s1", "refined", new(200, $"{{\"{propertyName}\":\"{ReadSas}\"}}", null, null));
 
         Assert.True(r.Success);
         Assert.Equal(ReadSas, r.DownloadUrl);
@@ -142,7 +142,7 @@ public class InventoryCommandTests
     [Fact]
     public void ParseExport_MissingUri_Fails()
     {
-        var r = ExportInventoryCommand.Parse("s1", new(200, "{}", null, null));
+        var r = ExportInventoryCommand.Parse("s1", "refined", new(200, "{}", null, null));
 
         Assert.False(r.Success);
         Assert.Null(r.DownloadUrl);
@@ -151,20 +151,50 @@ public class InventoryCommandTests
     [Fact]
     public void ParseExport_NotReady_TellsUserToCheckStatus()
     {
-        var r = ExportInventoryCommand.Parse("s1", new(400, "{\"error\":{\"code\":\"InvalidParameter\"}}", "bad", null));
+        var r = ExportInventoryCommand.Parse("s1", "refined", new(400, "{\"error\":{\"code\":\"InvalidParameter\"}}", "bad", null));
 
         Assert.False(r.Success);
         Assert.Equal(400, r.HttpStatus);
-        Assert.Contains("not available yet", r.Instructions);
+        Assert.Contains("refined inventory file is not available yet", r.Instructions);
     }
 
     [Fact]
     public void ParseExport_NotFound_Fails()
     {
-        var r = ExportInventoryCommand.Parse("s1", new(404, "{}", "x", null));
+        var r = ExportInventoryCommand.Parse("s1", "refined", new(404, "{}", "x", null));
 
         Assert.False(r.Success);
         Assert.Equal(404, r.HttpStatus);
         Assert.Contains("No inventory was found", r.Error);
+    }
+
+    [Theory]
+    [InlineData(null, "refined", "external")]
+    [InlineData("", "refined", "external")]
+    [InlineData("Refined", "refined", "external")]
+    [InlineData(" OFFLINE ", "offline", "internal")]
+    public void NormalizeOutput_MapsToArtifacts(string? input, string expectedOutput, string expectedArtifacts)
+    {
+        string? output = ExportInventoryCommand.NormalizeOutput(input);
+
+        Assert.Equal(expectedOutput, output);
+        Assert.Equal(expectedArtifacts, ExportInventoryCommand.ToArtifacts(output!));
+    }
+
+    [Theory]
+    [InlineData("internal")]
+    [InlineData("external")]
+    [InlineData("zip")]
+    public void NormalizeOutput_RejectsUnknownValue(string input) =>
+        Assert.Null(ExportInventoryCommand.NormalizeOutput(input));
+
+    [Fact]
+    public void ParseExport_Offline_NamesOfflinePackage()
+    {
+        var r = ExportInventoryCommand.Parse("s1", "offline", new(200, $"{{\"uri\":\"{ReadSas}\"}}", null, null));
+
+        Assert.True(r.Success);
+        Assert.Equal("offline", r.Output);
+        Assert.Contains("offline zip package is ready", r.Instructions);
     }
 }

@@ -7,7 +7,7 @@ This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Micros
 |---|---|
 | `azuremigrate_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command. |
 | `azuremigrate_inventory_status` | Returns the status of the inventory operation. |
-| `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for the output of a finished inventory. |
+| `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
 
 ## How authentication works
 
