@@ -118,19 +118,20 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
       
-- template: /eng/pipelines/templates/jobs/mcp-registry/release-server-json.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    PackageMCPB: ${{ parameters.PackageMCPB }}
-    DependsOn:
-    - PublishNugetPackage
-    - PublishNpm
-    - ${{ if parameters.PackageDocker }}:
-      - PublishACR
-    - ${{ if parameters.PackagePyPI }}:
-      - PublishPyPI
-    - ${{ if parameters.PackageMCPB }}:
-      - PublishMCPB
+- ${{ if not(parameters.IsTestPipeline) }}:
+  - template: /eng/pipelines/templates/jobs/mcp-registry/release-server-json.yml
+    parameters:
+      ServerName: ${{ parameters.ServerName }}
+      PackageMCPB: ${{ parameters.PackageMCPB }}
+      DependsOn:
+      - PublishNugetPackage
+      - PublishNpm
+      - ${{ if parameters.PackageDocker }}:
+        - PublishACR
+      - ${{ if parameters.PackagePyPI }}:
+        - PublishPyPI
+      - ${{ if parameters.PackageMCPB }}:
+        - PublishMCPB
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
