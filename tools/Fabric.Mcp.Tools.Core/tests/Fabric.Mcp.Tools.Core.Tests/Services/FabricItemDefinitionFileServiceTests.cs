@@ -272,6 +272,10 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     [InlineData(".git/config", true)]
     [InlineData(".GIT/hooks/post-checkout", true)]
     [InlineData("nested/.Git/config", true)]
+    [InlineData(".g\u200Cit/config", true)]
+    [InlineData("\uFEFF.git/hooks/post-checkout", true)]
+    [InlineData(".git\u200D", true)]
+    [InlineData("GIT~1/config", true)]
     [InlineData(".gitignore", false)]
     [InlineData(".github/workflows/build.yml", false)]
     [InlineData("nested.git/config", false)]
@@ -298,7 +302,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
         var repository = Directory.CreateDirectory(Path.Combine(_root, "repository")).FullName;
         var metadata = Directory.CreateDirectory(Path.Combine(_root, ".Git")).FullName;
 
-        foreach (var destination in new[] { Path.Combine(repository, ".git"), Path.Combine(metadata, "export") })
+        foreach (var destination in new[] { Path.Combine(repository, ".git"), Path.Combine(repository, ".g\u200Cit"), Path.Combine(metadata, "export") })
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.WriteAsync(destination, new([Part("config")]), CancellationToken));

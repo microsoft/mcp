@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Hardened local item definition files: the shared definition file service now refuses local file access unless the server uses stdio transport, and `core_get-item-definition` exports reject any destination or part path with a `.git` segment."

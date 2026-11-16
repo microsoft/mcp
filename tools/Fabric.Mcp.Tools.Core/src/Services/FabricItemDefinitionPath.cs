@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 // cspell:words CONIN CONOUT
 
+using System.Globalization;
+using System.Text;
+
 namespace Fabric.Mcp.Tools.Core.Services;
 
 internal static class FabricItemDefinitionPath
@@ -65,10 +68,17 @@ internal static class FabricItemDefinitionPath
     internal static void EnsureNoGitDirectory(string path)
     {
         // Like Git checkouts, never create or write Git metadata, whose configuration and hooks can run commands.
-        if (path.Split('/', Path.DirectorySeparatorChar).Any(static segment => segment.Equals(".git", StringComparison.OrdinalIgnoreCase)))
+        if (path.Split('/', Path.DirectorySeparatorChar).Any(IsGitDirectory))
         {
             throw new ArgumentException("Exported definitions cannot create or write inside a .git path segment.", nameof(path));
         }
+    }
+
+    // Match Git's checkout protections: HFS+ ignores some Unicode format characters, and git~1 is the NTFS short name.
+    private static bool IsGitDirectory(string segment)
+    {
+        var name = string.Concat(segment.EnumerateRunes().Where(static rune => Rune.GetUnicodeCategory(rune) != UnicodeCategory.Format));
+        return name.Equals(".git", StringComparison.OrdinalIgnoreCase) || name.Equals("git~1", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static string GetFile(string directory, string relativePath)

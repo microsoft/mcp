@@ -764,8 +764,9 @@ already exists. It validates all part paths and payloads first, writes into a te
 directory, then moves that completed directory into place. Existing destinations are never merged,
 overwritten, or deleted. It returns the published absolute directory; the caller already has the
 definition's part list and format for its result. Retain that format when reading the files back.
-Like Git checkouts, it rejects any destination or part path with a `.git` segment (case-insensitively),
-so exported content cannot create repository metadata whose configuration or hooks run commands.
+Like Git checkouts, it rejects any destination or part path with a `.git` segment (case-insensitively,
+including Git's HFS+ ignorable-character and NTFS `git~1` equivalents), so exported content cannot
+create repository metadata whose configuration or hooks run commands.
 
 ```csharp
 var outputDirectory = await definitionFiles.WriteAsync(
