@@ -68,7 +68,8 @@ sequenceDiagram
   id and input SAS URI.
 - **The user supplies the HA input.** The user combines the refined inventory (Discovery external
   artifacts) and the assessment export into a single zip and uploads it with the returned azcopy
-  command. The server does not download or repackage files.
+  command. The server does not download or repackage files. This is interim; see
+  [HA skill inputs](#ha-skill-inputs-proposed).
 - **HA progress is tracked through DS operation status**, with the same response shape as Discovery
   sessions.
 - **The assessment is the Business Case Service machine assessment from a collector ZIP**
@@ -86,6 +87,36 @@ sequenceDiagram
   found) fails at once. If it is still running after the last poll, the tool returns the operation id
   and the HA session is not started.
 - **Currency** must be one of the 25 codes the Business Case Service accepts.
+
+## HA skill inputs (proposed)
+
+The HA skill works on two inputs, both passed as read SAS URIs:
+
+| Input | Source | Lifetime |
+|---|---|---|
+| `inventorySasUri` | The inventory the user supplied to `assessment_create` (`inventory-sas-uri`). | Set by whoever issued it. |
+| `assessmentSasUri` | The `output` of the succeeded Business Case operation (recommendations JSON). | One hour from the last poll. |
+
+Instead of the user zipping and uploading the files, `assessment_create` passes both URIs in the HA
+invoke body, and the HA skill reads them directly:
+
+```json
+POST /mcprestapi/sessions/{sessionId}/invoke
+{
+  "inputs": {
+    "inventorySasUri": "https://...",
+    "assessmentSasUri": "https://..."
+  }
+}
+```
+
+- The HA skill must copy both blobs into its own session storage as soon as the invoke starts, because
+  the assessment SAS expires after one hour and later turns must not depend on it.
+- DS validates both as absolute https URLs and never logs or echoes the SAS query strings.
+- With inputs in the invoke body, DS no longer needs to return an upload SAS for HA, and the azcopy
+  upload step goes away.
+- If the HA session is started later (for example from `assessment_status`), the tool gets a fresh
+  assessment SAS from the operation GET first.
 
 ## Export behavior (DS)
 
@@ -116,6 +147,10 @@ sequenceDiagram
 - Align the HA upload window and maximum file size (currently 30 minutes and 500 MB, reused from
   inventory) with the DS HA skill configuration.
 - Confirm the HA operation status response shape once the HA skill exists.
+- HA inputs: agree with DS and the HA skill on the invoke `inputs` contract (`inventorySasUri`,
+  `assessmentSasUri`). Confirm the HA inventory is the user's collector ZIP rather than the refined
+  inventory (Discovery external artifacts). Then switch `DsHaSessionClient` from the upload SAS to
+  passing these URIs.
 - If the assessment is still running after the last poll, the HA session is not started. Decide
   whether to start it from the assessment status tool or a separate tool.
 - A new chat has no session id, so export needs a DS "list my sessions" API to find it.
