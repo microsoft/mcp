@@ -53,6 +53,10 @@ if ($IncludeNative) {
     -OperatingSystems $oses `
     -Architectures $architectures `
     -Native
+
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
 }
 
 # build_info.json is initialized with all buildable platforms, native and not
