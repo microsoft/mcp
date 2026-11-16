@@ -120,6 +120,31 @@ public class DppBackupInstanceReaderTests
     }
 
     [Fact]
+    public async Task ListProtectedItemsAsync_AllInstancesUnreadable_ReportsIncompleteListing()
+    {
+        using var handler = CreateHandler(_ => JsonResponse(HttpStatusCode.OK,
+            """{"value":[{"name":"broken1","properties":{"dataSourceInfo":"not-an-object"}},{"name":"broken2","properties":{"dataSourceInfo":7}}]}"""));
+        using var client = new HttpClient(handler);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => new DppBackupOperations(CreateAzureService(client)).ListProtectedItemsAsync(
+            "vault", "rg", Sub, null, TestContext.Current.CancellationToken));
+
+        Assert.Contains("2 backup instance(s)", ex.Message);
+    }
+
+    [Fact]
+    public async Task ListProtectedItemsAsync_EmptyVault_ReturnsEmptyList()
+    {
+        using var handler = CreateHandler(_ => JsonResponse(HttpStatusCode.OK, """{"value":[]}"""));
+        using var client = new HttpClient(handler);
+
+        var items = await new DppBackupOperations(CreateAzureService(client)).ListProtectedItemsAsync(
+            "vault", "rg", Sub, null, TestContext.Current.CancellationToken);
+
+        Assert.Empty(items);
+    }
+
+    [Fact]
     public async Task ListProtectedItemsAsync_NextLinkRejectedByArmPipelinePolicy_IsNotSent()
     {
         var requests = new List<Uri>();

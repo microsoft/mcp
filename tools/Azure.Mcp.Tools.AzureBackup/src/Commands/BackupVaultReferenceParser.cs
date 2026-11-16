@@ -25,6 +25,7 @@ internal static class BackupVaultReferenceParser
     internal const string ResourceGroupMismatchMessage = "The resource group in the --vault resource ID does not match --resource-group.";
     internal const string SubscriptionMismatchMessage = "The subscription in the --vault or --resource-group resource ID does not match --subscription.";
     internal const string ResourceIdSubscriptionMismatchMessage = "The --vault and --resource-group resource IDs refer to different subscriptions.";
+    internal const string SubscriptionNameWithResourceIdMessage = "When --vault or --resource-group is a resource ID, --subscription must be omitted or be the subscription ID (GUID), not a subscription name.";
     internal const string VaultTypeMismatchMessage = "--vault-type does not match the --vault resource ID (Microsoft.RecoveryServices/vaults is 'rsv'; Microsoft.DataProtection/backupVaults is 'dpp').";
 
     /// <summary>
@@ -123,11 +124,19 @@ internal static class BackupVaultReferenceParser
         {
             AddError(validationResult, ResourceIdSubscriptionMismatchMessage);
         }
-        else if (Guid.TryParse(subscription, out _) &&
-            ((vaultSubscription is not null && !SameSubscription(subscription!, vaultSubscription)) ||
-             (resourceGroupSubscription is not null && !SameSubscription(subscription!, resourceGroupSubscription))))
+        else if ((vaultSubscription ?? resourceGroupSubscription) is { } idSubscription &&
+            !string.IsNullOrWhiteSpace(subscription))
         {
-            AddError(validationResult, SubscriptionMismatchMessage);
+            // A subscription display name is resolved only after validation, so it cannot be compared with the
+            // subscription in the resource ID; require the ID form to avoid acting on a same-named vault elsewhere.
+            if (!Guid.TryParse(subscription, out _))
+            {
+                AddError(validationResult, SubscriptionNameWithResourceIdMessage);
+            }
+            else if (!SameSubscription(subscription, idSubscription))
+            {
+                AddError(validationResult, SubscriptionMismatchMessage);
+            }
         }
 
         return new BackupVaultReference(resourceGroup, vault, vaultType);

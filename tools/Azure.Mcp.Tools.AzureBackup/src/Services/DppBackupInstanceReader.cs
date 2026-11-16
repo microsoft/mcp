@@ -43,7 +43,8 @@ internal static class DppBackupInstanceReader
 
     /// <summary>
     /// Lists every backup instance in the vault, following nextLink pages through the validated ARM pipeline.
-    /// An instance that still fails to deserialize after repair is skipped instead of failing the listing.
+    /// An instance that still fails to deserialize after repair is skipped instead of failing the listing, unless every
+    /// returned instance is unreadable; that is reported as an error rather than as an empty vault.
     /// </summary>
     internal static async Task<List<TResult>> ListAsync<TResult>(
         ArmClient armClient,
@@ -56,6 +57,7 @@ internal static class DppBackupInstanceReader
         uri.AppendQuery("api-version", ApiVersion, escapeValue: true);
 
         var results = new List<TResult>();
+        var skipped = 0;
         Uri? pageUri = uri.ToUri();
         while (pageUri is not null)
         {
@@ -71,6 +73,7 @@ internal static class DppBackupInstanceReader
                     catch (Exception ex) when (ex is FormatException or ArgumentException or InvalidOperationException or JsonException)
                     {
                         // Skip only the instance that cannot be represented; the rest of the page is still returned.
+                        skipped++;
                     }
                 }
             }
@@ -79,6 +82,13 @@ internal static class DppBackupInstanceReader
             var nextLink = page?["nextLink"] is JsonValue next && next.TryGetValue<string>(out var link) ? link : null;
             Uri? nextUri = string.IsNullOrEmpty(nextLink) ? null : new Uri(nextLink, UriKind.Absolute);
             pageUri = nextUri is not null && nextUri != pageUri ? nextUri : null;
+        }
+
+        if (results.Count == 0 && skipped > 0)
+        {
+            throw new InvalidOperationException(
+                $"Listing backup instances is incomplete: {skipped} backup instance(s) were returned by the service but none could be read. " +
+                "Retrieve a specific instance with 'azurebackup protecteditem get --protected-item <name>', or inspect the vault in the Azure portal.");
         }
 
         return results;

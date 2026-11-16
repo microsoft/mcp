@@ -166,14 +166,34 @@ public class BackupVaultReferenceParserTests
         Assert.Equal([BackupVaultReferenceParser.ResourceIdSubscriptionMismatchMessage], validation.Errors);
     }
 
-    [Theory]
-    [InlineData("F0C630E0-2995-4853-B056-0B3C09CB673F")]
-    [InlineData("My Subscription")]
-    public void Normalize_SubscriptionNameOrDifferentCasing_IsNotAMismatch(string subscription)
+    [Fact]
+    public void Normalize_SubscriptionIdWithDifferentCasing_IsNotAMismatch()
     {
         var validation = new ValidationResult();
 
-        BackupVaultReferenceParser.Normalize(subscription, "myRg", RsvId, null, rsvOnly: false, validation);
+        BackupVaultReferenceParser.Normalize("F0C630E0-2995-4853-B056-0B3C09CB673F", "myRg", RsvId, null, rsvOnly: false, validation);
+
+        Assert.True(validation.IsValid);
+    }
+
+    [Theory]
+    [InlineData("myRg", RsvId)]
+    [InlineData(RgId, "myVault")]
+    public void Normalize_SubscriptionNameWithResourceId_IsRejected(string resourceGroup, string vault)
+    {
+        var validation = new ValidationResult();
+
+        BackupVaultReferenceParser.Normalize("My Subscription", resourceGroup, vault, null, rsvOnly: false, validation);
+
+        Assert.Equal([BackupVaultReferenceParser.SubscriptionNameWithResourceIdMessage], validation.Errors);
+    }
+
+    [Fact]
+    public void Normalize_SubscriptionNameWithPlainNames_IsAllowed()
+    {
+        var validation = new ValidationResult();
+
+        BackupVaultReferenceParser.Normalize("My Subscription", "myRg", "myVault", null, rsvOnly: false, validation);
 
         Assert.True(validation.IsValid);
     }

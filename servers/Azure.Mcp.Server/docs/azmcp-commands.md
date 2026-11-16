@@ -1292,8 +1292,10 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 `--vault` accepts a vault name or a full vault resource ID
 (`/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vault}` or
 `.../providers/Microsoft.DataProtection/backupVaults/{vault}`), and `--resource-group` accepts a resource group name or
-resource group resource ID. A vault resource ID supplies the vault type and, when omitted, the subscription and resource
-group; values that conflict with the other options are rejected. Recovery Services-only commands reject Backup vault IDs.
+resource group resource ID. A vault resource ID supplies the vault type and, when `--subscription` is omitted, the
+subscription. `vault get` also takes the resource group from the ID; other commands still require `--resource-group`.
+Values that conflict with the resource ID are rejected, and `--subscription` must be omitted or be a subscription ID (not
+a name) when a resource ID is used. Recovery Services-only commands reject Backup vault IDs.
 
 #### Operation Status (RSV only)
 

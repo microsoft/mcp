@@ -242,6 +242,17 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     }
 
     [Fact]
+    public async Task ExecuteAsync_VaultResourceIdWithoutResourceGroup_ReportsMissingResourceGroup()
+    {
+        var response = await ExecuteCommandAsync(
+            "--vault", "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ReturnsBadRequest_ForMalformedResourceGroupResourceId()
     {
         var response = await ExecuteCommandAsync(
