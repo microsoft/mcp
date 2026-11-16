@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -45,6 +46,11 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<CreateOrUpdateInventoryCommand>();
         services.AddSingleton<GetInventoryStatusCommand>();
         services.AddSingleton<ExportInventoryCommand>();
+
+        // Assessment (POC): the Assessment Service backdoor PUT is mocked until the real API is available.
+        services.AddSingleton<IAssessmentServiceClient>(_ => new MockAssessmentServiceClient(TimeProvider.System));
+        services.AddSingleton<CreateAssessmentCommand>();
+        services.AddSingleton<GetAssessmentStatusCommand>();
     }
 
     /// <inheritdoc/>
@@ -80,6 +86,14 @@ public class AzureMigrateSetup : IAreaSetup
         inventory.AddCommand<CreateOrUpdateInventoryCommand>(serviceProvider);
         inventory.AddCommand<GetInventoryStatusCommand>(serviceProvider);
         inventory.AddCommand<ExportInventoryCommand>(serviceProvider);
+
+        var assessment = new CommandGroup(
+            "assessment",
+            "Azure Migrate assessment operations - Create an assessment for the signed-in user for a target region and currency, and " +
+            "get the status of an assessment operation.");
+        azureMigrate.AddSubGroup(assessment);
+        assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
+        assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
 
         return azureMigrate;
     }
