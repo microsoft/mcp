@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -30,7 +31,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Commands.Backup;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
+public sealed partial class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAzureBackupService azureBackupService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<BackupStatusOptions, BackupStatusCommand.BackupStatusCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<BackupStatusCommand> _logger = logger;
@@ -73,9 +74,24 @@ public sealed class BackupStatusCommand(ILogger<BackupStatusCommand> logger, IAz
             "This tool requires the 'Microsoft.RecoveryServices/locations/backupStatus/action' permission " +
             "(included in 'Backup Reader' role at subscription scope). " +
             "Alternatively, use 'vault_get' + 'protecteditem_get' to check protection status.",
-        RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException { ErrorCode: ProviderNotRegisteredErrorCode } reqEx =>
+            $"The subscription is not registered to use the '{GetUnregisteredNamespace(reqEx)}' resource provider, so backup status cannot be checked. " +
+            $"Register it (for example, 'az provider register --namespace {GetUnregisteredNamespace(reqEx)}'; requires permission to register resource providers) and retry.",
         _ => base.GetErrorMessage(ex)
     };
+
+    private const string ProviderNotRegisteredErrorCode = "ProviderNotRegistered";
+    private const string DefaultBackupNamespace = "Microsoft.RecoveryServices";
+
+    // ARM reports "...not registered to use namespace 'Microsoft.X'". Only accept a well-formed namespace name.
+    private static string GetUnregisteredNamespace(RequestFailedException ex)
+    {
+        var match = UnregisteredNamespaceRegex().Match(ex.Message ?? string.Empty);
+        return match.Success ? match.Groups[1].Value : DefaultBackupNamespace;
+    }
+
+    [GeneratedRegex(@"namespace '(Microsoft\.[A-Za-z]+)'", RegexOptions.IgnoreCase)]
+    private static partial Regex UnregisteredNamespaceRegex();
 
     public sealed record BackupStatusCommandResult(BackupStatusResult Status);
 }
