@@ -61,7 +61,7 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/server-json
       artifact: server.json_${{ parameters.ServerName }}
   
-  - task: EsrpRelease@12
+  - task: EsrpRelease@14
     displayName: Publish to the Official MCP Registry
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'
