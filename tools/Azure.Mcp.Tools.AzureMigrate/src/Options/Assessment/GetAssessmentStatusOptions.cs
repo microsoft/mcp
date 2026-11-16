@@ -11,9 +11,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 public sealed class GetAssessmentStatusOptions
 {
     /// <summary>
-    /// Gets or sets the assessment name.
+    /// Gets or sets the assessment name. It is only echoed back in the result.
     /// </summary>
-    [Option(Description = "Required. Name of the assessment (assessmentName) returned when the assessment was created.")]
+    [Option(Description = "Optional. Name of the assessment (assessmentName) returned when the assessment was created.")]
     public string? AssessmentName { get; set; }
 
     /// <summary>

@@ -11,17 +11,18 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// POC: returns the current status of an assessment tracking operation with one call (currently mocked). It does not wait or poll.
+/// POC: returns the current status of a Business Case Service machine assessment operation with one call. It does not wait or
+/// poll. When the assessment has succeeded, it also returns a temporary read-only URL of the recommendations JSON.
 /// </summary>
 [CommandMetadata(
     Id = "d5ff4998-2934-4f4b-b805-87c8a1c1f540",
     Name = "status",
     Title = "Get Azure Migrate Assessment Status",
     Description = "Gets the current status of an Azure Migrate assessment started by the assessment create tool. Call this once when " +
-        "the user asks about the progress of their assessment; do not loop or wait. Requires 'assessment-name' and 'operation-id' " +
-        "from the latest assessment create result in the conversation (ask the user to create an assessment if there is none). " +
-        "Returns 'status' (for example Running, Succeeded or Failed), 'isCompleted' and 'instructions'. Follow 'instructions'. " +
-        "Do not mention tool or parameter names to the user.",
+        "the user asks about the progress of their assessment or needs a new link to download it; do not loop or wait. Requires " +
+        "'operation-id' from the latest assessment create result in the conversation (ask the user to create an assessment if " +
+        "there is none); 'assessment-name' is optional. Returns 'status' (Running, Succeeded, Failed or Canceled), 'isCompleted', " +
+        "'assessmentDownloadCommand' and 'instructions'. Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
@@ -32,8 +33,6 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<GetAssessmentStatusOptions, GetAssessmentStatusCommand.GetAssessmentStatusCommandResult>
 {
-    private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
-
     private readonly IAssessmentServiceClient _client = client;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
@@ -50,13 +49,8 @@ public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, 
 
     internal async Task<GetAssessmentStatusCommandResult> RunAsync(GetAssessmentStatusOptions options, CancellationToken cancellationToken)
     {
-        string? name = options.AssessmentName?.Trim();
+        string? name = string.IsNullOrWhiteSpace(options.AssessmentName) ? null : options.AssessmentName.Trim();
         string? operationIdText = options.OperationId?.Trim();
-        if (!CreateAssessmentCommand.IsValidAssessmentName(name))
-        {
-            return Fail(name, operationIdText, null, "'assessment-name' is required and must be the name returned when the assessment was created.");
-        }
-
         if (!Guid.TryParse(operationIdText, out Guid operationId))
         {
             return Fail(name, operationIdText, null, "'operation-id' is required and must be a GUID.");
@@ -68,25 +62,28 @@ public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, 
             return Fail(name, operationIdText, null, authError);
         }
 
-        AssessmentOperation operation = await _client.GetOperationAsync(name!, operationId, token, cancellationToken);
-        return Parse(name!, operationId.ToString("D"), operation);
+        // TODO: Pass the caller's workspace id once it is defined; the Business Case Service contract requires it.
+        AssessmentOperation operation = await _client.GetOperationAsync(operationId, workspaceId: null, token, cancellationToken);
+        return Parse(name, operationId.ToString("D"), operation);
     }
 
-    internal static GetAssessmentStatusCommandResult Parse(string name, string operationId, AssessmentOperation operation)
+    internal static GetAssessmentStatusCommandResult Parse(string? name, string operationId, AssessmentOperation operation)
     {
         if (operation.HttpStatus == (int)HttpStatusCode.NotFound)
         {
-            return Fail(name, operationId, operation.HttpStatus, "No assessment operation was found for this assessment name and operation ID.");
+            return Fail(name, operationId, operation.HttpStatus, "No assessment operation was found for this operation ID.");
         }
 
         if (operation.HttpStatus is not (>= 200 and < 300) || string.IsNullOrWhiteSpace(operation.Status))
         {
             return Fail(name, operationId, operation.HttpStatus,
-                $"Assessment Service status check failed (HTTP {operation.HttpStatus}): {operation.ErrorCode} {operation.ErrorMessage}".TrimEnd());
+                $"Assessment status check failed (HTTP {operation.HttpStatus}): {operation.ErrorCode} {operation.ErrorMessage}".TrimEnd());
         }
 
-        bool isCompleted = s_terminalStatuses.Contains(operation.Status, StringComparer.OrdinalIgnoreCase);
+        bool isCompleted = CreateAssessmentCommand.IsTerminal(operation.Status);
         bool succeeded = string.Equals(operation.Status, "Succeeded", StringComparison.OrdinalIgnoreCase);
+        string? outputUrl = succeeded ? operation.OutputUrl : null;
+        string? downloadCommand = ExportInventoryCommand.BuildDownloadCommand(outputUrl);
         return new(
             Success: true,
             Error: null,
@@ -98,15 +95,30 @@ public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, 
             ErrorCode: operation.ErrorCode,
             ErrorMessage: operation.ErrorMessage,
             RetryAfterSeconds: isCompleted ? null : operation.RetryAfterSeconds ?? 30,
+            AssessmentOutputUrl: outputUrl,
+            AssessmentDownloadCommand: downloadCommand,
             Instructions: !isCompleted
                 ? "Tell the user the assessment is still running and suggest checking again in about a minute."
                 : succeeded
-                    ? "Tell the user the assessment has completed."
+                    ? "Tell the user the assessment has completed. " + CreateAssessmentCommand.DownloadInstructions
                     : "Tell the user the assessment did not complete and quote 'errorMessage' if present.");
     }
 
     private static GetAssessmentStatusCommandResult Fail(string? name, string? operationId, int? status, string? error) =>
-        new(false, error ?? "Unknown error.", status, name, operationId, null, false, null, null, null, null);
+        new(
+            Success: false,
+            Error: error ?? "Unknown error.",
+            HttpStatus: status,
+            AssessmentName: name,
+            OperationId: operationId,
+            Status: null,
+            IsCompleted: false,
+            ErrorCode: null,
+            ErrorMessage: null,
+            RetryAfterSeconds: null,
+            AssessmentOutputUrl: null,
+            AssessmentDownloadCommand: null,
+            Instructions: null);
 
     /// <summary>Result of the assessment status command.</summary>
     public sealed record GetAssessmentStatusCommandResult(
@@ -120,5 +132,7 @@ public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, 
         string? ErrorCode,
         string? ErrorMessage,
         int? RetryAfterSeconds,
+        string? AssessmentOutputUrl,
+        string? AssessmentDownloadCommand,
         string? Instructions);
 }

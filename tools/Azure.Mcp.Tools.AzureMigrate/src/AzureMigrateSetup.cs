@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 
@@ -47,8 +48,12 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<GetInventoryStatusCommand>();
         services.AddSingleton<ExportInventoryCommand>();
 
-        // Assessment (POC): the Assessment Service backdoor PUT is mocked until the real API is available.
-        services.AddSingleton<IAssessmentServiceClient>(_ => new MockAssessmentServiceClient(TimeProvider.System));
+        // Assessment (POC): the Business Case Service machine assessment from a collector ZIP when its URL is configured,
+        // otherwise a mock.
+        services.AddSingleton<IAssessmentServiceClient>(sp =>
+            BusinessCaseAssessmentServiceClient.ConfiguredBaseUrl is { } baseUrl
+                ? new BusinessCaseAssessmentServiceClient(sp.GetRequiredService<ILogger<BusinessCaseAssessmentServiceClient>>(), baseUrl)
+                : new MockAssessmentServiceClient(TimeProvider.System));
         services.AddSingleton<IHaSessionClient, DsHaSessionClient>();
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();

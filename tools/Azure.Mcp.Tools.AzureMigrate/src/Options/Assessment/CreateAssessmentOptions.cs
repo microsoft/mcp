@@ -9,8 +9,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 /// Options for the assessment create command.
 /// </summary>
 /// <remarks>
-/// TODO: Add more customer-provided assessment settings (for example sizing, pricing and discount options) once the
-/// Assessment Service backdoor PUT contract is finalized.
+/// TODO: Add more customer-provided assessment settings (for example sizing, pricing and discount options) from the Business
+/// Case Service machine assessment contract.
 /// </remarks>
 public sealed class CreateAssessmentOptions
 {
@@ -32,4 +32,14 @@ public sealed class CreateAssessmentOptions
     /// </summary>
     [Option(Description = "Required. Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'.")]
     public string? Currency { get; set; }
+
+    /// <summary>
+    /// Gets or sets the read SAS URL of the collector ZIP to assess.
+    /// </summary>
+    /// <remarks>
+    /// TODO: Get this from the Discovery Service (a read SAS for the session's collector ZIP) instead of asking the user for it.
+    /// </remarks>
+    [Option(Description = "Required. Read-only SAS URL (https) of the offline collector ZIP to assess, as given by the user. Ask the user " +
+        "for it if it is missing and do not invent it.")]
+    public string? InventorySasUri { get; set; }
 }

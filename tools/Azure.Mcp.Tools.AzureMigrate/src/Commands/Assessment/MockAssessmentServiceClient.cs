@@ -7,9 +7,10 @@ using System.Net;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// POC mock of the Assessment Service backdoor until the real API is available. The PUT is accepted (HTTP 202) with a tracking
-/// operation that reports Running for <see cref="RunningDuration"/> and Succeeded afterwards. Operations are kept in memory, so
-/// they are lost when the server restarts and are not shared between instances. The caller's token is not used.
+/// POC mock of the Business Case Service machine assessment, used when <see cref="BusinessCaseAssessmentServiceClient.BaseUrlSettingName"/>
+/// is not set. The PUT is accepted (HTTP 202) with an operation that reports Running for <see cref="RunningDuration"/> and Succeeded
+/// afterwards, with a fake output URL. Operations are kept in memory, so they are lost when the server restarts and are not shared
+/// between instances. The caller's token and the inventory SAS URL are not used.
 /// </summary>
 public sealed class MockAssessmentServiceClient(TimeProvider timeProvider) : IAssessmentServiceClient
 {
@@ -25,18 +26,17 @@ public sealed class MockAssessmentServiceClient(TimeProvider timeProvider) : IAs
         Guid operationId = Guid.NewGuid();
         _operations[operationId] = (request, _timeProvider.GetUtcNow());
         return Task.FromResult(new AssessmentOperation(
-            (int)HttpStatusCode.Accepted, operationId, "Running", TrackingUrl(request.AssessmentName, operationId),
-            (int)RunningDuration.TotalSeconds, null, null));
+            (int)HttpStatusCode.Accepted, operationId, "Running", null, (int)RunningDuration.TotalSeconds, null, null));
     }
 
     /// <inheritdoc/>
-    public Task<AssessmentOperation> GetOperationAsync(string assessmentName, Guid operationId, string token, CancellationToken cancellationToken)
+    public Task<AssessmentOperation> GetOperationAsync(Guid operationId, string? workspaceId, string token, CancellationToken cancellationToken)
     {
         if (!_operations.TryGetValue(operationId, out var operation)
-            || !string.Equals(operation.Request.AssessmentName, assessmentName, StringComparison.OrdinalIgnoreCase))
+            || !string.Equals(operation.Request.WorkspaceId ?? string.Empty, workspaceId ?? string.Empty, StringComparison.Ordinal))
         {
             return Task.FromResult(new AssessmentOperation(
-                (int)HttpStatusCode.NotFound, operationId, null, null, null, "OperationNotFound", "The assessment operation was not found."));
+                (int)HttpStatusCode.NotFound, operationId, null, null, null, "OperationNotFound", "ZIP machine assessment operation not found."));
         }
 
         TimeSpan elapsed = _timeProvider.GetUtcNow() - operation.CreatedAt;
@@ -45,12 +45,13 @@ public sealed class MockAssessmentServiceClient(TimeProvider timeProvider) : IAs
             (int)HttpStatusCode.OK,
             operationId,
             completed ? "Succeeded" : "Running",
-            TrackingUrl(assessmentName, operationId),
+            completed ? OutputUrl(operation.Request) : null,
             completed ? null : (int)Math.Ceiling((RunningDuration - elapsed).TotalSeconds),
             null,
             null));
     }
 
-    private static string TrackingUrl(string assessmentName, Guid operationId) =>
-        $"{MockBaseUrl}/mcprestapi/assessments/{assessmentName}/operationstatus/{operationId:D}";
+    private static string OutputUrl(AssessmentRequest request) =>
+        $"{MockBaseUrl}/assessment-output/{Uri.EscapeDataString(request.WorkspaceId ?? "default")}/" +
+        $"{Uri.EscapeDataString(request.AssessmentName)}-recommendations.json?sp=r&sig=mock";
 }

@@ -12,23 +12,26 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// POC: creates an Azure Migrate assessment through the Assessment Service backdoor PUT (currently mocked), waits for its tracking
-/// operation to complete and then starts the HA skill on the Discovery Service (HA session PUT and invoke), all within one tool
-/// call while the caller's token is valid. The HA input is provided by the user: a single zip with the refined inventory file
-/// (inventory export with external artifacts) and the assessment export, uploaded to the SAS URL returned by the invoke. If the
-/// assessment does not complete within <see cref="DefaultTimeout"/>, the command returns the operation so the assessment status
-/// command can check it later; the HA session is then not started.
+/// POC: creates an Azure Migrate machine assessment from a collector ZIP through the Business Case Service
+/// (PUT /businessCaseRestApi/machineAssessmentsFromZip/{assessmentName}), waits for its operation to complete and then starts the
+/// HA skill on the Discovery Service (HA session PUT and invoke), all within one tool call while the caller's token is valid. On
+/// success the operation returns a temporary read-only URL of the recommendations JSON (the assessment export). The HA input is
+/// provided by the user: a single zip with the refined inventory file (inventory export with external artifacts) and the
+/// assessment export, uploaded to the SAS URL returned by the invoke. The operation is polled up to <see cref="MaxPollAttempts"/>
+/// times with exponential backoff (see <see cref="GetPollDelay"/>); if it has not completed by then, the command returns the
+/// operation so the assessment status command can check it later, and the HA session is not started.
 /// </summary>
 [CommandMetadata(
     Id = "4a38afca-7663-42f4-bb6d-943b745bb8cf",
     Name = "create",
     Title = "Create Azure Migrate Assessment",
-    Description = "Creates an Azure Migrate assessment for the signed-in user, waits for it to complete (up to a few minutes) and then " +
-        "starts the HA assessment for it, returning a command the user runs to upload the HA input. Requires 'assessment-name', 'target-region' (an Azure region name such as 'eastus') and " +
-        "'currency' (a three-letter code such as 'USD'); ask the user for any that are missing and do not invent them. Tell the user " +
-        "this can take a few minutes before calling it. Returns 'status', 'isCompleted', 'uploadCommand' and 'instructions'. Follow " +
-        "'instructions'; if the assessment is still running, keep 'assessmentName' and 'operationId' to check its status later. " +
-        "Do not mention tool or parameter names to the user.",
+    Description = "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete " +
+        "(up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment and a command " +
+        "the user runs to upload the HA input. Requires 'assessment-name', 'target-region' (an Azure region name such as 'eastus'), " +
+        "'currency' (a three-letter code such as 'USD') and 'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask " +
+        "the user for any that are missing and do not invent them. Tell the user this can take up to about 17 minutes before calling it. " +
+        "Returns 'status', 'isCompleted', 'assessmentOutputUrl', 'uploadCommand' and 'instructions'. Follow 'instructions'; if the " +
+        "assessment is still running, keep 'operationId' to check its status later. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
@@ -42,15 +45,23 @@ public sealed partial class CreateAssessmentCommand(
     IHttpContextAccessor httpContextAccessor)
     : BaseCommand<CreateAssessmentOptions, CreateAssessmentCommand.CreateAssessmentCommandResult>
 {
-    internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(3);
-    internal static readonly TimeSpan MinPollInterval = TimeSpan.FromSeconds(2);
-    internal static readonly TimeSpan MaxPollInterval = TimeSpan.FromSeconds(10);
+    // Status polls after the PUT: 1, 2, 4, ... 512 seconds apart (about 17 minutes in total).
+    internal const int MaxPollAttempts = 10;
+    internal static readonly TimeSpan InitialPollDelay = TimeSpan.FromSeconds(1);
 
     // TODO: Align with the Discovery Service HA skill configuration (maxUploadWaitTimeInMinutes, maxInputBlobSizeInBytes) once it is added.
     internal const int HaUploadWindowMinutes = CreateOrUpdateInventoryCommand.UploadWindowMinutes;
     internal const int HaMaxFileSizeMegabytes = CreateOrUpdateInventoryCommand.MaxFileSizeMegabytes;
 
-    private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
+    // Operation statuses of the Business Case Service machine assessment: Running, Succeeded, Failed or Canceled.
+    private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled"];
+
+    // Currencies accepted by the Business Case Service machine assessment.
+    private static readonly string[] s_supportedCurrencies =
+    [
+        "USD", "DKK", "CAD", "IDR", "JPY", "KRW", "NZD", "NOK", "RUB", "SAR", "ZAR", "SEK", "TRY", "GBP", "MXN", "MYR", "INR", "HKD",
+        "BRL", "TWD", "EUR", "CHF", "ARS", "AUD", "CNY",
+    ];
 
     private readonly IAssessmentServiceClient _client = client;
     private readonly IHaSessionClient _haClient = haClient;
@@ -62,10 +73,13 @@ public sealed partial class CreateAssessmentCommand(
     [GeneratedRegex("^[a-z][a-z0-9]{1,39}$")]
     private static partial Regex RegionRegex();
 
-    [GeneratedRegex("^[A-Z]{3}$")]
-    private static partial Regex CurrencyRegex();
-
     internal static bool IsValidAssessmentName(string? name) => !string.IsNullOrEmpty(name) && AssessmentNameRegex().IsMatch(name);
+
+    /// <summary>Returns true for an absolute http(s) URL, the shape the Business Case Service accepts for 'inventorySasUri'.</summary>
+    internal static bool IsValidInventorySasUri(string? uri) =>
+        !string.IsNullOrWhiteSpace(uri)
+        && Uri.TryCreate(uri, UriKind.Absolute, out Uri? parsed)
+        && (parsed.Scheme == Uri.UriSchemeHttps || parsed.Scheme == Uri.UriSchemeHttp);
 
     internal static bool IsTerminal(string? status) =>
         status is not null && s_terminalStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
@@ -77,25 +91,21 @@ public sealed partial class CreateAssessmentCommand(
         return !string.IsNullOrEmpty(normalized) && RegionRegex().IsMatch(normalized) ? normalized : null;
     }
 
-    /// <summary>Returns the currency code in upper case, or null if it is not three letters.</summary>
+    /// <summary>Returns the currency code in upper case, or null if the Business Case Service does not support it.</summary>
     internal static string? NormalizeCurrency(string? currency)
     {
         string? normalized = currency?.Trim().ToUpperInvariant();
-        return !string.IsNullOrEmpty(normalized) && CurrencyRegex().IsMatch(normalized) ? normalized : null;
+        return normalized is not null && s_supportedCurrencies.Contains(normalized, StringComparer.Ordinal) ? normalized : null;
     }
 
-    /// <summary>Uses the service's retry-after hint, kept between <see cref="MinPollInterval"/> and <see cref="MaxPollInterval"/>.</summary>
-    internal static TimeSpan GetPollInterval(int? retryAfterSeconds)
-    {
-        TimeSpan hint = TimeSpan.FromSeconds(retryAfterSeconds ?? 0);
-        return hint < MinPollInterval ? MinPollInterval : hint > MaxPollInterval ? MaxPollInterval : hint;
-    }
+    /// <summary>Delay before status poll <paramref name="attempt"/> (0-based): <see cref="InitialPollDelay"/> doubled on each attempt.</summary>
+    internal static TimeSpan GetPollDelay(int attempt) => InitialPollDelay * Math.Pow(2, attempt);
 
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CreateAssessmentOptions options, CancellationToken cancellationToken)
     {
         CreateAssessmentCommandResult result = await RunAsync(
-            options, TimeProvider.System, (delay, ct) => Task.Delay(delay, TimeProvider.System, ct), DefaultTimeout, cancellationToken);
+            options, (delay, ct) => Task.Delay(delay, ct), cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.CreateAssessmentCommandResult);
@@ -105,9 +115,7 @@ public sealed partial class CreateAssessmentCommand(
 
     internal async Task<CreateAssessmentCommandResult> RunAsync(
         CreateAssessmentOptions options,
-        TimeProvider timeProvider,
         Func<TimeSpan, CancellationToken, Task> delayAsync,
-        TimeSpan timeout,
         CancellationToken cancellationToken)
     {
         string? name = options.AssessmentName?.Trim();
@@ -125,7 +133,13 @@ public sealed partial class CreateAssessmentCommand(
         string? currency = NormalizeCurrency(options.Currency);
         if (currency is null)
         {
-            return Fail(name, null, "'currency' is required and must be a three-letter currency code such as 'USD'.");
+            return Fail(name, null, $"'currency' is required and must be one of: {string.Join(", ", s_supportedCurrencies)}.");
+        }
+
+        string? inventorySasUri = options.InventorySasUri?.Trim();
+        if (!IsValidInventorySasUri(inventorySasUri))
+        {
+            return Fail(name, null, "'inventory-sas-uri' is required and must be an https read-only SAS URL of the collector ZIP.");
         }
 
         (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
@@ -134,36 +148,47 @@ public sealed partial class CreateAssessmentCommand(
             return Fail(name, null, authError);
         }
 
-        AssessmentRequest request = new(name!, region, currency);
+        // TODO: Pass the caller's workspace id once it is defined; the Business Case Service contract requires it.
+        AssessmentRequest request = new(name!, WorkspaceId: null, inventorySasUri!, region, currency);
         AssessmentOperation operation = await _client.CreateAssessmentAsync(request, token, cancellationToken);
         if (operation.HttpStatus is not (>= 200 and < 300) || operation.OperationId is null)
         {
             return Fail(name, operation.HttpStatus,
-                $"Assessment Service create failed (HTTP {operation.HttpStatus}): {operation.ErrorCode} {operation.ErrorMessage}".TrimEnd());
+                $"Assessment create failed (HTTP {operation.HttpStatus}): {operation.ErrorCode} {operation.ErrorMessage}".TrimEnd());
         }
 
         Guid operationId = operation.OperationId.Value;
-        DateTimeOffset deadline = timeProvider.GetUtcNow() + timeout;
-        while (!IsTerminal(operation.Status))
+        AssessmentOperation? lastError = null;
+        for (int attempt = 0; attempt < MaxPollAttempts && !IsTerminal(operation.Status); attempt++)
         {
-            TimeSpan delay = GetPollInterval(operation.RetryAfterSeconds);
-            if (timeProvider.GetUtcNow() + delay > deadline)
+            await delayAsync(GetPollDelay(attempt), cancellationToken);
+            AssessmentOperation polled = await _client.GetOperationAsync(operationId, request.WorkspaceId, token, cancellationToken);
+            if (polled.HttpStatus is >= 200 and < 300 && !string.IsNullOrWhiteSpace(polled.Status))
             {
-                return Result(request, operation, operationId, null, null,
-                    "Tell the user the assessment was started but is still running, so the HA assessment has not been started yet. " +
-                    "They can ask for its status later; keep assessmentName and operationId for that.");
+                operation = polled;
+                lastError = null;
+                continue;
             }
 
-            await delayAsync(delay, cancellationToken);
-            AssessmentOperation polled = await _client.GetOperationAsync(request.AssessmentName, operationId, token, cancellationToken);
-            if (polled.HttpStatus is not (>= 200 and < 300) || string.IsNullOrWhiteSpace(polled.Status))
+            // A missing operation will not appear later; other errors (throttling, server or network errors) are retried.
+            if (polled.HttpStatus == (int)HttpStatusCode.NotFound)
             {
                 return Fail(name, polled.HttpStatus,
-                    $"Assessment Service status check failed (HTTP {polled.HttpStatus}): {polled.ErrorCode} {polled.ErrorMessage}".TrimEnd(),
+                    $"Assessment status check failed (HTTP {polled.HttpStatus}): {polled.ErrorCode} {polled.ErrorMessage}".TrimEnd(),
                     operationId);
             }
 
-            operation = polled;
+            lastError = polled;
+        }
+
+        if (!IsTerminal(operation.Status))
+        {
+            string lastErrorText = lastError is null
+                ? string.Empty
+                : $" The last status check failed (HTTP {lastError.HttpStatus}): {lastError.ErrorCode} {lastError.ErrorMessage}".TrimEnd();
+            return Result(request, operation, operationId, null, null,
+                "Tell the user the assessment was started but is still running, so the HA assessment has not been started yet. " +
+                "They can ask for its status later; keep operationId for that." + lastErrorText);
         }
 
         if (!string.Equals(operation.Status, "Succeeded", StringComparison.OrdinalIgnoreCase))
@@ -181,16 +206,24 @@ public sealed partial class CreateAssessmentCommand(
 
         return Result(request, operation, operationId, ha, uploadCommand,
             uploadCommand is not null
-                ? "Tell the user the assessment has completed and the HA assessment is waiting for its input. Ask them to put two files " +
-                  "into a single zip: the refined inventory file (they can ask to download their refined inventory if they do not have " +
-                  "it) and the export of this assessment. Show uploadCommand to the user exactly as returned, in a code block; never " +
+                ? "Tell the user the assessment has completed and the HA assessment is waiting for its input. " + DownloadInstructions +
+                  " Ask them to put two files into a single zip: the refined inventory file (they can ask to download their refined " +
+                  "inventory if they do not have it) and the downloaded assessment file. Show uploadCommand to the user exactly as returned, in a code block; never " +
                   "retype, shorten or split it, never show the URL inside it on its own, and do not repeat it later. Ask them to replace " +
                   $"{CreateOrUpdateInventoryCommand.FilePathPlaceholder} with the full path of that zip and run it on their own machine " +
                   $"within {HaUploadWindowMinutes} minutes; the zip must be at most {HaMaxFileSizeMegabytes} MB. AzCopy v10 is required " +
                   "(download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the files in the chat. Keep haSessionId " +
                   "and haOperationId to check the HA assessment later."
-                : "Tell the user the assessment has completed but starting the HA assessment failed. Quote 'haErrorMessage' if present.");
+                : "Tell the user the assessment has completed but starting the HA assessment failed. Quote 'haErrorMessage' if present. " +
+                  DownloadInstructions);
     }
+
+    /// <summary>Instructions for downloading the assessment output with 'assessmentDownloadCommand'.</summary>
+    internal const string DownloadInstructions =
+        "If assessmentDownloadCommand is present, show it to the user exactly as returned, in a code block, so they can download " +
+        "the assessment (recommendations JSON); never retype or shorten it and never show the URL inside it on its own. Ask them to " +
+        $"replace {ExportInventoryCommand.FilePathPlaceholder} with the full path to save the file and run it within an hour, " +
+        "after which the link expires and they can ask for the assessment status again to get a new one.";
 
     private static CreateAssessmentCommandResult Result(
         AssessmentRequest request,
@@ -211,6 +244,8 @@ public sealed partial class CreateAssessmentCommand(
             IsCompleted: IsTerminal(operation.Status),
             ErrorCode: operation.ErrorCode,
             ErrorMessage: operation.ErrorMessage,
+            AssessmentOutputUrl: operation.OutputUrl,
+            AssessmentDownloadCommand: ExportInventoryCommand.BuildDownloadCommand(operation.OutputUrl),
             HaFailedStep: ha?.FailedStep,
             HaHttpStatus: ha?.HttpStatus,
             HaSessionId: ha?.SessionId,
@@ -223,7 +258,30 @@ public sealed partial class CreateAssessmentCommand(
             Instructions: instructions);
 
     private static CreateAssessmentCommandResult Fail(string? name, int? status, string? error, Guid? operationId = null) =>
-        new(false, error ?? "Unknown error.", status, name, null, null, operationId?.ToString("D"), null, false, null, null, null, null, null, null, null, null, null, null, null, null);
+        new(
+            Success: false,
+            Error: error ?? "Unknown error.",
+            HttpStatus: status,
+            AssessmentName: name,
+            TargetRegion: null,
+            Currency: null,
+            OperationId: operationId?.ToString("D"),
+            Status: null,
+            IsCompleted: false,
+            ErrorCode: null,
+            ErrorMessage: null,
+            AssessmentOutputUrl: null,
+            AssessmentDownloadCommand: null,
+            HaFailedStep: null,
+            HaHttpStatus: null,
+            HaSessionId: null,
+            HaReusedExistingSession: null,
+            HaOperationId: null,
+            HaErrorMessage: null,
+            UploadCommand: null,
+            UploadWindowMinutes: null,
+            MaxFileSizeMegabytes: null,
+            Instructions: null);
 
     /// <summary>Result of the assessment create command.</summary>
     public sealed record CreateAssessmentCommandResult(
@@ -238,6 +296,8 @@ public sealed partial class CreateAssessmentCommand(
         bool IsCompleted,
         string? ErrorCode,
         string? ErrorMessage,
+        string? AssessmentOutputUrl,
+        string? AssessmentDownloadCommand,
         string? HaFailedStep,
         int? HaHttpStatus,
         string? HaSessionId,
