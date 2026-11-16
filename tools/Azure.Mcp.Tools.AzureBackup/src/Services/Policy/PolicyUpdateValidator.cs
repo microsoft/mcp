@@ -179,11 +179,25 @@ public static class PolicyUpdateValidator
 
     internal static DateTimeOffset ParseTime(string value)
     {
-        if (!TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+        if (!TryParseTime(value, out var time))
         {
             throw new ArgumentException("Invalid schedule time. Each time must use HH:mm format.");
         }
-        return new DateTimeOffset(2000, 1, 1, time.Hour, time.Minute, 0, TimeSpan.Zero);
+        return time;
+    }
+
+    internal static bool TryParseTime(string? value, out DateTimeOffset time)
+    {
+        // .NET 11 parses "24:00" as midnight; the round trip keeps rejecting it as before the upgrade.
+        if (TimeOnly.TryParseExact(value, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed) &&
+            parsed.ToString("HH:mm", CultureInfo.InvariantCulture) == value)
+        {
+            time = new DateTimeOffset(2000, 1, 1, parsed.Hour, parsed.Minute, 0, TimeSpan.Zero);
+            return true;
+        }
+
+        time = default;
+        return false;
     }
 
     internal static List<DateTimeOffset> ParseTimes(string value) =>

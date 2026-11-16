@@ -36,6 +36,7 @@ public class PolicyUpdateValidatorTests
     [InlineData(",02:00", false)]
     [InlineData("02:00,,14:00", false)]
     [InlineData("02:00,25:00", false)]
+    [InlineData("02:00,24:00", false)]
     public void Validate_ScheduleTimes_ValidatesEachCsvEntry(string times, bool valid)
     {
         var options = BaseOptions();
