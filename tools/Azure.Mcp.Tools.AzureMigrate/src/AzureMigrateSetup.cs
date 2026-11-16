@@ -49,7 +49,7 @@ public class AzureMigrateSetup : IAreaSetup
 
         // Assessment (POC): the Assessment Service backdoor PUT is mocked until the real API is available.
         services.AddSingleton<IAssessmentServiceClient>(_ => new MockAssessmentServiceClient(TimeProvider.System));
-        services.AddSingleton<IHaAssessmentClient, MockHaAssessmentClient>();
+        services.AddSingleton<IHaSessionClient, DsHaSessionClient>();
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();
     }

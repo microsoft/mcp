@@ -65,7 +65,7 @@ public class AssessmentCommandTests
         Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), CreateAssessmentCommand.GetPollInterval(retryAfter));
 
     [Fact]
-    public async Task Create_WaitsForCompletionThenCreatesHa()
+    public async Task Create_WaitsForCompletionThenStartsHaSession()
     {
         var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
 
@@ -76,9 +76,14 @@ public class AssessmentCommandTests
         Assert.Equal("Succeeded", result.Status);
         Assert.Equal("eastus", result.TargetRegion);
         Assert.Equal("USD", result.Currency);
-        Assert.Equal(201, result.HaHttpStatus);
-        Assert.Contains("HA assessment has been created", result.Instructions);
-        await ha.Received(1).PutHaAssessmentAsync(new("assess-1", "eastus", "USD"), "token", Arg.Any<CancellationToken>());
+        Assert.Null(result.HaFailedStep);
+        Assert.Equal("ha-1", result.HaSessionId);
+        Assert.Equal("op-1", result.HaOperationId);
+        Assert.Equal(
+            "azcopy copy \"<path to your file>\" \"https://sa.blob.core.windows.net/c/ha-1/input?sig=x\" --from-to=LocalBlob --blob-type=BlockBlob --overwrite=true --check-length=false",
+            result.UploadCommand);
+        Assert.Contains("single zip", result.Instructions);
+        await ha.Received(1).StartAsync("token", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -92,9 +97,10 @@ public class AssessmentCommandTests
         Assert.False(result.IsCompleted);
         Assert.Equal("Running", result.Status);
         Assert.NotNull(result.OperationId);
-        Assert.Null(result.HaHttpStatus);
+        Assert.Null(result.HaSessionId);
+        Assert.Null(result.UploadCommand);
         Assert.Contains("still running", result.Instructions);
-        await ha.DidNotReceiveWithAnyArgs().PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+        await ha.DidNotReceiveWithAnyArgs().StartAsync(default!, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -112,28 +118,45 @@ public class AssessmentCommandTests
         Assert.Equal("Failed", result.Status);
         Assert.Equal("It failed.", result.ErrorMessage);
         Assert.Contains("did not complete", result.Instructions);
-        await ha.DidNotReceiveWithAnyArgs().PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+        await ha.DidNotReceiveWithAnyArgs().StartAsync(default!, TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task Create_HaFails_ReturnsError()
+    public async Task Create_HaSessionFails_ReturnsError()
     {
         var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
-        ha.PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new HaAssessmentResult(500, null, "Internal", "HA down."));
+        ha.StartAsync(default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaSessionResult("createSession", 400, "ha-1", false, null, "req", null, "Unknown skill type."));
 
         var result = await Run(command, time, TimeSpan.FromMinutes(3));
 
         Assert.False(result.Success);
         Assert.True(result.IsCompleted);
-        Assert.Equal(500, result.HaHttpStatus);
-        Assert.Contains("HA assessment create failed", result.Error);
+        Assert.Equal("createSession", result.HaFailedStep);
+        Assert.Equal(400, result.HaHttpStatus);
+        Assert.Null(result.UploadCommand);
+        Assert.Contains("failed at createSession", result.Error);
+    }
+
+    [Fact]
+    public async Task Create_HaInvokeReturnsInvalidUrl_ReturnsError()
+    {
+        var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
+        ha.StartAsync(default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaSessionResult(null, 200, "ha-1", false, "op-1", "req", "not-a-url", null));
+
+        var result = await Run(command, time, TimeSpan.FromMinutes(3));
+
+        Assert.False(result.Success);
+        Assert.Equal("invokeSession", result.HaFailedStep);
+        Assert.Null(result.UploadCommand);
     }
 
     [Fact]
     public async Task Create_WithoutToken_FailsBeforeCallingService()
     {
         var client = Substitute.For<IAssessmentServiceClient>();
-        var command = new CreateAssessmentCommand(client, Substitute.For<IHaAssessmentClient>(), new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
+        var command = new CreateAssessmentCommand(client, Substitute.For<IHaSessionClient>(), new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
 
         var result = await command.RunAsync(ValidOptions(), Time, (_, _) => Task.CompletedTask, TimeSpan.FromMinutes(3), TestContext.Current.CancellationToken);
 
@@ -147,10 +170,11 @@ public class AssessmentCommandTests
     private static CreateAssessmentOptions ValidOptions() =>
         new() { AssessmentName = "assess-1", TargetRegion = "East US", Currency = "usd" };
 
-    private (CreateAssessmentCommand Command, ManualTimeProvider Time, IHaAssessmentClient Ha) CreateCommand(IAssessmentServiceClient client)
+    private (CreateAssessmentCommand Command, ManualTimeProvider Time, IHaSessionClient Ha) CreateCommand(IAssessmentServiceClient client)
     {
-        var ha = Substitute.For<IHaAssessmentClient>();
-        ha.PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new HaAssessmentResult(201, "Succeeded", null, null));
+        var ha = Substitute.For<IHaSessionClient>();
+        ha.StartAsync(default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaSessionResult(null, 200, "ha-1", false, "op-1", "req", "https://sa.blob.core.windows.net/c/ha-1/input?sig=x", null));
         var context = new DefaultHttpContext();
         context.Request.Headers.Authorization = "Bearer token";
         return (new CreateAssessmentCommand(client, ha, new HttpContextAccessor { HttpContext = context }), Time, ha);

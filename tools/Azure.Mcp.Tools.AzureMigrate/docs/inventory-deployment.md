@@ -8,7 +8,7 @@ This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Micros
 | `azuremigrate_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command. |
 | `azuremigrate_inventory_status` | Returns the status of the inventory operation. |
 | `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
-| `azuremigrate_assessment_create` | Starts an assessment for a target region and currency, polls its tracking operation (up to 3 minutes, using the caller's token) and, when it succeeds, sends the PUT HA assessment call. If it is still running at the timeout, returns the operation for the status tool and skips the HA call. **Mocked:** the Assessment Service backdoor PUT and the HA PUT are simulated in the MCP server (in-memory; operations report Running for 30 seconds, then Succeeded). |
+| `azuremigrate_assessment_create` | Starts an assessment for a target region and currency, polls its tracking operation (up to 3 minutes, using the caller's token) and, when it succeeds, starts the HA skill on the Discovery Service (session PUT with skill type `HA`, then invoke) and returns an azcopy upload command. The user zips the refined inventory file (inventory export, external artifacts) and the assessment export into a single zip and uploads it. If the assessment is still running at the timeout, returns the operation for the status tool and does not start the HA session. **Mocked:** the Assessment Service backdoor PUT is simulated in the MCP server (in-memory; operations report Running for 30 seconds, then Succeeded). |
 | `azuremigrate_assessment_status` | Returns the status of an assessment operation once per call (mocked). |
 
 ## How authentication works
@@ -81,6 +81,7 @@ az webapp config appsettings set -g $rg -n $app --settings `
 - The forwarded-headers settings are required because App Service terminates TLS in front of the app; without them
   the server advertises `http://` URLs in its OAuth protected resource metadata.
 - Optional: `AZUREMIGRATE_INVENTORY_SKILL_TYPE` overrides the Discovery Service skill type (default `Discovery`).
+- Optional: `AZUREMIGRATE_HA_SKILL_TYPE` overrides the Discovery Service skill type used for the HA session (default `HA`).
 
 ## 4. Set the startup command
 
