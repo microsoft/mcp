@@ -102,6 +102,16 @@ public class InventoryCommandTests
         Assert.Equal(404, r.HttpStatus);
     }
 
+    [Fact]
+    public void ParseStatus_WithHaSubject_UsesItInMessages()
+    {
+        var running = GetInventoryStatusCommand.Parse("ha-1", "op", new(200, "{\"status\":\"Running\"}", null, null), "HA assessment");
+        var notFound = GetInventoryStatusCommand.Parse("ha-1", "op", new(404, "{}", "x", null), "HA assessment");
+
+        Assert.Contains("the HA assessment is still in progress", running.Instructions);
+        Assert.Contains("No HA assessment operation was found", notFound.Error);
+    }
+
     private const string ReadSas = "https://acct.blob.core.windows.net/c/inv/output.csv?sv=2022-11-02&sp=r&sr=b&sig=abc%3D";
 
     [Fact]

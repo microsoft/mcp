@@ -52,6 +52,7 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<IHaSessionClient, DsHaSessionClient>();
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();
+        services.AddSingleton<GetHaStatusCommand>();
     }
 
     /// <inheritdoc/>
@@ -91,10 +92,11 @@ public class AzureMigrateSetup : IAreaSetup
         var assessment = new CommandGroup(
             "assessment",
             "Azure Migrate assessment operations - Create an assessment for the signed-in user for a target region and currency, and " +
-            "get the status of an assessment operation.");
+            "get the status of an assessment operation or of the HA assessment started after it.");
         azureMigrate.AddSubGroup(assessment);
         assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
         assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
+        assessment.AddCommand<GetHaStatusCommand>(serviceProvider);
 
         return azureMigrate;
     }

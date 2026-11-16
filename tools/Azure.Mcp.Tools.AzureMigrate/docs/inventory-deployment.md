@@ -10,6 +10,7 @@ This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Micros
 | `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
 | `azuremigrate_assessment_create` | Starts an assessment for a target region and currency, polls its tracking operation (up to 3 minutes, using the caller's token) and, when it succeeds, starts the HA skill on the Discovery Service (session PUT with skill type `HA`, then invoke) and returns an azcopy upload command. The user zips the refined inventory file (inventory export, external artifacts) and the assessment export into a single zip and uploads it. If the assessment is still running at the timeout, returns the operation for the status tool and does not start the HA session. **Mocked:** the Assessment Service backdoor PUT is simulated in the MCP server (in-memory; operations report Running for 30 seconds, then Succeeded). |
 | `azuremigrate_assessment_status` | Returns the status of an assessment operation once per call (mocked). |
+| `azuremigrate_assessment_hastatus` | Returns the Discovery Service operation status of the HA session started by `azuremigrate_assessment_create`, once per call. |
 
 ## How authentication works
 
@@ -87,7 +88,7 @@ az webapp config appsettings set -g $rg -n $app --settings `
 
 ```powershell
 az webapp config set -g $rg -n $app --startup-file `
-  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azuremigrate_inventory_createorupdate --tool azuremigrate_inventory_status --tool azuremigrate_inventory_export --tool azuremigrate_assessment_create --tool azuremigrate_assessment_status --outgoing-auth-strategy UseHostingEnvironmentIdentity"
+  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azuremigrate_inventory_createorupdate --tool azuremigrate_inventory_status --tool azuremigrate_inventory_export --tool azuremigrate_assessment_create --tool azuremigrate_assessment_status --tool azuremigrate_assessment_hastatus --outgoing-auth-strategy UseHostingEnvironmentIdentity"
 ```
 
 - `--tool` limits the server to the three inventory tools.
@@ -121,7 +122,7 @@ curl.exe -s -X POST "$url/" -H "Authorization: Bearer $token" -H "Content-Type: 
 ```
 
 The second call requires Azure CLI to be pre-authorized on `<MCP_APP_ID>`. The response should list only
-`azuremigrate_inventory_createorupdate`, `azuremigrate_inventory_status`, `azuremigrate_inventory_export`, `azuremigrate_assessment_create` and `azuremigrate_assessment_status`.
+`azuremigrate_inventory_createorupdate`, `azuremigrate_inventory_status`, `azuremigrate_inventory_export`, `azuremigrate_assessment_create`, `azuremigrate_assessment_status` and `azuremigrate_assessment_hastatus`.
 
 ## Troubleshooting
 

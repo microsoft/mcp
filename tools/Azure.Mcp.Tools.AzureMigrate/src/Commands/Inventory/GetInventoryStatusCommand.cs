@@ -77,12 +77,17 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
         return Parse(sessionId!, operationId.ToString("D"), response);
     }
 
-    internal static GetInventoryStatusCommandResult Parse(string sessionId, string operationId, DsBackdoorClient.DsResponse response)
+    /// <summary>
+    /// Parses a Discovery Service operation status response. <paramref name="subject"/> names what the session runs (for example
+    /// 'inventory' or 'HA assessment') in the error and instructions.
+    /// </summary>
+    internal static GetInventoryStatusCommandResult Parse(
+        string sessionId, string operationId, DsBackdoorClient.DsResponse response, string subject = "inventory")
     {
         if (response.Status == (int)HttpStatusCode.NotFound)
         {
             return Fail(sessionId, operationId, response.Status,
-                "No inventory operation was found for this session and operation ID for the signed-in user.");
+                $"No {subject} operation was found for this session and operation ID for the signed-in user.");
         }
 
         if (response.Status is not (>= 200 and < 300))
@@ -110,25 +115,25 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             ErrorCode: errorCode,
             ErrorMessage: DsBackdoorClient.ReadValue(response.Body, "error", "message"),
             RetryAfterSeconds: isCompleted ? null : response.RetryAfterSeconds ?? 30,
-            Instructions: GetInstructions(status, isCompleted, errorCode));
+            Instructions: GetInstructions(status, isCompleted, errorCode, subject));
     }
 
-    internal static string GetInstructions(string status, bool isCompleted, string? errorCode)
+    internal static string GetInstructions(string status, bool isCompleted, string? errorCode, string subject = "inventory")
     {
         if (!isCompleted)
         {
-            return "Tell the user the inventory is still in progress. If they have not uploaded their file yet, remind them to run the " +
+            return $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
                 "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }
 
         if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            return "Tell the user the inventory is ready and summarise 'result' in plain language without inventing details.";
+            return $"Tell the user the {subject} is ready and summarise 'result' in plain language without inventing details.";
         }
 
         return string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase)
-            ? "Tell the user the inventory did not complete because the file was not uploaded within the upload window, and offer to start again."
-            : "Tell the user the inventory did not complete and quote 'errorMessage'.";
+            ? $"Tell the user the {subject} did not complete because the file was not uploaded within the upload window, and offer to start again."
+            : $"Tell the user the {subject} did not complete and quote 'errorMessage'.";
     }
 
     private static GetInventoryStatusCommandResult Fail(string? sessionId, string? operationId, int? status, string? error) =>
