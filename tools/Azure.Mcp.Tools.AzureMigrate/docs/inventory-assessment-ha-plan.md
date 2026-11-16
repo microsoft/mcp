@@ -59,14 +59,15 @@ sequenceDiagram
     BC-->>M: Succeeded + output (assessmentSasUri, read, valid one hour)
 
     Note over M,HA: 3. HA
-    M->>DS: PUT /mcprestapi/sessions/{new HA sessionId} (skillType: HA)
-    alt Created
-        DS-->>M: 200/201 new HA session
+    Note over M,DS: One active session per user per skill type: the HA session is separate from the Discovery session
+    M->>DS: PUT /mcprestapi/sessions/{HA sessionId} (skillType: HA)
+    alt No HA session yet
+        DS-->>M: 200/201 HA session created
     else User already has an active HA session
-        DS-->>M: 409 ActiveSessionAlreadyExists
-        M-->>U: Fail: an active HA session exists (no archive API on /mcprestapi yet)
+        DS-->>M: 409 ActiveSessionAlreadyExists (active session id)
+        M->>M: Reuse the active HA session id
     end
-    M->>DS: POST /mcprestapi/sessions/{new HA sessionId}/invoke
+    M->>DS: POST /mcprestapi/sessions/{HA sessionId}/invoke
     DS-->>M: operationId + write SAS for the HA input blob
     M->>M: Build mini zip with manifest.json { inventorySasUri, assessmentSasUri }
     M->>ST: PUT mini zip (write SAS, about 1 KB)
