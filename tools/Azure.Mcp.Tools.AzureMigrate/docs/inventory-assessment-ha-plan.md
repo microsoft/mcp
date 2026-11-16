@@ -29,29 +29,54 @@ writes only the caller's own partition.
 
 ## Flow
 
+The HA steps show the planned mini-zip handoff (see [HA input](#ha-input-mini-zip-planned)). Today the
+tool still returns an azcopy upload command for a user-built zip.
+
 ```mermaid
 sequenceDiagram
-    participant U as User
+    participant U as User (Cowork)
     participant M as azmcp
+    participant BC as Business Case Service
     participant DS as Discovery Service
-    participant AS as Business Case Service
+    participant ST as DS session storage
+    participant HA as HA skill (Foundry)
+
+    Note over U,DS: 1. Inventory
     U->>M: inventory_createorupdate
-    M->>DS: PUT session (Discovery), POST invoke
-    DS-->>M: operationId + input SAS
+    M->>DS: PUT session (skillType: Discovery), POST invoke
+    DS-->>M: operationId + write SAS
     M-->>U: azcopy upload command
     U->>M: inventory_status / inventory_export
     M->>DS: GET operationstatus / POST export
-    U->>M: assessment_create (name, region, currency, inventory SAS)
-    M->>AS: PUT machineAssessmentsFromZip/{name}
-    M->>AS: GET operations/{id} (up to 10 polls, exponential backoff)
-    AS-->>M: Succeeded + output SAS (recommendations JSON)
-    M->>DS: PUT session (HA), POST invoke
-    DS-->>M: operationId + input SAS
-    M-->>U: azcopy upload command for the combined zip
-    U->>M: assessment_hastatus
-    M->>DS: GET operationstatus
-```
 
+    Note over U,BC: 2. Assessment
+    U->>M: assessment_create (name, region, currency, inventorySasUri)
+    M->>BC: PUT machineAssessmentsFromZip/{name} (inventorySasUri)
+    BC-->>M: 202 + operationId
+    loop Up to 10 polls (1, 2, 4 ... 512 seconds)
+        M->>BC: GET operations/{id}
+    end
+    BC-->>M: Succeeded + output (assessmentSasUri, read, valid one hour)
+
+    Note over M,HA: 3. HA
+    M->>DS: PUT session (skillType: HA), reuse active session on 409
+    M->>DS: POST invoke
+    DS-->>M: operationId + write SAS for the HA input blob
+    M->>M: Build mini zip with manifest.json { inventorySasUri, assessmentSasUri }
+    M->>ST: PUT mini zip (write SAS, about 1 KB)
+    M-->>U: assessment download command + HA operationId
+    DS->>ST: Check blob size only
+    DS->>HA: Start job with read SAS of the mini zip
+    HA->>ST: Download mini zip, read manifest.json
+    HA->>BC: Download assessment output (assessmentSasUri)
+    HA->>HA: Download inventory (inventorySasUri)
+    HA-->>DS: Outputs + status
+
+    Note over U,DS: 4. Track HA
+    U->>M: assessment_hastatus(operationId)
+    M->>DS: GET operationstatus
+    DS-->>M: Running / Succeeded / Failed
+```
 ## Decisions
 
 - **Separate create and status tools.** Each status tool checks once per call; the client decides
@@ -69,7 +94,7 @@ sequenceDiagram
 - **The user supplies the HA input.** The user combines the refined inventory (Discovery external
   artifacts) and the assessment export into a single zip and uploads it with the returned azcopy
   command. The server does not download or repackage files. This is interim; see
-  [HA skill inputs](#ha-skill-inputs-proposed).
+  [HA input](#ha-input-mini-zip-planned).
 - **HA progress is tracked through DS operation status**, with the same response shape as Discovery
   sessions.
 - **The assessment is the Business Case Service machine assessment from a collector ZIP**
@@ -88,38 +113,35 @@ sequenceDiagram
   and the HA session is not started.
 - **Currency** must be one of the 25 codes the Business Case Service accepts.
 
-## HA skill inputs (proposed)
+## HA input: mini zip (planned)
 
-The HA skill works on two inputs, both passed as read SAS URIs:
+The HA skill works on two read SAS URIs:
 
 | Input | Source | Lifetime |
 |---|---|---|
-| `inventorySasUri` | The inventory the user supplied to `assessment_create` (`inventory-sas-uri`). | Set by whoever issued it. |
+| `inventorySasUri` | The Cowork user, through the `inventory-sas-uri` parameter of `assessment_create`. | Set by whoever issued it. |
 | `assessmentSasUri` | The `output` of the succeeded Business Case operation (recommendations JSON). | One hour from the last poll. |
 
-Instead of the user zipping and uploading the files, `assessment_create` first creates the HA session
-(`PUT /mcprestapi/sessions/{sessionId}` with `skillType: HA`, reusing the user's active HA session on
-`409 ActiveSessionAlreadyExists`), then passes both URIs in the HA invoke body, and the HA skill reads
-them directly:
+The HA invoke returns a single write SAS for the HA input blob. Instead of downloading and repackaging
+the files, azmcp uploads a mini zip that only points to them:
 
-```json
-POST /mcprestapi/sessions/{sessionId}/invoke
-{
-  "inputs": {
-    "inventorySasUri": "https://...",
-    "assessmentSasUri": "https://..."
-  }
-}
+```
+HA-input.zip
+└── manifest.json   { "inventorySasUri": "https://...", "assessmentSasUri": "https://..." }
 ```
 
-- The HA skill must copy both blobs into its own session storage as soon as the invoke starts, because
-  the assessment SAS expires after one hour and later turns must not depend on it.
-- DS validates both as absolute https URLs and never logs or echoes the SAS query strings.
-- With inputs in the invoke body, DS no longer needs to return an upload SAS for HA, and the azcopy
-  upload step goes away.
-- If the HA session is started later (for example from `assessment_status`), the tool gets a fresh
-  assessment SAS from the operation GET first.
-
+- **No Discovery Service change for the handoff.** DS treats the input blob as opaque: it checks only
+  its size against the skill's maximum and passes a read SAS for it to the HA skill.
+- **Crash-resilient.** azmcp makes one small PUT, which is atomic and safe to retry (it overwrites). The
+  large downloads run inside the HA job, which has DS retries and operation status.
+- **Fits Cowork limits.** No user-machine access and no long transfer inside a tool call.
+- **HA skill change (SkillAgents).** When `manifest.json` is present, download both files at job start
+  and copy them into session storage, because the assessment SAS expires after one hour. Never log the
+  SAS query strings.
+- **Late start.** If HA is started after the assessment link expired (for example from
+  `assessment_status`), the tool first gets a fresh `assessmentSasUri` from the operation GET.
+- Rejected: azmcp downloads, zips and uploads (lost on crash); the user's machine (not reachable from
+  Cowork); DS takes the URIs in the invoke body (requires a DS change).
 ## Export behavior (DS)
 
 - Export only returns a read-only SAS for blob names already recorded on the session. It does not
@@ -149,10 +171,13 @@ POST /mcprestapi/sessions/{sessionId}/invoke
 - Align the HA upload window and maximum file size (currently 30 minutes and 500 MB, reused from
   inventory) with the DS HA skill configuration.
 - Confirm the HA operation status response shape once the HA skill exists.
-- HA inputs: agree with DS and the HA skill on the invoke `inputs` contract (`inventorySasUri`,
-  `assessmentSasUri`). Confirm the HA inventory is the user's collector ZIP rather than the refined
-  inventory (Discovery external artifacts). Then switch `DsHaSessionClient` from the upload SAS to
-  passing these URIs.
+- HA input: agree with the HA skill on the mini zip `manifest.json` shape. Confirm the HA inventory is
+  the user's collector ZIP rather than the refined inventory (Discovery external artifacts). Then make
+  `assessment_create` upload the mini zip instead of returning an azcopy command.
+- DS must register the `HA` skill type (`SkillType` has only Discovery and WavePlan today) and its
+  skill configuration (`BlobRequired` input, maximum input size, hosted agent target).
+- Cowork connector tool calls must finish within 30 seconds; `assessment_create` polls for up to about
+  17 minutes, so it must return the operation id at once and let the client poll `assessment_status`.
 - If the assessment is still running after the last poll, the HA session is not started. Decide
   whether to start it from the assessment status tool or a separate tool.
 - A new chat has no session id, so export needs a DS "list my sessions" API to find it.
