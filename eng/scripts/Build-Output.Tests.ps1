@@ -109,7 +109,7 @@ BeforeAll {
 }
 
 Describe 'Shared Azure runtime clean ownership' {
-    It 'cleans only the current host and intermediates, retaining another host and shared content' {
+    It "cleans only the current host and intermediates, retaining other projects' files and shared content" {
         $fixture = New-CleanFixture -Root (Join-Path $TestDrive 'shared runtime')
 
         $result = & dotnet msbuild $fixture.Project -target:CoreClean -nologo -verbosity:quiet 2>&1
@@ -182,6 +182,23 @@ Describe 'Shared Azure runtime output selection' {
 
         $targetDirectories[0] | Should -Not -Be $targetDirectories[1] `
             -Because 'Test-Code.ps1 can run both hosts concurrently, and coverage instrumentation rewrites assemblies in their output directory in place'
+    }
+
+    It 'keeps the performance benchmarks in the project bin directory that perf tooling runs' {
+        $root = Split-Path (Resolve-Path $propsPath).Path -Parent
+        $project = Join-Path $root 'servers\Azure.Mcp.Server\perf\Azure.Mcp.Server.PerformanceBenchmarks\Azure.Mcp.Server.PerformanceBenchmarks.csproj'
+
+        $result = & dotnet msbuild $project -nologo -property:Configuration=Release `
+            -getProperty:MSBuildProjectDirectory,TargetDir 2>&1
+        $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
+        $actual = (($result -join [Environment]::NewLine) | ConvertFrom-Json).Properties
+        foreach ($property in @('MSBuildProjectDirectory', 'TargetDir')) {
+            $actual.$property = $actual.$property.Replace('\', '/').Replace([char]'/', [IO.Path]::DirectorySeparatorChar)
+        }
+
+        [IO.Path]::TrimEndingDirectorySeparator($actual.TargetDir) |
+            Should -Be (Join-Path $actual.MSBuildProjectDirectory 'bin' 'Release' 'net10.0') `
+            -Because 'the perf pipeline and scripts run the benchmarks from their project bin directory'
     }
 }
 

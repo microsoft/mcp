@@ -28,7 +28,7 @@
        marker, including entries recorded before the shared layout was enabled. -->
   <Target Name="KeepAzureMcpSharedRuntimeFiles"
           BeforeTargets="_CleanGetCurrentAndPriorFileWrites;CoreClean"
-          Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
+          Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests'">
     <FindUnderPath Path="$(RepoRoot).work\test-runtime\Azure.Mcp.Server"
                    Files="$(TargetPath)">
       <Output TaskParameter="InPath" ItemName="_AzureMcpSharedRuntimeTarget" />
