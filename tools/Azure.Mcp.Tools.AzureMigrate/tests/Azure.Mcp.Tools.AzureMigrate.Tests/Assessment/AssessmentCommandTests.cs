@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
+using Microsoft.AspNetCore.Http;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.Assessment;
@@ -53,13 +56,117 @@ public class AssessmentCommandTests
     public void NormalizeCurrency(string? currency, string? expected) =>
         Assert.Equal(expected, CreateAssessmentCommand.NormalizeCurrency(currency));
 
+    [Theory]
+    [InlineData(null, 2)]
+    [InlineData(1, 2)]
+    [InlineData(5, 5)]
+    [InlineData(30, 10)]
+    public void GetPollInterval_ClampsRetryAfter(int? retryAfter, int expectedSeconds) =>
+        Assert.Equal(TimeSpan.FromSeconds(expectedSeconds), CreateAssessmentCommand.GetPollInterval(retryAfter));
+
+    [Fact]
+    public async Task Create_WaitsForCompletionThenCreatesHa()
+    {
+        var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
+
+        var result = await Run(command, time, TimeSpan.FromMinutes(3));
+
+        Assert.True(result.Success);
+        Assert.True(result.IsCompleted);
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal("eastus", result.TargetRegion);
+        Assert.Equal("USD", result.Currency);
+        Assert.Equal(201, result.HaHttpStatus);
+        Assert.Contains("HA assessment has been created", result.Instructions);
+        await ha.Received(1).PutHaAssessmentAsync(new("assess-1", "eastus", "USD"), "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_TimesOut_ReturnsRunningAndSkipsHa()
+    {
+        var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
+
+        var result = await Run(command, time, TimeSpan.FromSeconds(15));
+
+        Assert.True(result.Success);
+        Assert.False(result.IsCompleted);
+        Assert.Equal("Running", result.Status);
+        Assert.NotNull(result.OperationId);
+        Assert.Null(result.HaHttpStatus);
+        Assert.Contains("still running", result.Instructions);
+        await ha.DidNotReceiveWithAnyArgs().PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_AssessmentFails_SkipsHa()
+    {
+        var client = Substitute.For<IAssessmentServiceClient>();
+        Guid id = Guid.NewGuid();
+        client.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new AssessmentOperation(202, id, "Running", null, 5, null, null));
+        client.GetOperationAsync(default!, default, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new AssessmentOperation(200, id, "Failed", null, null, "Boom", "It failed."));
+        var (command, time, ha) = CreateCommand(client);
+
+        var result = await Run(command, time, TimeSpan.FromMinutes(3));
+
+        Assert.True(result.IsCompleted);
+        Assert.Equal("Failed", result.Status);
+        Assert.Equal("It failed.", result.ErrorMessage);
+        Assert.Contains("did not complete", result.Instructions);
+        await ha.DidNotReceiveWithAnyArgs().PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_HaFails_ReturnsError()
+    {
+        var (command, time, ha) = CreateCommand(new MockAssessmentServiceClient(Time));
+        ha.PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new HaAssessmentResult(500, null, "Internal", "HA down."));
+
+        var result = await Run(command, time, TimeSpan.FromMinutes(3));
+
+        Assert.False(result.Success);
+        Assert.True(result.IsCompleted);
+        Assert.Equal(500, result.HaHttpStatus);
+        Assert.Contains("HA assessment create failed", result.Error);
+    }
+
+    [Fact]
+    public async Task Create_WithoutToken_FailsBeforeCallingService()
+    {
+        var client = Substitute.For<IAssessmentServiceClient>();
+        var command = new CreateAssessmentCommand(client, Substitute.For<IHaAssessmentClient>(), new HttpContextAccessor { HttpContext = new DefaultHttpContext() });
+
+        var result = await command.RunAsync(ValidOptions(), Time, (_, _) => Task.CompletedTask, TimeSpan.FromMinutes(3), TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Contains("No bearer token", result.Error);
+        await client.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    private ManualTimeProvider Time { get; } = new();
+
+    private static CreateAssessmentOptions ValidOptions() =>
+        new() { AssessmentName = "assess-1", TargetRegion = "East US", Currency = "usd" };
+
+    private (CreateAssessmentCommand Command, ManualTimeProvider Time, IHaAssessmentClient Ha) CreateCommand(IAssessmentServiceClient client)
+    {
+        var ha = Substitute.For<IHaAssessmentClient>();
+        ha.PutHaAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new HaAssessmentResult(201, "Succeeded", null, null));
+        var context = new DefaultHttpContext();
+        context.Request.Headers.Authorization = "Bearer token";
+        return (new CreateAssessmentCommand(client, ha, new HttpContextAccessor { HttpContext = context }), Time, ha);
+    }
+
+    private static Task<CreateAssessmentCommand.CreateAssessmentCommandResult> Run(
+        CreateAssessmentCommand command, ManualTimeProvider time, TimeSpan timeout) =>
+        command.RunAsync(ValidOptions(), time, (delay, _) => { time.Now += delay; return Task.CompletedTask; }, timeout, TestContext.Current.CancellationToken);
+
     [Fact]
     public async Task MockClient_ReportsRunningThenSucceeded()
     {
         var time = new ManualTimeProvider();
         var client = new MockAssessmentServiceClient(time);
 
-        AssessmentOperation created = await client.CreateAssessmentAsync(new("assess-1", "eastus", "USD"), "token", CancellationToken.None);
+        AssessmentOperation created = await client.CreateAssessmentAsync(new("assess-1", "eastus", "USD"), "token", TestContext.Current.CancellationToken);
         Assert.Equal(202, created.HttpStatus);
         Assert.Equal("Running", created.Status);
         Assert.NotNull(created.OperationId);
@@ -68,12 +175,12 @@ public class AssessmentCommandTests
             created.TrackingUrl);
 
         time.Now += TimeSpan.FromSeconds(10);
-        AssessmentOperation running = await client.GetOperationAsync("assess-1", created.OperationId!.Value, "token", CancellationToken.None);
+        AssessmentOperation running = await client.GetOperationAsync("assess-1", created.OperationId!.Value, "token", TestContext.Current.CancellationToken);
         Assert.Equal("Running", running.Status);
         Assert.Equal(20, running.RetryAfterSeconds);
 
         time.Now += TimeSpan.FromSeconds(20);
-        AssessmentOperation done = await client.GetOperationAsync("assess-1", created.OperationId.Value, "token", CancellationToken.None);
+        AssessmentOperation done = await client.GetOperationAsync("assess-1", created.OperationId.Value, "token", TestContext.Current.CancellationToken);
         Assert.Equal(200, done.HttpStatus);
         Assert.Equal("Succeeded", done.Status);
         Assert.Null(done.RetryAfterSeconds);
@@ -83,10 +190,10 @@ public class AssessmentCommandTests
     public async Task MockClient_ReturnsNotFoundForUnknownOperationOrOtherName()
     {
         var client = new MockAssessmentServiceClient(new ManualTimeProvider());
-        AssessmentOperation created = await client.CreateAssessmentAsync(new("assess-1", "eastus", "USD"), "token", CancellationToken.None);
+        AssessmentOperation created = await client.CreateAssessmentAsync(new("assess-1", "eastus", "USD"), "token", TestContext.Current.CancellationToken);
 
-        AssessmentOperation unknown = await client.GetOperationAsync("assess-1", Guid.NewGuid(), "token", CancellationToken.None);
-        AssessmentOperation otherName = await client.GetOperationAsync("assess-2", created.OperationId!.Value, "token", CancellationToken.None);
+        AssessmentOperation unknown = await client.GetOperationAsync("assess-1", Guid.NewGuid(), "token", TestContext.Current.CancellationToken);
+        AssessmentOperation otherName = await client.GetOperationAsync("assess-2", created.OperationId!.Value, "token", TestContext.Current.CancellationToken);
 
         Assert.Equal(404, unknown.HttpStatus);
         Assert.Equal(404, otherName.HttpStatus);
