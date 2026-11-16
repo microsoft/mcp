@@ -1289,6 +1289,12 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 
 ### Azure Backup Operations
 
+`--vault` accepts a vault name or a full vault resource ID
+(`/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vault}` or
+`.../providers/Microsoft.DataProtection/backupVaults/{vault}`), and `--resource-group` accepts a resource group name or
+resource group resource ID. A vault resource ID supplies the vault type and, when omitted, the subscription and resource
+group; values that conflict with the other options are rejected. Recovery Services-only commands reject Backup vault IDs.
+
 #### Operation Status (RSV only)
 
 ```bash
