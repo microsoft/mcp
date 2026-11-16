@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// session (PUT /mcprestapi/sessions/{id}) and invokes it (POST /mcprestapi/sessions/{id}/invoke) on the Discovery
 /// Service, forwarding the caller's bearer token unchanged. It does not upload or poll: it returns an azcopy
 /// command the user runs on their own machine to upload the file, and the IDs to check progress with the status tool.
+/// With 'text-only', it invokes an existing session with the message alone (inputType Text) and returns no upload command.
 /// </summary>
 [CommandMetadata(
     Id = "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f",
@@ -26,6 +27,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "their own machine with the returned command. Pass 'session-id' only to update an inventory created earlier in the " +
         "conversation. Returns 'sessionId', 'operationId', 'uploadCommand' (an azcopy command) and 'instructions'. Follow " +
         "'instructions' and show 'uploadCommand' to the user exactly as returned, in a code block, without retyping or shortening it. " +
+        "To change, correct or ask about an existing inventory without a new file (for example 'set web-01's OS to Windows Server " +
+        "2025' or 'memory is in GB'), pass 'session-id', 'message' with the user's request as written, and 'text-only' true; no " +
+        "upload command is returned then. " +
         "This tool does not upload the file or wait for the result: use the inventory status tool with 'sessionId' and 'operationId'. " +
         "Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
@@ -68,10 +72,21 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 "'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.");
         }
 
+        string? message = string.IsNullOrWhiteSpace(options.Message) ? null : options.Message.Trim();
+        if (ValidateTextOnly(options.TextOnly, requestedSessionId, message) is { } textOnlyError)
+        {
+            return Fail("validation", requestedSessionId, null, null, textOnlyError);
+        }
+
         (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return Fail("auth", requestedSessionId, null, null, authError);
+        }
+
+        if (options.TextOnly)
+        {
+            return await RunTextOnlyAsync(baseUrl, requestedSessionId!, message!, token, cancellationToken);
         }
 
         string sessionId = requestedSessionId ?? DsBackdoorClient.NewSessionId();
@@ -110,9 +125,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         }
 
         // Step 2: invoke it with blob input; the response carries the write-only upload SAS URL.
-        string invokeBody = string.IsNullOrWhiteSpace(options.Message)
-            ? "{}"
-            : DsBackdoorClient.WriteJson(w => w.WriteString("message", options.Message.Trim()));
+        string invokeBody = BuildInvokeBody(message, textOnly: false);
         DsBackdoorClient.DsResponse invoke = await DsBackdoorClient.SendAsync(
             _logger, HttpMethod.Post, DsBackdoorClient.InvokeUrl(baseUrl, sessionId), token, invokeBody, clientRequestId, "invoke session", cancellationToken);
         if (invoke.Status is not (>= 200 and < 300))
@@ -151,6 +164,68 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 "AzCopy v10 is required (download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the file in the chat. " +
                 "After the upload finishes they can ask for the inventory status; keep sessionId and operationId for that.");
     }
+
+    /// <summary>
+    /// Updates an existing inventory from the message alone (inputType Text): the Discovery Service continues the skill
+    /// conversation without issuing an upload URL. The session is not created first, so an unknown session fails with 404
+    /// rather than starting an empty inventory, and a session with no completed import fails with 400.
+    /// </summary>
+    private async Task<CreateOrUpdateInventoryCommandResult> RunTextOnlyAsync(
+        string baseUrl, string sessionId, string message, string token, CancellationToken cancellationToken)
+    {
+        string clientRequestId = Guid.NewGuid().ToString();
+        DsBackdoorClient.DsResponse invoke = await DsBackdoorClient.SendAsync(
+            _logger, HttpMethod.Post, DsBackdoorClient.InvokeUrl(baseUrl, sessionId), token, BuildInvokeBody(message, textOnly: true),
+            clientRequestId, "invoke session", cancellationToken);
+        if (invoke.Status is not (>= 200 and < 300))
+        {
+            return Fail("invokeSession", sessionId, clientRequestId, invoke.Status, invoke.Error);
+        }
+
+        string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
+        _logger.LogInformation(
+            "AzureMigrate inventory: session {SessionId} invoked with text only (operation {OperationId}, request {RequestId}).",
+            sessionId, operationId, clientRequestId);
+        return TextOnlyResult(sessionId, operationId, clientRequestId, invoke.Status);
+    }
+
+    /// <summary>Returns the validation error for a text-only update, or null when the options are valid.</summary>
+    internal static string? ValidateTextOnly(bool textOnly, string? sessionId, string? message) =>
+        !textOnly ? null
+        : sessionId is null ? "'session-id' is required for a text-only update: it updates an inventory created earlier in the conversation."
+        : message is null ? "'message' is required for a text-only update."
+        : null;
+
+    /// <summary>Returns the invoke body: {"inputType":"Text","message"} for text only, else {} or {"message"} for blob input.</summary>
+    internal static string BuildInvokeBody(string? message, bool textOnly) =>
+        !textOnly && message is null
+            ? "{}"
+            : DsBackdoorClient.WriteJson(w =>
+            {
+                if (textOnly)
+                {
+                    w.WriteString("inputType", "Text");
+                }
+
+                w.WriteString("message", message);
+            });
+
+    internal static CreateOrUpdateInventoryCommandResult TextOnlyResult(string sessionId, string? operationId, string clientRequestId, int? status) =>
+        new(
+            Success: true,
+            Error: null,
+            FailedStep: null,
+            HttpStatus: status,
+            SessionId: sessionId,
+            ReusedExistingSession: true,
+            OperationId: operationId,
+            ClientRequestId: clientRequestId,
+            UploadCommand: null,
+            UploadWindowMinutes: null,
+            MaxFileSizeMegabytes: null,
+            Instructions: "Tell the user their request was sent to update the inventory and nothing needs to be uploaded. " +
+                "They can ask for the inventory status to see the result, which answers questions or confirms the changes; " +
+                "keep sessionId and operationId for that.");
 
     /// <summary>
     /// Builds the azcopy command for a write-only blob SAS URL, or returns null if the URL is not a valid http(s) URL.

@@ -21,4 +21,12 @@ public sealed class CreateOrUpdateInventoryOptions
     /// </summary>
     [Option(Description = "Optional instructions for the inventory build, for example 'only include production servers'. Omit when the user gave none.")]
     public string? Message { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the update is driven by <see cref="Message"/> alone, without uploading a file.
+    /// </summary>
+    [Option(Description = "Set true to update an existing inventory from 'message' alone, without uploading a file: a correction such as " +
+        "'set server web-01's OS to Windows Server 2025', guidance such as 'memory is in GB', or a question about the inventory. " +
+        "Requires 'session-id' and 'message'. Leave false when the user provides a new or edited file.")]
+    public bool TextOnly { get; set; }
 }

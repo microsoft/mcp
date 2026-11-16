@@ -20,7 +20,7 @@ writes only the caller's own partition.
 
 | Tool | Purpose | Backend |
 |---|---|---|
-| `azuremigrate_inventory_createorupdate` | Creates or reuses the user's Discovery session, invokes it and returns an upload command for the inventory file. | DS session PUT + invoke |
+| `azuremigrate_inventory_createorupdate` | Creates or reuses the user's Discovery session, invokes it and returns an upload command for the inventory file. With `text-only`, `session-id` and `message`, it refines an existing inventory from the message alone (corrections, guidance, questions) and returns no upload command. | DS session PUT + invoke (text-only: invoke with `inputType: Text`) |
 | `azuremigrate_inventory_status` | Checks an inventory invocation once. | DS operationstatus |
 | `azuremigrate_inventory_export` | Returns a download link and command for the refined inventory (`artifacts=external`) or the offline zip (`artifacts=internal`). | DS session export |
 | `azuremigrate_assessment_create` | Creates the assessment from the user's collector ZIP (`inventory-sas-uri`), polls its operation up to 10 times with exponential backoff (1, 2, 4 ... 512 seconds, about 17 minutes), then starts the HA session, uploads the HA input mini zip and returns the assessment download command and the HA operation id. | Assessment create and operation status APIs (stub clients, not implemented yet) + DS session PUT + invoke + HA input PUT |

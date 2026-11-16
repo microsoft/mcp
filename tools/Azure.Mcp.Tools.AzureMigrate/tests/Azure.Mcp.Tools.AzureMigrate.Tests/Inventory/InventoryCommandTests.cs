@@ -30,6 +30,34 @@ public class InventoryCommandTests
         Assert.Null(CreateOrUpdateInventoryCommand.BuildUploadCommand(url));
 
     [Theory]
+    [InlineData(null, false, "{}")]
+    [InlineData("only prod", false, "{\"message\":\"only prod\"}")]
+    [InlineData("set web-01 OS", true, "{\"inputType\":\"Text\",\"message\":\"set web-01 OS\"}")]
+    public void BuildInvokeBody_SelectsBlobOrTextInput(string? message, bool textOnly, string expected) =>
+        Assert.Equal(expected, CreateOrUpdateInventoryCommand.BuildInvokeBody(message, textOnly));
+
+    [Theory]
+    [InlineData(false, null, null, false)]
+    [InlineData(true, "inv-1", "memory is in GB", false)]
+    [InlineData(true, null, "memory is in GB", true)]
+    [InlineData(true, "inv-1", null, true)]
+    public void ValidateTextOnly_RequiresSessionAndMessage(bool textOnly, string? sessionId, string? message, bool expectError) =>
+        Assert.Equal(expectError, CreateOrUpdateInventoryCommand.ValidateTextOnly(textOnly, sessionId, message) is not null);
+
+    [Fact]
+    public void TextOnlyResult_HasNoUploadCommand()
+    {
+        var result = CreateOrUpdateInventoryCommand.TextOnlyResult("inv-1", "op-1", "req-1", 202);
+
+        Assert.True(result.Success);
+        Assert.Equal("inv-1", result.SessionId);
+        Assert.Equal("op-1", result.OperationId);
+        Assert.Null(result.UploadCommand);
+        Assert.Null(result.UploadWindowMinutes);
+        Assert.Contains("nothing needs to be uploaded", result.Instructions);
+    }
+
+    [Theory]
     [InlineData("inv-0123456789abcdef", true)]
     [InlineData("a_b-C", true)]
     [InlineData("", false)]
