@@ -1,9 +1,6 @@
 parameters:
 - name: ServerName
   type: string
-- name: NuGetFeedIndexUrl
-  type: string
-  default: 'https://api.nuget.org/v3/index.json'
 - name: DependsOn
   type: object
 - name: PackageMCPB
