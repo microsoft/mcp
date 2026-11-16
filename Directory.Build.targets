@@ -23,41 +23,6 @@
     <_AzureMcpServerReference Include="@(ProjectReference->WithMetadataValue('Filename', 'Azure.Mcp.Server'))" />
   </ItemGroup>
 
-  <!-- The SDK already treats copied assemblies outside a project's directory as
-       shared. Apply the same ownership rule to copied content and the location
-       marker, including entries recorded before the shared layout was enabled. -->
-  <Target Name="KeepAzureMcpSharedRuntimeFiles"
-          BeforeTargets="_CleanGetCurrentAndPriorFileWrites;CoreClean"
-          Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Core.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
-    <FindUnderPath Path="$(RepoRoot).work\test-runtime\Azure.Mcp.Server"
-                   Files="$(TargetPath)">
-      <Output TaskParameter="InPath" ItemName="_AzureMcpSharedRuntimeTarget" />
-    </FindUnderPath>
-    <ReadLinesFromFile File="$(IntermediateOutputPath)$(CleanFile)"
-                       Condition="'@(_AzureMcpSharedRuntimeTarget)' != ''">
-      <Output TaskParameter="Lines" ItemName="_AzureMcpPriorRuntimeWrites" />
-    </ReadLinesFromFile>
-    <FindUnderPath Path="$(TargetDir)"
-                   Files="@(_AzureMcpPriorRuntimeWrites);@(FileWrites);@(FileWritesShareable)"
-                   UpdateToAbsolutePaths="true"
-                   Condition="'@(_AzureMcpSharedRuntimeTarget)' != ''">
-      <Output TaskParameter="InPath" ItemName="_AzureMcpSharedRuntimeWrites" />
-    </FindUnderPath>
-    <ItemGroup>
-      <_AzureMcpOwnedRuntimeWrites Include="@(_AzureMcpSharedRuntimeWrites)"
-                                  Condition="'%(_AzureMcpSharedRuntimeWrites.Filename)' == '$(TargetName)' or $([System.String]::Copy('%(_AzureMcpSharedRuntimeWrites.Filename)').StartsWith('$(TargetName).'))" />
-      <_AzureMcpSharedRuntimeWrites Remove="@(_AzureMcpOwnedRuntimeWrites)" />
-      <FileWrites Remove="@(_AzureMcpSharedRuntimeWrites)" />
-      <FileWritesShareable Remove="@(_AzureMcpSharedRuntimeWrites)" />
-      <_AzureMcpPriorRuntimeWrites Remove="@(_AzureMcpSharedRuntimeWrites)" />
-    </ItemGroup>
-    <WriteLinesToFile File="$(IntermediateOutputPath)$(CleanFile)"
-                      Lines="@(_AzureMcpPriorRuntimeWrites)"
-                      Overwrite="true"
-                      WriteOnlyWhenDifferent="true"
-                      Condition="'@(_AzureMcpSharedRuntimeTarget)' != '' and Exists('$(IntermediateOutputPath)$(CleanFile)')" />
-  </Target>
-
   <!-- Query the referenced project's evaluated output instead of assuming a
        configuration, framework, RID, or output directory in the test client. -->
   <Target Name="WriteAzureMcpServerLocation"
