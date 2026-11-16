@@ -201,9 +201,10 @@ function Get-PathsToTest {
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
         # When common code builds all, track whether engineering, the Core libraries, or shared build changed. If so, build everything.
+        # global.json counts as shared build because an SDK change can alter runtime behavior that any tool's tests may catch.
         $coreChanged = $CommonCodeBuildsAll -and ($changedFiles | Where-Object { $_ -match '^core/(Azure|Fabric|Microsoft).Mcp.Core/src/' }).Count -gt 0
         $engChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^eng/' }).Count -gt 0
-        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^Directory.(Build|Packages).props' }).Count -gt 0
+        $sharedBuildChanged = $CommonCodeBuildsAll -and  ($changedFiles | Where-Object { $_ -match '^(Directory.(Build|Packages).props|global\.json$)' }).Count -gt 0
         if ($coreChanged -or $engChanged -or $sharedBuildChanged) {
             Write-Host "Core, engineering, or shared build changes detected. Building everything." -ForegroundColor Yellow
             $pathsToTest = @()

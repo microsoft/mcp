@@ -588,7 +588,7 @@ mcp.json configuration for local development:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net11.0/azmcp.exe",
+      "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/azmcp.exe",
       "args": ["server", "start"]
     }
   }

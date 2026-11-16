@@ -1061,7 +1061,7 @@ File: `servers/Azure.Mcp.Server/src/Resources/consolidated-tools.json`
 
 Add your new tool(s) to the consolidated tools JSON. Use the following command to find the correct tool name:
 ```powershell
-cd servers/Azure.Mcp.Server/src/bin/Debug/net11.0
+cd servers/Azure.Mcp.Server/src/bin/Debug
 ./azmcp[.exe] tools list --name --namespace <tool_area>
 ```
 
@@ -2100,7 +2100,7 @@ Every new command must be added to consolidated mode:
 4. If no matching category exists, suggest a new consolidated tool
 5. Find correct tool name:
    ```powershell
-   cd servers/Azure.Mcp.Server/src/bin/Debug/net11.0
+   cd servers/Azure.Mcp.Server/src/bin/Debug
    ./azmcp[.exe] tools list --name --namespace <tool_area>
    ```
 
