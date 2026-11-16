@@ -55,6 +55,22 @@ internal static class FabricItemDefinitionPath
         }
     }
 
+    internal static string GetOutputDirectory(string path)
+    {
+        var directory = GetDirectory(path);
+        EnsureNoGitDirectory(directory);
+        return directory;
+    }
+
+    internal static void EnsureNoGitDirectory(string path)
+    {
+        // Like Git checkouts, never create or write Git metadata, whose configuration and hooks can run commands.
+        if (path.Split('/', Path.DirectorySeparatorChar).Any(static segment => segment.Equals(".git", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ArgumentException("Exported definitions cannot create or write inside a .git path segment.", nameof(path));
+        }
+    }
+
     internal static string GetFile(string directory, string relativePath)
     {
         ValidatePart(relativePath);

@@ -7,14 +7,18 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Fabric.Mcp.Tools.Core.Tests.Services;
 
 public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
 {
     private readonly string _root = FabricDefinitionTestDirectory.Create();
-    private readonly FabricItemDefinitionFileService _service = new(NullLogger<FabricItemDefinitionFileService>.Instance);
+    private readonly FabricItemDefinitionFileService _service = new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime());
     private CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
@@ -263,6 +267,47 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
         AssertNoStaging();
     }
 
+    [Theory]
+    [InlineData(".git", true)]
+    [InlineData(".git/config", true)]
+    [InlineData(".GIT/hooks/post-checkout", true)]
+    [InlineData("nested/.Git/config", true)]
+    [InlineData(".gitignore", false)]
+    [InlineData(".github/workflows/build.yml", false)]
+    [InlineData("nested.git/config", false)]
+    public async Task Write_RejectsOnlyGitMetadataPartPathsBeforeCreatingOutput(string path, bool rejected)
+    {
+        var destination = Path.Combine(_root, "output");
+        var write = () => _service.WriteAsync(destination, new([Part("valid.txt"), Part(path)]), CancellationToken);
+
+        if (rejected)
+        {
+            await Assert.ThrowsAsync<ArgumentException>(write);
+            Assert.Empty(Directory.EnumerateFileSystemEntries(_root));
+        }
+        else
+        {
+            Assert.Equal(destination, await write());
+            Assert.True(File.Exists(Path.Combine(destination, path.Replace('/', Path.DirectorySeparatorChar))));
+        }
+    }
+
+    [Fact]
+    public async Task Write_RejectsGitMetadataDestinationsBeforeCreatingOutput()
+    {
+        var repository = Directory.CreateDirectory(Path.Combine(_root, "repository")).FullName;
+        var metadata = Directory.CreateDirectory(Path.Combine(_root, ".Git")).FullName;
+
+        foreach (var destination in new[] { Path.Combine(repository, ".git"), Path.Combine(metadata, "export") })
+        {
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                _service.WriteAsync(destination, new([Part("config")]), CancellationToken));
+        }
+
+        Assert.Empty(Directory.EnumerateFileSystemEntries(repository));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(metadata));
+    }
+
     [Fact]
     public async Task Read_ReportsMissingFilesAndWriteRequiresExistingParent()
     {
@@ -286,13 +331,29 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     }
 
     [Theory]
+    [InlineData(TransportTypes.Http)]
+    [InlineData("")]
+    [InlineData("HTTP")]
+    [InlineData("future-transport")]
+    public async Task BothDirections_RequireLocalCapabilityBeforePathOrFileAccess(string transport)
+    {
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(transport));
+
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            service.ReadAsync("relative", [new("a.txt")], cancellationToken: CancellationToken));
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            service.WriteAsync(Path.Combine(_root, "output"), new([Part("a.txt")]), CancellationToken));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(_root));
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Write_FailureOrCancellationDoesNotPublishPartialOutput(bool cancel)
     {
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
         var count = 0;
-        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, null, path =>
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), null, path =>
         {
             if (++count == 2)
             {
@@ -326,7 +387,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     public async Task Write_DestinationCreatedDuringStagingIsPreserved()
     {
         var destination = Path.Combine(_root, "output");
-        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, null, path =>
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), null, path =>
         {
             Directory.CreateDirectory(destination);
             File.WriteAllText(Path.Combine(destination, "keep.txt"), "keep");
@@ -402,7 +463,10 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     }
 
     private static FabricItemDefinitionFileService CreateService(FabricItemDefinitionFileLimits limits) =>
-        new(NullLogger<FabricItemDefinitionFileService>.Instance, limits);
+        new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), limits);
+
+    private static IOptions<ServerRuntimeConfiguration> Runtime(string transport = TransportTypes.StdIo) =>
+        OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = transport });
 
     private static FabricItemDefinitionPart Part(string path, byte[]? content = null) =>
         new(path, Convert.ToBase64String(content ?? [1]), "InlineBase64");
