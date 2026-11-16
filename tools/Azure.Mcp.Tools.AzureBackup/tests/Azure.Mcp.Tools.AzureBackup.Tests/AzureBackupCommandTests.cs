@@ -190,6 +190,26 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    public async Task VaultGet_WithBackupVaultResourceId_InfersScopeAndVaultType()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var vaultId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.DataProtection/backupVaults/{vaultName}";
+
+        var result = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", vaultId }
+            });
+
+        var vault = Assert.Single(result.AssertProperty("vaults").EnumerateArray());
+        Assert.Equal(vaultName, vault.AssertProperty("name").GetString());
+        Assert.Equal("dpp", vault.AssertProperty("vaultType").GetString());
+        Assert.Equal(Settings.ResourceGroupName, vault.AssertProperty("resourceGroup").GetString(), ignoreCase: true);
+    }
+
+    [Fact]
     public async Task VaultGet_FiltersByResourceGroup_Successfully()
     {
         // Bug 1.2 fix validation: RG filter should scope results to the specified resource group
