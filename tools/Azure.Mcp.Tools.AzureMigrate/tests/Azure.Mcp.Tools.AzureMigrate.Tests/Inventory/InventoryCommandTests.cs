@@ -101,4 +101,70 @@ public class InventoryCommandTests
         Assert.False(r.Success);
         Assert.Equal(404, r.HttpStatus);
     }
+
+    private const string ReadSas = "https://acct.blob.core.windows.net/c/inv/output.csv?sv=2022-11-02&sp=r&sr=b&sig=abc%3D";
+
+    [Fact]
+    public void ExportUrl_IsBuiltFromSession() =>
+        Assert.Equal(
+            "https://ds/mcprestapi/sessions/s1/export?api-version=2026-11-11-preview",
+            DsBackdoorClient.ExportUrl("https://ds", "s1"));
+
+    [Fact]
+    public void BuildDownloadCommand_QuotesSas()
+    {
+        Assert.Equal(
+            $"azcopy copy \"{ReadSas}\" \"<path to save the file>\" --from-to=BlobLocal",
+            ExportInventoryCommand.BuildDownloadCommand(ReadSas));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("not a url")]
+    [InlineData("ftp://acct/x")]
+    [InlineData("https://acct/x?sig=\"bad")]
+    public void BuildDownloadCommand_RejectsInvalidUrl(string? url) =>
+        Assert.Null(ExportInventoryCommand.BuildDownloadCommand(url));
+
+    [Theory]
+    [InlineData("uri")]
+    [InlineData("Uri")]
+    public void ParseExport_Success_ReturnsLinkAndCommand(string propertyName)
+    {
+        var r = ExportInventoryCommand.Parse("s1", new(200, $"{{\"{propertyName}\":\"{ReadSas}\"}}", null, null));
+
+        Assert.True(r.Success);
+        Assert.Equal(ReadSas, r.DownloadUrl);
+        Assert.Equal(ExportInventoryCommand.BuildDownloadCommand(ReadSas), r.DownloadCommand);
+        Assert.Contains("clickable link", r.Instructions);
+    }
+
+    [Fact]
+    public void ParseExport_MissingUri_Fails()
+    {
+        var r = ExportInventoryCommand.Parse("s1", new(200, "{}", null, null));
+
+        Assert.False(r.Success);
+        Assert.Null(r.DownloadUrl);
+    }
+
+    [Fact]
+    public void ParseExport_NotReady_TellsUserToCheckStatus()
+    {
+        var r = ExportInventoryCommand.Parse("s1", new(400, "{\"error\":{\"code\":\"InvalidParameter\"}}", "bad", null));
+
+        Assert.False(r.Success);
+        Assert.Equal(400, r.HttpStatus);
+        Assert.Contains("not available yet", r.Instructions);
+    }
+
+    [Fact]
+    public void ParseExport_NotFound_Fails()
+    {
+        var r = ExportInventoryCommand.Parse("s1", new(404, "{}", "x", null));
+
+        Assert.False(r.Success);
+        Assert.Equal(404, r.HttpStatus);
+        Assert.Contains("No inventory was found", r.Error);
+    }
 }

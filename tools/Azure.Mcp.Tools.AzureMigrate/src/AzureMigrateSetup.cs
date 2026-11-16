@@ -44,6 +44,7 @@ public class AzureMigrateSetup : IAreaSetup
         // Inventory (POC): create or update an inventory, then check its status, on the Discovery Service.
         services.AddSingleton<CreateOrUpdateInventoryCommand>();
         services.AddSingleton<GetInventoryStatusCommand>();
+        services.AddSingleton<ExportInventoryCommand>();
     }
 
     /// <inheritdoc/>
@@ -73,10 +74,12 @@ public class AzureMigrateSetup : IAreaSetup
         var inventory = new CommandGroup(
             "inventory",
             "Azure Migrate inventory operations - Create or update a server inventory for the signed-in user from a file on the " +
-            "user's machine (the user uploads it with a returned azcopy command), and get the status of an inventory operation.");
+            "user's machine (the user uploads it with a returned azcopy command), get the status of an inventory operation, and get " +
+            "a download link for the output of a finished inventory.");
         azureMigrate.AddSubGroup(inventory);
         inventory.AddCommand<CreateOrUpdateInventoryCommand>(serviceProvider);
         inventory.AddCommand<GetInventoryStatusCommand>(serviceProvider);
+        inventory.AddCommand<ExportInventoryCommand>(serviceProvider);
 
         return azureMigrate;
     }

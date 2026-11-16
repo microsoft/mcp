@@ -1,12 +1,13 @@
 # Deploying the Azure Migrate inventory tools to Azure App Service (Microsoft tenant)
 
 This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Microsoft corporate tenant
-(`72f988bf-86f1-41af-91ab-2d7cd011db47`) and exposes only the two Azure Migrate inventory tools:
+(`72f988bf-86f1-41af-91ab-2d7cd011db47`) and exposes only the three Azure Migrate inventory tools:
 
 | Tool | Purpose |
 |---|---|
 | `azuremigrate_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command. |
 | `azuremigrate_inventory_status` | Returns the status of the inventory operation. |
+| `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for the output of a finished inventory. |
 
 ## How authentication works
 
@@ -83,10 +84,10 @@ az webapp config appsettings set -g $rg -n $app --settings `
 
 ```powershell
 az webapp config set -g $rg -n $app --startup-file `
-  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azuremigrate_inventory_createorupdate --tool azuremigrate_inventory_status --outgoing-auth-strategy UseHostingEnvironmentIdentity"
+  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azuremigrate_inventory_createorupdate --tool azuremigrate_inventory_status --tool azuremigrate_inventory_export --outgoing-auth-strategy UseHostingEnvironmentIdentity"
 ```
 
-- `--tool` limits the server to the two inventory tools.
+- `--tool` limits the server to the three inventory tools.
 - `--outgoing-auth-strategy UseHostingEnvironmentIdentity` avoids the default On-Behalf-Of setup; the inventory tools
   forward the caller's token themselves and do not use the hosting identity.
 
@@ -117,7 +118,7 @@ curl.exe -s -X POST "$url/" -H "Authorization: Bearer $token" -H "Content-Type: 
 ```
 
 The second call requires Azure CLI to be pre-authorized on `<MCP_APP_ID>`. The response should list only
-`azuremigrate_inventory_createorupdate` and `azuremigrate_inventory_status`.
+`azuremigrate_inventory_createorupdate`, `azuremigrate_inventory_status` and `azuremigrate_inventory_export`.
 
 ## Troubleshooting
 
