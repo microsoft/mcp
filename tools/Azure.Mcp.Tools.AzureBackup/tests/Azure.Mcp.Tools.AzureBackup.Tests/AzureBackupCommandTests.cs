@@ -233,6 +233,62 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         Assert.Equal("Disabled", vault.AssertProperty("publicNetworkAccess").GetString());
     }
 
+    /// <summary>
+    /// NEW-11: 'vault create --storage-type' and 'vault update --redundancy' must apply the requested storage
+    /// redundancy. The service now rejects the legacy BackupResourceStorageConfig API with
+    /// BMSUserErrorRedundancySettingsUseVaultApi, so the change goes through a vault PATCH.
+    /// </summary>
+    [Fact]
+    public async Task VaultCreate_RsvVault_WithStorageType_ThenUpdateRedundancy_AppliesRedundancy()
+    {
+        var vaultName = RegisterOrRetrieveVariable("createdStorageTypeVaultName", $"test-rsv-{Random.Shared.NextInt64()}");
+
+        var createResult = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "location", "eastus" },
+                { "storage-type", "LocallyRedundant" }
+            });
+
+        Assert.Equal("Succeeded", createResult.AssertProperty("vault").AssertProperty("provisioningState").GetString());
+        Assert.Equal("LocallyRedundant", await GetRsvVaultRedundancyAsync(vaultName));
+
+        var updateResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "redundancy", "GeoRedundant" }
+            });
+
+        Assert.Equal("Succeeded", updateResult.AssertProperty("result").AssertProperty("status").GetString());
+        Assert.Equal("GeoRedundant", await GetRsvVaultRedundancyAsync(vaultName));
+    }
+
+    private async Task<string?> GetRsvVaultRedundancyAsync(string vaultName)
+    {
+        var getResult = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" }
+            });
+
+        var vault = Assert.Single(getResult.AssertProperty("vaults").EnumerateArray());
+        return vault.AssertProperty("redundancy").GetString();
+    }
+
     [Fact]
     public async Task VaultCreate_CreatesPublicRsvVault_WhenExplicitlyEnabled()
     {
