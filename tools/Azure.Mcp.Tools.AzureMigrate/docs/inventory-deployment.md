@@ -8,7 +8,7 @@ This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Micros
 | `azuremigrate_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command. |
 | `azuremigrate_inventory_status` | Returns the status of the inventory operation. |
 | `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
-| `azuremigrate_assessment_create` | Starts a Business Case Service machine assessment from the user's collector ZIP (`inventory-sas-uri`) for a target region and currency, polls its operation (up to 10 times with exponential backoff, 1 to 512 seconds, using the caller's token) and, when it succeeds, returns a download command for the assessment output, starts the HA skill on the Discovery Service (session PUT with skill type `HA`, then invoke) and returns an azcopy upload command. The user zips the refined inventory file (inventory export, external artifacts) and the assessment export into a single zip and uploads it. If the assessment is still running after the last poll, returns the operation for the status tool and does not start the HA session. Calls the Business Case Service at `AZUREMIGRATE_ASSESSMENT_SERVICE_URL`; when it is not set, a mock in the MCP server is used (in-memory; operations report Running for 30 seconds, then Succeeded). |
+| `azuremigrate_assessment_create` | Starts a machine assessment from the user's collector ZIP (`inventory-sas-uri`) for a target region and currency, polls its operation (up to 10 times with exponential backoff, 1 to 512 seconds, using the caller's token) and, when it succeeds, returns a download command for the assessment output, starts the HA skill on the Discovery Service (session PUT with skill type `HA`, then invoke) and uploads the HA input: a mini zip whose `manifest.json` holds the inventory and assessment read SAS URIs. If the assessment is still running after the last poll, returns the operation for the status tool and does not start the HA session. The assessment create and operation status calls go through `IAssessmentCreateClient` and `IAssessmentOperationStatusClient`, whose implementations are stubs (not implemented yet). |
 | `azuremigrate_assessment_status` | Returns the status of an assessment operation once per call and, when it has succeeded, a new download command for the assessment output. |
 | `azuremigrate_assessment_hastatus` | Returns the Discovery Service operation status of the HA session started by `azuremigrate_assessment_create`, once per call. |
 
@@ -23,8 +23,8 @@ MCP client ──(user token, aud = MCP app)──▶ Azure MCP Server (App Serv
   so the MCP server's app registration must be the audience the Discovery Service accepts.
 - Tokens and SAS query strings are never logged.
 - The Discovery Service endpoint is fixed in `DsBackdoorClient.BaseUrl`.
-- The Business Case Service endpoint for assessments is read from the `AZUREMIGRATE_ASSESSMENT_SERVICE_URL` environment
-  variable (for example `http://127.0.0.1:12689` for a local emulated OneBox). When it is not set, a mock is used.
+- The assessment APIs are not wired yet: `AssessmentCreateClient` and `AssessmentOperationStatusClient` throw
+  `NotImplementedException`.
 
 ## Prerequisites
 

@@ -9,10 +9,16 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 public interface IHaSessionClient
 {
     /// <summary>
-    /// Creates (or reuses) the caller's HA session and invokes it, returning the write-only SAS URL where the HA input must be uploaded.
+    /// Creates the caller's HA session, invokes it and uploads the HA input mini zip (see <see cref="HaInputPackage"/>) to the
+    /// write-only SAS URL the invoke returns.
     /// </summary>
-    Task<HaSessionResult> StartAsync(string token, CancellationToken cancellationToken);
+    Task<HaSessionResult> StartAsync(string token, HaInput input, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Read SAS URLs the HA skill downloads its input from: the user's inventory and the assessment output.
+/// </summary>
+public sealed record HaInput(string InventorySasUri, string AssessmentSasUri);
 
 /// <summary>
 /// Result of starting the HA session. <see cref="FailedStep"/> is null on success.
@@ -24,5 +30,4 @@ public sealed record HaSessionResult(
     bool ReusedExistingSession,
     string? OperationId,
     string? ClientRequestId,
-    string? UploadUrl,
     string? Error);

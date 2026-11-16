@@ -48,12 +48,9 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<GetInventoryStatusCommand>();
         services.AddSingleton<ExportInventoryCommand>();
 
-        // Assessment (POC): the Business Case Service machine assessment from a collector ZIP when its URL is configured,
-        // otherwise a mock.
-        services.AddSingleton<IAssessmentServiceClient>(sp =>
-            BusinessCaseAssessmentServiceClient.ConfiguredBaseUrl is { } baseUrl
-                ? new BusinessCaseAssessmentServiceClient(sp.GetRequiredService<ILogger<BusinessCaseAssessmentServiceClient>>(), baseUrl)
-                : new MockAssessmentServiceClient(TimeProvider.System));
+        // Assessment (POC): external assessment create and operation status APIs (placeholders for now).
+        services.AddSingleton<IAssessmentCreateClient, AssessmentCreateClient>();
+        services.AddSingleton<IAssessmentOperationStatusClient, AssessmentOperationStatusClient>();
         services.AddSingleton<IHaSessionClient, DsHaSessionClient>();
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();

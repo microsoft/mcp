@@ -23,14 +23,13 @@ writes only the caller's own partition.
 | `azuremigrate_inventory_createorupdate` | Creates or reuses the user's Discovery session, invokes it and returns an upload command for the inventory file. | DS session PUT + invoke |
 | `azuremigrate_inventory_status` | Checks an inventory invocation once. | DS operationstatus |
 | `azuremigrate_inventory_export` | Returns a download link and command for the refined inventory (`artifacts=external`) or the offline zip (`artifacts=internal`). | DS session export |
-| `azuremigrate_assessment_create` | Creates the assessment from the user's collector ZIP (`inventory-sas-uri`), polls its operation up to 10 times with exponential backoff (1, 2, 4 ... 512 seconds, about 17 minutes), then starts the HA session and returns the assessment download command and the HA upload command. | Business Case Service machine assessment from ZIP (mock when not configured) + DS session PUT + invoke |
-| `azuremigrate_assessment_status` | Checks an assessment operation once; on success returns a new download link and command for the assessment output. | Business Case Service (mock when not configured) |
+| `azuremigrate_assessment_create` | Creates the assessment from the user's collector ZIP (`inventory-sas-uri`), polls its operation up to 10 times with exponential backoff (1, 2, 4 ... 512 seconds, about 17 minutes), then starts the HA session, uploads the HA input mini zip and returns the assessment download command and the HA operation id. | Assessment create and operation status APIs (stub clients, not implemented yet) + DS session PUT + invoke + HA input PUT |
+| `azuremigrate_assessment_status` | Checks an assessment operation once; on success returns a new download link and command for the assessment output. | Assessment operation status API (stub client, not implemented yet) |
 | `azuremigrate_assessment_hastatus` | Checks an HA operation once. | DS operationstatus |
 
 ## Flow
 
-The HA steps show the planned mini-zip handoff (see [HA input](#ha-input-mini-zip-planned)). Today the
-tool still returns an azcopy upload command for a user-built zip.
+The HA steps use the mini-zip handoff (see [HA input](#ha-input-mini-zip)).
 
 ```mermaid
 sequenceDiagram
@@ -92,10 +91,10 @@ sequenceDiagram
   session with `skillType: HA` (overridable through `AZUREMIGRATE_HA_SKILL_TYPE`), reusing the
   user's active HA session on `409 ActiveSessionAlreadyExists`, then invokes it to get the operation
   id and input SAS URI.
-- **The user supplies the HA input.** The user combines the refined inventory (Discovery external
-  artifacts) and the assessment export into a single zip and uploads it with the returned azcopy
-  command. The server does not download or repackage files. This is interim; see
-  [HA input](#ha-input-mini-zip-planned).
+- **azmcp uploads the HA input as a mini zip.** After the invoke, `HaInputPackage` builds a zip with only
+  `manifest.json` (`inventorySasUri`, `assessmentSasUri`) and PUTs it to the returned write SAS (block blob,
+  no Authorization header, up to 3 attempts for 408, 429, 5xx and network errors). See
+  [HA input](#ha-input-mini-zip).
 - **HA progress is tracked through DS operation status**, with the same response shape as Discovery
   sessions.
 - **The assessment is the Business Case Service machine assessment from a collector ZIP**
@@ -103,9 +102,11 @@ sequenceDiagram
   with `inventorySasUri` and `settings { azureLocation, currency }`, then
   `GET .../machineAssessmentsFromZip/operations/{operationId}`. Statuses are Running, Succeeded, Failed and
   Canceled; on Succeeded `output` is a read SAS (valid one hour, refreshed on each poll) of the
-  recommendations JSON. `BusinessCaseAssessmentServiceClient` is used when
-  `AZUREMIGRATE_ASSESSMENT_SERVICE_URL` is set; otherwise `MockAssessmentServiceClient` (Running for 30
-  seconds, then Succeeded with a fake output URL).
+  recommendations JSON.
+- **External assessment APIs are behind two interfaces.** `IAssessmentCreateClient` (create) and
+  `IAssessmentOperationStatusClient` (operation status). Their implementations, `AssessmentCreateClient`
+  and `AssessmentOperationStatusClient`, are empty stubs that throw `NotImplementedException` until the
+  API calls are added.
 - **The user supplies the collector ZIP as a read SAS URL** (`inventory-sas-uri`). It is validated as an
   absolute http(s) URL and never logged or echoed.
 - **Polling.** The create tool polls the operation up to 10 times, 1 second apart and doubling each
@@ -114,7 +115,7 @@ sequenceDiagram
   and the HA session is not started.
 - **Currency** must be one of the 25 codes the Business Case Service accepts.
 
-## HA input: mini zip (planned)
+## HA input: mini zip
 
 The HA skill works on two read SAS URIs:
 
@@ -163,18 +164,15 @@ HA-input.zip
 
 - TODO: `workspaceId` is required by the Business Case Service contract (body and operation query) but
   is not sent yet. Decide how to choose it (for example the user's object id or DS session id).
-- Get the production Business Case Service URL and add the MCP server's app to the Business Case
+- Implement `AssessmentCreateClient` and `AssessmentOperationStatusClient`, get the production URL and add the MCP server's app to the Business Case
   `BusinessCaseAppDetails` allowlist.
 - Get the collector ZIP SAS from the Discovery Service instead of asking the user for it.
 - About 17 minutes of polling may exceed some MCP client tool-call timeouts or the caller's token
   lifetime; revisit if needed.
 - Add more assessment inputs from the customer beyond name, target region and currency.
-- Align the HA upload window and maximum file size (currently 30 minutes and 500 MB, reused from
-  inventory) with the DS HA skill configuration.
 - Confirm the HA operation status response shape once the HA skill exists.
 - HA input: agree with the HA skill on the mini zip `manifest.json` shape. Confirm the HA inventory is
-  the user's collector ZIP rather than the refined inventory (Discovery external artifacts). Then make
-  `assessment_create` upload the mini zip instead of returning an azcopy command.
+  the user's collector ZIP rather than the refined inventory (Discovery external artifacts).
 - DS must register the `HA` skill type (`SkillType` has only Discovery and WavePlan today) and its
   skill configuration (`BlobRequired` input, maximum input size, hosted agent target).
 - Cowork connector tool calls must finish within 30 seconds; `assessment_create` polls for up to about

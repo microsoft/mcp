@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// POC: returns the current status of a Business Case Service machine assessment operation with one call. It does not wait or
+/// POC: returns the current status of an assessment operation with one call. It does not wait or
 /// poll. When the assessment has succeeded, it also returns a temporary read-only URL of the recommendations JSON.
 /// </summary>
 [CommandMetadata(
@@ -30,10 +30,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class GetAssessmentStatusCommand(IAssessmentServiceClient client, IHttpContextAccessor httpContextAccessor)
+public sealed class GetAssessmentStatusCommand(IAssessmentOperationStatusClient client, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<GetAssessmentStatusOptions, GetAssessmentStatusCommand.GetAssessmentStatusCommandResult>
 {
-    private readonly IAssessmentServiceClient _client = client;
+    private readonly IAssessmentOperationStatusClient _client = client;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <inheritdoc/>
