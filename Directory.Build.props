@@ -25,8 +25,11 @@
   </PropertyGroup>
 
   <!-- These hosts load the entire Azure server in-process. Share its dependencies
-       while retaining project-local intermediates and separate production output. -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Core.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
+       while retaining project-local intermediates and separate production output.
+       Keep at most one test project here: Test-Code.ps1 can run test projects
+       concurrently, and coverage instrumentation rewrites the assemblies in a test's
+       output directory in place. Azure.Mcp.Core.Tests therefore keeps its own output. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests' or '$(MSBuildProjectName)' == 'Azure.Mcp.Server.PerformanceBenchmarks'">
     <BaseOutputPath Condition="'$(BaseOutputPath)' == '' and '$(UseArtifactsOutput)' != 'true'">$(RepoRoot).work\test-runtime\Azure.Mcp.Server\</BaseOutputPath>
   </PropertyGroup>
 

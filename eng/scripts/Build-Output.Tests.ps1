@@ -19,9 +19,9 @@ BeforeAll {
         $intermediate = Join-Path $Root 'obj'
         New-Item -ItemType Directory -Path $output, $intermediate -Force | Out-Null
         $files = @(
-            (Join-Path $output 'Azure.Mcp.Core.Tests.dll'),
-            (Join-Path $output 'Azure.Mcp.Core.Tests.deps.json'),
             (Join-Path $output 'Azure.Mcp.Server.Tests.dll'),
+            (Join-Path $output 'Azure.Mcp.Server.Tests.deps.json'),
+            (Join-Path $output 'Azure.Mcp.Server.PerformanceBenchmarks.dll'),
             (Join-Path $output 'AzureMcpServer.path'),
             (Join-Path $output 'appsettings.json'),
             (Join-Path $output 'Azure.Mcp.Core.dll'),
@@ -32,7 +32,7 @@ BeforeAll {
         }
         $listPath = Join-Path $intermediate 'fixture.FileListAbsolute.txt'
         Set-Content -LiteralPath $listPath -Value $files
-        $project = Join-Path $Root 'Azure.Mcp.Core.Tests.proj'
+        $project = Join-Path $Root 'Azure.Mcp.Server.Tests.proj'
         $escapedRoot = [System.Security.SecurityElement]::Escape($Root)
         $escapedOutput = [System.Security.SecurityElement]::Escape($output)
         $escapedTargets = [System.Security.SecurityElement]::Escape($targetsPath)
@@ -40,9 +40,9 @@ BeforeAll {
 <Project>
   <PropertyGroup>
     <RepoRoot>$escapedRoot\</RepoRoot>
-    <TargetName>Azure.Mcp.Core.Tests</TargetName>
+    <TargetName>Azure.Mcp.Server.Tests</TargetName>
     <TargetDir>$escapedOutput\</TargetDir>
-    <TargetPath>$escapedOutput\Azure.Mcp.Core.Tests.dll</TargetPath>
+    <TargetPath>$escapedOutput\Azure.Mcp.Server.Tests.dll</TargetPath>
     <OutDir>$escapedOutput\</OutDir>
     <IntermediateOutputPath>$escapedRoot\obj\</IntermediateOutputPath>
     <CleanFile>fixture.FileListAbsolute.txt</CleanFile>
@@ -141,7 +141,7 @@ Describe 'Shared Azure runtime output selection' {
     It 'does not override the SDK artifacts layout' {
         $root = Join-Path $TestDrive 'artifacts layout'
         New-Item -ItemType Directory -Path $root -Force | Out-Null
-        $project = Join-Path $root 'Azure.Mcp.Core.Tests.proj'
+        $project = Join-Path $root 'Azure.Mcp.Server.Tests.proj'
         $escapedProps = [System.Security.SecurityElement]::Escape($propsPath)
         Set-Content -LiteralPath $project -Value @"
 <Project>
@@ -157,7 +157,7 @@ Describe 'Shared Azure runtime output selection' {
     It 'respects an explicit base output path' {
         $root = Join-Path $TestDrive 'base output'
         New-Item -ItemType Directory -Path $root -Force | Out-Null
-        $project = Join-Path $root 'Azure.Mcp.Core.Tests.proj'
+        $project = Join-Path $root 'Azure.Mcp.Server.Tests.proj'
         $escapedProps = [System.Security.SecurityElement]::Escape($propsPath)
         Set-Content -LiteralPath $project -Value @"
 <Project>
@@ -168,6 +168,20 @@ Describe 'Shared Azure runtime output selection' {
         $result = & dotnet msbuild $project -nologo -property:BaseOutputPath=custom -getProperty:BaseOutputPath 2>&1
         $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
         ($result -join '').Trim() | Should -Be 'custom'
+    }
+
+    It 'keeps Azure core and server test hosts in separate output directories' {
+        $root = Split-Path (Resolve-Path $propsPath).Path -Parent
+        $targetDirectories = foreach ($project in @(
+                'core\Azure.Mcp.Core\tests\Azure.Mcp.Core.Tests\Azure.Mcp.Core.Tests.csproj',
+                'servers\Azure.Mcp.Server\tests\Azure.Mcp.Server.Tests\Azure.Mcp.Server.Tests.csproj')) {
+            $result = & dotnet msbuild (Join-Path $root $project) -nologo -getProperty:TargetDir 2>&1
+            $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
+            ($result -join '').Trim()
+        }
+
+        $targetDirectories[0] | Should -Not -Be $targetDirectories[1] `
+            -Because 'Test-Code.ps1 can run both hosts concurrently, and coverage instrumentation rewrites assemblies in their output directory in place'
     }
 }
 

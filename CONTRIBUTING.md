@@ -252,12 +252,16 @@ its full runtime into each test output. Build the test project normally, then us
 referenced server's evaluated output directory. Do not copy the server manually
 or assume a fixed configuration, framework, or runtime identifier.
 
-Azure core tests, Azure server tests, and performance benchmarks load server types
-in-process. Their runtime dependencies share
+Azure server tests and performance benchmarks load server types in-process. Their
+runtime dependencies share
 `.work/test-runtime/Azure.Mcp.Server/<configuration>/<framework>/`, with an additional
 runtime identifier directory for RID-specific builds. Intermediate files stay in
 each project's `obj` directory. Production server build and publish paths are
 unchanged. Explicit project output overrides still take precedence over this default.
+Azure core tests also load server types in-process but keep their own output
+directory. Do not add another test project to the shared runtime: `Test-Code.ps1`
+can run test projects concurrently, and coverage instrumentation rewrites the
+assemblies in a test's output directory in place.
 Run tests through `dotnet test --project <test-project>` or `Test-Code.ps1` rather
 than assuming that every test executable lives under its project's `bin` directory.
 

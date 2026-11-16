@@ -47,7 +47,7 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 
 Local server processes use the server output identified by the build-generated
 `AzureMcpServer.path` file, not a server copy beside each tool test. Building a
-test project also builds its server dependency. Azure core/server tests share a
+test project also builds its server dependency. Azure server tests use a shared
 runtime directory under `.work/test-runtime`; their settings are located using the
 test executable's `SourcePath` assembly metadata. Keep `.testsettings.json`,
 `assets.json`, and recordings in their existing test project locations, not in
