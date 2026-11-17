@@ -1,0 +1,98 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.4/schema.json",
+  "schema_version": "v2.4",
+  "name_for_human": "__APP_NAME__",
+  "namespace": "AzureMigrate",
+  "description_for_human": "Create, check and export Azure Migrate server inventories, and create assessments and HA assessments.",
+  "description_for_model": "Creates or updates an Azure Migrate inventory for the signed-in user (returning an azcopy command the user runs to upload their file), gets the status of an inventory operation, exports the refined inventory or offline zip, creates an assessment followed by an HA assessment, and gets assessment and HA status.",
+  "functions": [
+    {
+      "name": "azuremigrate_inventory_createorupdate",
+      "description": "Creates or updates an Azure Migrate inventory and returns an upload command for the user's file plus the session and operation IDs.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_inventory_status",
+      "description": "Gets the current status of an Azure Migrate inventory operation.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_inventory_export",
+      "description": "Gets a download link for the refined inventory or the offline zip of a finished inventory.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_create",
+      "description": "Creates an Azure Migrate assessment from the collector ZIP with optional settings (savings, hybrid benefit, discount, disks, uptime and more; defaults apply when not given), waits for it and starts the HA assessment.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_status",
+      "description": "Gets the current status of an Azure Migrate assessment operation.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_hastatus",
+      "description": "Gets the current status of an HA assessment operation.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "type": "RemoteMCPServer",
+      "auth": {
+        "type": "None"
+      },
+      "spec": {
+        "url": "__MCP_URL__",
+        "mcp_tool_description": {
+          "file": "mcp-tools.json"
+        }
+      },
+      "run_for_functions": [
+        "azuremigrate_inventory_createorupdate",
+        "azuremigrate_inventory_status",
+        "azuremigrate_inventory_export",
+        "azuremigrate_assessment_create",
+        "azuremigrate_assessment_status",
+        "azuremigrate_assessment_hastatus"
+      ]
+    }
+  ]
+}
