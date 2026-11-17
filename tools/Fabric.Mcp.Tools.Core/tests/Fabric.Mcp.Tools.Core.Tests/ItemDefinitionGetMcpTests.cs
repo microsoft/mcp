@@ -290,7 +290,8 @@ public sealed class ItemDefinitionGetMcpTests()
         using var caller = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
         var destination = Path.Combine(root.Path, "exported");
         var writes = 0;
-        var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, null, path =>
+        var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance,
+            OptionsFactory.Create(new ServerRuntimeConfiguration()), null, path =>
         {
             if (++writes == 2)
             {
@@ -326,7 +327,8 @@ public sealed class ItemDefinitionGetMcpTests()
     public async Task ResumeExportFailure_PreservesOperationIdButDoesNotReturnInlineContent()
     {
         using var root = new FabricDefinitionTestDirectory();
-        var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, null,
+        var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance,
+            OptionsFactory.Create(new ServerRuntimeConfiguration()), null,
             _ => throw new IOException("private-file-system-failure"));
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(ItemDefinitionTestData.Response()));
         await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.StdIo, files: files);

@@ -17,7 +17,7 @@ public class ItemDefinitionGetOptions
     [Option(Description = "Optional definition format, such as ipynb or FabricGitSource. Omit to use the item's default. Must not be empty or whitespace, must be at most 128 characters, and contain no control characters. Passed as one encoded query value; Fabric validates support. Cannot be combined with operation-id.")]
     public string? Format { get; set; }
 
-    [Option(Description = "Optional new absolute local directory for the completed definition's decoded files. Its parent must exist. Never overwrites or merges a destination. Local execution only; unavailable over HTTP. Omit to return only inline definition content without writing files.")]
+    [Option(Description = "Optional new absolute local directory for the completed definition's decoded files. Its parent must exist, and no path segment may be .git. Never overwrites or merges a destination. Local execution only; unavailable over HTTP. Omit to return only inline definition content without writing files.")]
     public string? OutputDirectory { get; set; }
 
     [Option(Description = "Nonempty UUID from an earlier Get Item Definition receipt. After get-operation-state reports Succeeded, retrieve this definition result once with one GET and no POST or polling. The result does not identify its item or prove its provenance. Cannot be combined with workspace-id, item-id, format, or sync=true.")]
