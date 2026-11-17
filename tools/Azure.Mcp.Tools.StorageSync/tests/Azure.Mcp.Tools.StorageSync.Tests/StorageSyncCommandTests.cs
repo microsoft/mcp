@@ -25,6 +25,12 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             Regex = "resource[gG]roups\\/([^?\\/]+)",
             Value = "Sanitized",
             GroupForReplace = "1"
+        }),
+        new(new()
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
         })
     ];
 
@@ -67,6 +73,12 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
         new(new("x-ms-operation-identifier")
         {
             Value = "sanitized"
+        }),
+        new(new("Azure-AsyncOperation")
+        {
+            Regex = "[?&]c=(?<token>[^&]+)",
+            Value = "Sanitized",
+            GroupForReplace = "token"
         })
     ];
 
@@ -167,7 +179,9 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
             { "location", "eastus" }
             });
 
-        Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("result").ValueKind);
+        var service = result.AssertProperty("result");
+        Assert.NotEqual(JsonValueKind.Null, service.ValueKind);
+        Assert.Equal("AllowAllTraffic", service.GetProperty("properties").GetProperty("incomingTrafficPolicy").GetString());
 
         result = await CallToolAsync(
             "storagesync_service_get",
@@ -201,6 +215,57 @@ public class StorageSyncCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "name", $"{Settings.ResourceBaseName}-test" }
             });
         Assert.NotEqual(JsonValueKind.Null, result.AssertProperty("message").ValueKind);
+    }
+
+    [Theory]
+    [InlineData("AllowAllTraffic")]
+    [InlineData("AllowVirtualNetworksOnly")]
+    public async Task Should_CreateStorageSyncService_WithIncomingTrafficPolicy(string incomingTrafficPolicy)
+    {
+        var serviceName = $"{Settings.ResourceBaseName}-{incomingTrafficPolicy.ToLowerInvariant()}";
+        var created = false;
+        try
+        {
+            var result = await CallToolAsync(
+                "storagesync_service_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", serviceName },
+                    { "location", "eastus" },
+                    { "incoming-traffic-policy", incomingTrafficPolicy }
+                });
+            created = true;
+
+            var service = result.AssertProperty("result");
+            Assert.Equal(incomingTrafficPolicy, service.GetProperty("properties").GetProperty("incomingTrafficPolicy").GetString());
+
+            result = await CallToolAsync(
+                "storagesync_service_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", serviceName }
+                });
+            service = Assert.Single(result.AssertProperty("results").EnumerateArray());
+            Assert.Equal(incomingTrafficPolicy, service.GetProperty("properties").GetProperty("incomingTrafficPolicy").GetString());
+        }
+        finally
+        {
+            if (created)
+            {
+                await CallToolAsync(
+                    "storagesync_service_delete",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "name", serviceName }
+                    });
+            }
+        }
     }
 
     [Fact]
