@@ -119,16 +119,6 @@ public sealed class ServerStartOptions
     public bool DisableCaching { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets whether the HTTP transport keeps a session for clients that connect with the <c>initialize</c> handshake.
-    /// When true, those clients can receive server-to-client requests such as elicitation; clients using the stateless
-    /// protocol are still served per request.
-    /// </summary>
-    [Option(Description = "With the HTTP transport, keep a session for clients that connect with the 'initialize' handshake so tools can ask " +
-        "the user for input (elicitation). Clients using the stateless protocol are still served per request. Needs session affinity " +
-        "when the server runs on more than one instance.", DefaultValue = false)]
-    public bool HttpStatefulSessions { get; set; } = false;
-
-    /// <summary>
     /// Gets or sets how tools advertise and return structured output.
     /// A <see langword="null"/> value preserves content-only responses.
     /// </summary>

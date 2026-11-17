@@ -65,17 +65,4 @@ public class CommandContext(Activity? activity = default)
     /// </summary>
     public ProgressToken? ProgressToken { get; set; }
 
-    /// <summary>
-    /// Responses the client supplied when retrying a tool call after the command asked for input by throwing
-    /// <see cref="InputRequiredException"/> (multi round-trip requests). Keyed by the names the command used in its request,
-    /// or <see langword="null"/> on the first call.
-    /// </summary>
-    public IDictionary<string, InputResponse>? InputResponses { get; init; }
-
-    /// <summary>
-    /// Opaque state the command attached to its <see cref="InputRequiredException"/>, echoed back by the client on retry,
-    /// or <see langword="null"/> on the first call.
-    /// </summary>
-    public string? RequestState { get; init; }
-
 }

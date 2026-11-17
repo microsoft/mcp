@@ -95,8 +95,7 @@ public class ServerStartCommandTests
             "--dangerously-disable-elicitation",
             "--dangerously-disable-retry-limits",
             "--disable-caching",
-            "--disable-proxy-tools",
-            "--http-stateful-sessions"
+            "--disable-proxy-tools"
         };
         var theoryData = new TheoryData<string, bool, bool>();
         foreach (var option in options)

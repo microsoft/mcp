@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
-using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
@@ -28,13 +27,10 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
     Title = "Create Azure Migrate Assessment",
     Description = "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete " +
         "(up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires " +
-        "'assessment-name' and 'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are " +
-        "missing and do not invent them. Pass 'target-region' (an Azure region name such as 'eastus') and 'currency' (a three-letter " +
-        "code such as 'USD') if the user gave them. When the user's app supports forms, the tool shows the user a form to confirm the " +
-        "region, currency, savings option, Azure Hybrid Benefit, environment type, discount and comfort factor, prefilled with what you " +
-        "pass, so do not ask for these in chat first; otherwise, if region or currency is missing, the tool returns an error and you " +
-        "should ask the user for them. Other optional settings such as storage scaling, disk types, VM families, uptime and licensing " +
-        "program use the assessment defaults when left out; pass them only when the user asks for them " +
+        "'assessment-name', 'target-region' (an Azure region name such as 'eastus'), 'currency' (a three-letter code such as 'USD') and " +
+        "'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent " +
+        "them. Optional settings such as savings option, Azure Hybrid Benefit, discount, scaling factors, environment type, disk types, " +
+        "VM families, uptime and licensing program use the assessment defaults when left out; pass them only when the user asks for them " +
         "and do not ask for them otherwise. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', " +
         "'assessmentOutputUrl', 'haOperationId' and 'instructions'. Follow 'instructions'; if the assessment is still running, keep " +
         "'operationId' to check its status later. Do not mention tool or parameter names to the user.",
@@ -202,11 +198,7 @@ public sealed partial class CreateAssessmentCommand(
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CreateAssessmentOptions options, CancellationToken cancellationToken)
     {
         CreateAssessmentCommandResult result = await RunAsync(
-            options,
-            (delay, ct) => Task.Delay(delay, ct),
-            cancellationToken,
-            canAskForSettings: context.McpServer?.IsMrtrSupported is true,
-            inputResponses: context.InputResponses);
+            options, (delay, ct) => Task.Delay(delay, ct), cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.CreateAssessmentCommandResult);
@@ -214,48 +206,15 @@ public sealed partial class CreateAssessmentCommand(
         return context.Response;
     }
 
-    /// <summary>
-    /// Validates the request, creates the assessment, waits for it and starts the HA assessment. When
-    /// <paramref name="canAskForSettings"/> is true and the user has not answered the settings form yet, throws
-    /// <see cref="InputRequiredException"/> to show it (see <see cref="AssessmentSettingsForm"/>) before anything is created; the
-    /// client calls the tool again with the answer in <paramref name="inputResponses"/>.
-    /// </summary>
     internal async Task<CreateAssessmentCommandResult> RunAsync(
         CreateAssessmentOptions options,
         Func<TimeSpan, CancellationToken, Task> delayAsync,
-        CancellationToken cancellationToken,
-        bool canAskForSettings = false,
-        IDictionary<string, InputResponse>? inputResponses = null)
+        CancellationToken cancellationToken)
     {
         string? name = options.AssessmentName?.Trim();
         if (!IsValidAssessmentName(name))
         {
             return Fail(name, null, "'assessment-name' is required: 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.");
-        }
-
-        string? inventorySasUri = options.InventorySasUri?.Trim();
-        if (!IsValidInventorySasUri(inventorySasUri))
-        {
-            return Fail(name, null, "'inventory-sas-uri' is required and must be an https read-only SAS URL of the collector ZIP.");
-        }
-
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
-        if (token is null)
-        {
-            return Fail(name, null, authError);
-        }
-
-        // The form is shown before anything is created: the SDK may run this method again with the answer.
-        bool? formAnswer = AssessmentSettingsForm.TryApply(inputResponses, options);
-        if (formAnswer is false)
-        {
-            return Fail(name, null, "The user closed the assessment settings form without submitting it, so no assessment was created.",
-                instructions: "Tell the user no assessment was created because the settings form was closed. Create it only if they ask again.");
-        }
-
-        if (formAnswer is null && canAskForSettings)
-        {
-            throw AssessmentSettingsForm.CreateRequest(name!, options, s_supportedCurrencies);
         }
 
         string? region = NormalizeRegion(options.TargetRegion);
@@ -270,10 +229,22 @@ public sealed partial class CreateAssessmentCommand(
             return Fail(name, null, $"'currency' is required and must be one of: {string.Join(", ", s_supportedCurrencies)}.");
         }
 
+        string? inventorySasUri = options.InventorySasUri?.Trim();
+        if (!IsValidInventorySasUri(inventorySasUri))
+        {
+            return Fail(name, null, "'inventory-sas-uri' is required and must be an https read-only SAS URL of the collector ZIP.");
+        }
+
         (AssessmentSettings? settings, string? settingsError) = BuildSettings(options);
         if (settingsError is not null)
         {
             return Fail(name, null, settingsError);
+        }
+
+        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        if (token is null)
+        {
+            return Fail(name, null, authError);
         }
 
         // TODO: Pass the caller's workspace id once it is defined.
@@ -382,8 +353,7 @@ public sealed partial class CreateAssessmentCommand(
             HaErrorMessage: ha?.Error,
             Instructions: instructions);
 
-    private static CreateAssessmentCommandResult Fail(
-        string? name, int? status, string? error, Guid? operationId = null, string? instructions = null) =>
+    private static CreateAssessmentCommandResult Fail(string? name, int? status, string? error, Guid? operationId = null) =>
         new(
             Success: false,
             Error: error ?? "Unknown error.",
@@ -404,7 +374,7 @@ public sealed partial class CreateAssessmentCommand(
             HaReusedExistingSession: null,
             HaOperationId: null,
             HaErrorMessage: null,
-            Instructions: instructions);
+            Instructions: null);
 
     /// <summary>Result of the assessment create command.</summary>
     public sealed record CreateAssessmentCommandResult(

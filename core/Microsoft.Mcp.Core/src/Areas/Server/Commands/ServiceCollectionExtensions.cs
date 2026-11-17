@@ -17,7 +17,6 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Http;
-using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -229,7 +228,7 @@ public static partial class ServiceCollectionExtensions
 
         if (serverStartOptions.Transport == TransportTypes.Http)
         {
-            mcpServerBuilder.WithHttpTransport(transportOptions => ConfigureHttpTransport(transportOptions, serverStartOptions));
+            mcpServerBuilder.WithHttpTransport();
         }
         else
         {
@@ -237,21 +236,6 @@ public static partial class ServiceCollectionExtensions
         }
 
         return services;
-    }
-
-    /// <summary>
-    /// Configures the HTTP transport. With <see cref="ServerStartOptions.HttpStatefulSessions"/>, clients that use the
-    /// <c>initialize</c> handshake get a session, so tools can send them requests such as elicitation; clients using the
-    /// stateless protocol are still served per request. Otherwise the SDK default (stateless) applies.
-    /// </summary>
-    /// <param name="transportOptions">The HTTP transport options to configure.</param>
-    /// <param name="serverStartOptions">The server start options.</param>
-    internal static void ConfigureHttpTransport(HttpServerTransportOptions transportOptions, ServerStartOptions serverStartOptions)
-    {
-        if (serverStartOptions.HttpStatefulSessions)
-        {
-            transportOptions.SessionMode = HttpServerSessionMode.StatefulForInitializeClients;
-        }
     }
 
     /// <summary>

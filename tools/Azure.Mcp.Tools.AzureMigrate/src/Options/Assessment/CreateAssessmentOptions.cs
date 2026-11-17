@@ -20,15 +20,13 @@ public sealed class CreateAssessmentOptions
     /// <summary>
     /// Gets or sets the target Azure region.
     /// </summary>
-    [Option(Description = "Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'. Pass it if the " +
-        "user gave it; the tool asks the user to confirm it in a form when their app supports forms, and needs it otherwise.")]
+    [Option(Description = "Required. Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'.")]
     public string? TargetRegion { get; set; }
 
     /// <summary>
     /// Gets or sets the currency for cost estimates.
     /// </summary>
-    [Option(Description = "Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'. Pass it if the user " +
-        "gave it; the tool asks the user to confirm it in a form when their app supports forms, and needs it otherwise.")]
+    [Option(Description = "Required. Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'.")]
     public string? Currency { get; set; }
 
     /// <summary>

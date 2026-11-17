@@ -189,8 +189,6 @@ public sealed class CommandFactoryToolLoader(
         {
             McpServer = request.Server,
             ProgressToken = request.Params.ProgressToken,
-            InputResponses = request.Params.InputResponses,
-            RequestState = request.Params.RequestState,
             ToolNamespaceName = registration.ToolNamespaceName
         };
 
@@ -268,7 +266,7 @@ public sealed class CommandFactoryToolLoader(
 
             return McpHelper.InjectToolIdMetadata(callToolResult, command.Id);
         }
-        catch (Exception ex) when (ex is not InputRequiredException)
+        catch (Exception ex)
         {
             _logger.LogError(ex, "An exception occurred running '{Tool}'. ", realCommand.Name);
             throw;
