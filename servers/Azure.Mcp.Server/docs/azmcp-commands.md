@@ -5764,9 +5764,9 @@ azmcp sreagent incidents plans create --subscription <subscription> \
 
 # Configure PagerDuty / ServiceNow connectors (local-only)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
-azmcp sreagent incidents setup pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
+azmcp sreagent incidents setup_pagerduty   --subscription <s> --resource-group <rg> --agent <a> --name <n> --api-key-env <env>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
-azmcp sreagent incidents setup servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
+azmcp sreagent incidents setup_servicenow  --subscription <s> --resource-group <rg> --agent <a> --name <n> --instance-url <url> --auth-type <type>
 ```
 
 #### Workflows
