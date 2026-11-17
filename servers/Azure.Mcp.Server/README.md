@@ -1304,6 +1304,16 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### Azure Monitor dashboards with Grafana
+
+* Find, inspect, and update saved Azure Monitor dashboards with Grafana
+* Query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health
+* Run PromQL queries against Azure Monitor managed service for Prometheus workspaces
+* Run KQL queries against Azure Data Explorer (Kusto) clusters
+* Inspect Azure Monitor health models and their history
+
+_These tools come from the [Azure Monitor dashboards with Grafana remote MCP server](https://learn.microsoft.com/azure/managed-grafana/azure-monitor-dashboards-mcp-server), which accepts Microsoft Entra ID user accounts only. They are unavailable when Azure MCP authenticates as a service principal or managed identity._
+
 ### 💾 Azure NetApp Files
 
 * "List my Azure NetApp Files accounts"
