@@ -828,9 +828,10 @@ fabmcp core get-item-definition --workspace-id cfafbeb1-8037-4d0c-896e-a46fb27ff
 On completed export, the result still includes `definition` and adds the published `outputDirectory`.
 Keep any returned format when packaging edited files later; the tool does not invent a format or
 write an extra manifest. Omission of `output-directory` means **no filesystem access or output**.
-The option is hidden and rejected over HTTP, and a separate service-level capability check rejects
-file access even when command-schema checks are bypassed. File paths are on the local MCP host,
-not the remote client's machine. Linked/junction, UNC/device, and unsafe part paths are rejected.
+The option is hidden and rejected over HTTP, and separate service-level capability checks, including one in the shared
+file service, reject file access even when command-schema checks are bypassed. File paths are on the local MCP host,
+not the remote client's machine. Linked/junction, UNC/device, and unsafe part paths are rejected. Like Git checkouts,
+export also rejects any destination or part path with a `.git` segment, so exported content cannot create Git metadata.
 These checks assume a trusted local filesystem, not an OS sandbox against concurrent hostile changes.
 
 **Resuming without restarting**

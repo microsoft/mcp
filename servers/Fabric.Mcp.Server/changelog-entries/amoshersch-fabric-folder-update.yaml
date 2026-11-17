@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_update-folder to rename one logical workspace folder by explicit workspace and folder IDs with a required display name, typed updated metadata, and safe mutation-outcome guidance."

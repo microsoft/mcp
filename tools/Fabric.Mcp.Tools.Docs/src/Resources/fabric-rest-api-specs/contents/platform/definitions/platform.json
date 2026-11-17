@@ -1481,33 +1481,6 @@
           "description": "The object id.",
           "type": "string",
           "format": "uuid"
-        },
-        "objectType": {
-          "description": "The type of Microsoft Entra ID object. Additional objectType types may be added over time.",
-          "type": "string",
-          "enum": [ "Group", "User", "ServicePrincipal", "ManagedIdentity" ],
-          "x-ms-enum": {
-            "name": "ObjectType",
-            "modelAsString": true,
-            "values": [
-              {
-                "value": "Group",
-                "description": "Attribute name Group"
-              },
-              {
-                "value": "User",
-                "description": "Attribute name User"
-              },
-              {
-                "value": "ServicePrincipal",
-                "description": "Attribute name ServicePrincipal"
-              },
-              {
-                "value": "ManagedIdentity",
-                "description": "Attribute name ManagedIdentity"
-              }
-            ]
-          }
         }
       }
     },

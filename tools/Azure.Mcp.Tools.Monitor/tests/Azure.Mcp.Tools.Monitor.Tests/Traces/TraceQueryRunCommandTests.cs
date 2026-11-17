@@ -113,6 +113,7 @@ public sealed class TraceQueryRunCommandTests : SubscriptionCommandUnitTestsBase
     [Theory]
     [InlineData("2026-10-12T00:00:00Z", "2026-10-12T00:00:00Z")]
     [InlineData("2026-10-12T01:00:00Z", "2026-10-12T00:00:00Z")]
+    [InlineData("2026-10-12T00:00:00Z", "2026-10-13T00:00:01Z")]
     [InlineData("2026-10-10T00:00:00Z", "2026-10-12T00:00:00Z")]
     [InlineData("invalid", "also-invalid")]
     public async Task ExecuteAsync_InvalidTimeRange_FailsBeforeCallingService(string startTime, string endTime)
@@ -122,6 +123,25 @@ public sealed class TraceQueryRunCommandTests : SubscriptionCommandUnitTestsBase
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AllowsExactlyOneDay()
+    {
+        Service.RunQueryAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(), Arg.Any<int>(), Arg.Any<bool>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(new TraceQueryResult { Status = "Succeeded", OperationId = KnownOperationId });
+
+        var response = await ExecuteCommandAsync(
+            $"{Target} --query {KnownQuery} --start-time 2026-10-12T00:00:00Z --end-time 2026-10-13T00:00:00Z");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).RunQueryAsync(
+            KnownSubscription, KnownResourceGroup, KnownWorkspace, KnownQuery,
+            Arg.Is<DateTimeOffset>(start => start == new DateTimeOffset(2026, 10, 12, 0, 0, 0, TimeSpan.Zero)),
+            Arg.Is<DateTimeOffset>(end => end == new DateTimeOffset(2026, 10, 13, 0, 0, 0, TimeSpan.Zero)),
+            Arg.Any<int>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -103,6 +103,20 @@ jobs:
     inputs:
       summaryFileLocation: $(CoverageFile)
 
+  - task: Powershell@2
+    displayName: "Report build output size"
+    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
+    inputs:
+      pwsh: true
+      targetType: inline
+      script: |
+        $ErrorActionPreference = 'Stop'
+        $script = '$(Build.SourcesDirectory)/eng/scripts/Measure-BuildOutput.ps1'
+        $artifacts = '$(Build.ArtifactStagingDirectory)'
+        & $script -Profile '$(BuildPlatformName)-checkout' -OutputPath "$artifacts/size-checkout.json" -MinimumDuplicateBytes 10485760 | Out-Null
+        $outputDirectories = @(Get-ChildItem -LiteralPath $artifacts -Directory -ErrorAction Stop | Select-Object -ExpandProperty FullName)
+        & $script -RepoRoot $artifacts -AdditionalOutputPath $outputDirectories -Profile '$(BuildPlatformName)-artifacts' -OutputPath "$artifacts/size-artifacts.json" -MinimumDuplicateBytes 10485760 | Out-Null
+
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)

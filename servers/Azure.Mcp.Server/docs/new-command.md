@@ -1942,7 +1942,7 @@ AOT (Ahead-of-Time) compilation is required for all new toolsets to ensure compa
 
 ```powershell
 # Test AOT compatibility - this is REQUIRED for all new toolsets
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 ```
 
 **Expected Outcome**: If your toolset is properly implemented, the build should succeed. However, if AOT compilation fails (which is very likely for new toolsets), follow these steps:
@@ -1972,7 +1972,7 @@ When AOT compilation fails for your new toolset, you need to exclude it from nat
 **Step 3: Verify the fix**
 ```powershell
 # Test that AOT compilation now succeeds
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 
 # Verify regular build still works
 dotnet build
@@ -2406,7 +2406,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
 
 **Issue: AOT compilation fails with runtime dependencies**
 - **Cause**: Some Azure SDK packages or dependencies are not AOT (Ahead-of-Time) compilation compatible
-- **Symptoms**: Build errors when running `./eng/scripts/Build-Local.ps1 -BuildNative`
+- **Symptoms**: Build errors when running `./eng/scripts/Build-Local.ps1 -IncludeNative`
 - **Solution**: Exclude non-AOT safe projects and packages for native builds
 - **Fix Steps**:
   1. **Move toolset setup under conditional compilation** in `servers/Azure.Mcp.Server/src/Program.cs`:
@@ -2428,7 +2428,7 @@ var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentif
      </ItemGroup>
      ```
 - **Examples**: See Cosmos, Monitor, Postgres, Search, VirtualDesktop, and BicepSchema toolsets in Program.cs and Azure.Mcp.Server.csproj
--**Prevention**: Test AOT compilation early in development using `./eng/scripts/Build-Local.ps1 -BuildNative`
+-**Prevention**: Test AOT compilation early in development using `./eng/scripts/Build-Local.ps1 -IncludeNative`
 -**Note**: Toolsets excluded from AOT builds are still available in regular builds and deployments
 
 ## Remote MCP Server Considerations
@@ -2828,7 +2828,7 @@ Before submitting:
 - [ ] Build succeeds with `dotnet build`
 - [ ] Code formatting applied with `dotnet format`
 - [ ] Spelling check passes with `.\eng\common\spelling\Invoke-Cspell.ps1`
-- [ ] **AOT compilation verified** with `./eng/scripts/Build-Local.ps1 -BuildNative`
+- [ ] **AOT compilation verified** with `./eng/scripts/Build-Local.ps1 -IncludeNative`
 - [ ] **Clean up unused using statements**: Run `dotnet format --include="tools/Azure.Mcp.Tools.{Toolset}/**/*.cs"` to remove unnecessary imports and ensure consistent formatting
 - [ ] Fix formatting issues with `dotnet format ./Microsoft.Mcp.slnx` and ensure no warnings
 

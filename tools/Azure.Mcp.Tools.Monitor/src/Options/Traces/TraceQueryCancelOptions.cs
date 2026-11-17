@@ -20,6 +20,6 @@ public sealed class TraceQueryCancelOptions : ISubscriptionOption
     [Option(Description = "The name of the Azure Monitor Workspace enabled for Trace Store.")]
     public required string Workspace { get; set; }
 
-    [Option(Description = "Operation id returned by 'monitor traces query run'.")]
+    [Option(Description = "Operation id returned by a 'monitor traces query' command.")]
     public required string OperationId { get; set; }
 }

@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added jobs_list-item-schedules to read one complete schedule page for an explicit workspace, item, and job type, with extensible settings and explicit continuation."

@@ -273,7 +273,7 @@ If new Azure Backup-specific technical terms are flagged, add them to `tools/Azu
 Azure Backup is marked `IsAotCompatible=true`, so also validate native compilation:
 
 ```powershell
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 ```
 
 If this fails for a new Azure SDK dependency, the toolset may need to be excluded
@@ -342,7 +342,7 @@ Before creating the PR, verify:
 - [ ] **Telemetry tags added** via `AzureBackupTelemetryTags`
 - [ ] **Documentation updated** (commands.md, e2eTestPrompts.md, changelog, README.md, eng/vscode/README.md)
 - [ ] **Commands metadata regenerated** via `Update-AzCommandsMetadata.ps1`
-- [ ] **AOT/native build passes** (`Build-Local.ps1 -BuildNative`)
+- [ ] **AOT/native build passes** (`Build-Local.ps1 -IncludeNative`)
 - [ ] **One tool per PR** (don't bundle unrelated changes)
 
 #### Create the PR

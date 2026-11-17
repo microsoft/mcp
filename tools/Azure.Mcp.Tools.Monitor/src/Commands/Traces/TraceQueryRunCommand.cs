@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.Mcp.Tools.Monitor.Options.Traces;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Mcp.Tools.Monitor.Services.Traces;
+using Azure.Mcp.Tools.Monitor.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -58,12 +59,7 @@ public sealed class TraceQueryRunCommand(
         {
             DateTimeOffset endTime = ParseUtc(options.EndTime) ?? DateTimeOffset.UtcNow;
             DateTimeOffset startTime = ParseUtc(options.StartTime) ?? endTime - DefaultTimeRange;
-            if (startTime >= endTime || endTime - startTime > TimeSpan.FromDays(1))
-            {
-                validationResult.AddError(
-                    "The query time range must be positive and no longer than one day.",
-                    "Invalid trace query time range.");
-            }
+            TraceQueryValidator.ValidateWindow(startTime, endTime, validationResult);
         }
     }
 

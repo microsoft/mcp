@@ -112,7 +112,7 @@ A **namespace** is a top-level command group (e.g., `storage`, `keyvault`, `sql`
 2. **Implement `{Toolset}Setup.cs`** as an `IAreaSetup` — exposes `Name` (lowercase, no dashes), `Title`, registers services in `ConfigureServices`, builds command tree in `RegisterCommands`
 3. **Register in `Program.cs`** `RegisterAreas()` — keep alphabetically sorted
 4. **Add to solution files**: `eng/scripts/Update-Solutions.ps1 -All`
-5. **Verify AOT compatibility**: `./eng/scripts/Build-Local.ps1 -BuildNative`
+5. **Verify AOT compatibility**: `./eng/scripts/Build-Local.ps1 -IncludeNative`
 
 > For the full end-to-end workflow, invoke `/skills add-azure-mcp-tools` in Copilot Chat.
 
@@ -286,7 +286,7 @@ You can duplicate an existing configuration to debug your own new command.
 - [ ] `.\eng\scripts\Update-AzCommandsMetadata.ps1` — metadata up-to-date
 - [ ] Tool descriptions validated with `ToolDescriptionEvaluator` (score ≥ 0.4) (not required for Fabric MCP tools)
 - [ ] Live tests recorded and passing in playback (Azure commands)
-- [ ] AOT check for new toolsets: `./eng/scripts/Build-Local.ps1 -BuildNative`
+- [ ] AOT check for new toolsets: `./eng/scripts/Build-Local.ps1 -IncludeNative`
 - [ ] Changelog entry created if applicable
 - [ ] CODEOWNERS entry added for new toolsets
 - [ ] One tool per PR
@@ -315,7 +315,7 @@ You can duplicate an existing configuration to debug your own new command.
 | Specific tests | `dotnet test --filter "FullyQualifiedName~{TestClass}"` |
 | Update metadata | `.\eng\scripts\Update-AzCommandsMetadata.ps1` |
 | Update solutions | `eng/scripts/Update-Solutions.ps1 -All` |
-| AOT build | `./eng/scripts/Build-Local.ps1 -BuildNative` |
+| AOT build | `./eng/scripts/Build-Local.ps1 -IncludeNative` |
 | Install git hooks | `./eng/scripts/Install-GitHooks.ps1` |
 
 ## How to Get Help

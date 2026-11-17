@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.Monitor.Options.Traces;
 
 public sealed class TraceQueryResumeOptions : ISubscriptionOption
 {
-    [Option(Description = "Operation id returned by 'monitor traces query run'.")]
+    [Option(Description = "Operation id returned by a 'monitor traces query' command.")]
     public required string OperationId { get; set; }
 
     [Option(Description = "Rows requested per results page. Default 100; clamped to 1-1000. Does not change the submitted query's total row limit.")]

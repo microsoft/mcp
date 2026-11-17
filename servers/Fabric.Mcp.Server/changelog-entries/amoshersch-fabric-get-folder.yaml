@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_get-folder to read one logical workspace folder by explicit workspace and folder IDs, returning safe metadata and available parent information without lookups, retries, or polling."

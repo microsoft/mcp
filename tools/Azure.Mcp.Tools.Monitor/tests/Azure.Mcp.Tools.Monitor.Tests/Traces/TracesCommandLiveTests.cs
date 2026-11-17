@@ -28,14 +28,137 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             Regex = "tenantId=[0-9a-fA-F-]+,objectId=[0-9a-fA-F-]+",
             Value = "Sanitized",
         }),
+        // The default resource-group sanitizer covers URIs, not ARM IDs in JSON bodies.
+        new(new()
+        {
+            Regex = @"(?i)/resourcegroups/(?<group>[\w\-.()]{1,90})",
+            GroupForReplace = "group",
+            Value = "Sanitized",
+        }),
+        // Preserve valid GUID/trace-ID formats so sanitized values still replay in dependent requests.
+        new(new()
+        {
+            Regex = "\\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\\b",
+            Value = "00000000-0000-0000-0000-000000000000",
+        }),
+        new(new()
+        {
+            Regex = "\\b[0-9a-fA-F]{32}\\b",
+            Value = "00000000000000000000000000000000",
+        }),
     ];
 
-    // Subscription display names are not covered by the default GUID sanitizers.
+    // Trace results can contain customer-defined attributes, span names, and identifiers.
     public override List<BodyKeySanitizer> BodyKeySanitizers =>
     [
         .. base.BodyKeySanitizers,
-        new(new BodyKeySanitizerBody("$..displayName")),
+        .. new[]
+        {
+            "$..displayName",
+            "$..owner",
+            "$..createdBy",
+            "$..lastModifiedBy",
+            "$..trace_id",
+            "$..traceId",
+            "$..span_id",
+            "$..spanId",
+            "$..rootSpanResourceId",
+            "$..uniqueRecordId",
+            "$..['span.name']",
+            "$..attribute",
+            "$..attributeValue",
+            "$..insightsMetadata",
+            "$..dataQuality",
+            "$..insightType",
+            "$..issueType",
+            "$..severity",
+            "$..traceStartTime",
+            "$..aggregationDimensions[*]",
+        }.Select(static path => new BodyKeySanitizer(new BodyKeySanitizerBody(path)
+        {
+            Value = path is "$..trace_id" or "$..traceId"
+                ? "00000000000000000000000000000000"
+                : "Sanitized",
+        })),
     ];
+
+    [Fact]
+    public async Task Should_compare_trace_cohorts()
+    {
+        var workspace = GetAnalysisWorkspace();
+        var end = RegisterOrRetrieveVariable("compare_end", DateTimeOffset.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        var start = DateTimeOffset.Parse(end, System.Globalization.CultureInfo.InvariantCulture).AddMinutes(-30)
+            .ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+        var result = await CallToolAsync("monitor_traces_query_analyze-top-attributes", new()
+        {
+            ["subscription"] = Settings.SubscriptionId,
+            ["tenant"] = Settings.TenantId,
+            ["resource-group"] = Settings.ResourceGroupName,
+            ["workspace"] = workspace,
+            ["overall-start-time"] = start,
+            ["overall-end-time"] = end,
+            ["selection-start-time"] = start,
+            ["selection-end-time"] = end,
+            ["selection-field"] = "span_count",
+            ["selection-op"] = ">",
+            ["selection-value"] = "10",
+        });
+        var analysis = result.AssertProperty("result");
+        Assert.Equal("Succeeded", analysis.AssertProperty("status").GetString());
+        Assert.Equal(JsonValueKind.Array, analysis.AssertProperty("payload").AssertProperty("value").ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_analyze_trace_critical_path()
+    {
+        var workspace = GetAnalysisWorkspace();
+        var end = RegisterOrRetrieveVariable("critical_path_end", DateTimeOffset.UtcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+        var start = DateTimeOffset.Parse(end, System.Globalization.CultureInfo.InvariantCulture).AddMinutes(-30)
+            .ToString("O", System.Globalization.CultureInfo.InvariantCulture);
+        var traces = await CallToolAsync("monitor_traces_query_run", new()
+        {
+            ["subscription"] = Settings.SubscriptionId,
+            ["tenant"] = Settings.TenantId,
+            ["resource-group"] = Settings.ResourceGroupName,
+            ["workspace"] = workspace,
+            ["query"] = "Traces | project trace_id",
+            ["start-time"] = start,
+            ["end-time"] = end,
+            ["max-results"] = 1,
+            ["include-spans"] = false,
+        });
+        var rows = traces.AssertProperty("result").AssertProperty("payload").AssertProperty("value");
+        var hasTraces = rows.GetArrayLength() > 0;
+        var traceId = hasTraces ? rows[0].AssertProperty("trace_id").GetString() : "abcdef1234567890abcdef1234567890";
+        var result = await CallToolAsync("monitor_traces_query_analyze-critical-path", new()
+        {
+            ["subscription"] = Settings.SubscriptionId,
+            ["tenant"] = Settings.TenantId,
+            ["resource-group"] = Settings.ResourceGroupName,
+            ["workspace"] = workspace,
+            ["trace-ids"] = new[] { traceId },
+            ["start-time"] = start,
+            ["end-time"] = end,
+        }, resultProcessor: envelope => envelope.TryGetProperty("results", out var results) ? results : envelope);
+        if (!hasTraces)
+        {
+            // Freshly deployed workspaces have no spans; analysis must report that explicitly.
+            Assert.Contains("No traces found", result.AssertProperty("message").GetString());
+            return;
+        }
+        var analysis = result.AssertProperty("result");
+        Assert.Equal("Succeeded", analysis.AssertProperty("status").GetString());
+        Assert.NotEmpty(analysis.AssertProperty("payload").AssertProperty("value").EnumerateArray());
+    }
+
+    private string GetAnalysisWorkspace()
+    {
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("traceAccountName", $"{Settings.ResourceBaseName}-traces");
+        // The proxy sanitizes resource names, but not saved variables; save a template instead.
+        var template = workspace.Replace(Settings.ResourceBaseName, "{base}", StringComparison.Ordinal);
+        return RegisterOrRetrieveVariable("trace_workspace", template)
+            .Replace("{base}", Settings.ResourceBaseName, StringComparison.Ordinal);
+    }
 
     [Fact]
     public async Task Should_list_trace_accounts()

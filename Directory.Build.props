@@ -24,6 +24,16 @@
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
+  <!-- Azure.Mcp.Server.Tests loads the entire Azure server in-process. Its runtime lives
+       under .work with project-local intermediates and separate production output.
+       Keep other projects out of this directory: Test-Code.ps1 can run test projects
+       concurrently while coverage instrumentation rewrites the assemblies in a test's
+       output directory in place, and the perf pipeline and scripts expect
+       Azure.Mcp.Server.PerformanceBenchmarks under its own bin directory. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Azure.Mcp.Server.Tests'">
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == '' and '$(UseArtifactsOutput)' != 'true'">$(RepoRoot).work\test-runtime\Azure.Mcp.Server\</BaseOutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>

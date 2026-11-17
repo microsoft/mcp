@@ -1289,6 +1289,8 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List the distributed trace accounts in my subscription"
 * "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Find attributes distinguishing traces with span_count > 10 from other traces in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg', using the last 30 minutes for both windows"
+* "Analyze the critical path for trace ID '<trace-id>' in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg' from '<start-time>' to '<end-time>'"
 * "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 
@@ -1301,6 +1303,16 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Start Azure Monitor instrumentation orchestration for my local workspace"
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
+
+### Azure Monitor dashboards with Grafana
+
+* Find, inspect, and update saved Azure Monitor dashboards with Grafana
+* Query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health
+* Run PromQL queries against Azure Monitor managed service for Prometheus workspaces
+* Run KQL queries against Azure Data Explorer (Kusto) clusters
+* Inspect Azure Monitor health models and their history
+
+_These tools come from the [Azure Monitor dashboards with Grafana remote MCP server](https://learn.microsoft.com/azure/managed-grafana/azure-monitor-dashboards-mcp-server), which accepts Microsoft Entra ID user accounts only. They are unavailable when Azure MCP authenticates as a service principal or managed identity._
 
 ### 💾 Azure NetApp Files
 

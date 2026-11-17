@@ -67,6 +67,21 @@ public sealed class FabricItemDefinitionExportServiceTests()
     }
 
     [Fact]
+    public void GitMetadataDestination_IsRejectedBeforeWriting()
+    {
+        using var root = new FabricDefinitionTestDirectory();
+
+        var error = Assert.Throws<FabricItemDefinitionExportException>(() =>
+            CreateService().ValidateDestination(Path.Combine(root.Path, ".git")));
+
+        Assert.Equal(HttpStatusCode.BadRequest, error.StatusCode);
+        Assert.Contains(".git", error.Message);
+        Assert.DoesNotContain(root.Path, error.Message);
+        Assert.Empty(_files.ReceivedCalls());
+        Assert.Empty(Directory.EnumerateFileSystemEntries(root.Path));
+    }
+
+    [Fact]
     public async Task Export_ForwardsCompletedDefinitionAndCancellationWithoutChangingParts()
     {
         using var root = new FabricDefinitionTestDirectory();

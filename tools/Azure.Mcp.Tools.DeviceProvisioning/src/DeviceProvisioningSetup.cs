@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.DeviceProvisioning.Commands.Onboarding;
 using Azure.Mcp.Tools.DeviceProvisioning.Commands.Service;
 using Azure.Mcp.Tools.DeviceProvisioning.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +18,11 @@ public class DeviceProvisioningSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient();
         services.AddSingleton<IDeviceProvisioningService, DeviceProvisioningService>();
+        services.AddSingleton<IDeviceProvisioningOnboardingService, DeviceProvisioningOnboardingService>();
         services.AddSingleton<DeviceProvisioningServiceGetCommand>();
+        services.AddSingleton<DeviceProvisioningOnboardingValidateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -34,7 +38,12 @@ public class DeviceProvisioningSetup : IAreaSetup
         deviceProvisioning.AddSubGroup(service);
         service.AddCommand<DeviceProvisioningServiceGetCommand>(serviceProvider);
 
+        var onboarding = new CommandGroup(
+            "onboarding",
+            "Validate Azure Device Provisioning Service onboarding configuration.");
+        deviceProvisioning.AddSubGroup(onboarding);
+        onboarding.AddCommand<DeviceProvisioningOnboardingValidateCommand>(serviceProvider);
+
         return deviceProvisioning;
     }
 }
-

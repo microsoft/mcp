@@ -307,7 +307,10 @@ try {
         exit $LastExitCode
     }
 
-    $coverageArg = $CollectCoverage ? "--coverlet --coverlet-output-format cobertura" : ""
+    # Exclude test helper libraries such as Microsoft.Mcp.Tests; they aren't product code. Test projects that
+    # apply a helper attribute at assembly level load that library before Coverlet can rewrite it in place,
+    # which aborts coverage collection for the whole test project on Windows.
+    $coverageArg = $CollectCoverage ? "--coverlet --coverlet-output-format cobertura --coverlet-exclude '[*.Tests]*'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--report-xunit-trx --output 'Detailed'"
     $filterArg = switch ($TestType) {
