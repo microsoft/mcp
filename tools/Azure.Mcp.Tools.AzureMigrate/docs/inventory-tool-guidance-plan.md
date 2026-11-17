@@ -116,7 +116,8 @@ will therefore also render for text-only calls, so it must handle that case (for
 Decisions so far:
 
 - Upload happens **directly from the browser** (the widget PUTs the file to the write-only SAS URL).
-- The azcopy command is **removed**; the widget is the only upload path.
+- The azcopy command was to be removed. Update (2026-11-18): it is kept only as a fallback; see "Widget upload and status
+  tracking" below.
 
 Finding (verified 2026-11-17): a CORS preflight (`OPTIONS`, method `PUT`, headers `x-ms-blob-type,content-type`) to
 `discoverysvccanecyrepsa.blob.core.windows.net` from `https://m365.cloud.microsoft`, `https://copilot.microsoft.com`
@@ -243,6 +244,128 @@ precedent, option B is now the chosen direction.
 | Chunked or streamed upload from the widget | No | — | **Not taken.** We would have to track how far each upload has got (block IDs and offset) and keep that state somewhere that survives a restart. If azmcp crashed or was recycled mid-upload, the upload couldn't resume without that state and the user would have to start again. That means extra state management, cleanup of uncommitted blocks, and retry logic for little benefit, since B uploads in one request. |
 | A. Cowork workspace file passed to the tool (`contentEncoding: base64`) | No (analysed from the Cowork doc and azmcp code) | — | The file arrives base64-encoded inside one `tools/call` on the main MCP endpoint. Kestrel's 30 MB default body limit applies, and base64 grows the file by a third (about 21 MiB raw maximum). The SDK also buffers the whole JSON body in memory. Cowork caps it at 150 MiB per call and tool calls should finish in under 30 s. |
 | C. Single-request relay through azmcp | Not built | — | **Not taken; kept as the fallback** if the CORS change is not approved. Every file would pass through azmcp, which by default hits Kestrel's 30 MB (about 28.6 MiB) request-body limit. That limit isn't overridden in azmcp today, so the upload route would need its own higher limit. It would also depend on App Service request-size and timeout limits, and use azmcp bandwidth for every upload. B avoids all of that and matches the portal. |
+
+### Widget upload and status tracking: built and tested (2026-11-18)
+
+Option B is built as a proof of concept (OneBox Discovery Service, local azmcp behind a dev tunnel, Cowork plugin
+"Azure Migrate (Local Widget)") and tested end to end in Cowork for both a file upload and a text-only change.
+
+**What we learned**
+
+- **Widget origin:** `https://cowork-<id>.widget-renderer.usercontent.microsoft` (found with the origin probe). The
+  storage CORS rule `https://*.widget-renderer.usercontent.microsoft`, methods `PUT`/`OPTIONS`, is enough. Verified on the
+  OneBox account: Cowork origin 200, other origins 403. The scripts to check and set the rule are in Discovery Service
+  [PR 17984633](https://msazure.visualstudio.com/DefaultCollection/One/_git/AzureMigrate-DiscoveryService/pullrequest/17984633)
+  (`docs/Scripts/StorageCors`). The production storage accounts still need this rule, which needs sign-off.
+- **The file picker works** in Cowork's sandboxed widget iframe. The browser `PUT` to the SAS returns 201.
+- **One panel for both modes:** Cowork renders the widget on every `createorupdate` call, including text-only ones.
+  azmcp omits null fields, so a text-only result has no `uploadCommand`. The widget recognises the result by
+  `sessionId` + `success` and shows "Updating your inventory, nothing needs to be uploaded" instead of the file picker.
+  The upload UI is hidden until an upload URL is present.
+- **Panel height:** report the body's content height in `ui/notifications/size-changed`. `documentElement.scrollHeight`
+  never drops below the frame's current height and left a large empty gap in the chat.
+- **`ui/message` rejected:** a widget can wake the agent only with `ui/message`, which Cowork shows as a user message in
+  the chat (queued as "Waiting" while the agent is busy). The requirement is that only the user writes chat messages,
+  so the widget never posts messages.
+- **Proxy timeout:** a widget `tools/call` goes through Cowork's proxy, which times out in under about 27 s. The
+  status tool's 25-second wait times out there, so the widget calls it with `no-wait` (a single check).
+- **Before the file arrives** the operation status is `Running`, the same as while the file is processed (see Deferred).
+- **azcopy** is kept only as a fallback, shown if the user says the panel is missing or the upload failed.
+
+**Who tracks the status: the agent, in the same turn**
+
+`createorupdate` returns straight away. The agent starts tracking in the same reply, without waiting for the user to say
+the file is uploaded, and keeps calling the status tool while the user uploads in the panel. Because the status stays
+`Running` until the file arrives and is processed, the agent just keeps checking. When it completes, the agent
+summarises the result in the chat. Nothing in the code loops: the agent repeats the call because of:
+
+1. The `createorupdate` description: "Next: … Start tracking it right away with the inventory status tool … and keep
+   tracking until it completes".
+2. The status description: "When: right after create-or-update succeeds, and again while the operation has not
+   completed" and "Next: while 'isCompleted' is false, call it again quietly …".
+3. The per-result `instructions` (the strongest signal): `WidgetFileInstructions` ("Right away, in this same reply,
+   start tracking … Do not wait for the user to say the file is uploaded"), the text-only result ("Start tracking the
+   inventory status right away …") and every status result that is not complete ("… check the status again quietly …
+   until isCompleted is true").
+
+`isCompleted` is the stop condition. This relies on the model following the text. It worked in every test, but it is
+not enforced in code, and Cowork's limits on how long one turn can run are unknown.
+
+**Intervals**
+
+| Caller | Interval | Per call |
+| --- | --- | --- |
+| Agent (`inventory_status`) | No timer: calls again as soon as the previous call returns, about every 30 to 40 s on OneBox | Waits up to 25 s on the server: checks the Discovery Service at once, then after gaps of 2, 4, 8 and 11 s. Returns early when complete; otherwise returns the latest status with `isCompleted: false` and the instructions to check again |
+| Panel (display only) | Every 30 s, at most 60 times (about 30 min), until complete | `no-wait`: a single check |
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User (Cowork chat)
+    participant A as Cowork agent
+    participant P as Panel (MCP Apps widget)
+    participant M as azmcp
+    participant D as Discovery Service /mcprestapi
+    participant S as Azure Storage (SAS)
+
+    U->>A: Request (file inventory or text change)
+    A->>M: inventory_createorupdate
+    alt Non-text mode (file)
+        M->>D: PUT session (create or reuse) + invoke
+        D-->>M: 202 operationId + write-only SAS uri
+        M-->>A: sessionId, operationId, uploadCommand, instructions
+        M-->>P: tool-result (Cowork renders the panel)
+        P->>P: Shows "Upload your inventory file" + file picker
+    else Text mode (text-only = true, existing session)
+        M->>D: invoke (inputType Text, message)
+        D-->>M: 202 operationId (no SAS)
+        M-->>A: sessionId, operationId, instructions (no uploadCommand)
+        M-->>P: tool-result (Cowork renders the panel)
+        P->>P: Shows "Updating your inventory, nothing to upload"
+    end
+
+    Note over A: Same turn, no user message needed:<br/>agent starts tracking right away
+
+    par Agent tracking (drives the chat summary)
+        loop until isCompleted
+            A->>M: inventory_status (sessionId, operationId)
+            loop long-poll up to 25 s (checks at 2/4/8/11 s)
+                M->>D: GET operationstatus
+                D-->>M: status
+            end
+            M-->>A: status, isCompleted
+        end
+        A-->>U: Summary in chat (servers, changes, answers)
+    and Non-text mode only: user uploads in the panel meanwhile
+        U->>P: Choose file
+        P->>S: PUT blob (browser, needs storage CORS)
+        S-->>P: 201 Created
+        P->>P: "Uploaded X. Copilot will summarise it when ready"
+        S-->>D: File picked up, transformation runs
+    and Panel display polling (display only, never posts chat messages)
+        loop every 30 s, up to 60 times, until isCompleted
+            P->>M: tools/call inventory_status (no-wait, via Cowork proxy)
+            M->>D: GET operationstatus (single check)
+            D-->>M: status
+            M-->>P: status
+            P->>P: "Inventory status: Running / Succeeded"
+        end
+    end
+```
+
+**Test results in Cowork**
+
+- File upload, made 45 s after the panel appeared: the agent was already tracking. About 35 s after the upload it
+  summarised on its own; the panel showed "Inventory Succeeded"; no message was posted on the user's behalf.
+- Text-only "add a new server winabc running Windows Server 2016": the request went in as text only (no SAS). The panel
+  showed "Updating your inventory", and the agent tracked the change and confirmed it.
+
+**Open**
+
+- The panel checks only every 30 s, so it can show `Running` after the agent has already summarised.
+- The agent's summary of a file upload was thin ("Files checked: 4" rather than the server count).
+- The widget code, the `no-wait` option and the instruction changes are not committed yet; their unit tests have not
+  been run.
 
 ## Deferred (needs Discovery Service changes)
 
