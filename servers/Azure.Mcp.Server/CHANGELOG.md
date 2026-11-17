@@ -2,15 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.9 (Unreleased)
+## 4.0.0-beta.9 (2026-11-17)
 
 ### Features Added
 
+- Added the Azure Monitor dashboards with Grafana remote MCP server (`https://mcp.dashboard.azure.com`) to the registry, exposing its dashboard, Azure Monitor, Prometheus, Kusto, and health model tools through the `dashboards` namespace. [[#4172](https://github.com/microsoft/mcp/pull/4172)]
+
 ### Breaking Changes
+
+- SRE Agent: `connectors create_mcp`, `incidents setup_servicenow` and `incidents setup_pagerduty` are now available only when the server runs locally (stdio). [[#4194](https://github.com/microsoft/mcp/pull/4194)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed local NPX package verification on Linux and paths containing special characters. [[#4175](https://github.com/microsoft/mcp/pull/4175)]
+- Fixed Azure Backup 'vault create --storage-type' and 'vault update --redundancy' failing with BMSUserErrorRedundancySettingsUseVaultApi; redundancy is now applied through the vault API when required. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Azure Backup commands now accept a full vault resource ID for '--vault' and a resource group resource ID for '--resource-group' instead of failing with 'Invalid resource id', and report clear errors for malformed or conflicting values. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Fixed Azure Backup 'protecteditem get' failing with ArgumentNullException for Backup vault instances whose datasource resourceProperties has no objectType; such instances no longer prevent the rest of the vault from being listed. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Azure Backup 'backup status' now returns actionable guidance for unregistered resource providers and tenant mismatches. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
 
 ## 4.0.0-beta.8 (2026-11-12)
 
