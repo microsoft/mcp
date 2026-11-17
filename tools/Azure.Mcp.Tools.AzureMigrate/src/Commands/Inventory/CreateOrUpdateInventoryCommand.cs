@@ -21,17 +21,19 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
     Id = "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f",
     Name = "createorupdate",
     Title = "Create or Update Azure Migrate Inventory",
-    Description = "Creates or updates an Azure Migrate server inventory for the signed-in user from a file on the user's machine " +
-        "(for example a CMDB, CSV, Excel or zip export). Call this once, straight away, when the user asks to create, update, build, " +
-        "import or upload an inventory. Do not ask the user to attach or send the file in the chat first: the user uploads it from " +
-        "their own machine with the returned command. Pass 'session-id' only to update an inventory created earlier in the " +
-        "conversation. Returns 'sessionId', 'operationId', 'uploadCommand' (an azcopy command) and 'instructions'. Follow " +
-        "'instructions' and show 'uploadCommand' to the user exactly as returned, in a code block, without retyping or shortening it. " +
+    Description = "Starts Discovery: creates or updates the signed-in user's Azure Migrate server inventory. This is the mandatory " +
+        "first step before assessing an estate or generating an ROI summary. Use it when the user says, for example, 'I want to " +
+        "upload the inventory of my estate' or 'I have an updated inventory' (a CMDB, CSV, Excel or zip export on their machine). " +
+        "Call it once, straight away; do not ask the user to attach or send the file in the chat first. Pass 'session-id' only to " +
+        "update an inventory created earlier in the conversation. Returns 'sessionId', 'operationId', 'uploadCommand' (an azcopy " +
+        "command the user runs on their own machine to upload the file) and 'instructions'. Follow 'instructions' and show " +
+        "'uploadCommand' to the user exactly as returned, in a code block, without retyping or shortening it. " +
         "To change, correct or ask about an existing inventory without a new file (for example 'set web-01's OS to Windows Server " +
         "2025' or 'memory is in GB'), pass 'session-id', 'message' with the user's request as written, and 'text-only' true; no " +
         "upload command is returned then. " +
-        "This tool does not upload the file or wait for the result: use the inventory status tool with 'sessionId' and 'operationId'. " +
-        "Do not mention tool or parameter names to the user.",
+        "This tool does not upload the file or wait for the result. Track the upload and transformation with the inventory status " +
+        "tool using the same 'sessionId' and 'operationId', and keep checking until it completes before exporting the inventory " +
+        "or creating an assessment. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
@@ -162,7 +164,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 $"inside it on its own, and do not repeat it later. Ask them to replace {FilePathPlaceholder} with the full path of their file " +
                 $"and run it on their own machine within {UploadWindowMinutes} minutes; the file must be at most {MaxFileSizeMegabytes} MB. " +
                 "AzCopy v10 is required (download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the file in the chat. " +
-                "After the upload finishes they can ask for the inventory status; keep sessionId and operationId for that.");
+                "Once the user says the upload has finished, track the inventory status with this sessionId and operationId until it " +
+                "completes, then summarise the result. Do not export the inventory or create an assessment before then.");
     }
 
     /// <summary>
@@ -224,8 +227,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             UploadWindowMinutes: null,
             MaxFileSizeMegabytes: null,
             Instructions: "Tell the user their request was sent to update the inventory and nothing needs to be uploaded. " +
-                "They can ask for the inventory status to see the result, which answers questions or confirms the changes; " +
-                "keep sessionId and operationId for that.");
+                "Now track the inventory status with this sessionId and operationId until it completes, then summarise the result, " +
+                "which answers questions or confirms the changes. Do not export the inventory or create an assessment before then.");
 
     /// <summary>
     /// Builds the azcopy command for a write-only blob SAS URL, or returns null if the URL is not a valid http(s) URL.

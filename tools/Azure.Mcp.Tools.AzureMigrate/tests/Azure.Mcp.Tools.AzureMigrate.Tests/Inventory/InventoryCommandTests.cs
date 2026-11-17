@@ -140,6 +140,71 @@ public class InventoryCommandTests
         Assert.Contains("No HA assessment operation was found", notFound.Error);
     }
 
+    [Fact]
+    public void ParseStatus_InventoryRunning_TellsAgentToKeepTracking()
+    {
+        var r = GetInventoryStatusCommand.Parse("s1", "op", new(200, "{\"status\":\"Running\"}", null, null));
+
+        Assert.Contains("keep checking until isCompleted is true", r.Instructions);
+    }
+
+    private static readonly DsBackdoorClient.DsResponse s_running = new(200, "{\"status\":\"Running\"}", null, null);
+    private static readonly DsBackdoorClient.DsResponse s_succeeded = new(200, "{\"status\":\"Succeeded\",\"properties\":{\"result\":\"ok\"}}", null, null);
+
+    private static async Task<(GetInventoryStatusCommand.GetInventoryStatusCommandResult Result, int Calls, List<TimeSpan> Delays)> WaitAsync(
+        params DsBackdoorClient.DsResponse[] responses)
+    {
+        int calls = 0;
+        List<TimeSpan> delays = [];
+        var result = await GetInventoryStatusCommand.WaitForCompletionAsync(
+            "s1", "op",
+            _ => Task.FromResult(responses[Math.Min(calls++, responses.Length - 1)]),
+            (d, _) => { delays.Add(d); return Task.CompletedTask; },
+            CancellationToken.None);
+        return (result, calls, delays);
+    }
+
+    [Fact]
+    public async Task WaitForCompletion_PollsUntilSucceeded()
+    {
+        var (result, calls, delays) = await WaitAsync(s_running, s_running, s_succeeded);
+
+        Assert.True(result.IsCompleted);
+        Assert.Equal("ok", result.Result);
+        Assert.Equal(3, calls);
+        Assert.Equal([TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4)], delays);
+    }
+
+    [Fact]
+    public async Task WaitForCompletion_StillRunningAfterAllChecks_ReturnsRunning()
+    {
+        var (result, calls, delays) = await WaitAsync(s_running);
+
+        Assert.True(result.Success);
+        Assert.False(result.IsCompleted);
+        Assert.Equal(GetInventoryStatusCommand.s_pollDelays.Length + 1, calls);
+        Assert.Equal(GetInventoryStatusCommand.MaxWaitSeconds, (int)delays.Sum(d => d.TotalSeconds));
+    }
+
+    [Fact]
+    public async Task WaitForCompletion_RetriesTransientError()
+    {
+        var (result, calls, _) = await WaitAsync(s_running, new(503, "{}", "busy", null), s_succeeded);
+
+        Assert.True(result.IsCompleted);
+        Assert.Equal(3, calls);
+    }
+
+    [Fact]
+    public async Task WaitForCompletion_NotFound_ReturnsImmediately()
+    {
+        var (result, calls, delays) = await WaitAsync(new DsBackdoorClient.DsResponse(404, "{}", "x", null));
+
+        Assert.False(result.Success);
+        Assert.Equal(1, calls);
+        Assert.Empty(delays);
+    }
+
     private const string ReadSas = "https://acct.blob.core.windows.net/c/inv/output.csv?sv=2022-11-02&sp=r&sr=b&sig=abc%3D";
 
     [Fact]

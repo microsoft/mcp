@@ -11,19 +11,22 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
 /// <summary>
-/// POC: returns the current status of an inventory operation with one call to the Discovery Service
+/// POC: tracks an inventory operation (upload and transformation) on the Discovery Service
 /// (GET /mcprestapi/sessions/{id}/operationstatus/{operationId}), forwarding the caller's bearer token unchanged.
-/// It does not wait or poll.
+/// Each call waits up to about <see cref="MaxWaitSeconds"/> seconds for the operation to complete before returning,
+/// so the agent can call it repeatedly with the same session and operation until it completes.
 /// </summary>
 [CommandMetadata(
     Id = "6e866a7d-d20d-4e98-9737-8240b7ad9957",
     Name = "status",
     Title = "Get Azure Migrate Inventory Status",
-    Description = "Gets the current status of an Azure Migrate inventory operation started by the inventory create-or-update tool. " +
-        "Call this once when the user asks about the progress or result of their inventory; do not loop or wait. Requires 'session-id' " +
-        "and 'operation-id' from the latest create-or-update result in the conversation (ask the user to start an inventory if there " +
-        "is none). Returns 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions', and when finished either " +
-        "'result' or 'errorCode'/'errorMessage'. Follow 'instructions'. Summarise 'result' in plain language without inventing details. " +
+    Description = "Tracks an Azure Migrate inventory operation (file upload and transformation, or a text-only update) started by " +
+        "the inventory create-or-update tool. Requires 'session-id' and 'operation-id' from the latest create-or-update result in " +
+        "the conversation (ask the user to start an inventory if there is none). Each call waits up to about a minute for the " +
+        "operation to finish. Returns 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions', and when " +
+        "finished either 'result' or 'errorCode'/'errorMessage'. While 'isCompleted' is false, call it again with the same " +
+        "'session-id' and 'operation-id' until it is true; the inventory must be complete before it is exported or assessed. " +
+        "Follow 'instructions'. Summarise 'result' in plain language without inventing details. " +
         "Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -36,6 +39,12 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     : BaseCommand<GetInventoryStatusOptions, GetInventoryStatusCommand.GetInventoryStatusCommandResult>
 {
     private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
+
+    // Re-checks within one call while the operation runs: 2, 4, 8, 16 and 30 seconds apart (about a minute in total).
+    internal static readonly TimeSpan[] s_pollDelays =
+        [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(16), TimeSpan.FromSeconds(30)];
+
+    internal const int MaxWaitSeconds = 60;
 
     private readonly ILogger<GetInventoryStatusCommand> _logger = logger;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
@@ -71,10 +80,43 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             return Fail(sessionId, operationIdText, null, authError);
         }
 
-        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(baseUrl, sessionId!, operationId), token, null,
-            Guid.NewGuid().ToString(), "get operation status", cancellationToken);
-        return Parse(sessionId!, operationId.ToString("D"), response);
+        string url = DsBackdoorClient.OperationStatusUrl(baseUrl, sessionId!, operationId);
+        return await WaitForCompletionAsync(
+            sessionId!,
+            operationId.ToString("D"),
+            ct => DsBackdoorClient.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", ct),
+            (delay, ct) => Task.Delay(delay, ct),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Checks the operation status and, while it is still running, checks again after each of <see cref="s_pollDelays"/>.
+    /// A missing operation or a failure on the first check is returned straight away; later transient failures are retried.
+    /// </summary>
+    internal static async Task<GetInventoryStatusCommandResult> WaitForCompletionAsync(
+        string sessionId,
+        string operationId,
+        Func<CancellationToken, Task<DsBackdoorClient.DsResponse>> getStatusAsync,
+        Func<TimeSpan, CancellationToken, Task> delayAsync,
+        CancellationToken cancellationToken)
+    {
+        GetInventoryStatusCommandResult result = Parse(sessionId, operationId, await getStatusAsync(cancellationToken));
+        foreach (TimeSpan delay in s_pollDelays)
+        {
+            if (!result.Success || result.IsCompleted)
+            {
+                break;
+            }
+
+            await delayAsync(delay, cancellationToken);
+            GetInventoryStatusCommandResult polled = Parse(sessionId, operationId, await getStatusAsync(cancellationToken));
+            if (polled.Success || polled.HttpStatus == (int)HttpStatusCode.NotFound)
+            {
+                result = polled;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -122,8 +164,13 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     {
         if (!isCompleted)
         {
-            return $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
-                "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
+            return subject == "inventory"
+                ? "Tell the user the inventory is still being processed. If they have not uploaded their file yet, remind them once to " +
+                    "run the upload command shared earlier within the upload window and wait for them to confirm the upload. Otherwise " +
+                    "check the status again with the same sessionId and operationId, and keep checking until isCompleted is true " +
+                    "before exporting the inventory or creating an assessment."
+                : $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
+                    "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }
 
         if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))

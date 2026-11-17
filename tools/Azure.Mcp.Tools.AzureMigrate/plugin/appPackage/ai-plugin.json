@@ -8,7 +8,7 @@
   "functions": [
     {
       "name": "azuremigrate_inventory_createorupdate",
-      "description": "Creates or updates an Azure Migrate inventory and returns an upload command for the user's file plus the session and operation IDs.",
+      "description": "Starts Discovery, the mandatory first step before assessing an estate: creates or updates an Azure Migrate inventory and returns an upload command for the user's file plus the session and operation IDs to track it with.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -19,7 +19,7 @@
     },
     {
       "name": "azuremigrate_inventory_status",
-      "description": "Gets the current status of an Azure Migrate inventory operation.",
+      "description": "Tracks an Azure Migrate inventory operation (upload and transformation); call it again with the same session and operation until it completes, before export or assessment.",
       "capabilities": {
         "security_info": {
           "data_handling": [
