@@ -51,7 +51,12 @@ public class AzureMigrateSetup : IAreaSetup
         // Assessment (POC): external assessment create and operation status APIs (placeholders for now).
         services.AddSingleton<IAssessmentCreateClient, AssessmentCreateClient>();
         services.AddSingleton<IAssessmentOperationStatusClient, AssessmentOperationStatusClient>();
-        services.AddSingleton<IHaSessionClient, DsHaSessionClient>();
+        // HA is mocked until the HA skill is deployed on the Discovery Service; set AZUREMIGRATE_HA_MOCK=false for real calls.
+        services.AddSingleton<DsHaSessionClient>();
+        services.AddSingleton<MockHaSessionClient>();
+        services.AddSingleton<IHaSessionClient>(sp => MockHaSessionClient.IsEnabled
+            ? sp.GetRequiredService<MockHaSessionClient>()
+            : sp.GetRequiredService<DsHaSessionClient>());
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();
         services.AddSingleton<GetHaStatusCommand>();

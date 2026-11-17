@@ -29,7 +29,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
         "(up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires " +
         "'assessment-name', 'target-region' (an Azure region name such as 'eastus'), 'currency' (a three-letter code such as 'USD') and " +
         "'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent " +
-        "them. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', " +
+        "them. Optional settings such as savings option, Azure Hybrid Benefit, discount, scaling factors, environment type, disk types, " +
+        "VM families, uptime and licensing program use the assessment defaults when left out; pass them only when the user asks for them " +
+        "and do not ask for them otherwise. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', " +
         "'assessmentOutputUrl', 'haOperationId' and 'instructions'. Follow 'instructions'; if the assessment is still running, keep " +
         "'operationId' to check its status later. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
@@ -99,6 +101,99 @@ public sealed partial class CreateAssessmentCommand(
     /// <summary>Delay before status poll <paramref name="attempt"/> (0-based): <see cref="InitialPollDelay"/> doubled on each attempt.</summary>
     internal static TimeSpan GetPollDelay(int attempt) => InitialPollDelay * Math.Pow(2, attempt);
 
+    /// <summary>
+    /// Validates the optional settings and returns them with enum values in the assessment's spelling, or null when none were supplied.
+    /// </summary>
+    internal static (AssessmentSettings? Settings, string? Error) BuildSettings(CreateAssessmentOptions o)
+    {
+        List<string> errors = [];
+
+        double? Range(string option, double? value, double min, double max)
+        {
+            if (value is not null && (double.IsNaN(value.Value) || value < min || value > max))
+            {
+                errors.Add($"'{option}' must be between {min} and {max}.");
+            }
+
+            return value;
+        }
+
+        int? IntRange(string option, int? value, int min, int max)
+        {
+            if (value is not null && (value < min || value > max))
+            {
+                errors.Add($"'{option}' must be between {min} and {max}.");
+            }
+
+            return value;
+        }
+
+        string? One(string option, string? value, string[] allowed)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            string? match = allowed.FirstOrDefault(a => a.Equals(value.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (match is null)
+            {
+                errors.Add($"'{option}' must be one of: {string.Join(", ", allowed)}.");
+            }
+
+            return match;
+        }
+
+        string[]? Many(string option, string[]? values, string[]? allowed)
+        {
+            string[]? items = values?.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            if (items is null || items.Length == 0)
+            {
+                return null;
+            }
+
+            return allowed is null ? items : items.Select(v => One(option, v, allowed)!).ToArray();
+        }
+
+        string? subscriptionId = string.IsNullOrWhiteSpace(o.BillingSubscriptionId) ? null : o.BillingSubscriptionId.Trim();
+        if (subscriptionId is not null && !Guid.TryParse(subscriptionId, out _))
+        {
+            errors.Add("'billing-subscription-id' must be a subscription ID (GUID).");
+        }
+
+        AssessmentSettings settings = new()
+        {
+            ScalingFactor = Range("scaling-factor", o.ScalingFactor, 1, 2),
+            StorageScalingFactor = Range("storage-scaling-factor", o.StorageScalingFactor, 1, 2),
+            DiscountPercentage = Range("discount-percentage", o.DiscountPercentage, 0, 100),
+            EnvironmentType = One("environment-type", o.EnvironmentType, ["Production", "DevTest"]),
+            LicensingProgram = One("licensing-program", o.LicensingProgram, ["Retail", "EA", "MCA"]),
+            BillingSubscriptionId = subscriptionId,
+            SavingsOption = One("savings-option", o.SavingsOption, ["None", "RI1Year", "RI3Year", "SavingsPlan1Year", "SavingsPlan3Year"]),
+            AzureOfferCode = One("azure-offer-code", o.AzureOfferCode,
+                ["MSAZR0003P", "MSAZR0023P", "MSMCAZR0044P", "MSMCAZR0059P", "MSMCAZR0060P", "MSMCAZR0063P", "MSAZRUSGOV0003P", "EA"]),
+            SecurityOfferingType = One("security-offering-type", o.SecurityOfferingType, ["NO", "MDC"]),
+            DiskTypes = Many("disk-types", o.DiskTypes, ["Standard", "StandardSSD", "Premium", "StandardOrPremium", "Ultra", "PremiumV2"]),
+            PricingTier = One("pricing-tier", o.PricingTier, ["Standard", "Basic"]),
+            StorageRedundancy = One("storage-redundancy", o.StorageRedundancy,
+                ["LocallyRedundant", "GeoRedundant", "ZoneRedundant", "ReadAccessGeoRedundant"]),
+            AzureHybridBenefit = One("azure-hybrid-benefit", o.AzureHybridBenefit, ["Yes", "No"]),
+            LinuxAzureHybridBenefit = One("linux-azure-hybrid-benefit", o.LinuxAzureHybridBenefit, ["Yes", "No"]),
+            VmFamilies = Many("vm-families", o.VmFamilies, null),
+            UptimeDaysPerMonth = IntRange("uptime-days-per-month", o.UptimeDaysPerMonth, 1, 31),
+            UptimeHoursPerDay = IntRange("uptime-hours-per-day", o.UptimeHoursPerDay, 1, 24),
+            VmSecurityOptions = Many("vm-security-options", o.VmSecurityOptions, ["Standard", "TVM", "CVM"]),
+            ManagementServices = Many("management-services", o.ManagementServices, null),
+        };
+
+        if (errors.Count > 0)
+        {
+            return (null, string.Join(" ", errors.Distinct()));
+        }
+
+        return settings == new AssessmentSettings() ? (null, null) : (settings, null);
+    }
+
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CreateAssessmentOptions options, CancellationToken cancellationToken)
     {
@@ -140,6 +235,12 @@ public sealed partial class CreateAssessmentCommand(
             return Fail(name, null, "'inventory-sas-uri' is required and must be an https read-only SAS URL of the collector ZIP.");
         }
 
+        (AssessmentSettings? settings, string? settingsError) = BuildSettings(options);
+        if (settingsError is not null)
+        {
+            return Fail(name, null, settingsError);
+        }
+
         (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
@@ -147,7 +248,7 @@ public sealed partial class CreateAssessmentCommand(
         }
 
         // TODO: Pass the caller's workspace id once it is defined.
-        AssessmentRequest request = new(name!, WorkspaceId: null, inventorySasUri!, region, currency);
+        AssessmentRequest request = new(name!, WorkspaceId: null, inventorySasUri!, region, currency, settings);
         AssessmentOperation operation = await _createClient.CreateAssessmentAsync(request, token, cancellationToken);
         if (operation.HttpStatus is not (>= 200 and < 300) || operation.OperationId is null)
         {
@@ -206,7 +307,10 @@ public sealed partial class CreateAssessmentCommand(
 
         HaSessionResult ha = await _haClient.StartAsync(token, new HaInput(inventorySasUri!, operation.OutputUrl!), cancellationToken);
         return Result(request, operation, operationId, ha,
-            ha.FailedStep is null
+            ha.FailedStep is null && MockHaSessionClient.IsMockSession(ha.SessionId)
+                ? "Tell the user the assessment has completed. The HA assessment is mocked because the HA skill is not deployed yet, " +
+                  "so no HA assessment was run. " + DownloadInstructions
+                : ha.FailedStep is null
                 ? "Tell the user the assessment has completed and the HA assessment has started with their inventory and the assessment; " +
                   "it runs in the background and they do not need to upload anything. " + DownloadInstructions + " Keep haSessionId " +
                   "and haOperationId to check the HA assessment later."

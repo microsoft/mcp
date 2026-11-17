@@ -23,8 +23,8 @@ writes only the caller's own partition.
 | `azuremigrate_inventory_createorupdate` | Creates or reuses the user's Discovery session, invokes it and returns an upload command for the inventory file. With `text-only`, `session-id` and `message`, it refines an existing inventory from the message alone (corrections, guidance, questions) and returns no upload command. | DS session PUT + invoke (text-only: invoke with `inputType: Text`) |
 | `azuremigrate_inventory_status` | Checks an inventory invocation once. | DS operationstatus |
 | `azuremigrate_inventory_export` | Returns a download link and command for the refined inventory (`artifacts=external`) or the offline zip (`artifacts=internal`). | DS session export |
-| `azuremigrate_assessment_create` | Creates the assessment from the user's collector ZIP (`inventory-sas-uri`), polls its operation up to 10 times with exponential backoff (1, 2, 4 ... 512 seconds, about 17 minutes), then starts the HA session, uploads the HA input mini zip and returns the assessment download command and the HA operation id. | Assessment create and operation status APIs (stub clients, not implemented yet) + DS session PUT + invoke + HA input PUT |
-| `azuremigrate_assessment_status` | Checks an assessment operation once; on success returns a new download link and command for the assessment output. | Assessment operation status API (stub client, not implemented yet) |
+| `azuremigrate_assessment_create` | Creates the assessment from the user's collector ZIP (`inventory-sas-uri`), polls its operation up to 10 times with exponential backoff (1, 2, 4 ... 512 seconds, about 17 minutes), then starts the HA session, uploads the HA input mini zip and returns the assessment download command and the HA operation id. | Assessment create and operation status APIs + DS session PUT + invoke + HA input PUT |
+| `azuremigrate_assessment_status` | Checks an assessment operation once; on success returns a new download link and command for the assessment output. | Assessment operation status API |
 | `azuremigrate_assessment_hastatus` | Checks an HA operation once. | DS operationstatus |
 
 ## Flow
@@ -105,8 +105,9 @@ sequenceDiagram
   recommendations JSON.
 - **External assessment APIs are behind two interfaces.** `IAssessmentCreateClient` (create) and
   `IAssessmentOperationStatusClient` (operation status). Their implementations, `AssessmentCreateClient`
-  and `AssessmentOperationStatusClient`, are empty stubs that throw `NotImplementedException` until the
-  API calls are added.
+  and `AssessmentOperationStatusClient`, call the Assessment Service (`PUT
+    /businessCaseRestApi/machineAssessmentsFromZip/{name}` and `GET .../operations/{id}?workspaceId=...`) through the
+    shared `AssessmentApi` helper, forwarding the caller's token.
 - **The user supplies the collector ZIP as a read SAS URL** (`inventory-sas-uri`). It is validated as an
   absolute http(s) URL and never logged or echoed.
 - **Polling.** The create tool polls the operation up to 10 times, 1 second apart and doubling each
@@ -114,6 +115,14 @@ sequenceDiagram
   found) fails at once. If it is still running after the last poll, the tool returns the operation id
   and the HA session is not started.
 - **Currency** must be one of the 25 codes the Business Case Service accepts.
+- **Optional assessment settings come from the customer.** The required inputs are name, target region,
+  currency and the inventory SAS URL. The optional settings are scaling factor, storage scaling factor,
+  discount percentage, environment type, licensing program, billing subscription id, savings option,
+  offer code, Defender for Cloud, disk types, pricing tier, storage redundancy, Windows and Linux Azure
+  Hybrid Benefit, VM families, uptime, VM security options and management services. Only supplied
+  settings are sent, so the service defaults apply to the rest. azmcp checks ranges and enum values
+  (case-insensitive) before calling the service. If only one uptime value is given, the other uses its
+  default (31 days, 24 hours).
 
 ## HA input: mini zip
 
@@ -169,7 +178,6 @@ HA-input.zip
 - Get the collector ZIP SAS from the Discovery Service instead of asking the user for it.
 - About 17 minutes of polling may exceed some MCP client tool-call timeouts or the caller's token
   lifetime; revisit if needed.
-- Add more assessment inputs from the customer beyond name, target region and currency.
 - Confirm the HA operation status response shape once the HA skill exists.
 - HA input: agree with the HA skill on the mini zip `manifest.json` shape. Confirm the HA inventory is
   the user's collector ZIP rather than the refined inventory (Discovery external artifacts).

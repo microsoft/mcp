@@ -73,6 +73,13 @@ public sealed class GetHaStatusCommand(ILogger<GetHaStatusCommand> logger, IHttp
             return Fail(sessionId, operationIdText, authError);
         }
 
+        if (MockHaSessionClient.IsMockSession(sessionId))
+        {
+            return new(true, null, (int)HttpStatusCode.OK, sessionId, operationId.ToString("D"), "Succeeded", true,
+                "Mocked HA result: the HA skill is not deployed yet, so no HA assessment was run.", null, null, null,
+                "Tell the user the HA assessment is mocked because the HA skill is not deployed yet, so there is no HA result to show.");
+        }
+
         DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
             _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(baseUrl, sessionId!, operationId), token, null,
             Guid.NewGuid().ToString(), "get HA operation status", cancellationToken);

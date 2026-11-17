@@ -125,6 +125,82 @@ public class AssessmentCommandTests
     }
 
     [Fact]
+    public void BuildSettings_NoOptionalSettings_ReturnsNullSoDefaultsApply()
+    {
+        var (settings, error) = CreateAssessmentCommand.BuildSettings(new CreateAssessmentOptions { DiskTypes = [], VmFamilies = [" "] });
+
+        Assert.Null(error);
+        Assert.Null(settings);
+    }
+
+    [Fact]
+    public void BuildSettings_NormalizesEnumCasing()
+    {
+        var (settings, error) = CreateAssessmentCommand.BuildSettings(new CreateAssessmentOptions
+        {
+            SavingsOption = "ri3year",
+            AzureHybridBenefit = "yes",
+            DiskTypes = ["premium", "PREMIUMV2"],
+            EnvironmentType = " devtest ",
+        });
+
+        Assert.Null(error);
+        Assert.Equal("RI3Year", settings!.SavingsOption);
+        Assert.Equal("Yes", settings.AzureHybridBenefit);
+        Assert.Equal(["Premium", "PremiumV2"], settings.DiskTypes!);
+        Assert.Equal("DevTest", settings.EnvironmentType);
+    }
+
+    [Fact]
+    public void BuildSettings_RejectsInvalidValues()
+    {
+        var (settings, error) = CreateAssessmentCommand.BuildSettings(new CreateAssessmentOptions
+        {
+            ScalingFactor = 3,
+            UptimeHoursPerDay = 25,
+            SavingsOption = "RI5Year",
+            DiskTypes = ["Premium", "Floppy"],
+            BillingSubscriptionId = "not-a-guid",
+        });
+
+        Assert.Null(settings);
+        Assert.Contains("'scaling-factor'", error);
+        Assert.Contains("'uptime-hours-per-day'", error);
+        Assert.Contains("'savings-option'", error);
+        Assert.Contains("'disk-types'", error);
+        Assert.Contains("'billing-subscription-id'", error);
+    }
+
+    [Fact]
+    public void WriteSettings_WritesOnlySuppliedSettingsAndCompletesUptime()
+    {
+        using MemoryStream stream = new();
+        using (Utf8JsonWriter writer = new(stream))
+        {
+            writer.WriteStartObject();
+            AssessmentCreateClient.WriteSettings(writer, new AssessmentSettings
+            {
+                SavingsOption = "RI1Year",
+                UptimeHoursPerDay = 8,
+                DiskTypes = ["Premium"],
+                ManagementServices = ["Backup"],
+            });
+            writer.WriteEndObject();
+        }
+
+        using JsonDocument doc = JsonDocument.Parse(stream.ToArray());
+        JsonElement root = doc.RootElement;
+        Assert.Equal("RI1Year", root.GetProperty("savingsSettings").GetProperty("savingsOptions").GetString());
+        Assert.False(root.GetProperty("savingsSettings").TryGetProperty("azureOfferCode", out _));
+        Assert.Equal(31, root.GetProperty("vmUptime").GetProperty("daysPerMonth").GetInt32());
+        Assert.Equal(8, root.GetProperty("vmUptime").GetProperty("hoursPerDay").GetInt32());
+        Assert.Equal("Premium", root.GetProperty("azureDiskTypes")[0].GetString());
+        Assert.Equal("Backup", root.GetProperty("azureManagementServices")[0].GetProperty("serviceName").GetString());
+        Assert.False(root.TryGetProperty("billingSettings", out _));
+        Assert.False(root.TryGetProperty("scalingFactor", out _));
+    }
+
+    [Fact]
     public async Task Create_SendsSasUriWithoutWorkspaceId()
     {
         var (command, time, create, _, _) = CreateCommand();
