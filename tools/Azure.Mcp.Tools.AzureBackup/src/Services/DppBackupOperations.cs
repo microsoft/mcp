@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -315,13 +316,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         string? protectionStatus = null;
         try
         {
-            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
-            var bi = await instanceResource.GetAsync(cancellationToken);
-            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+            var bi = await DppBackupInstanceReader.GetAsync(armClient, operation.Value.Id, cancellationToken);
+            protectionStatus = bi.Properties?.ProtectionStatus?.Status?.ToString();
         }
-        catch (RequestFailedException)
+        catch (Exception ex) when (ex is RequestFailedException or FormatException or ArgumentException or InvalidOperationException or JsonException)
         {
-            // Transient re-read failure; protection itself succeeded.
+            // Transient or unreadable re-read; protection itself succeeded.
         }
 
         return new ProtectResult(
@@ -351,9 +351,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         try
         {
             var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
-            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
-            var instance = await instanceResource.GetAsync(cancellationToken);
-            return MapToProtectedItemInfo(instance.Value.Data);
+            var instance = await DppBackupInstanceReader.GetAsync(armClient, instanceId, cancellationToken);
+            return MapToProtectedItemInfo(instance);
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
@@ -400,22 +399,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
-        var collection = vaultResource.GetDataProtectionBackupInstances();
 
-        // DPP backup instances sometimes deserialize to an "unknown" polymorphic subtype whose
-        // base-properties converter throws (ArgumentNullException / ArgumentException /
-        // FormatException / InvalidOperationException) inside MoveNextAsync. A single unsupported
-        // instance the enumerator can advance past is skipped so it does not blank the whole list
-        // (matching ListPoliciesAsync above). A failure the enumerator cannot advance past - for
-        // example a page that fails to deserialize because an instance has an empty resourceGroupId -
-        // truncates the listing; that case now surfaces as an error instead of silently returning an
-        // incomplete list as a success.
-        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
-        return await ProtectedItemEnumerator.CollectToleratingItemFailuresAsync(
-            enumerator,
-            static resource => MapToProtectedItemInfo(resource.Data),
-            $"Listing protected items in vault '{vaultName}'");
+        // Read pages directly so one malformed backup instance cannot fail SDK page deserialization and
+        // hide every other instance in the vault.
+        return await DppBackupInstanceReader.ListAsync(
+            armClient,
+            vaultId,
+            static data => MapToProtectedItemInfo(data),
+            cancellationToken);
     }
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
@@ -716,7 +707,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         // The DPP recovery-point deserializer may throw on unknown polymorphic
         // discriminators introduced by newer service versions. Skip the offending
         // item instead of blanking out the entire recovery-point list. Matches the
-        // pattern used by ListPoliciesAsync and ListProtectedItemsAsync.
+        // pattern used by ListPoliciesAsync.
         var enumerator = collection.GetAllAsync(cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
         const int maxConsecutiveFailures = 3;
         var consecutiveFailures = 0;

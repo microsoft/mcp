@@ -314,4 +314,34 @@ public class ContainerGetCommandTests : SubscriptionCommandUnitTestsBase<Contain
         Assert.False(document.RootElement.GetProperty("registered").GetBoolean());
         Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("container").ValueKind);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsRecoveryServicesVaultResourceId()
+    {
+        const string subscription = "f0c630e0-2995-4853-b056-0b3c09cb673f";
+        Service.GetContainerAsync(Vault, Rg, subscription, BareContainerName, Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(SampleContainer());
+
+        var response = await ExecuteCommandAsync(
+            "--resource-group", Rg,
+            "--vault", $"/subscriptions/{subscription}/resourceGroups/{Rg}/providers/Microsoft.RecoveryServices/vaults/{Vault}",
+            "--container", BareContainerName);
+
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ContainerGetCommandResult);
+        Assert.True(result.Registered);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_ForBackupVaultResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", Sub,
+            "--resource-group", Rg,
+            "--vault", $"/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/{Rg}/providers/Microsoft.DataProtection/backupVaults/{Vault}",
+            "--container", BareContainerName);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.RsvOnlyVaultMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
 }
