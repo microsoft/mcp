@@ -34,7 +34,7 @@ public sealed class FabricItemDefinitionExportService(
         }
         try
         {
-            var destination = FabricItemDefinitionPath.GetDirectory(directory);
+            var destination = FabricItemDefinitionPath.GetOutputDirectory(directory);
             FabricItemDefinitionPath.EnsureDirectory(Path.GetDirectoryName(destination)!);
             FabricItemDefinitionPath.EnsureNewDestination(destination);
             return destination;
@@ -43,7 +43,7 @@ public sealed class FabricItemDefinitionExportService(
         {
             throw new FabricItemDefinitionExportException(
                 "Invalid definition export destination. Select a new absolute local directory below an existing parent, " +
-                "using portable paths without links, UNC/device paths, or an existing destination. No files were saved.",
+                "using portable paths without links, UNC/device paths, .git segments, or an existing destination. No files were saved.",
                 HttpStatusCode.BadRequest);
         }
     }

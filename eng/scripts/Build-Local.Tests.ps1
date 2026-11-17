@@ -50,13 +50,13 @@ Describe 'Build-Local NPX verification' {
             param($Command, $DoNotExitOnFailedExitCode)
 
             $DoNotExitOnFailedExitCode | Should -BeTrue
-            $match = [regex]::Match($Command, '^npx --cache "([^"]+)" -y "(file://[^"]+)" tools list$')
+            $match = [regex]::Match($Command, "^npx --cache '((?:[^']|'')+)' -y 'file:((?:[^']|'')+)' tools list$")
             $match.Success | Should -BeTrue
-            $cache = $match.Groups[1].Value
+            $cache = $match.Groups[1].Value.Replace("''", "'")
             Test-Path -LiteralPath $cache -PathType Container | Should -BeTrue
             $cache | Should -Not -Be $env:NPM_CONFIG_CACHE
-            $package = [Uri]$match.Groups[2].Value
-            Test-Path -LiteralPath $package.LocalPath | Should -BeTrue
+            $package = $match.Groups[2].Value.Replace("''", "'")
+            Test-Path -LiteralPath $package | Should -BeTrue
             Set-Content -LiteralPath (Join-Path $cache 'downloaded.dat') -Value 'cache fixture'
             $script:observedCaches.Add($cache)
             if ($script:verificationThrows) {
@@ -86,6 +86,42 @@ Describe 'Build-Local NPX verification' {
         $script:observedCaches.Count | Should -Be 2
         @($script:observedCaches | Sort-Object -Unique).Count | Should -Be 2
         Should -Invoke Invoke-LoggedCommand -Times 2 -Exactly
+    }
+
+    It 'passes a quoted file package spec for <packagePath>' -TestCases @(
+        @{
+            packagePath = "/mnt/vss/_work/1/s/package space #100% 'quoted' $([char]0x2018)curly$([char]0x2019).tgz"
+        }
+        @{
+            packagePath = "C:\work\package space #100% 'quoted' $([char]0x2018)curly$([char]0x2019).tgz"
+        }
+    ) {
+        param($packagePath)
+
+        $expectedCachePath = "cache 'quoted' $([char]0x2018)curly$([char]0x2019)"
+        Mock Get-ChildItem {
+            [pscustomobject]@{
+                FullName = $packagePath
+                Directory = [pscustomobject]@{ Name = 'wrapper' }
+            }
+        }
+        Mock New-Item { [pscustomobject]@{ FullName = $expectedCachePath } }
+        Mock Remove-Item {}
+        Mock Invoke-LoggedCommand {
+            param($Command, $DoNotExitOnFailedExitCode)
+            $parseErrors = $null
+            $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+                $Command, [ref]$null, [ref]$parseErrors)
+            $parseErrors | Should -BeNullOrEmpty
+            $elements = $ast.EndBlock.Statements[0].PipelineElements[0].CommandElements
+            $elements[2].Value | Should -BeExactly $expectedCachePath
+            $elements[4].Value | Should -BeExactly "file:$packagePath"
+            $global:LASTEXITCODE = 0
+        }
+
+        & $verifyPackages
+
+        Should -Invoke Invoke-LoggedCommand -Times 1 -Exactly
     }
 
     It 'reports a failed package invocation and still cleans up' {
