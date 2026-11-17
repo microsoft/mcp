@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Shortened the shared `--subscription`, `--tenant`, `--resource-group`, and `--auth-method` option descriptions to reduce the tokens sent to MCP clients in tool listings."
