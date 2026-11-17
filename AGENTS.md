@@ -34,7 +34,7 @@
 ## Don't
 - Use `subscriptionId` parameter name
 - Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
-- Use the old one-generic `RegisterOptions`/`BindOptions` pattern for new commands (see `/docs/option-conversion.md`)
+- Use the old one-generic `RegisterOptions`/`BindOptions` pattern for new commands
 - Use `OptionDefinitions` static classes for new commands (use `[Option]` attributes instead)
 - Use options class inheritance hierarchies (use flat POCOs with interface constraints)
 - Skip live tests, live test infrastructure, or test recordings for Azure service commands
@@ -117,16 +117,14 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - `tools/Azure.Mcp.Tools.{Service}/` - Individual service toolsets (Storage, SQL, etc.)
 - `eng/scripts/` - Build, test, and deployment PowerShell scripts
 - `.github/skills/add-azure-mcp-tools/SKILL.md` - Implementation guide for new commands
-- `docs/option-conversion.md` - Guide for converting to two-generic option pattern
 - `CONTRIBUTING.md` - Contribution guidelines and workflows
 
 ### Good examples to follow
 - Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/AccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/StorageAccountGetCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/AccountGetCommandTests.cs`
 - Integration tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/StorageCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
-- Option conversion guide: `docs/option-conversion.md`
 
 ### Legacy patterns to avoid
 - Old one-generic `RegisterOptions`/`BindOptions` pattern (use two-generic with `[Option]` attributes)
@@ -167,7 +165,6 @@ dotnet build
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
 - Implementation guide: `/.github/skills/add-azure-mcp-tools/SKILL.md` - Step-by-step command creation
-- Option conversion: `/docs/option-conversion.md` - Converting to two-generic option pattern
 - Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
 - Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
@@ -179,7 +176,6 @@ dotnet build
 - Reference existing commands in similar services as templates
 - Check `/.github/skills/add-azure-mcp-tools/SKILL.md` for implementation patterns
 - Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"`
-- Check `/docs/option-conversion.md` for the two-generic option pattern
 
 ## PR Checklist
 - Format and type check: `dotnet format && dotnet build` - all green
@@ -407,8 +403,6 @@ public sealed class AccountGetCommand(
 }
 ```
 
-> See `/docs/option-conversion.md` for the full conversion guide from one-generic to two-generic pattern.
-
 ### Parameter Naming Standards
 - **Use `subscription`** (never `subscriptionId`) - supports both IDs and names
 - **Use `resourceGroup`** (not `resourceGroupName`)
@@ -537,7 +531,7 @@ await WaitForLroCompletionAsync(lroOperation, cancellationToken);
 ### Development Process
 1. **Create issue**: "Add command: azmcp [service] [resource] [operation]"
 2. **Use Copilot for generation**: Execute in Copilot Chat: `"create [service] [resource] [operation]" command using "/skills add-azure-mcp-tools" as a reference`
-3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md` and **two-generic pattern** in `/docs/option-conversion.md`
+3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md`
 4. **Create live test infrastructure** (if Azure service): Bicep template and post-deployment script
 5. **Submit one tool per pull request** for faster review cycles
 
