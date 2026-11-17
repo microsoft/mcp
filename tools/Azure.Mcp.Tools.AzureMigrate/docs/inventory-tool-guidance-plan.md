@@ -92,6 +92,158 @@ sees progress sooner. The HA status tool shares the parser but keeps its existin
 2. Run the unit tests and build.
 3. Deploy azmcp to App Service and sync the plugin's `mcp-tools.json` from the deployed `tools/list`.
 
+## Open question: who decides the text-only path
+
+Today the agent (LLM) chooses the path by setting the `text-only` flag on `createorupdate`, based on the
+user's words and the tool description. The MCP server only validates the call (`session-id` and `message` are required
+when `text-only` is true) and branches on the flag; it never infers intent from the message.
+
+| User says | Agent's likely choice |
+|---|---|
+| "I want to upload my inventory" | Flag omitted: file path, upload command returned |
+| "Set web-01's OS to Windows Server 2025" (with an earlier `sessionId`) | `text-only: true`: message sent to the Discovery Service |
+| "Update my inventory" (ambiguous) | Either path, or the agent asks the user |
+
+**Risk:** if the agent forgets the flag on a text change, it takes the file path and the user gets an upload command
+they do not need. Nothing on the server catches this.
+
+**Decision:** keep a single `createorupdate` tool with the `text-only` flag; do not split it into separate file and text
+tools. The tool description remains the agent's guide for when to set the flag. Any MCP Apps upload widget on this tool
+will therefore also render for text-only calls, so it must handle that case (for example, show status only).
+
+## MCP Apps upload widget (in design)
+
+Decisions so far:
+
+- Upload happens **directly from the browser** (the widget PUTs the file to the write-only SAS URL).
+- The azcopy command is **removed**; the widget is the only upload path.
+
+Finding (verified 2026-11-17): a CORS preflight (`OPTIONS`, method `PUT`, headers `x-ms-blob-type,content-type`) to
+`discoverysvccanecyrepsa.blob.core.windows.net` from `https://m365.cloud.microsoft`, `https://copilot.microsoft.com`
+and `https://example.com` returns **403 CorsPreflightFailure: no CORS rules match**. So a browser upload is blocked today.
+The SAS token authorises the write but does not bypass CORS. No Discovery Service code change is needed, but its
+storage account(s) need a Blob CORS rule allowing `PUT`/`OPTIONS` and headers `x-ms-blob-type`, `content-type`
+from the widget's origin, in every region the Discovery Service uses for upload. The widget's origin inside Cowork's
+sandboxed iframe is not yet known.
+The plugin package must also list the storage domain in the widget's `connectDomains` and in `validDomains`.
+
+Open: confirm the widget's origin in Cowork, whether a file picker works in the sandboxed iframe, whether azmcp
+supports tool `_meta` and `resources/read`, and whether the widget keeps running when scrolled away. Removing the
+azcopy fallback means a user whose widget does not render (for example, a client without MCP Apps support) has no
+upload path.
+
+### Exploring: local helper app launched by a custom link (spike 2026-11-17)
+
+To avoid both CORS and the azcopy command, the widget opens (via `ui/open-link`, https only) an azmcp page that
+hands off to an installed helper through `azmigrate-upload://`. The helper shows a file picker and uploads natively.
+Production design: the link carries a short-lived token that the helper exchanges with azmcp for the write-only SAS;
+the SAS never appears in a URL.
+
+Spike result (local, Windows): a WinForms helper registered `azmigrate-upload://` under HKCU (no admin). Launching
+the link started the helper, which PUT the file to a real SAS from `createorupdate` (201 Created). The status tool then
+went Running → Succeeded and returned the Discovery Service summary. Not yet tested: the browser's "Open app?"
+prompt from an https page, `ui/open-link` from a Cowork widget, the token exchange, macOS, and distribution/signing.
+
+### Plan: integrate the helper into createorupdate (in discussion)
+
+Target flow: `createorupdate` (file path) returns `uploadLink` (a short-lived token link) instead of `uploadCommand`.
+The widget's **Upload inventory** button opens `https://<azmcp>/upload/launch?t=…`, which opens
+`azmigrate-upload://upload?t=…`. The helper shows a file picker, exchanges the token at `POST /upload/resolve` for the
+write-only SAS and uploads. The widget tracks status and posts `ui/message` on completion. Text-only is unchanged.
+
+Phases:
+1. azmcp: `uploadLink` in the result, `/upload/launch` and `/upload/resolve` endpoints, updated instructions.
+2. Helper: token resolve, file picker, size check, retry, completion message; MSI/winget (Windows first).
+3. Cowork widget: `_meta.ui.resourceUri` on `createorupdate`, Upload button via `ui/open-link`, status polling,
+   `ui/message`; plugin repackage with the azmcp domain in `validDomains`.
+
+Decisions:
+- **Fallback when the helper is not installed:** give the user the azcopy command. The launch page shows it behind
+  "Can't install the helper?" (assumed; not in the chat).
+- **Token:** reusable until expiry. Stateless and encrypted (holds the SAS, sessionId, operationId and user id), expiring
+  with the 30-minute upload window; the helper can retry with the same link.
+- **Delivery order:** ship everything together (azmcp link and endpoints, helper, Cowork widget); no interim chat-link release.
+- **Helper:** Windows only first, packaged as a per-user MSIX (no admin; registers `azmigrate-upload://` in its manifest;
+  auto-updates) signed through ESRP. The Azure Migrate team owns it; it is downloaded from the launch page. macOS users
+  get the azcopy fallback until there is demand.
+
+All plan decisions are settled; implementation has not started.
+
+**Status: rejected (2026-11-18).** Distributing and installing a helper app on each customer's machine is not
+acceptable. The helper approach is dropped; the spike stays only as evidence that native upload to the SAS works.
+
+### Options without install, chunking or streaming (2026-11-18)
+
+Constraints: no app installed on the customer's machine; no chunked or streamed upload.
+
+| Option | How the file reaches storage | Catch |
+| --- | --- | --- |
+| A. Cowork workspace file | Tool parameter with `contentEncoding: base64`; Cowork sends the file in one `tools/call`; azmcp PUTs it | 150 MiB per file/call (Cowork limit) |
+| **B. Storage CORS rule (chosen, 2026-11-18)** | Widget PUTs directly to the SAS | Storage CORS change in every region |
+| C. Single-request relay (earlier choice, now fallback) | Widget sends the whole file in one request to azmcp; azmcp PUTs it to the SAS | File passes through azmcp |
+| D. azcopy command | User runs the command | Was to be removed |
+
+**Decision (updated 2026-11-18): option B.** The widget uploads the file straight to the write-only SAS from the browser,
+the same way the Azure Portal's CSV import already does (see "How the portal's CSV import uploads" below). The file never
+passes through azmcp, so azmcp's body-size limits and memory use don't apply. The only change is adding the Cowork widget
+origin to the existing CORS rule on the DS report storage accounts.
+
+**Earlier decision: option C**, kept as the fallback if the CORS change is not approved. The widget would upload the whole
+file to an azmcp endpoint in one HTTPS request; azmcp would then do one `PUT` to the write-only SAS.
+
+- **Relay mode:** azmcp pipes the incoming request body straight into the SAS `PUT` (no buffering in memory or on disk).
+  The client still sends one request and azmcp makes one outgoing request; this is not chunked upload.
+- **Auth:** `createorupdate` returns a short-lived encrypted upload token (SAS, sessionId, operationId, user id) that
+  the widget sends with the upload; the iframe never sees user credentials.
+- **Verified in azmcp code (2026-11-18):** no `resources/list` / `resources/read` handlers exist yet (widget resource
+  must be added); tool `_meta` is built in `CommandFactoryToolLoader` (can carry `ui.resourceUri`); Kestrel's
+  default 30 MB request-body limit is not overridden, so the upload endpoint must raise it for that route only.
+- **To verify:** App Service request-size and request-timeout limits; whether a file picker works in Cowork's
+  sandboxed iframe. With azcopy removed, a client that cannot render the widget has no upload path.
+
+### How the portal's CSV import uploads (verified 2026-11-18)
+
+The Azure Portal already uploads from the browser straight to a Discovery Service SAS, the same way as option B:
+
+1. The portal calls `POST …/ImportUri`. DS creates a write-only SAS on the report storage account and starts the
+   import job (`ImportSitesController`, `reportStorageClient.GetSASUri(blobName, SasBlobPermissions.Write, …)`).
+2. The browser uploads the file with `@azure/storage-blob` `BlockBlobClient.uploadData(file)`
+   (AzureMigrate-Portal `Client/React/Views/Data/Common/Ajax.ts`, `uploadFileContentsToBlobStorage`, called from
+   `ServerImportOnboardingUtilities.tsx` `uploadCsvAndPollJob`). The portal then polls the job.
+
+The MCP upload SAS (`McpController`, `GetV1Client`) uses the same report storage account (`ReportStorageClient`,
+`ReportStorageAccountManager`). The only difference is the browser origin making the call.
+
+Preflight checks (unauthenticated `OPTIONS`, method `PUT`) against `discoverysvccanecyrepsa` (EUS2EUAP; Stamp04's
+account not tested):
+
+| Origin | Result |
+| --- | --- |
+| `https://portal.azure.com`, `https://ms.portal.azure.com`, `https://anything.portal.azure.com` | Allowed |
+| `https://azuremigrate.reactblade.portal.azure.net`, `https://azuremigrate.hosting.portal.azure.net`, `https://reactblade.portal.azure.net` | Allowed |
+| `https://portal.azure.cn`, `http://portal.azure.com` | Allowed |
+| `https://x.y.portal.azure.net`, `https://foo.azure.com`, `https://portal.azure.us`, `*.office.com`, `*.cloud.microsoft`, `https://example.com` | 403 |
+
+- Allowed methods: GET, PUT, POST, DELETE. Max age: 300 seconds.
+- Wildcards seem to cover only one subdomain level (`*.portal.azure.com` matches; `x.y.portal.azure.net` does not).
+- The DS repo has no CORS configuration, so the rule is set outside the repo (owner not yet identified).
+
+Implication: a browser `PUT` to this account already has a precedent. Option B would add the Cowork widget origin to the
+existing rule list rather than introduce a new kind of access. The widget origin is still unknown; the origin probe
+(an azmcp tool with an MCP Apps widget that reports `location.origin`) is being built to find it. Based on this
+precedent, option B is now the chosen direction.
+
+### Upload options considered: summary (2026-11-18)
+
+| Option | Tried? | Outcome | Why not taken / status |
+| --- | --- | --- | --- |
+| azcopy command (current) | In use | Works; user runs the returned command on their machine | Requires the user to install and run a CLI outside Cowork. To be replaced by an in-Cowork upload. |
+| **B. Widget `PUT` straight to the SAS (browser)** | Yes: preflight from `https://m365.cloud.microsoft`, `https://copilot.microsoft.com`, `https://example.com` | 403 `CorsPreflightFailure` today | **Chosen.** The portal's CSV import already uploads from the browser to the same report storage account, so this follows an existing pattern. The file doesn't go through azmcp. Needed: the Cowork widget origin (origin probe), adding it to the storage CORS rule in every DS region (the owner of the rule is not identified yet), and checking Stamp04's account. |
+| Local helper app via `azmigrate-upload://` link | Yes: Windows spike (WinForms, HKCU registration) | Worked: 201 Created, status went to Succeeded | **Rejected.** (1) We would have to code-sign the exe and maintain the signing pipeline, or Windows SmartScreen and enterprise policy would block it. (2) Customers shouldn't need to install an extra exe just to upload a file: it adds friction, needs admin or IT approval in many organisations, and gives us a client binary to distribute, update and support (plus a separate build for macOS). |
+| Chunked or streamed upload from the widget | No | — | **Not taken.** We would have to track how far each upload has got (block IDs and offset) and keep that state somewhere that survives a restart. If azmcp crashed or was recycled mid-upload, the upload couldn't resume without that state and the user would have to start again. That means extra state management, cleanup of uncommitted blocks, and retry logic for little benefit, since B uploads in one request. |
+| A. Cowork workspace file passed to the tool (`contentEncoding: base64`) | No (analysed from the Cowork doc and azmcp code) | — | The file arrives base64-encoded inside one `tools/call` on the main MCP endpoint. Kestrel's 30 MB default body limit applies, and base64 grows the file by a third (about 21 MiB raw maximum). The SDK also buffers the whole JSON body in memory. Cowork caps it at 150 MiB per call and tool calls should finish in under 30 s. |
+| C. Single-request relay through azmcp | Not built | — | **Not taken; kept as the fallback** if the CORS change is not approved. Every file would pass through azmcp, which by default hits Kestrel's 30 MB (about 28.6 MiB) request-body limit. That limit isn't overridden in azmcp today, so the upload route would need its own higher limit. It would also depend on App Service request-size and timeout limits, and use azmcp bandwidth for every upload. B avoids all of that and matches the portal. |
+
 ## Deferred (needs Discovery Service changes)
 
 - A structured `activeSessionId` on the 409 response, replacing the regex on the error message.
