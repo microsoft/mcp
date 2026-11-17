@@ -42,7 +42,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
         Id = attr.Id;
         Name = attr.Name;
-        Description = attr.Description;
+        Description = DescriptionNormalization.Normalize(attr.Description);
         Title = attr.Title;
         Metadata = attr.ToToolMetadata();
 

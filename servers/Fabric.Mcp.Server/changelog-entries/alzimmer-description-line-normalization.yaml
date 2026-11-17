@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Tool descriptions no longer include line breaks from source-code wrapping, reducing the tokens sent to MCP clients in tool listings. Paragraph breaks and list items are preserved."
