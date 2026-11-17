@@ -347,6 +347,11 @@ namespace Azure.Mcp.Tools.SreAgent.Tests
         [Fact]
         public async Task Should_create_get_and_delete_mcp_connector()
         {
+            if (await AssertLocalToolIsUnavailableInHttpMode("sreagent_connectors_create_mcp"))
+            {
+                return;
+            }
+
             const string connectorName = "live-test-mcp-connector";
 
             // Create (HTTP type with a placeholder endpoint)

@@ -5580,8 +5580,8 @@ azmcp sreagent connectors create kusto --subscription <subscription> \
                                        --name <connector-name> \
                                        --cluster-url <kusto-cluster-url>
 
-# Create or update an MCP connector
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# Create or update an MCP connector (local-only)
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
 azmcp sreagent connectors create mcp --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -5770,9 +5770,11 @@ azmcp sreagent incidents plans create --subscription <subscription> \
                                       --severity <severity> \
                                       --trigger-condition <condition>
 
-# Configure PagerDuty / ServiceNow connectors
-azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
-azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
+# Configure PagerDuty / ServiceNow connectors (local-only)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup pagerduty   --subscription <s> --resource-group <rg> --agent <a> --name <n> --api-key-env <env>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup servicenow  --subscription <s> --resource-group <rg> --agent <a> --name <n> --instance-url <url> --auth-type BearerToken --token-env <env>
 ```
 
 #### Workflows
