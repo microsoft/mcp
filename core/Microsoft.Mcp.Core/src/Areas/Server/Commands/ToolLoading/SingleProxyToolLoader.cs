@@ -580,6 +580,8 @@ public sealed class SingleProxyToolLoader(
             {
                 McpServer = request.Server,
                 ProgressToken = request.Params?.ProgressToken,
+                InputResponses = request.Params?.InputResponses,
+                RequestState = request.Params?.RequestState,
                 ToolNamespaceName = registration.ToolNamespaceName
             };
             var realCommand = baseCommand.GetCommand();

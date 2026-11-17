@@ -49,7 +49,11 @@ sequenceDiagram
     M->>DS: GET operationstatus / POST export
 
     Note over U,BC: 2. Assessment
-    U->>M: assessment_create (name, region, currency, inventorySasUri)
+    U->>M: assessment_create (name, inventorySasUri, region?, currency?)
+    opt Client supports forms
+        M-->>U: Settings form (region, currency, main settings), prefilled
+        U->>M: Accept with values (same call, retried)
+    end
     M->>BC: PUT machineAssessmentsFromZip/{name} (inventorySasUri)
     BC-->>M: 202 + operationId
     loop Up to 10 polls (1, 2, 4 ... 512 seconds)
@@ -115,8 +119,18 @@ sequenceDiagram
   found) fails at once. If it is still running after the last poll, the tool returns the operation id
   and the HA session is not started.
 - **Currency** must be one of the 25 codes the Business Case Service accepts.
-- **Optional assessment settings come from the customer.** The required inputs are name, target region,
-  currency and the inventory SAS URL. The optional settings are scaling factor, storage scaling factor,
+  - **Settings form.** When the client supports forms (MCP elicitation through the SDK's multi
+    round-trip `InputRequiredException`), `assessment_create` first shows a form for target region,
+    currency, savings option, Azure Hybrid Benefit, environment type, discount percentage (0-100) and
+    scaling factor (1-2). It is prefilled with what the agent passed (currency defaults to USD). Accepted
+    values replace the passed ones and are then validated as usual; declining or cancelling creates
+    nothing. Nothing is sent to the service before the form is answered, because the SDK re-runs the
+    tool with the answer. Legacy clients such as Cowork (`initialize` handshake) need a stateful session
+    for this, so the server runs with `--http-stateful-sessions` (`StatefulForInitializeClients`) and the
+    App Service keeps client affinity on. Without form support the tool behaves as before and needs
+    region and currency from the agent.
+  - **Optional assessment settings come from the customer.** The required inputs are name and the
+    inventory SAS URL, plus target region and currency (from the form or the agent). The optional settings are scaling factor, storage scaling factor,
   discount percentage, environment type, licensing program, billing subscription id, savings option,
   offer code, Defender for Cloud, disk types, pricing tier, storage redundancy, Windows and Linux Azure
   Hybrid Benefit, VM families, uptime, VM security options and management services. Only supplied
@@ -187,5 +201,6 @@ HA-input.zip
   17 minutes, so it must return the operation id at once and let the client poll `assessment_status`.
 - If the assessment is still running after the last poll, the HA session is not started. Decide
   whether to start it from the assessment status tool or a separate tool.
+- Confirm which protocol version Cowork negotiates and that it renders the settings form, and whether time spent in the form counts against the 30-second tool call guidance.
 - A new chat has no session id, so export needs a DS "list my sessions" API to find it.
 - Confirm that the offline zip is the internal artifacts output.

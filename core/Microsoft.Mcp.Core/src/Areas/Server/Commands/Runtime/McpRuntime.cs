@@ -111,6 +111,11 @@ public sealed class McpRuntime(IToolLoader toolLoader, ITelemetryService telemet
                 IsError = true,
             };
         }
+        // The tool is asking the client for input (multi round-trip request); the SDK turns this into an input-required result.
+        catch (InputRequiredException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")

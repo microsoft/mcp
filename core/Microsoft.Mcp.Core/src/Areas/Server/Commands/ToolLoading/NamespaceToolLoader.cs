@@ -443,6 +443,8 @@ public sealed class NamespaceToolLoader(
             {
                 McpServer = request.Server,
                 ProgressToken = request.Params?.ProgressToken,
+                InputResponses = request.Params?.InputResponses,
+                RequestState = request.Params?.RequestState,
                 ToolNamespaceName = registration.ToolNamespaceName
             };
             var realCommand = cmd.GetCommand();

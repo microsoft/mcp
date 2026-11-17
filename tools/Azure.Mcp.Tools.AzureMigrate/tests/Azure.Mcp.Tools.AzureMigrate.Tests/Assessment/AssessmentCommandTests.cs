@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
+using ModelContextProtocol.Protocol;
 using NSubstitute;
 using Xunit;
 
@@ -364,6 +365,92 @@ public class AssessmentCommandTests
         Assert.Contains("No bearer token", result.Error);
         await create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
     }
+
+    [Fact]
+    public async Task Create_FormSupported_AsksForSettingsPrefilledBeforeCreating()
+    {
+        var (command, _, create, _, _) = CreateCommand();
+        CreateAssessmentOptions options = ValidOptions();
+        options.Currency = null;
+        options.SavingsOption = "ri3year";
+
+        var ex = await Assert.ThrowsAsync<InputRequiredException>(() => command.RunAsync(
+            options, (_, _) => Task.CompletedTask, TestContext.Current.CancellationToken, canAskForSettings: true));
+
+        ElicitRequestParams form = ex.Result.InputRequests![AssessmentSettingsForm.InputKey].ElicitationParams!;
+        var fields = form.RequestedSchema!.Properties;
+        Assert.Equal("eastus", Assert.IsType<ElicitRequestParams.StringSchema>(fields[AssessmentSettingsForm.TargetRegion]).Default);
+        Assert.Equal("USD", Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(fields[AssessmentSettingsForm.Currency]).Default);
+        Assert.Equal("RI3Year", Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(fields[AssessmentSettingsForm.SavingsOption]).Default);
+        Assert.Null(Assert.IsType<ElicitRequestParams.TitledSingleSelectEnumSchema>(fields[AssessmentSettingsForm.EnvironmentType]).Default);
+        Assert.Null(Assert.IsType<ElicitRequestParams.NumberSchema>(fields[AssessmentSettingsForm.DiscountPercentage]).Default);
+        Assert.Equal([AssessmentSettingsForm.TargetRegion, AssessmentSettingsForm.Currency], form.RequestedSchema.Required!);
+        await create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_FormAccepted_SendsSubmittedValuesAndOnlyFilledSettings()
+    {
+        var (command, _, create, _, _) = CreateCommand();
+        create.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new AssessmentOperation(400, null, null, null, null, "InvalidRequest", "Bad."));
+        var answer = FormAnswer("accept", new()
+        {
+            [AssessmentSettingsForm.TargetRegion] = "West Europe",
+            [AssessmentSettingsForm.Currency] = "EUR",
+            [AssessmentSettingsForm.SavingsOption] = "RI3Year",
+            [AssessmentSettingsForm.DiscountPercentage] = 10,
+        });
+
+        await command.RunAsync(ValidOptions(), (_, _) => Task.CompletedTask, TestContext.Current.CancellationToken,
+            canAskForSettings: true, inputResponses: answer);
+
+        await create.Received(1).CreateAssessmentAsync(
+            Arg.Is<AssessmentRequest>(r => r.TargetRegion == "westeurope" && r.Currency == "EUR"
+                && r.Settings!.SavingsOption == "RI3Year" && r.Settings.DiscountPercentage == 10
+                && r.Settings.AzureHybridBenefit == null && r.Settings.ScalingFactor == null),
+            "token",
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("decline")]
+    [InlineData("cancel")]
+    public async Task Create_FormClosed_CreatesNothing(string action)
+    {
+        var (command, _, create, _, _) = CreateCommand();
+
+        var result = await command.RunAsync(ValidOptions(), (_, _) => Task.CompletedTask, TestContext.Current.CancellationToken,
+            canAskForSettings: true, inputResponses: FormAnswer(action, []));
+
+        Assert.False(result.Success);
+        Assert.Contains("no assessment was created", result.Error);
+        Assert.NotNull(result.Instructions);
+        await create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_FormAcceptedWithInvalidNumber_FailsBeforeCallingService()
+    {
+        var (command, _, create, _, _) = CreateCommand();
+
+        var result = await command.RunAsync(ValidOptions(), (_, _) => Task.CompletedTask, TestContext.Current.CancellationToken,
+            canAskForSettings: true, inputResponses: FormAnswer("accept", new() { [AssessmentSettingsForm.ScalingFactor] = "lots" }));
+
+        Assert.False(result.Success);
+        Assert.Contains("scaling-factor", result.Error);
+        await create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    private static Dictionary<string, InputResponse> FormAnswer(string action, Dictionary<string, object> content) =>
+        new()
+        {
+            [AssessmentSettingsForm.InputKey] = InputResponse.FromElicitResult(new ElicitResult
+            {
+                Action = action,
+                Content = content.ToDictionary(kv => kv.Key, kv => JsonSerializer.SerializeToElement(kv.Value)),
+            }),
+        };
 
     [Fact]
     public void AssessmentRequest_ToStringDoesNotContainSasUri() =>

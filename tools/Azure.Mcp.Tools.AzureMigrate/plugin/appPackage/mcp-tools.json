@@ -64,7 +64,7 @@
     },
     {
       "name": "azuremigrate_assessment_create",
-      "description": "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete (up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires 'assessment-name', 'target-region' (an Azure region name such as 'eastus'), 'currency' (a three-letter code such as 'USD') and 'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent them. Optional settings such as savings option, Azure Hybrid Benefit, discount, scaling factors, environment type, disk types, VM families, uptime and licensing program use the assessment defaults when left out; pass them only when the user asks for them and do not ask for them otherwise. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', 'assessmentOutputUrl', 'haOperationId' and 'instructions'. Follow 'instructions'; if the assessment is still running, keep 'operationId' to check its status later. Do not mention tool or parameter names to the user.",
+      "description": "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete (up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires 'assessment-name' and 'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent them. Pass 'target-region' (an Azure region name such as 'eastus') and 'currency' (a three-letter code such as 'USD') if the user gave them. When the user's app supports forms, the tool shows the user a form to confirm the region, currency, savings option, Azure Hybrid Benefit, environment type, discount and comfort factor, prefilled with what you pass, so do not ask for these in chat first; otherwise, if region or currency is missing, the tool returns an error and you should ask the user for them. Other optional settings such as storage scaling, disk types, VM families, uptime and licensing program use the assessment defaults when left out; pass them only when the user asks for them and do not ask for them otherwise. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', 'assessmentOutputUrl', 'haOperationId' and 'instructions'. Follow 'instructions'; if the assessment is still running, keep 'operationId' to check its status later. Do not mention tool or parameter names to the user.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -74,11 +74,11 @@
           },
           "target-region": {
             "type": "string",
-            "description": "Required. Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'."
+            "description": "Required. Name of the assessment to create: 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'. Pass it if the user gave it; the tool asks the user to confirm it in a form when their app supports forms, and needs it otherwise."
           },
           "currency": {
             "type": "string",
-            "description": "Required. Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'."
+            "description": "Required. Name of the assessment to create: 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'. Pass it if the user gave it; the tool asks the user to confirm it in a form when their app supports forms, and needs it otherwise.Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'. Pass it if the user gave it; the tool asks the user to confirm it in a form when their app supports forms, and needs it otherwise."
           },
           "inventory-sas-uri": {
             "type": "string",
@@ -190,8 +190,6 @@
         },
         "required": [
           "assessment-name",
-          "target-region",
-          "currency",
           "inventory-sas-uri"
         ]
       }
