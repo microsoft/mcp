@@ -21,13 +21,16 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
     Name = "status",
     Title = "Get Azure Migrate Inventory Status",
     Description = "Tracks an Azure Migrate inventory operation (file upload and transformation, or a text-only update) started by " +
-        "the inventory create-or-update tool. Requires 'session-id' and 'operation-id' from the latest create-or-update result in " +
-        "the conversation (ask the user to start an inventory if there is none). Each call waits up to about a minute for the " +
-        "operation to finish. Returns 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions', and when " +
-        "finished either 'result' or 'errorCode'/'errorMessage'. While 'isCompleted' is false, call it again with the same " +
-        "'session-id' and 'operation-id' until it is true; the inventory must be complete before it is exported or assessed. " +
-        "Follow 'instructions'. Summarise 'result' in plain language without inventing details. " +
-        "Do not mention tool or parameter names to the user.",
+        "the inventory create-or-update tool. " +
+        "When: right after create-or-update succeeds, and again while the operation has not completed. " +
+        "How: pass 'session-id' and 'operation-id' from the latest create-or-update result in the conversation; ask the user to " +
+        "start an inventory if there is none. " +
+        "Returns: 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions' and, when finished, either " +
+        "'result' or 'errorCode'/'errorMessage'. Each call waits up to about 25 seconds for the operation to finish. " +
+        "Next: while 'isCompleted' is false, call it again quietly with the same 'session-id' and 'operation-id'; the inventory " +
+        "must be complete before it is exported or assessed. When it is done, summarise 'result' in plain language without " +
+        "inventing details. " +
+        "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
@@ -40,11 +43,11 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
 {
     private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
 
-    // Re-checks within one call while the operation runs: 2, 4, 8, 16 and 30 seconds apart (about a minute in total).
+    // Re-checks within one call while the operation runs: 2, 4, 8 and 11 seconds apart (about 25 seconds in total).
     internal static readonly TimeSpan[] s_pollDelays =
-        [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(16), TimeSpan.FromSeconds(30)];
+        [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(11)];
 
-    internal const int MaxWaitSeconds = 60;
+    internal const int MaxWaitSeconds = 25;
 
     private readonly ILogger<GetInventoryStatusCommand> _logger = logger;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
@@ -124,12 +127,15 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     /// 'inventory' or 'HA assessment') in the error and instructions.
     /// </summary>
     internal static GetInventoryStatusCommandResult Parse(
-        string sessionId, string operationId, DsBackdoorClient.DsResponse response, string subject = "inventory")
+        string sessionId, string operationId, DsBackdoorClient.DsResponse response, string subject = InventorySubject)
     {
         if (response.Status == (int)HttpStatusCode.NotFound)
         {
             return Fail(sessionId, operationId, response.Status,
-                $"No {subject} operation was found for this session and operation ID for the signed-in user.");
+                $"No {subject} operation was found for this session and operation ID for the signed-in user.",
+                subject == InventorySubject
+                    ? "Tell the user this inventory could not be found for them and offer to start a new inventory with their file."
+                    : null);
         }
 
         if (response.Status is not (>= 200 and < 300))
@@ -160,31 +166,38 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             Instructions: GetInstructions(status, isCompleted, errorCode, subject));
     }
 
-    internal static string GetInstructions(string status, bool isCompleted, string? errorCode, string subject = "inventory")
+    internal static string GetInstructions(string status, bool isCompleted, string? errorCode, string subject = InventorySubject)
     {
+        bool inventory = subject == InventorySubject;
         if (!isCompleted)
         {
-            return subject == "inventory"
-                ? "Tell the user the inventory is still being processed. If they have not uploaded their file yet, remind them once to " +
-                    "run the upload command shared earlier within the upload window and wait for them to confirm the upload. Otherwise " +
-                    "check the status again with the same sessionId and operationId, and keep checking until isCompleted is true " +
-                    "before exporting the inventory or creating an assessment."
+            return inventory
+                ? "If you have not already said so, tell the user once that you are waiting for their upload or processing their " +
+                    "inventory; do not repeat it on later checks. Then check the status again quietly with the same sessionId and " +
+                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating an assessment."
                 : $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
                     "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }
 
         if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            return $"Tell the user the {subject} is ready and summarise 'result' in plain language without inventing details.";
+            return $"Tell the user the {subject} is ready and summarise 'result' in plain language without inventing details." +
+                (inventory ? " Then offer to export the inventory or create an assessment." : string.Empty);
         }
 
-        return string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase)
-            ? $"Tell the user the {subject} did not complete because the file was not uploaded within the upload window, and offer to start again."
-            : $"Tell the user the {subject} did not complete and quote 'errorMessage'.";
+        if (string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"Tell the user the {subject} did not complete because the file was not uploaded within the upload window, and offer to start again.";
+        }
+
+        return $"Tell the user the {subject} did not complete and quote 'errorMessage'." +
+            (inventory ? " Offer to start again." : string.Empty);
     }
 
-    private static GetInventoryStatusCommandResult Fail(string? sessionId, string? operationId, int? status, string? error) =>
-        new(false, error ?? "Unknown error.", status, sessionId, operationId, null, false, null, null, null, null, null);
+    internal const string InventorySubject = "inventory";
+
+    private static GetInventoryStatusCommandResult Fail(string? sessionId, string? operationId, int? status, string? error, string? instructions = null) =>
+        new(false, error ?? "Unknown error.", status, sessionId, operationId, null, false, null, null, null, null, instructions);
 
     /// <summary>Result of the inventory status command.</summary>
     public sealed record GetInventoryStatusCommandResult(

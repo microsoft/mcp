@@ -140,12 +140,65 @@ public class InventoryCommandTests
         Assert.Contains("No HA assessment operation was found", notFound.Error);
     }
 
+    [Theory]
+    [InlineData(false, "the inventory has started")]
+    [InlineData(true, "updates their existing inventory, not a new one")]
+    public void FileInstructions_StartTrackingWithoutWaitingForUser(bool reused, string opening)
+    {
+        string instructions = CreateOrUpdateInventoryCommand.FileInstructions(reused);
+
+        Assert.Contains(opening, instructions);
+        Assert.Contains("do not wait for the user to say the upload has finished", instructions);
+    }
+
+    [Theory]
+    [InlineData("validation", null, false, "ask them for the correct value")]
+    [InlineData("auth", null, false, "sign in again")]
+    [InlineData("invokeSession", 404, true, "could not be found")]
+    [InlineData("invokeSession", 400, true, "upload their inventory file first")]
+    [InlineData("invokeSession", 503, true, "temporary service problem")]
+    [InlineData("createSession", null, false, "temporary service problem")]
+    [InlineData("invokeSession", 404, false, "quote 'error'")]
+    [InlineData("createSession", 403, false, "quote 'error'")]
+    public void GetFailureInstructions_SelectsByStepAndStatus(string step, int? status, bool textOnly, string expected) =>
+        Assert.Contains(expected, CreateOrUpdateInventoryCommand.GetFailureInstructions(step, status, textOnly));
+
+    [Fact]
+    public void Fail_UsesExplicitInstructionsWhenGiven()
+    {
+        var r = CreateOrUpdateInventoryCommand.Fail("createSession", "inv-1", "req", 409, "conflict",
+            instructions: CreateOrUpdateInventoryCommand.ActiveSessionInstructions("inv-old"));
+
+        Assert.False(r.Success);
+        Assert.Contains("'inv-old'", r.Instructions);
+    }
+
+    [Fact]
+    public void ParseStatus_NotFound_InventoryOffersNewInventory_HaUnchanged()
+    {
+        var inventory = GetInventoryStatusCommand.Parse("s1", "op", new(404, "{}", "x", null));
+        var ha = GetInventoryStatusCommand.Parse("ha-1", "op", new(404, "{}", "x", null), "HA assessment");
+
+        Assert.Contains("offer to start a new inventory", inventory.Instructions);
+        Assert.Null(ha.Instructions);
+    }
+
+    [Fact]
+    public void GetInstructions_Succeeded_InventoryOffersNextSteps_HaUnchanged()
+    {
+        Assert.Contains("offer to export the inventory or create an assessment",
+            GetInventoryStatusCommand.GetInstructions("Succeeded", true, null));
+        Assert.DoesNotContain("offer to export", GetInventoryStatusCommand.GetInstructions("Succeeded", true, null, "HA assessment"));
+    }
+
     [Fact]
     public void ParseStatus_InventoryRunning_TellsAgentToKeepTracking()
     {
         var r = GetInventoryStatusCommand.Parse("s1", "op", new(200, "{\"status\":\"Running\"}", null, null));
 
         Assert.Contains("keep checking until isCompleted is true", r.Instructions);
+        Assert.Contains("do not repeat it on later checks", r.Instructions);
+        Assert.DoesNotContain("wait for them to confirm the upload", r.Instructions);
     }
 
     private static readonly DsBackdoorClient.DsResponse s_running = new(200, "{\"status\":\"Running\"}", null, null);

@@ -21,19 +21,19 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
     Id = "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f",
     Name = "createorupdate",
     Title = "Create or Update Azure Migrate Inventory",
-    Description = "Starts Discovery: creates or updates the signed-in user's Azure Migrate server inventory. This is the mandatory " +
-        "first step before assessing an estate or generating an ROI summary. Use it when the user says, for example, 'I want to " +
-        "upload the inventory of my estate' or 'I have an updated inventory' (a CMDB, CSV, Excel or zip export on their machine). " +
-        "Call it once, straight away; do not ask the user to attach or send the file in the chat first. Pass 'session-id' only to " +
-        "update an inventory created earlier in the conversation. Returns 'sessionId', 'operationId', 'uploadCommand' (an azcopy " +
-        "command the user runs on their own machine to upload the file) and 'instructions'. Follow 'instructions' and show " +
-        "'uploadCommand' to the user exactly as returned, in a code block, without retyping or shortening it. " +
-        "To change, correct or ask about an existing inventory without a new file (for example 'set web-01's OS to Windows Server " +
-        "2025' or 'memory is in GB'), pass 'session-id', 'message' with the user's request as written, and 'text-only' true; no " +
-        "upload command is returned then. " +
-        "This tool does not upload the file or wait for the result. Track the upload and transformation with the inventory status " +
-        "tool using the same 'sessionId' and 'operationId', and keep checking until it completes before exporting the inventory " +
-        "or creating an assessment. Do not mention tool or parameter names to the user.",
+    Description = "Starts or updates the signed-in user's Azure Migrate server inventory; the required first step before exporting " +
+        "the inventory, assessing an estate or generating an ROI summary. " +
+        "When: the user has a new or updated inventory file (a CMDB, CSV, Excel or zip export on their machine), for example 'I want " +
+        "to upload the inventory of my estate'; wants to correct or ask about their inventory in text, for example 'set web-01's OS " +
+        "to Windows Server 2025' or 'memory is in GB'; or wants to start again after a failed or expired inventory. " +
+        "How: call it once, straight away; do not ask the user to attach or send the file in the chat. Omit 'session-id' for a new " +
+        "inventory; pass the 'sessionId' from an earlier result to update that inventory. For a text change, pass 'session-id', " +
+        "'message' with the user's request as written, and 'text-only' true. " +
+        "Returns: 'sessionId', 'operationId', 'instructions' and, for a file, 'uploadCommand' (an azcopy command the user runs on " +
+        "their own machine). Show 'uploadCommand' exactly as returned, in a code block, without retyping or shortening it. " +
+        "Next: success means the inventory has started, not finished. Start tracking it right away with the inventory status tool " +
+        "using the same 'sessionId' and 'operationId', before exporting the inventory or creating an assessment. " +
+        "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
@@ -109,7 +109,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             if (requestedSessionId is not null && !string.Equals(activeSessionId, requestedSessionId, StringComparison.OrdinalIgnoreCase))
             {
                 return Fail("createSession", requestedSessionId, clientRequestId, create.Status,
-                    $"The user already has a different active inventory session '{activeSessionId}'. Update that session instead.");
+                    $"The user already has a different active inventory session '{activeSessionId}'. Update that session instead.",
+                    instructions: ActiveSessionInstructions(activeSessionId));
             }
 
             // The Discovery Service allows one active session per user and skill type and has no close API yet,
@@ -140,7 +141,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         string? uploadCommand = BuildUploadCommand(uploadUrl);
         if (uploadCommand is null)
         {
-            return Fail("invokeSession", sessionId, clientRequestId, invoke.Status, "The Discovery Service did not return a valid upload URL.");
+            return Fail("invokeSession", sessionId, clientRequestId, invoke.Status, "The Discovery Service did not return a valid upload URL.",
+                instructions: RetryOnceInstructions);
         }
 
         _logger.LogInformation(
@@ -159,14 +161,45 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             UploadCommand: uploadCommand,
             UploadWindowMinutes: UploadWindowMinutes,
             MaxFileSizeMegabytes: MaxFileSizeMegabytes,
-            Instructions: (reusedSession ? "Tell the user this updates their existing inventory. " : "Tell the user the inventory has started. ") +
-                $"Show uploadCommand to the user exactly as returned, in a code block; never retype, shorten or split it, never show the URL " +
-                $"inside it on its own, and do not repeat it later. Ask them to replace {FilePathPlaceholder} with the full path of their file " +
-                $"and run it on their own machine within {UploadWindowMinutes} minutes; the file must be at most {MaxFileSizeMegabytes} MB. " +
-                "AzCopy v10 is required (download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the file in the chat. " +
-                "Once the user says the upload has finished, track the inventory status with this sessionId and operationId until it " +
-                "completes, then summarise the result. Do not export the inventory or create an assessment before then.");
+            Instructions: FileInstructions(reusedSession));
     }
+
+    /// <summary>Returns the instructions for a successful file-based create or update.</summary>
+    internal static string FileInstructions(bool reusedSession) =>
+        (reusedSession
+            ? "Tell the user this updates their existing inventory, not a new one. "
+            : "Tell the user the inventory has started. ") +
+        "Show uploadCommand to the user exactly as returned, in a code block; never retype, shorten or split it, never show the URL " +
+        $"inside it on its own, and do not repeat it later. Ask them to replace {FilePathPlaceholder} with the full path of their file " +
+        $"and run it on their own machine within {UploadWindowMinutes} minutes; the file must be at most {MaxFileSizeMegabytes} MB. " +
+        "AzCopy v10 is required (download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the file in the chat. " +
+        "Then start tracking the inventory status right away with this sessionId and operationId; do not wait for the user to say " +
+        "the upload has finished. Keep checking until it completes, then summarise the result. Do not export the inventory or " +
+        "create an assessment before then.";
+
+    internal const string RetryOnceInstructions =
+        "Tell the user the inventory could not be started because of a temporary service problem and offer to try once more. " +
+        "If it fails again, ask them to try again later.";
+
+    /// <summary>Returns the instructions when the user already has a different active inventory session.</summary>
+    internal static string ActiveSessionInstructions(string activeSessionId) =>
+        $"Tell the user they already have an active inventory ('{activeSessionId}') and offer to continue with it. If they agree, " +
+        $"use '{activeSessionId}' as the session ID for this and later updates.";
+
+    /// <summary>
+    /// Returns the instructions for a failed call, by the step that failed, the Discovery Service HTTP status (null when it
+    /// could not be reached) and whether it was a text-only update.
+    /// </summary>
+    internal static string GetFailureInstructions(string step, int? status, bool textOnly) => (step, status, textOnly) switch
+    {
+        ("validation", _, _) => "Tell the user which input is not valid, based on 'error', and ask them for the correct value; do not guess it.",
+        ("auth", _, _) => "Tell the user their sign-in could not be verified and ask them to sign in again, then try once more.",
+        ("invokeSession", 404, true) => "Tell the user this inventory could not be found for them and offer to start a new inventory with their file.",
+        ("invokeSession", 400, true) => "Tell the user this inventory has no completed import yet, so it cannot be changed in text; " +
+            "ask them to upload their inventory file first.",
+        (_, null or >= 500, _) => RetryOnceInstructions,
+        _ => "Tell the user the inventory could not be started and quote 'error' in plain language.",
+    };
 
     /// <summary>
     /// Updates an existing inventory from the message alone (inputType Text): the Discovery Service continues the skill
@@ -182,7 +215,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             clientRequestId, "invoke session", cancellationToken);
         if (invoke.Status is not (>= 200 and < 300))
         {
-            return Fail("invokeSession", sessionId, clientRequestId, invoke.Status, invoke.Error);
+            return Fail("invokeSession", sessionId, clientRequestId, invoke.Status, invoke.Error, textOnly: true);
         }
 
         string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
@@ -226,9 +259,10 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             UploadCommand: null,
             UploadWindowMinutes: null,
             MaxFileSizeMegabytes: null,
-            Instructions: "Tell the user their request was sent to update the inventory and nothing needs to be uploaded. " +
-                "Now track the inventory status with this sessionId and operationId until it completes, then summarise the result, " +
-                "which answers questions or confirms the changes. Do not export the inventory or create an assessment before then.");
+            Instructions: "Tell the user their change is being applied to the inventory and nothing needs to be uploaded. " +
+                "Start tracking the inventory status right away with this sessionId and operationId and keep checking until it " +
+                "completes, then summarise the result, which answers questions or confirms the changes. Do not export the inventory " +
+                "or create an assessment before then.");
 
     /// <summary>
     /// Builds the azcopy command for a write-only blob SAS URL, or returns null if the URL is not a valid http(s) URL.
@@ -247,8 +281,10 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         return $"azcopy copy \"{FilePathPlaceholder}\" \"{uploadUrl}\" --from-to=LocalBlob --blob-type=BlockBlob --overwrite=true --check-length=false";
     }
 
-    private static CreateOrUpdateInventoryCommandResult Fail(string step, string? sessionId, string? clientRequestId, int? status, string? error) =>
-        new(false, error ?? "Unknown error.", step, status, sessionId, false, null, clientRequestId, null, null, null, null);
+    internal static CreateOrUpdateInventoryCommandResult Fail(
+        string step, string? sessionId, string? clientRequestId, int? status, string? error, bool textOnly = false, string? instructions = null) =>
+        new(false, error ?? "Unknown error.", step, status, sessionId, false, null, clientRequestId, null, null, null,
+            instructions ?? GetFailureInstructions(step, status, textOnly));
 
     /// <summary>Result of the inventory create-or-update command.</summary>
     public sealed record CreateOrUpdateInventoryCommandResult(
