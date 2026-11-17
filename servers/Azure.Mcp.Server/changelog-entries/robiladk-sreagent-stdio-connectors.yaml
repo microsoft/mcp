@@ -1,3 +1,0 @@
-changes:
-  - section: "Breaking Changes"
-    description: "SRE Agent: `connectors create_mcp`, `incidents setup_servicenow` and `incidents setup_pagerduty` are now available only when the server runs locally (stdio)."

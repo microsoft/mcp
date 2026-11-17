@@ -1,9 +1,0 @@
-changes:
-  - section: "Bugs Fixed"
-    description: "Fixed Azure Backup 'vault create --storage-type' and 'vault update --redundancy' failing with BMSUserErrorRedundancySettingsUseVaultApi; redundancy is now applied through the vault API when required."
-  - section: "Bugs Fixed"
-    description: "Azure Backup commands now accept a full vault resource ID for '--vault' and a resource group resource ID for '--resource-group' instead of failing with 'Invalid resource id', and report clear errors for malformed or conflicting values."
-  - section: "Bugs Fixed"
-    description: "Fixed Azure Backup 'protecteditem get' failing with ArgumentNullException for Backup vault instances whose datasource resourceProperties has no objectType; such instances no longer prevent the rest of the vault from being listed."
-  - section: "Bugs Fixed"
-    description: "Azure Backup 'backup status' now returns actionable guidance for unregistered resource providers and tenant mismatches."
