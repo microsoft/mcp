@@ -260,30 +260,34 @@ public class ContainerGetCommandTests : CommandUnitTestsBase<ContainerGetCommand
         Assert.Contains("Authorization failed", response.Message);
     }
 
-    [Theory]
-    [InlineData(null, " next+/=% token ")]
-    [InlineData(" next+/=% token ", " last+/=% token ")]
-    [InlineData(" last+/=% token ", null)]
-    [InlineData(null, null)]
-    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    [Fact]
+    public async Task ExecuteAsync_BindsCursorToContainerListingArguments()
     {
-        Service.GetContainerDetails("testaccount", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>())
-            .Returns(([], nextCursor));
-        var args = new List<string> { "--account", "testaccount", "--prefix", "prefix", "--tenant", "tenant" };
-        if (cursor is not null)
-        {
-            args.AddRange(["--cursor", cursor]);
-        }
+        const string marker = " next+/=% token ";
+        Service.GetContainerDetails("testaccount", null, "prefix", null, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], marker));
+        Service.GetContainerDetails("testaccount", null, "prefix", marker, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], null));
+        string[] args = ["--account", "testaccount", "--tenant", "tenant"];
 
-        var response = await ExecuteCommandAsync(args.ToArray());
-
-        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.ContainerGetCommandResult);
+        var first = await ExecuteCommandAsync([.. args, "--prefix", "prefix"]);
+        var result = ValidateAndDeserializeResponse(first, StorageJsonContext.Default.ContainerGetCommandResult);
         Assert.Empty(result.Containers);
-        Assert.Equal(nextCursor, result.NextCursor);
-        var payload = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.ContainerGetCommandResult);
-        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual(marker, result.NextCursor);
+
+        var final = await ExecuteCommandAsync([.. args, "--prefix", "prefix", "--cursor", result.NextCursor]);
+        var finalResult = ValidateAndDeserializeResponse(final, StorageJsonContext.Default.ContainerGetCommandResult);
+        var payload = JsonSerializer.SerializeToElement(finalResult, StorageJsonContext.Default.ContainerGetCommandResult);
+        Assert.False(payload.TryGetProperty("nextCursor", out _));
         await Service.Received(1).GetContainerDetails(
-            "testaccount", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>());
+            "testaccount", null, "prefix", marker, "tenant", Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync([.. args, "--cursor", result.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

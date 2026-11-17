@@ -27,11 +27,11 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
     }
 
     [Fact]
-    public async Task Execute_WithPagingOptions_ForwardsRequestAndReturnsResponse()
+    public async Task Execute_WithExplicitLimit_ForwardsRequestAndReturnsResponse()
     {
         Service.QueryRecordsByKindAsync(
                 TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 25,
-            "prev-cursor", TestConstants.Tenant, null, Arg.Any<CancellationToken>())
+            null, TestConstants.Tenant, null, Arg.Any<CancellationToken>())
             .Returns(new AdmeResponse<QueryRecordsResponse>(
                 new QueryRecordsResponse { Cursor = "next-cursor", Results = [RecordId] },
                 "test-correlation-id"));
@@ -41,15 +41,15 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
             "--data-partition", TestConstants.DataPartition,
             "--kind", TestConstants.WellKind,
             "--limit", "25",
-            "--cursor", "prev-cursor",
             "--tenant", TestConstants.Tenant);
 
         var result = ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseRecordListResult);
-        Assert.Equal("next-cursor", result.NextCursor);
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual("next-cursor", result.NextCursor);
         Assert.Equal(RecordId, Assert.Single(result.Result.Results));
         Assert.Equal("test-correlation-id", result.CorrelationId);
         var payload = JsonSerializer.SerializeToElement(response, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
-        Assert.Equal("next-cursor", payload.GetProperty("nextCursor").GetString());
+        Assert.Equal(result.NextCursor, payload.GetProperty("nextCursor").GetString());
         Assert.Equal(["results"], payload.GetProperty("result").EnumerateObject().Select(property => property.Name));
     }
 
@@ -77,11 +77,11 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Execute_ContinuesWithNextCursorIncludingEmptyPages(bool emptyFirstPage)
+    public async Task Execute_BindsCursorToTargetAndKindButAllowsChangingLimit(bool emptyFirstPage)
     {
         const string cursor = " opaque+/=%2F== ";
         Service.QueryRecordsByKindAsync(
-                TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 1,
+                TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, Arg.Any<int>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(
                 new AdmeResponse<QueryRecordsResponse>(
@@ -94,20 +94,20 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
         [
             "--endpoint", TestConstants.Endpoint,
             "--data-partition", TestConstants.DataPartition,
-            "--kind", TestConstants.WellKind,
-            "--limit", "1",
         ];
 
-        var firstResponse = await ExecuteCommandAsync(arguments);
+        var firstResponse = await ExecuteCommandAsync([.. arguments, "--kind", TestConstants.WellKind, "--limit", "1"]);
         var first = ValidateAndDeserializeResponse(firstResponse, AdmeJsonContext.Default.AdmeResponseRecordListResult);
-        Assert.Equal(cursor, first.NextCursor);
+        Assert.NotNull(first.NextCursor);
+        Assert.NotEqual(cursor, first.NextCursor);
         Assert.Equal(emptyFirstPage ? 0 : 1, first.Result.Results.Count);
         Assert.Equal("first-correlation", first.CorrelationId);
         var firstPayload = JsonSerializer.SerializeToElement(firstResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
-        Assert.Equal(cursor, firstPayload.GetProperty("nextCursor").GetString());
+        Assert.Equal(first.NextCursor, firstPayload.GetProperty("nextCursor").GetString());
         Assert.Equal(["results"], firstPayload.GetProperty("result").EnumerateObject().Select(property => property.Name));
 
-        var finalResponse = await ExecuteCommandAsync([.. arguments, "--cursor", first.NextCursor!]);
+        var finalResponse = await ExecuteCommandAsync(
+            [.. arguments, "--kind", TestConstants.WellKind, "--limit", "2", "--cursor", first.NextCursor]);
         var final = ValidateAndDeserializeResponse(finalResponse, AdmeJsonContext.Default.AdmeResponseRecordListResult);
         Assert.Equal("opendes:master-data--Well:W-100", Assert.Single(final.Result.Results));
         Assert.Null(final.NextCursor);
@@ -120,8 +120,15 @@ public sealed class RecordListCommandTests : CommandUnitTestsBase<RecordListComm
             TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 1,
             null, null, null, Arg.Any<CancellationToken>());
         await Service.Received(1).QueryRecordsByKindAsync(
-            TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 1,
+            TestConstants.Endpoint, TestConstants.DataPartition, TestConstants.WellKind, 2,
             cursor, null, null, Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync(
+            [.. arguments, "--kind", "osdu:wks:master-data--Well:2.0.0", "--cursor", first.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Theory]

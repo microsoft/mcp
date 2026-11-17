@@ -105,6 +105,11 @@ public static class OptionBinder
             }
         }
 
+        if (instance is ICursorOption { Cursor: { } cursor } && string.IsNullOrWhiteSpace(cursor))
+        {
+            errors.Add(ICursorOption.BlankCursorError);
+        }
+
         if (missingOptions.Count > 0 || errors.Count > 0)
         {
             var messages = new List<string>();

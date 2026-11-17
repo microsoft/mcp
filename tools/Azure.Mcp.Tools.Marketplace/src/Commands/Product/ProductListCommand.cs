@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.Marketplace.Options.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
@@ -17,7 +18,7 @@ namespace Azure.Mcp.Tools.Marketplace.Commands.Product;
     Id = "0485e8f9-61bf-4baf-b914-7fa5530a6f78",
     Name = "list",
     Title = "List Marketplace Products",
-    Description = "Retrieves a page of marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans. If nextCursor is returned, pass it unchanged as cursor with the same filters to retrieve another page.",
+    Description = "Retrieves a page of marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans. If nextCursor is returned, pass it unchanged as cursor with all original parameters to retrieve another page.",
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,
     Idempotent = true,
@@ -35,7 +36,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
     {
         try
         {
-            // Call service operation with required parameters
+            var cursor = new PaginationCursor(Id, options.Subscription, options.Tenant, options.Language, options.Search,
+                options.Filter, options.OrderBy, options.Select, options.Expand);
             var results = await _marketplaceService.ListProducts(
                 options.Subscription!,
                 options.Language,
@@ -43,13 +45,13 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
                 options.Filter,
                 options.OrderBy,
                 options.Select,
-                options.Cursor,
+                cursor.Decode(options.Cursor),
                 options.Expand,
                 options.Tenant,
                 cancellationToken);
 
-            // Set results
-            context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new(results.Items ?? [], cursor.Encode(results.NextCursor)), MarketplaceJsonContext.Default.ProductListCommandResult);
         }
         catch (Exception ex)
         {

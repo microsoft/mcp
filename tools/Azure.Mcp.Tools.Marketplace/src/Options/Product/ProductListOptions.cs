@@ -23,7 +23,7 @@ public sealed class ProductListOptions : ISubscriptionOption, ICursorOption
     [Option(Description = "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\").")]
     public string? Select { get; set; }
 
-    [Option(Description = ICursorOption.CursorDescription + " Keep the same filters.")]
+    [Option(Description = ICursorOption.CursorDescription + " Keep the same subscription, tenant, language, search, filter, orderby, select, and expand.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).")]

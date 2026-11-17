@@ -101,28 +101,30 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         Assert.DoesNotContain("--subscription", CommandDefinition.Options.Select(option => option.Name));
     }
 
-    [Theory]
-    [InlineData(null, " next+/=% token ")]
-    [InlineData(" next+/=% token ", " last+/=% token ")]
-    [InlineData(" last+/=% token ", null)]
-    [InlineData(null, null)]
-    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    [Fact]
+    public async Task ExecuteAsync_BindsCursorToTableListingArguments()
     {
-        Service.ListTables(_knownStorageAccount, cursor, "tenant", Arg.Any<CancellationToken>())
-            .Returns(([], nextCursor));
-        var args = new List<string> { "--account", _knownStorageAccount, "--tenant", "tenant" };
-        if (cursor is not null)
-        {
-            args.AddRange(["--cursor", cursor]);
-        }
+        const string marker = " next+/=% token ";
+        Service.ListTables(_knownStorageAccount, null, "tenant", Arg.Any<CancellationToken>()).Returns(([], marker));
+        Service.ListTables(_knownStorageAccount, marker, "tenant", Arg.Any<CancellationToken>()).Returns(([], null));
+        string[] args = ["--tenant", "tenant"];
 
-        var response = await ExecuteCommandAsync(args.ToArray());
-
-        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.TableListCommandResult);
+        var first = await ExecuteCommandAsync([.. args, "--account", _knownStorageAccount]);
+        var result = ValidateAndDeserializeResponse(first, StorageJsonContext.Default.TableListCommandResult);
         Assert.Empty(result.Tables);
-        Assert.Equal(nextCursor, result.NextCursor);
-        var payload = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.TableListCommandResult);
-        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
-        await Service.Received(1).ListTables(_knownStorageAccount, cursor, "tenant", Arg.Any<CancellationToken>());
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual(marker, result.NextCursor);
+
+        var final = await ExecuteCommandAsync([.. args, "--account", _knownStorageAccount, "--cursor", result.NextCursor]);
+        var finalResult = ValidateAndDeserializeResponse(final, StorageJsonContext.Default.TableListCommandResult);
+        var payload = JsonSerializer.SerializeToElement(finalResult, StorageJsonContext.Default.TableListCommandResult);
+        Assert.False(payload.TryGetProperty("nextCursor", out _));
+        await Service.Received(1).ListTables(_knownStorageAccount, marker, "tenant", Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync([.. args, "--account", "otheraccount", "--cursor", result.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

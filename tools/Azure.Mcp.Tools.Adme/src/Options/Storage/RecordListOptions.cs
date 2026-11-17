@@ -17,7 +17,7 @@ public sealed class RecordListOptions : ICursorOption
     [Option(Description = "The number of record ids to return in one page, from 1 through 100. Defaults to 10.")]
     public int? Limit { get; set; }
 
-    [Option(Description = ICursorOption.CursorDescription)]
+    [Option(Description = ICursorOption.CursorDescription + " Keep the same endpoint, data partition, kind, tenant, and auth app ID. Limit may change.")]
     public string? Cursor { get; set; }
 
     [Option(Description = "The service endpoint, for example 'https://contoso.energy.azure.com'.")]

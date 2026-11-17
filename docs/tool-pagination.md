@@ -17,17 +17,22 @@ public sealed class ListOptions() : ICursorOption
 ```
 
 Use `ICursorOption.CursorDescription` as the entire parameter description, or append tool-specific guidance after it.
-The interface does not register options or fetch pages automatically. The attribute belongs on the concrete property,
-and the command passes the cursor to its service. Keep any page size, filters, expiration, and continuation
-restrictions specific to that tool.
+The attribute belongs on the concrete property. The option binder rejects explicitly supplied empty and
+whitespace-only cursors. Omit `cursor` to start a new request.
+
+Document which arguments must stay the same and which the backing service allows callers to change. Use
+`PaginationCursor` to bind a service token to the tool and the original scope, filters, ordering, and any other
+arguments the service requires to stay fixed. Decode and validate the wrapper before calling the service, then
+forward only the original service token. Leave supported per-page overrides (such as ADME record-list `limit`)
+out of the binding. A fingerprint detects mismatches; it does not replace normal authorization on every page.
 
 ## Result contract
 
 - Return `nextCursor` in the tool's result payload when another page can be requested. Callers pass it unchanged as
-  `cursor`.
+  `cursor` with the same arguments unless the tool documents an override.
 - Omit `nextCursor`, or return null, when enumeration is complete. Callers should also treat an empty `nextCursor` as completion.
-- Treat the value as opaque: do not trim, parse, or re-encode it at the command boundary. Use the service's required
-  URL/body encoding when sending it.
+- The cursor is opaque to callers. Preserve the service token byte-for-byte when wrapping or unwrapping it, and
+  use the service's required URL/body encoding when sending it.
 - An empty page may still have a continuation. Apply a service-specific terminal condition only when that service
   defines it.
 - Preserve existing result collections and wrappers. Register result types in their source-generated `System.Text.Json`
@@ -40,9 +45,10 @@ payload, not the command response envelope.
 
 ## Verification
 
-Test first, continued, and terminal pages through option binding and source-generated result serialization. Verify
-opaque characters are preserved and empty-page behavior follows the tool's contract. Use recorded multi-page tests
-where available without changing the existing request sequence unnecessarily.
+Test first, continued, and terminal pages through option binding and source-generated result serialization. Reject
+blank cursors and changed or missing fixed arguments before dispatch, and test that supported overrides reach the
+service. Verify opaque characters are preserved and empty-page behavior follows the tool's contract. Use recorded
+multi-page tests where available without changing the existing request sequence unnecessarily.
 
 For fixed-size migrations, also verify the exact SDK page-size request, that a call does not drain subsequent pages,
 and that continued calls preserve filters and return a terminal page. Test empty pages with continuation, invalid

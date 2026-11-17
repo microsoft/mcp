@@ -443,11 +443,13 @@ azmcp adme search --endpoint <endpoint> \
                   [--auth-app-id <application-id-or-app-id-uri>]
 
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
-Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Supplying `--cursor` or `--search-after` also selects it.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
 Cursor searches return `results.nextCursor`.
-Pass `nextCursor` unchanged as `--cursor` with the original criteria. It is omitted
-when the cursor-search result is empty or the service returns no continuation.
+Pass `nextCursor` unchanged as `--cursor`. Keep the same endpoint, data partition, tenant, auth app ID, kinds, sort,
+and `--search-after` setting. For snapshot paging, resend all original criteria. With `--search-after`, the service
+may support per-page overrides such as `--limit` and `--returned-fields`.
+`nextCursor` is omitted when the cursor-search result is empty or the service returns no continuation.
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
@@ -481,7 +483,8 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--auth-app-id <application-id-or-app-id-uri>]
 
 # The record listing returns results.nextCursor.
-# Pass nextCursor unchanged as --cursor; omit it for the first page and stop when it is absent.
+# Pass nextCursor unchanged as --cursor with the same endpoint, data partition, kind, tenant, and auth app ID.
+# You may change --limit between pages. Omit --cursor for the first page and stop when nextCursor is absent.
 # An empty record-ID page can still have a nextCursor.
 
 # List all numeric versions of an OSDU record
@@ -3708,7 +3711,7 @@ azmcp marketplace product list --subscription <subscription> \
                                [--cursor <pagination-cursor>]
 
 # Returns one page and nextCursor when more results can be requested.
-# Pass nextCursor unchanged as --cursor with the same filters to continue.
+# Pass nextCursor unchanged as --cursor with the same subscription, tenant, language, search, filter, orderby, select, and expand.
 
 # Get details about an Azure Marketplace product
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -5699,7 +5702,7 @@ azmcp storage blob container create --account <account> \
                                     --container <container>
 
 # Get detailed properties of a Storage container, or one page of up to 100 containers (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same account and prefix. Do not combine --cursor with --container.
+# Pass nextCursor unchanged as --cursor with the same account, prefix, and tenant. Do not combine --cursor with --container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --account <account> \
                                  [--container <container>] \
@@ -5707,7 +5710,7 @@ azmcp storage blob container get --account <account> \
                                  [--cursor <nextCursor>]
 
 # Get detailed properties of a Storage blob, or one page of up to 100 blobs (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same account, container, and prefix. Do not combine --cursor with --blob.
+# Pass nextCursor unchanged as --cursor with the same account, container, prefix, and tenant. Do not combine --cursor with --blob.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --account <account> \
                            --container <container> \
@@ -5780,7 +5783,7 @@ azmcp storage disk diagnose --subscription <subscription> \
 
 ```bash
 # List one page of up to 100 table names in an Azure Storage account (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same account to continue.
+# Pass nextCursor unchanged as --cursor with the same account and tenant to continue.
 # For all Storage listings, continue after empty pages with nextCursor; an omitted/null nextCursor means completion.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage table list --account <account> [--cursor <nextCursor>]

@@ -31,7 +31,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
-| adme_storage_record_list | Fetch the next page of ADME record IDs using the previous response's nextCursor unchanged as cursor, keeping the same endpoint, data partition, kind, and limit | context-required |
+| adme_storage_record_list | Fetch up to 25 ADME record IDs on the next page using the previous nextCursor unchanged, keeping the same endpoint, data partition, kind, and authentication options | context-required |
 | adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
@@ -1095,7 +1095,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | marketplace_product_get | Get details about marketplace product <product_name> | none |
 | marketplace_product_list | Search for Microsoft products in the marketplace | none |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> | none |
-| marketplace_product_list | Get the next page of the previous Marketplace product listing using nextCursor unchanged as cursor and the same subscription and filters | context-required |
+| marketplace_product_list | Get the next page of the previous Marketplace product listing using nextCursor unchanged as cursor and keep all original arguments, including sort and selected fields | context-required |
 
 ## Azure MCP Best Practices
 

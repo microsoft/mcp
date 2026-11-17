@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -21,7 +22,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
         get details for a specific blob. If no blob specified, returns one page of up to 100 blobs, optionally
         filtering on a prefix. The page size is fixed. Pass nextCursor unchanged as --cursor with the same account,
-        container, and prefix to retrieve another page, even if the current page is empty.
+        container, prefix, and tenant to retrieve another page, even if the current page is empty.
         The prefix is ignored if a blob is specified. Do not combine --cursor with --blob.
 
         Required: --account, --container
@@ -56,17 +57,19 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     {
         try
         {
+            var cursor = new PaginationCursor(Id, options.Account, options.Container, options.Prefix, options.Tenant);
             var details = await _storageService.GetBlobDetails(
                 options.Account,
                 options.Container,
                 options.Blob,
                 options.Prefix,
-                options.Cursor,
+                cursor.Decode(options.Cursor),
                 options.Tenant,
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details.Blobs ?? [], details.NextCursor), StorageJsonContext.Default.BlobGetCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new BlobGetCommandResult(details.Blobs ?? [], cursor.Encode(details.NextCursor)), StorageJsonContext.Default.BlobGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

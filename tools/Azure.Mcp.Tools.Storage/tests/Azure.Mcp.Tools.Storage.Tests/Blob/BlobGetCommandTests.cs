@@ -283,33 +283,34 @@ public class BlobGetCommandTests : CommandUnitTestsBase<BlobGetCommand, IStorage
         Assert.Contains("Authorization failed", response.Message);
     }
 
-    [Theory]
-    [InlineData(null, " next+/=% token ")]
-    [InlineData(" next+/=% token ", " last+/=% token ")]
-    [InlineData(" last+/=% token ", null)]
-    [InlineData(null, null)]
-    public async Task ExecuteAsync_PreservesOpaqueCursorsOnEmptyPages(string? cursor, string? nextCursor)
+    [Fact]
+    public async Task ExecuteAsync_BindsCursorToBlobListingArguments()
     {
-        Service.GetBlobDetails("testaccount", "container", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>())
-            .Returns(([], nextCursor));
-        var args = new List<string>
-        {
-            "--account", "testaccount", "--container", "container", "--prefix", "prefix", "--tenant", "tenant"
-        };
-        if (cursor is not null)
-        {
-            args.AddRange(["--cursor", cursor]);
-        }
+        const string marker = " next+/=% token ";
+        Service.GetBlobDetails("testaccount", "container", null, "prefix", null, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], marker));
+        Service.GetBlobDetails("testaccount", "container", null, "prefix", marker, "tenant", Arg.Any<CancellationToken>())
+            .Returns(([], null));
+        string[] args = ["--account", "testaccount", "--container", "container", "--tenant", "tenant"];
 
-        var response = await ExecuteCommandAsync(args.ToArray());
-
-        var result = ValidateAndDeserializeResponse(response, StorageJsonContext.Default.BlobGetCommandResult);
+        var first = await ExecuteCommandAsync([.. args, "--prefix", "prefix"]);
+        var result = ValidateAndDeserializeResponse(first, StorageJsonContext.Default.BlobGetCommandResult);
         Assert.Empty(result.Blobs);
-        Assert.Equal(nextCursor, result.NextCursor);
-        var payload = JsonSerializer.SerializeToElement(result, StorageJsonContext.Default.BlobGetCommandResult);
-        Assert.Equal(nextCursor is not null, payload.TryGetProperty("nextCursor", out _));
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual(marker, result.NextCursor);
+
+        var final = await ExecuteCommandAsync([.. args, "--prefix", "prefix", "--cursor", result.NextCursor]);
+        var finalResult = ValidateAndDeserializeResponse(final, StorageJsonContext.Default.BlobGetCommandResult);
+        var payload = JsonSerializer.SerializeToElement(finalResult, StorageJsonContext.Default.BlobGetCommandResult);
+        Assert.False(payload.TryGetProperty("nextCursor", out _));
         await Service.Received(1).GetBlobDetails(
-            "testaccount", "container", null, "prefix", cursor, "tenant", Arg.Any<CancellationToken>());
+            "testaccount", "container", null, "prefix", marker, "tenant", Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync([.. args, "--prefix", "other", "--cursor", result.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

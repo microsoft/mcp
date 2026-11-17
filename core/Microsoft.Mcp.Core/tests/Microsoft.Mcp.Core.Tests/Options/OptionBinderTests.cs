@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Options;
 using Xunit;
@@ -323,8 +324,6 @@ public sealed class OptionBinderTests
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
     [InlineData("opaque+/=%2F==")]
     [InlineData(" opaque+/=%2F== ")]
     public void BindOptions_Cursor_IsOptionalAndPreservesOpaqueValue(string? cursor)
@@ -343,6 +342,26 @@ public sealed class OptionBinderTests
         ICursorOption options = OptionBinder.BindOptions<CursorTestOptions>(parseResult);
 
         Assert.Equal(cursor, options.Cursor);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \t\r\n")]
+    public void BindOptions_Cursor_RejectsBlankCliAndMcpValues(string cursor)
+    {
+        var command = new Command("test");
+        OptionBinder.RegisterOptions<CursorTestOptions>(command);
+
+        var cli = command.Parse(["--cursor", cursor]);
+        var cliError = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<CursorTestOptions>(cli));
+        Assert.Contains("--cursor must not be empty or whitespace", cliError.Message);
+
+        Assert.True(command.TryParseFromDictionary(
+            new Dictionary<string, JsonElement> { ["cursor"] = JsonSerializer.SerializeToElement(cursor) },
+            out var mcp, out var parseError), parseError);
+        Assert.NotNull(mcp);
+        var mcpError = Assert.Throws<CommandValidationException>(() => OptionBinder.BindOptions<CursorTestOptions>(mcp));
+        Assert.Equal(cliError.Message, mcpError.Message);
     }
 
     [Fact]

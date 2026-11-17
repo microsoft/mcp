@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 
@@ -21,7 +22,7 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
         Show/list containers in a storage account. Use this tool to list blob containers in the storage account or
         show details for a specific Storage container. If no container specified, returns one page of up to 100
         containers, optionally filtering on a prefix. The page size is fixed. Pass nextCursor unchanged as --cursor
-        with the same account and prefix to retrieve another page, even if the current page is empty.
+        with the same account, prefix, and tenant to retrieve another page, even if the current page is empty.
         The prefix is ignored if a container is specified. Do not combine --cursor with --container.
 
         Required: --account
@@ -56,16 +57,18 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger, ISt
     {
         try
         {
+            var cursor = new PaginationCursor(Id, options.Account, options.Prefix, options.Tenant);
             var containers = await _storageService.GetContainerDetails(
                 options.Account,
                 options.Container,
                 options.Prefix,
-                options.Cursor,
+                cursor.Decode(options.Cursor),
                 options.Tenant,
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new ContainerGetCommandResult(containers.Containers ?? [], containers.NextCursor), StorageJsonContext.Default.ContainerGetCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new ContainerGetCommandResult(containers.Containers ?? [], cursor.Encode(containers.NextCursor)), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

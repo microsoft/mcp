@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Commands.Search;
 using Azure.Mcp.Tools.Adme.Models;
@@ -87,27 +88,21 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             default!, default!, default!, default, default, TestContext.Current.CancellationToken);
     }
 
-    [Fact]
-    public async Task Execute_WithCursor_ForwardsContinuation()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" \t")]
+    [InlineData("raw-service-cursor")]
+    public async Task Execute_WithInvalidCursor_DoesNotRestartSearch(string cursor)
     {
-        Service.QueryWithCursorAsync(
-                TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
-            false, null, null, Arg.Any<CancellationToken>())
-            .Returns(new AdmeResponse<SearchCursorResponse>(
-                new SearchCursorResponse { Results = [], Cursor = "NEXT" }, null));
-
         var response = await ExecuteCommandAsync(
             "--endpoint", TestConstants.Endpoint,
             "--data-partition", TestConstants.DataPartition,
             "--kind", TestConstants.WellKind,
-            "--cursor", "PREV");
+            "--cursor", cursor);
 
-        Assert.True(response.Status == System.Net.HttpStatusCode.OK, response.Message);
-        ValidateAndDeserializeResponse(response, AdmeJsonContext.Default.AdmeResponseSearchResponse);
-        await Service.Received(1).QueryWithCursorAsync(
-            TestConstants.Endpoint, TestConstants.DataPartition,
-            Arg.Is<SearchCursorRequest>(request => request.Cursor == "PREV"),
-            false, null, null, Arg.Any<CancellationToken>());
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--cursor", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
@@ -144,27 +139,27 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
             "--kind", TestConstants.WellKind,
             "--query", "id:*",
             "--limit", "1",
-            "--returned-fields", "id",
-            "--cursor-pagination-mode",
         ];
+        string[] criteria = [.. arguments, "--returned-fields", "id"];
 
-        var firstResponse = await ExecuteCommandAsync(arguments);
+        var firstResponse = await ExecuteCommandAsync([.. criteria, "--cursor-pagination-mode"]);
         var first = ValidateAndDeserializeResponse(firstResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
-        Assert.Equal(firstCursor, first.NextCursor);
+        Assert.NotNull(first.NextCursor);
+        Assert.NotEqual(firstCursor, first.NextCursor);
         Assert.Equal("first-correlation", first.CorrelationId);
         Assert.Equal("record-1", Assert.Single(first.Result.Results).GetProperty("id").GetString());
         var firstPayload = JsonSerializer.SerializeToElement(firstResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
-        Assert.Equal(firstCursor, firstPayload.GetProperty("nextCursor").GetString());
+        Assert.Equal(first.NextCursor, firstPayload.GetProperty("nextCursor").GetString());
         Assert.False(firstPayload.GetProperty("result").TryGetProperty("cursor", out _));
 
-        var secondResponse = await ExecuteCommandAsync([.. arguments, "--cursor", first.NextCursor!]);
+        var secondResponse = await ExecuteCommandAsync([.. criteria, "--cursor", first.NextCursor]);
         var second = ValidateAndDeserializeResponse(secondResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
-        Assert.Equal(secondCursor, second.NextCursor);
+        Assert.NotNull(second.NextCursor);
         Assert.Equal("record-2", Assert.Single(second.Result.Results).GetProperty("id").GetString());
         var secondPayload = JsonSerializer.SerializeToElement(secondResponse, ModelsJsonContext.Default.CommandResponse).GetProperty("results");
         Assert.False(secondPayload.GetProperty("result").TryGetProperty("cursor", out _));
 
-        var finalResponse = await ExecuteCommandAsync([.. arguments, "--cursor", second.NextCursor!]);
+        var finalResponse = await ExecuteCommandAsync([.. criteria, "--cursor", second.NextCursor]);
         var final = ValidateAndDeserializeResponse(finalResponse, AdmeJsonContext.Default.AdmeResponseSearchResponse);
         Assert.Empty(final.Result.Results);
         Assert.Null(final.NextCursor);
@@ -185,6 +180,52 @@ public sealed class SearchCommandTests : CommandUnitTestsBase<SearchCommand, ISe
         });
         await Service.DidNotReceiveWithAnyArgs().QueryAsync(
             default!, default!, default!, default, default, TestContext.Current.CancellationToken);
+
+        Service.ClearReceivedCalls();
+        var changedMode = await ExecuteCommandAsync([.. criteria, "--search-after", "--cursor", first.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, changedMode.Status);
+        Assert.Contains("does not match the original request", changedMode.Message);
+
+        var changedCriteria = await ExecuteCommandAsync([.. arguments, "--cursor", first.NextCursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, changedCriteria.Status);
+        Assert.Contains("does not match the original request", changedCriteria.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task Execute_WithSearchAfter_ForwardsOverridesButRejectsChangedSort()
+    {
+        const string serviceCursor = "search-after-token";
+        using var record = JsonDocument.Parse("""{"id":"record-1"}""");
+        Service.QueryWithCursorAsync(
+                TestConstants.Endpoint, TestConstants.DataPartition, Arg.Any<SearchCursorRequest>(),
+                true, null, null, Arg.Any<CancellationToken>())
+            .Returns(
+                new AdmeResponse<SearchCursorResponse>(
+                    new SearchCursorResponse { Results = [record.RootElement], Cursor = serviceCursor }, null),
+                new AdmeResponse<SearchCursorResponse>(new SearchCursorResponse { Results = [] }, null));
+        string[] target = ["--endpoint", TestConstants.Endpoint, "--data-partition", TestConstants.DataPartition,
+            "--kind", TestConstants.WellKind, "--search-after"];
+        const string sort = """{"field":["id"],"order":["ASC"]}""";
+
+        var first = await ExecuteCommandAsync([.. target, "--sort", sort, "--limit", "1", "--returned-fields", "id"]);
+        var cursor = ValidateAndDeserializeResponse(first, AdmeJsonContext.Default.AdmeResponseSearchResponse).NextCursor;
+        Assert.NotNull(cursor);
+
+        var next = await ExecuteCommandAsync([.. target, "--sort", sort, "--limit", "2", "--returned-fields", "kind", "--cursor", cursor]);
+        ValidateAndDeserializeResponse(next, AdmeJsonContext.Default.AdmeResponseSearchResponse);
+        await Service.Received(1).QueryWithCursorAsync(
+            TestConstants.Endpoint, TestConstants.DataPartition,
+            Arg.Is<SearchCursorRequest>(request => request.Cursor == serviceCursor && request.Limit == 2 &&
+                request.ReturnedFields != null && request.ReturnedFields.SequenceEqual(new[] { "kind" })),
+            true, null, null, Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync(
+            [.. target, "--sort", """{"field":["id"],"order":["DESC"]}""", "--cursor", cursor]);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]

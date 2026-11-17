@@ -5,4 +5,7 @@ changes:
       product listing, ADME search and record listing, Storage blob and container listing, and Storage table listing.
       ADME result.cursor is replaced by nextCursor, and Marketplace uses cursor in place of next-cursor.
       Storage listings now return fixed pages of up to 100 items.
-      Pass nextCursor unchanged as cursor to continue. Specific blob and container lookups are unchanged and reject cursor.
+      Pass nextCursor unchanged as cursor with the original required parameters to continue. Blank cursors and
+      mismatched continuation requests are rejected. ADME record listings can change limit between pages.
+      Restart without a cursor if you have a raw service cursor from an older version.
+      Specific blob and container lookups are unchanged and reject cursor.

@@ -71,13 +71,14 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
 
         var firstResponse = await ExecuteCommandAsync("--subscription", "test-sub", "--search", "azure");
         var first = ValidateAndDeserializeResponse(firstResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
-        Assert.Equal(cursor, first.NextCursor);
+        Assert.NotNull(first.NextCursor);
+        Assert.NotEqual(cursor, first.NextCursor);
         Assert.Equal(emptyFirstPage ? 0 : 1, first.Products.Count);
         var firstPayload = JsonSerializer.SerializeToElement(first, MarketplaceJsonContext.Default.ProductListCommandResult);
-        Assert.Equal(cursor, firstPayload.GetProperty("nextCursor").GetString());
+        Assert.Equal(first.NextCursor, firstPayload.GetProperty("nextCursor").GetString());
 
         var finalResponse = await ExecuteCommandAsync(
-            "--subscription", "test-sub", "--search", "azure", "--cursor", first.NextCursor!);
+            "--subscription", "test-sub", "--search", "azure", "--cursor", first.NextCursor);
         var final = ValidateAndDeserializeResponse(finalResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
         Assert.Equal("final-product", Assert.Single(final.Products).UniqueProductId);
         Assert.Null(final.NextCursor);
@@ -90,6 +91,13 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         await Service.Received(1).ListProducts(
             "test-sub", null, "azure", null, null, null, cursor, null, null,
             Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync(
+            "--subscription", "test-sub", "--search", "azure", "--orderby", "displayName desc", "--cursor", first.NextCursor);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
@@ -291,7 +299,7 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
     {
         // Arrange
         var subscriptionId = "test-sub";
-        var expectedNextCursor = "next-page-token-456";
+        var serviceCursor = "next-page-token-456";
         var expectedProducts = new List<ProductSummary>
         {
             new()
@@ -309,7 +317,7 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         var productsListResult = new ProductListResponseWithNextCursor
         {
             Items = expectedProducts,
-            NextCursor = expectedNextCursor
+            NextCursor = serviceCursor
         };
 
         Service.ListProducts(
@@ -331,7 +339,8 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         // Assert
         var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
-        Assert.Equal(expectedNextCursor, result.NextCursor);
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual(serviceCursor, result.NextCursor);
         Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-1");
         Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-2");
     }

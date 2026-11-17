@@ -23,7 +23,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Returns IDs only, in pages.
 
         Pagination parameters: limit (1-100, default 10) and cursor (continuation token).
-        Returns nextCursor when another page can be requested; pass it unchanged as cursor.
+        Pass nextCursor unchanged as cursor with the same endpoint, data partition, kind, tenant, and auth app ID.
+        You can change limit on a continuation request.
         Confirm how many records the user wants before paging through the whole set.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -57,13 +58,15 @@ public sealed class RecordListCommand(IEndpointValidator endpointValidator, ISto
     {
         try
         {
+            var cursor = new PaginationCursor(Id, options.Endpoint, options.DataPartition, options.Kind,
+                options.Tenant, AdmeServiceHelper.GetAuthScope(options.AuthAppId));
             var result = await _storageService.QueryRecordsByKindAsync(
                 options.Endpoint, options.DataPartition, options.Kind, options.Limit ?? DefaultLimit,
-                options.Cursor, options.Tenant, options.AuthAppId, cancellationToken);
+                cursor.Decode(options.Cursor), options.Tenant, options.AuthAppId, cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 new(new(result.Result.Results), result.CorrelationId)
                 {
-                    NextCursor = result.Result.Cursor,
+                    NextCursor = cursor.Encode(result.Result.Cursor),
                 },
                 AdmeJsonContext.Default.AdmeResponseRecordListResult);
         }
