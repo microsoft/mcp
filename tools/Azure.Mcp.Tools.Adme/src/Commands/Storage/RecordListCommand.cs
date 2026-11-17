@@ -58,6 +58,8 @@ public sealed class RecordListCommand(IEndpointValidator endpointValidator, ISto
     {
         try
         {
+            // The service applies the limit on each request. The cursor identifies where to resume
+            // within the kind, so changing the page size does not invalidate it.
             var cursor = new PaginationCursor(Id, options.Endpoint, options.DataPartition, options.Kind,
                 options.Tenant, AdmeServiceHelper.GetAuthScope(options.AuthAppId));
             var result = await _storageService.QueryRecordsByKindAsync(

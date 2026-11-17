@@ -36,6 +36,8 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger, IMark
     {
         try
         {
+            // We keep only the skip token from nextLink, so bind every argument needed to
+            // rebuild the same request, not just the filters.
             var cursor = new PaginationCursor(Id, options.Subscription, options.Tenant, options.Language, options.Search,
                 options.Filter, options.OrderBy, options.Select, options.Expand);
             var results = await _marketplaceService.ListProducts(

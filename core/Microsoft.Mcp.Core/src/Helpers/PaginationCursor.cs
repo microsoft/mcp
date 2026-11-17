@@ -13,10 +13,13 @@ namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
 /// Wraps a service continuation token with a fingerprint of the tool and its fixed arguments.
-/// This detects request mismatches, not tampering or authorization.
+/// The fingerprint can be checked without server-side state. It is not signed and does not
+/// replace authorization on each request.
 /// </summary>
 public sealed class PaginationCursor(string toolId, params string?[] fixedArguments)
 {
+    // Wire format: version.fingerprint.payload. URL-safe base64 prevents collisions with
+    // the separators while letting us recover the original service token unchanged.
     private const string Version = "v1";
     private static readonly UTF8Encoding s_utf8 = new(false, true);
     private readonly string _fingerprint = GetFingerprint(toolId, fixedArguments);
@@ -65,6 +68,7 @@ public sealed class PaginationCursor(string toolId, params string?[] fixedArgume
 
     private static string GetFingerprint(string toolId, string?[] fixedArguments)
     {
+        // An ordered array preserves argument boundaries and distinguishes an omitted value from an empty string.
         var buffer = new ArrayBufferWriter<byte>();
         using var writer = new Utf8JsonWriter(buffer);
         writer.WriteStartArray();

@@ -128,7 +128,9 @@ public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchS
             HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
         };
 
-        // With search_after, the backend can apply per-page overrides without changing the saved sort or kinds.
+        // Snapshot pages must reuse the original query. search_after resumes in the original
+        // order, so bind the kinds and sort but leave supported per-page overrides such as
+        // limit and projection out of the fingerprint.
         var fixedCriteria = options.SearchAfter
             ? new SearchCursorRequest { Kind = request.Kind, Sort = request.Sort }
             : request;
@@ -150,6 +152,7 @@ public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchS
             TotalCount = response.Result.TotalCount,
         }, response.CorrelationId)
         {
+            // An empty search page is terminal even if the service echoes a cursor.
             NextCursor = response.Result.Results.Count > 0 ? cursor.Encode(response.Result.Cursor) : null,
         };
     }

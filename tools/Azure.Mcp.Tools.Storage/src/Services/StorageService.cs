@@ -474,6 +474,8 @@ public sealed class StorageService(IAzureService azureService)
         await foreach (var page in tableServiceClient.QueryAsync(maxPerPage: TablePageSize, cancellationToken: cancellationToken)
             .AsPages(cursor, TablePageSize).WithCancellation(cancellationToken))
         {
+            // Table Storage can return a continuation on an empty page. Return it instead of
+            // fetching ahead so the caller controls when to continue.
             tables.AddRange(page.Values.Select(table => table.Name));
             return (tables, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
         }

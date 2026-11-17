@@ -105,6 +105,8 @@ public static class OptionBinder
             }
         }
 
+        // The generic string validator skips optional options. Omission starts a new request,
+        // but a supplied blank cursor must not silently restart paging.
         if (instance is ICursorOption { Cursor: { } cursor } && string.IsNullOrWhiteSpace(cursor))
         {
             errors.Add(ICursorOption.BlankCursorError);
