@@ -6,58 +6,6 @@ BeforeAll {
     $targetsPath = Join-Path $PSScriptRoot '..\..\Directory.Build.targets'
     $propsPath = Join-Path $PSScriptRoot '..\..\Directory.Build.props'
 
-    function New-CleanFixture {
-        param(
-            [string] $Root,
-            [switch] $CustomOutput
-        )
-
-        $output = Join-Path $Root '.work\test-runtime\Azure.Mcp.Server\Debug\net10.0'
-        if ($CustomOutput) {
-            $output = Join-Path $Root 'custom-output'
-        }
-        $intermediate = Join-Path $Root 'obj'
-        New-Item -ItemType Directory -Path $output, $intermediate -Force | Out-Null
-        $files = @(
-            (Join-Path $output 'Azure.Mcp.Core.Tests.dll'),
-            (Join-Path $output 'Azure.Mcp.Core.Tests.deps.json'),
-            (Join-Path $output 'Azure.Mcp.Server.Tests.dll'),
-            (Join-Path $output 'AzureMcpServer.path'),
-            (Join-Path $output 'appsettings.json'),
-            (Join-Path $output 'Azure.Mcp.Core.dll'),
-            (Join-Path $intermediate 'generated.cache')
-        )
-        foreach ($file in $files) {
-            Set-Content -LiteralPath $file -Value 'fixture'
-        }
-        $listPath = Join-Path $intermediate 'fixture.FileListAbsolute.txt'
-        Set-Content -LiteralPath $listPath -Value $files
-        $project = Join-Path $Root 'Azure.Mcp.Core.Tests.proj'
-        $escapedRoot = [System.Security.SecurityElement]::Escape($Root)
-        $escapedOutput = [System.Security.SecurityElement]::Escape($output)
-        $escapedTargets = [System.Security.SecurityElement]::Escape($targetsPath)
-        Set-Content -LiteralPath $project -Value @"
-<Project>
-  <PropertyGroup>
-    <RepoRoot>$escapedRoot\</RepoRoot>
-    <TargetName>Azure.Mcp.Core.Tests</TargetName>
-    <TargetDir>$escapedOutput\</TargetDir>
-    <TargetPath>$escapedOutput\Azure.Mcp.Core.Tests.dll</TargetPath>
-    <OutDir>$escapedOutput\</OutDir>
-    <IntermediateOutputPath>$escapedRoot\obj\</IntermediateOutputPath>
-    <CleanFile>fixture.FileListAbsolute.txt</CleanFile>
-  </PropertyGroup>
-  <Import Project="`$(MSBuildToolsPath)\Microsoft.Common.CurrentVersion.targets" />
-  <Import Project="$escapedTargets" />
-</Project>
-"@
-        return @{
-            Project = $project
-            Files = $files
-            ListPath = $listPath
-        }
-    }
-
     function New-LocationFixture {
         param([string] $Root)
 
@@ -108,69 +56,6 @@ BeforeAll {
     }
 }
 
-Describe 'Shared Azure runtime clean ownership' {
-    It 'cleans only the current host and intermediates, retaining another host and shared content' {
-        $fixture = New-CleanFixture -Root (Join-Path $TestDrive 'shared runtime')
-
-        $result = & dotnet msbuild $fixture.Project -target:CoreClean -nologo -verbosity:quiet 2>&1
-        $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
-
-        Test-Path -LiteralPath $fixture.Files[0] | Should -BeFalse
-        Test-Path -LiteralPath $fixture.Files[1] | Should -BeFalse
-        Test-Path -LiteralPath $fixture.Files[2] | Should -BeTrue
-        Test-Path -LiteralPath $fixture.Files[3] | Should -BeTrue
-        Test-Path -LiteralPath $fixture.Files[4] | Should -BeTrue
-        Test-Path -LiteralPath $fixture.Files[5] | Should -BeTrue
-        Test-Path -LiteralPath $fixture.Files[6] | Should -BeFalse
-        @(Get-Content -LiteralPath $fixture.ListPath).Count | Should -Be 0
-    }
-
-    It 'preserves standard clean behavior for explicitly selected project-local output' {
-        $fixture = New-CleanFixture -Root (Join-Path $TestDrive 'custom runtime') -CustomOutput
-
-        $result = & dotnet msbuild $fixture.Project -target:CoreClean -nologo -verbosity:quiet 2>&1
-        $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
-
-        foreach ($file in $fixture.Files) {
-            Test-Path -LiteralPath $file | Should -BeFalse
-        }
-    }
-}
-
-Describe 'Shared Azure runtime output selection' {
-    It 'does not override the SDK artifacts layout' {
-        $root = Join-Path $TestDrive 'artifacts layout'
-        New-Item -ItemType Directory -Path $root -Force | Out-Null
-        $project = Join-Path $root 'Azure.Mcp.Core.Tests.proj'
-        $escapedProps = [System.Security.SecurityElement]::Escape($propsPath)
-        Set-Content -LiteralPath $project -Value @"
-<Project>
-  <Import Project="$escapedProps" />
-</Project>
-"@
-
-        $result = & dotnet msbuild $project -nologo -property:UseArtifactsOutput=true -getProperty:BaseOutputPath 2>&1
-        $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
-        ($result -join '').Trim() | Should -BeNullOrEmpty
-    }
-
-    It 'respects an explicit base output path' {
-        $root = Join-Path $TestDrive 'base output'
-        New-Item -ItemType Directory -Path $root -Force | Out-Null
-        $project = Join-Path $root 'Azure.Mcp.Core.Tests.proj'
-        $escapedProps = [System.Security.SecurityElement]::Escape($propsPath)
-        Set-Content -LiteralPath $project -Value @"
-<Project>
-  <Import Project="$escapedProps" />
-</Project>
-"@
-
-        $result = & dotnet msbuild $project -nologo -property:BaseOutputPath=custom -getProperty:BaseOutputPath 2>&1
-        $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
-        ($result -join '').Trim() | Should -Be 'custom'
-    }
-}
-
 Describe 'Evaluated Azure server locations' {
     It 'uses the referenced configuration, target framework, RID and custom server output' {
         $fixture = New-LocationFixture -Root (Join-Path $TestDrive 'location with spaces')
@@ -199,7 +84,33 @@ Describe 'Evaluated Azure server locations' {
     }
 }
 
-Describe 'Production output remains independent of shared test runtimes' {
+Describe 'In-process Azure server test hosts' {
+    # These hosts copy the full server runtime. Sharing one output directory lets a
+    # parallel build overwrite assemblies another host has already loaded.
+    It 'build into distinct directories under their own projects' {
+        $root = Split-Path (Resolve-Path $propsPath).Path -Parent
+        $projects = @(
+            'core\Azure.Mcp.Core\tests\Azure.Mcp.Core.Tests\Azure.Mcp.Core.Tests.csproj',
+            'servers\Azure.Mcp.Server\tests\Azure.Mcp.Server.Tests\Azure.Mcp.Server.Tests.csproj',
+            'servers\Azure.Mcp.Server\perf\Azure.Mcp.Server.PerformanceBenchmarks\Azure.Mcp.Server.PerformanceBenchmarks.csproj'
+        )
+
+        $targetDirectories = foreach ($relativeProject in $projects) {
+            $project = Join-Path $root $relativeProject
+            $result = & dotnet msbuild $project -nologo -getProperty:TargetDir 2>&1
+            $LASTEXITCODE | Should -Be 0 -Because ($result -join [Environment]::NewLine)
+            $targetDir = [IO.Path]::GetFullPath(($result -join '').Trim())
+            $projectDirectory = [IO.Path]::GetFullPath((Split-Path $project -Parent)) + [IO.Path]::DirectorySeparatorChar
+            $targetDir.StartsWith($projectDirectory, [StringComparison]::OrdinalIgnoreCase) |
+                Should -BeTrue -Because "$relativeProject should build to its own directory, not $targetDir"
+            $targetDir
+        }
+
+        @($targetDirectories | Sort-Object -Unique).Count | Should -Be $projects.Count
+    }
+}
+
+Describe 'Production output remains independent of test outputs' {
     BeforeDiscovery {
         $profiles = @(
             @{ Configuration = 'Debug'; RuntimeIdentifier = ''; BuildNative = 'false' }

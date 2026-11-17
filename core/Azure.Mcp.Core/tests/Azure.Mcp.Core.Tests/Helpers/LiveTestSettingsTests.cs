@@ -31,7 +31,7 @@ public class LiveTestSettingsTests
     }
 
     [Fact]
-    public void TestHost_PreservesSourcePathWhenOutputIsShared()
+    public void TestHost_PreservesSourcePathOutsideOutputDirectory()
     {
         var sourcePath = System.Reflection.Assembly.GetEntryAssembly()?
             .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), inherit: false)

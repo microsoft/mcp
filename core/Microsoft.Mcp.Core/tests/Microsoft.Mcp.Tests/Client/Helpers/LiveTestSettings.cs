@@ -37,7 +37,7 @@ public class LiveTestSettings
 
     public static bool TryFindTestSettingsFile([NotNullWhen(true)] out string? path, string? directory = null)
     {
-        // Shared runtime hosts are no longer below their test project directories.
+        // Test output may be outside the project directory, for example with the SDK artifacts layout.
         directory ??= Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>()
             .SingleOrDefault(attribute => attribute.Key == "SourcePath")?.Value ?? AppContext.BaseDirectory;
 

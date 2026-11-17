@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Fixed intermittent test failures caused by Azure MCP core tests, server tests, and performance benchmarks sharing one build output directory."

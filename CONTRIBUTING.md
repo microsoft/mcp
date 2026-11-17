@@ -253,19 +253,10 @@ referenced server's evaluated output directory. Do not copy the server manually
 or assume a fixed configuration, framework, or runtime identifier.
 
 Azure core tests, Azure server tests, and performance benchmarks load server types
-in-process. Their runtime dependencies share
-`.work/test-runtime/Azure.Mcp.Server/<configuration>/<framework>/`, with an additional
-runtime identifier directory for RID-specific builds. Intermediate files stay in
-each project's `obj` directory. Production server build and publish paths are
-unchanged. Explicit project output overrides still take precedence over this default.
-Run tests through `dotnet test --project <test-project>` or `Test-Code.ps1` rather
-than assuming that every test executable lives under its project's `bin` directory.
-
-Cleaning a shared-runtime host removes that host's own files, not another host's
-files or shared dependencies and content. Shared dependency copies remain as a
-development cache, like the SDK's shared assembly copies. To reclaim the entire
-shared runtime, stop its test and benchmark processes before removing that runtime
-directory, then rebuild the projects you need. A normal project clean can also
+in-process, so each keeps its own copy of the server runtime in its project's `bin`
+directory. Do not point these hosts at a shared output directory. Parallel builds
+would overwrite assemblies that another test host has already loaded. Production
+server build and publish paths are unchanged. A normal project clean can also
 clean referenced projects, including the canonical server; rebuild before using
 `--no-build` after cleaning dependencies.
 
@@ -278,7 +269,7 @@ After the build and tests have stopped writing output, capture a size report:
 ```
 
 `-Profile` labels the snapshot; it does not build or filter configurations. The
-report includes all recognized output, including `obj`, the shared test runtime,
+report includes all recognized output, including `obj`, test output,
 publish and package staging, final archives, and exported container images. Source
 dependency caches and links are excluded; dependencies inside package staging and
 publish output are counted. The script does not delete files or clear caches.
