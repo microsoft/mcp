@@ -1186,17 +1186,18 @@ To fix this, set `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS` to read the cl
 export AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS=true
 ```
 
-If the public host or path differs from what the server sees (for example, behind a tunnel or a proxy that changes the host), or the MCP endpoint should be served at a path such as `/mcp`, configure `McpServer__EndpointPath` and `McpServer__ProtectedResource__Resource` instead. See [Protected Resource Metadata and Endpoint Configuration](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#protected-resource-metadata-and-endpoint-configuration).
 
 ### AADSTS9010010 when signing in to a remote server
 
 **Causes:** This error has been observed when the [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter sent by the client does not align with the requested scopes or the server's app registration. Clients typically use the `resource` and `scopes_supported` values from the server's protected resource metadata, so a mismatch between those values and the server's app registration — including a trailing-slash difference such as `https://mcp.contoso.com` versus `https://mcp.contoso.com/` — can cause this error.
 
 **Resolution:**
-1. Inspect the metadata the server advertises, for example `curl https://<public-host>/.well-known/oauth-protected-resource/mcp`.
-2. Set `McpServer__ProtectedResource__Resource` to the exact public MCP endpoint URI and configure the same value as an Application ID URI of the server's app registration.
+1. Inspect the metadata the server advertises, for example `curl https://<server-host>/.well-known/oauth-protected-resource/mcp`.
+2. Set `McpServer__ProtectedResource__Resource` to the exact MCP endpoint URI that clients use and configure the same value as an Application ID URI of the server's app registration.
 3. Set `McpServer__ProtectedResource__ScopesSupported__0` to `<Application ID URI>/Mcp.Tools.ReadWrite`.
 4. Prefer a non-root endpoint path such as `/mcp` (`McpServer__EndpointPath=/mcp`) so the resource URI has no ambiguous trailing slash.
+
+For setup steps, see [Protected Resource Metadata and Endpoint Configuration](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#protected-resource-metadata-and-endpoint-configuration).
 
 ### Common Issues
 
