@@ -22,7 +22,8 @@ MCP client ──(user token, aud = MCP app)──▶ Azure MCP Server (App Serv
 - The inventory tools forward the **same** bearer token to the Discovery Service. No On-Behalf-Of exchange happens,
   so the MCP server's app registration must be the audience the Discovery Service accepts.
 - Tokens and SAS query strings are never logged.
-- The Discovery Service endpoint is fixed in `DsBackdoorClient.BaseUrl`.
+- The Discovery Service endpoint defaults to `DsBackdoorClient.BaseUrl` and can be overridden with
+  `AZUREMIGRATE_DS_BASE_URL`.
 - The assessment tools forward the same bearer token to the Assessment Service
   (`/businessCaseRestApi/machineAssessmentsFromZip`, api-version `2022-01-05-preview`). The endpoint defaults to
   Stamp03 and can be overridden with `AZUREMIGRATE_ASSESSMENT_SERVICE_URL`; the workspace id defaults to
@@ -91,6 +92,10 @@ az webapp config appsettings set -g $rg -n $app --settings `
 - Optional: `AZUREMIGRATE_HA_MOCK` (default on) mocks the HA step until the HA skill is deployed: the create tool returns a
   `ha-mock-*` session without calling the Discovery Service, and the HA status tool answers it with a mocked result. Set it
   to `false` to call the Discovery Service.
+- Optional: `AZUREMIGRATE_DS_BASE_URL` points the inventory tools at a different Discovery Service, for example
+  another stamp or a local OneBox.
+- Optional: `AZMIGRATE_INVENTORY_WIDGET_DOMAINS` turns on the inventory upload panel. See
+  [Enable the inventory upload panel](#7-optional-enable-the-inventory-upload-panel).
 
 ## 4. Set the startup command
 
@@ -131,6 +136,41 @@ curl.exe -s -X POST "$url/" -H "Authorization: Bearer $token" -H "Content-Type: 
 
 The second call requires Azure CLI to be pre-authorized on `<MCP_APP_ID>`. The response should list only
 `azuremigrate_inventory_createorupdate`, `azuremigrate_inventory_status`, `azuremigrate_inventory_export`, `azuremigrate_assessment_create`, `azuremigrate_assessment_status` and `azuremigrate_assessment_hastatus`.
+
+## 7. Optional: enable the inventory upload panel
+
+With the panel on, MCP Apps hosts such as Cowork show an upload panel for `azuremigrate_inventory_createorupdate`
+instead of an `azcopy` command. The panel uploads the user's file with a single browser PUT to the write-only SAS URL,
+so the file never passes through MCP or the chat. It then polls `azuremigrate_inventory_status` with `no-wait` and
+shows the operation's summary when the inventory finishes. Without the setting, the server keeps the `azcopy` flow.
+
+All three parts are needed:
+
+1. **App setting.** Set the origins of the storage accounts the Discovery Service issues upload SAS URLs for
+   (comma-separated). The app restarts.
+
+   ```powershell
+   az webapp config appsettings set -g $rg -n $app --settings `
+     AZMIGRATE_INVENTORY_WIDGET_DOMAINS="https://<REPORT_STORAGE_ACCOUNT>.blob.core.windows.net"
+   ```
+
+2. **Storage CORS rule** on each of those storage accounts (Blob service), so the browser PUT from the panel is
+   allowed. The widget origin differs per host and per plugin, so use the host's wildcard origin:
+
+   - Allowed origins: `https://*.widget-renderer.usercontent.microsoft`
+   - Allowed methods: `PUT`, `OPTIONS`
+   - Allowed headers: at least `x-ms-blob-type` and `content-type`, which the panel sends (or `*`)
+
+3. **Plugin `validDomains`.** Cowork removes every widget connect domain that is not in the plugin package's
+   `validDomains`, so the package must list the MCP server host and each storage host (no scheme), for example
+   `"validDomains": ["<WEB_APP_NAME>.azurewebsites.net", "<REPORT_STORAGE_ACCOUNT>.blob.core.windows.net"]`.
+   Bump the plugin version and re-publish it.
+
+Verify with the same token as in step 6: in `tools/list`, `azuremigrate_inventory_createorupdate` must have
+`_meta.ui.resourceUri` set to `ui://azuremigrate/inventory-upload.html`, and `resources/read` for that URI must return
+the panel HTML with the storage origins in its CSP connect domains.
+
+Start a new chat after publishing, because an existing chat may keep the old tool list.
 
 ## Troubleshooting
 
