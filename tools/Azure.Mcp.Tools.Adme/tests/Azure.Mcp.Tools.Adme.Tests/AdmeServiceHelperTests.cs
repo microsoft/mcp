@@ -4,12 +4,12 @@
 using System.Net;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Commands;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -50,7 +50,7 @@ public sealed class AdmeServiceHelperTests
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
             TestConstants.DataPartition,
@@ -73,7 +73,7 @@ public sealed class AdmeServiceHelperTests
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
             TestConstants.DataPartition,
@@ -101,7 +101,7 @@ public sealed class AdmeServiceHelperTests
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
             TestConstants.DataPartition,
@@ -123,7 +123,7 @@ public sealed class AdmeServiceHelperTests
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
             TestConstants.DataPartition,
@@ -144,7 +144,7 @@ public sealed class AdmeServiceHelperTests
         });
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => AdmeServiceHelper.SendAsync(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(handler),
             TestConstants.Endpoint,
             TestConstants.DataPartition,
@@ -157,13 +157,13 @@ public sealed class AdmeServiceHelperTests
         Assert.Contains("empty response body", exception.Message);
     }
 
-    private static IAzureTokenCredentialProvider CreateCredentialProvider()
+    private static IAzureService CreateAzureService()
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return provider;
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        return azureService;
     }
 }
