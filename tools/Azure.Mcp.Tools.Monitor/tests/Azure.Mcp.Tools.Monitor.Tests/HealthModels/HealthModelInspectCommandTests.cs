@@ -29,7 +29,7 @@ public class HealthModelInspectCommandTests : SubscriptionCommandUnitTestsBase<H
         var response = await ExecuteCommandAsync(
             "--subscription", TestSubscription, "--resource-group", TestResourceGroup, "--health-model", TestHealthModel,
             "--walk", "Causes", "--where-health", "NotHealthy", "--include", "Signals", "--include", "History", "--timestamp", "2026-10-30T12:00:00Z",
-            "--fields", "entity.name, entity.properties.healthState", "--fields", "history", "--top", "20", "--next-marker", "100");
+            "--top", "20", "--cursor", "100");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var result = ValidateAndDeserializeResponse(response, MonitorJsonContext.Default.HealthModelInspectResult);
@@ -39,7 +39,6 @@ public class HealthModelInspectCommandTests : SubscriptionCommandUnitTestsBase<H
         Assert.Equal(HealthModelHealthFilter.NotHealthy, request.WhereHealth);
         Assert.Equal([HealthModelInclude.Signals, HealthModelInclude.History], request.Include);
         Assert.Equal(new DateTimeOffset(2026, 10, 30, 12, 0, 0, TimeSpan.Zero), request.Timestamp);
-        Assert.Equal(["entity.name", "entity.properties.healthState", "history"], request.Fields);
         Assert.Equal((20, 100), (request.Top, request.Skip));
     }
 
@@ -65,8 +64,8 @@ public class HealthModelInspectCommandTests : SubscriptionCommandUnitTestsBase<H
     [InlineData("--start-at 2026-10-30T12:00:00Z --timestamp 2026-10-30T12:00:00Z")]
     [InlineData("--top 0")]
     [InlineData("--top 501")]
-    [InlineData("--next-marker abc")]
-    [InlineData("--next-marker -1")]
+    [InlineData("--cursor abc")]
+    [InlineData("--cursor -1")]
     [InlineData("--walk Sideways")]
     [InlineData("--where-health Broken")]
     public async Task ExecuteAsync_RejectsInvalidOptions(string options)
@@ -78,32 +77,22 @@ public class HealthModelInspectCommandTests : SubscriptionCommandUnitTestsBase<H
     }
 
     [Theory]
-    // A parsed payload is at most 64 levels deep, so a field path can have at most 64 segments.
-    [InlineData(64, false)]
-    [InlineData(65, true)]
-    public async Task ExecuteAsync_RejectsAFieldPathDeeperThanAPayload(int segments, bool rejected)
-    {
-        var path = "entity" + string.Concat(Enumerable.Repeat(".**", segments - 1));
-
-        var response = await ExecuteCommandAsync(
-            $"--subscription {TestSubscription} --resource-group {TestResourceGroup} --health-model {TestHealthModel} --fields {path}");
-
-        Assert.Equal(rejected, response.Status == HttpStatusCode.BadRequest);
-    }
-
-    [Theory]
-    [InlineData("missing", HttpStatusCode.NotFound)]
-    [InlineData("forbidden", HttpStatusCode.Forbidden)]
-    public async Task ExecuteAsync_MapsServiceFailures(string failure, HttpStatusCode expected)
+    [InlineData("missing", HttpStatusCode.NotFound, "Entity 'x' was not found in health model 'shop'.")]
+    [InlineData("EntityNotFound", HttpStatusCode.NotFound, "Entity not found in the health model.")]
+    [InlineData("ParentResourceNotFound", HttpStatusCode.NotFound, "Health model not found.")]
+    [InlineData("AuthorizationFailed", HttpStatusCode.Forbidden, "Authorization failed reading the health model. Details: Forbidden")]
+    public async Task ExecuteAsync_MapsServiceFailures(string failure, HttpStatusCode expected, string message)
     {
         Exception exception = failure == "missing"
             ? new KeyNotFoundException("Entity 'x' was not found in health model 'shop'.")
-            : new RequestFailedException(403, "Forbidden", "AuthorizationFailed", null);
+            : new RequestFailedException((int)expected, "Forbidden\nStatus: 403\nHeaders:\nx-ms-request-id: 1", failure, null);
         Service.InspectHealthModel(TestSubscription, TestResourceGroup, TestHealthModel, Arg.Any<HealthModelInspectRequest>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<HealthModelInspectResult>(exception));
 
         var response = await ExecuteCommandAsync("--subscription", TestSubscription, "--resource-group", TestResourceGroup, "--health-model", TestHealthModel);
 
         Assert.Equal(expected, response.Status);
+        Assert.StartsWith(message, response.Message);
+        Assert.DoesNotContain("x-ms-request-id", response.Message);
     }
 }

@@ -194,9 +194,7 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         selected = [.. selected.Where(item => HealthModelInspection.Admits(request.WhereHealth, HealthModelInspection.HealthState(item.Entity)))];
         var (page, nextSkip) = HealthModelInspection.Page(selected, request.Skip, request.Top);
 
-        var fields = request.Fields is { Count: > 0 } chosen
-            ? chosen
-            : [.. DefaultFields, .. request.Include.Contains(HealthModelInclude.Signals) ? ["entity.properties.signalGroups"] : Array.Empty<string>()];
+        string[] fields = [.. DefaultFields, .. request.Include.Contains(HealthModelInclude.Signals) ? ["entity.properties.signalGroups"] : Array.Empty<string>()];
 
         List<JsonElement>? definitions = null;
         var named = page.SelectMany(item => HealthModelInspection.SignalNames(item.Entity).Definitions).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -225,15 +223,14 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
             new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentRequests, CancellationToken = cancellationToken },
             async (index, token) => items[index] = await CompleteAsync(armClient, model.Id, page[index].Step?.Path, page[index].Entity, reads, token));
 
-        return new([.. items.Select(item => Project(item, fields))], selected.Count)
-        {
-            NextMarker = nextSkip?.ToString(CultureInfo.InvariantCulture),
-            Truncated = truncated ? true : null,
-            SignalDefinitions = definitions is null ? null : [.. definitions.Select(definition => Project(definition, fields, "signalDefinitions")!.Value)],
-            Fields = request.Fields is { Count: > 0 } ? [.. items.SelectMany(Paths).Concat(definitions?.SelectMany(definition => HealthModelInspection.Paths(definition, "signalDefinitions")) ?? []).Distinct(StringComparer.Ordinal)] : null,
-            Id = model.Id.ToString(),
-            ReadAt = DateTimeOffset.UtcNow,
-        };
+        return new(
+            [.. items.Select(item => Project(item, fields))],
+            selected.Count,
+            NextCursor: nextSkip?.ToString(CultureInfo.InvariantCulture),
+            Truncated: truncated ? true : null,
+            SignalDefinitions: definitions is null ? null : [.. definitions.Select(definition => Project(definition, fields, "signalDefinitions")!.Value)],
+            Id: model.Id.ToString(),
+            ReadAt: DateTimeOffset.UtcNow);
     }
 
     private static string Find(Dictionary<string, JsonElement> entities, string name, string healthModel, bool truncated) =>
@@ -313,12 +310,6 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         HealthModelInspection.PathsFor(fields, key) is { Count: > 0 } paths ? HealthModelInspection.Project(payload, paths) : null;
 
     private static bool Keeps(IReadOnlyCollection<string> fields, string key) => HealthModelInspection.PathsFor(fields, key).Count > 0;
-
-    private static IEnumerable<string> Paths(HealthModelInspectItem item) =>
-        HealthModelInspection.Paths(item.Entity, "entity")
-            .Concat(item.History is { } history ? HealthModelInspection.Paths(history, "history") : [])
-            .Concat(item.SignalHistory?.SelectMany(read => HealthModelInspection.Paths(read, "signalHistory")) ?? [])
-            .Concat(item.Annotations is { } annotations ? HealthModelInspection.Paths(annotations, "annotations") : []);
 
     private static readonly JsonElement EmptyObject = JsonDocument.Parse("{}").RootElement.Clone();
 

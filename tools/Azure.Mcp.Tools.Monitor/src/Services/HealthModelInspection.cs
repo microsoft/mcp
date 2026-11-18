@@ -15,12 +15,6 @@ internal static class HealthModelInspection
 {
     internal static readonly TimeSpan DefaultWindow = TimeSpan.FromHours(24);
 
-    // A path segment that stands for any property at its level.
-    private const string AnyProperty = "*";
-
-    // A path segment that stands for any number of levels, none included.
-    private const string AnyDepth = "**";
-
     internal static string? Name(JsonElement entity) => Text(entity, "name");
 
     internal static string? HealthState(JsonElement entity) => Text(Property(entity, "properties"), "healthState");
@@ -167,61 +161,35 @@ internal static class HealthModelInspection
     }
 
     /// <summary>
-    /// The paths of <paramref name="fields"/> that reach into one payload of an item, such as entity, relative to it.
-    /// A field names the payload by its first segment, by * or by **, so entity.properties.healthState,
-    /// *.properties.healthState and **.healthState all reach into entity. A field that keeps the whole payload gives **.
+    /// The paths of <paramref name="fields"/> inside one payload of an item, such as entity, relative to it. A field
+    /// names its payload by its first segment, so entity.properties.healthState gives properties.healthState. A field
+    /// that keeps the whole payload, the payload's name, gives an empty path.
     /// </summary>
-    internal static List<string> PathsFor(IEnumerable<string> fields, string payload)
-    {
-        var paths = new List<string>();
-        foreach (var field in fields)
-        {
-            Add(field);
-        }
-        return paths;
-
-        void Add(string field)
-        {
-            var dot = field.IndexOf('.');
-            var (first, rest) = dot < 0 ? (field, null) : (field[..dot], field[(dot + 1)..]);
-            if (first == payload || first == AnyProperty)
-            {
-                paths.Add(rest ?? AnyDepth);
-            }
-            else if (first == AnyDepth)
-            {
-                // ** keeps applying inside the payload, and stands for no level too, so what follows it can name the payload.
-                paths.Add(field);
-                if (rest is not null)
-                {
-                    Add(rest);
-                }
-            }
-        }
-    }
+    internal static List<string> PathsFor(IEnumerable<string> fields, string payload) =>
+    [
+        .. fields
+            .Where(field => field == payload || field.StartsWith(payload + ".", StringComparison.Ordinal))
+            .Select(field => field.Length > payload.Length ? field[(payload.Length + 1)..] : string.Empty),
+    ];
 
     /// <summary>
     /// Keeps only the fields of <paramref name="source"/> named by dotted <paramref name="paths"/>, in place: names,
     /// nesting and array order stay as they are. A path keeps everything below it, and array elements are walked
-    /// through, so <c>properties.signalGroups.azureResource.signals.status</c> keeps the status of every signal.
+    /// through, so <c>properties.signalGroups.azureResource.signals.status</c> keeps the status of every signal. An
+    /// empty path keeps everything.
     /// </summary>
     internal static JsonElement Project(JsonElement source, IEnumerable<string> paths)
     {
         var keep = new Fields();
         foreach (var path in paths)
         {
-            // ** stands for no level too, so a trailing ** keeps the value itself, whatever it holds.
-            var segments = path.Split('.');
-            var count = segments.Length;
-            while (count > 0 && segments[count - 1] == AnyDepth)
-            {
-                count--;
-            }
-            if (count == 0)
+            if (path.Length == 0)
             {
                 return source;
             }
 
+            var segments = path.Split('.');
+            var count = segments.Length;
             var node = keep;
             for (var index = 0; index < count && node is not null; index++)
             {
@@ -243,40 +211,6 @@ internal static class HealthModelInspection
         return document.RootElement.Clone();
     }
 
-    /// <summary>
-    /// Every dotted path that occurs in <paramref name="source"/>, array elements walked through, in first-seen order.
-    /// A property whose name holds a dot, such as a tag key, cannot be named in a path, so the list stops at its parent.
-    /// </summary>
-    internal static IEnumerable<string> Paths(JsonElement source, string prefix = "")
-    {
-        var paths = new List<string>();
-        Collect(source, prefix, paths, new HashSet<string>(StringComparer.Ordinal));
-        return paths;
-    }
-
-    private static void Collect(JsonElement element, string path, List<string> paths, HashSet<string> seen)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            foreach (var property in element.EnumerateObject().Where(property => !property.Name.Contains('.')))
-            {
-                var child = path.Length == 0 ? property.Name : $"{path}.{property.Name}";
-                if (seen.Add(child))
-                {
-                    paths.Add(child);
-                }
-                Collect(property.Value, child, paths, seen);
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var item in element.EnumerateArray())
-            {
-                Collect(item, path, paths, seen);
-            }
-        }
-    }
-
     private static void Write(Utf8JsonWriter writer, JsonElement element, Fields? keep)
     {
         if (keep is null)
@@ -288,7 +222,7 @@ internal static class HealthModelInspection
             writer.WriteStartObject();
             foreach (var property in element.EnumerateObject())
             {
-                if (Match(keep, property.Name, out var child) && Keeps(property.Value, child))
+                if (keep.TryGetValue(property.Name, out var child) && Keeps(property.Value, child))
                 {
                     writer.WritePropertyName(property.Name);
                     Write(writer, property.Value, child);
@@ -312,57 +246,14 @@ internal static class HealthModelInspection
     }
 
     // Whether a projection keeps any field of the value. A value that no path matches is left out.
-    // For example, properties.signalGroups.*.signals.status drops a signal group that holds no signals.
+    // For example, properties.signalGroups.azureResource.signals.status drops a signals list whose signals have no status.
     private static bool Keeps(JsonElement element, Fields? keep) =>
         keep is null || element.ValueKind switch
         {
-            JsonValueKind.Object => element.EnumerateObject().Any(property => Match(keep, property.Name, out var child) && Keeps(property.Value, child)),
+            JsonValueKind.Object => element.EnumerateObject().Any(property => keep.TryGetValue(property.Name, out var child) && Keeps(property.Value, child)),
             JsonValueKind.Array => element.EnumerateArray().Any(item => Keeps(item, keep)),
             _ => false,
         };
-
-    // The fields kept below a property are its named entry, the * entry and the ** entry together. An entry with no
-    // children keeps everything. A ** entry stays in force below, and what follows it also applies at this level.
-    // For example, properties.healthState with **.status keeps healthState and every status at any depth below
-    // properties.
-    private static bool Match(Fields keep, string name, out Fields? child)
-    {
-        var found = new List<Fields?>();
-        if (keep.TryGetValue(name, out var byName))
-        {
-            found.Add(byName);
-        }
-        if (keep.TryGetValue(AnyProperty, out var byAny))
-        {
-            found.Add(byAny);
-        }
-        if (keep.TryGetValue(AnyDepth, out var rest))
-        {
-            found.Add(rest is null ? null : new Fields { [AnyDepth] = rest });
-            if (rest is not null && Match(rest, name, out var here))
-            {
-                found.Add(here);
-            }
-        }
-        child = found.Count == 0 ? null : found.Aggregate(Union);
-        return found.Count > 0;
-    }
-
-    private static Fields? Union(Fields? first, Fields? second)
-    {
-        if (first is null || second is null)
-        {
-            return null;
-        }
-        var union = new Fields();
-        foreach (var key in first.Keys.Union(second.Keys))
-        {
-            var inFirst = first.TryGetValue(key, out var fromFirst);
-            var inSecond = second.TryGetValue(key, out var fromSecond);
-            union[key] = !inFirst ? fromSecond : !inSecond ? fromFirst : Union(fromFirst, fromSecond);
-        }
-        return union;
-    }
 
     private static JsonElement Property(JsonElement element, string name) =>
         element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var value) ? value : default;

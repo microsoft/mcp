@@ -144,20 +144,15 @@ public class HealthModelInspectionTests
     }
 
     [Theory]
-    // A field names its payload by its first segment, by * or by **.
+    // A field names its payload by its first segment.
     [InlineData("entity.properties.healthState", "properties.healthState")]
-    [InlineData("*.properties.healthState", "properties.healthState")]
     [InlineData("history.history", "")]
-    // A field that keeps the whole payload gives **.
-    [InlineData("entity", "**")]
-    [InlineData("*", "**")]
-    [InlineData("**", "**")]
-    // ** keeps applying inside the payload, and what follows it can name the payload itself.
-    [InlineData("**.status", "**.status")]
-    [InlineData("**.entity.name", "**.entity.name;name")]
-    [InlineData("entity.name;signalDefinitions.name;**.status", "name;**.status")]
+    [InlineData("entityName", "")]
+    [InlineData("entity.name;signalDefinitions.name;entity.properties", "name;properties")]
+    // The payload's name keeps the whole payload, which is the empty path.
+    [InlineData("entity", "<all>")]
     public void PathsFor_ReturnsThePathsThatReachIntoAPayload(string fields, string expected) =>
-        Assert.Equal(expected, string.Join(';', HealthModelInspection.PathsFor(fields.Split(';'), "entity")));
+        Assert.Equal(expected, string.Join(';', HealthModelInspection.PathsFor(fields.Split(';'), "entity").Select(path => path.Length == 0 ? "<all>" : path)));
 
     [Theory]
     // An enabled Resource Health signal is read like the group's other signals. A disabled one is skipped.
@@ -185,20 +180,8 @@ public class HealthModelInspectionTests
     [InlineData("properties.signalGroups.azureResource.signals.status;properties.signalGroups", """{"properties":{"signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""")]
     // A path that matches nothing leaves nothing behind.
     [InlineData("name;properties.missing", """{"name":"api"}""")]
-    // * stands for any property at its level.
-    [InlineData("properties.signalGroups.*.signals.name", """{"properties":{"signalGroups":{"azureResource":{"signals":[{"name":"cpu"},{"name":"mem"}]}}}}""")]
-    // A named path and a * path that meet keep what either names.
-    [InlineData("properties.signalGroups.*.signals.name;properties.signalGroups.azureResource.signals.status", """{"properties":{"signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""")]
-    // A ** segment stands for any number of levels.
-    [InlineData("properties.**.value", """{"properties":{"signalGroups":{"azureResource":{"signals":[{"status":{"value":1}},{}]}}}}""")]
-    // A ** at the end keeps everything below.
-    [InlineData("properties.signalGroups.**", """{"properties":{"signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""")]
-    // A list none of whose elements match leaves nothing behind either.
-    [InlineData("name;**.missing", """{"name":"api"}""")]
-    // A trailing ** stands for no level too, so it keeps a plain value.
-    [InlineData("properties.healthState.**", """{"properties":{"healthState":"Degraded"}}""")]
-    // ** alone keeps everything.
-    [InlineData("**", """{"name":"api","properties":{"healthState":"Degraded","signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""")]
+    // An empty path keeps everything.
+    [InlineData("properties.healthState;", """{"name":"api","properties":{"healthState":"Degraded","signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""")]
     public void Project_KeepsOnlyTheNamedPathsInPlace(string paths, string expected)
     {
         var entity = Json("""{"name":"api","properties":{"healthState":"Degraded","signalGroups":{"azureResource":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}]}}}}""");
@@ -206,17 +189,6 @@ public class HealthModelInspectionTests
         var projected = HealthModelInspection.Project(entity, paths.Split(';'));
 
         Assert.Equal(expected, projected.GetRawText());
-    }
-
-    [Fact]
-    public void Paths_ListsEveryFieldPathOnce()
-    {
-        // A tag key with a dot cannot be named in a path, so the list stops at tags.
-        var entity = Json("""{"name":"api","properties":{"signals":[{"name":"cpu","status":{"value":1}},{"name":"mem"}],"tags":{"app.tier":"web"}}}""");
-
-        Assert.Equal(
-            ["entity.name", "entity.properties", "entity.properties.signals", "entity.properties.signals.name", "entity.properties.signals.status", "entity.properties.signals.status.value", "entity.properties.tags"],
-            HealthModelInspection.Paths(entity, "entity"));
     }
 
     private static JsonElement Entity(string name, string state, string impact = "Standard") =>

@@ -37,14 +37,11 @@ public sealed class HealthModelInspectOptions : ISubscriptionOption
     [Option(Description = "Read entities and relationships as they were at this instant (the API's timestamp, ISO 8601).")]
     public DateTimeOffset? Timestamp { get; set; }
 
-    [Option(Description = $"Field paths to keep, comma-separated or repeated, prefixed by payload: entity, history, signalHistory, annotations or signalDefinitions, for example entity.properties.healthState or entity.properties.signalGroups.*.signals.status. A path keeps everything below it, * as a segment stands for any property, ** for any number of levels, and * alone keeps everything. The result's fields lists every path. The payloads are CloudHealth API {HealthModelApi.Version} objects: {HealthModelApi.Contract}")]
-    public string[]? Fields { get; set; }
-
     [Option(Description = "The most entities to return, 1 through 500. Default: 50.", DefaultValue = 50)]
     public int Top { get; set; }
 
-    [Option(Description = "The result's nextMarker, to read the next page with the same other options. Entities that change in between can move between pages.")]
-    public string? NextMarker { get; set; }
+    [Option(Description = "The result's nextCursor, to read the next page with the same other options. Entities that change in between can move between pages.")]
+    public string? Cursor { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

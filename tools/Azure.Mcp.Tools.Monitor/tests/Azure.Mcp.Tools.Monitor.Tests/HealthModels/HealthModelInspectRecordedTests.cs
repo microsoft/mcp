@@ -151,33 +151,12 @@ public sealed class HealthModelInspectRecordedTests(ITestOutputHelper output, Te
         var model = _modelC!;
 
         var first = await InspectAsync(model, ("where-health", "NotHealthy"), ("top", 1));
-        var second = await InspectAsync(model, ("where-health", "NotHealthy"), ("top", 1), ("next-marker", first.AssertProperty("nextMarker").GetString()!));
+        var second = await InspectAsync(model, ("where-health", "NotHealthy"), ("top", 1), ("cursor", first.AssertProperty("nextCursor").GetString()!));
 
         Assert.Equal(2, first.AssertProperty("total").GetInt32());
-        Assert.False(second.TryGetProperty("nextMarker", out _));
+        Assert.False(second.TryGetProperty("nextCursor", out _));
         var entities = first.AssertProperty("entities").EnumerateArray().Concat(second.AssertProperty("entities").EnumerateArray()).ToList();
         Assert.Equal([model, $"{model}-leaf-frontend"], entities.Select(entity => entity.AssertProperty("entity").AssertProperty("name").GetString()!).Order(StringComparer.Ordinal));
-    }
-
-    // * as the first segment reaches into every payload, and the result lists every path the payloads hold.
-    [Fact]
-    public async Task Should_Inspect_HealthModel_KeepsOnlyTheChosenFields()
-    {
-        var model = _modelC!;
-
-        var result = await InspectAsync(model, ("fields", "*.properties.healthState"));
-
-        var entities = result.AssertProperty("entities").EnumerateArray().ToList();
-        Assert.Equal(3, entities.Count);
-        Assert.All(entities, entity =>
-        {
-            var properties = Assert.Single(entity.AssertProperty("entity").EnumerateObject());
-            Assert.Equal("properties", properties.Name);
-            Assert.Equal("healthState", Assert.Single(properties.Value.EnumerateObject()).Name);
-        });
-        var fields = result.AssertProperty("fields").EnumerateArray().Select(field => field.GetString()).ToList();
-        Assert.Contains("entity.name", fields);
-        Assert.Contains("entity.properties.healthState", fields);
     }
 
     // The topology exists well before the tests run, so the model a minute ago has the same walk.

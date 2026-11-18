@@ -50,22 +50,11 @@ The model as it was at an instant: entities and relationships at that timestamp,
 azmcp monitor healthmodels inspect ... --health-model shop --walk Causes --include Signals --timestamp 2026-10-30T12:00:00Z
 ```
 
-## Choose fields
+## Fields
 
-Without `--fields`, an entity keeps its name, display name, health state, impact, health objective, discovery rule,
+An entity keeps its name, display name, health state, impact, health objective, discovery rule,
 provisioning state, tags, signal aggregation groups and dependency rollup (`properties.signalGroups.dependencies`);
-`--include Signals` adds its signal groups. `--fields` keeps only the field paths you name, prefixed by item field, in
-place and with their API names:
-
-```bash
-azmcp monitor healthmodels inspect ... --health-model shop --include Signals \
-  --fields entity.properties.healthState,entity.properties.signalGroups.*.signals.status
-```
-
-Paths are comma-separated or repeated. A path keeps everything below it, array elements are walked through, `*` as a
-segment stands for any one property at its level, `**` for any number of levels (so `entity.**.status` keeps every
-`status` in the entity), and `*` alone keeps everything. A path that matches nothing leaves nothing behind. With
-`--fields`, the result's `fields` lists every path the payloads hold.
+`--include Signals` adds its signal groups.
 
 ## Options
 
@@ -77,12 +66,11 @@ segment stands for any one property at its level, `**` for any number of levels 
 | `--include` | `Signals`, `History`, `SignalHistory` (needs `--entity`), `Annotations` |
 | `--start-at`, `--end-at` | The API's `startAt` and `endAt` for history, signal history and annotations; a given end starts a day earlier |
 | `--timestamp` | The API's `timestamp`: read entities and relationships as they were at this instant |
-| `--fields` | Field paths to keep; see above |
-| `--top`, `--next-marker` | Page size (default 50, at most 500) and the result's `nextMarker` for the next page |
+| `--top`, `--cursor` | Page size (default 50, at most 500) and the result's `nextCursor` for the next page |
 
 ## Results and limits
 
-- `total` is how many entities the selection matched; `nextMarker` is set while more remain. Entities that change
+- `total` is how many entities the selection matched; `nextCursor` is set while more remain. Entities that change
   between calls can move between pages.
 - Up to 5,000 entities, relationships and signal definitions are listed; `truncated` says when a model has more. Up to 8 Azure requests
   run at a time.

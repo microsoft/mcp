@@ -4082,9 +4082,8 @@ azmcp monitor healthmodels inspect --subscription <subscription> \
                                    [--start-at <start-at>] \
                                    [--end-at <end-at>] \
                                    [--timestamp <timestamp>] \
-                                   [--fields <field-path>] \
                                    [--top <top>] \
-                                   [--next-marker <next-marker>]
+                                   [--cursor <cursor>]
 ```
 
 #### Metrics
