@@ -426,6 +426,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
 
+        McpHttpEndpointSettings endpointSettings = McpHttpEndpointSettings.FromConfiguration(builder.Configuration);
+
         IServiceCollection services = builder.Services;
 
         // Configure outgoing and incoming authentication and authorization.
@@ -454,7 +456,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
                             {
                                 HttpRequest request = context.Request;
                                 string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                                string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                                string resourceMetadataUrl = OAuthProtectedResourceMetadataHelper.GetMetadataUrl(endpointSettings, scheme, request.Host);
 
                                 context.Response.StatusCode = 401;
 
@@ -529,8 +531,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         //
         app.Use(async (context, next) =>
         {
-            if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
-                context.Request.Method == "GET")
+            if (OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, endpointSettings))
             {
                 IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
                     .RequestServices
@@ -538,34 +539,14 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
                 MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
                 string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                string baseUrl = $"{scheme}://{request.Host}";
-                string? clientId = azureAdOptions.ClientId;
-                string? tenantId = azureAdOptions.TenantId;
-                string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
+                string resource = OAuthProtectedResourceMetadataHelper.GetResource(endpointSettings, scheme, request.Host);
 
-                var metadata = new OAuthProtectedResourceMetadata
-                {
-                    Resource = baseUrl,
-                    AuthorizationServers = [$"{instance}/{tenantId}/v2.0"],
-
-                    // Only delegated permissions for user principal authorization is listed here.
-                    // Client with users send these scopes to the identity platform to acquire an
-                    // access token.
-                    // However, special to Entra, service principals are expected to always
-                    // request the special `app-id/.default` scope because service principals use
-                    // app roles/app permissions instead of scopes. At time of writing (Oct 2025),
-                    // we don't solve this problem here. Instead we expect any service principal
-                    // clients to be hardcoded to use the `app-id/.default` scope when requesting
-                    // access tokens for our endpoint and for the owners of the client and MCP
-                    // server's service principals to ensure the necessary app roles are assigned
-                    // upfront.
-                    ScopesSupported = [$"{clientId}/Mcp.Tools.ReadWrite"],
-                    BearerMethodsSupported = ["header"],
-
-                    // Intentionally pointing to MCP repo for documentation. Could eventually
-                    // have a dedicated usage doc page, potentially provided by this service itself.
-                    ResourceDocumentation = "https://github.com/Microsoft/mcp"
-                };
+                OAuthProtectedResourceMetadata metadata = OAuthProtectedResourceMetadataHelper.CreateMetadata(
+                    endpointSettings,
+                    resource,
+                    azureAdOptions.ClientId,
+                    azureAdOptions.TenantId,
+                    azureAdOptions.Instance);
 
                 context.Response.ContentType = "application/json";
                 await JsonSerializer.SerializeAsync(
@@ -584,7 +565,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
         app.Use(ValidateMcpRoutingHeadersMiddleware);
 
-        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp();
+        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp(endpointSettings.EndpointPath);
         // All MCP endpoints require MCP.All scope or role
         mcpEndpointBuilder.RequireAuthorization("McpAccess");
 
@@ -612,6 +593,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
+
+        McpHttpEndpointSettings endpointSettings = McpHttpEndpointSettings.FromConfiguration(builder.Configuration);
 
         IServiceCollection services = builder.Services;
 
@@ -642,7 +625,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
         app.Use(ValidateMcpRoutingHeadersMiddleware);
-        app.MapMcp();
+        app.MapMcp(endpointSettings.EndpointPath);
 
         return app;
     }

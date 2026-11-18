@@ -126,6 +126,37 @@ Every incoming request must carry a valid Entra ID bearer token with the require
 > [!NOTE]
 > The inbound authentication is determined entirely by the OAuth flow the client uses — the Azure MCP Server validates the incoming token and required claim but does not control how it is obtained.
 
+### Protected Resource Metadata and Endpoint Configuration
+
+MCP clients that are not pre-configured with authorization details discover them from the server's [OAuth 2.0 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728) (PRM), which is linked from the `resource_metadata` parameter of the `WWW-Authenticate` header on `401` responses. By default, the server maps the MCP endpoint at the root path and derives the advertised `resource` from the incoming request scheme and host, advertises `<AzureAd:Instance>/<AzureAd:TenantId>/v2.0` as the authorization server, and advertises `<AzureAd:ClientId>/Mcp.Tools.ReadWrite` as the scope.
+
+When the server runs behind a reverse proxy or tunnel, or when a client sends an [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter that must match a value registered with Entra ID, configure the following optional settings so the advertised values match the public endpoint:
+
+| Environment variable | Description |
+|---|---|
+| `McpServer__EndpointPath` | Path at which the MCP endpoint is mapped, for example `/mcp`. Defaults to the root path. When set, the root path no longer serves MCP requests. |
+| `McpServer__ProtectedResource__Resource` | Public, canonical URI of the MCP endpoint advertised as the PRM `resource`, for example `https://mcp.contoso.com/mcp`. Must be `https` (`http` is allowed only for loopback hosts) and must not contain a query or fragment. The value is advertised exactly as configured, so avoid trailing-slash differences with what clients and Entra ID use. |
+| `McpServer__ProtectedResource__AuthorizationServers__0` | Authorization server issuer identifier to advertise instead of the default. Add more entries with `__1`, `__2`, and so on. |
+| `McpServer__ProtectedResource__ScopesSupported__0` | Delegated scope to advertise instead of the default, for example `https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite`. Add more entries with `__1`, `__2`, and so on. |
+
+When `McpServer__ProtectedResource__Resource` or `McpServer__EndpointPath` includes a path, the PRM document is served both at the resource-specific URL defined by RFC 9728 (for example `/.well-known/oauth-protected-resource/mcp`) and at `/.well-known/oauth-protected-resource`, and `WWW-Authenticate` challenges point to the resource-specific URL. The reverse proxy must forward these paths unchanged. Invalid values cause the server to fail at startup.
+
+For example, to expose `https://mcp.contoso.com/mcp` with a scope that is based on an Application ID URI of `https://mcp.contoso.com/mcp`:
+
+```bash
+export McpServer__EndpointPath=/mcp
+export McpServer__ProtectedResource__Resource=https://mcp.contoso.com/mcp
+export McpServer__ProtectedResource__ScopesSupported__0=https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite
+```
+
+Keep the following in mind when configuring these settings:
+
+- **Align the resource, Application ID URI, and scope.** Clients may request a token with the PRM `resource` as the RFC 8707 `resource` parameter together with the advertised scope. Configure the MCP server app registration so that its Application ID URI matches the advertised resource, and advertise scopes in the form `<Application ID URI>/Mcp.Tools.ReadWrite`. Depending on your tenant's app management policies, Entra ID may require an `https` Application ID URI to use a verified domain of the tenant.
+- **Token validation is unchanged.** These settings only change what is advertised to clients and where the endpoint is mapped. Incoming tokens are still validated by Microsoft.Identity.Web using the `AzureAd` configuration section, including the issuer for `AzureAd__TenantId`, the audience, and the `Mcp.Tools.ReadWrite` scope or `Mcp.Tools.ReadWrite.All` app role. Advertised scopes must resolve to the `Mcp.Tools.ReadWrite` delegated permission on the server's app registration. If tokens are issued with an audience other than the client ID or `api://<client ID>`, configure the expected audience in the `AzureAd` section (for example, `AzureAd__Audience`).
+- **Advertised authorization servers must issue tokens the server accepts.** Overriding `AuthorizationServers`, for example to point clients to a different or preview Entra ID discovery endpoint, does not change the issuer the server validates. Only advertise authorization servers whose tokens are issued by the tenant configured in `AzureAd__TenantId`.
+- **Consent.** Users, or an administrator on their behalf, must consent to the client requesting the `Mcp.Tools.ReadWrite` delegated permission. If the client is not pre-registered in your tenant, review your tenant's user consent settings and grant admin consent where required.
+- **Single-tenant only.** Issuer validation is bound to `AzureAd__TenantId`. Multi-tenant configurations (such as `organizations` or `common` authorities) have not been validated with these settings.
+
 ### Outbound Authentication
 
 The `--outgoing-auth-strategy` flag (`UseOnBehalfOf` or `UseHostingEnvironmentIdentity`) is passed when starting the Azure MCP Server and controls how it obtains outbound tokens to access downstream Azure services:

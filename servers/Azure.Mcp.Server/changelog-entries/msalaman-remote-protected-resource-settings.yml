@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added optional `McpServer` settings for remote HTTP mode to map the MCP endpoint at a path such as `/mcp` and to advertise a configured public protected resource, authorization servers, and scopes in OAuth Protected Resource Metadata and `WWW-Authenticate` challenges. Default behavior and token validation are unchanged."
