@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
@@ -52,7 +51,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         if (typeof(ISelectOption).IsAssignableFrom(typeof(TOptions)))
         {
             _fieldSelection = ResponseFieldSelection.Create(ResultTypeInfo
-                ?? throw new InvalidOperationException("Commands with ISelectOption options must override JsonContext or ResultTypeInfo."));
+                ?? throw new InvalidOperationException("Commands with ISelectOption options must override ResultTypeInfo."));
         }
         OptionBinder.RegisterOptions<TOptions>(_command, _fieldSelection?.DescriptionSuffix);
     }
@@ -64,30 +63,13 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     public ToolMetadata Metadata { get; }
 
     /// <summary>
-    /// Gets the source-generated context used to resolve result serialization metadata, including
-    /// JSON property names for field selection. Overrides must be available during base construction.
-    /// </summary>
-    public virtual JsonSerializerContext? JsonContext => null;
-
-    /// <summary>
     /// Gets the source-generated <see cref="JsonTypeInfo{TResult}"/> for this command's result type.
-    /// Resolved from <see cref="JsonContext"/> by default; commands can also override this directly.
-    /// Commands providing neither return <see langword="null"/> and advertise no output schema.
+    /// Migrated commands override this so the server can advertise an MCP <c>outputSchema</c> and emit
+    /// <c>structuredContent</c>. Commands that have not been migrated return <see langword="null"/> and
+    /// simply advertise no output schema.
     /// </summary>
-    public virtual JsonTypeInfo<TResult>? ResultTypeInfo
-    {
-        get
-        {
-            if (JsonContext is not { } jsonContext)
-            {
-                return null;
-            }
-
-            return jsonContext.GetTypeInfo(typeof(TResult)) as JsonTypeInfo<TResult>
-                ?? throw new InvalidOperationException(
-                    $"JSON context '{jsonContext.GetType().FullName}' does not contain metadata for result type '{typeof(TResult).FullName}'.");
-        }
-    }
+    /// <remarks>Commands with <see cref="ISelectOption"/> options must provide this during base construction.</remarks>
+    public virtual JsonTypeInfo<TResult>? ResultTypeInfo => null;
 
     JsonTypeInfo? IBaseCommand.ResultTypeInfo => ResultTypeInfo;
 
@@ -159,8 +141,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     /// <summary>
     /// Stores the command result on the response using <see cref="ResultTypeInfo"/> so it is serialized
     /// with the same source-generated <see cref="JsonTypeInfo{TResult}"/> used to advertise the
-    /// <c>outputSchema</c>. Only call this from commands that override <see cref="JsonContext"/>
-    /// or <see cref="ResultTypeInfo"/>.
+    /// <c>outputSchema</c>. Only call this from commands that override <see cref="ResultTypeInfo"/>.
     /// </summary>
     protected void SetResult(CommandContext context, TResult result)
     {
@@ -168,7 +149,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
         var typeInfo = ResultTypeInfo
             ?? throw new InvalidOperationException(
-                $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(JsonContext)} or {nameof(ResultTypeInfo)}.");
+                $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(ResultTypeInfo)}.");
 
         context.Response.Results = ResponseResult.Create(result, typeInfo);
     }

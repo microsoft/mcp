@@ -180,9 +180,9 @@ public sealed class BaseCommandMetadataTests
     }
 
     [Fact]
-    public void SetResult_WithJsonContext_UsesContextPropertyNames()
+    public void SetResult_WithResultTypeInfo_UsesSerializedPropertyNames()
     {
-        var command = new JsonContextTestCommand<ExceptionResult>();
+        var command = new ResultTypeInfoTestCommand();
         var context = new CommandContext();
 
         command.SetCommandResult(context, new("message", "stack", "type"));
@@ -195,17 +195,6 @@ public sealed class BaseCommandMetadataTests
         var selection = ResponseFieldSelection.Create(typeInfo);
         Assert.NotNull(selection.Parse("stackTrace"));
         Assert.Throws<CommandValidationException>(() => selection.Parse("stack_trace"));
-    }
-
-    [Fact]
-    public void SetResult_WithJsonContextMissingResultType_ThrowsInvalidOperationException()
-    {
-        var command = new JsonContextTestCommand<int>();
-
-        var exception = Assert.Throws<InvalidOperationException>(() => command.SetCommandResult(new(), 1));
-
-        Assert.Contains("does not contain metadata", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(nameof(Int32), exception.Message, StringComparison.Ordinal);
     }
 
     // ---------- Missing metadata throws InvalidOperationException ----------

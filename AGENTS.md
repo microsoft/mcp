@@ -518,7 +518,8 @@ Commands should expose and use the same generated metadata:
 
 ```csharp
 // In the command class
-public override JsonSerializerContext JsonContext => StorageJsonContext.Default;
+public override JsonTypeInfo<StorageAccountListCommandResult>? ResultTypeInfo
+    => StorageJsonContext.Default.StorageAccountListCommandResult;
 
 // In ExecuteAsync, after building the result
 SetResult(context, new(results));
@@ -526,9 +527,9 @@ SetResult(context, new(results));
 
 ### Optional response field selection
 
-Commands can opt in to `--select` by implementing `ISelectOption` on their options class. The interface declares the `Select` property only; add an explicit `[Option(Description = "...")]` to that property, using the standard description or tool-specific wording. Core appends the serialized response property names from the command's `JsonContext` metadata and filters the success response using those names.
+Commands can opt in to `--select` by implementing `ISelectOption` on their options class. The interface declares the `Select` property only; add an explicit `[Option(Description = "...")]` to that property, using the standard description or tool-specific wording. Core appends the serialized response property names from the command's `ResultTypeInfo` metadata and filters the success response using those names.
 
-The command must expose its source-generated `JsonContext` (or override `ResultTypeInfo` directly), and its result must be an object, an object collection, or a single-property wrapper around an object collection. Selection trims surrounding whitespace, is case-insensitive, and rejects empty or unknown field names before executing the command. Selected nested objects are retained in full. Add unit tests for selected fields, invalid selections that do not call the service, and the unchanged unfiltered response.
+The command must override `ResultTypeInfo` with source-generated metadata available during base construction, and its result must be an object, an object collection, or a single-property wrapper around an object collection. Selection trims surrounding whitespace, is case-insensitive, and rejects empty or unknown field names before executing the command. Selected nested objects are retained in full. Add unit tests for selected fields, invalid selections that do not call the service, and the unchanged unfiltered response.
 
 ### Long-running operations
 

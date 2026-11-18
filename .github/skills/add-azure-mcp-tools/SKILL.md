@@ -397,7 +397,7 @@ File: `src/Commands/{Resource}/{Resource}{Operation}Command.cs`
 
 **Required using statements:**
 ```csharp
-using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.{Toolset}.Models;
@@ -432,7 +432,8 @@ public sealed class {Resource}{Operation}Command(
     private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
     private readonly I{Toolset}Service _service = service;
 
-    public override JsonSerializerContext JsonContext => {Toolset}JsonContext.Default;
+    public override JsonTypeInfo<{Resource}{Operation}CommandResult>? ResultTypeInfo
+        => {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult;
 
     public override async Task<CommandResponse> ExecuteAsync(
         CommandContext context, {Resource}{Operation}Options options, CancellationToken cancellationToken)
@@ -548,13 +549,13 @@ Guidelines:
 - Keep `[JsonSerializable]` attributes sorted by `typeof` model name
 - Use one context per toolset always
 - Filename must match class name (`{Toolset}JsonContext.cs`)
-- Expose the context from each two-generic command as `public override JsonSerializerContext JsonContext => {Toolset}JsonContext.Default;`
+- Expose the result metadata from each two-generic command as `public override JsonTypeInfo<{Resource}{Operation}CommandResult>? ResultTypeInfo => {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult;`
 - Store successful results with `SetResult(context, result)` so serialization, output schema generation, and response-field selection all use the same source-generated metadata
 - Never use `JsonSerializer.Deserialize<T>()` without source-generated metadata
 
 ### Optional response field selection
 
-Use the shared `--select` option only when callers benefit from limiting response fields. The command must expose its source-generated context through `JsonContext` (or provide `ResultTypeInfo` directly), and its options class must implement `ISelectOption`:
+Use the shared `--select` option only when callers benefit from limiting response fields. The command must override `ResultTypeInfo` with its source-generated result metadata, and its options class must implement `ISelectOption`:
 
 ```csharp
 using Azure.Mcp.Core.Options;
@@ -571,7 +572,7 @@ public class {Resource}{Operation}Options : ISubscriptionOption, ISelectOption
 
 `ISelectOption` defines the `Select` contract, not its `[Option]` metadata. Every implementing options class must add `[Option]` to the property; use the standard description above or provide tool-specific wording. Core appends the serialized response field names (including naming-policy and `JsonPropertyName` results) to that description.
 
-Selection is case-insensitive, trims whitespace around comma-separated names, and rejects empty selections, unknown names, and nested paths before the command executes. It filters top-level object fields; for a collection or a result object with one collection property, it filters each item while preserving the collection wrapper. Selected nested objects remain intact. Add unit tests for filtered fields, invalid names (and verify the service is not called), and the unchanged response when `--select` is omitted. See [`docs/output-schema-migration.md`](../../../docs/output-schema-migration.md#optional-response-field-selection) for response-shape details.
+Selection is case-insensitive, trims whitespace around comma-separated names, and rejects empty selections, unknown names, and nested paths before the command executes. It filters top-level object fields; for a collection or a result object with one collection property, it filters each item while preserving the collection wrapper. Selected nested objects remain intact. Add unit tests for filtered fields, invalid names (and verify the service is not called), and the unchanged response when `--select` is omitted. See [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md#optional-response-field-selection) for response-shape details.
 
 ### 1g. Register Command
 
