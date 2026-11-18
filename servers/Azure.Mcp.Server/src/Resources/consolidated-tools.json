@@ -5798,8 +5798,8 @@
           "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
         },
         "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
+          "value": true,
+          "description": "This tool requires local execution and is not available in remote server mode."
         }
       },
       "mappedToolList": [
@@ -5867,8 +5867,8 @@
           "description": "This tool may handle sensitive secret material such as bearer tokens or credentials."
         },
         "localRequired": {
-          "value": false,
-          "description": "This tool is available in both local and remote server modes."
+          "value": true,
+          "description": "This tool requires local execution and is not available in remote server mode."
         }
       },
       "mappedToolList": [

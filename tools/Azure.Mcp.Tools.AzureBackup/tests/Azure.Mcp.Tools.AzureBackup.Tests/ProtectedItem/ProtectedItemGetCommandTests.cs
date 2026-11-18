@@ -225,4 +225,41 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         Assert.Contains(options, o => o.Name == "--protected-item");
         Assert.Contains(options, o => o.Name == "--container");
     }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsVaultAndResourceGroupResourceIds()
+    {
+        const string subscription = "f0c630e0-2995-4853-b056-0b3c09cb673f";
+        Service.ListProtectedItemsAsync("myVault", "myRg", subscription, "rsv", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--resource-group", $"/subscriptions/{subscription}/resourceGroups/myRg",
+            "--vault", $"/subscriptions/{subscription}/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault");
+
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
+        Assert.Empty(result.ProtectedItems);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_VaultResourceIdWithoutResourceGroup_ReportsMissingResourceGroup()
+    {
+        var response = await ExecuteCommandAsync(
+            "--vault", "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_ForMalformedResourceGroupResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "/subscriptions/x/resourceGroups/myRg", "--vault", "myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.InvalidResourceGroupMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
 }

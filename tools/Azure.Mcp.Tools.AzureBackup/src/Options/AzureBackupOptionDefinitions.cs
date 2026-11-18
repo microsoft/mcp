@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Options;
 
 public static class AzureBackupOptionDefinitions
 {
-    internal const string Vault = "The name of the backup vault (Recovery Services vault or Backup vault).";
+    internal const string Vault = "The name of the backup vault (Recovery Services vault or Backup vault). A full vault resource ID is also accepted; its resource group, subscription, and vault type must match the other options when they are supplied.";
     internal const string ContainerListAvailableFilter = "OData filter passed to the protectableContainers API. Defaults to \"backupManagementType eq 'AzureStorage'\" to list Azure File share storage accounts available for registration.";
     internal const string ContainerStorageAccount = "Optional storage account name or fully qualified ARM resource ID used to filter available Azure File share containers. Cannot be used with a non-AzureStorage --filter.";
     internal const string ContainerRegisterStorageAccount = "The Azure Storage account to register as an Azure File share backup container. Accepts a bare account name (assumed to live in the vault --resource-group) or a fully qualified ARM resource ID (e.g., '/subscriptions/.../providers/Microsoft.Storage/storageAccounts/{name}').";

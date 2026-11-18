@@ -59,8 +59,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
         await WaitForLroCompletionAsync(result, cancellationToken);
 
-        // RSV storage redundancy is not part of the vault PUT payload; it is managed via the
-        // BackupResourceStorageConfig API and can only be changed before any item is protected.
+        // RSV storage redundancy is set after creation: through the BackupResourceStorageConfig API,
+        // or a vault PATCH when the service requires it. It can only change before any item is protected.
         if (storageModelType is { } requestedStorageType)
         {
             try
@@ -682,8 +682,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
-        // not the vault patch endpoint.
+        // RSV storage redundancy goes through BackupResourceStorageConfig, with a vault PATCH
+        // fallback when the service requires the vault API.
         if (!string.IsNullOrEmpty(redundancy))
         {
             await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, new BackupStorageType(redundancy), cancellationToken);
@@ -728,22 +728,59 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
     }
 
+    private const string RedundancySettingsUseVaultApiErrorCode = "BMSUserErrorRedundancySettingsUseVaultApi";
+
+    /// <summary>
+    /// Sets the vault storage redundancy. Uses the legacy BackupResourceStorageConfig API first and, when the
+    /// service rejects it with <c>BMSUserErrorRedundancySettingsUseVaultApi</c>, falls back to a vault PATCH of
+    /// <c>properties.redundancySettings</c> (NEW-11). The same fallback is used for Cross-Region Restore.
+    /// </summary>
     private static async Task ConfigureStorageRedundancyAsync(
         ArmClient armClient, string vaultName, string resourceGroup,
         string subscription, BackupStorageType redundancy, CancellationToken cancellationToken)
     {
-        var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
-        var currentConfig = await configResource.GetAsync(cancellationToken);
+        try
+        {
+            var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+            var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
+            var currentConfig = await configResource.GetAsync(cancellationToken);
 
-        var data = currentConfig.Value.Data;
-        data.Properties.StorageModelType = redundancy;
+            var data = currentConfig.Value.Data;
+            data.Properties.StorageModelType = redundancy;
 
-        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
-        var rgResource = armClient.GetResourceGroupResource(rgId);
-        var collection = rgResource.GetBackupResourceConfigs();
-        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
+            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
+            var rgResource = armClient.GetResourceGroupResource(rgId);
+            var collection = rgResource.GetBackupResourceConfigs();
+            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (RequestFailedException ex) when (ex.ErrorCode == RedundancySettingsUseVaultApiErrorCode)
+        {
+            var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+            var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+            var vault = await vaultResource.GetAsync(cancellationToken);
+
+            // Keep the existing Cross-Region Restore state so the PATCH changes only storage redundancy.
+            var redundancySettings = new VaultPropertiesRedundancySettings
+            {
+                StandardTierStorageRedundancy = new StandardTierStorageRedundancy(redundancy.ToString())
+            };
+            if (vault.Value.Data.Properties?.RedundancySettings?.CrossRegionRestore is { } crossRegionRestore)
+            {
+                redundancySettings.CrossRegionRestore = crossRegionRestore;
+            }
+
+            var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
+            {
+                Properties = new RecoveryServicesVaultProperties
+                {
+                    RedundancySettings = redundancySettings
+                }
+            };
+
+            var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
     }
 
     public async Task<OperationResult> CreatePolicyAsync(

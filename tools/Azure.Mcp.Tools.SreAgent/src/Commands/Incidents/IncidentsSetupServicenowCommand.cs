@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     OpenWorld = false,
     ReadOnly = false,
     Secret = true,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<IncidentConnectorServiceNowOptions, SreAgentTextResult>(subscriptionResolver)
 {

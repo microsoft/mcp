@@ -3,26 +3,33 @@
 
 using Fabric.Mcp.Tools.Core.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
 /// <summary>
 /// Lossless, bounded file/part conversion for Fabric callers with local file access.
+/// Fails closed unless the server uses the stdio transport, even for direct callers.
 /// Requires a trusted local filesystem; path checks are not an OS-level sandbox.
 /// </summary>
 public sealed class FabricItemDefinitionFileService(
     ILogger<FabricItemDefinitionFileService> logger,
+    IOptions<ServerRuntimeConfiguration> configuration,
     FabricItemDefinitionFileLimits? limits = null) : IFabricItemDefinitionFileService
 {
     private readonly ILogger<FabricItemDefinitionFileService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly FabricItemDefinitionValidator _validator = new(limits ?? new());
     private readonly Func<string, Stream> _createFile = static path =>
         new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true);
 
     internal FabricItemDefinitionFileService(
         ILogger<FabricItemDefinitionFileService> logger,
+        IOptions<ServerRuntimeConfiguration> configuration,
         FabricItemDefinitionFileLimits? limits,
-        Func<string, Stream> createFile) : this(logger, limits)
+        Func<string, Stream> createFile) : this(logger, configuration, limits)
     {
         _createFile = createFile;
     }
@@ -35,6 +42,7 @@ public sealed class FabricItemDefinitionFileService(
     {
         ArgumentNullException.ThrowIfNull(files);
         cancellationToken.ThrowIfCancellationRequested();
+        EnsureLocalFiles();
         _validator.ValidateCount(files.Count);
         FabricItemDefinitionValidator.ValidateFormat(format);
         var selectedFiles = files.ToArray();
@@ -90,10 +98,15 @@ public sealed class FabricItemDefinitionFileService(
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(definition.Parts);
         cancellationToken.ThrowIfCancellationRequested();
+        EnsureLocalFiles();
         _validator.ValidateCount(definition.Parts.Count);
         var parts = definition.Parts.ToArray();
         _validator.Validate(new(parts, definition.Format), cancellationToken);
-        var directory = FabricItemDefinitionPath.GetDirectory(directoryPath);
+        foreach (var part in parts)
+        {
+            FabricItemDefinitionPath.EnsureNoGitDirectory(part.Path);
+        }
+        var directory = FabricItemDefinitionPath.GetOutputDirectory(directoryPath);
         var parent = Path.GetDirectoryName(directory) ??
             throw new ArgumentException("The output must be a new directory below an existing parent.", nameof(directoryPath));
         FabricItemDefinitionPath.EnsureDirectory(parent);
@@ -144,6 +157,14 @@ public sealed class FabricItemDefinitionFileService(
                 _logger.LogWarning(cleanupException, "Could not clean up staged Fabric definition files after an unsuccessful export.");
             }
             throw;
+        }
+    }
+
+    private void EnsureLocalFiles()
+    {
+        if (_configuration.Value.Transport != TransportTypes.StdIo)
+        {
+            throw new NotSupportedException("Local definition files are unavailable on this host.");
         }
     }
 }
