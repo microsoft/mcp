@@ -572,6 +572,8 @@ public class {Resource}{Operation}Options : ISubscriptionOption, ISelectOption
 
 `ISelectOption` defines the `Select` contract, not its `[Option]` metadata. Every implementing options class must add `[Option]` to the property; use the standard description above or provide tool-specific wording. Core appends the serialized response field names (including naming-policy and `JsonPropertyName` results) to that description.
 
+For tools supporting `--select`, Core advertises selectable fields as optional in `outputSchema` so filtered structured results remain valid. Wrapper properties and nested-object requirements remain unchanged.
+
 Selection is case-insensitive, trims whitespace around comma-separated names, and rejects empty selections, unknown names, and nested paths before the command executes. It filters top-level object fields; for a collection or a result object with one collection property, it filters each item while preserving the collection wrapper. Selected nested objects remain intact. Add unit tests for filtered fields, invalid names (and verify the service is not called), and the unchanged response when `--select` is omitted. See [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md#optional-response-field-selection) for response-shape details.
 
 ### 1g. Register Command

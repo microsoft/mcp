@@ -324,7 +324,7 @@ public sealed class CommandFactoryToolLoader(
             : null;
         if (resultTypeInfo != null)
         {
-            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo);
+            var outputSchema = OptionSchemaGenerator.CreateOutputSchema(resultTypeInfo, command.SupportsFieldSelection);
             tool.OutputSchema = JsonSerializer.SerializeToElement(outputSchema, ServerJsonContext.Default.JsonObject);
         }
 

@@ -9,6 +9,7 @@ using System.Text.Json.Schema;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
@@ -135,25 +136,34 @@ internal static class OptionSchemaGenerator
     /// MCP requires the root schema to be an <c>"object"</c>, so result types that export as a
     /// non-object root (arrays or scalars) are wrapped under a single <c>value</c> property. Unlike the
     /// input schema, <c>additionalProperties</c> is intentionally left unset for forward compatibility
-    /// with evolving result shapes.
+    /// with evolving result shapes. Commands supporting field selection make only selectable fields optional.
     /// </summary>
-    public static JsonObject CreateOutputSchema(JsonTypeInfo resultTypeInfo)
+    public static JsonObject CreateOutputSchema(JsonTypeInfo resultTypeInfo, bool supportsFieldSelection = false)
     {
         ArgumentNullException.ThrowIfNull(resultTypeInfo);
 
         var schema = JsonSchemaExporter.GetJsonSchemaAsNode(resultTypeInfo, OutputExporterOptions);
 
+        JsonObject outputSchema;
+        var wrapped = false;
         if (schema is JsonObject rootObject && StructuredOutputHelper.IsObjectRoot(rootObject))
         {
-            return rootObject;
+            outputSchema = rootObject;
+        }
+        else
+        {
+            wrapped = true;
+            outputSchema = new JsonObject
+            {
+                ["type"] = "object",
+                ["properties"] = StructuredOutputHelper.WrapValue(schema),
+                ["required"] = new JsonArray { (JsonNode)StructuredOutputHelper.ValuePropertyName },
+            };
         }
 
-        return new JsonObject
-        {
-            ["type"] = "object",
-            ["properties"] = StructuredOutputHelper.WrapValue(schema),
-            ["required"] = new JsonArray { (JsonNode)StructuredOutputHelper.ValuePropertyName },
-        };
+        return supportsFieldSelection
+            ? ResponseFieldSelectionSchema.Apply(outputSchema, ResponseFieldSelection.Create(resultTypeInfo).SchemaPath, wrapped)
+            : outputSchema;
     }
 
     private static void ReconcileRequiredProperties(JsonObject schema, JsonTypeInfo resultTypeInfo)

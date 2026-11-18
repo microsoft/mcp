@@ -73,6 +73,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     JsonTypeInfo? IBaseCommand.ResultTypeInfo => ResultTypeInfo;
 
+    bool IBaseCommand.SupportsFieldSelection => _fieldSelection is not null;
+
     public Command GetCommand() => _command;
 
     public TOptions BindOptions(ParseResult parseResult)

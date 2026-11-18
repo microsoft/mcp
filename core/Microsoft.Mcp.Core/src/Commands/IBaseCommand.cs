@@ -50,6 +50,11 @@ public interface IBaseCommand
     JsonTypeInfo? ResultTypeInfo => null;
 
     /// <summary>
+    /// Gets whether the command supports selecting response fields with <c>--select</c>.
+    /// </summary>
+    bool SupportsFieldSelection => false;
+
+    /// <summary>
     /// Gets the command definition
     /// </summary>
     Command GetCommand();

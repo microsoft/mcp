@@ -10,8 +10,14 @@ namespace Microsoft.Mcp.Core.Commands;
 
 internal sealed class ResponseFieldSelection(JsonTypeInfo typeInfo, string? collectionProperty, bool isCollection)
 {
+    private readonly string[] _schemaPath = collectionProperty is not null
+        ? ["properties", collectionProperty, "items"]
+        : isCollection ? ["items"] : [];
+
     private readonly HashSet<string> _fields = new(
         typeInfo.Properties.Where(p => p.Get is not null).Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
+
+    internal ReadOnlySpan<string> SchemaPath => _schemaPath;
 
     internal string DescriptionSuffix { get; } =
         $"Choices are: {string.Join(", ", typeInfo.Properties.Where(p => p.Get is not null).Select(p => p.Name))}";

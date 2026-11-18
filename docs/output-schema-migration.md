@@ -150,6 +150,11 @@ surrounding whitespace is ignored, and duplicates are allowed. Unknown names, em
 nested paths are rejected. Omitting `--select` preserves the full response. Filtering is request-local
 and applies to both text and structured success results, not error responses.
 
+For tools supporting `--select`, `outputSchema` makes every selectable field optional, even when a
+particular request omits `--select`. Only the filtered object or collection-item level is relaxed:
+collection wrappers (including MCP's `value` wrapper) and nested-object requirements are preserved.
+Tools that do not implement `ISelectOption` retain their existing required fields.
+
 ## Worked example (App Configuration `KeyValueGetCommand`)
 
 **Before:**
