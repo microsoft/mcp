@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 
 namespace Azure.Mcp.Tools.AzureBackup.Commands;
 
@@ -33,6 +34,25 @@ public abstract class BaseAzureBackupCommand<[DynamicallyAccessedMembers(TrimAnn
             !options.VaultType.Equals("dpp", StringComparison.OrdinalIgnoreCase))
         {
             validationResult.Errors.Add("--vault-type must be 'rsv' (Recovery Services vault) or 'dpp' (Backup vault).");
+        }
+    }
+
+    /// <summary>
+    /// Handles <paramref name="ex"/> like <c>HandleException</c>, then replaces the response message with
+    /// option-aware guidance when Azure reports <c>UserErrorInvalidRequestParameter</c>. Telemetry still
+    /// records the original exception, error code, and request ID.
+    /// </summary>
+    protected void HandleAzureBackupException(
+        CommandContext context,
+        Exception ex,
+        string operation,
+        IReadOnlyCollection<string> suppliedOptions,
+        string? limitsHint = null)
+    {
+        HandleException(context, ex);
+        if (AzureBackupErrorGuidance.TryDescribeInvalidParameter(ex, operation, suppliedOptions, limitsHint, out var message))
+        {
+            context.Response.Message = message;
         }
     }
 }

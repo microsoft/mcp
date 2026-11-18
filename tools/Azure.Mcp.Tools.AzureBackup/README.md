@@ -24,7 +24,7 @@ These options extend the existing schedule, time-zone, and daily/weekly/monthly/
 | `--hourly-window-start-time` | Local `HH:mm` converted to UTC using supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. Uses the `2000-01-01` baseline; omission preserves the stored timestamp. |
 | `--hourly-window-duration-hours` | `4`–`24` hours and at least the effective interval. |
 | `--policy-sub-type` | `Standard` or `Enhanced`; asserts the existing subtype. A mismatch is rejected, **not migrated**. |
-| `--instant-rp-retention-days` | `1`–`30` days; Azure additionally enforces schedule- and subtype-specific limits. |
+| `--instant-rp-retention-days` | `1`–`5` days for Standard (V1) Daily policies, exactly `5` for Standard Weekly, and `1`–`30` for Enhanced (V2) policies; never longer than the effective daily retention. Validated against the fetched policy before the update is sent. |
 | `--instant-rp-resource-group` | Instant recovery resource-group name prefix, not a resource ID; 1–50 letters, digits, underscores, or hyphens. Preserves the existing suffix. |
 | `--snapshot-consistency` | `ApplicationConsistent` restores the default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`. |
 | `--archive-tier-after-days` | At least `45` days; implies `TierAfter` when no mode is supplied. |
@@ -42,7 +42,7 @@ These options extend the existing schedule, time-zone, and daily/weekly/monthly/
 - Schedule or retention updates to a Weekly policy require positive weekly retention; weekly retention days must be a subset of backup schedule days. Supply `--weekly-retention-weeks` together with `--weekly-retention-days-of-week` when setting that tier.
 - A transition from Daily/Hourly to Weekly that removes positive daily retention requires an **explicit weekly retention weeks-and-days pair**, even if a weekly tier already exists. The update removes daily retention; `--daily-retention-days` cannot be supplied for Weekly schedules.
 - Schedule, retention, or instant recovery updates resulting in a **Standard Weekly** policy require effective instant recovery retention of **5 days**. Supply `--instant-rp-retention-days 5` unless the existing value is already 5; omission preserves the existing value and never automatically changes it. This precondition does not apply to tags-only or time-zone-only updates, or to Enhanced policies.
-- Schedule or retention updates to a Daily/Hourly policy require positive daily retention. If it is absent (for example, when leaving Weekly), supply `--daily-retention-days` (`1`–`9999`).
+- Schedule or retention updates to a Daily/Hourly policy require positive daily retention. If it is absent (for example, when leaving Weekly), supply `--daily-retention-days` (`7`–`9999` for Azure VM policies).
 - Monthly updates require `--monthly-retention-months` plus either absolute `--monthly-retention-days-of-month` or both relative `--monthly-retention-week-of-month` and `--monthly-retention-days-of-week`. Yearly updates require `--yearly-retention-years`, `--yearly-retention-months`, and the corresponding absolute or relative day selectors. Absolute days are `1`–`28` or `Last`; do not mix absolute and relative schemes. Unmentioned tiers remain unchanged, subject to the Weekly transition rules above.
 
 ### Time-zone semantics and limitations

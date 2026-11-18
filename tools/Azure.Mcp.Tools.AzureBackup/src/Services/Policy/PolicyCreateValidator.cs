@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Globalization;
 using Azure.Mcp.Tools.AzureBackup.Options;
 using Azure.Mcp.Tools.AzureBackup.Options.Policy;
 
@@ -170,6 +171,10 @@ public static class PolicyCreateValidator
         EnsureFamily(options.SnapshotConsistency,
             $"--{AzureBackupOptionDefinitions.SnapshotConsistencyName}",
             family, WorkloadFamily.RsvVm, "RSV VM", issues);
+        if (family == WorkloadFamily.RsvVm)
+        {
+            ValidateIaasVmLimits(options, issues);
+        }
 
         // RSV VmWorkload (SQL / SAPHANA / SAPASE).
         EnsureFamily(options.FullScheduleFrequency,
@@ -481,6 +486,44 @@ public static class PolicyCreateValidator
 
     private static bool IsRsvHourly(string? frequency) =>
         string.Equals(frequency, "Hourly", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsEnhancedVmPolicy(string? policySubType) =>
+        policySubType?.Trim().ToUpperInvariant() is "V2" or "ENHANCED";
+
+    // Azure rejects out-of-range VM values with UserErrorInvalidRequestParameter (NO_PARAM), so check them here.
+    private static void ValidateIaasVmLimits(PolicyCreateOptions options, List<PolicyValidationIssue> issues)
+    {
+        var dailyDays = ParsePositiveDays(options.DailyRetentionDays, $"--{AzureBackupOptionDefinitions.DailyRetentionDaysName}", issues);
+        if (IaasVmPolicyLimits.ValidateLongTermRetention(dailyDays, options.WeeklyRetentionWeeks,
+            options.MonthlyRetentionMonths, options.YearlyRetentionYears) is { } retentionIssue)
+        {
+            issues.Add(retentionIssue);
+        }
+
+        var instantDays = ParsePositiveDays(options.InstantRpRetentionDays, $"--{AzureBackupOptionDefinitions.InstantRpRetentionDaysName}", issues);
+        if (instantDays is int days)
+        {
+            var enhanced = IsEnhancedVmPolicy(options.PolicySubType) || IsRsvHourly(options.ScheduleFrequency);
+            if (IaasVmPolicyLimits.ValidateInstantRpRetention(days, enhanced, IsRsvWeekly(options.ScheduleFrequency), dailyDays) is { } instantIssue)
+            {
+                issues.Add(instantIssue);
+            }
+        }
+    }
+
+    private static int? ParsePositiveDays(string? value, string flag, List<PolicyValidationIssue> issues)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+        if (int.TryParse(value.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var days) && days > 0)
+        {
+            return days;
+        }
+        issues.Add(new PolicyValidationIssue(flag, $"'{value}' is not a valid number of days. Expected a positive whole number."));
+        return null;
+    }
 
     private static bool IsKnownDppScheduleFrequency(string frequency) => frequency.Trim().ToUpperInvariant() switch
     {

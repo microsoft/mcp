@@ -662,7 +662,7 @@ public class IaasVmPolicyUpdaterTests
     }
 
     [Theory]
-    [InlineData(false, "30")]
+    [InlineData(false, "5")]
     [InlineData(true, "7")]
     public void Apply_InstantSnapshotAndTimeZone_PreservesSuffixAndSchedule(bool enhanced, string instantDays)
     {
@@ -681,11 +681,80 @@ public class IaasVmPolicyUpdaterTests
 
         Assert.Same(schedule, policy.SchedulePolicy);
         Assert.Same(instant, policy.InstantRPDetails);
-        Assert.Equal(enhanced ? 7 : 30, policy.InstantRPRetentionRangeInDays);
+        Assert.Equal(enhanced ? 7 : 5, policy.InstantRPRetentionRangeInDays);
         Assert.Equal("updated-rg", instant.AzureBackupRGNamePrefix);
         Assert.Equal("suffix", instant.AzureBackupRGNameSuffix);
         Assert.Equal(IaasVmSnapshotConsistencyType.OnlyCrashConsistent, policy.SnapshotConsistencyType);
         Assert.Equal("Pacific Standard Time", policy.TimeZone);
+        Assert.Equal(14, Retention(policy).DailySchedule.RetentionDuration.Count);
+    }
+
+    [Theory]
+    [InlineData("6")]
+    [InlineData("30")]
+    public void Apply_StandardDailyInstantDaysAboveFive_RejectsWithAllowedRange(string instantDays)
+    {
+        var policy = Policy();
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            IaasVmPolicyUpdater.Apply(policy, new() { InstantRpRetentionDays = instantDays }));
+
+        Assert.Contains("[--instant-rp-retention-days]", error.Message);
+        Assert.Contains($"{instantDays} days", error.Message);
+        Assert.Contains("Standard (V1) policies: 1-5 days", error.Message);
+        Assert.Equal(2, policy.InstantRPRetentionRangeInDays);
+    }
+
+    [Fact]
+    public void Apply_EnhancedInstantDaysUpToThirty_Allowed()
+    {
+        var policy = Policy(enhanced: true);
+
+        IaasVmPolicyUpdater.Apply(policy, new() { InstantRpRetentionDays = "30", DailyRetentionDays = "30" });
+
+        Assert.Equal(30, policy.InstantRPRetentionRangeInDays);
+        Assert.Equal(30, Retention(policy).DailySchedule.RetentionDuration.Count);
+    }
+
+    [Fact]
+    public void Apply_InstantDaysAboveDailyRetention_Rejects()
+    {
+        var policy = Policy(enhanced: true);
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            IaasVmPolicyUpdater.Apply(policy, new() { InstantRpRetentionDays = "20" }));
+
+        Assert.Contains("[--instant-rp-retention-days]", error.Message);
+        Assert.Contains("exceeds the daily retention of 14 days", error.Message);
+        Assert.Equal(2, policy.InstantRPRetentionRangeInDays);
+    }
+
+    [Fact]
+    public void Apply_DailyRetentionBelowExistingInstantDays_RejectsAndNamesExistingValue()
+    {
+        var policy = Policy(enhanced: true);
+        policy.InstantRPRetentionRangeInDays = 10;
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            IaasVmPolicyUpdater.Apply(policy, new() { DailyRetentionDays = "7" }));
+
+        Assert.Contains("exceeds the daily retention of 7 days", error.Message);
+        Assert.Contains("existing policy keeps 10 days", error.Message);
+        Assert.Equal(14, Retention(policy).DailySchedule.RetentionDuration.Count);
+    }
+
+    [Theory]
+    [InlineData("1")]
+    [InlineData("6")]
+    public void Apply_DailyRetentionBelowVmMinimum_RejectsWithFlagAndRange(string dailyDays)
+    {
+        var policy = Policy();
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            IaasVmPolicyUpdater.Apply(policy, new() { DailyRetentionDays = dailyDays }));
+
+        Assert.Contains("[--daily-retention-days]", error.Message);
+        Assert.Contains("7-9999 days", error.Message);
         Assert.Equal(14, Retention(policy).DailySchedule.RetentionDuration.Count);
     }
 

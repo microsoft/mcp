@@ -82,7 +82,7 @@ public sealed class PolicyCreateOptions : BaseAzureBackupOptions
     [Option(Description = "RSV VM policy sub-type: 'Standard' or 'Enhanced'. Enhanced is required for hourly schedules and Trusted Launch VMs. RSV VM only.")]
     public string? PolicySubType { get; set; }
 
-    [Option(Description = "Instant recovery point retention in days (1-30 for Standard, 1-7 for Enhanced). RSV VM only.")]
+    [Option(Description = "Instant recovery point retention in days: 1-5 for Standard policies (exactly 5 for Standard Weekly), 1-30 for Enhanced policies, and no longer than daily retention. RSV VM only.")]
     public string? InstantRpRetentionDays { get; set; }
 
     [Option(Description = "Resource group that hosts the instant recovery point snapshots. RSV VM only.")]

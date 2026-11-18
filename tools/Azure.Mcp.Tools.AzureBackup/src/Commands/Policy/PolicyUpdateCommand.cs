@@ -64,11 +64,41 @@ public sealed class PolicyUpdateCommand(ILogger<PolicyUpdateCommand> logger, IAz
         {
             _logger.LogError(ex, "Error updating policy. Policy: {Policy}, Vault: {Vault}",
                 options.Policy, options.Vault);
-            HandleException(context, ex);
+            HandleAzureBackupException(context, ex, "policy update", GetSuppliedValueOptions(options), AzureBackupErrorGuidance.VmPolicyLimitsHint);
         }
 
         return context.Response;
     }
+
+    internal static IReadOnlyList<string> GetSuppliedValueOptions(PolicyUpdateOptions o) => AzureBackupErrorGuidance.Supplied(
+        ("--schedule-time", o.ScheduleTime is not null),
+        ("--daily-retention-days", o.DailyRetentionDays is not null),
+        ("--time-zone", o.TimeZone is not null),
+        ("--schedule-frequency", o.ScheduleFrequency is not null),
+        ("--schedule-times", o.ScheduleTimes is not null),
+        ("--schedule-days-of-week", o.ScheduleDaysOfWeek is not null),
+        ("--weekly-retention-weeks", o.WeeklyRetentionWeeks != 0),
+        ("--weekly-retention-days-of-week", o.WeeklyRetentionDaysOfWeek is not null),
+        ("--monthly-retention-months", o.MonthlyRetentionMonths != 0),
+        ("--monthly-retention-week-of-month", o.MonthlyRetentionWeekOfMonth is not null),
+        ("--monthly-retention-days-of-week", o.MonthlyRetentionDaysOfWeek is not null),
+        ("--monthly-retention-days-of-month", o.MonthlyRetentionDaysOfMonth is not null),
+        ("--yearly-retention-years", o.YearlyRetentionYears != 0),
+        ("--yearly-retention-months", o.YearlyRetentionMonths is not null),
+        ("--yearly-retention-week-of-month", o.YearlyRetentionWeekOfMonth is not null),
+        ("--yearly-retention-days-of-week", o.YearlyRetentionDaysOfWeek is not null),
+        ("--yearly-retention-days-of-month", o.YearlyRetentionDaysOfMonth is not null),
+        ("--hourly-interval-hours", o.HourlyIntervalHours.HasValue),
+        ("--hourly-window-start-time", o.HourlyWindowStartTime is not null),
+        ("--hourly-window-duration-hours", o.HourlyWindowDurationHours.HasValue),
+        ("--policy-sub-type", o.PolicySubType is not null),
+        ("--instant-rp-retention-days", o.InstantRpRetentionDays is not null),
+        ("--instant-rp-resource-group", o.InstantRpResourceGroup is not null),
+        ("--snapshot-consistency", o.SnapshotConsistency is not null),
+        ("--archive-tier-after-days", o.ArchiveTierAfterDays is not null),
+        ("--archive-tier-mode", o.ArchiveTierMode is not null),
+        ("--smart-tier", o.SmartTier.HasValue),
+        ("--policy-tags", o.PolicyTags is not null));
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
