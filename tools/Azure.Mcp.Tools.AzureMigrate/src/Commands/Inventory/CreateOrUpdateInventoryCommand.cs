@@ -17,8 +17,14 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// command the user runs on their own machine to upload the file, and the IDs to check progress with the status tool.
 /// With 'text-only', it invokes an existing session with the message alone (inputType Text) and returns no upload command.
 /// </summary>
+/// <remarks>
+/// Status tracking is driven by text, not code: the server cannot call tools itself, so this description ("Next") and each
+/// result's 'instructions' tell the agent to call the status tool straight away and keep calling it until it completes. The
+/// agent then tracks and summarises in the same reply, without waiting for the user to say the file is uploaded. When the
+/// upload panel is enabled, the panel replaces 'uploadCommand', so the description defers to 'instructions'.
+/// </remarks>
 [CommandMetadata(
-    Id = "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f",
+    Id = CommandId,
     Name = "createorupdate",
     Title = "Create or Update Azure Migrate Inventory",
     Description = "Starts or updates the signed-in user's Azure Migrate server inventory; the required first step before exporting " +
@@ -30,9 +36,11 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "inventory; pass the 'sessionId' from an earlier result to update that inventory. For a text change, pass 'session-id', " +
         "'message' with the user's request as written, and 'text-only' true. " +
         "Returns: 'sessionId', 'operationId', 'instructions' and, for a file, 'uploadCommand' (an azcopy command the user runs on " +
-        "their own machine). Show 'uploadCommand' exactly as returned, in a code block, without retyping or shortening it. " +
+        "their own machine). Unless 'instructions' say an upload panel is shown, show 'uploadCommand' exactly as returned, in a code " +
+        "block, without retyping or shortening it. " +
         "Next: success means the inventory has started, not finished. Start tracking it right away with the inventory status tool " +
-        "using the same 'sessionId' and 'operationId', before exporting the inventory or creating an assessment. " +
+        "using the same 'sessionId' and 'operationId', and keep tracking until it completes, before exporting the inventory or " +
+        "creating an assessment. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -44,6 +52,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInventoryCommand> logger, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<CreateOrUpdateInventoryOptions, CreateOrUpdateInventoryCommand.CreateOrUpdateInventoryCommandResult>
 {
+    internal const string CommandId = "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f";
     internal const string FilePathPlaceholder = "<path to your file>";
 
     // Mirrors the Discovery Service Discovery skill configuration (maxUploadWaitTimeInMinutes, maxInputBlobSizeInBytes):
@@ -165,8 +174,11 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     }
 
     /// <summary>Returns the instructions for a successful file-based create or update.</summary>
-    internal static string FileInstructions(bool reusedSession) =>
-        (reusedSession
+    /// <remarks>The upload panel is enabled for the whole server (see <see cref="InventoryUploadWidget.IsEnabled"/>), so the server
+    /// returns one set of instructions or the other, never both.</remarks>
+    internal static string FileInstructions(bool reusedSession) => InventoryUploadWidget.IsEnabled
+        ? WidgetFileInstructions(reusedSession)
+        : (reusedSession
             ? "Tell the user this updates their existing inventory, not a new one. "
             : "Tell the user the inventory has started. ") +
         "Show uploadCommand to the user exactly as returned, in a code block; never retype, shorten or split it, never show the URL " +
@@ -176,6 +188,30 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         "Then start tracking the inventory status right away with this sessionId and operationId; do not wait for the user to say " +
         "the upload has finished. Keep checking until it completes, then summarise the result. Do not export the inventory or " +
         "create an assessment before then.";
+
+    /// <summary>Returns the instructions for a successful file-based create or update when the upload widget is shown.</summary>
+    /// <remarks>
+    /// Reasons for each part of the text:
+    /// - Hide 'uploadCommand': the panel uploads the file, and a second path confuses users. The azcopy command is a fallback only,
+    ///   for hosts that cannot render the panel, or storage without the CORS rule.
+    /// - "Right away, in this same reply": the panel never posts chat messages (ui/message appears as if the user wrote it), so
+    ///   nothing would wake the agent after the upload. It must already be tracking when the file arrives.
+    /// - "Stays in progress until the file arrives": the Discovery Service reports Running both while it waits for the file and
+    ///   while it processes it, so Running alone is not a reason to stop.
+    /// - "Quietly": each status call can take up to about 25 seconds and repeats many times; narrating every check floods the chat.
+    /// </remarks>
+    internal static string WidgetFileInstructions(bool reusedSession) =>
+        (reusedSession
+            ? "Tell the user this updates their existing inventory, not a new one. "
+            : "Tell the user the inventory has started. ") +
+        $"An upload panel is shown to the user with this result: ask them to choose their file in it within {UploadWindowMinutes} " +
+        $"minutes; the file must be at most {MaxFileSizeMegabytes} MB. Do not show uploadCommand or the URL in it, and do not ask " +
+        "them to send the file in the chat. Only if they say the panel is missing or the upload failed, show uploadCommand exactly " +
+        $"as returned in a code block and ask them to replace {FilePathPlaceholder} with their file path and run it (AzCopy v10). " +
+        "Ask them to choose their file in the panel; they do not need to tell you when it is uploaded. Right away, in this same " +
+        "reply, start tracking the inventory status with this sessionId and operationId and keep calling it quietly while it has " +
+        "not completed: it stays in progress until the file arrives and is processed. Do not wait for the user to say the file " +
+        "is uploaded. When it completes, summarise the result. Do not export the inventory or create an assessment before then.";
 
     internal const string RetryOnceInstructions =
         "Tell the user the inventory could not be started because of a temporary service problem and offer to try once more. " +
@@ -246,6 +282,12 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 w.WriteString("message", message);
             });
 
+    /// <summary>Returns the result of a text-only update.</summary>
+    /// <remarks>
+    /// There is no upload, but the change still runs as a Discovery Service operation, so the agent tracks it the same way. Hosts
+    /// with the upload panel render it here too; the panel shows "Updating your inventory" instead of a file picker. Null fields are
+    /// omitted when serialized, so the panel recognises this result by 'sessionId' and 'success'.
+    /// </remarks>
     internal static CreateOrUpdateInventoryCommandResult TextOnlyResult(string sessionId, string? operationId, string clientRequestId, int? status) =>
         new(
             Success: true,

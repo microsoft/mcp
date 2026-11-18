@@ -21,4 +21,10 @@ public sealed class GetInventoryStatusOptions
     /// </summary>
     [Option(Description = "Required. ID of the inventory operation (operationId, a GUID) returned when the inventory was created or updated.")]
     public string? OperationId { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to return the current status straight away instead of waiting for completion.
+    /// </summary>
+    [Option(Description = "Optional. Set true to return the current status straight away instead of waiting up to about 25 seconds for completion. Used by the upload panel.")]
+    public bool? NoWait { get; set; }
 }

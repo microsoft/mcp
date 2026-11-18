@@ -220,6 +220,16 @@ public static partial class ServiceCollectionExtensions
                     ListToolsHandler = mcpRuntime.ListToolsHandler,
                 };
 
+                // POC: serve MCP Apps widgets registered in McpAppRegistry. Servers without widgets keep reporting
+                // that resources are not supported.
+                if (McpApps.McpAppRegistry.HasWidgets)
+                {
+                    mcpServerOptions.Handlers.ListResourcesHandler = (request, cancellationToken) =>
+                        ValueTask.FromResult(McpApps.McpAppRegistry.ListResources());
+                    mcpServerOptions.Handlers.ReadResourceHandler = (request, cancellationToken) =>
+                        ValueTask.FromResult(McpApps.McpAppRegistry.ReadResource(request.Params?.Uri));
+                }
+
                 // Add instructions for the server
                 mcpServerOptions.ServerInstructions = serverInstructionsProvider.GetServerInstructions();
             });

@@ -16,6 +16,11 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// Each call waits up to about <see cref="MaxWaitSeconds"/> seconds for the operation to complete before returning,
 /// so the agent can call it repeatedly with the same session and operation until it completes.
 /// </summary>
+/// <remarks>
+/// The description's "When" and "Next" are what keep the agent tracking. The server cannot call tools itself, so the agent calls
+/// this again after each result whose 'isCompleted' is false. Each call waits server-side (see <see cref="s_pollDelays"/>), which
+/// spaces the checks without a client timer.
+/// </remarks>
 [CommandMetadata(
     Id = "6e866a7d-d20d-4e98-9737-8240b7ad9957",
     Name = "status",
@@ -44,6 +49,10 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
 
     // Re-checks within one call while the operation runs: 2, 4, 8 and 11 seconds apart (about 25 seconds in total).
+    // Why a long poll: the agent has no timer and calls again only after a result, so a short call would cause many round trips
+    // and chat noise. 25 seconds keeps each call under typical host tool-call timeouts (the Cowork widget proxy cuts off at about
+    // 27 seconds). The short first gaps catch fast text-only updates; the call returns as soon as the operation completes. On
+    // OneBox a five-check call took about 35 seconds, because each check itself takes a few seconds.
     internal static readonly TimeSpan[] s_pollDelays =
         [TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(11)];
 
@@ -84,6 +93,14 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
         }
 
         string url = DsBackdoorClient.OperationStatusUrl(baseUrl, sessionId!, operationId);
+        if (options.NoWait == true)
+        {
+            // The upload panel calls this tool through the host, which cuts off widget tools/call after about 27 seconds, so the
+            // panel asks for a single check (no wait). The panel only displays progress; the agent's waiting calls do the tracking.
+            return Parse(sessionId!, operationId.ToString("D"),
+                await DsBackdoorClient.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", cancellationToken));
+        }
+
         return await WaitForCompletionAsync(
             sessionId!,
             operationId.ToString("D"),
@@ -171,6 +188,8 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
         bool inventory = subject == InventorySubject;
         if (!isCompleted)
         {
+            // "Tell the user once ... quietly": the agent calls this repeatedly in one reply; repeating the same progress line
+            // on every call floods the chat. Running covers both waiting for the upload and processing it.
             return inventory
                 ? "If you have not already said so, tell the user once that you are waiting for their upload or processing their " +
                     "inventory; do not repeat it on later checks. Then check the status again quietly with the same sessionId and " +
