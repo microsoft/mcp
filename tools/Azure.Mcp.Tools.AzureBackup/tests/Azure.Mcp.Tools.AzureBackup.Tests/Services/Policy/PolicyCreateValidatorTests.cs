@@ -945,6 +945,37 @@ public class PolicyCreateValidatorTests
         Assert.True(result.IsValid, string.Join(" ", result.Issues.Select(i => i.Message)));
     }
 
+    [Theory]
+    [InlineData(4, 24, "18", "maximum of 17 days")]
+    [InlineData(6, 24, "23", "maximum of 22 days")]
+    public void Validate_VmHourlyInstantRpAboveSnapshotCap_Fails(int interval, int duration, string instantDays, string expected)
+    {
+        var options = VmOptions(null, "Hourly");
+        options.HourlyIntervalHours = interval;
+        options.HourlyWindowDurationHours = duration;
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.Contains(result.Issues, i => i.Flag == "--instant-rp-retention-days" && i.Message.Contains(expected));
+    }
+
+    [Theory]
+    [InlineData(4, 24, "17")]
+    [InlineData(6, 24, "22")]
+    [InlineData(12, 24, "30")]
+    public void Validate_VmHourlyInstantRpWithinSnapshotCap_Passes(int interval, int duration, string instantDays)
+    {
+        var options = VmOptions(null, "Hourly");
+        options.HourlyIntervalHours = interval;
+        options.HourlyWindowDurationHours = duration;
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid, string.Join(" ", result.Issues.Select(i => i.Message)));
+    }
+
     [Fact]
     public void Validate_VmInstantRpAboveDailyRetention_Fails()
     {

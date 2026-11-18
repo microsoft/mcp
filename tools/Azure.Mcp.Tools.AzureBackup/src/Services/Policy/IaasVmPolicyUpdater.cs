@@ -165,12 +165,14 @@ internal static class IaasVmPolicyUpdater
         {
             throw new ArgumentException("Standard Weekly policies require effective instant RP retention of 5 days. Specify --instant-rp-retention-days 5; omission preserves the existing value.");
         }
-        // Standard Daily (1-5 days) and the daily-retention ceiling are otherwise rejected by Azure as NO_PARAM.
+        // Standard Daily (1-5 days), Hourly snapshot-count caps, and the daily-retention ceiling are otherwise
+        // rejected by Azure as NO_PARAM. Schedule-only changes to Hourly can lower the cap for the existing value.
         if (!weekly && instantDays is int effectiveInstantDays
-            && (request.InstantRpRetentionDays is not null || request.DailyRetentionDays is not null))
+            && (request.InstantRpRetentionDays is not null || request.DailyRetentionDays is not null || (hourly && scheduleChanged)))
         {
             int? effectiveDailyDays = requestedDailyDays ?? retention.DailySchedule?.RetentionDuration?.Count;
-            if (IaasVmPolicyLimits.ValidateInstantRpRetention(effectiveInstantDays, enhanced, weekly: false, effectiveDailyDays) is { } instantIssue)
+            int? hourlySnapshots = hourly ? IaasVmPolicyLimits.HourlySnapshotsPerDay(interval, duration) : null;
+            if (IaasVmPolicyLimits.ValidateInstantRpRetention(effectiveInstantDays, enhanced, weekly: false, effectiveDailyDays, hourlySnapshots) is { } instantIssue)
             {
                 var message = IaasVmPolicyLimits.Format(instantIssue);
                 throw new ArgumentException(request.InstantRpRetentionDays is null

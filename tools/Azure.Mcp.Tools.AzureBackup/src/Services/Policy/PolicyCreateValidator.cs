@@ -503,8 +503,12 @@ public static class PolicyCreateValidator
         var instantDays = ParsePositiveDays(options.InstantRpRetentionDays, $"--{AzureBackupOptionDefinitions.InstantRpRetentionDaysName}", issues);
         if (instantDays is int days)
         {
-            var enhanced = IsEnhancedVmPolicy(options.PolicySubType) || IsRsvHourly(options.ScheduleFrequency);
-            if (IaasVmPolicyLimits.ValidateInstantRpRetention(days, enhanced, IsRsvWeekly(options.ScheduleFrequency), dailyDays) is { } instantIssue)
+            var hourly = IsRsvHourly(options.ScheduleFrequency);
+            var enhanced = IsEnhancedVmPolicy(options.PolicySubType) || hourly;
+            var hourlySnapshots = hourly
+                ? IaasVmPolicyLimits.HourlySnapshotsPerDay(options.HourlyIntervalHours, options.HourlyWindowDurationHours)
+                : null;
+            if (IaasVmPolicyLimits.ValidateInstantRpRetention(days, enhanced, IsRsvWeekly(options.ScheduleFrequency), dailyDays, hourlySnapshots) is { } instantIssue)
             {
                 issues.Add(instantIssue);
             }

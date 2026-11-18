@@ -744,6 +744,67 @@ public class IaasVmPolicyUpdaterTests
     }
 
     [Theory]
+    [InlineData(4, 24, "18", 17)]
+    [InlineData(4, 23, "18", 17)]
+    [InlineData(6, 24, "23", 22)]
+    public void Apply_HourlyInstantDaysAboveSnapshotCap_RejectsWithCap(int interval, int duration, string instantDays, int cap)
+    {
+        var policy = Policy(enhanced: true);
+
+        var error = Assert.Throws<ArgumentException>(() => IaasVmPolicyUpdater.Apply(policy, new()
+        {
+            ScheduleFrequency = "Hourly",
+            HourlyIntervalHours = interval,
+            HourlyWindowStartTime = "08:00",
+            HourlyWindowDurationHours = duration,
+            DailyRetentionDays = "30",
+            InstantRpRetentionDays = instantDays
+        }));
+
+        Assert.Contains("[--instant-rp-retention-days]", error.Message);
+        Assert.Contains($"maximum of {cap} days", error.Message);
+        Assert.Equal(2, policy.InstantRPRetentionRangeInDays);
+    }
+
+    [Theory]
+    [InlineData(4, 24, "17")]
+    [InlineData(6, 24, "22")]
+    [InlineData(12, 24, "30")]
+    [InlineData(4, 12, "30")]
+    public void Apply_HourlyInstantDaysWithinSnapshotCap_Allowed(int interval, int duration, string instantDays)
+    {
+        var policy = Policy(enhanced: true);
+
+        IaasVmPolicyUpdater.Apply(policy, new()
+        {
+            ScheduleFrequency = "Hourly",
+            HourlyIntervalHours = interval,
+            HourlyWindowStartTime = "08:00",
+            HourlyWindowDurationHours = duration,
+            DailyRetentionDays = "30",
+            InstantRpRetentionDays = instantDays
+        });
+
+        Assert.Equal(int.Parse(instantDays), policy.InstantRPRetentionRangeInDays);
+    }
+
+    [Fact]
+    public void Apply_HourlyScheduleOnlyChangeLoweringCap_RejectsExistingInstantDays()
+    {
+        var policy = Policy(enhanced: true, frequency: "Hourly");
+        policy.InstantRPRetentionRangeInDays = 20;
+        Retention(policy).DailySchedule.RetentionDuration.Count = 30;
+
+        var error = Assert.Throws<ArgumentException>(() =>
+            IaasVmPolicyUpdater.Apply(policy, new() { HourlyWindowDurationHours = 24 }));
+
+        Assert.Contains("maximum of 17 days", error.Message);
+        Assert.Contains("existing policy keeps 20 days", error.Message);
+        var schedule = Assert.IsType<SimpleSchedulePolicyV2>(policy.SchedulePolicy);
+        Assert.Equal(12, schedule.HourlySchedule.ScheduleWindowDuration);
+    }
+
+    [Theory]
     [InlineData("1")]
     [InlineData("6")]
     public void Apply_DailyRetentionBelowVmMinimum_RejectsWithFlagAndRange(string dailyDays)

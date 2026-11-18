@@ -19,7 +19,8 @@ internal static partial class AzureBackupErrorGuidance
 
     internal const string VmPolicyLimitsHint =
         "Azure VM policy limits: instant restore 1-5 days for Standard policies (exactly 5 for Standard Weekly) " +
-        "or 1-30 days for Enhanced policies, and no longer than daily retention; daily retention 7-9999 days; " +
+        "or 1-30 days for Enhanced policies (Enhanced Hourly: up to 17 days with 6 snapshots per day, up to 22 with 4-5), " +
+        "and no longer than daily retention; daily retention 7-9999 days; " +
         "weekly retention up to 5163 weeks; monthly up to 1188 months; yearly up to 99 years. " +
         "Use 'azurebackup policy get' to inspect the policy subtype and current values.";
 

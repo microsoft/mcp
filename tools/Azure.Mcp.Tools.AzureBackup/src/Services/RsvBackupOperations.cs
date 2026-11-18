@@ -659,6 +659,16 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
 
+        // Resolve Cross-Region Restore and reject an incompatible redundancy before any write,
+        // so a rejected request leaves identity, network access, and tags unchanged.
+        CrossRegionRestore? crossRegionRestore = null;
+        if (requestedRedundancy is { } requestedBeforePatch
+            && vault.Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy != requestedBeforePatch)
+        {
+            crossRegionRestore = await ResolveCrossRegionRestoreAsync(armClient, vault.Value.Data, vaultName, resourceGroup, subscription, cancellationToken);
+            EnsureRedundancyAllowed(vaultName, requestedBeforePatch, crossRegionRestore);
+        }
+
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location);
 
         if (!string.IsNullOrEmpty(identityType))
@@ -699,7 +709,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         // RSV storage redundancy is set through the vault API and verified by read-back.
         if (requestedRedundancy is { } requested)
         {
-            await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, knownCrossRegionRestore: null, cancellationToken);
+            await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, crossRegionRestore, cancellationToken);
         }
 
         // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
@@ -749,7 +759,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// </summary>
     /// <param name="knownCrossRegionRestore">
     /// Cross-Region Restore state to send when the vault GET does not report one; Azure rejects
-    /// <c>redundancySettings</c> without it. Pass <c>null</c> when the state is not known.
+    /// <c>redundancySettings</c> without it. Callers resolve it with <see cref="ResolveCrossRegionRestoreAsync"/>
+    /// or pass the known state of a new vault.
     /// </param>
     private static async Task<string> ApplyStorageRedundancyAsync(
         ArmClient armClient, string vaultName, string resourceGroup,
@@ -766,12 +777,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
 
         var crossRegionRestore = currentSettings?.CrossRegionRestore ?? knownCrossRegionRestore;
-        if (crossRegionRestore == CrossRegionRestore.Enabled && requested != StandardTierStorageRedundancy.GeoRedundant)
-        {
-            throw new ArgumentException(
-                $"Vault '{vaultName}' has Cross-Region Restore enabled, which requires GeoRedundant storage, so it cannot switch to {requested}. " +
-                "Keep --redundancy GeoRedundant, or use a vault without Cross-Region Restore.");
-        }
+        EnsureRedundancyAllowed(vaultName, requested, crossRegionRestore);
 
         // Send the existing Cross-Region Restore state so the PATCH changes only storage redundancy.
         var patchData = new RecoveryServicesVaultPatch(current.Location)
@@ -798,6 +804,37 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         }
 
         return requested.ToString();
+    }
+
+    /// <summary>
+    /// Returns the vault's Cross-Region Restore state. The vault GET does not always populate it, so the
+    /// backup configuration GET (<c>crossRegionRestoreFlag</c>) is used as the fallback, as in
+    /// <see cref="ConfigureCrossRegionRestoreAsync"/>. Only that read is used; redundancy is never written there.
+    /// </summary>
+    private static async Task<CrossRegionRestore> ResolveCrossRegionRestoreAsync(
+        ArmClient armClient, RecoveryServicesVaultData vault, string vaultName, string resourceGroup,
+        string subscription, CancellationToken cancellationToken)
+    {
+        if (vault.Properties?.RedundancySettings?.CrossRegionRestore is { } reported)
+        {
+            return reported;
+        }
+
+        var configId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var config = await armClient.GetBackupResourceConfigResource(configId).GetAsync(cancellationToken);
+        return config.Value.Data.Properties?.EnableCrossRegionRestore == true
+            ? CrossRegionRestore.Enabled
+            : CrossRegionRestore.Disabled;
+    }
+
+    private static void EnsureRedundancyAllowed(string vaultName, StandardTierStorageRedundancy requested, CrossRegionRestore? crossRegionRestore)
+    {
+        if (crossRegionRestore == CrossRegionRestore.Enabled && requested != StandardTierStorageRedundancy.GeoRedundant)
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' has Cross-Region Restore enabled, which requires GeoRedundant storage, so it cannot switch to {requested}. " +
+                "Keep --redundancy GeoRedundant, or use a vault without Cross-Region Restore.");
+        }
     }
 
     public async Task<OperationResult> CreatePolicyAsync(

@@ -38,13 +38,18 @@ internal static class IaasVmPolicyLimits
     /// <param name="enhanced">True for Enhanced (V2) policies, including Hourly schedules.</param>
     /// <param name="weekly">True when the backup schedule is Weekly.</param>
     /// <param name="dailyRetentionDays">Effective daily retention, or <c>null</c> when unknown or not applicable.</param>
-    internal static PolicyValidationIssue? ValidateInstantRpRetention(int days, bool enhanced, bool weekly, int? dailyRetentionDays)
+    /// <param name="hourlySnapshotsPerDay">Snapshots per day for an Hourly schedule, or <c>null</c> for other schedules.</param>
+    internal static PolicyValidationIssue? ValidateInstantRpRetention(int days, bool enhanced, bool weekly, int? dailyRetentionDays, int? hourlySnapshotsPerDay = null)
     {
         if (enhanced)
         {
             if (days is < 1 or > EnhancedInstantRpMaxDays)
             {
                 return new(InstantRpFlag, $"{days} days is outside the range allowed for Enhanced (V2) policies: 1-{EnhancedInstantRpMaxDays} days.");
+            }
+            if (hourlySnapshotsPerDay is int snapshots && MaxHourlyInstantRpDays(snapshots) is int hourlyMax && days > hourlyMax)
+            {
+                return new(InstantRpFlag, $"{days} days exceeds the maximum of {hourlyMax} days for Enhanced Hourly policies that take {snapshots} snapshots per day. Lower {InstantRpFlag}, or use a longer interval or shorter window so fewer snapshots are taken each day.");
             }
         }
         else if (weekly)
@@ -93,4 +98,23 @@ internal static class IaasVmPolicyLimits
     }
 
     internal static string Format(PolicyValidationIssue issue) => $"[{issue.Flag}] {issue.Message}";
+
+    /// <summary>
+    /// Number of snapshots an Hourly schedule takes per day: one at the window start and one every
+    /// <paramref name="intervalHours"/> within the window. Returns <c>null</c> for an incomplete schedule.
+    /// </summary>
+    internal static int? HourlySnapshotsPerDay(int? intervalHours, int? windowDurationHours) =>
+        intervalHours is int interval and > 0 && windowDurationHours is int duration and > 0
+            ? (duration + interval - 1) / interval
+            : null;
+
+    // The documented maximum falls as snapshots per day rise: every 4 hours over 24 hours (6 snapshots)
+    // allows 17 days and every 6 hours (4 snapshots) allows 22. Only these documented values are enforced,
+    // as upper bounds, so a value Azure accepts is never rejected.
+    private static int? MaxHourlyInstantRpDays(int snapshotsPerDay) => snapshotsPerDay switch
+    {
+        >= 6 => 17,
+        >= 4 => 22,
+        _ => null,
+    };
 }

@@ -18,12 +18,14 @@ namespace Azure.Mcp.Tools.AzureBackup.Tests.Services;
 /// <summary>
 /// Recovery Services vault storage redundancy is set through the vault API
 /// (<c>properties.redundancySettings.standardTierStorageRedundancy</c>) and verified by read-back.
-/// The legacy backupstorageconfig API is never called: the fake ARM transport fails any other request.
+/// The legacy backupstorageconfig API is only read (for Cross-Region Restore state the vault GET omits),
+/// never written: the fake ARM transport fails any other request.
 /// </summary>
 public class RsvVaultStorageRedundancyTests
 {
     private const string Subscription = "22222222-2222-2222-2222-222222222222";
     private const string VaultPath = $"/subscriptions/{Subscription}/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault";
+    private const string StorageConfigPath = $"{VaultPath}/backupstorageconfig/vaultstorageconfig";
 
     [Theory]
     [InlineData("LocallyRedundant", "LocallyRedundant")]
@@ -146,11 +148,11 @@ public class RsvVaultStorageRedundancyTests
     }
 
     [Theory]
-    [InlineData("LocallyRedundant", null)]
-    [InlineData("ZoneRedundant", "Disabled")]
-    public async Task UpdateVaultAsync_Redundancy_PatchesVaultApiKeepsCrossRegionRestoreAndVerifies(string redundancy, string? crossRegionRestore)
+    [InlineData("LocallyRedundant")]
+    [InlineData("ZoneRedundant")]
+    public async Task UpdateVaultAsync_Redundancy_PatchesVaultApiKeepsCrossRegionRestoreAndVerifies(string redundancy)
     {
-        var vault = new FakeVault { Exists = true, Redundancy = "GeoRedundant", CrossRegionRestore = crossRegionRestore };
+        var vault = new FakeVault { Exists = true, Redundancy = "GeoRedundant", CrossRegionRestore = "Disabled" };
 
         var result = await UpdateRedundancyAsync(vault, redundancy);
 
@@ -158,8 +160,37 @@ public class RsvVaultStorageRedundancyTests
         Assert.Equal(redundancy, vault.Redundancy);
         var redundancyPatch = Assert.Single(vault.Requests, r => r.Method == HttpMethod.Patch && GetRequestedRedundancy(r.Body) is not null);
         Assert.Equal(redundancy, GetRequestedRedundancy(redundancyPatch.Body));
-        Assert.Equal(crossRegionRestore, GetRequestedCrossRegionRestore(redundancyPatch.Body));
+        Assert.Equal("Disabled", GetRequestedCrossRegionRestore(redundancyPatch.Body));
         Assert.Equal((HttpMethod.Get, VaultPath), (vault.Requests[^1].Method, vault.Requests[^1].Path));
+        // The vault GET reported Cross-Region Restore, so the backup configuration is not read.
+        Assert.DoesNotContain(vault.Requests, r => r.Path == StorageConfigPath);
+    }
+
+    [Fact]
+    public async Task UpdateVaultAsync_CrossRegionRestoreMissingAndDisabledInBackupConfig_PatchesWithDisabled()
+    {
+        var vault = new FakeVault { Exists = true, Redundancy = "GeoRedundant", ConfigCrossRegionRestore = false };
+
+        await UpdateRedundancyAsync(vault, "LocallyRedundant");
+
+        Assert.Contains(vault.Requests, r => r.Method == HttpMethod.Get && r.Path == StorageConfigPath);
+        var redundancyPatch = Assert.Single(vault.Requests, r => r.Method == HttpMethod.Patch && GetRequestedRedundancy(r.Body) is not null);
+        Assert.Equal("LocallyRedundant", GetRequestedRedundancy(redundancyPatch.Body));
+        Assert.Equal("Disabled", GetRequestedCrossRegionRestore(redundancyPatch.Body));
+        Assert.Equal("LocallyRedundant", vault.Redundancy);
+    }
+
+    [Fact]
+    public async Task UpdateVaultAsync_CrossRegionRestoreMissingAndEnabledInBackupConfig_RejectsBeforeAnyPatch()
+    {
+        var vault = new FakeVault { Exists = true, Redundancy = "GeoRedundant", ConfigCrossRegionRestore = true };
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => UpdateRedundancyAsync(vault, "ZoneRedundant", identityType: "None"));
+
+        Assert.Contains("Cross-Region Restore enabled", exception.Message);
+        Assert.Contains(vault.Requests, r => r.Method == HttpMethod.Get && r.Path == StorageConfigPath);
+        Assert.DoesNotContain(vault.Requests, r => r.Method == HttpMethod.Patch);
+        Assert.Equal("GeoRedundant", vault.Redundancy);
     }
 
     [Fact]
@@ -170,20 +201,22 @@ public class RsvVaultStorageRedundancyTests
         await UpdateRedundancyAsync(vault, "georedundant");
 
         Assert.DoesNotContain(vault.Requests, r => r.Method == HttpMethod.Patch && GetRequestedRedundancy(r.Body) is not null);
+        Assert.DoesNotContain(vault.Requests, r => r.Path == StorageConfigPath);
     }
 
     [Theory]
     [InlineData("LocallyRedundant")]
     [InlineData("ZoneRedundant")]
-    public async Task UpdateVaultAsync_CrossRegionRestoreEnabled_RejectsNonGeoRedundancy(string redundancy)
+    public async Task UpdateVaultAsync_CrossRegionRestoreEnabled_RejectsBeforeAnyPatch(string redundancy)
     {
         var vault = new FakeVault { Exists = true, Redundancy = "GeoRedundant", CrossRegionRestore = "Enabled" };
 
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => UpdateRedundancyAsync(vault, redundancy));
+        // Identity changes in the same request must not be applied when the redundancy change is rejected.
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => UpdateRedundancyAsync(vault, redundancy, identityType: "None"));
 
         Assert.Contains("Cross-Region Restore enabled", exception.Message);
         Assert.Contains(redundancy, exception.Message);
-        Assert.DoesNotContain(vault.Requests, r => r.Method == HttpMethod.Patch && GetRequestedRedundancy(r.Body) is not null);
+        Assert.Equal([(HttpMethod.Get, VaultPath)], vault.Requests.Select(r => (r.Method, r.Path)));
         Assert.Equal("GeoRedundant", vault.Redundancy);
     }
 
@@ -211,9 +244,9 @@ public class RsvVaultStorageRedundancyTests
         Assert.Contains("before any item is protected", exception.Message);
     }
 
-    private static Task<OperationResult> UpdateRedundancyAsync(FakeVault vault, string redundancy) =>
+    private static Task<OperationResult> UpdateRedundancyAsync(FakeVault vault, string redundancy, string? identityType = null) =>
         new RsvBackupOperations(vault.CreateAzureService()).UpdateVaultAsync(
-            "vault", "rg", Subscription, redundancy, null, null, null, null, null, null, null, null,
+            "vault", "rg", Subscription, redundancy, null, null, null, identityType, null, null, null, null,
             TestContext.Current.CancellationToken);
 
     private static JsonElement? GetRedundancySettings(string? body)
@@ -250,6 +283,7 @@ public class RsvVaultStorageRedundancyTests
         public bool IgnoreRedundancyOnPut { get; init; }
         public bool IgnoreRedundancyOnPatch { get; init; }
         public int PatchStatus { get; init; } = 200;
+        public bool ConfigCrossRegionRestore { get; init; }
         public List<(HttpMethod Method, string Path, string? Body)> Requests { get; } = [];
 
         public IAzureService CreateAzureService()
@@ -277,9 +311,18 @@ public class RsvVaultStorageRedundancyTests
             {
                 path = VaultPath;
             }
+            else if (path.Equals(StorageConfigPath, StringComparison.OrdinalIgnoreCase))
+            {
+                path = StorageConfigPath;
+            }
             var body = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
             Requests.Add((request.Method, path, body));
 
+            // The backup configuration is only read for Cross-Region Restore; any write fails the test.
+            if (path == StorageConfigPath && request.Method == HttpMethod.Get)
+            {
+                return Respond(200, StorageConfigBody());
+            }
             if (path != VaultPath)
             {
                 throw new InvalidOperationException($"Unexpected request: {request.Method} {path}");
@@ -333,6 +376,20 @@ public class RsvVaultStorageRedundancyTests
                 }
                 """;
         }
+
+        private string StorageConfigBody() => $$"""
+            {
+              "id": "{{StorageConfigPath}}",
+              "name": "vaultstorageconfig",
+              "type": "Microsoft.RecoveryServices/vaults/backupstorageconfig",
+              "properties": {
+                "storageModelType": "{{Redundancy ?? "GeoRedundant"}}",
+                "storageType": "{{Redundancy ?? "GeoRedundant"}}",
+                "storageTypeState": "Unlocked",
+                "crossRegionRestoreFlag": {{(ConfigCrossRegionRestore ? "true" : "false")}}
+              }
+            }
+            """;
 
         private static string Error(string code) => $$$"""{"error":{"code":"{{{code}}}","message":"{{{code}}}"}}""";
 

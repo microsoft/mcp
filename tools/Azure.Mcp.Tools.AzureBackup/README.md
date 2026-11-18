@@ -24,7 +24,7 @@ These options extend the existing schedule, time-zone, and daily/weekly/monthly/
 | `--hourly-window-start-time` | Local `HH:mm` converted to UTC using supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. Uses the `2000-01-01` baseline; omission preserves the stored timestamp. |
 | `--hourly-window-duration-hours` | `4`–`24` hours and at least the effective interval. |
 | `--policy-sub-type` | `Standard` or `Enhanced`; asserts the existing subtype. A mismatch is rejected, **not migrated**. |
-| `--instant-rp-retention-days` | `1`–`5` days for Standard (V1) Daily policies, exactly `5` for Standard Weekly, and `1`–`30` for Enhanced (V2) policies; never longer than the effective daily retention. Validated against the fetched policy before the update is sent. |
+| `--instant-rp-retention-days` | `1`–`5` days for Standard (V1) Daily policies, exactly `5` for Standard Weekly, and `1`–`30` for Enhanced (V2) policies (Enhanced Hourly: up to `17` with 6 snapshots per day, up to `22` with 4–5); never longer than the effective daily retention. Validated against the fetched policy before the update is sent. |
 | `--instant-rp-resource-group` | Instant recovery resource-group name prefix, not a resource ID; 1–50 letters, digits, underscores, or hyphens. Preserves the existing suffix. |
 | `--snapshot-consistency` | `ApplicationConsistent` restores the default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`. |
 | `--archive-tier-after-days` | At least `45` days; implies `TierAfter` when no mode is supplied. |
