@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobGetOptions
+public class BlobGetOptions : ISelectOption
 {
     [Option(Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').")]
     public string? Blob { get; set; }
@@ -23,4 +23,6 @@ public class BlobGetOptions
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }
 
+    [Option(Description = "Comma-separated list of response fields to include in the output. If not specified all fields will be included.")]
+    public string? Select { get; set; }
 }

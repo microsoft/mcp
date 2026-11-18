@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
@@ -40,6 +41,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
     private readonly ILogger<BlobGetCommand> _logger = logger;
     private readonly IStorageService _storageService = storageService;
 
+    public override JsonSerializerContext JsonContext => StorageJsonContext.Default;
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobGetOptions options, CancellationToken cancellationToken)
     {
         try
@@ -53,7 +56,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
                 cancellationToken
             );
 
-            context.Response.Results = ResponseResult.Create(new BlobGetCommandResult(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
+            SetResult(context, new BlobGetCommandResult(details ?? []));
             return context.Response;
         }
         catch (Exception ex)

@@ -1706,6 +1706,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_blob_get | Get the details about blob \<blob> in the container \<container> in storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
+| storage_blob_get | List blobs in container \<container> in storage account \<account>, returning only name and contentLength using select | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added --select support to storage blob get to return selected blob response fields using shared Core field selection infrastructure."

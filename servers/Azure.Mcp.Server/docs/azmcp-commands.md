@@ -5892,7 +5892,8 @@ azmcp storage blob container get --account <account> \
 azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
-                           [--prefix <prefix>]
+                           [--prefix <prefix>] \
+                           [--select <fields>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -5901,6 +5902,12 @@ azmcp storage blob upload --account <account> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
 ```
+
+Use `--select name,contentLength` to return only those top-level fields for each blob while retaining
+the `blobs` array. Field names are case-insensitive, and whitespace around names is ignored. Nested
+objects such as `metadata` are retained in full when selected. Omit `--select` to include all fields;
+empty values, unknown fields, and nested paths are rejected. The parameter description lists the
+available JSON field names.
 
 #### Disk Diagnostics
 

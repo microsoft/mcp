@@ -20,26 +20,37 @@ public static class OptionBinder
         DynamicallyAccessedMemberTypes.PublicProperties |
         DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
 
-    private static readonly ConcurrentDictionary<Type, OptionTypeHandler[]> s_optionTypeHandlers = new();
+    private static readonly ConcurrentDictionary<(Type OptionsType, string? SelectDescriptionSuffix), OptionTypeHandler[]> s_optionTypeHandlers = new();
 
     /// <summary>
     /// Registers System.CommandLine options on a command based on the public properties of <typeparamref name="TOptions"/>.
     /// </summary>
     /// <param name="command">The command to register options on.</param>
     public static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command)
+        where TOptions : class => RegisterOptions<TOptions>(command, null);
+
+    internal static void RegisterOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(Command command, string? selectDescriptionSuffix)
         where TOptions : class
     {
-        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
+        var handlers = s_optionTypeHandlers.GetOrAdd((typeof(TOptions), selectDescriptionSuffix), _ => GetOptionTypeHandlers<TOptions>(selectDescriptionSuffix));
         foreach (var handler in handlers)
         {
             command.Options.Add(handler.Option);
         }
     }
 
-    private static OptionTypeHandler[] GetOptionTypeHandlers<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>() where TOptions : class
+    private static OptionTypeHandler[] GetOptionTypeHandlers<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(string? selectDescriptionSuffix) where TOptions : class
     {
         var descriptors = OptionDescriptor.FromType<TOptions>();
-        return [.. descriptors.Select(d => new OptionTypeHandler(d))];
+        return [.. descriptors.Select(d =>
+        {
+            var handler = new OptionTypeHandler(d);
+            if (selectDescriptionSuffix is not null && d.TargetProperty.Name == nameof(ISelectOption.Select))
+            {
+                handler.Option.Description += $" {selectDescriptionSuffix}";
+            }
+            return handler;
+        })];
     }
 
     /// <summary>
@@ -48,13 +59,16 @@ public static class OptionBinder
     /// </summary>
     /// <param name="parseResult">The parsed command-line values.</param>
     public static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult)
+        where TOptions : class => BindOptions<TOptions>(parseResult, null);
+
+    internal static TOptions BindOptions<[DynamicallyAccessedMembers(OptionBindingMembers)] TOptions>(ParseResult parseResult, string? selectDescriptionSuffix)
         where TOptions : class
     {
         var instance = (TOptions)CreateInstance(typeof(TOptions));
         List<string> missingOptions = [];
         List<string> errors = [.. parseResult.Errors.Select(e => e.Message)];
         Dictionary<PropertyInfo, object>? parentInstances = null;
-        var handlers = s_optionTypeHandlers.GetOrAdd(typeof(TOptions), _ => GetOptionTypeHandlers<TOptions>());
+        var handlers = s_optionTypeHandlers.GetOrAdd((typeof(TOptions), selectDescriptionSuffix), _ => GetOptionTypeHandlers<TOptions>(selectDescriptionSuffix));
 
         foreach (var handler in handlers)
         {

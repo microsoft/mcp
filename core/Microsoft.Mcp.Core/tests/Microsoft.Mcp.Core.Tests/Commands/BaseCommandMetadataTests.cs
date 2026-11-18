@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -176,6 +177,35 @@ public sealed class BaseCommandMetadataTests
             () => command.SetStringResult(new CommandContext(), "result"));
 
         Assert.Contains(nameof(command.ResultTypeInfo), exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SetResult_WithJsonContext_UsesContextPropertyNames()
+    {
+        var command = new JsonContextTestCommand<ExceptionResult>();
+        var context = new CommandContext();
+
+        command.SetCommandResult(context, new("message", "stack", "type"));
+
+        var node = Assert.IsType<JsonObject>(context.Response.Results?.ToJsonNode());
+        Assert.Equal(["message", "stackTrace", "type"], node.Select(property => property.Key));
+        Assert.Equal("stack", node["stackTrace"]!.GetValue<string>());
+        var typeInfo = command.ResultTypeInfo;
+        Assert.NotNull(typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        Assert.NotNull(selection.Parse("stackTrace"));
+        Assert.Throws<CommandValidationException>(() => selection.Parse("stack_trace"));
+    }
+
+    [Fact]
+    public void SetResult_WithJsonContextMissingResultType_ThrowsInvalidOperationException()
+    {
+        var command = new JsonContextTestCommand<int>();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => command.SetCommandResult(new(), 1));
+
+        Assert.Contains("does not contain metadata", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(Int32), exception.Message, StringComparison.Ordinal);
     }
 
     // ---------- Missing metadata throws InvalidOperationException ----------

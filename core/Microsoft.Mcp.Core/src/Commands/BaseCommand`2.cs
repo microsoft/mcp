@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Mcp.Core.Areas.Server;
@@ -25,6 +26,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
+    private readonly ResponseFieldSelection? _fieldSelection;
 
     [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
         Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
@@ -47,7 +49,12 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         Metadata = attr.ToToolMetadata();
 
         _command = new ExtendedCommand(this, Name, Description);
-        OptionBinder.RegisterOptions<TOptions>(_command);
+        if (typeof(ISelectOption).IsAssignableFrom(typeof(TOptions)))
+        {
+            _fieldSelection = ResponseFieldSelection.Create(ResultTypeInfo
+                ?? throw new InvalidOperationException("Commands with ISelectOption options must override JsonContext or ResultTypeInfo."));
+        }
+        OptionBinder.RegisterOptions<TOptions>(_command, _fieldSelection?.DescriptionSuffix);
     }
 
     public string Id { get; }
@@ -57,12 +64,30 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     public ToolMetadata Metadata { get; }
 
     /// <summary>
-    /// Gets the source-generated <see cref="JsonTypeInfo{TResult}"/> for this command's result type.
-    /// Migrated commands override this so the server can advertise an MCP <c>outputSchema</c> and emit
-    /// <c>structuredContent</c>. Commands that have not been migrated return <see langword="null"/> and
-    /// simply advertise no output schema.
+    /// Gets the source-generated context used to resolve result serialization metadata, including
+    /// JSON property names for field selection. Overrides must be available during base construction.
     /// </summary>
-    public virtual JsonTypeInfo<TResult>? ResultTypeInfo => null;
+    public virtual JsonSerializerContext? JsonContext => null;
+
+    /// <summary>
+    /// Gets the source-generated <see cref="JsonTypeInfo{TResult}"/> for this command's result type.
+    /// Resolved from <see cref="JsonContext"/> by default; commands can also override this directly.
+    /// Commands providing neither return <see langword="null"/> and advertise no output schema.
+    /// </summary>
+    public virtual JsonTypeInfo<TResult>? ResultTypeInfo
+    {
+        get
+        {
+            if (JsonContext is not { } jsonContext)
+            {
+                return null;
+            }
+
+            return jsonContext.GetTypeInfo(typeof(TResult)) as JsonTypeInfo<TResult>
+                ?? throw new InvalidOperationException(
+                    $"JSON context '{jsonContext.GetType().FullName}' does not contain metadata for result type '{typeof(TResult).FullName}'.");
+        }
+    }
 
     JsonTypeInfo? IBaseCommand.ResultTypeInfo => ResultTypeInfo;
 
@@ -70,7 +95,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
     public TOptions BindOptions(ParseResult parseResult)
     {
-        var options = OptionBinder.BindOptions<TOptions>(parseResult);
+        var options = OptionBinder.BindOptions<TOptions>(parseResult, _fieldSelection?.DescriptionSuffix);
         PostBindOptions(options);
         return options;
     }
@@ -97,9 +122,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     async Task<CommandResponse> IBaseCommand.ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         TOptions options;
+        HashSet<string>? selectedFields;
         try
         {
             options = BindOptions(parseResult);
+            selectedFields = _fieldSelection?.Parse((options as ISelectOption)?.Select);
         }
         catch (CommandValidationException ex)
         {
@@ -120,6 +147,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         }
 
         CommandResponse response = await ExecuteAsync(context, options, cancellationToken);
+        if (_fieldSelection is not null && selectedFields is not null
+            && response.Status >= HttpStatusCode.OK && response.Status < HttpStatusCode.Ambiguous)
+        {
+            response.Results?.SelectFields(_fieldSelection, selectedFields);
+        }
         CaptureTelemetryFailureMessage(context, response);
         return response;
     }
@@ -127,7 +159,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     /// <summary>
     /// Stores the command result on the response using <see cref="ResultTypeInfo"/> so it is serialized
     /// with the same source-generated <see cref="JsonTypeInfo{TResult}"/> used to advertise the
-    /// <c>outputSchema</c>. Only call this from commands that override <see cref="ResultTypeInfo"/>.
+    /// <c>outputSchema</c>. Only call this from commands that override <see cref="JsonContext"/>
+    /// or <see cref="ResultTypeInfo"/>.
     /// </summary>
     protected void SetResult(CommandContext context, TResult result)
     {
@@ -135,7 +168,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
 
         var typeInfo = ResultTypeInfo
             ?? throw new InvalidOperationException(
-                $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(ResultTypeInfo)}.");
+                $"Command type '{GetType().FullName}' called {nameof(SetResult)} without overriding {nameof(JsonContext)} or {nameof(ResultTypeInfo)}.");
 
         context.Response.Results = ResponseResult.Create(result, typeInfo);
     }
