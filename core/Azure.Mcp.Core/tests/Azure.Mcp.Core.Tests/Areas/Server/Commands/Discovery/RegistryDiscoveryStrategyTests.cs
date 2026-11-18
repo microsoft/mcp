@@ -525,6 +525,47 @@ public class RegistryDiscoveryStrategyTests
     }
 
     [Fact]
+    public async Task DiscoverServersAsync_DashboardsServerIsDiscovered()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var dashboardsProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "dashboards");
+
+        // Assert
+        Assert.NotNull(dashboardsProvider);
+
+        var metadata = dashboardsProvider.CreateMetadata();
+        Assert.Equal("dashboards", metadata.Id);
+        Assert.Equal("dashboards", metadata.Name);
+        Assert.Equal("Azure Monitor dashboards with Grafana MCP", metadata.Title);
+        Assert.NotEmpty(metadata.Description);
+    }
+
+    [Fact]
+    public async Task DiscoverServersAsync_DashboardsServerHasExpectedProperties()
+    {
+        // Arrange
+        var strategy = RegistryDiscoveryStrategyHelper.CreateStrategy();
+
+        // Act
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var dashboardsProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "dashboards");
+
+        // Assert
+        Assert.NotNull(dashboardsProvider);
+
+        // Description should mention dashboards and the main query surfaces
+        var description = dashboardsProvider.CreateMetadata().Description.ToLowerInvariant();
+        Assert.Contains("dashboards", description);
+        Assert.Contains("azure monitor", description);
+        Assert.Contains("prometheus", description);
+        Assert.Contains("kusto", description);
+    }
+
+    [Fact]
     public async Task DiscoverServersAsync_AllExpectedServersArePresent()
     {
         // Arrange
@@ -540,5 +581,6 @@ public class RegistryDiscoveryStrategyTests
         Assert.Contains("azd", serverIds);
         Assert.Contains("foundry", serverIds);
         Assert.Contains("arm", serverIds);
+        Assert.Contains("dashboards", serverIds);
     }
 }

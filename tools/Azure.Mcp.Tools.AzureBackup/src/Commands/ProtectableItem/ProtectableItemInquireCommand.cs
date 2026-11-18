@@ -42,9 +42,20 @@ public sealed class ProtectableItemInquireCommand(ILogger<ProtectableItemInquire
     private readonly ILogger<ProtectableItemInquireCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
+    public override void PostBindOptions(ProtectableItemInquireOptions options)
+    {
+        options.Subscription = BackupVaultReferenceParser.ResolveSubscription(options.Subscription, options.Vault, options.ResourceGroup);
+        base.PostBindOptions(options);
+    }
+
     public override void ValidateOptions(ProtectableItemInquireOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        var reference = BackupVaultReferenceParser.Normalize(
+            options.Subscription, options.ResourceGroup, options.Vault, vaultType: null, rsvOnly: true, validationResult);
+        options.ResourceGroup = reference.ResourceGroup ?? options.ResourceGroup;
+        options.Vault = reference.Vault ?? options.Vault;
 
         var hasContainer = !string.IsNullOrWhiteSpace(options.Container);
         var hasStorageAccount = !string.IsNullOrWhiteSpace(options.StorageAccount);

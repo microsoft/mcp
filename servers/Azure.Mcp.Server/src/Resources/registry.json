@@ -28,6 +28,12 @@
             "description": "MCP server with tools to use Azure Resource Graph to retrieve and filter information about Azure resources in a customer's subscription, and tools to manage ARM template deployments.",
             "toolPrefix": "arm_",
             "oauthScopes": ["22bfbae3-f4e7-485f-be43-8cee15065084/.default"]
+        },
+        "dashboards": {
+            "url": "https://mcp.dashboard.azure.com",
+            "title": "Azure Monitor dashboards with Grafana MCP",
+            "description": "MCP server with tools to find, inspect, and update saved Azure Monitor dashboards with Grafana; query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health; run PromQL against Azure Monitor managed service for Prometheus workspaces; run KQL against Azure Data Explorer (Kusto) clusters; and inspect Azure Monitor health models.",
+            "oauthScopes": ["6f2d169c-08f3-4a4c-a982-bcaf2d038c45/.default"]
         }
     }
 }

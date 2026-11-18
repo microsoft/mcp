@@ -1290,6 +1290,14 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 
 ### Azure Backup Operations
 
+`--vault` accepts a vault name or a full vault resource ID
+(`/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vault}` or
+`.../providers/Microsoft.DataProtection/backupVaults/{vault}`), and `--resource-group` accepts a resource group name or
+resource group resource ID. A vault resource ID supplies the vault type and, when `--subscription` is omitted, the
+subscription. `vault get` also takes the resource group from the ID; other commands still require `--resource-group`.
+Values that conflict with the resource ID are rejected, and `--subscription` must be omitted or be a subscription ID (not
+a name) when a resource ID is used. Recovery Services-only commands reject Backup vault IDs.
+
 #### Operation Status (RSV only)
 
 ```bash
@@ -5575,8 +5583,8 @@ azmcp sreagent connectors create kusto --subscription <subscription> \
                                        --name <connector-name> \
                                        --cluster-url <kusto-cluster-url>
 
-# Create or update an MCP connector
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# Create or update an MCP connector (local-only)
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
 azmcp sreagent connectors create mcp --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -5765,9 +5773,11 @@ azmcp sreagent incidents plans create --subscription <subscription> \
                                       --severity <severity> \
                                       --trigger-condition <condition>
 
-# Configure PagerDuty / ServiceNow connectors
-azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
-azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
+# Configure PagerDuty / ServiceNow connectors (local-only)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup pagerduty   --subscription <s> --resource-group <rg> --agent <a> --name <n> --api-key-env <env>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup servicenow  --subscription <s> --resource-group <rg> --agent <a> --name <n> --instance-url <url> --auth-type BearerToken --token-env <env>
 ```
 
 #### Workflows

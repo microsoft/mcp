@@ -505,6 +505,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_vault_get | Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
+| azurebackup_vault_get | Get details of the backup vault with resource ID <vault_resource_id> | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
 | azurebackup_vault_update | Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned | investigation-required |

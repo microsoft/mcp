@@ -35,9 +35,20 @@ public sealed class OperationGetCommand(
     ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<OperationGetOptions, OperationGetCommand.OperationGetCommandResult>(subscriptionResolver)
 {
+    public override void PostBindOptions(OperationGetOptions options)
+    {
+        options.Subscription = BackupVaultReferenceParser.ResolveSubscription(options.Subscription, options.Vault, options.ResourceGroup);
+        base.PostBindOptions(options);
+    }
+
     public override void ValidateOptions(OperationGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        var reference = BackupVaultReferenceParser.Normalize(
+            options.Subscription, options.ResourceGroup, options.Vault, vaultType: null, rsvOnly: true, validationResult);
+        options.ResourceGroup = reference.ResourceGroup ?? options.ResourceGroup;
+        options.Vault = reference.Vault ?? options.Vault;
         RsvOperationInputValidator.Validate(
             options.Operation, options.Vault, options.ResourceGroup, options.Container, options.ProtectedItem, options.Fabric, validationResult);
     }

@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     OpenWorld = true,
     ReadOnly = false,
     Secret = true,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<ConnectorsCreateMcpOptions, ConnectorsCreateMcpCommand.ConnectorsCreateMcpCommandResult>(subscriptionResolver)
 {
