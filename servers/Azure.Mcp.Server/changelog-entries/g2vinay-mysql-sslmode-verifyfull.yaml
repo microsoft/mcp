@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Updated MySQL tools to use the 'VerifyFull' SSL mode when connecting to Azure Database for MySQL, matching the PostgreSQL tools."
