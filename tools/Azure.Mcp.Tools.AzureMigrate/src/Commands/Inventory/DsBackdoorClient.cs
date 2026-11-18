@@ -20,8 +20,13 @@ internal static partial class DsBackdoorClient
     internal const string SkillTypeSettingName = "AZUREMIGRATE_INVENTORY_SKILL_TYPE";
     internal const string ApiVersion = "2026-11-11-preview";
 
-    // Discovery Service backdoor endpoint (private Stamp04).
-    internal const string BaseUrl = "https://discoverysrv-pvt-stamp04.ecy.prod.migration.windowsazure.com";
+    internal const string BaseUrlSettingName = "AZUREMIGRATE_DS_BASE_URL";
+
+    // Discovery Service backdoor endpoint (private Stamp04); override with AZUREMIGRATE_DS_BASE_URL (e.g. local OneBox).
+    internal const string DefaultBaseUrl = "https://discoverysrv-pvt-stamp04.ecy.prod.migration.windowsazure.com";
+
+    internal static string BaseUrl =>
+        (Environment.GetEnvironmentVariable(BaseUrlSettingName) is { Length: > 0 } s ? s.Trim() : DefaultBaseUrl).TrimEnd('/');
 
     private const string DefaultSkillType = "Discovery";
 

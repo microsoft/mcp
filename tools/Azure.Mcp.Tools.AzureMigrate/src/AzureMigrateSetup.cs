@@ -60,6 +60,9 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<CreateAssessmentCommand>();
         services.AddSingleton<GetAssessmentStatusCommand>();
         services.AddSingleton<GetHaStatusCommand>();
+
+        // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
+        InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
     }
 
     /// <inheritdoc/>
