@@ -247,9 +247,20 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         ArmClient armClient, ResourceIdentifier modelId, string? path, JsonElement entity, HealthModelInspectRequest request, CancellationToken cancellationToken)
     {
         var errors = new List<string>();
-        var resource = Entity(armClient, modelId, HealthModelInspection.Name(entity) ?? string.Empty);
-        var (startAt, endAt) = HealthModelInspection.Window(request.StartAt, request.EndAt, request.Timestamp);
         var item = new HealthModelInspectItem(path, entity);
+        HealthModelEntityResource resource;
+        try
+        {
+            resource = Entity(armClient, modelId, HealthModelInspection.Name(entity) ?? string.Empty);
+        }
+        // A name that cannot be part of a resource ID, such as an empty one, leaves nothing to read.
+        catch (ArgumentException ex)
+        {
+            return request.Include.Any(include => include is not HealthModelInclude.Signals)
+                ? item with { Errors = [$"entity name: {ex.Message.Split('\n')[0].Trim()}"] }
+                : item;
+        }
+        var (startAt, endAt) = HealthModelInspection.Window(request.StartAt, request.EndAt, request.Timestamp);
 
         if (request.Include.Contains(HealthModelInclude.History))
         {
@@ -288,9 +299,9 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         return errors.Count > 0 ? item with { Errors = errors } : item;
     }
 
-    // Keeps the selected fields of each payload. "*" keeps everything, and a payload that no field names is left out.
+    // Keeps the selected fields of each payload. A payload that no field reaches into is left out.
     private static HealthModelInspectItem Project(HealthModelInspectItem item, IReadOnlyCollection<string> fields) =>
-        fields.Contains("*") ? item : item with
+        item with
         {
             Entity = Project(item.Entity, fields, "entity") ?? EmptyObject,
             History = item.History is { } history ? Project(history, fields, "history") : null,
@@ -298,20 +309,10 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
             Annotations = item.Annotations is { } annotations ? Project(annotations, fields, "annotations") : null,
         };
 
-    private static JsonElement? Project(JsonElement payload, IReadOnlyCollection<string> fields, string key)
-    {
-        if (fields.Contains("*") || fields.Contains(key))
-        {
-            return payload;
-        }
-        var paths = fields.Where(field => Names(field, key)).Select(field => field[(key.Length + 1)..]).ToList();
-        return paths.Count > 0 ? HealthModelInspection.Project(payload, paths) : null;
-    }
+    private static JsonElement? Project(JsonElement payload, IReadOnlyCollection<string> fields, string key) =>
+        HealthModelInspection.PathsFor(fields, key) is { Count: > 0 } paths ? HealthModelInspection.Project(payload, paths) : null;
 
-    private static bool Keeps(IReadOnlyCollection<string> fields, string key) => fields.Any(field => field == "*" || Names(field, key));
-
-    private static bool Names(string field, string key) =>
-        field == key || (field.Length > key.Length && field.StartsWith(key, StringComparison.Ordinal) && field[key.Length] == '.');
+    private static bool Keeps(IReadOnlyCollection<string> fields, string key) => HealthModelInspection.PathsFor(fields, key).Count > 0;
 
     private static IEnumerable<string> Paths(HealthModelInspectItem item) =>
         HealthModelInspection.Paths(item.Entity, "entity")
@@ -347,6 +348,12 @@ public class MonitorHealthModelService(IAzureService azureService, ILogger<Monit
         catch (AggregateException ex)
         {
             errors.Add($"{read}: {ex.Message.Split('\n')[0].Trim()}");
+            return null;
+        }
+        // A response whose body is empty or not JSON.
+        catch (JsonException ex)
+        {
+            errors.Add($"{read}: the response body is not JSON: {ex.Message.Split('\n')[0].Trim()}");
             return null;
         }
     }

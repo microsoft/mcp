@@ -40,38 +40,53 @@ foreach ($file in $files) {
 }
 
 # ---------------------------------------------------------------------------
-# Seed health state transitions on Model B's root entity for the health model inspect
-# recorded test Should_Inspect_HealthModel_EntityWithSignalsAndHistory, which reads a
-# non-empty history.
+# Seed health states for the health model inspect recorded tests
+# (Azure.Mcp.Tools.Monitor.Tests.HealthModels.HealthModelInspectRecordedTests).
 #
-# Uses the official Entities_IngestHealthReport ARM action (a manual "push" signal,
-# worst-of'd with the entity's Resource Health): Degraded, then Unhealthy, gives two
-# transitions and a non-Healthy final state. The 35s gap keeps them distinct.
-# expires-in-minutes is set high so the reported state persists through recording.
+# Uses the official Entities_IngestHealthReport ARM action (a manual "push" signal).
+# - Model B's root, worst-of'd with its Resource Health: Degraded, then Unhealthy, gives two
+#   transitions and a non-Healthy final state for the history test. The 35s gap keeps them distinct.
+# - Model C's leaves: frontend Degraded and backend Healthy, so the root's WorstOf rollup is
+#   Degraded and a Causes walk follows the frontend only.
+# expires-in-minutes is set high so the reported states persist through recording.
 # These writes are test-setup only; the inspect tool stays read-only.
 # ---------------------------------------------------------------------------
 $subscriptionId = $testSettings.SubscriptionId
 $healthModelB   = "$($BaseName)-hm-b"
+$healthModelC   = "$($BaseName)-hm-c"
 $manualSignal   = 'mcp-fixture-manual'
-$apiVersion     = '2026-05-01-preview'
+$apiVersion     = '2026-11-01'
 $expiresMinutes = 1440
 
 function Invoke-HealthReport {
-    param([string] $EntityName, [string] $HealthState)
-    $path = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CloudHealth/healthmodels/$healthModelB/entities/$EntityName/ingestHealthReport?api-version=$apiVersion"
+    param([string] $HealthModel, [string] $EntityName, [string] $HealthState)
+    $path = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CloudHealth/healthmodels/$HealthModel/entities/$EntityName/ingestHealthReport?api-version=$apiVersion"
     $payload = @{ signalName = $manualSignal; healthState = $HealthState; expiresInMinutes = $expiresMinutes } | ConvertTo-Json -Compress
     Write-Host "IngestHealthReport: $EntityName -> $HealthState" -ForegroundColor Yellow
-    $response = Invoke-AzRestMethod -Method POST -Path $path -Payload $payload
-    if ($response.StatusCode -ge 300) {
-        throw "IngestHealthReport failed for $EntityName ($HealthState): HTTP $($response.StatusCode) $($response.Content)"
+
+    # Right after deployment, role assignments and entities can still be propagating.
+    for ($attempt = 1; $attempt -le 12; $attempt++) {
+        $response = Invoke-AzRestMethod -Method POST -Path $path -Payload $payload
+        if ($response.StatusCode -lt 300) {
+            return
+        }
+        $isTransient = $response.StatusCode -in 403, 404, 429 -or $response.StatusCode -ge 500
+        if (!$isTransient -or $attempt -eq 12) {
+            throw "IngestHealthReport failed for $EntityName ($HealthState): HTTP $($response.StatusCode) $($response.Content)"
+        }
+        Write-Host "IngestHealthReport is not ready yet (HTTP $($response.StatusCode)); retrying." -ForegroundColor DarkYellow
+        Start-Sleep -Seconds ([Math]::Min(30, $attempt * 5))
     }
 }
 
-Invoke-HealthReport -EntityName $healthModelB -HealthState 'Degraded'
+Invoke-HealthReport -HealthModel $healthModelB -EntityName $healthModelB -HealthState 'Degraded'
+Invoke-HealthReport -HealthModel $healthModelC -EntityName "$healthModelC-leaf-frontend" -HealthState 'Degraded'
+Invoke-HealthReport -HealthModel $healthModelC -EntityName "$healthModelC-leaf-backend" -HealthState 'Healthy'
 Start-Sleep -Seconds 35
-Invoke-HealthReport -EntityName $healthModelB -HealthState 'Unhealthy'
+Invoke-HealthReport -HealthModel $healthModelB -EntityName $healthModelB -HealthState 'Unhealthy'
 # Let the reported states settle into the entity rollup + history before recording.
 Start-Sleep -Seconds 45
+
 function Get-PlainTextAccessToken {
     param([Parameter(Mandatory)] [string] $ResourceUrl)
 

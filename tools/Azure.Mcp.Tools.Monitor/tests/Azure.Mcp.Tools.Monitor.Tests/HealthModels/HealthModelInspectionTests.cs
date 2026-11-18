@@ -81,6 +81,8 @@ public class HealthModelInspectionTests
     [InlineData("Degraded", "MaxNotHealthy", false, true)]
     [InlineData("Degraded", "WorstOf", false, false)]
     [InlineData("Degraded", null, false, false)]
+    // A healthy parent has no state to explain, even where the rollup counts Unknown children.
+    [InlineData("Healthy", "MinHealthy", false, false)]
     public void Walk_Causes_FollowsUnknownChildrenOnlyWhereTheRollupCountsThem(string parentState, string? aggregationType, bool? ignoreUnknown, bool followed)
     {
         var settings = new[]
@@ -122,10 +124,47 @@ public class HealthModelInspectionTests
     }
 
     [Theory]
+    // A MinHealthy parent within its threshold is healthy, so its Degraded child does not drive it.
+    [InlineData("Healthy", "MinHealthy", "Degraded", "Standard", "root")]
+    [InlineData("Degraded", "MinHealthy", "Degraded", "Standard", "root;root/x")]
+    // States, rollups and impact are compared ignoring case.
+    [InlineData("degraded", "bestOf", "UNHEALTHY", "Standard", "root;root/x")]
+    [InlineData("Degraded", "WorstOf", "Degraded", "suppressed", "root")]
+    public void Walk_Causes_FollowsAChildOnlyWhenItsParentIsNotHealthy(string parentState, string aggregationType, string childState, string childImpact, string expected)
+    {
+        var entities = new[]
+        {
+            Json("{\"name\":\"root\",\"properties\":{\"healthState\":\"" + parentState + "\",\"signalGroups\":{\"dependencies\":{\"aggregationType\":\"" + aggregationType + "\"}}}}"),
+            Entity("x", childState, childImpact),
+        }.ToDictionary(entity => HealthModelInspection.Name(entity)!, StringComparer.OrdinalIgnoreCase);
+
+        var found = HealthModelInspection.Walk(entities, [Relationship(("root", "x"))], "root", HealthModelWalk.Causes);
+
+        Assert.Equal(expected, string.Join(';', found.Select(step => step.Path)));
+    }
+
+    [Theory]
+    // A field names its payload by its first segment, by * or by **.
+    [InlineData("entity.properties.healthState", "properties.healthState")]
+    [InlineData("*.properties.healthState", "properties.healthState")]
+    [InlineData("history.history", "")]
+    // A field that keeps the whole payload gives **.
+    [InlineData("entity", "**")]
+    [InlineData("*", "**")]
+    [InlineData("**", "**")]
+    // ** keeps applying inside the payload, and what follows it can name the payload itself.
+    [InlineData("**.status", "**.status")]
+    [InlineData("**.entity.name", "**.entity.name;name")]
+    [InlineData("entity.name;signalDefinitions.name;**.status", "name;**.status")]
+    public void PathsFor_ReturnsThePathsThatReachIntoAPayload(string fields, string expected) =>
+        Assert.Equal(expected, string.Join(';', HealthModelInspection.PathsFor(fields.Split(';'), "entity")));
+
+    [Theory]
     // An enabled Resource Health signal is read like the group's other signals. A disabled one is skipped.
     [InlineData("""{"signalName":"RH"}""", "RH;cpu;lat;push")]
     [InlineData("""{"signalName":"RH","enabled":"Enabled"}""", "RH;cpu;lat;push")]
     [InlineData("""{"signalName":"RH","enabled":"Disabled"}""", "cpu;lat;push")]
+    [InlineData("""{"signalName":"RH","enabled":"disabled"}""", "cpu;lat;push")]
     public void SignalNames_ReadsEveryGroupAndTheDefinitionsTheSignalsName(string resourceHealth, string expected)
     {
         var entity = Json("""{"name":"api","properties":{"signalGroups":{"azureResource":{"signals":[{"name":"cpu"},{"name":"lat","signalDefinitionName":"lat-def"}],"resourceHealth":"""

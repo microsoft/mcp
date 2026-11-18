@@ -134,8 +134,8 @@ resource rootEntityA 'Microsoft.CloudHealth/healthmodels/entities@2026-05-01-pre
 
 // ============================================================
 // Model C (topology): the fixture for the health model inspect walk test.
-// Deliberately separate from models A and B so declaring relationships and a signal
-// definition cannot change the health rollup the other recorded tests depend on.
+// Deliberately separate from models A and B so declaring relationships and the leaf states
+// test-resources-post.ps1 reports cannot change the health rollup the other recorded tests depend on.
 // ============================================================
 resource healthModelC 'Microsoft.CloudHealth/healthmodels@2026-05-01-preview' = {
   name: modelCName

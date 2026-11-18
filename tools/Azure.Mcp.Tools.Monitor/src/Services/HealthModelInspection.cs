@@ -31,7 +31,7 @@ internal static class HealthModelInspection
         HealthModelHealthFilter.NotHealthy => Admits(HealthModelHealthFilter.Degraded, state)
             || Admits(HealthModelHealthFilter.Unhealthy, state)
             || Admits(HealthModelHealthFilter.Unknown, state),
-        _ => string.Equals(state, filter.ToString(), StringComparison.OrdinalIgnoreCase),
+        _ => Is(state, filter.ToString()!),
     };
 
     /// <summary>
@@ -88,36 +88,44 @@ internal static class HealthModelInspection
         return found;
     }
 
-    // A child that is not suppressed drives its parent when it is Degraded or Unhealthy. BestOf takes the least severe
-    // state of the children (best), so there a child drives only when no sibling is healthier. An Unknown child never
-    // beats a known state under WorstOf (the default) or BestOf, and MinHealthy and MaxNotHealthy count it only when
-    // the parent's dependencies set ignoreUnknown to false. Otherwise it drives only a parent that is Unknown itself.
+    // A child that is not suppressed drives a parent that is Degraded or Unhealthy when it is Degraded or Unhealthy
+    // itself. A healthy parent has no state to explain, for example a MinHealthy rollup that is within its threshold.
+    // BestOf takes the least severe state of the children (best), so there a child drives only when no sibling is
+    // healthier. An Unknown child never beats a known state under WorstOf (the default) or BestOf, and MinHealthy and
+    // MaxNotHealthy count it only when the parent's dependencies set ignoreUnknown to false. Otherwise it drives only a
+    // parent that is Unknown itself.
     private static bool Drives(JsonElement parent, JsonElement child, int? best)
     {
+        if (Suppressed(child))
+        {
+            return false;
+        }
         var dependencies = Property(Property(Property(parent, "properties"), "signalGroups"), "dependencies");
-        return !Suppressed(child)
-            && HealthState(child) switch
-            {
-                "Degraded" or "Unhealthy" => Text(dependencies, "aggregationType") != "BestOf" || Severity(child) <= best,
-                "Unknown" => HealthState(parent) == "Unknown" || CountsUnknown(dependencies),
-                _ => false,
-            };
+        var parentNotHealthy = Severity(parent) > 0;
+        return Severity(child) is int severity and > 0
+            ? parentNotHealthy && (!Is(Text(dependencies, "aggregationType"), "BestOf") || severity <= best)
+            : Is(HealthState(child), "Unknown") && (Is(HealthState(parent), "Unknown") || (parentNotHealthy && CountsUnknown(dependencies)));
     }
 
-    private static bool Suppressed(JsonElement entity) => Text(Property(entity, "properties"), "impact") == "Suppressed";
+    private static bool Suppressed(JsonElement entity) => Is(Text(Property(entity, "properties"), "impact"), "Suppressed");
 
     // How severe a known state is: Healthy 0, Degraded 1, Unhealthy 2. Unknown has no severity.
-    private static int? Severity(JsonElement entity) => HealthState(entity) switch
+    private static int? Severity(JsonElement entity) =>
+        HealthState(entity) is { } state && s_severity.TryGetValue(state, out var severity) ? severity : null;
+
+    private static readonly Dictionary<string, int> s_severity = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Healthy" => 0,
-        "Degraded" => 1,
-        "Unhealthy" => 2,
-        _ => null,
+        ["Healthy"] = 0,
+        ["Degraded"] = 1,
+        ["Unhealthy"] = 2,
     };
 
     private static bool CountsUnknown(JsonElement dependencies) =>
-        Text(dependencies, "aggregationType") is "MinHealthy" or "MaxNotHealthy"
+        (Is(Text(dependencies, "aggregationType"), "MinHealthy") || Is(Text(dependencies, "aggregationType"), "MaxNotHealthy"))
         && Property(dependencies, "ignoreUnknown").ValueKind == JsonValueKind.False;
+
+    // API values such as states and rollup types are compared ignoring case, as the health filter compares them.
+    private static bool Is(string? value, string expected) => string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>The names of the entity's signals and of the signal definitions they name, across every signal group.</summary>
     internal static (List<string> Signals, List<string> Definitions) SignalNames(JsonElement entity)
@@ -130,7 +138,7 @@ internal static class HealthModelInspection
             {
                 // A group's Resource Health signal has a history of its own while it is enabled.
                 if (Property(group.Value, "resourceHealth") is { ValueKind: JsonValueKind.Object } resourceHealth
-                    && Text(resourceHealth, "enabled") is null or "Enabled"
+                    && (Text(resourceHealth, "enabled") is not { } enabled || Is(enabled, "Enabled"))
                     && Text(resourceHealth, "signalName") is { } resourceHealthSignal)
                 {
                     signals.Add(resourceHealthSignal);
@@ -156,6 +164,40 @@ internal static class HealthModelInspection
             }
         }
         return (signals, definitions);
+    }
+
+    /// <summary>
+    /// The paths of <paramref name="fields"/> that reach into one payload of an item, such as entity, relative to it.
+    /// A field names the payload by its first segment, by * or by **, so entity.properties.healthState,
+    /// *.properties.healthState and **.healthState all reach into entity. A field that keeps the whole payload gives **.
+    /// </summary>
+    internal static List<string> PathsFor(IEnumerable<string> fields, string payload)
+    {
+        var paths = new List<string>();
+        foreach (var field in fields)
+        {
+            Add(field);
+        }
+        return paths;
+
+        void Add(string field)
+        {
+            var dot = field.IndexOf('.');
+            var (first, rest) = dot < 0 ? (field, null) : (field[..dot], field[(dot + 1)..]);
+            if (first == payload || first == AnyProperty)
+            {
+                paths.Add(rest ?? AnyDepth);
+            }
+            else if (first == AnyDepth)
+            {
+                // ** keeps applying inside the payload, and stands for no level too, so what follows it can name the payload.
+                paths.Add(field);
+                if (rest is not null)
+                {
+                    Add(rest);
+                }
+            }
+        }
     }
 
     /// <summary>
