@@ -1,3 +1,5 @@
+<!-- cspell:ignore CIMD PKCE -->
+
 # Authentication in Azure MCP Server
 
 Azure MCP Server runs in two transport modes — **stdio** (local) and **HTTP** (remote) — each with a different authentication model.
@@ -190,14 +192,14 @@ When the configured resource or endpoint includes a path, the server serves PRM 
 
 #### Override advertised authorization servers
 
-Omit `AuthorizationServers` to advertise the default authorization server derived from `AzureAd`. Set it only when clients must use a different discovery URL that issues tokens for the configured tenant:
+Omit `AuthorizationServers` to advertise the default authorization server derived from `AzureAd`. Set it only when clients need a different authorization server identifier whose endpoints issue tokens for the configured tenant. For example, Microsoft's CIMD preview uses the tenant-specific identifier:
 
 ```json
 {
   "McpServer": {
     "ProtectedResource": {
       "AuthorizationServers": [
-        "https://login.microsoftonline.com/<tenant-id>/v2.0"
+        "https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08"
       ]
     }
   }
@@ -213,6 +215,19 @@ Keep the following in mind when configuring these settings:
 - **Advertised authorization servers must issue tokens the server accepts.** Overriding `AuthorizationServers`, for example to point clients to a different or preview Entra ID discovery endpoint, does not change the issuer the server validates. Only advertise authorization servers whose tokens are issued by the tenant configured in `AzureAd__TenantId`.
 - **Consent.** Users, or an administrator on their behalf, must consent to the client requesting the `Mcp.Tools.ReadWrite` delegated permission. If the client is not pre-registered in your tenant, review your tenant's user consent settings and grant admin consent where required.
 - **Single-tenant only.** Issuer validation is bound to `AzureAd__TenantId`. Multi-tenant configurations (such as `organizations` or `common` authorities) have not been validated with these settings.
+
+#### Client ID Metadata Documents (CIMD)
+
+[CIMD support in Microsoft Entra ID](https://learn.microsoft.com/entra/agent-id/client-id-metadata-documents) is in public preview and is not recommended for production workloads. CIMD identifies the **client** using the URL of its metadata document; the MCP server remains a separately registered protected resource. The server does not host the client's document or require CIMD-specific token validation.
+
+To use a CIMD-capable client with the remote server:
+
+1. **Prepare the client and tenant.** Use a client that supports CIMD and the authorization code flow with PKCE, and a tenant where CIMD is available. The client must provide a stable, publicly accessible HTTPS metadata document URL with a path. Its document's `client_id` must exactly match that URL, and its redirect URIs must match those used by the client. A public client uses `token_endpoint_auth_method: none`. The client owner normally provides this document; see [Configure a client to use CIMD](https://learn.microsoft.com/entra/agent-id/configure-client-id-metadata-document). CIMD does not support the client credentials flow.
+2. **Configure the server and its app registration.** Follow the `/mcp` example above: use the same canonical MCP endpoint URI for the Entra Application ID URI and `McpServer:ProtectedResource:Resource`, expose `Mcp.Tools.ReadWrite`, and advertise the corresponding `<Application ID URI>/Mcp.Tools.ReadWrite` scope. Configure `AzureAd` for the server's tenant and expected token audience. These settings are optional in general, but must be configured when the defaults do not match the resource and scope the client needs.
+3. **Advertise and verify CIMD discovery.** When required by the client, set `McpServer:ProtectedResource:AuthorizationServers:0` (or `McpServer__ProtectedResource__AuthorizationServers__0`) to the tenant-specific preview identifier `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08`, replacing `<tenant-id>` with the configured tenant. Advertise the identifier, not the full metadata URL. Check `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08/.well-known/openid-configuration` and confirm `client_id_metadata_document_supported` is `true`. If it is absent or false, do not use a CIMD client ID; use another supported client registration method.
+4. **Approve access.** The client requests the advertised resource and delegated scope. Tenant policy governs whether users can consent or an administrator must add the client and grant consent. During the preview, plan for administrator approval rather than relying on user consent. The signed-in user also needs appropriate Azure RBAC permissions for the requested operations.
+
+Changing the advertised authorization server does not change `AzureAd` token validation. The configured server must accept the resulting token's issuer, audience, and `Mcp.Tools.ReadWrite` scope. Only single-tenant use has been validated; `common` and `organizations` have not.
 
 ### Outbound Authentication
 
