@@ -55,6 +55,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     resource fooContainer 'containers' = { name: 'foo' }
     resource barContainer 'containers' = { name: 'bar' }
     resource bazContainer 'containers' = { name: 'baz' }
+    resource paginationContainers 'containers' = [for index in range(0, 101): {
+      name: 'pagination-${padLeft(string(index), 3, '0')}'
+      properties: {
+        publicAccess: 'None'
+      }
+    }]
     resource testFileSystem 'containers' = { 
       name: 'testfilesystem'
       properties: {
@@ -68,6 +74,9 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     resource fooTable 'tables' = { name: 'foo' }
     resource barTable 'tables' = { name: 'bar' }
     resource bazTable 'tables' = { name: 'baz' }
+    resource paginationTables 'tables' = [for index in range(0, 101): {
+      name: 'Pagination${padLeft(string(index), 3, '0')}'
+    }]
   }
 }
 
@@ -178,6 +187,21 @@ resource appBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalId: testApplicationOid
     roleDefinitionId: blobContributorRoleDefinition.id
     description: 'Blob Contributor for testApplicationOid'
+  }
+}
+
+resource tableReaderRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: '76199698-9eea-4c19-bc75-cec21354c6b6'
+}
+
+resource appTableRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(tableReaderRoleDefinition.id, testApplicationOid, storageAccount.id)
+  scope: storageAccount
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: tableReaderRoleDefinition.id
+    description: 'Table Data Reader for testApplicationOid'
   }
 }
 

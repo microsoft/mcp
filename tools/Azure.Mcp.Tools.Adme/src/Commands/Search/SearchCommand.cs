@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Options.Search;
@@ -24,6 +25,9 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
 
         Pagination modes: offset and cursor (point-in-time snapshot, bulk processing, more than 10000 results,
         search_after).
+        Cursor pages return nextCursor when another page can be requested; pass it unchanged as cursor.
+        Keep the original target, kinds, sort, and search_after setting. Keep the original criteria for
+        snapshot pages. With search_after, the service may support overrides such as limit and returnedFields.
         """,
     Destructive = false,
     Idempotent = false,
@@ -33,7 +37,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Search;
     LocalRequired = false,
     Secret = false)]
 public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchService searchService)
-    : AuthenticatedCommand<SearchOptions, SearchResponse>
+    : AuthenticatedCommand<SearchOptions, AdmeResponse<SearchResponse>>
 {
     private readonly ISearchService _searchService = searchService;
 
@@ -110,23 +114,33 @@ public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchS
         SearchOptions options,
         CancellationToken cancellationToken)
     {
+        var request = new SearchCursorRequest
+        {
+            Kind = options.Kind,
+            Query = AdmeServiceHelper.Normalize(options.Query),
+            SuggestPhrase = AdmeServiceHelper.Normalize(options.SuggestPhrase),
+            Limit = options.Limit,
+            ReturnedFields = AdmeServiceHelper.Normalize(options.ReturnedFields),
+            Sort = AdmeServiceHelper.ParseSort(options.Sort),
+            SpatialFilter = AdmeServiceHelper.ParseJsonObject(options.SpatialFilter),
+            QueryAsOwner = options.QueryAsOwner,
+            ExcludedFields = AdmeServiceHelper.Normalize(options.ExcludedFields),
+            HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
+        };
+
+        // Snapshot pages must reuse the original query. search_after resumes in the original
+        // order, so bind the kinds and sort but leave supported per-page overrides such as
+        // limit and projection out of the fingerprint.
+        var fixedCriteria = options.SearchAfter
+            ? new SearchCursorRequest { Kind = request.Kind, Sort = request.Sort }
+            : request;
+        var cursor = new PaginationCursor(Id, options.Endpoint, options.DataPartition, options.Tenant,
+            AdmeServiceHelper.GetAuthScope(options.AuthAppId), options.SearchAfter ? "search_after" : "snapshot",
+            JsonSerializer.Serialize(fixedCriteria, AdmeJsonContext.Default.SearchCursorRequest));
         var response = await _searchService.QueryWithCursorAsync(
             options.Endpoint,
             options.DataPartition,
-            new SearchCursorRequest
-            {
-                Kind = options.Kind,
-                Query = AdmeServiceHelper.Normalize(options.Query),
-                SuggestPhrase = AdmeServiceHelper.Normalize(options.SuggestPhrase),
-                Limit = options.Limit,
-                ReturnedFields = AdmeServiceHelper.Normalize(options.ReturnedFields),
-                Cursor = AdmeServiceHelper.Normalize(options.Cursor),
-                Sort = AdmeServiceHelper.ParseSort(options.Sort),
-                SpatialFilter = AdmeServiceHelper.ParseJsonObject(options.SpatialFilter),
-                QueryAsOwner = options.QueryAsOwner,
-                ExcludedFields = AdmeServiceHelper.Normalize(options.ExcludedFields),
-                HighlightedFields = AdmeServiceHelper.Normalize(options.HighlightedFields),
-            },
+            request with { Cursor = cursor.Decode(options.Cursor) },
             options.SearchAfter,
             options.Tenant,
             options.AuthAppId,
@@ -136,12 +150,15 @@ public sealed class SearchCommand(IEndpointValidator endpointValidator, ISearchS
         {
             Results = response.Result.Results,
             TotalCount = response.Result.TotalCount,
-            Cursor = response.Result.Cursor,
-        }, response.CorrelationId);
+        }, response.CorrelationId)
+        {
+            // An empty search page is terminal even if the service echoes a cursor.
+            NextCursor = response.Result.Results.Count > 0 ? cursor.Encode(response.Result.Cursor) : null,
+        };
     }
 
     private static bool UsesCursorPagination(SearchOptions options) =>
-        !string.IsNullOrWhiteSpace(options.Cursor)
+        options.Cursor is not null
         || options.CursorPaginationMode
         || options.SearchAfter;
 }

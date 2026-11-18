@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Options.Storage;
 using Azure.Mcp.Tools.Adme.Services;
@@ -22,6 +23,8 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
         Returns IDs only, in pages.
 
         Pagination parameters: limit (1-100, default 10) and cursor (continuation token).
+        Pass nextCursor unchanged as cursor with the same endpoint, data partition, kind, tenant, and auth app ID.
+        You can change limit on a continuation request.
         Confirm how many records the user wants before paging through the whole set.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -32,7 +35,7 @@ namespace Azure.Mcp.Tools.Adme.Commands.Storage;
     LocalRequired = false,
     Secret = false)]
 public sealed class RecordListCommand(IEndpointValidator endpointValidator, IStorageService storageService)
-    : AuthenticatedCommand<RecordListOptions, QueryRecordsResponse>
+    : AuthenticatedCommand<RecordListOptions, AdmeResponse<RecordListResult>>
 {
     private const int DefaultLimit = 10;
     private const int MaxLimit = 100;
@@ -55,11 +58,19 @@ public sealed class RecordListCommand(IEndpointValidator endpointValidator, ISto
     {
         try
         {
+            // The service applies the limit on each request. The cursor identifies where to resume
+            // within the kind, so changing the page size does not invalidate it.
+            var cursor = new PaginationCursor(Id, options.Endpoint, options.DataPartition, options.Kind,
+                options.Tenant, AdmeServiceHelper.GetAuthScope(options.AuthAppId));
             var result = await _storageService.QueryRecordsByKindAsync(
                 options.Endpoint, options.DataPartition, options.Kind, options.Limit ?? DefaultLimit,
-                options.Cursor, options.Tenant, options.AuthAppId, cancellationToken);
+                cursor.Decode(options.Cursor), options.Tenant, options.AuthAppId, cancellationToken);
             context.Response.Results = ResponseResult.Create(
-                result, AdmeJsonContext.Default.AdmeResponseQueryRecordsResponse);
+                new(new(result.Result.Results), result.CorrelationId)
+                {
+                    NextCursor = cursor.Encode(result.Result.Cursor),
+                },
+                AdmeJsonContext.Default.AdmeResponseRecordListResult);
         }
         catch (Exception ex)
         {
