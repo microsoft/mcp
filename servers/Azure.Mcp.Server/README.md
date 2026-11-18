@@ -1357,6 +1357,7 @@ _These tools come from the [Azure Monitor dashboards with Grafana remote MCP ser
 * "List all databases in my Azure SQL server 'myserver'"
 * "Update the performance tier of my Azure SQL database 'mydb'"
 * "Rename my Azure SQL database 'mydb' to 'newname'"
+* "Which columns in my Azure SQL database 'mydb' are labelled confidential?"
 * "List all firewall rules for my Azure SQL server 'myserver'"
 * "Create a firewall rule for my Azure SQL server 'myserver'"
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
