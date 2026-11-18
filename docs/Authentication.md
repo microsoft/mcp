@@ -130,23 +130,31 @@ Every incoming request must carry a valid Entra ID bearer token with the require
 
 MCP clients that are not pre-configured with authorization details discover them from the server's [OAuth 2.0 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728) (PRM), which is linked from the `resource_metadata` parameter of the `WWW-Authenticate` header on `401` responses. By default, the server maps the MCP endpoint at the root path and derives the advertised `resource` from the incoming request scheme and host, advertises `<AzureAd:Instance>/<AzureAd:TenantId>/v2.0` as the authorization server, and advertises `<AzureAd:ClientId>/Mcp.Tools.ReadWrite` as the scope.
 
-When the server runs behind a reverse proxy or tunnel, or when a client sends an [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter that must match a value registered with Entra ID, configure the following optional settings so the advertised values match the public endpoint:
+When the server runs behind a reverse proxy or tunnel, or when a client sends an [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter that must match a value registered with Entra ID, configure the following optional settings so the advertised values match the public endpoint. These use the standard .NET configuration system: set them in `appsettings.json` or another configuration provider, or override them with the listed environment variables.
 
-| Environment variable | Description |
-|---|---|
-| `McpServer__EndpointPath` | Path at which the MCP endpoint is mapped, for example `/mcp`. Defaults to the root path. When set, the root path no longer serves MCP requests. |
-| `McpServer__ProtectedResource__Resource` | Public, canonical URI of the MCP endpoint advertised as the PRM `resource`, for example `https://mcp.contoso.com/mcp`. Must be `https` (`http` is allowed only for loopback hosts) and must not contain a query or fragment. The value is advertised exactly as configured, so avoid trailing-slash differences with what clients and Entra ID use. |
-| `McpServer__ProtectedResource__AuthorizationServers__0` | Authorization server issuer identifier to advertise instead of the default. Add more entries with `__1`, `__2`, and so on. |
-| `McpServer__ProtectedResource__ScopesSupported__0` | Delegated scope to advertise instead of the default, for example `https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite`. Add more entries with `__1`, `__2`, and so on. |
+| Configuration key | Environment variable | Description |
+|---|---|---|
+| `McpServer:EndpointPath` | `McpServer__EndpointPath` | Path at which the MCP endpoint is mapped, for example `/mcp`. Defaults to the root path. When set, the root path no longer serves MCP requests. |
+| `McpServer:ProtectedResource:Resource` | `McpServer__ProtectedResource__Resource` | Public, canonical URI of the MCP endpoint advertised as the PRM `resource`, for example `https://mcp.contoso.com/mcp`. Must be `https` (`http` is allowed only for loopback hosts) and must not contain a query or fragment. The value is advertised exactly as configured, so avoid trailing-slash differences with what clients and Entra ID use. |
+| `McpServer:ProtectedResource:AuthorizationServers:0` | `McpServer__ProtectedResource__AuthorizationServers__0` | Authorization server issuer identifier to advertise instead of the default. Add more entries with `:1`, `:2`, and so on. |
+| `McpServer:ProtectedResource:ScopesSupported:0` | `McpServer__ProtectedResource__ScopesSupported__0` | Delegated scope to advertise instead of the default, for example `https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite`. Add more entries with `:1`, `:2`, and so on. |
 
 When `McpServer__ProtectedResource__Resource` or `McpServer__EndpointPath` includes a path, the PRM document is served both at the resource-specific URL defined by RFC 9728 (for example `/.well-known/oauth-protected-resource/mcp`) and at `/.well-known/oauth-protected-resource`, and `WWW-Authenticate` challenges point to the resource-specific URL. The reverse proxy must forward these paths unchanged. Invalid values cause the server to fail at startup.
 
-For example, to expose `https://mcp.contoso.com/mcp` with a scope that is based on an Application ID URI of `https://mcp.contoso.com/mcp`:
+For example, add this to `appsettings.json` to expose `https://mcp.contoso.com/mcp` with a scope based on the same Application ID URI. Authorization servers are omitted here, so the server uses its existing Azure AD configuration to advertise the default:
 
-```bash
-export McpServer__EndpointPath=/mcp
-export McpServer__ProtectedResource__Resource=https://mcp.contoso.com/mcp
-export McpServer__ProtectedResource__ScopesSupported__0=https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite
+```json
+{
+  "McpServer": {
+    "EndpointPath": "/mcp",
+    "ProtectedResource": {
+      "Resource": "https://mcp.contoso.com/mcp",
+      "ScopesSupported": [
+        "https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite"
+      ]
+    }
+  }
+}
 ```
 
 Keep the following in mind when configuring these settings:

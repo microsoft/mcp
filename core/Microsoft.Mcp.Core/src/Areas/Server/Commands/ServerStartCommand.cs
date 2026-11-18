@@ -426,7 +426,15 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
 
-        McpHttpEndpointSettings endpointSettings = McpHttpEndpointSettings.FromConfiguration(builder.Configuration);
+        IConfiguration configuration = builder.Configuration;
+        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(configuration["McpServer:EndpointPath"]);
+        IConfigurationSection protectedResourceConfiguration = configuration.GetSection("McpServer:ProtectedResource");
+        string? resource = OAuthProtectedResourceMetadataHelper.ValidateResource(protectedResourceConfiguration["Resource"]);
+        string[] authorizationServers = OAuthProtectedResourceMetadataHelper.ValidateAuthorizationServers(
+            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResourceConfiguration.GetSection("AuthorizationServers")));
+        string[] scopesSupported = OAuthProtectedResourceMetadataHelper.ValidateScopes(
+            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResourceConfiguration.GetSection("ScopesSupported")));
+        string resourcePath = OAuthProtectedResourceMetadataHelper.GetResourcePath(resource, endpointPath);
 
         IServiceCollection services = builder.Services;
 
@@ -456,7 +464,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
                             {
                                 HttpRequest request = context.Request;
                                 string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                                string resourceMetadataUrl = OAuthProtectedResourceMetadataHelper.GetMetadataUrl(endpointSettings, scheme, request.Host);
+                                string resourceMetadataUrl = OAuthProtectedResourceMetadataHelper.GetMetadataUrl(resource, resourcePath, scheme, request.Host);
 
                                 context.Response.StatusCode = 401;
 
@@ -531,7 +539,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         //
         app.Use(async (context, next) =>
         {
-            if (OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, endpointSettings))
+            if (OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, resourcePath))
             {
                 IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
                     .RequestServices
@@ -539,11 +547,12 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
                 MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
                 string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                string resource = OAuthProtectedResourceMetadataHelper.GetResource(endpointSettings, scheme, request.Host);
+                string effectiveResource = OAuthProtectedResourceMetadataHelper.GetResource(resource, endpointPath, scheme, request.Host);
 
                 OAuthProtectedResourceMetadata metadata = OAuthProtectedResourceMetadataHelper.CreateMetadata(
-                    endpointSettings,
-                    resource,
+                    authorizationServers,
+                    scopesSupported,
+                    effectiveResource,
                     azureAdOptions.ClientId,
                     azureAdOptions.TenantId,
                     azureAdOptions.Instance);
@@ -565,7 +574,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
         app.Use(ValidateMcpRoutingHeadersMiddleware);
 
-        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp(endpointSettings.EndpointPath);
+        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp(endpointPath);
         // All MCP endpoints require MCP.All scope or role
         mcpEndpointBuilder.RequireAuthorization("McpAccess");
 
@@ -594,7 +603,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
 
-        McpHttpEndpointSettings endpointSettings = McpHttpEndpointSettings.FromConfiguration(builder.Configuration);
+        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(builder.Configuration["McpServer:EndpointPath"]);
 
         IServiceCollection services = builder.Services;
 
@@ -625,7 +634,7 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
         app.Use(ValidateMcpRoutingHeadersMiddleware);
-        app.MapMcp(endpointSettings.EndpointPath);
+        app.MapMcp(endpointPath);
 
         return app;
     }

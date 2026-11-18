@@ -13,35 +13,55 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
 {
     private static readonly HostString s_host = new("internal:8080");
 
-    private static McpHttpEndpointSettings CreateSettings(params (string Key, string Value)[] values) =>
-        McpHttpEndpointSettings.FromConfiguration(new ConfigurationBuilder()
+    private static (string EndpointPath, string? Resource, string[] AuthorizationServers, string[] ScopesSupported, string ResourcePath)
+        CreateSettings(params (string Key, string Value)[] values)
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(values.Select(v => new KeyValuePair<string, string?>(v.Key, v.Value)))
-            .Build());
+            .Build();
+        IConfigurationSection protectedResource = configuration.GetSection("McpServer:ProtectedResource");
+        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(configuration["McpServer:EndpointPath"]);
+        string? resource = OAuthProtectedResourceMetadataHelper.ValidateResource(protectedResource["Resource"]);
+        string[] authorizationServers = OAuthProtectedResourceMetadataHelper.ValidateAuthorizationServers(
+            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResource.GetSection("AuthorizationServers")));
+        string[] scopesSupported = OAuthProtectedResourceMetadataHelper.ValidateScopes(
+            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResource.GetSection("ScopesSupported")));
 
-    private static bool IsMetadataRequest(McpHttpEndpointSettings settings, string method, string path)
+        return (
+            endpointPath,
+            resource,
+            authorizationServers,
+            scopesSupported,
+            OAuthProtectedResourceMetadataHelper.GetResourcePath(resource, endpointPath));
+    }
+
+    private static bool IsMetadataRequest(
+        (string EndpointPath, string? Resource, string[] AuthorizationServers, string[] ScopesSupported, string ResourcePath) settings,
+        string method,
+        string path)
     {
         DefaultHttpContext context = new();
         context.Request.Method = method;
         context.Request.Path = path;
-        return OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, settings);
+        return OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, settings.ResourcePath);
     }
 
     [Fact]
     public void DefaultSettings_PreserveExistingBehavior()
     {
-        McpHttpEndpointSettings settings = CreateSettings();
+        var settings = CreateSettings();
 
         Assert.Equal(string.Empty, settings.EndpointPath);
-        Assert.Equal("https://internal:8080", OAuthProtectedResourceMetadataHelper.GetResource(settings, "https", s_host));
+        Assert.Equal("https://internal:8080", OAuthProtectedResourceMetadataHelper.GetResource(settings.Resource, settings.EndpointPath, "https", s_host));
         Assert.Equal(
             "https://internal:8080/.well-known/oauth-protected-resource",
-            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings, "https", s_host));
+            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings.Resource, settings.ResourcePath, "https", s_host));
         Assert.True(IsMetadataRequest(settings, "GET", "/.well-known/oauth-protected-resource"));
         Assert.False(IsMetadataRequest(settings, "POST", "/.well-known/oauth-protected-resource"));
         Assert.False(IsMetadataRequest(settings, "GET", "/.well-known/oauth-protected-resource/mcp"));
 
         OAuthProtectedResourceMetadata metadata = OAuthProtectedResourceMetadataHelper.CreateMetadata(
-            settings, "https://internal:8080", "client-id", "tenant-id", "https://login.microsoftonline.com/");
+            settings.AuthorizationServers, settings.ScopesSupported, "https://internal:8080", "client-id", "tenant-id", "https://login.microsoftonline.com/");
 
         Assert.Equal("https://internal:8080", metadata.Resource);
         Assert.Equal(["https://login.microsoftonline.com/tenant-id/v2.0"], metadata.AuthorizationServers);
@@ -51,13 +71,13 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
     [Fact]
     public void EndpointPath_IsUsedForDerivedResourceAndMetadataUrl()
     {
-        McpHttpEndpointSettings settings = CreateSettings(("McpServer:EndpointPath", "/mcp/"));
+        var settings = CreateSettings(("McpServer:EndpointPath", "/mcp/"));
 
         Assert.Equal("/mcp", settings.EndpointPath);
-        Assert.Equal("https://internal:8080/mcp", OAuthProtectedResourceMetadataHelper.GetResource(settings, "https", s_host));
+        Assert.Equal("https://internal:8080/mcp", OAuthProtectedResourceMetadataHelper.GetResource(settings.Resource, settings.EndpointPath, "https", s_host));
         Assert.Equal(
             "https://internal:8080/.well-known/oauth-protected-resource/mcp",
-            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings, "https", s_host));
+            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings.Resource, settings.ResourcePath, "https", s_host));
         Assert.True(IsMetadataRequest(settings, "GET", "/.well-known/oauth-protected-resource/mcp"));
         Assert.True(IsMetadataRequest(settings, "GET", "/.well-known/oauth-protected-resource"));
     }
@@ -65,20 +85,20 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
     [Fact]
     public void ConfiguredProtectedResource_OverridesRequestDerivedValues()
     {
-        McpHttpEndpointSettings settings = CreateSettings(
+        var settings = CreateSettings(
             ("McpServer:EndpointPath", "/mcp"),
             ("McpServer:ProtectedResource:Resource", "https://mcp.contoso.com/mcp"),
             ("McpServer:ProtectedResource:AuthorizationServers:0", "https://login.contoso.com/tenant/v2.0"),
             ("McpServer:ProtectedResource:ScopesSupported:0", "https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite"));
 
-        string resource = OAuthProtectedResourceMetadataHelper.GetResource(settings, "http", s_host);
+        string resource = OAuthProtectedResourceMetadataHelper.GetResource(settings.Resource, settings.EndpointPath, "http", s_host);
         OAuthProtectedResourceMetadata metadata = OAuthProtectedResourceMetadataHelper.CreateMetadata(
-            settings, resource, "client-id", "tenant-id", null);
+            settings.AuthorizationServers, settings.ScopesSupported, resource, "client-id", "tenant-id", null);
 
         Assert.Equal("https://mcp.contoso.com/mcp", resource);
         Assert.Equal(
             "https://mcp.contoso.com/.well-known/oauth-protected-resource/mcp",
-            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings, "http", s_host));
+            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings.Resource, settings.ResourcePath, "http", s_host));
         Assert.Equal("https://mcp.contoso.com/mcp", metadata.Resource);
         Assert.Equal(["https://login.contoso.com/tenant/v2.0"], metadata.AuthorizationServers);
         Assert.Equal(["https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite"], metadata.ScopesSupported);
@@ -87,12 +107,12 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
     [Fact]
     public void ConfiguredRootResource_IsAdvertisedExactlyAsConfigured()
     {
-        McpHttpEndpointSettings settings = CreateSettings(("McpServer:ProtectedResource:Resource", "https://mcp.contoso.com"));
+        var settings = CreateSettings(("McpServer:ProtectedResource:Resource", "https://mcp.contoso.com"));
 
-        Assert.Equal("https://mcp.contoso.com", OAuthProtectedResourceMetadataHelper.GetResource(settings, "http", s_host));
+        Assert.Equal("https://mcp.contoso.com", OAuthProtectedResourceMetadataHelper.GetResource(settings.Resource, settings.EndpointPath, "http", s_host));
         Assert.Equal(
             "https://mcp.contoso.com/.well-known/oauth-protected-resource",
-            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings, "http", s_host));
+            OAuthProtectedResourceMetadataHelper.GetMetadataUrl(settings.Resource, settings.ResourcePath, "http", s_host));
     }
 
     [Theory]
@@ -118,7 +138,7 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
     [InlineData("http://127.0.0.1:5001/mcp")]
     public void LoopbackHttpResource_IsAllowed(string resource)
     {
-        McpHttpEndpointSettings settings = CreateSettings(("McpServer:ProtectedResource:Resource", resource));
+        var settings = CreateSettings(("McpServer:ProtectedResource:Resource", resource));
 
         Assert.Equal(resource, settings.Resource);
     }
