@@ -534,7 +534,7 @@ The `[Option]` attribute drives automatic option registration and binding via `O
 - **Implement `ISubscriptionOption`** if the command needs optional `string? Subscription`. This enables post-processing by `SubscriptionCommand` and `ISubscriptionResolver`. Note: `ISubscriptionOption` only provides `Subscription` — add a separate `Tenant` property if the command accepts `--tenant`.
 - **Implement additional option interfaces** (e.g., `IStorageAccountOption`) only when base command classes need type-safe access to specific properties for shared behavior like validation.
 - **Validation** is done via `ValidateOptions(TOptions, ValidationResult)` override in the command class — not via `Command.Validators.Add`.
-- **Telemetry-safe validation errors** must use `validationResult.AddError(message, telemetrySafeMessage)`. Never add or modify errors through the `ValidationResult.Errors` property; direct collection changes bypass telemetry-safe error tracking. See [Telemetry-safe validation errors](#telemetry-safe-validation-errors).
+- **Telemetry-safe validation errors** must use `validationResult.AddError(message, telemetrySafeMessage)`. Never add or modify errors through the `ValidationResult.Errors` property; direct collection changes bypass telemetry-safe error tracking. See [Telemetry-safe validation errors](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#telemetry-safe-validation-errors).
 - **No manual registration or binding**: Remove all `RegisterOptions`/`BindOptions` overrides. If you find yourself writing these, you're using the old pattern.
 
 **Conventions:**
@@ -850,7 +850,7 @@ Key differences from the old pattern:
 - **No `RegisterOptions`/`BindOptions`**: `OptionBinder` handles this automatically via `[Option]` attributes
 - **`ExecuteAsync` signature**: Takes `TOptions` directly instead of `ParseResult` — options are pre-bound and pre-validated
 - **No `Validate()` call**: Validation is handled before `ExecuteAsync` is called. Use `ValidateOptions` override for custom validation.
-- **Structured output**: Override `ResultTypeInfo` with the source-generated type for `TResult` and use `SetResult` for success. When the server's `--structured-output-mode` enables structured output, the same type supplies `outputSchema` and `structuredContent`; see [`docs/output-schema-migration.md`](../../../docs/output-schema-migration.md).
+- **Structured output**: Override `ResultTypeInfo` with the source-generated type for `TResult` and use `SetResult` for success. When the server's `--structured-output-mode` enables structured output, the same type supplies `outputSchema` and `structuredContent`; see [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md).
 
 ### Tool ID
 
@@ -1323,7 +1323,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output, TestProxyFixture fi
 Guidelines:
 - Supply MCP option values in the parameter dictionary, not as a CLI argument string. Adapt the result assertions to the actual tool response.
 - In every test of a `LocalRequired = true` tool, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true`.
-- Create `assets.json` beside the live test project if needed, use `IHttpClientFactory.CreateClient()` for service HTTP clients, set `.testsettings.json` to `Record`, inspect recordings, verify in `Playback`, then push them as described in [`docs/recorded-tests.md`](../../../docs/recorded-tests.md).
+- Create `assets.json` beside the live test project if needed, use `IHttpClientFactory.CreateClient()` for service HTTP clients, set `.testsettings.json` to `Record`, inspect recordings, verify in `Playback`, then push them as described in [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md).
 - When validating JSON for an expected property use `JsonElement.AssertProperty`.
 - When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause.
 
@@ -1763,7 +1763,7 @@ Use the deployment script with your toolset:
 dotnet test tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.Tests --filter "TestType=Live"
 ```
 
-Inspect the recording, switch `TestMode` to `Playback`, rerun the tests, and push the verified recordings using the workflow in [`docs/recorded-tests.md`](../../../docs/recorded-tests.md). Cover supported authentication methods and invalid inputs where applicable; unit tests can validate errors without Azure resources.
+Inspect the recording, switch `TestMode` to `Playback`, rerun the tests, and push the verified recordings using the workflow in [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md). Cover supported authentication methods and invalid inputs where applicable; unit tests can validate errors without Azure resources.
 
 `RecordedCommandTestsBase` implements `IAsyncLifetime`. If your test overrides `InitializeAsync` or `DisposeAsync`, call the corresponding base method:
 ```cs

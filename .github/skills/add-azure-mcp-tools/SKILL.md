@@ -42,8 +42,8 @@ Before starting, determine:
   - Example: Storage account names are 3–24 lowercase alphanumeric characters only.
   - Example: Resource group names allow letters, digits, underscores, hyphens, and periods up to 90 characters.
   - Reference: [Azure naming rules and restrictions](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
-- Use `ValidateOptions` for semantic constraints beyond required options (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. See the `ValidateOptions` override guidance in [Phase 1e](#1e-command-class).
-- Always add validation errors with `validationResult.AddError(message, telemetrySafeMessage)`. Do not add errors through the `ValidationResult.Errors` property; direct collection changes bypass telemetry-safe error tracking. See [Telemetry-safe validation errors](#telemetry-safe-validation-errors).
+- Use `ValidateOptions` for semantic constraints beyond required options (name length, format, mutual exclusivity, and allowed value sets). Only reject characters that are provably invalid for the specific resource type. See the `ValidateOptions` override guidance in [Phase 1e](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md#1e-command-class).
+- Always add validation errors with `validationResult.AddError(message, telemetrySafeMessage)`. Do not add errors through the `ValidationResult.Errors` property; direct collection changes bypass telemetry-safe error tracking. See [Telemetry-safe validation errors](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md#telemetry-safe-validation-errors).
 - Prefer SDK/runtime validators and deterministic checks first (`Length`, explicit allowed-value sets, character/category checks).
 
 ### Secure Logging
@@ -71,7 +71,7 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
   - **User-supplied URL to a known external service** (e.g. a GitHub URL the user provides): call `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` with an explicit allowlist of permitted hosts.
   - **User-supplied target URL with no known domain** (e.g. a load-test target the user controls): call `AzureService.ValidatePublicTargetUrl(url: url)` or inject `IEndpointValidator` and call `ValidatePublicTargetUrl(url)`. This enforces HTTP(S)-only schemes, rejects private/reserved IP ranges and hostnames, and resolves DNS to catch hostnames that map to internal IPs. The validator applies namespace-scoped emergency overrides from the ambient command context.
 - When a toolset directly injects `IEndpointValidator`, register it with `services.AddEndpointValidation()`. Reuse the host-owned validator and policy; do not construct a production validator or pass an executing namespace at tool boundaries.
-- For services that construct endpoints internally, use the cloud-type switch pattern (see [Phase 1c: Service Implementation](#1c-service-interface-and-implementation)) and validate the completed endpoint before credential acquisition, client construction, or network use.
+- For services that construct endpoints internally, use the cloud-type switch pattern (see [Phase 1c: Service Implementation](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md#1c-service-interface-and-implementation)) and validate the completed endpoint before credential acquisition, client construction, or network use.
 - **Control-plane operations** (ARM resource creation, RBAC assignments, policy etc.) do not need `EndpointValidator` because they go through the typed Azure SDK ARM client. Construct ARM resource IDs using `ResourceIdentifier` or collection helpers — never by string-interpolating subscription/resource-group/resource-name directly into a raw ARM path.
 - For new commands and services, always pass `CancellationToken` as the final parameter to all async downstream calls and propagate it throughout — never substitute `CancellationToken.None` or `default` at call sites.
 - Fail closed: if tenant, subscription, or resource context is ambiguous, return an explicit validation error and require the caller to specify the value. Do not silently pick a default.
@@ -121,7 +121,7 @@ Requirements:
 - Keep error messages actionable but non-revealing: avoid exposing stack traces, raw backend payloads, or sensitive values to callers.
 ```
 
-Review every AI-generated snippet for these properties before committing. Generated code that omits them must be corrected before the security gate in [Phase 7](#phase-7-pr-checklist) can be met.
+Review every AI-generated snippet for these properties before committing. Generated code that omits them must be corrected before the security gate in [Phase 7](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md#phase-7-pr-checklist) can be met.
 
 ---
 
@@ -473,7 +473,7 @@ public sealed class {Resource}{Operation}Command(
 - `ExecuteAsync` receives **pre-bound `TOptions options`** — no `ParseResult` parameter
 - No `RegisterOptions()`/`BindOptions()` overrides needed — `OptionBinder` handles binding via `[Option]` attributes
 - No manual `Validate()` call — the framework checks required options and invokes `ValidateOptions()`
-- Override `ResultTypeInfo` and use `SetResult` for successful results so structured output can use the same source-generated type; see [`docs/output-schema-migration.md`](../../../docs/output-schema-migration.md). Structured output is enabled by the server's `--structured-output-mode` setting.
+- Override `ResultTypeInfo` and use `SetResult` for successful results so structured output can use the same source-generated type; see [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md). Structured output is enabled by the server's `--structured-output-mode` setting.
 - Result record is `public` (for JSON serialization context visibility) and declared inside the command class
 - **DO NOT** log `{@Options}` — may expose sensitive information
 
@@ -905,7 +905,7 @@ Inspect the recording for secrets and unstable values. Change `TestMode` to `"Pl
   -a tools\Azure.Mcp.Tools.{Toolset}\tests\Azure.Mcp.Tools.{Toolset}.Tests\assets.json
 ```
 
-Commit the updated `assets.json` tag with the test changes. See [`docs/recorded-tests.md`](../../../docs/recorded-tests.md) for the complete workflow.
+Commit the updated `assets.json` tag with the test changes. See [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) for the complete workflow.
 
 ### 3c-1. Recorded Test Pitfalls
 
