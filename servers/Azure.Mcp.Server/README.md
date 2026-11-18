@@ -1399,6 +1399,7 @@ _These tools come from the [Azure Monitor dashboards with Grafana remote MCP ser
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "List blobs in my Storage container, returning only name and contentLength using select"
 * "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 

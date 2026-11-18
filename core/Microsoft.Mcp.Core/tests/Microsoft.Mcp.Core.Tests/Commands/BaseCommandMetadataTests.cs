@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Nodes;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
@@ -176,6 +177,24 @@ public sealed class BaseCommandMetadataTests
             () => command.SetStringResult(new CommandContext(), "result"));
 
         Assert.Contains(nameof(command.ResultTypeInfo), exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SetResult_WithResultTypeInfo_UsesSerializedPropertyNames()
+    {
+        var command = new ResultTypeInfoTestCommand();
+        var context = new CommandContext();
+
+        command.SetCommandResult(context, new("message", "stack", "type"));
+
+        var node = Assert.IsType<JsonObject>(context.Response.Results?.ToJsonNode());
+        Assert.Equal(["message", "stackTrace", "type"], node.Select(property => property.Key));
+        Assert.Equal("stack", node["stackTrace"]!.GetValue<string>());
+        var typeInfo = command.ResultTypeInfo;
+        Assert.NotNull(typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        Assert.NotNull(selection.Parse("stackTrace"));
+        Assert.Throws<CommandValidationException>(() => selection.Parse("stack_trace"));
     }
 
     // ---------- Missing metadata throws InvalidOperationException ----------

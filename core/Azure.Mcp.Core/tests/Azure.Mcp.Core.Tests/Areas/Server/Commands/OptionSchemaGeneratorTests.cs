@@ -11,6 +11,9 @@ using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.Compute.Commands.Vm;
 using Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Areas.Server.Commands;
@@ -227,6 +230,112 @@ public class OptionSchemaGeneratorTests
         AssertWrappedValue(schema, expectedInnerType: "integer");
     }
 
+    [Theory]
+    [InlineData("name")]
+    [InlineData("details")]
+    public void CreateOutputSchema_Select_MakesOnlyRootFieldsOptional(string select)
+    {
+        var typeInfo = SelectOutputSchemaJsonContext.Default.SelectOutputSchemaSample;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo, supportsFieldSelection: true);
+        var result = ResponseResult.Create(new("outer", 1, new("inner", 2)), typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        result.SelectFields(selection, Assert.IsType<HashSet<string>>(selection.Parse(select)));
+
+        var payload = Assert.IsType<JsonElement>(StructuredOutputHelper.TryBuildStructuredContent(result));
+
+        Assert.False(schema.ContainsKey("required"));
+        var details = Assert.IsType<JsonObject>(schema["properties"]!["details"]);
+        Assert.Contains(Assert.IsType<JsonArray>(details["required"]), name => (string?)name == "count");
+        Assert.Single(payload.EnumerateObject());
+        AssertRequiredPropertiesArePresent(schema, payload);
+
+        var unselectedSchema = OptionSchemaGenerator.CreateOutputSchema(typeInfo);
+        Assert.Contains(Assert.IsType<JsonArray>(unselectedSchema["required"]), name => (string?)name == "count");
+    }
+
+    [Fact]
+    public void CreateOutputSchema_SelectArray_PreservesValueWrapperRequirement()
+    {
+        var typeInfo = SelectOutputSchemaJsonContext.Default.SelectOutputSchemaSampleArray;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo, supportsFieldSelection: true);
+        var result = ResponseResult.Create<SelectOutputSchemaSample[]>([new("outer", 1, new("inner", 2))], typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        result.SelectFields(selection, Assert.IsType<HashSet<string>>(selection.Parse("name")));
+
+        var payload = Assert.IsType<JsonElement>(StructuredOutputHelper.TryBuildStructuredContent(result));
+
+        Assert.Contains(Assert.IsType<JsonArray>(schema["required"]), name => (string?)name == "value");
+        var items = Assert.IsType<JsonObject>(schema["properties"]!["value"]!["items"]);
+        Assert.False(items.ContainsKey("required"));
+        Assert.Equal("""{"value":[{"name":"outer"}]}""", payload.GetRawText());
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_SelectCollection_PreservesWrapperAndNestedRequirements()
+    {
+        var typeInfo = SelectOutputSchemaJsonContext.Default.SelectOutputSchemaCollection;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo, supportsFieldSelection: true);
+        var result = ResponseResult.Create(new([new("outer", 1, new("inner", 2))]), typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        result.SelectFields(selection, Assert.IsType<HashSet<string>>(selection.Parse("details")));
+
+        var payload = Assert.IsType<JsonElement>(StructuredOutputHelper.TryBuildStructuredContent(result));
+
+        Assert.Contains(Assert.IsType<JsonArray>(schema["required"]), name => (string?)name == "result/items~");
+        var items = Assert.IsType<JsonObject>(schema["properties"]!["result/items~"]!["items"]);
+        Assert.False(items.ContainsKey("required"));
+        var details = Assert.IsType<JsonObject>(items["properties"]!["details"]);
+        Assert.Contains(Assert.IsType<JsonArray>(details["required"]), name => (string?)name == "count");
+        Assert.Equal("""{"result/items~":[{"details":{"name":"inner","count":2}}]}""", payload.GetRawText());
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CreateOutputSchema_SelectRecursiveResult_PreservesNestedRequirements(bool array)
+    {
+        var value = new RecursiveSelectOutputSchemaSample("outer", [new("inner", [])]);
+        var typeInfo = SelectOutputSchemaJsonContext.Default.RecursiveSelectOutputSchemaSample;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(
+            array ? SelectOutputSchemaJsonContext.Default.RecursiveSelectOutputSchemaSampleArray : typeInfo,
+            supportsFieldSelection: true);
+        var result = array
+            ? ResponseResult.Create<RecursiveSelectOutputSchemaSample[]>([value],
+                SelectOutputSchemaJsonContext.Default.RecursiveSelectOutputSchemaSampleArray)
+            : ResponseResult.Create(value, typeInfo);
+        var selection = ResponseFieldSelection.Create(array
+            ? SelectOutputSchemaJsonContext.Default.RecursiveSelectOutputSchemaSampleArray : typeInfo);
+        result.SelectFields(selection, Assert.IsType<HashSet<string>>(selection.Parse("children")));
+
+        var payload = Assert.IsType<JsonElement>(StructuredOutputHelper.TryBuildStructuredContent(result));
+        var selected = array ? schema["properties"]!["value"]!["items"]! : schema;
+        Assert.False(Assert.IsType<JsonObject>(selected).ContainsKey("required"));
+        var nested = ResolveSchemaReference(
+            schema, selected["properties"]!["children"]!["items"]!["$ref"]!.GetValue<string>());
+        Assert.Contains(Assert.IsType<JsonArray>(nested["required"]), name => (string?)name == "name");
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
+    [Fact]
+    public void CreateOutputSchema_SelectReferencedCollectionItem_PreservesNestedRequirements()
+    {
+        var typeInfo = SelectOutputSchemaJsonContext.Default.RecursiveSelectOutputSchemaCollection;
+        var schema = OptionSchemaGenerator.CreateOutputSchema(typeInfo, supportsFieldSelection: true);
+        var result = ResponseResult.Create(new([new([])]), typeInfo);
+        var selection = ResponseFieldSelection.Create(typeInfo);
+        result.SelectFields(selection, Assert.IsType<HashSet<string>>(selection.Parse("items")));
+
+        var payload = Assert.IsType<JsonElement>(StructuredOutputHelper.TryBuildStructuredContent(result));
+        Assert.Contains(Assert.IsType<JsonArray>(schema["required"]), name => (string?)name == "items");
+        var items = Assert.IsType<JsonObject>(schema["properties"]!["items"]!["items"]);
+        Assert.False(items.ContainsKey("required"));
+        var nested = ResolveSchemaReference(schema, items["properties"]!["items"]!["items"]!["$ref"]!.GetValue<string>());
+        Assert.Contains(Assert.IsType<JsonArray>(nested["required"]), name => (string?)name == "items");
+        AssertRequiredPropertiesArePresent(schema, payload);
+    }
+
     [Fact]
     public void CreateOutputSchema_KeyValueSetWithoutLabel_MatchesSerializedPayload()
     {
@@ -339,22 +448,71 @@ public class OptionSchemaGeneratorTests
         AssertRequiredPropertiesArePresent(schema, payload);
     }
 
-    private static void AssertRequiredPropertiesArePresent(JsonObject schema, JsonElement payload)
+    internal static void AssertRequiredPropertiesArePresent(JsonObject schema, JsonElement payload, JsonObject? rootSchema = null)
     {
-        if (schema["required"] is not JsonArray required)
+        rootSchema ??= schema;
+        if (schema["$ref"] is JsonValue reference)
         {
-            return;
+            AssertRequiredPropertiesArePresent(
+                ResolveSchemaReference(rootSchema, reference.GetValue<string>()), payload, rootSchema);
         }
 
-        foreach (var requiredProperty in required)
+        if (payload.ValueKind == JsonValueKind.Object)
         {
-            var propertyName = Assert.IsAssignableFrom<JsonValue>(requiredProperty).GetValue<string>();
-            Assert.True(
-                payload.TryGetProperty(propertyName, out _),
-                $"Serialized payload omitted required output property '{propertyName}'.");
+            if (schema["required"] is JsonArray required)
+            {
+                foreach (var requiredProperty in required)
+                {
+                    var propertyName = Assert.IsAssignableFrom<JsonValue>(requiredProperty).GetValue<string>();
+                    Assert.True(
+                        payload.TryGetProperty(propertyName, out _),
+                        $"Serialized payload omitted required output property '{propertyName}'.");
+                }
+            }
+
+            if (schema["properties"] is JsonObject properties)
+            {
+                foreach (var property in properties)
+                {
+                    if (property.Value is JsonObject propertySchema && payload.TryGetProperty(property.Key, out var value))
+                    {
+                        AssertRequiredPropertiesArePresent(propertySchema, value, rootSchema);
+                    }
+                }
+            }
+        }
+        else if (payload.ValueKind == JsonValueKind.Array && schema["items"] is JsonObject items)
+        {
+            foreach (var item in payload.EnumerateArray())
+            {
+                AssertRequiredPropertiesArePresent(items, item, rootSchema);
+            }
+        }
+
+        if (schema["allOf"] is JsonArray variants)
+        {
+            foreach (var variant in variants)
+            {
+                AssertRequiredPropertiesArePresent(Assert.IsType<JsonObject>(variant), payload, rootSchema);
+            }
         }
     }
 
+    private static JsonObject ResolveSchemaReference(JsonObject root, string pointer)
+    {
+        JsonNode? node = root;
+        if (pointer != "#")
+        {
+            Assert.StartsWith("#/", pointer);
+            foreach (var segment in pointer[2..].Split('/'))
+            {
+                var name = segment.Replace("~1", "/", StringComparison.Ordinal).Replace("~0", "~", StringComparison.Ordinal);
+                node = node is JsonArray array ? array[int.Parse(name, System.Globalization.CultureInfo.InvariantCulture)] : node?[name];
+            }
+        }
+
+        return Assert.IsType<JsonObject>(node);
+    }
     // MCP requires the outputSchema root to be an object, so a non-object export (array or scalar) must be
     // wrapped as { "type": "object", "properties": { "value": <inner> }, "required": ["value"] }.
     private static void AssertWrappedValue(JsonObject schema, string expectedInnerType)

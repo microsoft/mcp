@@ -25,6 +25,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
+    private readonly ResponseFieldSelection? _fieldSelection;
 
     [UnconditionalSuppressMessage("Trimming", "IL2075:UnrecognizedReflectionPattern",
         Justification = "CommandMetadataAttribute is only applied to concrete command types that are rooted by DI service registration.")]
@@ -47,7 +48,12 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         Metadata = attr.ToToolMetadata();
 
         _command = new ExtendedCommand(this, Name, Description);
-        OptionBinder.RegisterOptions<TOptions>(_command);
+        if (typeof(ISelectOption).IsAssignableFrom(typeof(TOptions)))
+        {
+            _fieldSelection = ResponseFieldSelection.Create(ResultTypeInfo
+                ?? throw new InvalidOperationException("Commands with ISelectOption options must override ResultTypeInfo."));
+        }
+        OptionBinder.RegisterOptions<TOptions>(_command, _fieldSelection?.DescriptionSuffix);
     }
 
     public string Id { get; }
@@ -62,15 +68,18 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     /// <c>structuredContent</c>. Commands that have not been migrated return <see langword="null"/> and
     /// simply advertise no output schema.
     /// </summary>
+    /// <remarks>Commands with <see cref="ISelectOption"/> options must provide this during base construction.</remarks>
     public virtual JsonTypeInfo<TResult>? ResultTypeInfo => null;
 
     JsonTypeInfo? IBaseCommand.ResultTypeInfo => ResultTypeInfo;
+
+    bool IBaseCommand.SupportsFieldSelection => _fieldSelection is not null;
 
     public Command GetCommand() => _command;
 
     public TOptions BindOptions(ParseResult parseResult)
     {
-        var options = OptionBinder.BindOptions<TOptions>(parseResult);
+        var options = OptionBinder.BindOptions<TOptions>(parseResult, _fieldSelection?.DescriptionSuffix);
         PostBindOptions(options);
         return options;
     }
@@ -97,9 +106,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     async Task<CommandResponse> IBaseCommand.ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         TOptions options;
+        HashSet<string>? selectedFields;
         try
         {
             options = BindOptions(parseResult);
+            selectedFields = _fieldSelection?.Parse((options as ISelectOption)?.Select);
         }
         catch (CommandValidationException ex)
         {
@@ -120,6 +131,11 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         }
 
         CommandResponse response = await ExecuteAsync(context, options, cancellationToken);
+        if (_fieldSelection is not null && selectedFields is not null
+            && response.Status >= HttpStatusCode.OK && response.Status < HttpStatusCode.Ambiguous)
+        {
+            response.Results?.SelectFields(_fieldSelection, selectedFields);
+        }
         CaptureTelemetryFailureMessage(context, response);
         return response;
     }

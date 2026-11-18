@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -831,6 +832,7 @@ public class CommandFactoryToolLoaderTests
 
         Assert.True(outputSchema.TryGetProperty("properties", out var properties), "outputSchema is missing 'properties'.");
         Assert.True(properties.TryGetProperty("name", out _), "outputSchema should expose the result record's 'name' property.");
+        Assert.Contains(outputSchema.GetProperty("required").EnumerateArray(), property => property.GetString() == "count");
 
         var inputProperties = tool.InputSchema.GetProperty("properties");
         Assert.Empty(inputProperties.EnumerateObject());
@@ -868,6 +870,52 @@ public class CommandFactoryToolLoaderTests
         var tool = result.Tools.FirstOrDefault(t => t.Name == "fake-no-schema-get");
         Assert.NotNull(tool);
         Assert.Null(tool.OutputSchema);
+    }
+
+    [Theory]
+    [InlineData(StructuredOutputMode.Compact, null)]
+    [InlineData(StructuredOutputMode.Compact, "name")]
+    [InlineData(StructuredOutputMode.Compact, "details")]
+    [InlineData(StructuredOutputMode.Duplicated, null)]
+    [InlineData(StructuredOutputMode.Duplicated, "name")]
+    [InlineData(StructuredOutputMode.Duplicated, "details")]
+    public async Task SelectableCommand_StructuredContent_ConformsToAdvertisedRequiredProperties(
+        StructuredOutputMode mode, string? select)
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader(new ServerRuntimeConfiguration
+        {
+            StructuredOutputMode = mode,
+        });
+        var command = new SelectOutputSchemaTestCommand();
+        InjectCommandFactoryTool(commandFactory, command);
+
+        var tools = await toolLoader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(), TestContext.Current.CancellationToken);
+        var tool = Assert.Single(tools.Tools, tool => tool.Name == command.Name);
+        var schemaElement = Assert.IsType<JsonElement>(tool.OutputSchema);
+        var schema = Assert.IsType<JsonObject>(JsonNode.Parse(schemaElement.GetRawText()));
+        var arguments = new Dictionary<string, JsonElement>();
+        if (select is not null)
+        {
+            arguments["select"] = JsonSerializer.SerializeToElement(select, OutputSchemaTestJsonContext.Default.String);
+        }
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(arguments, command.Name), TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsError);
+        var payload = Assert.IsType<JsonElement>(result.StructuredContent);
+        var item = payload.GetProperty("result/items~")[0];
+        Assert.Equal(select is null ? 3 : 1, item.EnumerateObject().Count());
+        Assert.Contains(Assert.IsType<JsonArray>(schema["required"]), name => (string?)name == "result/items~");
+        Assert.False(Assert.IsType<JsonObject>(schema["properties"]!["result/items~"]!["items"]).ContainsKey("required"));
+        OptionSchemaGeneratorTests.AssertRequiredPropertiesArePresent(schema, payload);
+
+        if (mode == StructuredOutputMode.Duplicated)
+        {
+            using var text = JsonDocument.Parse(GetTextContent(result));
+            Assert.True(JsonElement.DeepEquals(payload, text.RootElement.GetProperty("results")));
+        }
     }
 
     [Theory]

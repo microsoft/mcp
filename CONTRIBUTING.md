@@ -176,6 +176,8 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
 
   Tools marked `LocalRequired = true` need special recorded-test handling. In every applicable test in a class extending `RecordedCommandTestsBase`, call `AssertLocalToolIsUnavailableInHttpMode(toolName)` and return early when it returns `true` so the test verifies that remote HTTP mode excludes the local-only tool.
 
+  For optional response field selection with `--select`, see the [response field selection guidance](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md#optional-response-field-selection). Commands opt in through `ISelectOption`, provide an explicit `[Option]` description, and expose the same source-generated `ResultTypeInfo` used for serialization.
+
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
    - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)

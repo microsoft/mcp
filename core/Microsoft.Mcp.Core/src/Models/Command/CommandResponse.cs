@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.Mcp.Core.Commands;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Models.Command;
@@ -47,12 +48,35 @@ public sealed class ResponseResult(object? result, JsonTypeInfo typeInfo)
 {
     private readonly object? _result = result;
     private readonly JsonTypeInfo _typeInfo = typeInfo;
+    private (ResponseFieldSelection Selection, HashSet<string> Fields)? _selection;
 
     public static ResponseResult Create<T>(T result, JsonTypeInfo<T> typeInfo) => new(result, typeInfo);
 
-    public void Write(Utf8JsonWriter writer) => JsonSerializer.Serialize(writer, _result, _typeInfo);
+    public void Write(Utf8JsonWriter writer)
+    {
+        if (_selection is null)
+        {
+            // Keep the normal source-generated serialization path unchanged when --select is omitted.
+            JsonSerializer.Serialize(writer, _result, _typeInfo);
+        }
+        else if (ToJsonNode() is { } node)
+        {
+            node.WriteTo(writer);
+        }
+        else
+        {
+            writer.WriteNullValue();
+        }
+    }
 
-    internal JsonNode? ToJsonNode() => JsonSerializer.SerializeToNode(_result, _typeInfo);
+    internal void SelectFields(ResponseFieldSelection selection, HashSet<string> fields) => _selection = (selection, fields);
+
+    internal JsonNode? ToJsonNode()
+    {
+        // Structured content and the response writer must observe the same filtered payload.
+        var node = JsonSerializer.SerializeToNode(_result, _typeInfo);
+        return _selection is { } selection ? selection.Selection.Apply(node, selection.Fields) : node;
+    }
 }
 
 public class ResultConverter : JsonConverter<ResponseResult>

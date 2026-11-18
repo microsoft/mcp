@@ -125,6 +125,36 @@ SetResult(context, <result>);
 Leave error handling untouched: `catch` blocks continue to call `HandleException(context, ex)`. Only
 success-path result assignments change.
 
+### Optional response field selection
+
+Commands can opt into `--select` by implementing
+`Microsoft.Mcp.Core.Options.ISelectOption` on their options class and declaring a nullable `Select` property
+with an explicit `[Option]` attribute. The interface defines the property contract but not option
+metadata; put the static description in the property attribute, for example:
+`Comma-separated list of response fields to include in the output. If not specified all fields will be included.`
+Core appends `Choices are: ...` using the serialized response field names from the source-generated
+result metadata; no reflection-based JSON serialization or per-command filtering code is needed.
+
+The command must override `ResultTypeInfo` with the source-generated metadata described above. That
+metadata must be available during base construction, for example by returning a property of the default
+context directly. `SetResult`, output schemas, and field selection then use the same serialized property
+names, including naming policies and `JsonPropertyName` attributes.
+
+Selection applies to top-level object properties. For an array result, or a result object containing
+only one collection property (such as `BlobGetCommandResult.Blobs`), it applies to each item's
+top-level properties while preserving the collection wrapper. Nested values are retained in full.
+Object responses and object collections are supported; scalar and dictionary result roots are not.
+
+The base command validates comma-separated field names before execution. Names are case-insensitive,
+surrounding whitespace is ignored, and duplicates are allowed. Unknown names, empty selections, and
+nested paths are rejected. Omitting `--select` preserves the full response. Filtering is request-local
+and applies to both text and structured success results, not error responses.
+
+For tools supporting `--select`, `outputSchema` makes every selectable field optional, even when a
+particular request omits `--select`. Only the filtered object or collection-item level is relaxed:
+collection wrappers (including MCP's `value` wrapper) and nested-object requirements are preserved.
+Tools that do not implement `ISelectOption` retain their existing required fields.
+
 ## Worked example (App Configuration `KeyValueGetCommand`)
 
 **Before:**
@@ -254,6 +284,7 @@ Run these from the repository root, scoped to the toolset you migrated (App Conf
 - [ ] Replaced every success-path `ResponseResult.Create(...)` with `SetResult(context, ...)`
 - [ ] Left `catch` / `HandleException` paths unchanged
 - [ ] Did **not** change `TResult`, its members, or the text `content`
+- [ ] If enabling `--select`, implemented `ISelectOption`, added `[Option(Description = "...")]` to `Select`, and tested both filtered and unfiltered responses
 - [ ] Built the tool project
 - [ ] Ran the toolset's unit tests (all green)
 - [ ] Confirmed `outputSchema` present and `name`/`description`/`inputSchema` unchanged via `tools list`
