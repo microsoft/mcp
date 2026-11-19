@@ -53,5 +53,14 @@ public sealed class HealthModelListCommand(IMonitorHealthModelService healthMode
         return context.Response;
     }
 
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException { Status: 404 } =>
+            "Resource group not found. Verify the resource group name and that you have access",
+        RequestFailedException { Status: 403 } reqEx =>
+            $"Authorization failed listing health models. Details: {reqEx.Message.Split('\n')[0].Trim()}",
+        _ => base.GetErrorMessage(ex)
+    };
+
     public sealed record HealthModelListCommandResult(List<HealthModelSummary> HealthModels);
 }
