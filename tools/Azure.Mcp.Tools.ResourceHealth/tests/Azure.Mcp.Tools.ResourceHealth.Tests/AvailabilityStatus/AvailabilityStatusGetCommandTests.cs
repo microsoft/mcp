@@ -89,7 +89,7 @@ public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBas
         var resourceType = "Microsoft.Network/virtualNetworks";
         var errorCode = "UnsupportedResourceType";
         var errorMessage = "Resource type is not supported.";
-        var expectedError = $"Azure Resource Health could not retrieve availability status for resource type '{resourceType}'. Azure error code: {errorCode}. Details: {errorMessage}{Environment.NewLine}Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+        var expectedError = $"Azure Resource Health could not retrieve availability status for resource type '{resourceType}'. Azure error code: {errorCode}. Details: {errorMessage} Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, errorMessage));
