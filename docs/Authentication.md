@@ -144,8 +144,6 @@ To use a CIMD-capable client with the remote server:
 3. **Verify CIMD discovery.** The configuration below advertises the tenant-specific preview identifier `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08`. Check `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08/.well-known/openid-configuration` and confirm `client_id_metadata_document_supported` is `true`. If it is absent or false, do not use a CIMD client ID; use another supported client registration method.
 4. **Approve access.** The client requests the advertised resource and delegated scope. Tenant policy governs whether users can consent or an administrator must add the client and grant consent. During the preview, plan for administrator approval rather than relying on user consent; see [Manage CIMD clients in your tenant](#manage-cimd-clients-in-your-tenant). The signed-in user also needs appropriate Azure RBAC permissions for the requested operations.
 
-Changing the advertised authorization server does not change `AzureAd` token validation. The configured server must accept the resulting token's issuer, audience, and `Mcp.Tools.ReadWrite` scope. Only single-tenant use has been validated; `common` and `organizations` have not.
-
 #### Manage CIMD clients in your tenant
 
 Entra ID represents each approved CIMD client as an agent identity in the tenant. Tenant administrators control which CIMD clients can access the MCP server. For full guidance, see [Manage CIMD clients in Microsoft Entra ID](https://learn.microsoft.com/entra/agent-id/manage-client-id-metadata-document-clients).
