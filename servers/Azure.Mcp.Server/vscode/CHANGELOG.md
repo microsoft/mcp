@@ -1,5 +1,17 @@
 # Release History
 
+## 4.0.10 (2026-11-19) (pre-release)
+
+### Added
+
+- Added `azmcp monitor healthmodels inspect`, a read-only tool for the entities of an Azure Monitor Health Model: their health state, signals with values and both evaluation rules, what drives an entity's state (`--walk Causes`), what it depends on or what depends on it, health state history, signal history and data annotations, now or at a past instant (`--timestamp`). [[#4077](https://github.com/microsoft/mcp/pull/4077)]
+
+### Changed
+
+- Updated MySQL tools to use the 'VerifyFull' SSL mode, which validates the server certificate and hostname when connecting to Azure Database for MySQL. [[#4205](https://github.com/microsoft/mcp/pull/4205)]
+#### Dependency Updates
+- Updated `Azure.ResourceManager.CloudHealth` from 1.0.0-beta.3 to 1.0.0, `Azure.Core` from 1.61.0 to 1.64.0 and `System.ClientModel` from 1.15.0 to 1.16.0. [[#4077](https://github.com/microsoft/mcp/pull/4077)]
+
 ## 4.0.9 (2026-11-17) (pre-release)
 
 ### Added
