@@ -26,12 +26,25 @@ public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : I
         sessionId is not null && sessionId.StartsWith(SessionIdPrefix, StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc/>
-    public Task<HaSessionResult> StartAsync(string token, HaInput input, CancellationToken cancellationToken)
+    public Task<HaSessionResult> StartAsync(string token, HaInput input, CancellationToken cancellationToken) =>
+        StartInSessionAsync(token, input, SessionIdPrefix + Guid.NewGuid().ToString("N")[..12], cancellationToken);
+
+    /// <inheritdoc/>
+    public Task<HaSessionResult> StartInSessionAsync(string token, HaInput input, string sessionId, CancellationToken cancellationToken)
     {
-        string sessionId = SessionIdPrefix + Guid.NewGuid().ToString("N")[..12];
+        if (!IsMockSession(sessionId))
+        {
+            // Keep within the Discovery Service limit of 20 characters.
+            sessionId = SessionIdPrefix + sessionId[Math.Max(0, sessionId.Length - 12)..];
+        }
+
         string operationId = Guid.NewGuid().ToString("D");
         _logger.LogInformation("HA is mocked: returning session {SessionId}, operation {OperationId} without calling the Discovery Service.",
             sessionId, operationId);
         return Task.FromResult(new HaSessionResult(null, (int)HttpStatusCode.Accepted, sessionId, false, operationId, Guid.NewGuid().ToString(), null));
     }
+
+    /// <inheritdoc/>
+    public Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken) =>
+        Task.FromResult(new HaOperationStatus((int)HttpStatusCode.OK, "Succeeded", null, null, null, null, null));
 }

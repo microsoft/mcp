@@ -19,7 +19,10 @@ internal static class HaInputPackage
     internal const int MaxUploadAttempts = 3;
     internal static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(1);
 
-    /// <summary>Returns the mini zip bytes with manifest.json { inventorySasUri, assessmentSasUri }.</summary>
+    /// <summary>
+    /// Returns the mini zip bytes with manifest.json { inventorySasUri, assessmentSasUri } and, for a business case, also
+    /// businessCaseSasUri and haSasUri.
+    /// </summary>
     internal static byte[] Build(HaInput input)
     {
         using MemoryStream stream = new();
@@ -31,6 +34,16 @@ internal static class HaInputPackage
             writer.WriteStartObject();
             writer.WriteString("inventorySasUri", input.InventorySasUri);
             writer.WriteString("assessmentSasUri", input.AssessmentSasUri);
+            if (input.BusinessCaseSasUri is not null)
+            {
+                writer.WriteString("businessCaseSasUri", input.BusinessCaseSasUri);
+            }
+
+            if (input.HaSasUri is not null)
+            {
+                writer.WriteString("haSasUri", input.HaSasUri);
+            }
+
             writer.WriteEndObject();
         }
 

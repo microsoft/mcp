@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+using Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -61,6 +62,11 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<GetAssessmentStatusCommand>();
         services.AddSingleton<GetHaStatusCommand>();
 
+        // Business case (POC): create starts the assessment; each status call moves the business case forward, statelessly.
+        services.AddSingleton<IBusinessCaseEvaluationClient, BusinessCaseEvaluationClient>();
+        services.AddSingleton<CreateBusinessCaseCommand>();
+        services.AddSingleton<GetBusinessCaseStatusCommand>();
+
         // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
     }
@@ -107,6 +113,14 @@ public class AzureMigrateSetup : IAreaSetup
         assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
         assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
         assessment.AddCommand<GetHaStatusCommand>(serviceProvider);
+
+        var businessCase = new CommandGroup(
+            "businesscase",
+            "Azure Migrate business case operations - Start a business case for the signed-in user from their offline collector ZIP, " +
+            "and check its status, which also moves it to its next stage.");
+        azureMigrate.AddSubGroup(businessCase);
+        businessCase.AddCommand<CreateBusinessCaseCommand>(serviceProvider);
+        businessCase.AddCommand<GetBusinessCaseStatusCommand>(serviceProvider);
 
         return azureMigrate;
     }

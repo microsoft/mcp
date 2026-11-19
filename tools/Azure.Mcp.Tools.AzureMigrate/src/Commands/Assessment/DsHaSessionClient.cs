@@ -27,10 +27,33 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     internal static string NewSessionId() => "ha-" + Guid.NewGuid().ToString("N")[..16];
 
     /// <inheritdoc/>
-    public async Task<HaSessionResult> StartAsync(string token, HaInput input, CancellationToken cancellationToken)
+    public Task<HaSessionResult> StartAsync(string token, HaInput input, CancellationToken cancellationToken) =>
+        StartCoreAsync(token, input, NewSessionId(), reuseActiveSession: true, cancellationToken);
+
+    /// <inheritdoc/>
+    public Task<HaSessionResult> StartInSessionAsync(string token, HaInput input, string sessionId, CancellationToken cancellationToken) =>
+        StartCoreAsync(token, input, sessionId, reuseActiveSession: false, cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken)
+    {
+        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
+            _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(DsBackdoorClient.BaseUrl, sessionId, operationId), token, null,
+            Guid.NewGuid().ToString(), "get HA operation status", cancellationToken);
+        return new(
+            response.Status,
+            DsBackdoorClient.ReadValue(response.Body, "status"),
+            DsBackdoorClient.ReadValue(response.Body, "properties", "result"),
+            DsBackdoorClient.ReadValue(response.Body, "error", "code"),
+            DsBackdoorClient.ReadValue(response.Body, "error", "message"),
+            response.Error,
+            response.RetryAfterSeconds);
+    }
+
+    private async Task<HaSessionResult> StartCoreAsync(
+        string token, HaInput input, string sessionId, bool reuseActiveSession, CancellationToken cancellationToken)
     {
         string baseUrl = DsBackdoorClient.BaseUrl;
-        string sessionId = NewSessionId();
         string clientRequestId = Guid.NewGuid().ToString();
         string skillType = SkillType;
 
@@ -44,7 +67,7 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
             _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "create HA session", cancellationToken);
 
         bool reused = false;
-        if (create.Status == (int)HttpStatusCode.Conflict && DsBackdoorClient.ReadActiveSessionId(create.Body) is { } activeSessionId)
+        if (reuseActiveSession && create.Status == (int)HttpStatusCode.Conflict && DsBackdoorClient.ReadActiveSessionId(create.Body) is { } activeSessionId)
         {
             // One active session per user and skill type: on a later run, continue in the caller's existing HA session.
             sessionId = activeSessionId;
