@@ -767,6 +767,8 @@ To understand how platform-specific binaries are installed with @azure/mcp, revi
 
 Install the Python package: [msmcp-azure](https://pypi.org/project/msmcp-azure/).
 
+The Python package is a small launcher. On first use, it downloads the matching server version for your OS and architecture from the official `microsoft/mcp` GitHub Release, verifies SHA-256 integrity, and caches the executable and its dependencies. Later runs use the verified cache and can work offline. The first run requires network access to GitHub and a writable cache directory; set `AZURE_MCP_CACHE_DIR` to override the default per-user cache location. See [PyPI launcher documentation](../../eng/pypi/README.md) for cache locations and offline provisioning.
+
 **Run directly without installation (using uvx - recommended):**
 
 ```bash

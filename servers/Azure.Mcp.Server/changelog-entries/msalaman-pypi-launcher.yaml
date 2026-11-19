@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Replaced bundled Azure MCP PyPI binaries with a small Python launcher that downloads the matching official GitHub Release, verifies archive and cached-file SHA-256 hashes, and supports offline reuse after the first download. Set AZURE_MCP_CACHE_DIR to customize the cache location."
