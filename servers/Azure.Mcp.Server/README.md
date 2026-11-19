@@ -95,8 +95,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       ```json}} -->
-<!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
-<!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
+<!-- insert-section: vsix {{      // Auto: consolidated in VS Code Insiders, namespace in stable VS Code}} -->
+<!-- insert-section: vsix {{      "azureMcp.serverMode": "auto", // one of: "auto" (default) | "single" | "namespace" | "consolidated" | "all"}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Filter which namespaces to expose}} -->
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
@@ -126,6 +126,8 @@ Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
 ### VS Code (Recommended)
 Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
+
+The extension's `azureMcp.serverMode` setting defaults to `auto`: consolidated mode in VS Code Insiders and namespace mode in stable VS Code. Consolidated mode groups related tools by task and action; namespace mode groups tools by Azure service. Explicit mode settings are preserved. Set `azureMcp.serverMode` to `namespace` to opt out in Insiders, then restart the Azure MCP server.
 
 ![Install Azure MCP Server Extension](images/install_azure_mcp_server_extension.gif)
 

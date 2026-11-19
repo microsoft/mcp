@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
             onDidChangeMcpServerDefinitions: didChangeEmitter.event,
             provideMcpServerDefinitions: async () => {
                 const config = vscode.workspace.getConfiguration('azureMcp');
-                const args = buildServerArguments(config);
+                const args = buildServerArguments(config, vscode.env.uriScheme);
 
                 // Honor VS Code telemetry settings
                 // Only set AZURE_MCP_COLLECT_TELEMETRY if telemetry is disabled
