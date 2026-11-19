@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Identity.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using ModelContextProtocol.AspNetCore.Authentication;
+using ModelContextProtocol.Authentication;
 
 namespace Microsoft.Mcp.Core.Areas.Server;
 
@@ -22,23 +23,10 @@ internal static class OAuthProtectedResourceMetadataHelper
     private static readonly string[] s_reservedPathPrefixes = ["/.well-known", "/health"];
 
     /// <summary>
-    /// Returns <c>true</c> when the request targets the root or the resource-specific protected resource metadata URL.
-    /// </summary>
-    public static bool IsMetadataRequest(HttpRequest request, string resourcePath)
-    {
-        if (!HttpMethods.IsGet(request.Method))
-        {
-            return false;
-        }
-
-        return request.Path == WellKnownPath
-            || (resourcePath.Length > 0
-                && request.Path == PathString.FromUriComponent(WellKnownPath + resourcePath));
-    }
-
-    /// <summary>
     /// Validates and normalizes the configured MCP endpoint path.
     /// </summary>
+    /// <param name="value">The configured endpoint path.</param>
+    /// <returns>The normalized endpoint path, or an empty string when no path is configured.</returns>
     public static string NormalizeEndpointPath(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -72,6 +60,8 @@ internal static class OAuthProtectedResourceMetadataHelper
     /// <summary>
     /// Validates the configured public resource identifier.
     /// </summary>
+    /// <param name="value">The configured protected resource identifier.</param>
+    /// <returns>The validated resource identifier, or <see langword="null"/> when it is not configured.</returns>
     public static string? ValidateResource(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -94,30 +84,10 @@ internal static class OAuthProtectedResourceMetadataHelper
     }
 
     /// <summary>
-    /// Gets the configured values in a scalar or indexed configuration section.
-    /// </summary>
-    public static string[] ReadValues(IConfigurationSection section)
-    {
-        List<string> values = [];
-        if (!string.IsNullOrWhiteSpace(section.Value))
-        {
-            values.Add(section.Value.Trim());
-        }
-
-        foreach (IConfigurationSection child in section.GetChildren())
-        {
-            if (!string.IsNullOrWhiteSpace(child.Value))
-            {
-                values.Add(child.Value.Trim());
-            }
-        }
-
-        return [.. values];
-    }
-
-    /// <summary>
     /// Validates configured authorization server issuer identifiers.
     /// </summary>
+    /// <param name="values">The configured issuer identifiers.</param>
+    /// <returns>The validated issuer identifiers.</returns>
     public static string[] ValidateAuthorizationServers(string[] values)
     {
         foreach (string value in values)
@@ -139,6 +109,8 @@ internal static class OAuthProtectedResourceMetadataHelper
     /// <summary>
     /// Validates configured OAuth scopes.
     /// </summary>
+    /// <param name="values">The configured OAuth scopes.</param>
+    /// <returns>The validated scopes.</returns>
     public static string[] ValidateScopes(string[] values)
     {
         foreach (string value in values)
@@ -154,49 +126,93 @@ internal static class OAuthProtectedResourceMetadataHelper
     }
 
     /// <summary>
-    /// Gets the resource path used by RFC 9728 resource-specific metadata discovery.
+    /// Validates the configured HTTP endpoint options.
     /// </summary>
-    public static string GetResourcePath(string? resource, string endpointPath) =>
-        resource is null ? endpointPath : GetResourcePath(new Uri(resource, UriKind.Absolute));
+    /// <param name="options">The options to validate.</param>
+    /// <returns><see langword="true"/> when the options are valid.</returns>
+    public static bool ValidateOptions(McpHttpEndpointOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _ = NormalizeEndpointPath(options.EndpointPath);
+
+        ProtectedResourceOptions protectedResource = options.ProtectedResource
+            ?? throw new InvalidOperationException($"{ConfigurationSectionName}:{ProtectedResourceSectionName} must be an object.");
+        _ = ValidateResource(protectedResource.Resource);
+        _ = ValidateAuthorizationServers(protectedResource.AuthorizationServers ?? []);
+        _ = ValidateScopes(protectedResource.ScopesSupported ?? []);
+        return true;
+    }
 
     /// <summary>
-    /// Gets the protected resource identifier: the configured public resource, or one derived from the request.
+    /// Configures the MCP SDK authentication handler with protected resource metadata.
     /// </summary>
-    public static string GetResource(string? resource, string endpointPath, string scheme, HostString host) =>
-        resource ?? $"{scheme}://{host}{endpointPath}";
+    /// <param name="authenticationOptions">The MCP SDK authentication options to configure.</param>
+    /// <param name="endpointOptions">The HTTP endpoint configuration.</param>
+    /// <param name="azureAdOptions">The Microsoft Entra application configuration.</param>
+    public static void ConfigureAuthenticationOptions(
+        McpAuthenticationOptions authenticationOptions,
+        McpHttpEndpointOptions endpointOptions,
+        MicrosoftIdentityApplicationOptions azureAdOptions)
+    {
+        ProtectedResourceOptions protectedResource = endpointOptions.ProtectedResource;
+        authenticationOptions.ResourceMetadata = CreateMetadata(
+            protectedResource.AuthorizationServers ?? [],
+            protectedResource.ScopesSupported ?? [],
+            protectedResource.Resource,
+            azureAdOptions.ClientId,
+            azureAdOptions.TenantId,
+            azureAdOptions.Instance);
+
+        if (protectedResource.Resource is string resource)
+        {
+            string endpointPath = NormalizeEndpointPath(endpointOptions.EndpointPath);
+            string resourcePath = GetResourcePath(resource, endpointPath);
+            authenticationOptions.ResourceMetadataUri = new Uri(GetConfiguredMetadataUrl(resource, resourcePath));
+        }
+    }
 
     /// <summary>
-    /// Gets the protected resource metadata URL for the resource, following RFC 9728 section 3.1.
+    /// Gets the metadata path for a protected resource, removing its terminating slash for discovery.
     /// </summary>
-    public static string GetMetadataUrl(string? resource, string resourcePath, string scheme, HostString host)
+    /// <param name="resource">The protected resource identifier.</param>
+    /// <param name="endpointPath">The configured MCP endpoint path.</param>
+    /// <returns>The path appended to the well-known metadata path.</returns>
+    public static string GetResourcePath(string? resource, string endpointPath)
     {
         if (resource is null)
         {
-            return $"{scheme}://{host}{WellKnownPath}{resourcePath}";
+            return endpointPath;
         }
 
-        Uri resourceUri = new(resource, UriKind.Absolute);
-        return $"{resourceUri.GetLeftPart(UriPartial.Authority)}{WellKnownPath}{resourcePath}";
+        string path = new Uri(resource, UriKind.Absolute).AbsolutePath;
+        return path == "/" ? string.Empty : path.TrimEnd('/');
     }
 
     /// <summary>
     /// Creates the protected resource metadata document.
     /// </summary>
-    public static OAuthProtectedResourceMetadata CreateMetadata(
+    /// <param name="authorizationServers">Configured authorization server issuer identifiers.</param>
+    /// <param name="scopesSupported">Configured scopes to advertise.</param>
+    /// <param name="resource">The configured protected resource identifier, if any.</param>
+    /// <param name="clientId">The protected resource application's client ID.</param>
+    /// <param name="tenantId">The tenant ID used by the protected resource.</param>
+    /// <param name="instance">The identity platform instance used by the protected resource.</param>
+    /// <returns>The metadata document configured for the MCP SDK handler.</returns>
+    public static ProtectedResourceMetadata CreateMetadata(
         string[] authorizationServers,
         string[] scopesSupported,
-        string resource,
+        string? resource,
         string? clientId,
         string? tenantId,
         string? instance)
     {
         string authorityInstance = instance?.TrimEnd('/') ?? DefaultInstance;
 
-        return new OAuthProtectedResourceMetadata
+        return new ProtectedResourceMetadata
         {
             Resource = resource,
             AuthorizationServers = authorizationServers.Length > 0
-                ? authorizationServers
+                ? [.. authorizationServers]
                 : [$"{authorityInstance}/{tenantId}/v2.0"],
 
             // Only delegated permissions for user principal authorization are listed here.
@@ -206,7 +222,7 @@ internal static class OAuthProtectedResourceMetadataHelper
             // Configured scopes must still resolve to the Mcp.Tools.ReadWrite delegated scope
             // on this server's app registration, because that is what the authorization policy requires.
             ScopesSupported = scopesSupported.Length > 0
-                ? scopesSupported
+                ? [.. scopesSupported]
                 : [$"{clientId}/{DelegatedScope}"],
             BearerMethodsSupported = ["header"],
             ResourceDocumentation = ResourceDocumentation
@@ -216,9 +232,9 @@ internal static class OAuthProtectedResourceMetadataHelper
     private static bool IsAllowedScheme(Uri uri) =>
         uri.Scheme == Uri.UriSchemeHttps || (uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback);
 
-    private static string GetResourcePath(Uri uri)
+    private static string GetConfiguredMetadataUrl(string resource, string resourcePath)
     {
-        string path = uri.AbsolutePath;
-        return path == "/" ? string.Empty : path;
+        Uri resourceUri = new(resource, UriKind.Absolute);
+        return $"{resourceUri.GetLeftPart(UriPartial.Authority)}{WellKnownPath}{resourcePath}";
     }
 }

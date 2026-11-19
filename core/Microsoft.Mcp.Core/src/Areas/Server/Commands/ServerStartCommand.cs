@@ -29,6 +29,7 @@ using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using ModelContextProtocol.AspNetCore.Authentication;
 using ModelContextProtocol.Protocol;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -426,24 +427,20 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
 
-        IConfiguration configuration = builder.Configuration;
-        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(configuration["McpServer:EndpointPath"]);
-        IConfigurationSection protectedResourceConfiguration = configuration.GetSection("McpServer:ProtectedResource");
-        string? resource = OAuthProtectedResourceMetadataHelper.ValidateResource(protectedResourceConfiguration["Resource"]);
-        string[] authorizationServers = OAuthProtectedResourceMetadataHelper.ValidateAuthorizationServers(
-            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResourceConfiguration.GetSection("AuthorizationServers")));
-        string[] scopesSupported = OAuthProtectedResourceMetadataHelper.ValidateScopes(
-            OAuthProtectedResourceMetadataHelper.ReadValues(protectedResourceConfiguration.GetSection("ScopesSupported")));
-        string resourcePath = OAuthProtectedResourceMetadataHelper.GetResourcePath(resource, endpointPath);
-
         IServiceCollection services = builder.Services;
+        ConfigureMcpHttpEndpointOptions(services);
 
         // Configure outgoing and incoming authentication and authorization.
         //
         // Configure incoming authentication and authorization.
         var azureAdSection = builder.Configuration.GetSection(Constants.AzureAd);
-        AuthenticationBuilder authBuilder = services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        services
+            .AddAuthentication(options =>
+            {
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = McpAuthenticationDefaults.AuthenticationScheme;
+            })
             .AddMicrosoftIdentityWebApiAot(
                 options => azureAdSection.Bind(options),
                 JwtBearerDefaults.AuthenticationScheme,
@@ -453,34 +450,19 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
                     // Production environments should enforce HTTPS for metadata endpoints.
                     // Note: Azure AD (login.microsoftonline.com) always uses HTTPS regardless of this setting.
                     jwtOptions.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+                })
+            .AddMcp();
 
-                    // Configure JWT Bearer events for OAuth protected resource metadata
-                    jwtOptions.Events = new JwtBearerEvents
-                    {
-                        OnChallenge = context =>
-                        {
-                            // Add resource_metadata parameter to WWW-Authenticate header
-                            if (!context.Response.HasStarted)
-                            {
-                                HttpRequest request = context.Request;
-                                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                                string resourceMetadataUrl = OAuthProtectedResourceMetadataHelper.GetMetadataUrl(resource, resourcePath, scheme, request.Host);
-
-                                context.Response.StatusCode = 401;
-
-                                var header = $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
-                                if (!string.IsNullOrEmpty(context.Error))
-                                    header += $", error=\"{context.Error}\"";
-                                if (!string.IsNullOrEmpty(context.ErrorDescription))
-                                    header += $", error_description=\"{context.ErrorDescription}\"";
-
-                                // Modify the WWW-Authenticate header to include resource_metadata
-                                context.Response.Headers.WWWAuthenticate = header;
-                            }
-                            context.HandleResponse();
-                            return Task.CompletedTask;
-                        }
-                    };
+        services.AddOptions<McpAuthenticationOptions>(McpAuthenticationDefaults.AuthenticationScheme)
+            .Configure<IOptions<McpHttpEndpointOptions>, IOptionsMonitor<MicrosoftIdentityApplicationOptions>>(
+                (options, httpEndpointOptions, azureAdOptionsMonitor) =>
+                {
+                    MicrosoftIdentityApplicationOptions azureAdOptions =
+                        azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                    OAuthProtectedResourceMetadataHelper.ConfigureAuthenticationOptions(
+                        options,
+                        httpEndpointOptions.Value,
+                        azureAdOptions);
                 });
 
         // Configure authorization policy for MCP access.
@@ -535,38 +517,14 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
 
-        // Add OAuth protected resource metadata middleware
-        //
-        app.Use(async (context, next) =>
+        if (enableForwardedHeaders)
         {
-            if (OAuthProtectedResourceMetadataHelper.IsMetadataRequest(context.Request, resourcePath))
+            app.Use((context, next) =>
             {
-                IOptionsMonitor<MicrosoftIdentityApplicationOptions> azureAdOptionsMonitor = context
-                    .RequestServices
-                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityApplicationOptions>>();
-                MicrosoftIdentityApplicationOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
-                HttpRequest request = context.Request;
-                string scheme = GetSchemeForOAuthProtectedResourceMetadata(request, enableForwardedHeaders);
-                string effectiveResource = OAuthProtectedResourceMetadataHelper.GetResource(resource, endpointPath, scheme, request.Host);
-
-                OAuthProtectedResourceMetadata metadata = OAuthProtectedResourceMetadataHelper.CreateMetadata(
-                    authorizationServers,
-                    scopesSupported,
-                    effectiveResource,
-                    azureAdOptions.ClientId,
-                    azureAdOptions.TenantId,
-                    azureAdOptions.Instance);
-
-                context.Response.ContentType = "application/json";
-                await JsonSerializer.SerializeAsync(
-                    context.Response.Body,
-                    metadata,
-                    OAuthMetadataJsonContext.Default.OAuthProtectedResourceMetadata);
-                return;
-            }
-
-            await next(context);
-        });
+                context.Request.Scheme = GetSchemeForOAuthProtectedResourceMetadata(context.Request, enableForwardedHeaders);
+                return next(context);
+            });
+        }
 
         // AuthN/Z are always required in the remote HTTP service scenario.
         app.UseAuthentication();
@@ -574,6 +532,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 
         app.Use(ValidateMcpRoutingHeadersMiddleware);
 
+        McpHttpEndpointOptions endpointOptions = app.Services.GetRequiredService<IOptions<McpHttpEndpointOptions>>().Value;
+        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(endpointOptions.EndpointPath);
         IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp(endpointPath);
         // All MCP endpoints require MCP.All scope or role
         mcpEndpointBuilder.RequireAuthorization("McpAccess");
@@ -603,9 +563,8 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         builder.Logging.AddConsole();
         ConfigureSupportLogging(builder.Logging, serverOptions);
 
-        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(builder.Configuration["McpServer:EndpointPath"]);
-
         IServiceCollection services = builder.Services;
+        ConfigureMcpHttpEndpointOptions(services);
 
         // Configure single identity token credential provider for outgoing authentication
         services.AddSingleIdentityTokenCredentialProvider();
@@ -634,9 +593,19 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         app.UseCors("McpCorsPolicy");
         app.UseRouting();
         app.Use(ValidateMcpRoutingHeadersMiddleware);
+        string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(
+            app.Services.GetRequiredService<IOptions<McpHttpEndpointOptions>>().Value.EndpointPath);
         app.MapMcp(endpointPath);
 
         return app;
+    }
+
+    private static void ConfigureMcpHttpEndpointOptions(IServiceCollection services)
+    {
+        services.AddOptions<McpHttpEndpointOptions>()
+            .BindConfiguration(McpHttpEndpointOptions.SectionName)
+            .Validate(OAuthProtectedResourceMetadataHelper.ValidateOptions, "Invalid remote HTTP MCP endpoint configuration.")
+            .ValidateOnStart();
     }
 
     /// <summary>
