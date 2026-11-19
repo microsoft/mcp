@@ -1,10 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
+using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Services;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -226,6 +230,58 @@ public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBas
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Missing Required options: --subscription", response.Message);
+    }
+
+    #endregion
+
+    #region Telemetry Tests
+
+    [Theory]
+    [InlineData("/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet", "Microsoft.Network/virtualNetworks")]
+    [InlineData("/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Sql/servers/srv/databases/db", "Microsoft.Sql/servers/databases")]
+    public async Task ExecuteAsync_TagsResourceType_WhenResourceHealthReturnsUnprocessableEntity(string resourceId, string expectedResourceType)
+    {
+        using var listener = CreateListener();
+        using var source = new ActivitySource("test");
+        using var activity = source.StartActivity("test-op");
+        Assert.NotNull(activity);
+
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, expectedResourceType, "UnsupportedResourceType", "Not supported."));
+
+        var response = await ((IBaseCommand)Command).ExecuteAsync(
+            new CommandContext(activity),
+            CommandDefinition.Parse(["--resourceId", resourceId, "--subscription", "12345678-1234-1234-1234-123456789012"]),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        Assert.Equal(expectedResourceType, activity.GetTagItem(ResourceHealthTelemetryTags.ResourceType));
+    }
+
+    [Theory]
+    [InlineData("not-a-resource-id")]
+    [InlineData("/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/my secret value/vm")]
+    public void AddResourceTypeTag_SkipsTag_WhenResourceTypeIsNotWellFormed(string resourceId)
+    {
+        using var listener = CreateListener();
+        using var source = new ActivitySource("test");
+        using var activity = source.StartActivity("test-op");
+        Assert.NotNull(activity);
+
+        ResourceHealthTelemetryTags.AddResourceTypeTag(activity, resourceId);
+
+        Assert.Null(activity.GetTagItem(ResourceHealthTelemetryTags.ResourceType));
+    }
+
+    private static ActivityListener CreateListener()
+    {
+        var listener = new ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+        };
+        ActivitySource.AddActivityListener(listener);
+        return listener;
     }
 
     #endregion

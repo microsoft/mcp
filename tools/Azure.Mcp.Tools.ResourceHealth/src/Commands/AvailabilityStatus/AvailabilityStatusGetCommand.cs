@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,9 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             // If resourceId is provided, get single resource status
             if (!string.IsNullOrEmpty(options.ResourceId))
             {
+                // Tag before the call so unsupported types (422) are captured too.
+                ResourceHealthTelemetryTags.AddResourceTypeTag(context.Activity, options.ResourceId);
+
                 var status = await _resourceHealthService.GetAvailabilityStatusAsync(
                     options.ResourceId,
                     cancellationToken);
