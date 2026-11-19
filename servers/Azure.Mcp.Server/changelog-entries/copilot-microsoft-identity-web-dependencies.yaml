@@ -1,0 +1,4 @@
+changes:
+  - section: "Other Changes"
+    subsection: "Dependency Updates"
+    description: "Updated Microsoft.Identity.Web and Microsoft.Identity.Web.Azure to version 4.15.0 and Microsoft.Identity.Abstractions to version 12.7.0."
