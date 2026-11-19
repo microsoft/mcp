@@ -34,7 +34,7 @@ internal static class StructuredArtifactMarkdownRenderer
             && TryRenderDataGrid(data, out RenderedMarkdown grid))
         {
             return new AgentArtifact(
-                grid.FileName,
+                ResolveMarkdownFileName(artifactName, grid.FileName),
                 description,
                 "text/markdown",
                 grid.Content,
@@ -46,7 +46,7 @@ internal static class StructuredArtifactMarkdownRenderer
             && TryRenderResiliencyAgent(data, out RenderedMarkdown resiliency))
         {
             return new AgentArtifact(
-                resiliency.FileName,
+                ResolveMarkdownFileName(artifactName, resiliency.FileName),
                 description,
                 "text/markdown",
                 resiliency.Content,
@@ -490,9 +490,13 @@ internal static class StructuredArtifactMarkdownRenderer
             .Replace("\n", " ", StringComparison.Ordinal);
 
     private static string EscapeLinkLabel(string value) =>
-        EscapeTableCell(value)
-            .Replace("[", "\\[", StringComparison.Ordinal)
-            .Replace("]", "\\]", StringComparison.Ordinal);
+        EscapeTableCell(value);
+
+    private static string ResolveMarkdownFileName(string artifactName, string fallbackName)
+    {
+        string candidate = string.IsNullOrWhiteSpace(artifactName) ? fallbackName : artifactName.Trim();
+        return Path.HasExtension(candidate) ? candidate : candidate + ".md";
+    }
 
     private static string? ReadString(JsonElement element, string propertyName) =>
         element.ValueKind == JsonValueKind.Object

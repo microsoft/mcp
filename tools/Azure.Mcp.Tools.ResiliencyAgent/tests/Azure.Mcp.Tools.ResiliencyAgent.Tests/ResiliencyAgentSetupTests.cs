@@ -58,12 +58,13 @@ public sealed class ResiliencyAgentSetupTests
         AssertCommand(area, "terraform", "review", "existing Terraform");
         AssertCommand(area, "goals", "get", "goal-assignment state");
         AssertCommand(area, "goals", "manage", "assign a goal");
-        AssertCommand(area, "usage-plan", "get", "list or find plans");
-        AssertCommand(area, "usage-plan", "manage", "create a Standard");
-        AssertCommand(area, "service-group", "get", "ordinary Azure Service Group inspection");
-        AssertCommand(area, "service-group", "manage", "create a root or nested");
+        AssertCommand(area, "usageplan", "get", "list or find plans");
+        AssertCommand(area, "usageplan", "manage", "create a Standard");
+        AssertCommand(area, "servicegroup", "get", "ordinary Azure Service Group inspection");
+        AssertCommand(area, "servicegroup", "manage", "create a root or nested");
 
         Assert.DoesNotContain(area.SubGroup, group => group.Name is "zonal" or "conversation");
+        Assert.DoesNotContain(area.SubGroup, group => group.Name.Contains('-', StringComparison.Ordinal));
         Assert.NotNull(serviceProvider.GetRequiredService<GuidanceGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<FileAttachCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<ArchitectureAssessCommand>());
@@ -93,12 +94,14 @@ public sealed class ResiliencyAgentSetupTests
         Assert.False(area.SubGroup.Single(group => group.Name == "goals").Commands["get"].Command.Metadata.Idempotent);
         Assert.False(area.SubGroup.Single(group => group.Name == "goals").Commands["manage"].Command.Metadata.ReadOnly);
         Assert.True(area.SubGroup.Single(group => group.Name == "goals").Commands["manage"].Command.Metadata.Destructive);
-        Assert.False(area.SubGroup.Single(group => group.Name == "usage-plan").Commands["get"].Command.Metadata.ReadOnly);
-        Assert.False(area.SubGroup.Single(group => group.Name == "usage-plan").Commands["get"].Command.Metadata.Idempotent);
-        Assert.False(area.SubGroup.Single(group => group.Name == "usage-plan").Commands["manage"].Command.Metadata.ReadOnly);
-        Assert.False(area.SubGroup.Single(group => group.Name == "service-group").Commands["get"].Command.Metadata.ReadOnly);
-        Assert.False(area.SubGroup.Single(group => group.Name == "service-group").Commands["get"].Command.Metadata.Idempotent);
-        Assert.False(area.SubGroup.Single(group => group.Name == "service-group").Commands["manage"].Command.Metadata.ReadOnly);
+        Assert.False(area.SubGroup.Single(group => group.Name == "usageplan").Commands["get"].Command.Metadata.ReadOnly);
+        Assert.False(area.SubGroup.Single(group => group.Name == "usageplan").Commands["get"].Command.Metadata.Idempotent);
+        Assert.False(area.SubGroup.Single(group => group.Name == "usageplan").Commands["manage"].Command.Metadata.ReadOnly);
+        Assert.True(area.SubGroup.Single(group => group.Name == "usageplan").Commands["manage"].Command.Metadata.Destructive);
+        Assert.False(area.SubGroup.Single(group => group.Name == "servicegroup").Commands["get"].Command.Metadata.ReadOnly);
+        Assert.False(area.SubGroup.Single(group => group.Name == "servicegroup").Commands["get"].Command.Metadata.Idempotent);
+        Assert.False(area.SubGroup.Single(group => group.Name == "servicegroup").Commands["manage"].Command.Metadata.ReadOnly);
+        Assert.True(area.SubGroup.Single(group => group.Name == "servicegroup").Commands["manage"].Command.Metadata.Destructive);
     }
 
     [Fact]

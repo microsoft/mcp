@@ -50,7 +50,7 @@ public sealed class StructuredArtifactMarkdownRendererTests
 
         AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
 
-        Assert.Equal("ServiceGroupGoalStatus.md", artifact.Name);
+        Assert.Equal("Service Group Goal Status.md", artifact.Name);
         Assert.Equal("goals", artifact.Family);
         Assert.Equal("text/markdown", artifact.MimeType);
         Assert.Contains("# Service Group goal status", artifact.Content, StringComparison.Ordinal);
@@ -60,6 +60,40 @@ public sealed class StructuredArtifactMarkdownRendererTests
             artifact.Content,
             StringComparison.Ordinal);
         Assert.Contains("Warning: Not assigned", artifact.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_UsesBackendNameAndEscapesLinkLabelOnce()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Goal Status West",
+              "metadata": { "type": "datagrid" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "columns": [
+                    { "id": "name", "header": "Service Group", "type": "deepLink" },
+                    { "id": "goalAssignedStatus", "header": "Goal Status", "type": "string" }
+                  ],
+                  "data": [{
+                    "name": {
+                      "label": "Group[Primary]",
+                      "deepLink": "#view/Microsoft_Azure_Resources/ServiceGroup.MenuView/~/goalsAndRecommendations/serviceGroupId/GroupPrimary"
+                    },
+                    "goalAssignedStatus": "Assigned"
+                  }]
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("Goal Status West.md", artifact.Name);
+        Assert.Contains("[Group\\[Primary\\]](", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("[Group\\\\[Primary\\\\]](", artifact.Content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -98,7 +132,7 @@ public sealed class StructuredArtifactMarkdownRendererTests
 
         AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
 
-        Assert.Equal("GoalResourceExemptionStatus.md", artifact.Name);
+        Assert.Equal("Goal Resource Exemption Status.md", artifact.Name);
         Assert.Equal("goals", artifact.Family);
         Assert.Contains("# Goal resource participation", artifact.Content, StringComparison.Ordinal);
         Assert.Contains("**Resources:** 1", artifact.Content, StringComparison.Ordinal);
@@ -146,7 +180,7 @@ public sealed class StructuredArtifactMarkdownRendererTests
 
         AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
 
-        Assert.Equal("ServiceGroupDetails.md", artifact.Name);
+        Assert.Equal("Members of ContosoAppFleetSG.md", artifact.Name);
         Assert.Equal("service-groups", artifact.Family);
         Assert.Contains("# Service Group details", artifact.Content, StringComparison.Ordinal);
         Assert.Contains("ContosoAppFleetSG", artifact.Content, StringComparison.Ordinal);
@@ -193,7 +227,7 @@ public sealed class StructuredArtifactMarkdownRendererTests
 
         AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
 
-        Assert.Equal("ResourceCriteriaResolution.md", artifact.Name);
+        Assert.Equal("Resource criteria resolution.md", artifact.Name);
         Assert.Equal("resources", artifact.Family);
         Assert.Contains("# Resource criteria resolution", artifact.Content, StringComparison.Ordinal);
         Assert.Contains("**Total resources:** 2", artifact.Content, StringComparison.Ordinal);

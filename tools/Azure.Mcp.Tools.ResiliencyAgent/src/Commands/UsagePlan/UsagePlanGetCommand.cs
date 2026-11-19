@@ -13,16 +13,17 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
     Name = "get",
     Title = "Inspect Azure resiliency Usage Plans and enrollments",
     Description = """
-        Use this inspection command only when the user explicitly asks about Azure Resilience
-        Management Usage Plans or Service Group enrollment. It can list or find plans, inspect the
-        observed plan type and status, check one Service Group's enrollment, and find eligible
-        Standard plans for attachment. Include exact subscription, resource group, plan name, Service
-        Group, or other filters in request.
+        Use this agent-backed conversational inspection command when the user asks about Azure
+        Resilience Management Usage Plans or Service Group enrollment. It can discover, list, or find
+        plans, inspect the observed plan type and status, check one Service Group's enrollment, and
+        find eligible Standard plans for attachment. It supports natural-language questions,
+        missing-filter clarification, and related multi-turn conversation. Include exact
+        subscription, resource group, plan name, Service Group, or other known filters in request.
         Standard is the only supported plan type for creation and attachment. Existing Basic records
         may be reported factually as retired and unsupported, but must never be offered as attachment
         candidates. Goals, recommendations, and zonal-resiliency insights do not require a Usage Plan.
         Continue related turns with conversationId.
-        Do not use this command to create or attach a plan; use resiliencyagent_usage-plan_manage.
+        Do not use this command to create or attach a plan; use resiliencyagent_usageplan_manage.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = false,

@@ -13,15 +13,17 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
     Name = "manage",
     Title = "Manage an Azure Service Group zonal-resiliency goal",
     Description = """
-        Use this command for supported mutations on one Azure Service Group's zonal-resiliency goal:
-        assign a goal, optionally assign it with selected Availability or Latency SLIs, delete an
-        assignment, attach SLIs after assignment succeeds, include resources, exclude resources with
-        an approved exclusion reason, or refresh goal resources. Include the exact Service Group name
-        or ID and the user's requested operation in request.
-        The backend owns validation and confirmation. Show every elicitation question verbatim and
-        never approve a mutation for the user. Goal mutations across multiple Service Groups are not
-        supported. Only zonal-resiliency goals are supported. Continue related turns with
-        conversationId and present any returned authoritative Markdown artifacts.
+        Use this agent-backed guided workflow when the user asks in natural language to manage one
+        Azure Service Group's zonal-resiliency goal: assign a goal, optionally assign it with selected
+        Availability or Latency SLIs, delete an assignment, attach SLIs after assignment succeeds,
+        include resources, exclude resources with an approved custom-solution reason, or refresh goal
+        resources. Include the exact Service Group name or ID and the user's requested operation in
+        request when known.
+        The backend collects missing values, validates intent, and owns confirmation. Show every
+        elicitation question verbatim and never approve a mutation for the user. Goal mutations
+        across multiple Service Groups are not supported. Only zonal-resiliency goals are supported.
+        Continue related turns with conversationId and present any returned authoritative Markdown
+        artifacts.
         Do not use this command for read-only inspection, Usage Plans, deprecated goal templates, or
         discovery workflows.
         """,

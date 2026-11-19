@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
         Do not use this command for goal assignment or Service Group discovery.
         """,
     OperationPlane = ToolOperationPlane.Control,
-    Destructive = false,
+    Destructive = true,
     Idempotent = false,
     OpenWorld = true,
     ReadOnly = false,

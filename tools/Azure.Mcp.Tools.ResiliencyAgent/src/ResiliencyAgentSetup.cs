@@ -122,10 +122,10 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             "goals",
             "Inspect or manage zonal-resiliency goals and goal-resource participation for Azure Service Groups.");
         var usagePlan = new CommandGroup(
-            "usage-plan",
+            "usageplan",
             "Inspect, create, or attach Azure Resilience Management Standard Usage Plans.");
         var serviceGroup = new CommandGroup(
-            "service-group",
+            "servicegroup",
             "Inspect, create, or update ordinary Azure Service Groups without automatic application discovery.");
 
         guidance.AddCommand<GuidanceGetCommand>(serviceProvider);

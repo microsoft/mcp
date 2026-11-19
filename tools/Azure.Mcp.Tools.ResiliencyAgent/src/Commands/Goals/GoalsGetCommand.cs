@@ -13,12 +13,14 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
     Name = "get",
     Title = "Inspect Azure resiliency goals and goal-resource participation",
     Description = """
-        Use this inspection command for Azure Service Group zonal-resiliency goal information. It can
-        get one Service Group's goal-assignment state or object, show assignment status across all
-        visible Service Groups, inspect goal-resource inclusion and exclusion status, list attached
-        or available Availability and Latency SLIs, and answer supported goal-data queries. Include
-        the exact Service Group name or ID and requested filters in request. Cross-Service Group
-        status reads are supported; mutations across multiple Service Groups are not.
+        Use this agent-backed conversational inspection command to discover and summarize Azure
+        Service Group zonal-resiliency goals. It can get one Service Group's goal-assignment state or
+        object, show assignment status across all visible Service Groups, inspect goal-resource
+        inclusion and exclusion status, list attached or available Availability and Latency SLIs,
+        and answer supported goal-data queries. It supports broad natural-language questions,
+        aggregation, clarification, and related multi-turn conversation. Include the exact Service
+        Group name or ID and requested filters in request. Cross-Service Group status reads are
+        supported; mutations across multiple Service Groups are not.
         Returned DataGrid and Resiliency Agent data artifacts are rendered as authoritative Markdown
         files with absolute Azure Portal links. Present the attached Markdown artifact and summarize
         it without fabricating rows. Continue related turns with conversationId.

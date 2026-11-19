@@ -275,6 +275,16 @@ public sealed class ArtifactWriter : IArtifactWriter
             return null;
         }
 
+        var compactName = new StringBuilder(candidate.Length);
+        foreach (char character in candidate)
+        {
+            if (!char.IsWhiteSpace(character) && !char.IsControl(character))
+            {
+                compactName.Append(character);
+            }
+        }
+
+        candidate = compactName.ToString();
         foreach (char invalid in Path.GetInvalidFileNameChars())
         {
             candidate = candidate.Replace(invalid, '_');

@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.ServiceGroup;
         discoveries, arrangements, or multi-Service-Group discovery-plan execution.
         """,
     OperationPlane = ToolOperationPlane.Control,
-    Destructive = false,
+    Destructive = true,
     Idempotent = false,
     OpenWorld = true,
     ReadOnly = false,

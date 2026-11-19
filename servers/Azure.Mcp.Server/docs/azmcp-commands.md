@@ -5270,22 +5270,22 @@ azmcp resiliencyagent goals manage --request <request> \
 
 # Inspect Standard Usage Plans and Service Group enrollment
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp resiliencyagent usage-plan get --request <request> \
+azmcp resiliencyagent usageplan get --request <request> \
                                       [--conversation-id <conversation-id>]
 
 # Create or attach a Standard Usage Plan
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp resiliencyagent usage-plan manage --request <request> \
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent usageplan manage --request <request> \
                                          [--conversation-id <conversation-id>]
 
 # Inspect Service Group metadata, criticality, hierarchy, and members
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp resiliencyagent service-group get --request <request> \
+azmcp resiliencyagent servicegroup get --request <request> \
                                          [--conversation-id <conversation-id>]
 
 # Create or update an ordinary Azure Service Group
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
-azmcp resiliencyagent service-group manage --request <request> \
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent servicegroup manage --request <request> \
                                             [--conversation-id <conversation-id>]
 ```
 

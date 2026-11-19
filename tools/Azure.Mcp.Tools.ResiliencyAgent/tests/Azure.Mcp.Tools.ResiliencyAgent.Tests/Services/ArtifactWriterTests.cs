@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-// cspell:ignore Résilience
+// cspell:ignore Bname reportname Résilience
 
 using System.Text;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
@@ -139,18 +139,43 @@ public sealed class ArtifactWriterTests : IDisposable
         "Zone-Resilient Posture Report",
         "text/markdown",
         null,
-        "Zone-Resilient Posture Report.md")]
+        "Zone-ResilientPostureReport.md")]
     [InlineData(
         "  report name.md  ",
         "text/markdown",
         null,
-        "report name.md")]
+        "reportname.md")]
+    [InlineData(
+        "report\tname.md",
+        "text/markdown",
+        null,
+        "reportname.md")]
+    [InlineData(
+        "report\nname.md",
+        "text/markdown",
+        null,
+        "reportname.md")]
+    [InlineData(
+        "report\u2028name.md",
+        "text/markdown",
+        null,
+        "reportname.md")]
+    [InlineData(
+        "report\u2029name.md",
+        "text/markdown",
+        null,
+        "reportname.md")]
+    [InlineData(
+        "report\u001Bname.md",
+        "text/markdown",
+        null,
+        "reportname.md")]
     [InlineData(
         "already-safe_name.v1.md",
         "text/markdown",
         null,
         "already-safe_name.v1.md")]
-    public void Write_PreservesSafeWhitespaceWithoutChangingContent(
+    public void Write_RemovesWhitespaceWithoutChangingContent(
         string name,
         string mimeType,
         string? format,
@@ -169,27 +194,15 @@ public sealed class ArtifactWriterTests : IDisposable
     }
 
     [Fact]
-    public void Write_PreservesDistinctBackendNamesThatDifferByWhitespace()
+    public void Write_RejectsNamesThatCollideAfterWhitespaceRemoval()
     {
         var first = new AgentArtifact("Zone Report.md", null, "text/markdown", "first", null);
         var second = new AgentArtifact("Zone  Report.md", null, "text/markdown", "second", null);
 
         var written = _writer.Write([first, second], "conv-1");
 
-        Assert.Collection(
-            written,
-            result =>
-            {
-                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("Zone Report.md", artifact.Name);
-                Assert.Equal("first", File.ReadAllText(artifact.Path));
-            },
-            result =>
-            {
-                WrittenArtifact artifact = Assert.IsType<WrittenArtifact>(result.WorkspaceArtifact);
-                Assert.Equal("Zone  Report.md", artifact.Name);
-                Assert.Equal("second", File.ReadAllText(artifact.Path));
-            });
+        Assert.All(written, result => Assert.Null(result.WorkspaceArtifact));
+        Assert.False(Directory.Exists(Path.Combine(_workingDirectory, "azure-resiliency")));
     }
 
     [Fact]
