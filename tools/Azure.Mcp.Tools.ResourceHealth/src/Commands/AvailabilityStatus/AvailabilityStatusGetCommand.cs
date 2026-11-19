@@ -86,7 +86,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         ResourceHealthUnprocessableEntityException unprocessableEx =>
-            $"Azure Resource Health could not process availability status for resource type '{unprocessableEx.ResourceType}'. Error code: {unprocessableEx.ErrorCode ?? "UnprocessableEntity"}. Details: {unprocessableEx.ErrorDetails ?? unprocessableEx.Message}",
+            $"Azure Resource Health could not retrieve availability status for resource type '{unprocessableEx.ResourceType}'. Azure error code: {unprocessableEx.ErrorCode ?? "UnprocessableEntity"}. Details: {unprocessableEx.ErrorDetails ?? unprocessableEx.Message}{Environment.NewLine}Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types",
         FormatException =>
             "Invalid Azure resource ID. Provide a resource ID in the format /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/<provider>/<type>/<name>",
         _ => base.GetErrorMessage(ex)
