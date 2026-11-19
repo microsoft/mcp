@@ -5281,6 +5281,8 @@ azmcp group resource list --subscription <subscription> --resource-group <resour
 
 ### Azure Resource Health Operations
 
+When Azure Resource Health returns `UnsupportedResourceType` for a specific resource, the availability status command succeeds with an empty `statuses` list and an explanatory `message`, including a link to supported resource types and health checks. Other service errors and malformed resource IDs remain errors.
+
 ```bash
 # Get availability status for a specific resource or list all resources (dual-mode)
 # With --resourceId: Get availability status for a specific resource

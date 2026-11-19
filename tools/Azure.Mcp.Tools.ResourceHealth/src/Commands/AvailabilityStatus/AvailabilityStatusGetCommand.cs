@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
@@ -42,7 +43,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
             // If resourceId is provided, get single resource status
             if (!string.IsNullOrEmpty(options.ResourceId))
             {
-                // Tag before the call so unsupported types (422) are captured too.
+                // Tag before the call so unsupported types are captured too.
                 ResourceHealthTelemetryTags.AddResourceTypeTag(context.Activity, options.ResourceId);
 
                 var status = await _resourceHealthService.GetAvailabilityStatusAsync(
@@ -63,6 +64,17 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
             context.Response.Results = ResponseResult.Create(
                 new(statuses),
+                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+        }
+        catch (ResourceHealthUnprocessableEntityException ex) when (
+            string.Equals(ex.ErrorCode, "UnsupportedResourceType", StringComparison.OrdinalIgnoreCase))
+        {
+            var message = $"Resource type '{ex.ResourceType}' is not supported by Azure Resource Health. Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types";
+            _logger.LogInformation("Resource type {ResourceType} is not supported by Azure Resource Health", ex.ResourceType);
+            context.Response.Status = HttpStatusCode.OK;
+            context.Response.Message = message;
+            context.Response.Results = ResponseResult.Create(
+                new([], message),
                 ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)
@@ -99,5 +111,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record AvailabilityStatusGetCommandResult(List<Models.AvailabilityStatus> Statuses);
+    public sealed record AvailabilityStatusGetCommandResult(
+        List<Models.AvailabilityStatus> Statuses,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Message = null);
 }

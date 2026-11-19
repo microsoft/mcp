@@ -81,15 +81,36 @@ public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBas
         Assert.Equal(expectedError, response.Message);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ReturnsHelpfulError_WhenResourceHealthReturnsUnprocessableEntity()
+    [Theory]
+    [InlineData("UnsupportedResourceType")]
+    [InlineData("unsupportedResourceType")]
+    public async Task ExecuteAsync_ReturnsSuccess_WhenResourceTypeIsUnsupported(string errorCode)
+    {
+        var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet";
+        var resourceType = "Microsoft.Network/virtualNetworks";
+        var expectedMessage = $"Resource type '{resourceType}' is not supported by Azure Resource Health. Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types";
+
+        Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, "Resource type is not supported."));
+
+        var response = await ExecuteCommandAsync("--resourceId", resourceId, "--subscription", "12345678-1234-1234-1234-123456789012");
+
+        var result = ValidateAndDeserializeResponse(response, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+        Assert.Empty(result.Statuses);
+        Assert.Equal(expectedMessage, response.Message);
+        Assert.Equal(expectedMessage, result.Message);
+    }
+
+    [Theory]
+    [InlineData("OtherError")]
+    [InlineData(null)]
+    public async Task ExecuteAsync_ReturnsHelpfulError_WhenResourceHealthReturnsOtherUnprocessableEntity(string? errorCode)
     {
         var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet";
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var resourceType = "Microsoft.Network/virtualNetworks";
-        var errorCode = "UnsupportedResourceType";
-        var errorMessage = "Resource type is not supported.";
-        var expectedError = $"Azure Resource Health could not retrieve availability status for resource type '{resourceType}'. Azure error code: {errorCode}. Details: {errorMessage} Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
+        var errorMessage = "The request could not be processed.";
+        var expectedError = $"Azure Resource Health could not retrieve availability status for resource type '{resourceType}'. Azure error code: {errorCode ?? "UnprocessableEntity"}. Details: {errorMessage} Supported resource types and health checks: https://learn.microsoft.com/azure/service-health/resource-health-checks-resource-types. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
         Service.GetAvailabilityStatusAsync(resourceId, Arg.Any<CancellationToken>())
             .ThrowsAsync(new ResourceHealthUnprocessableEntityException(resourceId, resourceType, errorCode, errorMessage));
@@ -239,7 +260,7 @@ public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBas
     [Theory]
     [InlineData("/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet", "Microsoft.Network/virtualNetworks")]
     [InlineData("/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Sql/servers/srv/databases/db", "Microsoft.Sql/servers/databases")]
-    public async Task ExecuteAsync_TagsResourceType_WhenResourceHealthReturnsUnprocessableEntity(string resourceId, string expectedResourceType)
+    public async Task ExecuteAsync_TagsResourceType_WhenResourceTypeIsUnsupported(string resourceId, string expectedResourceType)
     {
         using var listener = CreateListener();
         using var source = new ActivitySource("test");
@@ -254,7 +275,8 @@ public class AvailabilityStatusGetCommandTests : SubscriptionCommandUnitTestsBas
             CommandDefinition.Parse(["--resourceId", resourceId, "--subscription", "12345678-1234-1234-1234-123456789012"]),
             TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotEqual(ActivityStatusCode.Error, activity.Status);
         Assert.Equal(expectedResourceType, activity.GetTagItem(ResourceHealthTelemetryTags.ResourceType));
     }
 

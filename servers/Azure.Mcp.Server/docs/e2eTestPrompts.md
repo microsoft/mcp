@@ -1508,6 +1508,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | resourcehealth_availability-status_get | Get the availability status for resource <resource_name> | none |
+| resourcehealth_availability-status_get | Get availability status for resource <unsupported_resource_id> and explain whether Azure Resource Health supports its resource type | none |
 | resourcehealth_availability-status_get | What is the Azure Resource Health availability status of the storage account <storage_account_name>? | none |
 | resourcehealth_availability-status_get | What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>? | none |
 | resourcehealth_availability-status_get | Get Azure Resource Health availability status for all resources in my subscription | none |
