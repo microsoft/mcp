@@ -12,7 +12,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// POC: creates an Azure Migrate machine assessment from a collector ZIP through the external assessment create API, waits for its
+/// POC: creates an Azure Catalyst machine assessment from a collector ZIP through the external assessment create API, waits for its
 /// operation to complete (assessment operation status API) and then starts the HA skill on the Discovery Service, all within one tool
 /// call while the caller's token is valid. On success the operation returns a temporary read-only URL of the assessment output. The
 /// HA session is created and invoked, and its input is a mini zip (see <see cref="HaInputPackage"/>) holding the read SAS URLs of the
@@ -24,8 +24,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 [CommandMetadata(
     Id = "4a38afca-7663-42f4-bb6d-943b745bb8cf",
     Name = "create",
-    Title = "Create Azure Migrate Assessment",
-    Description = "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete " +
+    Title = "Create Azure Catalyst Assessment",
+    Description = "Creates an Azure Catalyst assessment for the signed-in user from their offline collector ZIP, waits for it to complete " +
         "(up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires " +
         "'assessment-name', 'target-region' (an Azure region name such as 'eastus'), 'currency' (a three-letter code such as 'USD') and " +
         "'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent " +
@@ -38,7 +38,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
-    ReadOnly = false,
+    ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
 public sealed partial class CreateAssessmentCommand(

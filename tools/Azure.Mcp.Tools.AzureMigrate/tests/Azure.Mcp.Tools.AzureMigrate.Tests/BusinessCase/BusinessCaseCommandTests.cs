@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
+using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,6 +27,7 @@ public class BusinessCaseCommandTests
     private readonly IAssessmentOperationStatusClient _asStatus = Substitute.For<IAssessmentOperationStatusClient>();
     private readonly IBusinessCaseEvaluationClient _evaluation = Substitute.For<IBusinessCaseEvaluationClient>();
     private readonly IHaSessionClient _ha = Substitute.For<IHaSessionClient>();
+    private readonly IInventoryExportClient _export = Substitute.For<IInventoryExportClient>();
 
     [Fact]
     public async Task Create_StartsAssessmentWithBusinessCaseDefaultsAndReturnsNextStatusParameters()
@@ -43,10 +45,66 @@ public class BusinessCaseCommandTests
         Assert.Equal(10, result.RetryAfterSeconds);
         Assert.Equal(_asOperationId.ToString("D"), result.NextStatusParameters!.AsOperationId);
         Assert.Equal(new double[] { 0, 20, 50, 100 }, result.NextStatusParameters.MigrationCompletionByYear);
+        Assert.Contains("scaling factor 1.3; storage scaling factor 1; savings option RI3Year", result.Instructions);
+        Assert.Contains("the inventory SAS URL the user gave in the chat", result.Instructions);
+        Assert.Contains("migration completion by year 0, 20, 50, 100%", result.Instructions);
         await _create.Received(1).CreateAssessmentAsync(
             Arg.Is<AssessmentRequest>(r => r.Currency == "USD" && r.TargetRegion == "eastus" && r.Settings!.ScalingFactor == 1.3
                 && r.Settings.SavingsOption == "RI3Year" && r.Settings.AzureHybridBenefit == "Yes" && r.Settings.LinuxAzureHybridBenefit == "Yes"),
             "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_PassesUserSettingsToTheAssessment()
+    {
+        _create.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new AssessmentOperation(202, _asOperationId, "Running", null, 10, null, null));
+
+        var result = await CreateCommand().RunAsync(
+            new()
+            {
+                AssessmentName = "bc-1", TargetRegion = "eastus", InventorySasUri = SasUri, DiscountPercentage = 10,
+                EnvironmentType = "devtest", DiskTypes = ["Premium"], UptimeHoursPerDay = 12,
+            },
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        await _create.Received(1).CreateAssessmentAsync(
+            Arg.Is<AssessmentRequest>(r => r.Settings!.DiscountPercentage == 10 && r.Settings.EnvironmentType == "DevTest"
+                && r.Settings.DiskTypes!.SequenceEqual(new[] { "Premium" }) && r.Settings.UptimeHoursPerDay == 12
+                && r.Settings.ScalingFactor == 1.3 && r.Settings.SavingsOption == "RI3Year"),
+            "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_WithSessionIdAndNoSas_ExportsTheInventoryAndUsesItsLink()
+    {
+        _export.ExportOfflineAsync("inv-1", "token", Arg.Any<CancellationToken>()).Returns(new InventoryExportResult(200, SasUri, null));
+        _create.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new AssessmentOperation(202, _asOperationId, "Running", null, 10, null, null));
+
+        var result = await CreateCommand().RunAsync(
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1" }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Equal("Running", result.Status);
+        Assert.Equal(SasUri, result.NextStatusParameters!.InventorySasUri);
+        Assert.Contains("a fresh export of the user's inventory session 'inv-1'", result.Instructions);
+        await _create.Received(1).CreateAssessmentAsync(Arg.Is<AssessmentRequest>(r => r.InventorySasUri == SasUri), "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_ExportFails_ReturnsFailedWithoutCallingTheAssessment()
+    {
+        _export.ExportOfflineAsync("inv-1", "token", Arg.Any<CancellationToken>()).Returns(new InventoryExportResult(400, null, "SessionState"));
+
+        var result = await CreateCommand().RunAsync(
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1" }, TestContext.Current.CancellationToken);
+
+        Assert.Equal("Failed", result.Status);
+        Assert.Contains("SessionState", result.ErrorMessage);
+        Assert.Equal("inventoryExport", result.FailedStep);
+        await _create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
     }
 
     [Theory]
@@ -145,6 +203,8 @@ public class BusinessCaseCommandTests
         Guid dsOperationId = Guid.NewGuid();
         _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
             new HaOperationStatus(httpStatus, dsStatus, "{\"savings\":1}", null, null, null, null));
+        _ha.ExportAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new InventoryExportResult(200, "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x", null));
 
         var result = await StatusCommand().RunAsync(
             StatusOptions(o => { o.DsSessionId = "bc-0123456789abcdef"; o.DsOperationId = dsOperationId.ToString(); }),
@@ -153,9 +213,70 @@ public class BusinessCaseCommandTests
         Assert.Equal(expectedStatus, result.Status);
         Assert.Equal(expectedCompleted, result.IsCompleted);
         Assert.Equal("HaSkill", result.Stage);
-        Assert.Equal(expectedStatus == "Succeeded" ? "{\"savings\":1}" : null, result.Result);
+        Assert.Equal(expectedStatus == "Succeeded" ? "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x" : null, result.Result);
         await _ha.Received(1).GetOperationStatusAsync("token", "bc-0123456789abcdef", dsOperationId, Arg.Any<CancellationToken>());
         await _asStatus.DidNotReceiveWithAnyArgs().GetOperationAsync(default, default, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Status_Succeeded_ReturnsDownloadedReportMarkdown()
+    {
+        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaOperationStatus(200, "Succeeded", null, null, null, null, null));
+        _ha.ExportAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, uri, null));
+        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns("# ROI\n| a | b |");
+
+        var result = await StatusCommand().RunAsync(
+            StatusOptions(o => { o.DsSessionId = "bc-0123456789abcdef"; o.DsOperationId = Guid.NewGuid().ToString(); }),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal(uri, result.Result);
+        Assert.Equal("# ROI\n| a | b |", result.Report);
+        Assert.Contains("call the business case report tool once", result.Instructions);
+    }
+
+    [Fact]
+    public async Task Report_DownloadsReportForTheCard()
+    {
+        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns("# ROI");
+
+        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(
+            new() { AssessmentName = "bc-1", ReportUri = uri }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal("# ROI", result.Report);
+        Assert.Equal(uri, result.Result);
+        Assert.Equal("bc-1", result.AssessmentName);
+    }
+
+    [Fact]
+    public async Task Report_DownloadFails_ReturnsLinkOnly()
+    {
+        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns((string?)null);
+
+        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(new() { ReportUri = uri }, TestContext.Current.CancellationToken);
+
+        Assert.Equal("Failed", result.Status);
+        Assert.Null(result.Report);
+        Assert.Equal(uri, result.Result);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("http://acct.blob.core.windows.net/c/ROI.md")]
+    [InlineData("https://169.254.169.254/metadata")]
+    [InlineData("https://evil.example.com/acct.blob.core.windows.net")]
+    public async Task Report_RejectsNonBlobLinks(string? uri)
+    {
+        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(new() { ReportUri = uri }, TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        await _ha.DidNotReceiveWithAnyArgs().DownloadReportAsync(default!, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -257,8 +378,15 @@ public class BusinessCaseCommandTests
 
         using ZipArchive archive = new(new MemoryStream(zip));
         using JsonDocument manifest = JsonDocument.Parse(archive.Entries.Single().Open());
-        Assert.Equal(TcoUri, manifest.RootElement.GetProperty("businessCaseSasUri").GetString());
-        Assert.Equal(HaUri, manifest.RootElement.GetProperty("haSasUri").GetString());
+        JsonElement root = manifest.RootElement;
+        Assert.Equal("bc-dataplane-links/1", root.GetProperty("schema").GetString());
+        Assert.Equal(SasUri, root.GetProperty("inventory").GetProperty("uri").GetString());
+        JsonElement assessment = root.GetProperty("assessments").EnumerateArray().Single();
+        Assert.Equal("assessedMachines", assessment.GetProperty("type").GetString());
+        Assert.Equal(OutputUri, assessment.GetProperty("uri").GetString());
+        Assert.Equal(TcoUri, root.GetProperty("onPremTco").GetProperty("manifestUri").GetString());
+        Assert.Equal(HaUri, root.GetProperty("ha").GetProperty("manifestUri").GetString());
+        Assert.False(root.TryGetProperty("inventorySasUri", out _));
     }
 
     private void AssessmentStatus(AssessmentOperation operation) =>
@@ -289,7 +417,7 @@ public class BusinessCaseCommandTests
         return new HttpContextAccessor { HttpContext = context };
     }
 
-    private CreateBusinessCaseCommand CreateCommand() => new(_create, Accessor());
+    private CreateBusinessCaseCommand CreateCommand() => new(_create, _export, Accessor());
 
     private GetBusinessCaseStatusCommand StatusCommand() => new(_asStatus, _evaluation, _ha, Accessor());
 }

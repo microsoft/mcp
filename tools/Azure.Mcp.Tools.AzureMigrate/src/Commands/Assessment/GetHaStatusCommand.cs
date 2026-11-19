@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 [CommandMetadata(
     Id = "43da1c44-2cef-46e3-872d-49e93b47bd4b",
     Name = "hastatus",
-    Title = "Get Azure Migrate HA Assessment Status",
+    Title = "Get Azure Catalyst HA Assessment Status",
     Description = "Gets the current status of the HA assessment started by the assessment create tool. Call this once when the user " +
         "asks about the progress or result of their HA assessment; do not loop or wait. Requires 'ha-session-id' and 'ha-operation-id' " +
         "from the latest assessment create result in the conversation (ask the user to create an assessment if there is none). Returns " +
@@ -44,7 +44,7 @@ public sealed class GetHaStatusCommand(ILogger<GetHaStatusCommand> logger, IHttp
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GetHaStatusOptions options, CancellationToken cancellationToken)
     {
-        GetInventoryStatusCommand.GetInventoryStatusCommandResult result = await RunAsync(DsBackdoorClient.BaseUrl, options, cancellationToken);
+        GetInventoryStatusCommand.GetInventoryStatusCommandResult result = await RunAsync(DsHaSessionClient.BaseUrl, options, cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.GetInventoryStatusCommandResult);

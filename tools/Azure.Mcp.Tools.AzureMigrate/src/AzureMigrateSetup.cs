@@ -15,15 +15,15 @@ using Microsoft.Mcp.Core.Commands;
 namespace Azure.Mcp.Tools.AzureMigrate;
 
 /// <summary>
-/// Setup class for Azure Migrate toolset.
+/// Setup class for the Azure Catalyst toolset.
 /// </summary>
 public class AzureMigrateSetup : IAreaSetup
 {
     /// <inheritdoc/>
-    public string Name => "azuremigrate";
+    public string Name => "azure_catalyst";
 
     /// <inheritdoc/>
-    public string Title => "Azure Landing Zone Generation and Guidance";
+    public string Title => "Azure Catalyst";
 
     /// <inheritdoc/>
     public void ConfigureServices(IServiceCollection services)
@@ -52,7 +52,7 @@ public class AzureMigrateSetup : IAreaSetup
         // Assessment (POC): external assessment create and operation status APIs (placeholders for now).
         services.AddSingleton<IAssessmentCreateClient, AssessmentCreateClient>();
         services.AddSingleton<IAssessmentOperationStatusClient, AssessmentOperationStatusClient>();
-        // HA is mocked until the HA skill is deployed on the Discovery Service; set AZUREMIGRATE_HA_MOCK=false for real calls.
+        // The business case skill runs on the Discovery Service at AZUREMIGRATE_HA_DS_BASE_URL; set AZUREMIGRATE_HA_MOCK=true to mock it.
         services.AddSingleton<DsHaSessionClient>();
         services.AddSingleton<MockHaSessionClient>();
         services.AddSingleton<IHaSessionClient>(sp => MockHaSessionClient.IsEnabled
@@ -64,11 +64,16 @@ public class AzureMigrateSetup : IAreaSetup
 
         // Business case (POC): create starts the assessment; each status call moves the business case forward, statelessly.
         services.AddSingleton<IBusinessCaseEvaluationClient, BusinessCaseEvaluationClient>();
+        services.AddSingleton<IInventoryExportClient, InventoryExportClient>();
         services.AddSingleton<CreateBusinessCaseCommand>();
         services.AddSingleton<GetBusinessCaseStatusCommand>();
+        services.AddSingleton<ShowBusinessCaseReportCommand>();
 
         // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
+        // MCP Apps card that renders the ROI report (ROI.md) like a Markdown preview; set AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn it off.
+        // It is attached to the report tool, called once, so it isn't rendered on every status poll.
+        BusinessCaseReportWidget.Register(ShowBusinessCaseReportCommand.CommandId);
     }
 
     /// <inheritdoc/>
@@ -97,7 +102,7 @@ public class AzureMigrateSetup : IAreaSetup
 
         var inventory = new CommandGroup(
             "inventory",
-            "Azure Migrate inventory operations - Create or update a server inventory for the signed-in user from a file on the " +
+            "Azure Catalyst inventory operations - Create or update a server inventory for the signed-in user from a file on the " +
             "user's machine (the user uploads it with a returned azcopy command), get the status of an inventory operation, and get " +
             "a download link for the output of a finished inventory.");
         azureMigrate.AddSubGroup(inventory);
@@ -105,22 +110,24 @@ public class AzureMigrateSetup : IAreaSetup
         inventory.AddCommand<GetInventoryStatusCommand>(serviceProvider);
         inventory.AddCommand<ExportInventoryCommand>(serviceProvider);
 
-        var assessment = new CommandGroup(
-            "assessment",
-            "Azure Migrate assessment operations - Create an assessment for the signed-in user for a target region and currency, and " +
-            "get the status of an assessment operation or of the HA assessment started after it.");
-        azureMigrate.AddSubGroup(assessment);
-        assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
-        assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
-        assessment.AddCommand<GetHaStatusCommand>(serviceProvider);
+        // Assessment tools are hidden for now; the business case tools run the assessment themselves.
+        // var assessment = new CommandGroup(
+        //     "assessment",
+        //     "Azure Catalyst assessment operations - Create an assessment for the signed-in user for a target region and currency, and " +
+        //     "get the status of an assessment operation or of the HA assessment started after it.");
+        // azureMigrate.AddSubGroup(assessment);
+        // assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
+        // assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
+        // assessment.AddCommand<GetHaStatusCommand>(serviceProvider);
 
         var businessCase = new CommandGroup(
             "businesscase",
-            "Azure Migrate business case operations - Start a business case for the signed-in user from their offline collector ZIP, " +
-            "and check its status, which also moves it to its next stage.");
+            "Azure Catalyst business case operations - Start a business case for the signed-in user from their offline collector ZIP, " +
+            "check its status, which also moves it to its next stage, and show the ROI report of a finished business case.");
         azureMigrate.AddSubGroup(businessCase);
         businessCase.AddCommand<CreateBusinessCaseCommand>(serviceProvider);
         businessCase.AddCommand<GetBusinessCaseStatusCommand>(serviceProvider);
+        businessCase.AddCommand<ShowBusinessCaseReportCommand>(serviceProvider);
 
         return azureMigrate;
     }

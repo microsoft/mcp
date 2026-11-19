@@ -15,7 +15,20 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSessionClient
 {
     internal const string SkillTypeSettingName = "AZUREMIGRATE_HA_SKILL_TYPE";
-    private const string DefaultSkillType = "HA";
+    private const string DefaultSkillType = "BusinessCase";
+
+    /// <summary>Discovery Service that hosts the business case skill; it can differ from the inventory Discovery Service.</summary>
+    internal const string BaseUrlSettingName = "AZUREMIGRATE_HA_DS_BASE_URL";
+    private const string DefaultBaseUrl = "https://discoverysrv-pvt-stamp03.ecy.prod.migration.windowsazure.com";
+
+    internal static string BaseUrl =>
+        (Environment.GetEnvironmentVariable(BaseUrlSettingName) is { Length: > 0 } s ? s.Trim() : DefaultBaseUrl).TrimEnd('/');
+
+    /// <summary>Discovery Service export 'artifacts' value for the business case report: 'internal' is ROI.md, 'external' the migration proposal.</summary>
+    internal const string ExportArtifactsSettingName = "AZUREMIGRATE_HA_EXPORT_ARTIFACTS";
+
+    internal static string ExportArtifacts =>
+        Environment.GetEnvironmentVariable(ExportArtifactsSettingName) is { Length: > 0 } s ? s.Trim() : "internal";
 
     private static readonly HttpClient s_storageHttp = new() { Timeout = TimeSpan.FromSeconds(30) };
 
@@ -38,7 +51,7 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     public async Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken)
     {
         DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(DsBackdoorClient.BaseUrl, sessionId, operationId), token, null,
+            _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(BaseUrl, sessionId, operationId), token, null,
             Guid.NewGuid().ToString(), "get HA operation status", cancellationToken);
         return new(
             response.Status,
@@ -50,10 +63,53 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
             response.RetryAfterSeconds);
     }
 
+    /// <inheritdoc/>
+    public async Task<InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken)
+    {
+        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
+            _logger, HttpMethod.Get, DsBackdoorClient.ExportUrl(BaseUrl, sessionId, ExportArtifacts), token, null,
+            Guid.NewGuid().ToString(), "export business case report", cancellationToken);
+        if (response.Status is not (>= 200 and < 300))
+        {
+            return new(response.Status, null, response.Error);
+        }
+
+        string? uri = DsBackdoorClient.ReadValue(response.Body, "uri");
+        return string.IsNullOrWhiteSpace(uri)
+            ? new(response.Status, null, "The Discovery Service export response did not include a download URL.")
+            : new(response.Status, uri, null);
+    }
+
+    /// <summary>Largest report returned inline (characters); larger reports are only linked.</summary>
+    internal const int MaxInlineReportLength = 200_000;
+
+    /// <inheritdoc/>
+    public async Task<string?> DownloadReportAsync(string reportUri, CancellationToken cancellationToken)
+    {
+        string logUrl = reportUri.Split('?')[0];
+        try
+        {
+            using HttpResponseMessage response = await s_storageHttp.GetAsync(reportUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            _logger.LogInformation("AzureMigrate HA: download report {Url} returned {Status}.", logUrl, (int)response.StatusCode);
+            if (!response.IsSuccessStatusCode || response.Content.Headers.ContentLength > MaxInlineReportLength * 4L)
+            {
+                return null;
+            }
+
+            string report = await response.Content.ReadAsStringAsync(cancellationToken);
+            return report.Length is > 0 and <= MaxInlineReportLength ? report : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning("AzureMigrate HA: download report {Url} failed: {Error}.", logUrl, ex.Message);
+            return null;
+        }
+    }
+
     private async Task<HaSessionResult> StartCoreAsync(
         string token, HaInput input, string sessionId, bool reuseActiveSession, CancellationToken cancellationToken)
     {
-        string baseUrl = DsBackdoorClient.BaseUrl;
+        string baseUrl = BaseUrl;
         string clientRequestId = Guid.NewGuid().ToString();
         string skillType = SkillType;
 

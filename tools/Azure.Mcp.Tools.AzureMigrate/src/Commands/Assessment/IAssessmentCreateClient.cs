@@ -4,7 +4,7 @@
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 
 /// <summary>
-/// Client for the external API that starts an Azure Migrate machine assessment from a collector ZIP. Creating an assessment is
+/// Client for the external API that starts an Azure Catalyst machine assessment from a collector ZIP. Creating an assessment is
 /// asynchronous: the call returns an operation that is checked with <see cref="IAssessmentOperationStatusClient"/>.
 /// </summary>
 public interface IAssessmentCreateClient

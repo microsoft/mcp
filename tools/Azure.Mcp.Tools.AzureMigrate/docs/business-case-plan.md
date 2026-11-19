@@ -535,11 +535,14 @@ invoke rejected with 400 `SessionState` (already invoking) is reported as Runnin
 `metadata.json`:
 
 ```json
-{ "inventorySasUri": "...", "assessmentSasUri": "...",
-  "businessCaseSasUri": "<BCS result.manifestUri>", "haSasUri": "<HA result URI>" }
+{ "schema": "bc-dataplane-links/1",
+  "inventory": { "uri": "<inventory ZIP link>" },
+  "assessments": [ { "type": "assessedMachines", "uri": "<assessment output link>" } ],
+  "onPremTco": { "manifestUri": "<BCS result.manifestUri>" },
+  "ha": { "manifestUri": "<HA result.manifestUri>" } }
 ```
 
-This extends today's two-key `manifest.json` in `HaInputPackage`.
+The HA skill keeps today's two-key `manifest.json` (`inventorySasUri`, `assessmentSasUri`) in `HaInputPackage`.
 
 ## Operation status per backend
 

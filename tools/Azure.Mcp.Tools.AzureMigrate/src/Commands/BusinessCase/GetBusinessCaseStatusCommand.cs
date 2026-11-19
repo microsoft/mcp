@@ -27,19 +27,26 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 /// Each call does at most one pass with no waiting, so it finishes within the client's tool call limit.
 /// </summary>
 [CommandMetadata(
-    Id = "83765d81-da5b-4d77-8c0d-526cc20f0066",
+    Id = CommandId,
     Name = "status",
-    Title = "Get Azure Migrate Business Case Status",
-    Description = "Checks a business case started by the business case create tool and moves it to its next stage. Pass exactly the " +
-        "values in 'nextStatusParameters' of the latest business case result in the conversation, unchanged; ask the user to create a " +
-        "business case if there is none. Returns 'status' (Running, Succeeded or Failed), 'stage' and 'stageNumber' of 'totalStages', " +
-        "'isCompleted', 'nextStatusParameters' while it is running, 'result' once it succeeded, and 'instructions'. Follow " +
-        "'instructions'. Do not mention tool or parameter names to the user.",
+    Title = "Get Azure Catalyst Business Case Status",
+    Description = "Tracks the state of an Azure Catalyst business case (including its assessment, ROI summary and executive " +
+        "artifacts) started by the business case create tool, moves it to its next stage and returns its result once it finishes. " +
+        "When: immediately after the business case create tool succeeds, in the same reply and without waiting for the user, again while the status is Running, or when the user asks about the " +
+        "progress or result of their business case, assessment, ROI summary or executive artifacts. " +
+        "How: pass exactly the values in 'nextStatusParameters' of the latest business case result in the conversation, unchanged " +
+        "and without inventing any; ask the user to create a business case if there is none. Wait about 'retryAfterSeconds' between " +
+                "calls. Call it directly yourself, one call at a time; never write or run a script or code to call it or to wait between calls. " +
+        "Returns: 'status' (Running, Succeeded or Failed), 'stage' and 'stageNumber' of 'totalStages', 'isCompleted', " +
+        "'nextStatusParameters' while it is running, 'result' once it succeeded (a read link to the ROI report), 'report' (the ROI " +
+        "report Markdown, when available) and 'instructions'. " +
+        "Next: follow 'instructions'; while 'status' is Running call this tool again with the new 'nextStatusParameters'; once it " +
+        "has succeeded, follow 'instructions' to show the report. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
     OpenWorld = false,
-    ReadOnly = false,
+    ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
 public sealed class GetBusinessCaseStatusCommand(
@@ -49,6 +56,7 @@ public sealed class GetBusinessCaseStatusCommand(
     IHttpContextAccessor httpContextAccessor)
     : BaseCommand<GetBusinessCaseStatusOptions, BusinessCaseCommandResult>
 {
+    internal const string CommandId = "83765d81-da5b-4d77-8c0d-526cc20f0066";
     internal const int DefaultRetryAfterSeconds = 30;
 
     private readonly IAssessmentOperationStatusClient _assessmentStatusClient = assessmentStatusClient;
@@ -150,8 +158,37 @@ public sealed class GetBusinessCaseStatusCommand(
 
         if (string.Equals(status.Status, BusinessCaseStages.Succeeded, StringComparison.OrdinalIgnoreCase))
         {
-            return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, status.HttpStatus, null, null, status.Result,
-                "Tell the user the business case is ready and summarise 'result' in plain language without inventing details.");
+            InventoryExportResult report = await _haClient.ExportAsync(token, sessionId, cancellationToken);
+            if (report.Uri is not null)
+            {
+                string? markdown = await _haClient.DownloadReportAsync(report.Uri, cancellationToken);
+                if (markdown is not null)
+                {
+                    return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
+                        (BusinessCaseReportWidget.IsEnabled
+                            ? "Tell the user the business case is ready. Then call the business case report tool once, with 'report-uri' " +
+                              "set to 'result' exactly as given and 'assessment-name', to show the ROI report in a card, and follow its " +
+                              "'instructions'. Do not paste 'report' yourself. "
+                            : "Tell the user the business case is ready, then render 'report' (the ROI report, ROI.md) in your reply as " +
+                              "Markdown exactly as given, keeping its headings and tables; do not summarise, reword or wrap it in a code block. " +
+                              "After it, add a clickable Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>); " +
+                              "never retype, shorten or show the URL on its own, and say the link expires.")) with { Report = markdown };
+                }
+
+                return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
+                    "Tell the user the business case is ready. 'result' is a read link to the ROI report (ROI.md): show it as a clickable " +
+                    "Markdown link exactly as given, for example [Download the ROI report (ROI.md)](<result>); never retype, shorten or " +
+                    "show the URL on its own. Tell them the link expires, and to ask for the business case status again for a new link.");
+            }
+
+            if (IsTransient(report.HttpStatus))
+            {
+                return Running(ctx, BusinessCaseStages.HaSkill, sessionId, operationIdText, report.HttpStatus, null,
+                    "If you have not already said so, tell the user once that the business case report is being prepared.");
+            }
+
+            return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "export", report.HttpStatus, null, report.Error, null,
+                "Tell the user the business case completed but its ROI report could not be downloaded, and quote 'errorMessage'.");
         }
 
         if (CreateAssessmentCommand.IsTerminal(status.Status))

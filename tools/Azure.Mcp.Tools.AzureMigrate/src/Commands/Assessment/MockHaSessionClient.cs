@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 /// <summary>
 /// Mock HA client used until the HA skill is deployed on the Discovery Service. It makes no calls and returns a started HA session
 /// whose id starts with <see cref="SessionIdPrefix"/>, which the HA status tool recognises and answers with a mocked result.
-/// Set <see cref="MockSettingName"/> to <c>false</c> to use <see cref="DsHaSessionClient"/> instead.
+/// Off by default; set <see cref="MockSettingName"/> to <c>true</c> to use it instead of <see cref="DsHaSessionClient"/>.
 /// </summary>
 public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : IHaSessionClient
 {
@@ -18,9 +18,9 @@ public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : I
 
     private readonly ILogger<MockHaSessionClient> _logger = logger;
 
-    /// <summary>True unless <see cref="MockSettingName"/> is set to <c>false</c>.</summary>
+    /// <summary>True only when <see cref="MockSettingName"/> is set to <c>true</c>.</summary>
     internal static bool IsEnabled =>
-        !string.Equals(Environment.GetEnvironmentVariable(MockSettingName)?.Trim(), "false", StringComparison.OrdinalIgnoreCase);
+        string.Equals(Environment.GetEnvironmentVariable(MockSettingName)?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
 
     internal static bool IsMockSession(string? sessionId) =>
         sessionId is not null && sessionId.StartsWith(SessionIdPrefix, StringComparison.OrdinalIgnoreCase);
@@ -47,4 +47,11 @@ public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : I
     /// <inheritdoc/>
     public Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken) =>
         Task.FromResult(new HaOperationStatus((int)HttpStatusCode.OK, "Succeeded", null, null, null, null, null));
+
+    /// <inheritdoc/>
+    public Task<Inventory.InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        Task.FromResult(new Inventory.InventoryExportResult(null, null, "HA is mocked, so there is no report to export."));
+
+    /// <inheritdoc/>
+    public Task<string?> DownloadReportAsync(string reportUri, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
 }

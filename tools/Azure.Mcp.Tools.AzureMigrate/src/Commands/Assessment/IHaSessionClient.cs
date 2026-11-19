@@ -25,6 +25,18 @@ public interface IHaSessionClient
     /// Reads the status of an HA operation (GET /mcprestapi/sessions/{id}/operationstatus/{operationId}) once.
     /// </summary>
     Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Exports the session output (POST /mcprestapi/sessions/{id}/export) and returns its read SAS URL; for a business case session
+    /// this is the ROI.md report.
+    /// </summary>
+    Task<Inventory.InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Downloads the exported report (ROI.md) from its read SAS URL and returns its Markdown, or null when it cannot be read or is
+    /// larger than the inline limit, so callers fall back to the link.
+    /// </summary>
+    Task<string?> DownloadReportAsync(string reportUri, CancellationToken cancellationToken);
 }
 
 /// <summary>

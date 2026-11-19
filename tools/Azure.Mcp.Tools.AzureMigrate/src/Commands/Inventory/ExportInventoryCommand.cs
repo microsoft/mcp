@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 [CommandMetadata(
     Id = "88304b20-dbf6-4c54-8202-c7a6613b0bb7",
     Name = "export",
-    Title = "Export Azure Migrate Inventory",
-    Description = "Gets a download link for an output of a finished Azure Migrate inventory. " +
+    Title = "Export Azure Catalyst Inventory",
+    Description = "Gets a download link for an output of a finished Azure Catalyst inventory. " +
         "When: the user asks to download, export or get the file of their inventory, after the inventory status tool reports it " +
         "as completed. " +
         "How: pass 'session-id' from the latest create-or-update result in the conversation; ask the user to start an inventory if " +

@@ -5130,7 +5130,7 @@
         }
       },
       "mappedToolList": [
-        "azuremigrate_platformlandingzone_request"
+        "azure_catalyst_platformlandingzone_request"
       ]
     },
     {
@@ -5163,7 +5163,7 @@
         }
       },
       "mappedToolList": [
-        "azuremigrate_platformlandingzone_getguidance"
+        "azure_catalyst_platformlandingzone_getguidance"
       ]
     },
     {

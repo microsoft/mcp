@@ -31,7 +31,11 @@ public sealed record BusinessCaseCommandResult(
     string? Result,
     int? RetryAfterSeconds,
     BusinessCaseNextStatusParameters? NextStatusParameters,
-    string? Instructions);
+    string? Instructions)
+{
+    /// <summary>The ROI report (ROI.md) Markdown once the business case succeeded, when it could be downloaded; else null.</summary>
+    public string? Report { get; init; }
+}
 
 /// <summary>
 /// Parameters for the next business case status call, named as the tool parameters so they can be passed back unchanged.
@@ -73,7 +77,7 @@ internal static class BusinessCaseStages
 
     internal const string CheckAgainInstructions =
         "Check the status again with exactly the values in 'nextStatusParameters', after about 'retryAfterSeconds' seconds. " +
-        "Do not change or invent any of them.";
+        "Do not change or invent any of them. Call the status tool directly yourself; never write or run a script or code to call it.";
 
     internal static int StageNumber(string stage) => stage == HaSkill ? 2 : 1;
 

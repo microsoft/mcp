@@ -11,7 +11,7 @@ using Microsoft.Mcp.Core.Models.Command;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
 /// <summary>
-/// POC: creates or updates an Azure Migrate inventory for the signed-in user. It creates (or reuses) a user-owned
+/// POC: creates or updates an Azure Catalyst inventory for the signed-in user. It creates (or reuses) a user-owned
 /// session (PUT /mcprestapi/sessions/{id}) and invokes it (POST /mcprestapi/sessions/{id}/invoke) on the Discovery
 /// Service, forwarding the caller's bearer token unchanged. It does not upload or poll: it returns an azcopy
 /// command the user runs on their own machine to upload the file, and the IDs to check progress with the status tool.
@@ -26,8 +26,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 [CommandMetadata(
     Id = CommandId,
     Name = "createorupdate",
-    Title = "Create or Update Azure Migrate Inventory",
-    Description = "Starts or updates the signed-in user's Azure Migrate server inventory; the required first step before exporting " +
+    Title = "Create or Update Azure Catalyst Inventory",
+    Description = "Starts or updates the signed-in user's Azure Catalyst server inventory; the required first step before exporting " +
         "the inventory, assessing an estate or generating an ROI summary. " +
         "When: the user has a new or updated inventory file (a CMDB, CSV, Excel or zip export on their machine), for example 'I want " +
         "to upload the inventory of my estate'; wants to correct or ask about their inventory in text, for example 'set web-01's OS " +
@@ -40,13 +40,13 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "block, without retyping or shortening it. " +
         "Next: success means the inventory has started, not finished. Start tracking it right away with the inventory status tool " +
         "using the same 'sessionId' and 'operationId', and keep tracking until it completes, before exporting the inventory or " +
-        "creating an assessment. " +
+        "creating an assessment; call the status tool directly yourself, never from a script or code. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
-    ReadOnly = false,
+    ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
 public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInventoryCommand> logger, IHttpContextAccessor httpContextAccessor)

@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 [CommandMetadata(
     Id = "d5ff4998-2934-4f4b-b805-87c8a1c1f540",
     Name = "status",
-    Title = "Get Azure Migrate Assessment Status",
-    Description = "Gets the current status of an Azure Migrate assessment started by the assessment create tool. Call this once when " +
+    Title = "Get Azure Catalyst Assessment Status",
+    Description = "Gets the current status of an Azure Catalyst assessment started by the assessment create tool. Call this once when " +
         "the user asks about the progress of their assessment or needs a new link to download it; do not loop or wait. Requires " +
         "'operation-id' from the latest assessment create result in the conversation (ask the user to create an assessment if " +
         "there is none); 'assessment-name' is optional. Returns 'status' (Running, Succeeded, Failed or Canceled), 'isCompleted', " +

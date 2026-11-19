@@ -24,8 +24,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 [CommandMetadata(
     Id = "6e866a7d-d20d-4e98-9737-8240b7ad9957",
     Name = "status",
-    Title = "Get Azure Migrate Inventory Status",
-    Description = "Tracks an Azure Migrate inventory operation (file upload and transformation, or a text-only update) started by " +
+    Title = "Get Azure Catalyst Inventory Status",
+    Description = "Tracks an Azure Catalyst inventory operation (file upload and transformation, or a text-only update) started by " +
         "the inventory create-or-update tool. " +
         "When: right after create-or-update succeeds, and again while the operation has not completed. " +
         "How: pass 'session-id' and 'operation-id' from the latest create-or-update result in the conversation; ask the user to " +
@@ -33,7 +33,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "Returns: 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions' and, when finished, either " +
         "'result' or 'errorCode'/'errorMessage'. Each call waits up to about 25 seconds for the operation to finish. " +
         "Next: while 'isCompleted' is false, call it again quietly with the same 'session-id' and 'operation-id'; the inventory " +
-        "must be complete before it is exported or assessed. When it is done, summarise 'result' in plain language without " +
+        "must be complete before it is exported or assessed. Call it directly yourself, one call at a time; never write or run a " +
+        "script or code to call it. When it is done, summarise 'result' in plain language without " +
         "inventing details. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
@@ -193,7 +194,8 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             return inventory
                 ? "If you have not already said so, tell the user once that you are waiting for their upload or processing their " +
                     "inventory; do not repeat it on later checks. Then check the status again quietly with the same sessionId and " +
-                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating an assessment."
+                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating an assessment. " +
+                    "Call the status tool directly yourself; never write or run a script or code to call it."
                 : $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
                     "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }

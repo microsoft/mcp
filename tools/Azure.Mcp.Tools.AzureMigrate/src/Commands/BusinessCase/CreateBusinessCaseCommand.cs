@@ -19,22 +19,36 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 [CommandMetadata(
     Id = "eacaf2d9-6983-41dd-bd91-b0502d9ca2d6",
     Name = "create",
-    Title = "Create Azure Migrate Business Case",
-    Description = "Starts an Azure Migrate business case for the signed-in user from their offline collector ZIP and returns at once. " +
-        "Requires 'assessment-name', 'target-region' (an Azure region name such as 'eastus') and 'inventory-sas-uri' (a read-only https " +
-        "SAS URL of the collector ZIP); ask the user for any that are missing and do not invent them. Only USD is supported. Optional " +
-        "settings (scaling factor, savings option, Azure Hybrid Benefit, network and labor cost percentages, growth rate, migration " +
-        "completion by year) use the business case defaults when left out; pass them only when the user asks for them. Returns 'status', " +
-        "'stage', 'nextStatusParameters' and 'instructions'. Follow 'instructions' and pass 'nextStatusParameters' unchanged to the " +
-        "business case status tool. Do not mention tool or parameter names to the user.",
+    Title = "Create Azure Catalyst Business Case",
+    Description = "Creates an Azure Catalyst business case for the signed-in user from their inventory: an assessment of their servers " +
+        "for Azure, then cost savings, payback, ROI and Azure versus on-premises cost per migration strategy, and returns at once. " +
+        "When: the user asks to create, build or run an assessment, a business case, an ROI or cost savings analysis, an ROI summary, " +
+        "or executive artifacts (an executive summary of the migration). Use this tool for all of these. " +
+        "How: needs 'assessment-name', 'target-region' (an Azure region name such as 'eastus') and the inventory: pass 'session-id' " +
+        "(the 'sessionId' of the user's inventory, from the inventory tools) to use a fresh link to that inventory's offline zip, or " +
+        "'inventory-sas-uri' only when the user gives a read-only https SAS URL of a collector ZIP; when you take it from the chat, " +
+        "        tell the user you are using the inventory SAS URL from the chat. Before calling, ask the user for any of these " +
+                "they have not given (name, target region, which inventory) and wait for the answer; do not invent or assume them. Only USD is supported. Optional settings use their defaults when left out; pass them only when the " +
+        "user asks for them and do not ask for them otherwise: scaling factor (1.3), storage scaling factor (1), savings option " +
+        "(RI3Year), Azure Hybrid Benefit for Windows and Linux (Yes), discount (0%), environment type (Production), licensing program " +
+        "(Retail), Azure offer (pay as you go), Defender for Cloud (No), disk types (StandardSSD), pricing tier (Standard), storage " +
+        "redundancy (locally redundant), VM families (all), uptime (31 days, 24 hours), VM security types (none), management services " +
+        "(none), network cost (5%), IaaS, PaaS and management labor cost remaining (75%, 60%, 60%), infrastructure growth (5% a year) " +
+        "and migration completion by year (0, 20, 50, 100%). " +
+        "Returns: 'status', 'stage', 'nextStatusParameters' and 'instructions', which lists the settings used. " +
+        "Next: success means the business case has started, not finished. Follow 'instructions' and start tracking it right away, " +
+        "in the same reply, with the business case status tool using 'nextStatusParameters' unchanged, and keep tracking until it " +
+        "completes; do not wait for the user to ask, and call the status tool directly yourself, never from a script or code. Its 'result' holds the ROI summary: the business case per migration strategy (savings, payback, Azure versus " +
+        "on-premises cost). Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
     OpenWorld = false,
-    ReadOnly = false,
+    ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
-public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClient, IHttpContextAccessor httpContextAccessor)
+public sealed class CreateBusinessCaseCommand(
+    IAssessmentCreateClient createClient, IInventoryExportClient exportClient, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<CreateBusinessCaseOptions, BusinessCaseCommandResult>
 {
     internal const string Currency = "USD";
@@ -43,6 +57,7 @@ public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClie
     internal const string DefaultAzureHybridBenefit = "Yes";
 
     private readonly IAssessmentCreateClient _createClient = createClient;
+    private readonly IInventoryExportClient _exportClient = exportClient;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <inheritdoc/>
@@ -77,9 +92,23 @@ public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClie
         }
 
         string? inventorySasUri = options.InventorySasUri?.Trim();
-        if (!CreateAssessmentCommand.IsValidInventorySasUri(inventorySasUri))
+        string? sessionId = options.SessionId?.Trim();
+        if (string.IsNullOrEmpty(inventorySasUri))
         {
-            return BusinessCaseStages.Invalid("'inventory-sas-uri' is required and must be an https read-only SAS URL of the collector ZIP.", name);
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return BusinessCaseStages.Invalid(
+                    "An inventory is required: pass 'session-id' of the user's inventory or 'inventory-sas-uri' of a collector ZIP.", name);
+            }
+
+            if (!DsBackdoorClient.IsValidSessionId(sessionId))
+            {
+                return BusinessCaseStages.Invalid("'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.", name);
+            }
+        }
+        else if (!CreateAssessmentCommand.IsValidInventorySasUri(inventorySasUri))
+        {
+            return BusinessCaseStages.Invalid("'inventory-sas-uri' must be an https read-only SAS URL of the collector ZIP.", name);
         }
 
         (AssessmentSettings? assessmentSettings, string? assessmentError) = CreateAssessmentCommand.BuildSettings(new CreateAssessmentOptions
@@ -88,6 +117,21 @@ public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClie
             SavingsOption = string.IsNullOrWhiteSpace(options.SavingsOption) ? DefaultSavingsOption : options.SavingsOption,
             AzureHybridBenefit = string.IsNullOrWhiteSpace(options.AzureHybridBenefit) ? DefaultAzureHybridBenefit : options.AzureHybridBenefit,
             LinuxAzureHybridBenefit = string.IsNullOrWhiteSpace(options.LinuxAzureHybridBenefit) ? DefaultAzureHybridBenefit : options.LinuxAzureHybridBenefit,
+            StorageScalingFactor = options.StorageScalingFactor,
+            DiscountPercentage = options.DiscountPercentage,
+            EnvironmentType = options.EnvironmentType,
+            LicensingProgram = options.LicensingProgram,
+            BillingSubscriptionId = options.BillingSubscriptionId,
+            AzureOfferCode = options.AzureOfferCode,
+            SecurityOfferingType = options.SecurityOfferingType,
+            DiskTypes = options.DiskTypes,
+            PricingTier = options.PricingTier,
+            StorageRedundancy = options.StorageRedundancy,
+            VmFamilies = options.VmFamilies,
+            UptimeDaysPerMonth = options.UptimeDaysPerMonth,
+            UptimeHoursPerDay = options.UptimeHoursPerDay,
+            VmSecurityOptions = options.VmSecurityOptions,
+            ManagementServices = options.ManagementServices,
         });
         (BusinessCaseHaSettings? haSettings, string? haError) = BusinessCaseHaSettings.Build(options);
         if (assessmentError is not null || haError is not null)
@@ -99,6 +143,26 @@ public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClie
         if (token is null)
         {
             return BusinessCaseStages.Invalid(authError, name);
+        }
+
+        string inventorySource = string.IsNullOrEmpty(inventorySasUri)
+            ? $"a fresh export of the user's inventory session '{sessionId}'"
+            : "the inventory SAS URL the user gave in the chat";
+
+        if (string.IsNullOrEmpty(inventorySasUri))
+        {
+            InventoryExportResult export = await _exportClient.ExportOfflineAsync(sessionId!, token, cancellationToken);
+            if (!CreateAssessmentCommand.IsValidInventorySasUri(export.Uri))
+            {
+                return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
+                    null, null, null, "inventoryExport", export.HttpStatus, null,
+                    export.Error ?? "The inventory export did not return a valid link.", null, null, null,
+                    "Tell the user the business case could not be started because their inventory's offline zip could not be " +
+                    "exported: the inventory may still be running, may have failed, or may have been archived. Suggest checking the " +
+                    "inventory status, or giving a read-only SAS URL of a collector ZIP instead.");
+            }
+
+            inventorySasUri = export.Uri;
         }
 
         AssessmentRequest request = new(name!, WorkspaceId: null, inventorySasUri!, region, Currency, assessmentSettings);
@@ -115,7 +179,41 @@ public sealed class CreateBusinessCaseCommand(IAssessmentCreateClient createClie
         return new(true, null, BusinessCaseStages.Running, false, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
             operationId.ToString("D"), null, null, null, operation.HttpStatus, null, null, null, operation.RetryAfterSeconds ?? 30,
             BusinessCaseNextStatusParameters.Create(name, operationId, inventorySasUri!, haSettings!),
-            "Tell the user the business case has started (stage 1 of 2: assessment) and can take several minutes. " +
-            BusinessCaseStages.CheckAgainInstructions);
+            "Tell the user the business case has started (stage 1 of 2: assessment) and can take several minutes, that it uses " +
+            inventorySource + " as the inventory, and show them the settings it uses: " +
+            DescribeSettings(region, assessmentSettings!, haSettings!) + ". " +
+            "Then, right away in this same reply, start tracking the business case status with exactly the values in " +
+            "'nextStatusParameters'; do not wait for the user to ask, do not change or invent any of them, and keep checking until " +
+            "it completes.");
+    }
+
+    /// <summary>Lists every business case setting with the value used, defaults included, for the user.</summary>
+    internal static string DescribeSettings(string region, AssessmentSettings s, BusinessCaseHaSettings ha)
+    {
+        static string List(string[]? values, string fallback) => values is { Length: > 0 } ? string.Join(", ", values) : fallback;
+
+        return string.Join("; ",
+            $"target region {region}",
+            $"currency {Currency}",
+            $"scaling factor {s.ScalingFactor ?? DefaultScalingFactor}",
+            $"storage scaling factor {s.StorageScalingFactor ?? 1}",
+            $"savings option {s.SavingsOption ?? DefaultSavingsOption}",
+            $"Azure Hybrid Benefit Windows {s.AzureHybridBenefit ?? DefaultAzureHybridBenefit}, Linux {s.LinuxAzureHybridBenefit ?? DefaultAzureHybridBenefit}",
+            $"discount {s.DiscountPercentage ?? 0}%",
+            $"environment type {s.EnvironmentType ?? "Production"}",
+            $"licensing program {s.LicensingProgram ?? "Retail"}" + (s.BillingSubscriptionId is null ? string.Empty : $" (billing subscription {s.BillingSubscriptionId})"),
+            $"Azure offer {s.AzureOfferCode ?? "MSAZR0003P (pay as you go)"}",
+            $"Defender for Cloud {(s.SecurityOfferingType == "MDC" ? "Yes" : "No")}",
+            $"disk types {List(s.DiskTypes, "StandardSSD")}",
+            $"pricing tier {s.PricingTier ?? "Standard"}",
+            $"storage redundancy {s.StorageRedundancy ?? "LocallyRedundant"}",
+            $"VM families {List(s.VmFamilies, "all")}",
+            $"uptime {s.UptimeDaysPerMonth ?? 31} days a month, {s.UptimeHoursPerDay ?? 24} hours a day",
+            $"VM security types {List(s.VmSecurityOptions, "none")}",
+            $"management services {List(s.ManagementServices, "none")}",
+            $"network cost {ha.NetworkCostPercentage}%",
+            $"labor cost remaining IaaS {ha.IaasLaborCostPercentage}%, PaaS {ha.PaasLaborCostPercentage}%, management {ha.ManagementLaborCostPercentage}%",
+            $"infrastructure growth {ha.InfrastructureGrowthRate}% a year",
+            $"migration completion by year {string.Join(", ", ha.MigrationCompletionByYear)}%");
     }
 }

@@ -20,8 +20,8 @@ internal static class HaInputPackage
     internal static readonly TimeSpan InitialRetryDelay = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// Returns the mini zip bytes with manifest.json { inventorySasUri, assessmentSasUri } and, for a business case, also
-    /// businessCaseSasUri and haSasUri.
+    /// Returns the mini zip bytes with manifest.json { inventorySasUri, assessmentSasUri } for HA, or, for a business case, the
+    /// bc-dataplane-links/1 manifest (inventory, assessments, onPremTco and ha links).
     /// </summary>
     internal static byte[] Build(HaInput input)
     {
@@ -32,22 +32,50 @@ internal static class HaInputPackage
             using Stream entryStream = entry.Open();
             using Utf8JsonWriter writer = new(entryStream);
             writer.WriteStartObject();
-            writer.WriteString("inventorySasUri", input.InventorySasUri);
-            writer.WriteString("assessmentSasUri", input.AssessmentSasUri);
-            if (input.BusinessCaseSasUri is not null)
+            if (input.BusinessCaseSasUri is not null || input.HaSasUri is not null)
             {
-                writer.WriteString("businessCaseSasUri", input.BusinessCaseSasUri);
+                WriteBusinessCaseLinks(writer, input);
             }
-
-            if (input.HaSasUri is not null)
+            else
             {
-                writer.WriteString("haSasUri", input.HaSasUri);
+                writer.WriteString("inventorySasUri", input.InventorySasUri);
+                writer.WriteString("assessmentSasUri", input.AssessmentSasUri);
             }
 
             writer.WriteEndObject();
         }
 
         return stream.ToArray();
+    }
+
+    internal const string BusinessCaseLinksSchema = "bc-dataplane-links/1";
+
+    // Business case agent manifest: { schema, inventory.uri, assessments[{type, uri}], onPremTco.manifestUri, ha.manifestUri }.
+    private static void WriteBusinessCaseLinks(Utf8JsonWriter writer, HaInput input)
+    {
+        writer.WriteString("schema", BusinessCaseLinksSchema);
+        writer.WriteStartObject("inventory");
+        writer.WriteString("uri", input.InventorySasUri);
+        writer.WriteEndObject();
+        writer.WriteStartArray("assessments");
+        writer.WriteStartObject();
+        writer.WriteString("type", "assessedMachines");
+        writer.WriteString("uri", input.AssessmentSasUri);
+        writer.WriteEndObject();
+        writer.WriteEndArray();
+        if (input.BusinessCaseSasUri is not null)
+        {
+            writer.WriteStartObject("onPremTco");
+            writer.WriteString("manifestUri", input.BusinessCaseSasUri);
+            writer.WriteEndObject();
+        }
+
+        if (input.HaSasUri is not null)
+        {
+            writer.WriteStartObject("ha");
+            writer.WriteString("manifestUri", input.HaSasUri);
+            writer.WriteEndObject();
+        }
     }
 
     /// <summary>

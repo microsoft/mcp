@@ -31,7 +31,7 @@ internal static class InventoryUploadWidget
     {
         if (IsEnabled)
         {
-            McpAppRegistry.Register(commandId, new McpAppWidget(ResourceUri, "Azure Migrate inventory upload", Html, ConnectDomains));
+            McpAppRegistry.Register(commandId, new McpAppWidget(ResourceUri, "Azure Catalyst inventory upload", Html, ConnectDomains));
         }
     }
 
@@ -50,7 +50,7 @@ internal static class InventoryUploadWidget
         </style>
         </head>
         <body>
-        <b id="title">Azure Migrate inventory</b>
+        <b id="title">Azure Catalyst inventory</b>
         <div class="muted" id="hint">Starting...</div>
         <div class="row" id="filerow" style="display:none"><input type="file" id="file" disabled accept=".zip,.csv,.xlsx,.xls,.json,.txt"></div>
         <div class="row" id="progrow" style="display:none"><progress id="prog" max="100" value="0"></progress></div>
@@ -190,7 +190,7 @@ internal static class InventoryUploadWidget
           // the 30-minute upload window.
           function poll(n) {
             if (!ctx.operationId || n >= 60) { return; }
-            send('tools/call', { name: 'azuremigrate_inventory_status', arguments: { 'session-id': ctx.sessionId, 'operation-id': ctx.operationId, 'no-wait': true } }, 20000)
+            send('tools/call', { name: 'azure_catalyst_inventory_status', arguments: { 'session-id': ctx.sessionId, 'operation-id': ctx.operationId, 'no-wait': true } }, 20000)
               .then(function (r) {
                 var s = findResult(r, 0);
                 diag.lastStatus = s ? { status: s.status, isCompleted: s.isCompleted } : 'unreadable';
