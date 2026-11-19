@@ -31,6 +31,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(HealthModelDetail))]
 [JsonSerializable(typeof(HealthModelGetCommand.HealthModelGetCommandResult))]
 [JsonSerializable(typeof(HealthModelIdentity))]
+[JsonSerializable(typeof(HealthModelInspectResult))]
 [JsonSerializable(typeof(HealthModelListCommand.HealthModelListCommandResult))]
 [JsonSerializable(typeof(HealthModelSummary))]
 [JsonSerializable(typeof(IngestionUploadResult))]
