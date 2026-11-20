@@ -70,5 +70,15 @@ public sealed class SensitivityLabelListCommand(ISqlService sqlService, ILogger<
         _ => base.GetErrorMessage(ex)
     };
 
+    protected override void HandleException(CommandContext context, Exception ex)
+    {
+        base.HandleException(context, ex);
+        // The base error payload carries the raw backend message even when GetErrorMessage is sanitized.
+        if (ex is RequestFailedException { Status: (int)HttpStatusCode.Forbidden or (int)HttpStatusCode.NotFound })
+        {
+            context.Response.Results = null;
+        }
+    }
+
     public sealed record SensitivityLabelListResult(List<SqlDatabaseSensitivityLabel> SensitivityLabels);
 }

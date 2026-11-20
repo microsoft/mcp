@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Commands.SensitivityLabel;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
+using Microsoft.Mcp.Core.Models;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -172,6 +174,8 @@ public class SensitivityLabelListCommandTests : SubscriptionCommandUnitTestsBase
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL database or server not found", response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain("Database not found", JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
     }
 
     [Fact]
@@ -198,6 +202,8 @@ public class SensitivityLabelListCommandTests : SubscriptionCommandUnitTestsBase
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
         Assert.DoesNotContain("secret-backend-detail", response.Message);
+        Assert.Null(response.Results);
+        Assert.DoesNotContain("secret-backend-detail", JsonSerializer.Serialize(response, ModelsJsonContext.Default.CommandResponse));
     }
 
     [Fact]
