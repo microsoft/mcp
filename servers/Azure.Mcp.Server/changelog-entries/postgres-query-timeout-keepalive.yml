@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "PostgreSQL tools: configure KeepAlive=30, TcpKeepAlive=true, and default command timeout to 300 seconds (configurable via AZURE_MCP_POSTGRES_COMMAND_TIMEOUT) to prevent timeouts and dropped idle connections during long-running queries (#2959)."
