@@ -34,7 +34,8 @@ public static class AzureBackupOptionDefinitions
     // Distinct from the policy-create/protect WorkloadType above, which also covers DPP workloads.
     internal const string ProtectableItemWorkloadType = $"Filter by workload type. Supported values (case-insensitive): {WorkloadTypeNormalizer.SupportedTokensDescription}.";
     public const string WorkloadTypeName = "workload-type";
-    internal const string DailyRetentionDays = "Daily recovery point retention in days. Defaults to datasource-specific value if omitted.";
+    internal const string DailyRetentionDays = "Daily recovery point retention in days (Azure VM: 7-9999). Defaults to datasource-specific value if omitted.";
+    public const string DailyRetentionDaysName = "daily-retention-days";
 
     // Policy create  -  common schedule flags (new in policy create overhaul)
     public const string ScheduleFrequencyName = "schedule-frequency";

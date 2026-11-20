@@ -276,6 +276,7 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
             });
 
         Assert.Equal("Succeeded", createResult.AssertProperty("vault").AssertProperty("provisioningState").GetString());
+        Assert.Equal("LocallyRedundant", createResult.AssertProperty("vault").AssertProperty("storageRedundancy").GetString());
         Assert.Equal("LocallyRedundant", await GetRsvVaultRedundancyAsync(vaultName));
 
         var updateResult = await CallToolAsync(
@@ -286,11 +287,11 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
                 { "resource-group", Settings.ResourceGroupName },
                 { "vault", vaultName },
                 { "vault-type", "rsv" },
-                { "redundancy", "GeoRedundant" }
+                { "redundancy", "ZoneRedundant" }
             });
 
         Assert.Equal("Succeeded", updateResult.AssertProperty("result").AssertProperty("status").GetString());
-        Assert.Equal("GeoRedundant", await GetRsvVaultRedundancyAsync(vaultName));
+        Assert.Equal("ZoneRedundant", await GetRsvVaultRedundancyAsync(vaultName));
     }
 
     private async Task<string?> GetRsvVaultRedundancyAsync(string vaultName)

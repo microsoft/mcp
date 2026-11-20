@@ -244,4 +244,32 @@ public class PolicyCreateCommandTests : SubscriptionCommandUnitTestsBase<PolicyC
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_AzureInvalidParameterWithoutName_ReturnsSuppliedOptionsAndLimits()
+    {
+        Service.CreatePolicyAsync(
+            Arg.Any<PolicyCreateRequest>(),
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400,
+                "Parameter NO_PARAM in request is invalid. Please provide correct value for parameter NO_PARAM",
+                "UserErrorInvalidRequestParameter", null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--policy", "p",
+            "--workload-type", "VM",
+            "--daily-retention-days", "30",
+            "--instant-rp-retention-days", "3");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("UserErrorInvalidRequestParameter", response.Message);
+        Assert.Contains("Options supplied: --daily-retention-days, --instant-rp-retention-days.", response.Message);
+        Assert.Contains("instant restore 1-5 days for Standard policies", response.Message);
+        Assert.DoesNotContain("NO_PARAM", response.Message);
+    }
 }

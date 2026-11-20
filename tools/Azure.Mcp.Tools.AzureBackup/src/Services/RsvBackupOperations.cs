@@ -31,7 +31,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(location), location));
 
         // Validate before any ARM call so an invalid value never leaves a half-configured vault behind.
-        var storageModelType = ParseCreateStorageType(storageType);
+        var requestedRedundancy = ParseStorageRedundancy(storageType, nameof(storageType));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
@@ -52,33 +52,45 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled,
+                // Storage redundancy is a vault property; the legacy backupstorageconfig API is rejected
+                // with BMSUserErrorRedundancySettingsUseVaultApi. The service requires both redundancy
+                // settings together, and a new vault starts with Cross-Region Restore disabled.
+                RedundancySettings = requestedRedundancy is { } redundancy
+                    ? new VaultPropertiesRedundancySettings
+                    {
+                        StandardTierStorageRedundancy = redundancy,
+                        CrossRegionRestore = CrossRegionRestore.Disabled
+                    }
+                    : null
             }
         };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
         await WaitForLroCompletionAsync(result, cancellationToken);
 
-        // RSV storage redundancy is set after creation: through the BackupResourceStorageConfig API,
-        // or a vault PATCH when the service requires it. It can only change before any item is protected.
-        if (storageModelType is { } requestedStorageType)
+        var storageRedundancy = result.Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString();
+        if (requestedRedundancy is { } requested)
         {
+            // Read back the vault and, if the create did not apply the requested value, set it with a vault PATCH.
             try
             {
-                await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requestedStorageType, cancellationToken);
+                storageRedundancy = await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, CrossRegionRestore.Disabled, cancellationToken);
             }
-            catch (RequestFailedException ex)
+            catch (Exception ex) when (ex is RequestFailedException or InvalidOperationException)
             {
                 var tenantArgument = string.IsNullOrEmpty(tenant) ? string.Empty : $" --tenant \"{tenant}\"";
-                throw new RequestFailedException(
-                    ex.Status,
-                    $"Vault '{vaultName}' was created, but setting storage redundancy to '{requestedStorageType}' failed. " +
-                    $"The vault currently uses the default storage redundancy. Before configuring backup, retry with " +
+                var message =
+                    $"Vault '{vaultName}' was created, but setting storage redundancy to '{requested}' failed. " +
+                    $"The vault may still use the default GeoRedundant storage. Before configuring backup, retry with " +
                     $"'azurebackup vault update --subscription \"{subscription}\"{tenantArgument} --resource-group \"{resourceGroup}\" " +
-                    $"--vault \"{vaultName}\" --vault-type rsv --redundancy {requestedStorageType}'. " +
-                    $"Details: {ex.Message}",
-                    ex.ErrorCode,
-                    ex);
+                    $"--vault \"{vaultName}\" --vault-type rsv --redundancy {requested}'. " +
+                    $"Details: {ex.Message}";
+                if (ex is RequestFailedException requestFailed)
+                {
+                    throw new RequestFailedException(requestFailed.Status, message, requestFailed.ErrorCode, requestFailed);
+                }
+                throw new InvalidOperationException(message, ex);
             }
         }
 
@@ -88,19 +100,20 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             VaultType,
             result.Value.Data.Location.Name,
             result.Value.Data.Properties?.ProvisioningState,
-            result.Value.Data.Properties?.PublicNetworkAccess?.ToString());
+            result.Value.Data.Properties?.PublicNetworkAccess?.ToString(),
+            storageRedundancy);
     }
 
-    private static BackupStorageType? ParseCreateStorageType(string? storageType) =>
-        storageType?.ToLowerInvariant() switch
+    private static StandardTierStorageRedundancy? ParseStorageRedundancy(string? value, string parameterName) =>
+        value?.ToLowerInvariant() switch
         {
-            null or "" => (BackupStorageType?)null,
-            "georedundant" => BackupStorageType.GeoRedundant,
-            "locallyredundant" => BackupStorageType.LocallyRedundant,
-            "zoneredundant" => BackupStorageType.ZoneRedundant,
+            null or "" => (StandardTierStorageRedundancy?)null,
+            "georedundant" => StandardTierStorageRedundancy.GeoRedundant,
+            "locallyredundant" => StandardTierStorageRedundancy.LocallyRedundant,
+            "zoneredundant" => StandardTierStorageRedundancy.ZoneRedundant,
             _ => throw new ArgumentException(
-                $"Invalid storage type: '{storageType}'. Valid values: GeoRedundant, LocallyRedundant, ZoneRedundant.",
-                nameof(storageType))
+                $"Invalid storage redundancy: '{value}'. Valid values: GeoRedundant, LocallyRedundant, ZoneRedundant.",
+                parameterName)
         };
 
     public async Task<BackupVaultInfo> GetVaultAsync(
@@ -639,11 +652,22 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
+        var requestedRedundancy = ParseStorageRedundancy(redundancy, nameof(redundancy));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
+
+        // Resolve Cross-Region Restore and reject an incompatible redundancy before any write,
+        // so a rejected request leaves identity, network access, and tags unchanged.
+        CrossRegionRestore? crossRegionRestore = null;
+        if (requestedRedundancy is { } requestedBeforePatch
+            && vault.Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy != requestedBeforePatch)
+        {
+            crossRegionRestore = await ResolveCrossRegionRestoreAsync(armClient, vault.Value.Data, vaultName, resourceGroup, subscription, cancellationToken);
+            EnsureRedundancyAllowed(vaultName, requestedBeforePatch, crossRegionRestore);
+        }
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location);
 
@@ -682,11 +706,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        // RSV storage redundancy goes through BackupResourceStorageConfig, with a vault PATCH
-        // fallback when the service requires the vault API.
-        if (!string.IsNullOrEmpty(redundancy))
+        // RSV storage redundancy is set through the vault API and verified by read-back.
+        if (requestedRedundancy is { } requested)
         {
-            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, new BackupStorageType(redundancy), cancellationToken);
+            await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, crossRegionRestore, cancellationToken);
         }
 
         // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
@@ -728,58 +751,89 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
     }
 
-    private const string RedundancySettingsUseVaultApiErrorCode = "BMSUserErrorRedundancySettingsUseVaultApi";
+    /// <summary>
+    /// Sets the Recovery Services vault storage redundancy through the vault API
+    /// (<c>properties.redundancySettings.standardTierStorageRedundancy</c>) and verifies the stored value by
+    /// read-back. The legacy BackupResourceStorageConfig API is rejected for this setting with
+    /// <c>BMSUserErrorRedundancySettingsUseVaultApi</c>. Returns the verified redundancy.
+    /// </summary>
+    /// <param name="knownCrossRegionRestore">
+    /// Cross-Region Restore state to send when the vault GET does not report one; Azure rejects
+    /// <c>redundancySettings</c> without it. Callers resolve it with <see cref="ResolveCrossRegionRestoreAsync"/>
+    /// or pass the known state of a new vault.
+    /// </param>
+    private static async Task<string> ApplyStorageRedundancyAsync(
+        ArmClient armClient, string vaultName, string resourceGroup,
+        string subscription, StandardTierStorageRedundancy requested,
+        CrossRegionRestore? knownCrossRegionRestore, CancellationToken cancellationToken)
+    {
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var current = (await vaultResource.GetAsync(cancellationToken)).Value.Data;
+        var currentSettings = current.Properties?.RedundancySettings;
+        if (currentSettings?.StandardTierStorageRedundancy == requested)
+        {
+            return requested.ToString();
+        }
+
+        var crossRegionRestore = currentSettings?.CrossRegionRestore ?? knownCrossRegionRestore;
+        EnsureRedundancyAllowed(vaultName, requested, crossRegionRestore);
+
+        // Send the existing Cross-Region Restore state so the PATCH changes only storage redundancy.
+        var patchData = new RecoveryServicesVaultPatch(current.Location)
+        {
+            Properties = new RecoveryServicesVaultProperties
+            {
+                RedundancySettings = new VaultPropertiesRedundancySettings
+                {
+                    StandardTierStorageRedundancy = requested,
+                    CrossRegionRestore = crossRegionRestore
+                }
+            }
+        };
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
+        await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var applied = (await vaultResource.GetAsync(cancellationToken)).Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy;
+        if (applied != requested)
+        {
+            throw new InvalidOperationException(
+                $"Azure accepted the storage redundancy change for vault '{vaultName}', but the vault reports '{applied?.ToString() ?? "unknown"}' instead of '{requested}'. " +
+                "Storage redundancy can change only before any item is protected in the vault. Verify with 'azurebackup vault get'.");
+        }
+
+        return requested.ToString();
+    }
 
     /// <summary>
-    /// Sets the vault storage redundancy. Uses the legacy BackupResourceStorageConfig API first and, when the
-    /// service rejects it with <c>BMSUserErrorRedundancySettingsUseVaultApi</c>, falls back to a vault PATCH of
-    /// <c>properties.redundancySettings</c> (NEW-11). The same fallback is used for Cross-Region Restore.
+    /// Returns the vault's Cross-Region Restore state. The vault GET does not always populate it, so the
+    /// backup configuration GET (<c>crossRegionRestoreFlag</c>) is used as the fallback, as in
+    /// <see cref="ConfigureCrossRegionRestoreAsync"/>. Only that read is used; redundancy is never written there.
     /// </summary>
-    private static async Task ConfigureStorageRedundancyAsync(
-        ArmClient armClient, string vaultName, string resourceGroup,
-        string subscription, BackupStorageType redundancy, CancellationToken cancellationToken)
+    private static async Task<CrossRegionRestore> ResolveCrossRegionRestoreAsync(
+        ArmClient armClient, RecoveryServicesVaultData vault, string vaultName, string resourceGroup,
+        string subscription, CancellationToken cancellationToken)
     {
-        try
+        if (vault.Properties?.RedundancySettings?.CrossRegionRestore is { } reported)
         {
-            var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-            var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
-            var currentConfig = await configResource.GetAsync(cancellationToken);
-
-            var data = currentConfig.Value.Data;
-            data.Properties.StorageModelType = redundancy;
-
-            var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
-            var rgResource = armClient.GetResourceGroupResource(rgId);
-            var collection = rgResource.GetBackupResourceConfigs();
-            var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            return reported;
         }
-        catch (RequestFailedException ex) when (ex.ErrorCode == RedundancySettingsUseVaultApiErrorCode)
+
+        var configId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var config = await armClient.GetBackupResourceConfigResource(configId).GetAsync(cancellationToken);
+        return config.Value.Data.Properties?.EnableCrossRegionRestore == true
+            ? CrossRegionRestore.Enabled
+            : CrossRegionRestore.Disabled;
+    }
+
+    private static void EnsureRedundancyAllowed(string vaultName, StandardTierStorageRedundancy requested, CrossRegionRestore? crossRegionRestore)
+    {
+        if (crossRegionRestore == CrossRegionRestore.Enabled && requested != StandardTierStorageRedundancy.GeoRedundant)
         {
-            var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-            var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
-            var vault = await vaultResource.GetAsync(cancellationToken);
-
-            // Keep the existing Cross-Region Restore state so the PATCH changes only storage redundancy.
-            var redundancySettings = new VaultPropertiesRedundancySettings
-            {
-                StandardTierStorageRedundancy = new StandardTierStorageRedundancy(redundancy.ToString())
-            };
-            if (vault.Value.Data.Properties?.RedundancySettings?.CrossRegionRestore is { } crossRegionRestore)
-            {
-                redundancySettings.CrossRegionRestore = crossRegionRestore;
-            }
-
-            var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location)
-            {
-                Properties = new RecoveryServicesVaultProperties
-                {
-                    RedundancySettings = redundancySettings
-                }
-            };
-
-            var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
-            await WaitForLroCompletionAsync(operation, cancellationToken);
+            throw new ArgumentException(
+                $"Vault '{vaultName}' has Cross-Region Restore enabled, which requires GeoRedundant storage, so it cannot switch to {requested}. " +
+                "Keep --redundancy GeoRedundant, or use a vault without Cross-Region Restore.");
         }
     }
 

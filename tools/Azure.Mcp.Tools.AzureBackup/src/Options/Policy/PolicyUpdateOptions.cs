@@ -78,7 +78,7 @@ public sealed class PolicyUpdateOptions : BaseAzureBackupOptions
     [Option(Description = "Assert the existing VM policy subtype: Standard or Enhanced. Changing subtype requires a separate migration and is rejected.")]
     public string? PolicySubType { get; set; }
 
-    [Option(Description = "Instant recovery point retention in days (1-30). Azure enforces schedule-specific limits for Standard and Enhanced policies. Omission preserves existing retention. RSV Azure VM only.")]
+    [Option(Description = "Instant recovery point retention in days: 1-5 for Standard policies (exactly 5 for Standard Weekly), 1-30 for Enhanced policies (Hourly with 6 snapshots/day, e.g. every 4 hours over 24 hours: up to 17; 4-5 snapshots/day: up to 22), and no longer than daily retention. Omission preserves existing retention. RSV Azure VM only.")]
     public string? InstantRpRetentionDays { get; set; }
 
     [Option(Description = "Instant recovery point resource group name prefix. Preserves the existing suffix. RSV Azure VM only.")]

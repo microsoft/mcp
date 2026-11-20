@@ -90,7 +90,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState?.ToString());
+            result.Value.Data.Properties?.ProvisioningState?.ToString(),
+            StorageRedundancy: result.Value.Data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString());
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
