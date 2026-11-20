@@ -193,8 +193,9 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         : "Inventory started.";
 
     private const string TrackUntilDone =
-        "Keep checking quietly until it completes, then reply with the format the final status result gives. Do not export the " +
-        "inventory or create a business case before then.";
+        "Keep checking quietly until it completes, then reply with the format the final status result gives. If it completes " +
+        "before you have replied, send only that final reply and drop the started reply above; never tell the user you are still " +
+        "waiting for a file once the status is completed. Do not export the inventory or create a business case before then.";
 
     /// <summary>Returns the instructions for a successful file-based create or update when the upload widget is shown.</summary>
     /// <remarks>
