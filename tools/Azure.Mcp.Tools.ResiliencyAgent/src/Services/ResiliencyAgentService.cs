@@ -306,7 +306,6 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         string? format = artifact.TryGetProperty("metadata", out JsonElement artifactMetadata)
             ? ReadString(artifactMetadata, "type")
             : null;
-
         if (!artifact.TryGetProperty("parts", out JsonElement parts) || parts.ValueKind != JsonValueKind.Array)
         {
             return [new AgentArtifact(name, description, null, null, format)];
@@ -329,26 +328,38 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                 case "text":
                     {
                         string text = ReadString(part, "text") ?? string.Empty;
-                        List<AgentArtifact>? envelope = UnpackFileEnvelope(text, description, format);
+                        List<AgentArtifact>? envelope = UnpackFileEnvelope(
+                            text,
+                            description,
+                            format);
                         if (envelope is not null)
                         {
                             decoded.AddRange(envelope);
                         }
                         else
                         {
-                            decoded.Add(new AgentArtifact(name, description, "text/markdown", text, format));
+                            decoded.Add(new AgentArtifact(
+                                name,
+                                description,
+                                "text/markdown",
+                                text,
+                                format));
                         }
 
                         break;
                     }
 
                 case "data" when part.TryGetProperty("data", out JsonElement data):
-                    decoded.Add(new AgentArtifact(
-                        name,
-                        description,
-                        "text/markdown",
-                        TranscodeDataToMarkdown(data),
-                        format));
+                    AgentArtifact rendered =
+                        StructuredArtifactMarkdownRenderer.Render(name, description, format, data)
+                        ?? new AgentArtifact(
+                            name,
+                            description,
+                            "text/markdown",
+                            TranscodeDataToMarkdown(data),
+                            format,
+                            "structured-data");
+                    decoded.Add(rendered);
                     break;
             }
         }
@@ -633,7 +644,10 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
     /// Some generators emit <c>{"files":[{"file_name":...,"content":...}]}</c> as a single text part.
     /// Unpack it so each file arrives under its real name instead of one opaque blob.
     /// </summary>
-    private static List<AgentArtifact>? UnpackFileEnvelope(string text, string? description, string? format)
+    private static List<AgentArtifact>? UnpackFileEnvelope(
+        string text,
+        string? description,
+        string? format)
     {
         if (!text.TrimStart().StartsWith('{'))
         {
