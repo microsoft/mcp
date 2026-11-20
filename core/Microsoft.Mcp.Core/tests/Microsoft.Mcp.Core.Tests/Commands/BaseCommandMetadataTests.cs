@@ -43,6 +43,28 @@ public sealed class BaseCommandMetadataTests
             => Task.FromResult(context.Response);
     }
 
+    [CommandMetadata(
+        Id = "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        Name = "test-wrapped",
+        Title = "Test Wrapped Description Command",
+        Description = """
+            A command whose description
+            wraps across source lines.
+            """,
+        OperationPlane = ToolOperationPlane.Control,
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false)]
+    private sealed class WrappedDescriptionCommand : BaseCommand<EmptyOptions, string>
+    {
+        public override Task<CommandResponse> ExecuteAsync(
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
+            => Task.FromResult(context.Response);
+    }
+
     // ---------- Attribute-based metadata tests ----------
 
     [Fact]
@@ -64,6 +86,14 @@ public sealed class BaseCommandMetadataTests
     {
         var command = new AttributeBasedCommand();
         Assert.Equal("A command used only in tests.", command.Description);
+    }
+
+    [Fact]
+    public void WrappedDescriptionCommand_JoinsSourceLineBreaks()
+    {
+        var command = new WrappedDescriptionCommand();
+        Assert.Equal("A command whose description wraps across source lines.", command.Description);
+        Assert.Equal(command.Description, command.GetCommand().Description);
     }
 
     [Fact]

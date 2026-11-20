@@ -738,6 +738,8 @@ public class StorageAccountListOptions : ISubscriptionOption
 
 All `CommandMetadata` properties are required. Choose `OperationPlane` to match the APIs the tool acts against.
 
+Line breaks in `Description` are joined at runtime, so you can wrap long text across source lines without adding tokens. A blank line starts a new paragraph, and list items (`- `, `* `, `1. `) and lines ending in `:` keep their own line.
+
 **CRITICAL: Using Statements**
 Ensure all necessary using statements are included:
 
