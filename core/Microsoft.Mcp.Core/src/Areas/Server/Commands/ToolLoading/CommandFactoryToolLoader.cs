@@ -113,6 +113,7 @@ public sealed class CommandFactoryToolLoader(
             {
                 activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);
+                RecordToolFailure(activity, ToolFailureReason.ToolNotEnabled);
                 var content = new TextContentBlock
                 {
                     Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _configuration.Value.Tool.Select(t => $"'{t}'"))}",
@@ -131,6 +132,7 @@ public sealed class CommandFactoryToolLoader(
         {
             activity?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                 .SetTag(TagName.ToolName, TagConstants.Unknown);
+            RecordToolFailure(activity, ToolFailureReason.ToolNotFound);
             var content = new TextContentBlock
             {
                 Text = $"Could not find command: {toolName}",
@@ -156,6 +158,7 @@ public sealed class CommandFactoryToolLoader(
         // Enforce read-only mode at execution time
         if (_configuration.Value.ReadOnly && !command.Metadata.ReadOnly)
         {
+            RecordToolFailure(activity, ToolFailureReason.ReadOnlyMode);
             var content = new TextContentBlock
             {
                 Text = $"Tool '{toolName}' is not available. This server is configured in read-only mode and this tool is not a read-only tool.",
@@ -172,6 +175,7 @@ public sealed class CommandFactoryToolLoader(
         // Enforce HTTP mode restrictions at execution time
         if (_configuration.Value.IsHttpMode && command.Metadata.LocalRequired)
         {
+            RecordToolFailure(activity, ToolFailureReason.LocalRequiredInHttpMode);
             var content = new TextContentBlock
             {
                 Text = $"Tool '{toolName}' is not available. This server is running in HTTP mode and this tool requires local execution.",
@@ -221,6 +225,7 @@ public sealed class CommandFactoryToolLoader(
         {
             if (!realCommand.TryParseFromDictionary(request.Params.Arguments, out commandOptions, out var parseErrors))
             {
+                RecordToolFailure(activity, ToolFailureReason.InvalidArguments);
                 return new CallToolResult
                 {
                     Content =
@@ -246,6 +251,7 @@ public sealed class CommandFactoryToolLoader(
             {
                 commandResponse = await command.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             }
+            RecordCommandResponseFailure(activity, commandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
             var callToolResult = StructuredOutputHelper.CreateCallToolResult(
