@@ -1,3 +1,0 @@
-changes:
-  - section: "Other Changes"
-    description: "Updated MySQL tools to use the 'VerifyFull' SSL mode, which validates the server certificate and hostname when connecting to Azure Database for MySQL."
