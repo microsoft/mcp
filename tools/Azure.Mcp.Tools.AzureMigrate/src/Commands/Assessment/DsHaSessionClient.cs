@@ -45,7 +45,7 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
 
     /// <inheritdoc/>
     public Task<HaSessionResult> StartInSessionAsync(string token, HaInput input, string sessionId, CancellationToken cancellationToken) =>
-        StartCoreAsync(token, input, sessionId, reuseActiveSession: false, cancellationToken);
+        StartCoreAsync(token, input, sessionId, reuseActiveSession: true, cancellationToken);
 
     /// <inheritdoc/>
     public async Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken)
@@ -106,6 +106,14 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
         }
     }
 
+    /// <summary>The failed step reported while the reused active session still runs an earlier invocation.</summary>
+    internal const string SessionBusyStep = "sessionBusy";
+
+    /// <summary>Returns true for a Discovery Service session state in which the session still runs an invocation.</summary>
+    internal static bool IsBusy(string? sessionState) =>
+        string.Equals(sessionState, "Invoking", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(sessionState, "Publishing", StringComparison.OrdinalIgnoreCase);
+
     private async Task<HaSessionResult> StartCoreAsync(
         string token, HaInput input, string sessionId, bool reuseActiveSession, CancellationToken cancellationToken)
     {
@@ -128,6 +136,17 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
             // One active session per user and skill type: on a later run, continue in the caller's existing HA session.
             sessionId = activeSessionId;
             reused = true;
+
+            // A PUT of an existing session returns it unchanged, with its state. While it still runs an earlier business case, wait
+            // for it to finish instead of invoking it.
+            DsBackdoorClient.DsResponse active = await DsBackdoorClient.SendAsync(
+                _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "read active HA session", cancellationToken);
+            string? state = DsBackdoorClient.ReadValue(active.Body, "properties", "sessionState");
+            if (IsBusy(state))
+            {
+                _logger.LogInformation("AzureMigrate HA: active session {SessionId} is {State}; waiting for it to finish.", sessionId, state);
+                return new(SessionBusyStep, active.Status, sessionId, true, null, clientRequestId, $"Session '{sessionId}' is {state}.");
+            }
         }
         else if (create.Status is not (>= 200 and < 300))
         {

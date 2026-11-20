@@ -22,7 +22,7 @@ internal static class BusinessCaseReportWidget
     internal static bool IsEnabled =>
         !string.Equals(Environment.GetEnvironmentVariable(EnabledSetting)?.Trim(), "false", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Registers the card for the business case status command when enabled.</summary>
+    /// <summary>Registers the card for the given command (the business case status command) when enabled.</summary>
     internal static void Register(string commandId)
     {
         if (IsEnabled)

@@ -210,6 +210,24 @@ public class BusinessCaseCommandTests
     }
 
     [Theory]
+    [InlineData("sessionBusy", 200, "Session 'bc-earlier' is Invoking.", "earlier ROI summary")]
+    [InlineData("invokeSession", 400, "HTTP 400: InvalidSessionState", "being evaluated")]
+    public async Task Status_HaSkillReusedSessionStillBusy_WaitsForIt(string failedStep, int httpStatus, string error, string instructions)
+    {
+        AssessmentSucceeded();
+        Evaluations(new EvaluationResult(200, "Succeeded", TcoUri, null, null, null), new EvaluationResult(200, "Succeeded", HaUri, null, null, null));
+        _ha.StartInSessionAsync(default!, default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaSessionResult(failedStep, httpStatus, "bc-earlier", true, null, "req", error));
+
+        var result = await StatusCommand().RunAsync(StatusOptions(), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Running", result.Status);
+        Assert.Null(result.FailedStep);
+        Assert.NotNull(result.NextStatusParameters);
+        Assert.Contains(instructions, result.Instructions);
+    }
+
+    [Theory]
     [InlineData(200, "Succeeded", "Succeeded", true)]
     [InlineData(200, "Failed", "Failed", true)]
     [InlineData(200, "Running", "Running", false)]
@@ -251,49 +269,8 @@ public class BusinessCaseCommandTests
         Assert.Equal("Succeeded", result.Status);
         Assert.Equal(uri, result.Result);
         Assert.Equal("# ROI\n| a | b |", result.Report);
-        Assert.Contains("call the business case report tool once", result.Instructions);
-    }
-
-    [Fact]
-    public async Task Report_DownloadsReportForTheCard()
-    {
-        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
-        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns("# ROI");
-
-        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(
-            new() { AssessmentName = "bc-1", ReportUri = uri }, TestContext.Current.CancellationToken);
-
-        Assert.True(result.Success);
-        Assert.Equal("Succeeded", result.Status);
-        Assert.Equal("# ROI", result.Report);
-        Assert.Equal(uri, result.Result);
-        Assert.Equal("bc-1", result.AssessmentName);
-    }
-
-    [Fact]
-    public async Task Report_DownloadFails_ReturnsLinkOnly()
-    {
-        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
-        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns((string?)null);
-
-        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(new() { ReportUri = uri }, TestContext.Current.CancellationToken);
-
-        Assert.Equal("Failed", result.Status);
-        Assert.Null(result.Report);
-        Assert.Equal(uri, result.Result);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("http://acct.blob.core.windows.net/c/ROI.md")]
-    [InlineData("https://169.254.169.254/metadata")]
-    [InlineData("https://evil.example.com/acct.blob.core.windows.net")]
-    public async Task Report_RejectsNonBlobLinks(string? uri)
-    {
-        var result = await new ShowBusinessCaseReportCommand(_ha).RunAsync(new() { ReportUri = uri }, TestContext.Current.CancellationToken);
-
-        Assert.False(result.Success);
-        await _ha.DidNotReceiveWithAnyArgs().DownloadReportAsync(default!, TestContext.Current.CancellationToken);
+        Assert.Contains("shown to them in the report card", result.Instructions);
+        Assert.Contains("in a few bullets", result.Instructions);
     }
 
     [Fact]

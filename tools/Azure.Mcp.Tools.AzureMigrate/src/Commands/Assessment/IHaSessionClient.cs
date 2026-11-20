@@ -16,8 +16,9 @@ public interface IHaSessionClient
 
     /// <summary>
     /// Like <see cref="StartAsync"/>, but in the session <paramref name="sessionId"/>, which the business case derives from its
-    /// assessment operation so that repeated calls address the same session. Another active session of the caller is reported as a
-    /// failure of the 'createSession' step (HTTP 409) instead of being reused.
+    /// assessment operation so that repeated calls address the same session. When the caller already has another active session
+    /// of the skill type (HTTP 409), the run continues in that session instead, as <see cref="StartAsync"/> does; while that session
+    /// still runs an earlier invocation, it is not invoked and the result's failed step is 'sessionBusy'.
     /// </summary>
     Task<HaSessionResult> StartInSessionAsync(string token, HaInput input, string sessionId, CancellationToken cancellationToken);
 

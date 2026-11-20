@@ -67,13 +67,12 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<IInventoryExportClient, InventoryExportClient>();
         services.AddSingleton<CreateBusinessCaseCommand>();
         services.AddSingleton<GetBusinessCaseStatusCommand>();
-        services.AddSingleton<ShowBusinessCaseReportCommand>();
 
         // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
         // MCP Apps card that renders the ROI report (ROI.md) like a Markdown preview; set AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn it off.
-        // It is attached to the report tool, called once, so it isn't rendered on every status poll.
-        BusinessCaseReportWidget.Register(ShowBusinessCaseReportCommand.CommandId);
+        // It is attached to the status tool: it shows the stage on each poll and the report once the business case succeeds.
+        BusinessCaseReportWidget.Register(GetBusinessCaseStatusCommand.CommandId);
     }
 
     /// <inheritdoc/>
@@ -123,11 +122,10 @@ public class AzureMigrateSetup : IAreaSetup
         var businessCase = new CommandGroup(
             "businesscase",
             "Azure Catalyst business case operations - Start a business case for the signed-in user from their offline collector ZIP, " +
-            "check its status, which also moves it to its next stage, and show the ROI report of a finished business case.");
+            "and check its status, which also moves it to its next stage and shows the ROI report once it finishes.");
         azureMigrate.AddSubGroup(businessCase);
         businessCase.AddCommand<CreateBusinessCaseCommand>(serviceProvider);
         businessCase.AddCommand<GetBusinessCaseStatusCommand>(serviceProvider);
-        businessCase.AddCommand<ShowBusinessCaseReportCommand>(serviceProvider);
 
         return azureMigrate;
     }

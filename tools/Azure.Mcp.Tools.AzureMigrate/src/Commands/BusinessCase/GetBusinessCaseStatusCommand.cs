@@ -166,9 +166,11 @@ public sealed class GetBusinessCaseStatusCommand(
                 {
                     return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
                         (BusinessCaseReportWidget.IsEnabled
-                            ? "Tell the user the business case is ready. Then call the business case report tool once, with 'report-uri' " +
-                              "set to 'result' exactly as given and 'assessment-name', to show the ROI report in a card, and follow its " +
-                              "'instructions'. Do not paste 'report' yourself. "
+                            ? "Tell the user the business case is ready; the ROI report is shown to them in the report card, so do not " +
+                              "paste 'report'. Summarise its headline figures from 'report' in a few bullets (annual savings, ROI, NPV and " +
+                              "payback per migration strategy, and the number of servers), quoting the figures exactly. Then add a " +
+                              "clickable Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>); " +
+                              "never retype, shorten or show the URL on its own, and say the link expires."
                             : "Tell the user the business case is ready, then render 'report' (the ROI report, ROI.md) in your reply as " +
                               "Markdown exactly as given, keeping its headings and tables; do not summarise, reword or wrap it in a code block. " +
                               "After it, add a clickable Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>); " +
@@ -258,8 +260,17 @@ public sealed class GetBusinessCaseStatusCommand(
                 "Tell the user the business case evaluations have completed and its final stage (2 of 2) has started.");
         }
 
-        // The session already runs (an earlier call started it and its result was lost) or the Discovery Service is busy: try again.
-        if (IsTransient(start.HttpStatus) || (start.FailedStep == "invoke" && start.Error?.Contains("SessionState", StringComparison.Ordinal) == true))
+        // The caller's active session still runs an earlier business case: wait for it to finish, then run in it.
+        if (start.FailedStep == DsHaSessionClient.SessionBusyStep)
+        {
+            return Running(ctx, BusinessCaseStages.Assessment, null, null, start.HttpStatus, null,
+                "If you have not already said so, tell the user once that an earlier ROI summary of theirs is still running and this one " +
+                "will start as soon as it finishes; do not repeat it.");
+        }
+
+        // The session already runs (an earlier call started it and its result was lost, or the reused active session started
+        // another invocation in the meantime) or the Discovery Service is busy: try again.
+        if (IsTransient(start.HttpStatus) || (start.FailedStep == "invokeSession" && start.Error?.Contains("SessionState", StringComparison.Ordinal) == true))
         {
             return Running(ctx, BusinessCaseStages.Assessment, null, null, start.HttpStatus, null, AssessmentRunningText);
         }
