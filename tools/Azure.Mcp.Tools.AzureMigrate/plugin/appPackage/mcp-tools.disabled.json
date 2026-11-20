@@ -1,0 +1,65 @@
+{
+  "tools": [
+    {
+      "name": "azuremigrate_assessment_create",
+      "description": "Creates an Azure Migrate assessment: a datacenter (DC) migration proposal built from the on-premises inventory with the given target Azure region (location), currency and savings option. Returns the inventory summary, per-server Azure VM recommendations, on-premises vs Azure monthly cost and estimated savings. The request is authorized by the Azure Migrate Discovery Service as the signed-in user. POC: uses dummy inventory and illustrative prices.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "Target Azure region for the migrated workloads, for example 'eastus', 'westeurope' or 'centralindia'."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency for all cost figures. Valid values: 'USD', 'EUR', 'GBP', 'INR', 'JPY', 'AUD', 'CAD'. Defaults to 'USD'."
+          },
+          "savings-option": {
+            "type": "string",
+            "description": "Pricing commitment applied to Azure compute. Valid values: 'None' (pay-as-you-go), 'RI1Year', 'RI3Year' (reserved instances), 'ASP1Year', 'ASP3Year' (Azure savings plan). Defaults to 'RI3Year'."
+          },
+          "assessment-name": {
+            "type": "string",
+            "description": "Optional display name for the assessment. A name is generated when omitted."
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_upload_geturl",
+      "description": "Gets a URL to upload a file (for example a server inventory CSV or Excel file) to Azure Migrate. Call this when the user provides or attaches a file to import. Returns 'uploadUrl', a pre-authorized Azure Blob Storage SAS URL, plus the HTTP method and headers to use: upload the raw file bytes with an HTTP PUT to 'uploadUrl' and the header 'x-ms-blob-type: BlockBlob'. A 201 response means the upload succeeded. The URL is a temporary credential: do not show it to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file-name": {
+            "type": "string",
+            "description": "Name of the file the user wants to upload, including its extension, for example 'servers.csv' or 'inventory.xlsx'."
+          }
+        },
+        "required": [
+          "file-name"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_inventory_build",
+      "description": "Starts building an Azure Migrate server inventory from a file the user provides (for example a CMDB, CSV, Excel or zip export). Call this once per file when the user asks to build, import or discover an inventory. It creates a new Azure Migrate session for the signed-in user, starts the inventory build and returns 'uploadUrl', a pre-authorized Azure Blob Storage SAS URL: upload the raw file bytes with an HTTP PUT to 'uploadUrl' and the header 'x-ms-blob-type: BlockBlob'. HTTP 201 means the upload succeeded and the build runs in the background. Returns 'sessionId' and 'operationId' to reference the build. The URL is a temporary credential: do not show it to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file-name": {
+            "type": "string",
+            "description": "Name of the inventory file the user provided, including its extension, for example 'servers.csv', 'cmdb.xlsx' or 'export.zip'. Used only to describe the upload."
+          },
+          "message": {
+            "type": "string",
+            "description": "Optional instructions for the inventory build, for example 'only include production servers'. Omit when the user gave none."
+          }
+        }
+      }
+    }
+  ]
+}

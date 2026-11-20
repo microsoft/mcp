@@ -1,0 +1,242 @@
+{
+  "tools": [
+    {
+      "name": "azuremigrate_inventory_createorupdate",
+      "description": "Starts or updates the signed-in user's Azure Migrate server inventory; the required first step before exporting the inventory, assessing an estate or generating an ROI summary. When: the user has a new or updated inventory file (a CMDB, CSV, Excel or zip export on their machine), for example 'I want to upload the inventory of my estate'; wants to correct or ask about their inventory in text, for example 'set web-01's OS to Windows Server 2025' or 'memory is in GB'; or wants to start again after a failed or expired inventory. How: call it once, straight away; do not ask the user to attach or send the file in the chat. Omit 'session-id' for a new inventory; pass the 'sessionId' from an earlier result to update that inventory. For a text change, pass 'session-id', 'message' with the user's request as written, and 'text-only' true. Returns: 'sessionId', 'operationId', 'instructions' and, for a file, 'uploadCommand' (an azcopy command the user runs on their own machine). Show 'uploadCommand' exactly as returned, in a code block, without retyping or shortening it. Next: success means the inventory has started, not finished. Start tracking it right away with the inventory status tool using the same 'sessionId' and 'operationId', before exporting the inventory or creating an assessment. Follow 'instructions'. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session-id": {
+            "type": "string",
+            "description": "Optional. ID of the inventory session to update, as returned by an earlier call (1-20 characters: letters, digits, '-' or '_'). Omit to create a new inventory; if the user already has an active session it is reused."
+          },
+          "message": {
+            "type": "string",
+            "description": "Optional instructions for the inventory build, for example 'only include production servers'. Omit when the user gave none."
+          },
+          "text-only": {
+            "type": "boolean",
+            "description": "Set true to update an existing inventory from 'message' alone, without uploading a file: a correction such as 'set server web-01's OS to Windows Server 2025', guidance such as 'memory is in GB', or a question about the inventory. Requires 'session-id' and 'message'. Leave false when the user provides a new or edited file."
+          }
+        }
+      }
+    },
+    {
+      "name": "azuremigrate_inventory_status",
+      "description": "Tracks an Azure Migrate inventory operation (file upload and transformation, or a text-only update) started by the inventory create-or-update tool. When: right after create-or-update succeeds, and again while the operation has not completed. How: pass 'session-id' and 'operation-id' from the latest create-or-update result in the conversation; ask the user to start an inventory if there is none. Returns: 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions' and, when finished, either 'result' or 'errorCode'/'errorMessage'. Each call waits up to about 25 seconds for the operation to finish. Next: while 'isCompleted' is false, call it again quietly with the same 'session-id' and 'operation-id'; the inventory must be complete before it is exported or assessed. When it is done, summarise 'result' in plain language without inventing details. Follow 'instructions'. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session-id": {
+            "type": "string",
+            "description": "Required. ID of the inventory session (sessionId) returned when the inventory was created or updated."
+          },
+          "operation-id": {
+            "type": "string",
+            "description": "Required. ID of the inventory operation (operationId, a GUID) returned when the inventory was created or updated."
+          }
+        },
+        "required": [
+          "session-id",
+          "operation-id"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_inventory_export",
+      "description": "Gets a download link for an output of a finished Azure Migrate inventory. When: the user asks to download, export or get the file of their inventory, after the inventory status tool reports it as completed. How: pass 'session-id' from the latest create-or-update result in the conversation; ask the user to start an inventory if there is none. Set 'output' to 'refined' for the refined (cleaned-up) inventory file, which is the default, or to 'offline' for the offline zip package; ask the user if it is unclear which one they want. Returns: 'downloadUrl', 'downloadCommand' (an azcopy command) and 'instructions'. Next: share the download link or command with the user. Follow 'instructions'. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session-id": {
+            "type": "string",
+            "description": "Required. ID of the inventory session (sessionId) returned when the inventory was created or updated."
+          },
+          "output": {
+            "type": "string",
+            "description": "Optional. Which output to download: 'refined' (default) for the refined inventory file, or 'offline' for the offline zip package."
+          }
+        },
+        "required": [
+          "session-id"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_create",
+      "description": "Creates an Azure Migrate assessment for the signed-in user from their offline collector ZIP, waits for it to complete (up to about 17 minutes) and then starts the HA assessment for it, returning a link to download the assessment. Requires 'assessment-name', 'target-region' (an Azure region name such as 'eastus'), 'currency' (a three-letter code such as 'USD') and 'inventory-sas-uri' (a read-only https SAS URL of the collector ZIP); ask the user for any that are missing and do not invent them. Optional settings such as savings option, Azure Hybrid Benefit, discount, scaling factors, environment type, disk types, VM families, uptime and licensing program use the assessment defaults when left out; pass them only when the user asks for them and do not ask for them otherwise. Tell the user this can take up to about 17 minutes before calling it. Returns 'status', 'isCompleted', 'assessmentOutputUrl', 'haOperationId' and 'instructions'. Follow 'instructions'; if the assessment is still running, keep 'operationId' to check its status later. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "assessment-name": {
+            "type": "string",
+            "description": "Required. Name of the assessment to create: 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'."
+          },
+          "target-region": {
+            "type": "string",
+            "description": "Required. Target Azure region to assess for, as an Azure region name such as 'eastus' or 'westeurope'."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Required. Currency for cost estimates, as a three-letter ISO 4217 code such as 'USD' or 'EUR'."
+          },
+          "inventory-sas-uri": {
+            "type": "string",
+            "description": "Required. Read-only SAS URL (https) of the offline collector ZIP to assess, as given by the user. Ask the user for it if it is missing and do not invent it."
+          },
+          "scaling-factor": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Optional. Compute scaling (comfort) factor between 1 and 2. Default 1."
+          },
+          "storage-scaling-factor": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Optional. Storage scaling factor between 1 and 2. Default 1."
+          },
+          "discount-percentage": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Optional. Discount percentage on Azure costs, 0 to 100. Default 0."
+          },
+          "environment-type": {
+            "type": "string",
+            "description": "Optional. Environment type: 'Production' or 'DevTest'. Default 'Production'."
+          },
+          "licensing-program": {
+            "type": "string",
+            "description": "Optional. Licensing program: 'Retail', 'EA' or 'MCA'. Default 'Retail'. EA and MCA pricing need 'billing-subscription-id'."
+          },
+          "billing-subscription-id": {
+            "type": "string",
+            "description": "Optional. Subscription ID (GUID) used for EA or MCA negotiated pricing. Default none."
+          },
+          "savings-option": {
+            "type": "string",
+            "description": "Optional. Savings option: 'None', 'RI1Year', 'RI3Year', 'SavingsPlan1Year' or 'SavingsPlan3Year'. Default 'None'."
+          },
+          "azure-offer-code": {
+            "type": "string",
+            "description": "Optional. Azure offer code, for example 'MSAZR0003P' (pay as you go) or 'MSAZR0023P' (dev/test). Default 'MSAZR0003P'."
+          },
+          "security-offering-type": {
+            "type": "string",
+            "description": "Optional. Microsoft Defender for Cloud cost: 'NO' or 'MDC'. Default 'NO'."
+          },
+          "disk-types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional. Disk types to consider, any of 'Standard', 'StandardSSD', 'Premium', 'StandardOrPremium', 'Ultra', 'PremiumV2'. Replaces the default rather than adding to it. Default ['StandardSSD']."
+          },
+          "pricing-tier": {
+            "type": "string",
+            "description": "Optional. Pricing tier: 'Standard' or 'Basic'. Default 'Standard'."
+          },
+          "storage-redundancy": {
+            "type": "string",
+            "description": "Optional. Storage redundancy: 'LocallyRedundant', 'GeoRedundant', 'ZoneRedundant' or 'ReadAccessGeoRedundant'. Default 'LocallyRedundant'."
+          },
+          "azure-hybrid-benefit": {
+            "type": "string",
+            "description": "Optional. Azure Hybrid Benefit for Windows: 'Yes' or 'No'. Default 'No'."
+          },
+          "linux-azure-hybrid-benefit": {
+            "type": "string",
+            "description": "Optional. Azure Hybrid Benefit for Linux: 'Yes' or 'No'. Default 'No'."
+          },
+          "vm-families": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional. VM families to limit recommendations to, for example 'Dsv5_series' or 'Ev5_series'. Default: all families."
+          },
+          "uptime-days-per-month": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Optional. Days per month the VMs run, 1 to 31. Default 31."
+          },
+          "uptime-hours-per-day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Optional. Hours per day the VMs run, 1 to 24. Default 24."
+          },
+          "vm-security-options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional. VM security types to consider, any of 'Standard', 'TVM' (trusted launch) or 'CVM' (confidential). Default none."
+          },
+          "management-services": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional. Azure management service names to include in costs. Default none."
+          }
+        },
+        "required": [
+          "assessment-name",
+          "target-region",
+          "currency",
+          "inventory-sas-uri"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_status",
+      "description": "Gets the current status of an Azure Migrate assessment started by the assessment create tool. Call this once when the user asks about the progress of their assessment or needs a new link to download it; do not loop or wait. Requires 'operation-id' from the latest assessment create result in the conversation (ask the user to create an assessment if there is none); 'assessment-name' is optional. Returns 'status' (Running, Succeeded, Failed or Canceled), 'isCompleted', 'assessmentDownloadCommand' and 'instructions'. Follow 'instructions'. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "assessment-name": {
+            "type": "string",
+            "description": "Optional. Name of the assessment (assessmentName) returned when the assessment was created."
+          },
+          "operation-id": {
+            "type": "string",
+            "description": "Required. ID of the assessment operation (operationId, a GUID) returned when the assessment was created."
+          }
+        },
+        "required": [
+          "assessment-name",
+          "operation-id"
+        ]
+      }
+    },
+    {
+      "name": "azuremigrate_assessment_hastatus",
+      "description": "Gets the current status of the HA assessment started by the assessment create tool. Call this once when the user asks about the progress or result of their HA assessment; do not loop or wait. Requires 'ha-session-id' and 'ha-operation-id' from the latest assessment create result in the conversation (ask the user to create an assessment if there is none). Returns 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions', and when finished either 'result' or 'errorCode'/'errorMessage'. Follow 'instructions'. Summarise 'result' in plain language without inventing details. Do not mention tool or parameter names to the user.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ha-session-id": {
+            "type": "string",
+            "description": "Required. ID of the HA session (haSessionId) returned when the assessment was created."
+          },
+          "ha-operation-id": {
+            "type": "string",
+            "description": "Required. ID of the HA operation (haOperationId, a GUID) returned when the assessment was created."
+          }
+        },
+        "required": [
+          "ha-session-id",
+          "ha-operation-id"
+        ]
+      }
+    }
+  ]
+}
