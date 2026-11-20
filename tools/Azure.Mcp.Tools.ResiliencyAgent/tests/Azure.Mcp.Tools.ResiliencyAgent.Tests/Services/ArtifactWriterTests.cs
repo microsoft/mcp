@@ -11,6 +11,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Tests.Services;
 
+[CollectionDefinition("ArtifactWriter process directory", DisableParallelization = true)]
+public sealed class ArtifactWriterTestCollection
+{
+}
+
+[Collection("ArtifactWriter process directory")]
 public sealed class ArtifactWriterTests : IDisposable
 {
     private readonly string _workingDirectory;
