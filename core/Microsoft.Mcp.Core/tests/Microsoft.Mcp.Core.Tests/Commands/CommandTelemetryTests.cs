@@ -10,6 +10,7 @@ using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Commands;
@@ -191,6 +192,19 @@ public sealed class CommandTelemetryTests
         Assert.Equal("invalid_request", exceptionDetails["ErrorCode"]!.GetValue<string>());
         Assert.Equal(expectedAadStsCode, exceptionDetails["AadStsErrorCode"]?.GetValue<string>());
         Assert.DoesNotContain("Trace ID", exceptionDetails.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OnBehalfOfUserTokenRequired_ReturnsForbiddenWithActionableMessage()
+    {
+        using var activity = CreateActivity();
+        var command = new ThrowingTestCommand(new OnBehalfOfUserTokenRequiredException());
+
+        Assert.True(command.GetCommand().TryParseFromDictionary(null, out ParseResult? parseResult, out _));
+        var response = await ((IBaseCommand)command).ExecuteAsync(new CommandContext(activity), parseResult!, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("UseHostingEnvironmentIdentity", response.Message);
     }
 
     [Fact]

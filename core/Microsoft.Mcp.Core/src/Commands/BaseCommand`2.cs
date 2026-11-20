@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -235,6 +236,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
     protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
+        OnBehalfOfUserTokenRequiredException => HttpStatusCode.Forbidden,
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
         RequestFailedException reqFailedEx => (HttpStatusCode)reqFailedEx.Status,
