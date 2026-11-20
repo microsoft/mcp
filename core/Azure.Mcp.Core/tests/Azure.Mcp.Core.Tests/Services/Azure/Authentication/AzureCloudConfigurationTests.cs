@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -378,5 +379,204 @@ public class AzureCloudConfigurationTests
 
         // Assert
         Assert.Equal(new Uri("https://management.usgovcloudapi.net"), cloudConfig.ArmEnvironment.Endpoint);
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloud_LoadsConfiguredMetadata()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, """
+                {
+                  "authorityHost": "https://login.custom.example",
+                  "arm": {
+                    "endpoint": "https://management.custom.example",
+                    "audience": "https://management.custom.example"
+                  },
+                  "logAnalytics": {
+                    "endpoint": "https://logs.custom.example",
+                    "audience": "https://logs.custom.example"
+                  },
+                  "kusto": {
+                    "endpointSuffix": "KUSTO.CONTOSO.EXAMPLE",
+                    "audience": "https://kusto.contoso.example"
+                  }
+                }
+                """);
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+                .Build();
+            var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { CustomCloudConfig = path });
+
+            var cloudConfig = new AzureCloudConfiguration(config, options);
+
+            Assert.Equal(AzureCloudConfiguration.AzureCloud.CustomCloud, cloudConfig.CloudType);
+            Assert.Equal(new Uri("https://management.custom.example"), cloudConfig.ArmEnvironment.Endpoint);
+            Assert.Equal(new Uri("https://logs.custom.example"), cloudConfig.LogAnalytics!.Endpoint);
+            Assert.Equal("https://logs.custom.example", cloudConfig.LogAnalytics.Audience);
+            Assert.Equal("https://logs.custom.example/.default", cloudConfig.LogAnalytics.DefaultScope);
+            Assert.Equal(".kusto.contoso.example", cloudConfig.Kusto!.EndpointSuffix);
+            Assert.Equal("https://kusto.contoso.example", cloudConfig.Kusto.Audience);
+            Assert.Equal("https://kusto.contoso.example/.default", cloudConfig.Kusto.DefaultScope);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloudWithoutConfig_ThrowsArgumentException()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+            .Build();
+
+        Assert.Throws<ArgumentException>(() => new AzureCloudConfiguration(config));
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloudWithOnlyArm_LoadsArmCapability()
+    {
+        var path = WriteCustomCloudConfig();
+        try
+        {
+            var cloudConfig = CreateCustomCloudConfiguration(path);
+
+            Assert.Equal(new Uri("https://management.custom.example"), cloudConfig.ArmEnvironment.Endpoint);
+            Assert.Null(cloudConfig.LogAnalytics);
+            Assert.Null(cloudConfig.Kusto);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void ParseCloudValue_CustomCloudWithoutArm_ThrowsArgumentException()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, """{ "authorityHost": "https://login.custom.example" }""");
+
+            var exception = Assert.Throws<ArgumentException>(() => CreateCustomCloudConfiguration(path));
+
+            Assert.Contains("arm capability", exception.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("kusto.contoso.example", null, "kusto.audience")]
+    [InlineData(null, "https://kusto.contoso.example", "kusto.endpointSuffix")]
+    public void ParseCloudValue_CustomCloudWithIncompleteKustoCapability_ThrowsArgumentException(
+        string? kustoEndpointSuffix,
+        string? kustoAudience,
+        string expectedProperty)
+    {
+        var path = WriteCustomCloudConfig(kustoEndpointSuffix, kustoAudience);
+        try
+        {
+            var exception = Assert.Throws<ArgumentException>(() => CreateCustomCloudConfiguration(path));
+
+            Assert.Contains(expectedProperty, exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("*.kusto.contoso.example")]
+    [InlineData("https://kusto.contoso.example")]
+    [InlineData(".example")]
+    [InlineData(".kusto.contoso.example.")]
+    [InlineData(".kusto.contoso.example/path")]
+    [InlineData(".kusto.contoso.example:443")]
+    [InlineData(".kusto.contoso.exämple")]
+    public void ParseCloudValue_CustomCloudWithInvalidKustoEndpointSuffix_ThrowsArgumentException(string suffix)
+    {
+        var path = WriteCustomCloudConfig(suffix, "https://kusto.contoso.example");
+        try
+        {
+            var exception = Assert.Throws<ArgumentException>(() => CreateCustomCloudConfiguration(path));
+
+            Assert.Contains("kusto.endpointSuffix", exception.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("http://kusto.contoso.example")]
+    [InlineData("https://user@kusto.contoso.example")]
+    [InlineData("https://kusto.contoso.example:443")]
+    [InlineData("https://kusto.contoso.example/path")]
+    [InlineData("https://kusto.contoso.example?query=value")]
+    [InlineData("https://kusto.contoso.example#fragment")]
+    public void ParseCloudValue_CustomCloudWithInvalidKustoAudience_ThrowsArgumentException(string audience)
+    {
+        var path = WriteCustomCloudConfig("kusto.contoso.example", audience);
+        try
+        {
+            var exception = Assert.Throws<ArgumentException>(() => CreateCustomCloudConfiguration(path));
+
+            Assert.Contains("kusto.audience", exception.Message);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static AzureCloudConfiguration CreateCustomCloudConfiguration(string path)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["cloud"] = "custom" })
+            .Build();
+        var options = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { CustomCloudConfig = path });
+
+        return new AzureCloudConfiguration(config, options);
+    }
+
+    private static string WriteCustomCloudConfig(
+        string? kustoEndpointSuffix = null,
+        string? kustoAudience = null)
+    {
+        var metadata = new Dictionary<string, object?>
+        {
+            ["authorityHost"] = "https://login.custom.example",
+            ["arm"] = new Dictionary<string, object?>
+            {
+                ["endpoint"] = "https://management.custom.example",
+                ["audience"] = "https://management.custom.example"
+            }
+        };
+
+        if (kustoEndpointSuffix != null || kustoAudience != null)
+        {
+            metadata["kusto"] = new Dictionary<string, object?>
+            {
+                ["endpointSuffix"] = kustoEndpointSuffix,
+                ["audience"] = kustoAudience
+            };
+        }
+
+        var path = Path.GetTempFileName();
+        File.WriteAllText(path, JsonSerializer.Serialize(metadata));
+        return path;
     }
 }

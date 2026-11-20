@@ -44,6 +44,8 @@ public sealed class MySqlService(IAzureService azureService)
                 "https://ossrdbms-aad.database.usgovcloudapi.net/.default",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud =>
                 "https://ossrdbms-aad.database.chinacloudapi.cn/.default",
+            AzureCloudConfiguration.AzureCloud.CustomCloud =>
+                throw new InvalidOperationException("Azure Database for MySQL authentication is not supported for custom clouds."),
             _ => throw new ArgumentException(
                 $"The configured Azure cloud is not supported for MySql connections. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
                 nameof(AzureService.CloudConfiguration.CloudType))

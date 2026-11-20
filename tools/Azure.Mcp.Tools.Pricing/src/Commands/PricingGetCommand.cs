@@ -29,7 +29,8 @@ namespace Azure.Mcp.Tools.Pricing.Commands;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class PricingGetCommand(ILogger<PricingGetCommand> logger, IPricingService pricingService)
     : AuthenticatedCommand<PricingGetOptions, PricingGetCommand.PricingGetCommandResult>
 {

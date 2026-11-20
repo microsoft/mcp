@@ -271,7 +271,7 @@ public class AppLensService(IAzureService azureService)
 
         // Get ARM token
         var token = await credential.GetTokenAsync(
-            new TokenRequestContext([GetManagementImpersonationEndpoint()]),
+            new TokenRequestContext([AzureService.CloudConfiguration.ArmEnvironment.DefaultScope]),
             cancellationToken);
 
         // Call the AppLens token endpoint
@@ -536,31 +536,15 @@ public class AppLensService(IAzureService azureService)
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://diagnosticschatnext.azure.com/chatHub",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://diagnosticschat.azure.cn/chatHub",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://diagnosticschat.azure.us/chatHub",
-            _ => "https://diagnosticschatnext.azure.com/chatHub",
-        };
-    }
-
-    private string GetManagementImpersonationEndpoint()
-    {
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://management.azure.com/user_impersonation",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://management.chinacloudapi.cn/user_impersonation",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://management.usgovcloudapi.net/user_impersonation",
-            _ => "https://management.azure.com/user_impersonation",
+            _ => throw new InvalidOperationException("AppLens conversational diagnostics are not supported for custom clouds."),
         };
     }
 
     private string GetAppLensTokenEndpoint(string resourceId)
     {
         const string detectorsTokenPath = "detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01";
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{resourceId}/{detectorsTokenPath}",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{resourceId}/{detectorsTokenPath}",
-            _ => $"https://management.azure.com/{resourceId}/{detectorsTokenPath}",
-        };
+        var armEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri.TrimEnd('/');
+        return $"{armEndpoint}/{resourceId}/{detectorsTokenPath}";
     }
 
     private string GetDiagnosticsPortalEndpoint()
@@ -570,7 +554,7 @@ public class AppLensService(IAzureService azureService)
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => "https://appservice-diagnostics.trafficmanager.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => "https://appservice-diagnostics.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => "https://appservice-diagnostics.azure.us",
-            _ => "https://appservice-diagnostics.trafficmanager.net",
+            _ => throw new InvalidOperationException("AppLens diagnostics are not supported for custom clouds."),
         };
     }
 }

@@ -28,7 +28,8 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = true)]
+    LocalRequired = true,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
     : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>(endpointValidator)
 {

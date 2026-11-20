@@ -15,6 +15,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
@@ -1539,6 +1540,25 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
         });
     }
 
+    [Fact]
+    public async Task ListToolsHandler_CustomCloud_HidesNamespaceWithNoAvailableCommands()
+    {
+        var command = CreateRoutingCommand(
+            "query",
+            customCloudRequirement: CustomCloudRequirement.Unsupported);
+        var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.CustomCloud);
+        var loader = CreateRoutingLoader(
+            new Dictionary<string, IBaseCommand> { ["query"] = command },
+            cloudConfiguration: cloudConfiguration);
+
+        var result = await loader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Empty(result.Tools);
+    }
+
     // Helper methods
 
     private static ICommandFactory CreateNamespaceCommandFactory(
@@ -1569,7 +1589,8 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
     private NamespaceToolLoader CreateRoutingLoader(
         Dictionary<string, IBaseCommand> commands,
         ServerRuntimeConfiguration? configuration = null,
-        string namespaceName = "storage")
+        string namespaceName = "storage",
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         var group = new CommandGroup(namespaceName, "Namespace commands");
         foreach (var (name, command) in commands)
@@ -1584,18 +1605,29 @@ public sealed class NamespaceToolLoaderTests : IAsyncDisposable
             item => item.Key, item => new CommandRegistration(item.Value, namespaceName)));
         configuration ??= new ServerRuntimeConfiguration();
         return new NamespaceToolLoader(new CommandContextAccessor(), factory, Microsoft.Extensions.Options.Options.Create(configuration), _logger,
-            applyFilter: configuration.Mode != ModeTypes.ConsolidatedProxy);
+            applyFilter: configuration.Mode != ModeTypes.ConsolidatedProxy,
+            cloudConfiguration: cloudConfiguration);
     }
 
     private static IBaseCommand CreateRoutingCommand(
-        string name, bool readOnly = true, bool localRequired = false, int descriptionRepeats = 1)
+        string name,
+        bool readOnly = true,
+        bool localRequired = false,
+        int descriptionRepeats = 1,
+        CustomCloudRequirement customCloudRequirement = CustomCloudRequirement.None)
     {
         var description = string.Concat(Enumerable.Repeat("Catalog detail. ", descriptionRepeats));
         var underlyingCommand = new Command(name, description);
         underlyingCommand.Options.Add(new Option<string>("--subscription") { Description = description });
         underlyingCommand.Options.Add(new Option<int>("--limit") { Description = description });
         var command = Substitute.For<IBaseCommand>();
-        command.Metadata.Returns(new ToolMetadata { ReadOnly = readOnly, LocalRequired = localRequired, Destructive = false });
+        command.Metadata.Returns(new ToolMetadata
+        {
+            ReadOnly = readOnly,
+            LocalRequired = localRequired,
+            Destructive = false,
+            CustomCloudRequirement = customCloudRequirement
+        });
         command.GetCommand().Returns(underlyingCommand);
         command.ExecuteAsync(default!, default!, default!).ReturnsForAnyArgs(CreateSuccessfulCommandResponse());
         return command;

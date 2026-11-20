@@ -23,7 +23,8 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ItemListRecentCommand(ILogger<ItemListRecentCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver)
     : BaseCosmosCommand<ItemListRecentOptions, ItemListRecentCommand.ItemListRecentCommandResult>(subscriptionResolver)
 {

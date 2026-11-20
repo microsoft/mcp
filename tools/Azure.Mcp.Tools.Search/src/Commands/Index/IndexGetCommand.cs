@@ -25,7 +25,8 @@ namespace Azure.Mcp.Tools.Search.Commands.Index;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchService searchService)
     : AuthenticatedCommand<IndexGetOptions, IndexGetCommand.IndexGetCommandResult>
 {

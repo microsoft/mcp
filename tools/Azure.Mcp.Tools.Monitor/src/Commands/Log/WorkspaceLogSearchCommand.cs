@@ -30,7 +30,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class WorkspaceLogSearchCommand(
     ILogger<WorkspaceLogSearchCommand> logger,
     IMonitorLogSearchService logSearchService,

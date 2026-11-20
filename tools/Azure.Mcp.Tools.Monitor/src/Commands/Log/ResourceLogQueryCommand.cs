@@ -30,7 +30,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Log;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.LogAnalytics)]
 public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> logger, IMonitorService monitorService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<ResourceLogQueryOptions, ResourceLogQueryCommand.ResourceLogQueryCommandResult>(subscriptionResolver)
 {

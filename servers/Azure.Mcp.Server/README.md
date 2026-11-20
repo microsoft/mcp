@@ -921,7 +921,12 @@ azmcp server start --cloud AzureChinaCloud
 
 # Environment variable (PowerShell)
 $env:AZURE_CLOUD = "AzureUSGovernment"
-azmcp server start
+```
+
+Custom ARM and Resource Graph endpoints, with optional Log Analytics and Azure Data Explorer capabilities, can be configured with a local JSON file. MCP discovery automatically omits commands that are unavailable for the configured custom cloud:
+
+```bash
+azmcp server start --cloud custom --custom-cloud-config ./custom-cloud.json
 ```
 
 Before connecting, authenticate your local tools against the target cloud:

@@ -26,7 +26,8 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger, IApplicationInsightsService applicationInsightsService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<RecommendationListOptions, RecommendationListCommand.RecommendationListCommandResult>(subscriptionResolver)
 {

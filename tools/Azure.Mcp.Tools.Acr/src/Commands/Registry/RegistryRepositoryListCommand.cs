@@ -25,7 +25,8 @@ namespace Azure.Mcp.Tools.Acr.Commands.Registry;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryListCommand> logger, IAcrService acrService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<RegistryRepositoryListOptions, RegistryRepositoryListCommand.RegistryRepositoryListCommandResult>(subscriptionResolver)
 {

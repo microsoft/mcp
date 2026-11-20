@@ -21,7 +21,8 @@ namespace Azure.Mcp.Tools.Extension.Commands;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliGenerateService cliGenerateService)
     : AuthenticatedCommand<CliGenerateOptions, CliGenerateResult>
 {

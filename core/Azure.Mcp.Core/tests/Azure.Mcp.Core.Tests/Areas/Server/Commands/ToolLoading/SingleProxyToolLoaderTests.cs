@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
@@ -833,6 +834,46 @@ public class SingleProxyToolLoaderTests
             Assert.False(McpHelper.HasHint(tool, McpHelper.LocalRequiredHintMetaKey),
                 $"Tool '{tool.Name}' should have LocalRequiredHint = false when HTTP mode is enabled");
         });
+    }
+
+    [Fact]
+    public async Task GetToolsInGroupAsync_CustomCloud_FiltersUnavailableLocalCommands()
+    {
+        var command = Substitute.For<IBaseCommand>();
+        command.Metadata.Returns(new ToolMetadata
+        {
+            ReadOnly = true,
+            CustomCloudRequirement = CustomCloudRequirement.Unsupported
+        });
+        command.GetCommand().Returns(new Command("query", "Query data."));
+
+        var commands = new Dictionary<string, CommandRegistration> { ["query"] = new(command, "storage") };
+        var group = new CommandGroup("storage", "Storage commands");
+        group.AddCommand("query", command);
+        var root = new CommandGroup("root", "Root");
+        root.SubGroup.Add(group);
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.RootGroup.Returns(root);
+        commandFactory.AllCommands.Returns(commands);
+        commandFactory.GroupCommands(Arg.Any<string[]>()).Returns(commands);
+
+        var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.CustomCloud);
+        var toolLoader = new SingleProxyToolLoader(
+            new CommandContextAccessor(),
+            commandFactory,
+            Substitute.For<ILogger<SingleProxyToolLoader>>(),
+            Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()),
+            CreateServerConfigurationOptions(),
+            cloudConfiguration: cloudConfiguration);
+
+        var tools = await toolLoader.GetToolsInGroupAsync(
+            McpTestUtilities.CreateToolCallRequest("azure"),
+            "storage",
+            TestContext.Current.CancellationToken);
+
+        Assert.Empty(tools);
     }
 
     [Fact]

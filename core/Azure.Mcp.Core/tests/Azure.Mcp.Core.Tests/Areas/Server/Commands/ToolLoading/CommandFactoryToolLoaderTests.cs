@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests;
 using Microsoft.Mcp.Tests.Client.Helpers;
@@ -28,13 +29,20 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.ToolLoading;
 
 public class CommandFactoryToolLoaderTests
 {
-    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(ServerRuntimeConfiguration? configuration = null)
+    private static (CommandFactoryToolLoader toolLoader, ICommandFactory commandFactory) CreateToolLoader(
+        ServerRuntimeConfiguration? configuration = null,
+        IAzureCloudConfiguration? cloudConfiguration = null)
     {
         var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
         var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
 
-        var toolLoader = new CommandFactoryToolLoader(new CommandContextAccessor(), commandFactory, runtimeConfiguration, Substitute.For<ILogger<CommandFactoryToolLoader>>());
+        var toolLoader = new CommandFactoryToolLoader(
+            new CommandContextAccessor(),
+            commandFactory,
+            runtimeConfiguration,
+            Substitute.For<ILogger<CommandFactoryToolLoader>>(),
+            cloudConfiguration);
         return (toolLoader, commandFactory);
     }
 
@@ -67,6 +75,32 @@ public class CommandFactoryToolLoaderTests
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var commandMap = (Dictionary<string, CommandRegistration>)commandMapField!.GetValue(commandFactory)!;
         commandMap[fakeCommand.GetCommand().Name] = new CommandRegistration(fakeCommand, null);
+    }
+
+    private static IAzureCloudConfiguration CreateCustomCloudConfiguration(
+        bool includeLogAnalytics = false,
+        bool includeKusto = false)
+    {
+        var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.CustomCloud);
+
+        if (includeLogAnalytics)
+        {
+            cloudConfiguration.LogAnalytics.Returns(
+                new CloudServiceConfiguration(
+                    new Uri("https://logs.contoso.example"),
+                    "https://logs.contoso.example"));
+        }
+
+        if (includeKusto)
+        {
+            cloudConfiguration.Kusto.Returns(
+                new KustoCloudConfiguration(
+                    ".kusto.contoso.example",
+                    "https://kusto.contoso.example"));
+        }
+
+        return cloudConfiguration;
     }
 
     [Fact]
@@ -128,6 +162,102 @@ public class CommandFactoryToolLoaderTests
             Assert.True(tool.Annotations?.ReadOnlyHint == true,
                 $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
         }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CustomCloud_FiltersUnavailableTools()
+    {
+        var cloudConfiguration = CreateCustomCloudConfiguration();
+        var (toolLoader, commandFactory) = CreateToolLoader(cloudConfiguration: cloudConfiguration);
+        var unsupported = CreateFakeCommand(
+            "custom-unsupported",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.Unsupported
+            });
+        var logAnalytics = CreateFakeCommand(
+            "custom-loganalytics",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.LogAnalytics
+            });
+        var kusto = CreateFakeCommand(
+            "custom-kusto",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.Kusto
+            });
+
+        InjectCommandFactoryTool(commandFactory, unsupported);
+        InjectCommandFactoryTool(commandFactory, logAnalytics);
+        InjectCommandFactoryTool(commandFactory, kusto);
+
+        var result = await toolLoader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain(result.Tools, tool => tool.Name == "custom-unsupported");
+        Assert.DoesNotContain(result.Tools, tool => tool.Name == "custom-loganalytics");
+        Assert.DoesNotContain(result.Tools, tool => tool.Name == "custom-kusto");
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_CustomCloudWithCapabilities_IncludesCapabilityTools()
+    {
+        var cloudConfiguration = CreateCustomCloudConfiguration(
+            includeLogAnalytics: true,
+            includeKusto: true);
+        var (toolLoader, commandFactory) = CreateToolLoader(cloudConfiguration: cloudConfiguration);
+        var logAnalytics = CreateFakeCommand(
+            "custom-loganalytics",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.LogAnalytics
+            });
+        var kusto = CreateFakeCommand(
+            "custom-kusto",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.Kusto
+            });
+
+        InjectCommandFactoryTool(commandFactory, logAnalytics);
+        InjectCommandFactoryTool(commandFactory, kusto);
+
+        var result = await toolLoader.ListToolsHandler(
+            McpTestUtilities.CreateToolListRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.Contains(result.Tools, tool => tool.Name == "custom-loganalytics");
+        Assert.Contains(result.Tools, tool => tool.Name == "custom-kusto");
+    }
+
+    [Fact]
+    public async Task CallToolHandler_CustomCloudUnavailableTool_RejectsStaleInvocation()
+    {
+        var cloudConfiguration = CreateCustomCloudConfiguration();
+        var (toolLoader, commandFactory) = CreateToolLoader(cloudConfiguration: cloudConfiguration);
+        var command = CreateFakeCommand(
+            "custom-unsupported",
+            new ToolMetadata
+            {
+                ReadOnly = true,
+                CustomCloudRequirement = CustomCloudRequirement.Unsupported
+            });
+        InjectCommandFactoryTool(commandFactory, command);
+
+        var result = await toolLoader.CallToolHandler(
+            McpTestUtilities.CreateToolCallRequest("custom-unsupported"),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        var content = Assert.IsType<TextContentBlock>(Assert.Single(result.Content));
+        Assert.Contains("not supported for custom clouds", content.Text);
     }
 
     [Fact]

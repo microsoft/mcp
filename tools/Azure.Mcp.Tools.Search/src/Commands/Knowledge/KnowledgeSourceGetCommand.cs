@@ -29,7 +29,8 @@ namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand> logger, ISearchService searchService)
     : AuthenticatedCommand<KnowledgeSourceGetOptions, KnowledgeSourceGetCommand.KnowledgeSourceGetCommandResult>
 {

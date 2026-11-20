@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Http;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -60,6 +61,7 @@ public static partial class ServiceCollectionExtensions
             ReadOnly = serverStartOptions.ReadOnly ?? false,
             DangerouslyDisableElicitation = serverStartOptions.DangerouslyDisableElicitation,
             Cloud = serverStartOptions.Cloud,
+            CustomCloudConfig = serverStartOptions.CustomCloudConfig,
             StructuredOutputMode = serverStartOptions.StructuredOutputMode
         };
 
@@ -131,7 +133,8 @@ public static partial class ServiceCollectionExtensions
                     sp.GetRequiredService<ICommandContextAccessor>(),
                     sp.GetRequiredService<ICommandFactory>(),
                     Options.Create(additionalToolsServerRuntimeConfiguration),
-                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()));
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>(),
+                    sp.GetRequiredService<IAzureCloudConfiguration>()));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
@@ -168,7 +171,8 @@ public static partial class ServiceCollectionExtensions
                     consolidatedCommandFactory,
                     sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
                     loggerFactory.CreateLogger<NamespaceToolLoader>(),
-                    false));
+                    false,
+                    sp.GetRequiredService<IAzureCloudConfiguration>()));
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });

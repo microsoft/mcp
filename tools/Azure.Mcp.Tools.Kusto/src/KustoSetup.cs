@@ -6,10 +6,11 @@ using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Kusto;
 
-public class KustoSetup : IAreaSetup
+public sealed class KustoSetup : IAreaSetup
 {
     public string Name => "kusto";
 
@@ -17,6 +18,8 @@ public class KustoSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient(KustoClient.HttpClientName)
+            .DisableAutomaticRedirects();
         services.AddSingleton<IKustoService, KustoService>();
 
         services.AddSingleton<SampleCommand>();

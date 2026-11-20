@@ -27,7 +27,8 @@ namespace Azure.Mcp.Tools.Cosmos.Commands.Item;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ItemVectorSearchCommand(ILogger<ItemVectorSearchCommand> logger, ICosmosService cosmosService, ISubscriptionResolver subscriptionResolver, IEndpointValidator endpointValidator)
     : BaseCosmosCommand<ItemVectorSearchOptions, ItemVectorSearchCommand.ItemVectorSearchCommandResult>(subscriptionResolver)
 {

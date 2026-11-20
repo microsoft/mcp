@@ -140,8 +140,9 @@ public sealed class AzureService(
     /// <inheritdoc/>
     public async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
-        if (tenant == null)
-            return tenant;
+        if (string.IsNullOrWhiteSpace(tenant))
+            return null;
+
         return await GetTenantId(tenant, cancellationToken);
     }
 

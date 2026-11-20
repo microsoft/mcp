@@ -180,7 +180,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
                 $"AccountEndpoint=https://{databaseServer}.documents.azure.cn:443/;AccountKey={{key}};Database={databaseName};",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
                 $"AccountEndpoint=https://{databaseServer}.documents.azure.us:443/;AccountKey={{key}};Database={databaseName};",
-            _ => $"AccountEndpoint=https://{databaseServer}.documents.azure.com:443/;AccountKey={{key}};Database={databaseName};"
+            _ => throw new InvalidOperationException("Azure Cosmos DB connection strings are not supported for custom clouds.")
         };
     }
 
@@ -467,13 +467,8 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         string subscriptionPath = string.IsNullOrEmpty(detectorName)
             ? $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors?api-version=2025-05-01"
             : $"subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{siteName}/detectors/{detectorName}?api-version=2025-05-01";
-        return AzureService.CloudConfiguration.CloudType switch
-        {
-            AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://management.azure.com/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://management.chinacloudapi.cn/{subscriptionPath}",
-            AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://management.usgovcloudapi.net/{subscriptionPath}",
-            _ => $"https://management.azure.com/{subscriptionPath}"
-        };
+        var armEndpoint = AzureService.CloudConfiguration.ArmEnvironment.Endpoint.AbsoluteUri.TrimEnd('/');
+        return $"{armEndpoint}/{subscriptionPath}";
     }
 
     private async Task<T> CallDetectorsAsync<T>(

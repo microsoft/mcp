@@ -16,10 +16,18 @@ public sealed class CommandMetadataAttributeTests
         var properties = typeof(CommandMetadataAttribute).GetProperties(
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
-        Assert.NotEmpty(properties);
-        Assert.All(properties, property => Assert.True(
+        var requiredProperties = properties
+            .Where(property => property.Name != nameof(CommandMetadataAttribute.CustomCloudRequirement));
+
+        Assert.NotEmpty(requiredProperties);
+        Assert.All(requiredProperties, property => Assert.True(
             property.IsDefined(typeof(RequiredMemberAttribute), inherit: false),
             $"{property.Name} must be required."));
+
+        var customCloudRequirement = Assert.Single(
+            properties,
+            property => property.Name == nameof(CommandMetadataAttribute.CustomCloudRequirement));
+        Assert.False(customCloudRequirement.IsDefined(typeof(RequiredMemberAttribute), inherit: false));
     }
 
     [Theory]

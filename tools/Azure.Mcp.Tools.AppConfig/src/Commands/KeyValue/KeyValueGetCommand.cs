@@ -29,7 +29,8 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger, IAppConfigService appConfigService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<KeyValueGetOptions, KeyValueGetCommand.KeyValueGetCommandResult>(subscriptionResolver)
 {

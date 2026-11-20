@@ -47,6 +47,6 @@ internal class CliGenerateService(IHttpClientFactory httpClientFactory, IAzureTo
         AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
             "https://azclis-copilot-apim-prod-eus.azure-api.us/azcli/copilot",
         _ =>
-            "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot"
+            throw new InvalidOperationException("Azure CLI generation is not supported for custom clouds.")
     };
 }

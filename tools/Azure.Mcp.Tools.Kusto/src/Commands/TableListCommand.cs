@@ -21,7 +21,8 @@ namespace Azure.Mcp.Tools.Kusto.Commands;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Kusto)]
 public sealed class TableListCommand(
     ILogger<TableListCommand> logger,
     IKustoService kustoService,

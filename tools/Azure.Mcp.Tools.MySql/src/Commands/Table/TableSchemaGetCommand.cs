@@ -20,7 +20,8 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger, IMySqlService mysqlService)
     : AuthenticatedCommand<TableSchemaGetOptions, TableSchemaGetCommand.TableSchemaGetCommandResult>
 {

@@ -311,12 +311,12 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
 
     private async Task<KustoClient> GetOrCreateKustoClientAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "command");
+        var endpoint = KustoEndpoint.Create(clusterUri, AzureService.CloudConfiguration);
+        var providerCacheKey = GetProviderCacheKey(endpoint.ClusterUri, tenant, "command");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
-            var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
+            kustoClient = new KustoClient(endpoint, tenant, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -325,12 +325,12 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
 
     private async Task<KustoClient> GetOrCreateCslQueryProviderAsync(string clusterUri, string? tenant, CancellationToken cancellationToken = default)
     {
-        var providerCacheKey = GetProviderCacheKey(clusterUri, tenant, "query");
+        var endpoint = KustoEndpoint.Create(clusterUri, AzureService.CloudConfiguration);
+        var providerCacheKey = GetProviderCacheKey(endpoint.ClusterUri, tenant, "query");
         var kustoClient = await _cacheService.GetAsync<KustoClient>(CacheGroup, providerCacheKey, s_providerCacheDuration, cancellationToken);
         if (kustoClient == null)
         {
-            var tokenCredential = await GetCredential(tenant, cancellationToken);
-            kustoClient = new KustoClient(clusterUri, tokenCredential, UserAgent, AzureService);
+            kustoClient = new KustoClient(endpoint, tenant, UserAgent, AzureService);
             await _cacheService.SetAsync(CacheGroup, providerCacheKey, kustoClient, s_providerCacheDuration, cancellationToken);
         }
 
@@ -342,6 +342,8 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
         string clusterName,
         string? tenant)
     {
+        KustoEndpoint.EnsureCustomCloudConfigured(AzureService.CloudConfiguration);
+
         var cluster = await GetClusterAsync(subscriptionId, clusterName, tenant);
         var value = cluster?.ClusterUri;
 

@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added custom cloud endpoint trust and OAuth scope configuration for Azure Data Explorer queries."

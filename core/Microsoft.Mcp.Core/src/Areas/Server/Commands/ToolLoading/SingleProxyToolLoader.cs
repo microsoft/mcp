@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -45,12 +46,14 @@ public sealed class SingleProxyToolLoader(
     ILogger<SingleProxyToolLoader> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
     IOptions<McpServerConfiguration> serverConfiguration,
-    IMcpDiscoveryStrategy? discoveryStrategy = null) : BaseToolLoader(logger)
+    IMcpDiscoveryStrategy? discoveryStrategy = null,
+    IAzureCloudConfiguration? cloudConfiguration = null) : BaseToolLoader(logger)
 {
     private readonly ICommandContextAccessor _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
     private readonly ICommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IMcpDiscoveryStrategy? _discoveryStrategy = discoveryStrategy;
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly IAzureCloudConfiguration? _cloudConfiguration = cloudConfiguration;
     private readonly string _toolName = serverConfiguration?.Value.ShortName ?? throw new ArgumentNullException(nameof(serverConfiguration));
     private readonly string _toolDescription = serverConfiguration.Value.Description;
     private readonly string _displayName = serverConfiguration.Value.DisplayName;
@@ -245,13 +248,17 @@ public sealed class SingleProxyToolLoader(
 
             if (_configuration.Value.ReadOnly && group.AllToolsInGroupMatch(meta => !meta.ReadOnly))
             {
-                // If ReadOnly mode is enabled and all commands in the group are not read-only, skip exposing this namespace as a tool.
                 continue;
             }
 
             if (_configuration.Value.IsHttpMode && group.AllToolsInGroupMatch(meta => meta.LocalRequired))
             {
-                // If HTTP mode is enabled and all commands in the group are local-required, skip exposing this namespace as a tool.
+                continue;
+            }
+
+            if (_cloudConfiguration?.CloudType == AzureCloudConfiguration.AzureCloud.CustomCloud &&
+                group.AllToolsInGroupMatch(meta => !IsAvailableInCustomCloud(meta, _cloudConfiguration)))
+            {
                 continue;
             }
 
@@ -345,7 +352,7 @@ public sealed class SingleProxyToolLoader(
         if (group != null)
         {
             var groupTools = CommandFactory.GetVisibleCommands(_commandFactory.GroupCommands([group.Name]))
-                .Where(command => ShouldKeepBaseCommand(command.Value.Command, _configuration.Value))
+                .Where(command => ShouldKeepBaseCommand(command.Value.Command, _configuration.Value, _cloudConfiguration))
                 .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value.Command))
                 .ToList();
             _cachedCommandFactoryTools[tool] = groupTools;
@@ -527,6 +534,23 @@ public sealed class SingleProxyToolLoader(
                 .SetTag(TagName.ToolId, baseCommand.Id)
                 .SetTag(TagName.ToolAnnotations, McpHelper.CreateToolAnnotationTelemetry(baseCommand))
                 .SetTag(TagName.ToolSource, "internal");
+
+            var customCloudUnavailabilityReason = GetCustomCloudUnavailabilityReason(baseCommand, _cloudConfiguration);
+            if (customCloudUnavailabilityReason != null)
+            {
+                return new CallToolResult
+                {
+                    Content =
+                    [
+                        new TextContentBlock
+                        {
+                            Text = $"Tool '{tool} {command}' is not available. {customCloudUnavailabilityReason}",
+                        }
+                    ],
+                    IsError = true,
+                    Meta = new([new(McpHelper.ToolIdMetaKey, baseCommand.Id)])
+                };
+            }
 
             // Enforce read-only mode at execution time
             if (_configuration.Value.ReadOnly && !baseCommand.Metadata.ReadOnly)

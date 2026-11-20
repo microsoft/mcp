@@ -33,7 +33,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     OpenWorld = false,
     ReadOnly = true,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageService storageService)
     : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {

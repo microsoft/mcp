@@ -564,6 +564,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => $"https://{serviceName}.search.windows.net",
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => $"https://{serviceName}.search.azure.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => $"https://{serviceName}.search.azure.us",
+            AzureCloudConfiguration.AzureCloud.CustomCloud =>
+                throw new InvalidOperationException("Azure AI Search data-plane operations are not supported for custom clouds."),
             _ => throw GetUnsupportedCloudException(cloud)
         };
 
@@ -586,6 +588,8 @@ public sealed partial class SearchService(ICacheService cacheService, IAzureServ
             AzureCloudConfiguration.AzureCloud.AzurePublicCloud => SearchAudience.AzurePublicCloud,
             AzureCloudConfiguration.AzureCloud.AzureChinaCloud => SearchAudience.AzureChina,
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud => SearchAudience.AzureGovernment,
+            AzureCloudConfiguration.AzureCloud.CustomCloud =>
+                throw new InvalidOperationException("Azure AI Search data-plane operations are not supported for custom clouds."),
             _ => throw GetUnsupportedCloudException(cloud)
         };
     }

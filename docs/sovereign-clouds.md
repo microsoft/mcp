@@ -4,7 +4,7 @@ The Azure MCP Server supports connecting to Azure sovereign clouds (national clo
 
 ## Overview
 
-By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables. Only the well-known cloud names listed below are supported; URL-like values or custom authority hosts are not accepted.
+By default, the Azure MCP Server authenticates against the Azure Public Cloud (`login.microsoftonline.com`). To connect to a sovereign cloud, you can specify the cloud environment using the `--cloud` option, configuration files, or environment variables. A configuration-driven `custom` mode is also available for ARM operations.
 
 ## Supported Cloud Environments
 
@@ -33,6 +33,42 @@ You can configure the cloud environment using one of the following methods. The 
 | 5 | IConfiguration | `Cloud` |
 | 6 | Environment variable | `AZURE_CLOUD` (direct fallback) |
 | Default | Fallback | `AzurePublicCloud` |
+
+### Custom cloud
+
+Set `--cloud custom` and provide a local JSON file describing the cloud. The file must contain an `authorityHost` and an `arm` capability. Service-specific capabilities such as `logAnalytics` and `kusto` are optional and are validated only when configured:
+
+```json
+{
+  "authorityHost": "https://login.contoso.example",
+  "arm": {
+    "endpoint": "https://management.contoso.example",
+    "audience": "https://management.contoso.example"
+  },
+  "logAnalytics": {
+    "endpoint": "https://logs.contoso.example",
+    "audience": "https://logs.contoso.example"
+  },
+  "kusto": {
+    "endpointSuffix": ".kusto.contoso.example",
+    "audience": "https://kusto.contoso.example"
+  }
+}
+```
+
+Endpoints and audiences must be canonical HTTPS origins without paths, query strings, fragments, user information, or explicit ports. Specify OAuth audiences without the `/.default` suffix; the server derives the default scope when requesting tokens.
+
+Start the server with:
+
+```bash
+azmcp server start --cloud custom --custom-cloud-config ./custom-cloud.json
+```
+
+Custom ARM and Resource Graph operations use the required `arm` capability. Log Analytics queries use the optional `logAnalytics` endpoint and audience through the Azure Monitor Logs Query SDK. If `logAnalytics` is omitted, Log Analytics queries return a configuration error while ARM operations remain available.
+
+Azure Data Explorer operations that contact a cluster require the `kusto` capability. `endpointSuffix` must be a dedicated DNS suffix such as `.kusto.contoso.example`; only HTTPS cluster hosts beneath that suffix are trusted. In custom-cloud mode this suffix replaces the built-in Azure Kusto trust list, and automatic redirects are disabled for Kusto requests. Omitting `kusto` leaves management-plane cluster list/get operations available, but Kusto database, table, sample, schema, and query operations return a configuration error.
+
+Commands that are unsupported in custom clouds are omitted from MCP tool discovery instead of sending requests to Azure Public Cloud endpoints. Commands that require `logAnalytics` or `kusto` are exposed only when the corresponding capability is configured. Partially supported commands remain visible for their supported ARM operations, and direct or stale invocations still fail explicitly. Application Insights Profiler, batch metrics, and other operations that require additional service-specific cloud mappings are not available in custom mode.
 
 > **Note:** IConfiguration in .NET includes multiple providers in order: `appsettings.json`, `appsettings.{Environment}.json`, user secrets (development), environment variables, and command line arguments. This means environment variables set via `AZURE_CLOUD` will be found at priority 2 through the IConfiguration system before the direct fallback at priority 6.
 

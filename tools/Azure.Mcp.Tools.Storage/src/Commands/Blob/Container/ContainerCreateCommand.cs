@@ -31,7 +31,8 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = false)]
+    LocalRequired = false,
+    CustomCloudRequirement = CustomCloudRequirement.Unsupported)]
 public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logger, IStorageService storageService)
     : AuthenticatedCommand<ContainerCreateOptions, ContainerCreateCommand.ContainerCreateCommandResult>
 {

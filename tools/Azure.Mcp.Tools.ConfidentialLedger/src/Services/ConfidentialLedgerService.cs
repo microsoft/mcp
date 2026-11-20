@@ -134,7 +134,7 @@ public class ConfidentialLedgerService(IAzureService azureService)
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
                 $"https://{ledgerName}.confidential-ledger.azure.us",
             _ =>
-                $"https://{ledgerName}.confidential-ledger.azure.com"
+                throw new InvalidOperationException("Azure Confidential Ledger data-plane operations are not supported for custom clouds.")
         });
 
         AzureService.ValidateAzureServiceEndpoint(
