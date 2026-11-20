@@ -13,7 +13,7 @@
     the boilerplate build fails and nothing runs, so this fails explicitly if no benchmarks executed.
 
 .PARAMETER BenchmarkExe
-    Path to the built performance-benchmark executable.
+    Path to the built performance-benchmark executable. Defaults to the Release build.
 
 .PARAMETER ArtifactsPath
     Directory for BenchmarkDotNet artifacts and the captured run log.
@@ -25,7 +25,7 @@
     --buildTimeout for the generated boilerplate build.
 #>
 param(
-    [Parameter(Mandatory)][string] $BenchmarkExe,
+    [string] $BenchmarkExe,
     [Parameter(Mandatory)][string] $ArtifactsPath,
     [string] $Filter = '*',
     [int]    $BuildTimeoutSeconds = 600
@@ -33,6 +33,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if (-not $BenchmarkExe) {
+    . (Join-Path $PSScriptRoot 'StartupPerformance.Common.ps1')
+    $BenchmarkExe = Resolve-PerfBenchmarkExe -RepoRoot (Join-Path $PSScriptRoot '../..')
+}
 
 New-Item -ItemType Directory -Force -Path $ArtifactsPath | Out-Null
 $logPath = Join-Path $ArtifactsPath 'run.log'

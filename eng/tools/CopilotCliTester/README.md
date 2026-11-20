@@ -49,7 +49,7 @@ CopilotCliTester/
 ├── README.md
 └── src/
     ├── Program.cs                # CLI entry point, orchestration, report generation
-    ├── CopilotCliTester.csproj   # Project file (.NET 10, AOT-compatible)
+    ├── CopilotCliTester.csproj   # Project file (.NET 11, AOT-compatible)
     ├── PromptParser.cs           # Parses e2eTestPrompts.md markdown tables
     ├── AgentRunner.cs            # Copilot SDK client/session lifecycle, event mapping
     ├── AgentRunnerUtils.cs       # Tool invocation detection and matching utilities
@@ -69,7 +69,7 @@ CopilotCliTester/
 
 ## Prerequisites
 
-1. **Latest .NET 10 SDK LTS** — [Download](https://dotnet.microsoft.com/download/dotnet)
+1. **.NET 11 SDK** — [Download](https://dotnet.microsoft.com/download/dotnet/11.0)
 2. **GitHub Copilot subscription** — Required for Copilot SDK authentication
 3. **GitHub Copilot CLI** — Authenticated (`gh auth login` or VS Code Copilot extension sign-in)
 4. **Azure CLI** — Authenticated for MCP tool execution

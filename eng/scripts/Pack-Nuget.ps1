@@ -66,6 +66,10 @@ if($LASTEXITCODE -ne 0 -or !$sharedTargetFramework) {
     $exitCode = 1
 }
 
+# The wrapper's tools/<tfm>/any folder sets the minimum SDK that can install the tool or run it with dnx.
+# Platform packages ship self-contained executables, so the wrapper keeps the oldest SDK with RID-specific tool support.
+$wrapperTargetFramework = 'net10.0'
+
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
 # Exit early if there were parameter errors
@@ -458,7 +462,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
 
     # Create dnx wrapper nuget tool
-    $wrapperToolDir = "$tempFolder/tools/$sharedTargetFramework/any"
+    $wrapperToolDir = "$tempFolder/tools/$wrapperTargetFramework/any"
     $wrapperToolNuspec = "$tempFolder/$packageId.nuspec"
     New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
     New-Item -ItemType Directory -Force -Path "$tempFolder/.mcp" | Out-Null
@@ -479,7 +483,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -ReleaseTag $server.releaseTag `
         -Branch $buildInfo.branch `
         -CommitSha $buildInfo.commitSha `
-        -SharedTargetFramework $sharedTargetFramework `
+        -SharedTargetFramework $wrapperTargetFramework `
         -PackageIcon $iconFileName `
         -OutputPath $wrapperToolNuspec
 
@@ -487,7 +491,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -CommandName $server.cliName `
         -RuntimeIdentifier $sharedTargetFramework `
         -PlatformReferences $platformRefs `
-        -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
+        -OutputPath "$wrapperToolDir/DotnetToolSettings.xml"
 
     $insertPayload = @{
         ToolTitle = '.NET Tool'

@@ -15,8 +15,10 @@ public sealed class OptionBinderTrimmedTests
     private static readonly TimeSpan PublishTimeout = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ExecutionTimeout = TimeSpan.FromMinutes(2);
 
-    [Fact]
-    public async Task TrimmedPublish_PreservesNestedOptionContainerProperties()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TrimmedPublish_SuppressesOnlyKnownFrameworkXmlWarning(bool includeMalformedLinkerXml)
     {
         var sourcePath = Assembly.GetExecutingAssembly()
             .GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -37,9 +39,19 @@ public sealed class OptionBinderTrimmedTests
                     "--runtime", RuntimeInformation.RuntimeIdentifier,
                     "--self-contained", "true",
                     "--output", publishPath,
-                    "/p:PublishTrimmed=true"
+                    "/p:PublishTrimmed=true",
+                    $"/p:IncludeMalformedLinkerXml={includeMalformedLinkerXml}"
                 ],
                 PublishTimeout);
+
+            if (includeMalformedLinkerXml)
+            {
+                Assert.NotEqual(0, publishResult.ExitCode);
+                var output = $"{publishResult.StandardOutput}{Environment.NewLine}{publishResult.StandardError}";
+                Assert.Contains("error IL2101: TrimmedOptionContainerApp:", output);
+                Assert.DoesNotContain("error IL2101: Microsoft.AspNetCore.Components.Endpoints:", output);
+                return;
+            }
 
             Assert.True(
                 publishResult.ExitCode == 0,

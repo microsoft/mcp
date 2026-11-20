@@ -76,6 +76,12 @@ If you are contributing significant changes, or if the issue is already assigned
 2. **GitHub Copilot**: Install [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 3. **Node.js**: Install latest [Node.js](https://nodejs.org/en/download) version (ensure `node` and `npm` are in your PATH)
 4. **PowerShell**: Install [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) 7.0 or later (required for build and test scripts)
+5. **.NET SDK**: Install the [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0) version pinned in `global.json`
+
+> [!NOTE]
+> The ASP.NET Core 11.0.0 runtime pack contains malformed embedded linker metadata tracked in [dotnet/aspnetcore#70236](https://github.com/dotnet/aspnetcore/issues/70236).
+> Trimmed publishing suppresses `IL2101` only in `Microsoft.AspNetCore.Components.Endpoints`, using assembly-scoped linker attributes in `eng/ILLink.Suppressions.xml`.
+> Other assemblies retain `IL2101` as an error. This suppression is enabled only for the affected runtime pack version, not for later servicing releases.
 
 ### Central NuGet Feed
 
@@ -207,7 +213,7 @@ Do not assume the Pull Request pipeline will always ingest a missing package aut
       ```
    - Use the following command to find out the correct tool name for your new tool
       ```
-      cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
+      cd servers/Azure.Mcp.Server/src/bin/Debug
       ./azmcp[.exe] tools list --name --namespace <tool_area>
       ```
    - Commit the change.
@@ -335,6 +341,8 @@ Build the project at the root directory of this repository:
 dotnet build
 ```
 
+Server projects build to `servers/<server>/src/bin/<Configuration>/` without a target framework folder, so local paths such as `servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]` stay the same across .NET version upgrades.
+
 #### Run the Azure MCP server in HTTP mode
 
 **Option 1: Using dotnet run (uses launchSettings.json)**
@@ -389,7 +397,7 @@ $env:AzureAd__ClientId = "<your-client-id>"
 $env:AzureAd__Instance = "https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 ```bash
@@ -401,7 +409,7 @@ export AzureAd__ClientId="<your-client-id>"
 export AzureAd__Instance="https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 > **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
@@ -431,7 +439,7 @@ Update your mcp.json to point to the locally built azmcp executable.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -467,7 +475,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -481,7 +489,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -495,7 +503,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -509,7 +517,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -524,7 +532,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--mode", "consolidated"]
     }
   }
@@ -538,7 +546,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -552,7 +560,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/azmcp[.exe]",
       "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
     }
   }

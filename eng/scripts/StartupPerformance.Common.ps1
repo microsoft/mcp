@@ -365,6 +365,28 @@ function Resolve-PerfOutputPath {
 }
 
 # ---------------------------------------------------------------------------
+# Returns the performance-benchmark executable path for a build configuration.
+# MSBuild supplies the output directory, so the path follows the shared
+# TargetFramework instead of a hardcoded .NET version.
+# ---------------------------------------------------------------------------
+function Resolve-PerfBenchmarkExe {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string] $RepoRoot,
+        [ValidateSet('Debug', 'Release')][string] $Configuration = 'Release'
+    )
+
+    $project = Join-Path $RepoRoot 'servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/Azure.Mcp.Server.PerformanceBenchmarks.csproj'
+    $targetDir = dotnet msbuild $project -getProperty:TargetDir "-p:Configuration=$Configuration" | Select-Object -Last 1
+    if ($LASTEXITCODE -ne 0 -or -not $targetDir) {
+        throw "Unable to resolve the $Configuration output directory of $project."
+    }
+
+    $extension = if ($IsWindows) { '.exe' } else { '' }
+    return Join-Path $targetDir.Trim() "Azure.Mcp.Server.PerformanceBenchmarks$extension"
+}
+
+# ---------------------------------------------------------------------------
 # Reads the catalog_version from the versioned workload catalog (eng/perf-workloads.json),
 # used to stamp every result so a number can be tied to the workload definition that produced
 # it (issue #3120). Returns 'unknown' if the catalog is missing or unreadable.

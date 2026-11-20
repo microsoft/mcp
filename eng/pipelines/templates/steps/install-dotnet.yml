@@ -8,7 +8,7 @@ steps:
   - task: NuGetAuthenticate@1
 
   # UseDotNet's useGlobalJson applies the rollForward policy against the set of downloadable
-  # SDKs, so 'feature' installs the newest 10.0.x rather than the version named in global.json.
+  # SDKs, so 'latestFeature' installs the newest feature band rather than the version named in global.json.
   # That drags CI onto same-day SDK releases whose implicit ILLink/ILCompiler packs may not have
   # reached our NuGet feed yet. Install the exact version instead; rollForward is still honored
   # when selecting among installed SDKs, so local development is unaffected.

@@ -52,8 +52,8 @@
 #>
 
 param(
-    [string]   $Executable = './servers/Azure.Mcp.Server/src/bin/Release/net10.0/azmcp.exe',
-    [string]   $BenchmarkExe = './servers/Azure.Mcp.Server/perf/Azure.Mcp.Server.PerformanceBenchmarks/bin/Release/net10.0/Azure.Mcp.Server.PerformanceBenchmarks.exe',
+    [string]   $Executable = './servers/Azure.Mcp.Server/src/bin/Release/azmcp.exe',
+    [string]   $BenchmarkExe,
     [ValidateSet('default', 'namespace', 'all')]
     [string[]] $Modes = @('default', 'all'),
     [int]      $Concurrency = 1,
@@ -71,6 +71,10 @@ $ErrorActionPreference = 'Stop'
 $ScriptDir = $PSScriptRoot
 $RepoRoot = (Get-Item (Join-Path $ScriptDir '../..')).FullName
 . (Join-Path $ScriptDir 'ResourcePerformance.Common.ps1')
+
+if (-not $BenchmarkExe) {
+    $BenchmarkExe = Resolve-PerfBenchmarkExe -RepoRoot $RepoRoot
+}
 
 foreach ($path in @($Executable, $BenchmarkExe)) {
     if (-not (Test-Path $path)) {

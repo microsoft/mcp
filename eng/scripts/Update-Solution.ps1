@@ -13,6 +13,28 @@ param(
 $ErrorActionPreference = "Stop"
 $PSNativeCommandUseErrorActionPreference = $true
 
+function Get-ProjectsWithReferences {
+    param (
+        [string[]] $ProjectPaths
+    )
+
+    $pending = [System.Collections.Generic.Queue[string]]::new($ProjectPaths)
+    $projects = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    while ($pending.Count -gt 0) {
+        $projectPath = (Resolve-Path -LiteralPath $pending.Dequeue()).Path
+        if (-not $projects.Add($projectPath)) {
+            continue
+        }
+
+        $references = (dotnet msbuild $projectPath -getItem:ProjectReference | ConvertFrom-Json).Items.ProjectReference
+        foreach ($reference in $references) {
+            $pending.Enqueue($reference.FullPath)
+        }
+    }
+
+    return $projects | Sort-Object
+}
+
 function Update-Solution {
     param (
         [string] $serverDirectory
@@ -40,13 +62,11 @@ function Update-Solution {
         Write-Host "Creating new solution file: $slnFile" -ForegroundColor Cyan
         dotnet new sln -n $tempName --format slnx
 
-        Write-Host "Adding server projects and dependencies to solution" -ForegroundColor Cyan
+        Write-Host "Discovering server projects and dependencies" -ForegroundColor Cyan
         $serverProjects = Get-ChildItem -Path "$serverDirectory/src" -Filter "*.csproj" | Sort-Object -Property FullName
-        dotnet sln $slnFile add $serverProjects
+        $projects = @(Get-ProjectsWithReferences -ProjectPaths $serverProjects.FullName)
 
-        $projects = dotnet sln $slnFile list | Where-Object { $_ -like "*.csproj" } | ForEach-Object { Resolve-Path $_ } | Sort-Object
-
-        Write-Host "Adding tests to solution" -ForegroundColor Cyan
+        Write-Host "Discovering tests and dependencies" -ForegroundColor Cyan
 
         $testProjects = @()
         foreach ($project in $projects) {
@@ -63,8 +83,12 @@ function Update-Solution {
 
         if ($testProjects) {
             $testProjects = $testProjects | Sort-Object -Property FullName -Unique
-            dotnet sln $slnFile add $testProjects
+            $projects += Get-ProjectsWithReferences -ProjectPaths $testProjects.FullName
         }
+
+        Write-Host "Adding projects to solution" -ForegroundColor Cyan
+        $projects = $projects | Sort-Object -Unique
+        dotnet sln $slnFile add $projects --include-references false
 
         # When moving the solution file into the server directory, we need to update the project paths
         $contents = Get-Content $slnFile -Raw
@@ -124,7 +148,7 @@ function Update-RootSolution {
 
         $allProjects = Get-ChildItem -Path $RepoRoot -Filter "*.csproj" -Recurse | Sort-Object -Property FullName
         Write-Host "Adding all projects to root solution" -ForegroundColor Cyan
-        dotnet sln $tempSlnFile add $allProjects
+        dotnet sln $tempSlnFile add $allProjects --include-references false
 
         if ($Verify) {
             $contents = Get-Content $tempSlnFile -Raw

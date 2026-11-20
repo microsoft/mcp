@@ -19,7 +19,7 @@ ensuring it passes all validation gates before PR submission.
 
 ## Prerequisites
 
-- `.NET 10 SDK` installed (see `global.json`)
+- `.NET 11 SDK` installed (see `global.json`)
 - Azure authentication configured (`az login` / `Connect-AzAccount`)
 - Repository cloned with `upstream` remote pointing to `microsoft/mcp`
 - Branch created from `upstream/main`

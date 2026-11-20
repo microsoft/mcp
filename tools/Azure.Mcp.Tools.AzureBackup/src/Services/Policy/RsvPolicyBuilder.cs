@@ -419,9 +419,9 @@ public static class RsvPolicyBuilder
         {
             hs.Interval = req.HourlyIntervalHours;
         }
-        if (DateTimeOffset.TryParseExact(req.HourlyWindowStartTime ?? string.Empty, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var startTime))
+        if (PolicyUpdateValidator.TryParseTime(req.HourlyWindowStartTime, out var startTime))
         {
-            hs.ScheduleWindowStartOn = NormalizeToHourMinute(startTime);
+            hs.ScheduleWindowStartOn = startTime;
         }
         if (req.HourlyWindowDurationHours > 0)
         {
@@ -655,9 +655,9 @@ public static class RsvPolicyBuilder
 
         foreach (var raw in csv!.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            if (DateTimeOffset.TryParseExact(raw, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed))
+            if (PolicyUpdateValidator.TryParseTime(raw, out var parsed))
             {
-                list.Add(NormalizeToHourMinute(parsed));
+                list.Add(parsed);
             }
         }
 
@@ -833,12 +833,5 @@ public static class RsvPolicyBuilder
             return text;
         }
         return char.ToUpperInvariant(text[0]) + text[1..].ToLowerInvariant();
-    }
-
-    private static DateTimeOffset NormalizeToHourMinute(DateTimeOffset value)
-    {
-        // Schedule/window times are time-of-day only; anchor to the canonical 2000-01-01
-        // baseline (matching the update path) so request bodies are deterministic across days.
-        return new DateTimeOffset(2000, 1, 1, value.Hour, value.Minute, 0, TimeSpan.Zero);
     }
 }

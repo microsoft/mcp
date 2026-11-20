@@ -121,8 +121,10 @@ internal static class FabricItemScheduleJson
         }
         foreach (var entry in property.EnumerateArray())
         {
-            if (entry.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(entry.GetString()) ||
-                (times && !TimeOnly.TryParseExact(entry.GetString(), "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)))
+            var text = entry.ValueKind == JsonValueKind.String ? entry.GetString() : null;
+            if (string.IsNullOrWhiteSpace(text) ||
+                (times && (!TimeOnly.TryParseExact(text, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var time) ||
+                    time.ToString("HH:mm", CultureInfo.InvariantCulture) != text)))
             {
                 throw new JsonException(InvalidMetadataMessage);
             }

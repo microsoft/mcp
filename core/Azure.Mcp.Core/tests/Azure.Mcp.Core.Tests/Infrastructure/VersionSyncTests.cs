@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Azure.Mcp.Core.Tests.Infrastructure;
@@ -38,6 +39,20 @@ public class VersionSyncTests
         Assert.True(sdkVersion >= runtimeVersion,
             $"Major.Minor versions should be compatible between {GlobalJsonFileName} SDK ({sdkVersion}) and {DockerfileFileName} runtime ({runtimeVersion}). " +
             $"Found SDK: {sdkVersion.Major}.{sdkVersion.Minor}, Runtime: {runtimeVersion.Major}.{runtimeVersion.Minor}");
+    }
+
+    [Theory]
+    [InlineData("Directory.Build.props")]
+    [InlineData("core/Microsoft.ModelContextProtocol.HttpServer.Distributed/Directory.Build.props")]
+    public void DotNet_TargetFramework_Should_Match_Dockerfile_Runtime(string relativePropsPath)
+    {
+        var propsPath = Path.Combine(_repoRoot, relativePropsPath);
+        var dockerfilePath = Path.Combine(_repoRoot, DockerfileFileName);
+        var runtimeVersion = ParseMajorMinorVersion(GetDotNetRuntimeVersionFromDockerfile(dockerfilePath));
+        var properties = XDocument.Load(propsPath);
+        var targetFramework = Assert.Single(properties.Descendants("TargetFramework"));
+
+        Assert.Equal($"net{runtimeVersion.Major}.{runtimeVersion.Minor}", targetFramework.Value);
     }
 
     private static Version ParseMajorMinorVersion(string semverString)

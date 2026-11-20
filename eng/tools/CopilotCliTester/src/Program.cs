@@ -686,7 +686,7 @@ internal static class Program
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
         var binDirectory = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin");
 
-        // Check well-known output paths (bin/{Debug,Release}/*/) and pick the most recent
+        // Check the Debug and Release output directories (including subfolders) and pick the most recent
         var knownPath = s_configurations
             .Select(config => Path.Combine(binDirectory, config))
             .Where(Directory.Exists)

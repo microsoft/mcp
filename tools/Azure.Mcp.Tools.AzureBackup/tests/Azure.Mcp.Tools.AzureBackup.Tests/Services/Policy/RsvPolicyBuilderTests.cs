@@ -507,4 +507,13 @@ public class RsvPolicyBuilderTests
         var result = RsvPolicyBuilder.ParseScheduleTimes("02:00,14:00");
         Assert.Equal(2, result.Count);
     }
+
+    [Fact]
+    public void ParseScheduleTimes_EndOfDayTime_IsIgnored()
+    {
+        var result = RsvPolicyBuilder.ParseScheduleTimes("14:00,24:00");
+        Assert.Single(result);
+        Assert.Equal(14, result[0].Hour);
+        Assert.Equal(0, result[0].Minute);
+    }
 }
