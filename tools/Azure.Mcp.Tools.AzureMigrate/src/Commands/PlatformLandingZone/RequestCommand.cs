@@ -92,7 +92,8 @@ public sealed class RequestCommand(
             var landingZoneContext = new PlatformLandingZoneContext(
                 options.Subscription!,
                 options.ResourceGroup,
-                options.MigrateProjectName);
+                options.MigrateProjectName,
+                options.Tenant);
 
             var result = options.Action.ToLowerInvariant() switch
             {
