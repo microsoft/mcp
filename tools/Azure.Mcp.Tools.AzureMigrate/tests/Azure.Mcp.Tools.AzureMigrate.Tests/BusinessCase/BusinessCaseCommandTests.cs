@@ -77,6 +77,23 @@ public class BusinessCaseCommandTests
     }
 
     [Fact]
+    public async Task Create_WithoutName_GeneratesOneFromRegionAndTime()
+    {
+        _create.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new AssessmentOperation(202, _asOperationId, "Running", null, 10, null, null));
+
+        var result = await CreateCommand().RunAsync(
+            new() { TargetRegion = "Central India", InventorySasUri = SasUri }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Matches(@"^bc-centralindia-\d{8}-\d{6}$", result.AssessmentName);
+        Assert.True(CreateAssessmentCommand.IsValidAssessmentName(result.AssessmentName));
+        Assert.Equal(result.AssessmentName, result.NextStatusParameters!.AssessmentName);
+        await _create.Received(1).CreateAssessmentAsync(
+            Arg.Is<AssessmentRequest>(r => r.AssessmentName == result.AssessmentName), "token", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Create_WithSessionIdAndNoSas_ExportsTheInventoryAndUsesItsLink()
     {
         _export.ExportOfflineAsync("inv-1", "token", Arg.Any<CancellationToken>()).Returns(new InventoryExportResult(200, SasUri, null));

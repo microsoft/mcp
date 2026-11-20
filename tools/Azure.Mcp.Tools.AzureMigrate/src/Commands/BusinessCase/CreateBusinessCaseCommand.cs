@@ -24,11 +24,13 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "for Azure, then cost savings, payback, ROI and Azure versus on-premises cost per migration strategy, and returns at once. " +
         "When: the user asks to create, build or run an assessment, a business case, an ROI or cost savings analysis, an ROI summary, " +
         "or executive artifacts (an executive summary of the migration). Use this tool for all of these. " +
-        "How: needs 'assessment-name', 'target-region' (an Azure region name such as 'eastus') and the inventory: pass 'session-id' " +
+        "How: needs 'target-region' (an Azure region name such as 'eastus') and the inventory: pass 'session-id' " +
         "(the 'sessionId' of the user's inventory, from the inventory tools) to use a fresh link to that inventory's offline zip, or " +
         "'inventory-sas-uri' only when the user gives a read-only https SAS URL of a collector ZIP; when you take it from the chat, " +
         "        tell the user you are using the inventory SAS URL from the chat. Before calling, ask the user for any of these " +
-                "they have not given (name, target region, which inventory) and wait for the answer; do not invent or assume them. Only USD is supported. Optional settings use their defaults when left out; pass them only when the " +
+                "they have not given (target region, which inventory) and wait for the answer; do not invent or assume them. Never ask " +
+                "for a business case name: pass 'assessment-name' only when the user gives one, otherwise leave it out and a name is " +
+                "generated. Only USD is supported. Optional settings use their defaults when left out; pass them only when the " +
         "user asks for them and do not ask for them otherwise: scaling factor (1.3), storage scaling factor (1), savings option " +
         "(RI3Year), Azure Hybrid Benefit for Windows and Linux (Yes), discount (0%), environment type (Production), licensing program " +
         "(Retail), Azure offer (pay as you go), Defender for Cloud (No), disk types (StandardSSD), pricing tier (Standard), storage " +
@@ -73,11 +75,11 @@ public sealed class CreateBusinessCaseCommand(
 
     internal async Task<BusinessCaseCommandResult> RunAsync(CreateBusinessCaseOptions options, CancellationToken cancellationToken)
     {
-        string? name = options.AssessmentName?.Trim();
-        if (!CreateAssessmentCommand.IsValidAssessmentName(name))
+        string? name = string.IsNullOrWhiteSpace(options.AssessmentName) ? null : options.AssessmentName.Trim();
+        if (name is not null && !CreateAssessmentCommand.IsValidAssessmentName(name))
         {
             return BusinessCaseStages.Invalid(
-                "'assessment-name' is required: 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.", name);
+                "'assessment-name' must be 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.", name);
         }
 
         string? region = CreateAssessmentCommand.NormalizeRegion(options.TargetRegion);
@@ -85,6 +87,8 @@ public sealed class CreateBusinessCaseCommand(
         {
             return BusinessCaseStages.Invalid("'target-region' is required and must be an Azure region name such as 'eastus'.", name);
         }
+
+        name ??= GenerateName(region, DateTime.UtcNow);
 
         if (!string.IsNullOrWhiteSpace(options.Currency) && !string.Equals(options.Currency.Trim(), Currency, StringComparison.OrdinalIgnoreCase))
         {
@@ -179,13 +183,17 @@ public sealed class CreateBusinessCaseCommand(
         return new(true, null, BusinessCaseStages.Running, false, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
             operationId.ToString("D"), null, null, null, operation.HttpStatus, null, null, null, operation.RetryAfterSeconds ?? 30,
             BusinessCaseNextStatusParameters.Create(name, operationId, inventorySasUri!, haSettings!),
-            "Tell the user the business case has started (stage 1 of 2: assessment) and can take several minutes, that it uses " +
+            "Tell the user the business case '" + name + "' has started (stage 1 of 2: assessment) and can take several minutes, that it uses " +
             inventorySource + " as the inventory, and show them the settings it uses: " +
             DescribeSettings(region, assessmentSettings!, haSettings!) + ". " +
             "Then, right away in this same reply, start tracking the business case status with exactly the values in " +
             "'nextStatusParameters'; do not wait for the user to ask, do not change or invent any of them, and keep checking until " +
             "it completes.");
     }
+
+    /// <summary>Builds a valid business case name from the region and UTC time, for when the user gives none.</summary>
+    internal static string GenerateName(string region, DateTime utcNow) =>
+        $"bc-{region}-{utcNow.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture)}";
 
     /// <summary>Lists every business case setting with the value used, defaults included, for the user.</summary>
     internal static string DescribeSettings(string region, AssessmentSettings s, BusinessCaseHaSettings ha)

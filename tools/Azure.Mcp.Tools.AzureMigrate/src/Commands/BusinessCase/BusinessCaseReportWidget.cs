@@ -48,6 +48,8 @@ internal static class BusinessCaseReportWidget
         .state{padding:10px 12px;color:var(--muted)}.state.ok{color:var(--ok)}.state.err{color:var(--err)}
         #doc{padding:4px 20px 16px;overflow:auto}
         #doc.collapsed{max-height:520px}
+        body.fullscreen #doc{max-height:none}
+        body.fullscreen .more{display:none !important}
         .more{display:none;padding:6px 12px;border-top:1px solid var(--border);text-align:center}
         .markdown h1,.markdown h2{padding-bottom:.3em;border-bottom:1px solid var(--border)}
         .markdown h1{font-size:1.8em;margin:.6em 0 .5em}.markdown h2{font-size:1.4em;margin:1.2em 0 .6em}
@@ -69,6 +71,7 @@ internal static class BusinessCaseReportWidget
         </head>
         <body>
         <div class="bar"><span class="title" id="title">Business case<span class="sub" id="sub"></span></span>
+          <button id="full" style="display:none">Open full view</button>
           <button id="copy" style="display:none">Copy Markdown</button>
           <button id="open" style="display:none">Download ROI.md</button></div>
         <div class="state" id="state">Waiting for the business case...</div>
@@ -203,6 +206,7 @@ internal static class BusinessCaseReportWidget
               state('');
               el('doc').innerHTML = markdown(r.report);
               el('copy').style.display = '';
+              el('full').style.display = '';
               el('open').style.display = ctx.link ? '' : 'none';
               el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
             } else if (r.status === 'Succeeded') {
@@ -219,6 +223,7 @@ internal static class BusinessCaseReportWidget
             if (!m || m.jsonrpc !== '2.0') { return; }
             if (m.method) {
               if (m.method === 'ui/notifications/tool-result') { onToolResult(m.params); }
+              if (m.method === 'ui/notifications/host-context-changed' && m.params) { applyHostContext(m.params); }
               if (m.id !== undefined) { window.parent.postMessage({ jsonrpc: '2.0', id: m.id, result: {} }, '*'); }
             } else if (m.id !== undefined && pending[m.id]) {
               var p = pending[m.id]; delete pending[m.id];
@@ -248,8 +253,36 @@ internal static class BusinessCaseReportWidget
             el('toggle').textContent = d.classList.contains('collapsed') ? 'Show full report' : 'Collapse report';
             size();
           });
-          send('ui/initialize', { appInfo: { name: 'azurecatalyst-business-case-report', version: '0.1.0' }, appCapabilities: {}, protocolVersion: '2025-06-18' }, 8000)
-            .then(function () { window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/initialized', params: {} }, '*'); }, function () { })
+          // Full view: ask the host for its fullscreen display mode (MCP Apps); hosts without it get the full report inline.
+          var displayMode = 'inline';
+          function setMode(mode) {
+            displayMode = mode === 'fullscreen' ? 'fullscreen' : 'inline';
+            document.body.classList.toggle('fullscreen', displayMode === 'fullscreen');
+            el('full').textContent = displayMode === 'fullscreen' ? 'Exit full view' : 'Open full view';
+            size();
+          }
+          function applyHostContext(hc) {
+            if (hc && hc.displayMode) { setMode(hc.displayMode); }
+          }
+          function expandInline() {
+            el('doc').classList.remove('collapsed'); el('toggle').textContent = 'Collapse report'; size();
+          }
+          el('full').addEventListener('click', function () {
+            var want = displayMode === 'fullscreen' ? 'inline' : 'fullscreen';
+            send('ui/request-display-mode', { mode: want }, 5000).then(function (res) {
+              var got = res && res.mode;
+              if (got) { setMode(got); }
+              if (want === 'fullscreen' && got !== 'fullscreen') { expandInline(); }
+            }, function () { if (want === 'fullscreen') { expandInline(); } });
+          });
+          send('ui/initialize', {
+            appInfo: { name: 'azurecatalyst-business-case-report', version: '0.2.0' },
+            appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] }, protocolVersion: '2025-06-18'
+          }, 8000)
+            .then(function (res) {
+              if (res && res.hostContext) { applyHostContext(res.hostContext); }
+              window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/initialized', params: {} }, '*');
+            }, function () { })
             .then(size);
         })();
         </script>

@@ -11,8 +11,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
 public sealed class CreateBusinessCaseOptions : BusinessCaseHaSettingsOptions
 {
     /// <summary>Gets or sets the name of the assessment the business case creates.</summary>
-    [Option(Description = "Required. Name of the business case assessment: 1-64 characters, starting with a letter or digit, using only " +
-        "letters, digits, '-' or '_'.")]
+    [Option(Description = "Optional. Name of the business case assessment: 1-64 characters, starting with a letter or digit, using only " +
+        "letters, digits, '-' or '_'. Pass it only when the user gives one; never ask for it. Left out, a name such as " +
+        "'bc-eastus-20261120-1130' is generated.")]
     public string? AssessmentName { get; set; }
 
     /// <summary>Gets or sets the target Azure region.</summary>
