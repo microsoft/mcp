@@ -32,7 +32,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
     Title = "Get Azure Catalyst Business Case Status",
     Description = "Tracks the state of an Azure Catalyst business case (including its assessment, ROI summary and executive " +
         "artifacts) started by the business case create tool, moves it to its next stage and returns its result once it finishes. " +
-        "When: immediately after the business case create tool succeeds, in the same reply and without waiting for the user, again while the status is Running, or when the user asks about the " +
+        "When: when the 'instructions' of the latest business case result say to check its status, or when the user asks about the " +
         "progress or result of their business case, assessment, ROI summary or executive artifacts. " +
         "How: pass exactly the values in 'nextStatusParameters' of the latest business case result in the conversation, unchanged " +
         "and without inventing any; ask the user to create a business case if there is none. Wait about 'retryAfterSeconds' between " +
@@ -40,8 +40,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "Returns: 'status' (Running, Succeeded or Failed), 'stage' and 'stageNumber' of 'totalStages', 'isCompleted', " +
         "'nextStatusParameters' while it is running, 'result' once it succeeded (a read link to the ROI report), 'report' (the ROI " +
         "report Markdown, when available) and 'instructions'. " +
-        "Next: follow 'instructions'; while 'status' is Running call this tool again with the new 'nextStatusParameters'; once it " +
-        "has succeeded, follow 'instructions' to show the report. Do not mention tool or parameter names to the user.",
+        "Next: follow 'instructions': while 'status' is Running they say whether to call this tool again with the new " +
+        "'nextStatusParameters' or that the business case card tracks it for the user; once it has succeeded, follow 'instructions' " +
+        "to show the report. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
@@ -136,18 +137,16 @@ public sealed class GetBusinessCaseStatusCommand(
         {
             return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, (int)HttpStatusCode.OK, null, null,
                 "Mocked HA result: the HA skill is not deployed yet, so no HA skill was run.",
-                "Tell the user the business case evaluations have completed but the final HA step is mocked because the HA skill is not " +
-                "deployed yet, so there is no business case result to show.");
+                ReplyFormat.Reply("Business case evaluations completed (final step mocked).",
+                    "that the final HA step is mocked because the HA skill is not deployed yet, so there is no ROI result to show.",
+                    "create the business case again once the HA skill is deployed."));
         }
 
         HaOperationStatus status = await _haClient.GetOperationStatusAsync(token, sessionId, operationId, cancellationToken);
         if (status.HttpStatus is 401 or 403 or 404)
         {
             return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "haSkillStatus", status.HttpStatus, status.ErrorCode,
-                status.ErrorMessage ?? status.Error, null,
-                status.HttpStatus == 404
-                    ? "Tell the user the business case run could not be found for them and offer to create a new business case."
-                    : "Tell the user they are not allowed to read this business case and quote 'errorMessage'.");
+                status.ErrorMessage ?? status.Error, null, NotFoundOrForbidden(status.HttpStatus));
         }
 
         if (status.HttpStatus is not (>= 200 and < 300) || string.IsNullOrWhiteSpace(status.Status))
@@ -165,22 +164,27 @@ public sealed class GetBusinessCaseStatusCommand(
                 if (markdown is not null)
                 {
                     return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
-                        (BusinessCaseReportWidget.IsEnabled
-                            ? "Tell the user the business case is ready; the ROI report is shown to them in the report card, so do not " +
-                              "paste 'report'. Summarise its headline figures from 'report' in a few bullets (annual savings, ROI, NPV and " +
-                              "payback per migration strategy, and the number of servers), quoting the figures exactly. Then add a " +
-                              "clickable Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>); " +
-                              "never retype, shorten or show the URL on its own, and say the link expires."
-                            : "Tell the user the business case is ready, then render 'report' (the ROI report, ROI.md) in your reply as " +
-                              "Markdown exactly as given, keeping its headings and tables; do not summarise, reword or wrap it in a code block. " +
-                              "After it, add a clickable Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>); " +
-                              "never retype, shorten or show the URL on its own, and say the link expires.")) with { Report = markdown };
+                        ReplyFormat.Reply(
+                            "'Business case ready:' followed by the total annual savings and the payback period of the recommended " +
+                            "migration strategy from 'report', quoting the figures exactly, for example 'Business case ready: $1.2M " +
+                            "annual savings, payback in 1.8 years'.",
+                            "the ROI, NPV and annual savings per migration strategy and the number of servers, quoting 'report' " +
+                            "exactly; any issue the report names (for example servers not ready for Azure), with counts; a clickable " +
+                            "Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>), " +
+                            "never retyped, shortened or shown on its own, noting that the link expires." +
+                            (BusinessCaseReportWidget.IsEnabled
+                                ? " The full report is shown in the card, so do not paste 'report'."
+                                : " Right after the bullets render 'report' as Markdown exactly as given, keeping its headings and " +
+                                  "tables, not in a code block."),
+                            ReplyFormat.AfterBusinessCase)) with { Report = markdown };
                 }
 
                 return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
-                    "Tell the user the business case is ready. 'result' is a read link to the ROI report (ROI.md): show it as a clickable " +
-                    "Markdown link exactly as given, for example [Download the ROI report (ROI.md)](<result>); never retype, shorten or " +
-                    "show the URL on its own. Tell them the link expires, and to ask for the business case status again for a new link.");
+                    ReplyFormat.Reply("Business case ready.",
+                        "a clickable Markdown link to 'result' (the ROI report, ROI.md) exactly as given, for example " +
+                        "[Download the ROI report (ROI.md)](<result>), never retyped, shortened or shown on its own; that the link " +
+                        "expires and asking for the business case status again gives a new one.",
+                        ReplyFormat.AfterBusinessCase));
             }
 
             if (IsTransient(report.HttpStatus))
@@ -190,14 +194,15 @@ public sealed class GetBusinessCaseStatusCommand(
             }
 
             return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "export", report.HttpStatus, null, report.Error, null,
-                "Tell the user the business case completed but its ROI report could not be downloaded, and quote 'errorMessage'.");
+                ReplyFormat.Failure("Business case completed, but its ROI report could not be downloaded.",
+                    "ask for the business case status again to retry the download."));
         }
 
         if (CreateAssessmentCommand.IsTerminal(status.Status))
         {
             return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "haSkill", status.HttpStatus, status.ErrorCode,
                 status.ErrorMessage, null,
-                "Tell the user the business case did not complete in its final stage and quote 'errorMessage'. Offer to create it again.");
+                ReplyFormat.Failure("Business case did not complete (final stage 2 of 2).", RecreateNextStep));
         }
 
         return Running(ctx, BusinessCaseStages.HaSkill, sessionId, operationIdText, status.HttpStatus, status.RetryAfterSeconds,
@@ -210,10 +215,7 @@ public sealed class GetBusinessCaseStatusCommand(
         if (operation.HttpStatus is 401 or 403 or 404)
         {
             return Finished(ctx, BusinessCaseStages.Failed, null, null, "assessmentStatus", operation.HttpStatus, operation.ErrorCode,
-                operation.ErrorMessage, null,
-                operation.HttpStatus == 404
-                    ? "Tell the user the business case assessment could not be found for them and offer to create a new business case."
-                    : "Tell the user they are not allowed to read this business case and quote 'errorMessage'.");
+                operation.ErrorMessage, null, NotFoundOrForbidden(operation.HttpStatus));
         }
 
         if (operation.HttpStatus is not (>= 200 and < 300) || !CreateAssessmentCommand.IsTerminal(operation.Status))
@@ -224,14 +226,14 @@ public sealed class GetBusinessCaseStatusCommand(
         if (!string.Equals(operation.Status, BusinessCaseStages.Succeeded, StringComparison.OrdinalIgnoreCase))
         {
             return Finished(ctx, BusinessCaseStages.Failed, null, null, "assessment", operation.HttpStatus, operation.ErrorCode,
-                operation.ErrorMessage, null, "Tell the user the business case assessment did not complete and quote 'errorMessage'.");
+                operation.ErrorMessage, null, ReplyFormat.Failure("Business case assessment did not complete (stage 1 of 2).", RecreateNextStep));
         }
 
         if (!CreateAssessmentCommand.IsValidInventorySasUri(operation.OutputUrl))
         {
             return Finished(ctx, BusinessCaseStages.Failed, null, null, "assessmentOutput", operation.HttpStatus, null,
                 "The assessment did not return a valid output URL.", null,
-                "Tell the user the business case assessment completed without an output link, so the business case cannot continue.");
+                ReplyFormat.Failure("Business case stopped: its assessment returned no output.", RecreateNextStep));
         }
 
         EvaluationResult tco = await _evaluationClient.GetOnPremTcoAsync(token, operation.OutputUrl!, ctx.InventorySasUri, cancellationToken);
@@ -278,10 +280,17 @@ public sealed class GetBusinessCaseStatusCommand(
         return Finished(ctx, BusinessCaseStages.Failed, start.SessionId, start.OperationId, start.FailedStep ?? "haSkillStart", start.HttpStatus,
             null, start.Error, null,
             start.HttpStatus == (int)HttpStatusCode.Conflict
-                ? "Tell the user the business case could not start its final stage because another of their Discovery Service sessions " +
-                  "is active. They can try again once it has finished."
-                : "Tell the user the business case could not start its final stage and quote 'errorMessage'.");
+                ? ReplyFormat.Failure("Business case could not start its final stage: another of your sessions is active.",
+                    "wait for that session to finish, then create the business case again.")
+                : ReplyFormat.Failure("Business case could not start its final stage (2 of 2).", RecreateNextStep));
     }
+
+    private const string RecreateNextStep =
+        "fix the input or inventory issue named in the cause if there is one, then offer to create the business case again.";
+
+    private static string NotFoundOrForbidden(int? httpStatus) => httpStatus == 404
+        ? ReplyFormat.Failure("Business case not found.", "offer to create a new business case from their inventory.")
+        : ReplyFormat.Failure("You are not allowed to read this business case.", "sign in with the account that created it, then ask again.");
 
     private const string AssessmentRunningText =
         "If you have not already said so, tell the user once that the business case is being evaluated (stage 1 of 2); do not repeat it.";
@@ -296,9 +305,12 @@ public sealed class GetBusinessCaseStatusCommand(
         if (summary.Summary is not null)
         {
             return Finished(ctx, BusinessCaseStages.Succeeded, null, null, null, summary.HttpStatus, null, null, summary.Summary,
-                "Tell the user the business case is ready. Summarise 'result' per migration strategy in plain language: annual savings, " +
-                "payback period in years, total Azure versus on-premises cost and the year-on-year savings, in 'currency'. Do not invent " +
-                "details; for a strategy with 'unavailableReason', say it has no business case.", BusinessCaseStages.HaSkill);
+                ReplyFormat.Reply(
+                    "'Business case ready:' followed by the annual savings and payback period of the strategy with the highest " +
+                    "savings from 'result', in 'currency', quoting the figures exactly.",
+                    "per migration strategy: annual savings, payback in years, and total Azure versus on-premises cost, from " +
+                    "'result'; a strategy with 'unavailableReason' gets one bullet saying it has no business case and why.",
+                    ReplyFormat.AfterBusinessCase), BusinessCaseStages.HaSkill);
         }
 
         if (IsTransient(summary.HttpStatus))
@@ -307,7 +319,7 @@ public sealed class GetBusinessCaseStatusCommand(
         }
 
         return Finished(ctx, BusinessCaseStages.Failed, null, null, "haResult", summary.HttpStatus, null, summary.Error, null,
-            "Tell the user the business case evaluation finished but its result could not be read, and quote 'errorMessage'.");
+            ReplyFormat.Failure("Business case evaluated, but its result could not be read.", RecreateNextStep));
     }
 
     private static BusinessCaseCommandResult? CheckEvaluation(Context ctx, EvaluationResult evaluation, string step)
@@ -326,7 +338,7 @@ public sealed class GetBusinessCaseStatusCommand(
 
         return Finished(ctx, BusinessCaseStages.Failed, null, null, step, evaluation.HttpStatus, evaluation.ErrorCode,
             evaluation.ErrorMessage ?? (succeeded ? "The response did not include a valid manifest URL." : null), null,
-            "Tell the user the business case evaluation failed and quote 'errorMessage'.");
+            ReplyFormat.Failure("Business case evaluation failed (stage 1 of 2).", RecreateNextStep));
     }
 
     private static BusinessCaseCommandResult Running(
@@ -335,7 +347,7 @@ public sealed class GetBusinessCaseStatusCommand(
             ctx.AssessmentName, ctx.AsOperationId.ToString("D"), dsSessionId, dsOperationId, null, httpStatus, null, null, null,
             retryAfterSeconds ?? DefaultRetryAfterSeconds,
             BusinessCaseNextStatusParameters.Create(ctx.AssessmentName, ctx.AsOperationId, ctx.InventorySasUri, ctx.Settings, dsSessionId, dsOperationId),
-            instructions + " " + BusinessCaseStages.CheckAgainInstructions);
+            instructions + " " + BusinessCaseStages.TrackingInstructions);
 
     private static BusinessCaseCommandResult Finished(
         Context ctx, string status, string? dsSessionId, string? dsOperationId, string? failedStep, int? httpStatus, string? errorCode,

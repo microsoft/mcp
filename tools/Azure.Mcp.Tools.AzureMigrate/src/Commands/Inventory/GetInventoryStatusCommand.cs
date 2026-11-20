@@ -33,9 +33,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "Returns: 'status' (for example Running, Succeeded or Failed), 'isCompleted', 'instructions' and, when finished, either " +
         "'result' or 'errorCode'/'errorMessage'. Each call waits up to about 25 seconds for the operation to finish. " +
         "Next: while 'isCompleted' is false, call it again quietly with the same 'session-id' and 'operation-id'; the inventory " +
-        "must be complete before it is exported or assessed. Call it directly yourself, one call at a time; never write or run a " +
-        "script or code to call it. When it is done, summarise 'result' in plain language without " +
-        "inventing details. " +
+        "must be complete before it is exported or used for a business case. Call it directly yourself, one call at a time; never " +
+        "write or run a script or code to call it. When it is done, reply in the format 'instructions' give. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -152,13 +151,16 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             return Fail(sessionId, operationId, response.Status,
                 $"No {subject} operation was found for this session and operation ID for the signed-in user.",
                 subject == InventorySubject
-                    ? "Tell the user this inventory could not be found for them and offer to start a new inventory with their file."
+                    ? ReplyFormat.Failure("Inventory not found.", "offer to start a new inventory with their file.")
                     : null);
         }
 
         if (response.Status is not (>= 200 and < 300))
         {
-            return Fail(sessionId, operationId, response.Status, response.Error);
+            return Fail(sessionId, operationId, response.Status, response.Error,
+                subject == InventorySubject
+                    ? ReplyFormat.Failure("The inventory status could not be read.", "offer to check again; if it keeps failing, try later.")
+                    : null);
         }
 
         string? status = DsBackdoorClient.ReadValue(response.Body, "status");
@@ -194,25 +196,44 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             return inventory
                 ? "If you have not already said so, tell the user once that you are waiting for their upload or processing their " +
                     "inventory; do not repeat it on later checks. Then check the status again quietly with the same sessionId and " +
-                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating an assessment. " +
+                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating a business case. " +
                     "Call the status tool directly yourself; never write or run a script or code to call it."
                 : $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
                     "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }
 
+        if (!inventory)
+        {
+            if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"Tell the user the {subject} is ready and summarise 'result' in plain language without inventing details.";
+            }
+
+            return string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase)
+                ? $"Tell the user the {subject} did not complete because the file was not uploaded within the upload window, and offer to start again."
+                : $"Tell the user the {subject} did not complete and quote 'errorMessage'.";
+        }
+
         if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            return $"Tell the user the {subject} is ready and summarise 'result' in plain language without inventing details." +
-                (inventory ? " Then offer to export the inventory or create an assessment." : string.Empty);
+            return ReplyFormat.Reply(
+                "'Inventory ready:' followed by the server count, with the OS split and the total storage when 'result' gives them, for " +
+                "example 'Inventory ready: 312 servers (280 Windows, 32 Linux), 4.1 TB storage'. If this was a text change or a " +
+                "question, the headline confirms the change or answers the question instead.",
+                "the most useful exact figures from 'result' (for example cores, memory, databases or applications) and any " +
+                "issues found, such as missing or invalid data, with counts.",
+                "when there are issues the user can fix, say how (correct the file and upload it again, or describe the fix in " +
+                "text) and that the business case can still be created; otherwise " + ReplyFormat.AfterInventory);
         }
 
         if (string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase))
         {
-            return $"Tell the user the {subject} did not complete because the file was not uploaded within the upload window, and offer to start again.";
+            return ReplyFormat.Failure("The inventory did not complete: the file was not uploaded within the upload window.",
+                "offer to start again and upload the file within the window.");
         }
 
-        return $"Tell the user the {subject} did not complete and quote 'errorMessage'." +
-            (inventory ? " Offer to start again." : string.Empty);
+        return ReplyFormat.Failure("The inventory did not complete.",
+            "say how to fix the cause (for example correct the file and upload it again), then offer to start again.");
     }
 
     internal const string InventorySubject = "inventory";

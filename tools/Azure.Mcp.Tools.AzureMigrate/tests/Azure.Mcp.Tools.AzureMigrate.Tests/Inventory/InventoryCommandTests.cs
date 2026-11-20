@@ -141,8 +141,8 @@ public class InventoryCommandTests
     }
 
     [Theory]
-    [InlineData(false, "the inventory has started")]
-    [InlineData(true, "updates their existing inventory, not a new one")]
+    [InlineData(false, "Inventory started.")]
+    [InlineData(true, "Updating your existing inventory (not a new one).")]
     public void FileInstructions_StartTrackingWithoutWaitingForUser(bool reused, string opening)
     {
         string instructions = CreateOrUpdateInventoryCommand.FileInstructions(reused);
@@ -152,14 +152,14 @@ public class InventoryCommandTests
     }
 
     [Theory]
-    [InlineData("validation", null, false, "ask them for the correct value")]
+    [InlineData("validation", null, false, "ask for the correct value")]
     [InlineData("auth", null, false, "sign in again")]
-    [InlineData("invokeSession", 404, true, "could not be found")]
-    [InlineData("invokeSession", 400, true, "upload their inventory file first")]
+    [InlineData("invokeSession", 404, true, "Inventory not found.")]
+    [InlineData("invokeSession", 400, true, "upload the inventory file first")]
     [InlineData("invokeSession", 503, true, "temporary service problem")]
     [InlineData("createSession", null, false, "temporary service problem")]
-    [InlineData("invokeSession", 404, false, "quote 'error'")]
-    [InlineData("createSession", 403, false, "quote 'error'")]
+    [InlineData("invokeSession", 404, false, "Inventory could not be started.")]
+    [InlineData("createSession", 403, false, "Inventory could not be started.")]
     public void GetFailureInstructions_SelectsByStepAndStatus(string step, int? status, bool textOnly, string expected) =>
         Assert.Contains(expected, CreateOrUpdateInventoryCommand.GetFailureInstructions(step, status, textOnly));
 
@@ -186,7 +186,7 @@ public class InventoryCommandTests
     [Fact]
     public void GetInstructions_Succeeded_InventoryOffersNextSteps_HaUnchanged()
     {
-        Assert.Contains("offer to export the inventory or create an assessment",
+        Assert.Contains("create the business case and ROI summary",
             GetInventoryStatusCommand.GetInstructions("Succeeded", true, null));
         Assert.DoesNotContain("offer to export", GetInventoryStatusCommand.GetInstructions("Succeeded", true, null, "HA assessment"));
     }
@@ -292,7 +292,7 @@ public class InventoryCommandTests
         Assert.True(r.Success);
         Assert.Equal(ReadSas, r.DownloadUrl);
         Assert.Equal(ExportInventoryCommand.BuildDownloadCommand(ReadSas), r.DownloadCommand);
-        Assert.Contains("clickable link", r.Instructions);
+        Assert.Contains("clickable Markdown link", r.Instructions);
     }
 
     [Fact]

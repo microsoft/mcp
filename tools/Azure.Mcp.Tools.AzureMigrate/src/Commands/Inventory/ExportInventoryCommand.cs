@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "there is none. Set 'output' to 'refined' for the refined (cleaned-up) inventory file, which is the default, or to " +
         "'offline' for the offline zip package; ask the user if it is unclear which one they want. " +
         "Returns: 'downloadUrl', 'downloadCommand' (an azcopy command) and 'instructions'. " +
-        "Next: share the download link or command with the user. " +
+        "Next: share the download link or command with the user, then continue to the business case. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -105,14 +105,14 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
         if (response.Status == (int)HttpStatusCode.NotFound)
         {
             return Fail(sessionId, output, response.Status, "No inventory was found for this session ID for the signed-in user.",
-                "Tell the user no inventory was found for them with this ID and offer to start a new one.");
+                ReplyFormat.Failure("Inventory not found.", "offer to start a new inventory with their file."));
         }
 
         if (response.Status == (int)HttpStatusCode.BadRequest)
         {
             return Fail(sessionId, output, response.Status, response.Error,
-                $"Tell the user the {label} is not available yet: the inventory may still be running or did not produce it. " +
-                "Suggest checking the inventory status first.");
+                ReplyFormat.Failure($"The {label} is not available yet.",
+                    "check the inventory status first: it may still be running or may not have produced this file."));
         }
 
         if (response.Status is not (>= 200 and < 300))
@@ -135,11 +135,13 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
             Output: output,
             DownloadUrl: downloadUrl,
             DownloadCommand: downloadCommand,
-            Instructions: $"Tell the user their {label} is ready to download. Share downloadUrl as a clickable link exactly as " +
-                "returned, without retyping or shortening it, and mention that the link is temporary and read-only. If they prefer the " +
-                $"command line, show downloadCommand exactly as returned in a code block and ask them to replace {FilePathPlaceholder} " +
-                "with where to save the file (AzCopy v10 is required: https://aka.ms/downloadazcopy-v10-windows). If the link has " +
-                "expired, they can ask for a new one.");
+            Instructions: ReplyFormat.Reply(
+                $"Your {label} is ready to download.",
+                "downloadUrl as a clickable Markdown link exactly as returned, without retyping or shortening it; that the link is " +
+                "temporary and read-only (ask again for a new one when it expires). Only if they prefer the command line, show " +
+                $"downloadCommand exactly as returned in a code block and ask them to replace {FilePathPlaceholder} with where to save " +
+                "the file (AzCopy v10: https://aka.ms/downloadazcopy-v10-windows).",
+                ReplyFormat.AfterInventory));
     }
 
     /// <summary>
@@ -159,7 +161,8 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
     }
 
     private static ExportInventoryCommandResult Fail(string? sessionId, string? output, int? status, string? error, string? instructions = null) =>
-        new(false, error ?? "Unknown error.", status, sessionId, output, null, null, instructions);
+        new(false, error ?? "Unknown error.", status, sessionId, output, null, null,
+            instructions ?? ReplyFormat.Failure("The inventory file could not be exported.", "offer to try again; if it keeps failing, try later."));
 
     /// <summary>Result of the inventory export command.</summary>
     public sealed record ExportInventoryCommandResult(

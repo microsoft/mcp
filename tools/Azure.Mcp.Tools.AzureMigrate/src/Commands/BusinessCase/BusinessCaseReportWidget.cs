@@ -6,11 +6,13 @@ using Microsoft.Mcp.Core.Areas.Server.McpApps;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 
 /// <summary>
-/// POC: MCP Apps card for the business case status tool. The host renders it with every status result: while the business case
-/// runs it shows the stage, and once it succeeds it renders the ROI report ('report', the ROI.md Markdown) like an editor's
-/// Markdown preview (headings, tables, lists, code), with buttons to open the report link and copy the Markdown. The report comes
-/// in the tool result, so the card makes no network calls and needs no connect domains. Everything is escaped before rendering
-/// and only http(s) links are kept.
+/// POC: MCP Apps card for the business case create and status tools. Shown with the create result, it tracks the business case by
+/// calling the status tool itself (each call moves the business case to its next stage) and updates its stage in place, so the agent
+/// does not poll and the chat shows one card instead of a tool call per check. Once the business case succeeds it renders the ROI
+/// report ('report', the ROI.md Markdown) like an editor's Markdown preview (headings, tables, lists, code), with buttons to open the
+/// full view, copy the Markdown and download the report. It tells the agent the latest state through ui/update-model-context and
+/// never posts chat messages. The report comes in the tool result, so the card needs no connect domains. Everything is escaped
+/// before rendering and only http(s) links are kept.
 /// </summary>
 internal static class BusinessCaseReportWidget
 {
@@ -22,7 +24,7 @@ internal static class BusinessCaseReportWidget
     internal static bool IsEnabled =>
         !string.Equals(Environment.GetEnvironmentVariable(EnabledSetting)?.Trim(), "false", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Registers the card for the given command (the business case status command) when enabled.</summary>
+    /// <summary>Registers the card for the given command (the business case create or status command) when enabled.</summary>
     internal static void Register(string commandId)
     {
         if (IsEnabled)
@@ -195,9 +197,13 @@ internal static class BusinessCaseReportWidget
             return null;
           }
           function state(text, cls) { var s = el('state'); s.textContent = text; s.className = 'state ' + (cls || ''); s.style.display = text ? '' : 'none'; }
-          function onToolResult(params) {
-            var r = findResult(params, 0);
-            if (!r) { size(); return; }
+          var stageText = { Assessment: 'assessing the servers and evaluating costs', HaSkill: 'building the ROI report' };
+          function elapsed() {
+            if (!ctx.startedAt) { return ''; }
+            var m = Math.floor((Date.now() - ctx.startedAt) / 60000);
+            return m < 1 ? '' : ' (' + m + ' min)';
+          }
+          function render(r) {
             if (r.assessmentName) { el('sub').textContent = r.assessmentName; }
             if (r.success === false) { state(r.error || 'The business case request was not valid.', 'err'); size(); return; }
             if (r.status === 'Succeeded' && r.report) {
@@ -210,13 +216,88 @@ internal static class BusinessCaseReportWidget
               el('open').style.display = ctx.link ? '' : 'none';
               el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
             } else if (r.status === 'Succeeded') {
-              state('The business case is ready. The report link is in the chat.', 'ok');
+              state('The business case is ready. Ask Copilot in the chat for the report link.', 'ok');
             } else if (r.status === 'Failed') {
               state('The business case failed' + (r.errorMessage ? ': ' + r.errorMessage : '.'), 'err');
             } else {
-              state('Business case running' + (r.stageNumber ? ', stage ' + r.stageNumber + ' of ' + (r.totalStages || 2) : '') + '...', '');
+              var n = r.stageNumber || 1;
+              state('Stage ' + n + ' of ' + (r.totalStages || 2) + ': ' + (stageText[r.stage] || 'running') + '...' + elapsed() +
+                ' This card updates by itself.', '');
             }
             size();
+          }
+
+          // ---- Tracking ----
+          // The card calls the status tool itself until the business case finishes, so the agent does not poll and the chat shows one
+          // card instead of a tool call per check. Each status call also moves the business case to its next stage. Calls must stay
+          // short: hosts cut off a card's tools/call after about 27 seconds. The latest state is saved per business case so a reloaded
+          // card resumes from it instead of starting the business case's next stage again; the agent is told the latest state through
+          // ui/update-model-context so it can answer questions about it. It never sends ui/message: hosts show it as the user's message.
+          var STATUS_TOOL = 'azure_catalyst_businesscase_status', MAX_CHECKS = 120, MAX_FAILURES = 3;
+          var tracking = false, checks = 0, failures = 0;
+          function storageKey(r) { return r && r.asOperationId ? 'azurecatalyst-bc-' + r.asOperationId : null; }
+          function load(r) {
+            try { var k = storageKey(r), v = k && window.localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+          }
+          function save(r) {
+            try { var k = storageKey(r); if (k) { window.localStorage.setItem(k, JSON.stringify(r)); } } catch (e) { }
+          }
+          function clean(p) {
+            var o = {};
+            for (var k in p) { if (p[k] !== null && p[k] !== undefined) { o[k] = p[k]; } }
+            return o;
+          }
+          function tellModel(r) {
+            var lines = ['Business case card update for "' + (r.assessmentName || r.asOperationId) + '": status ' + r.status +
+              ', stage ' + (r.stageNumber || 1) + ' of ' + (r.totalStages || 2) + '.'];
+            if (r.status === 'Running' && r.nextStatusParameters) {
+              lines.push('The card is tracking it. If the user asks for the status, use these nextStatusParameters: ' + JSON.stringify(clean(r.nextStatusParameters)));
+            } else if (r.status === 'Succeeded') {
+              lines.push('The ROI report is shown to the user in the card.' + (r.result ? ' Report link: ' + r.result : ''));
+              if (r.report) { lines.push('ROI report (ROI.md):\n' + String(r.report).slice(0, 12000)); }
+            } else if (r.status === 'Failed') {
+              lines.push('Error: ' + (r.errorMessage || 'unknown') + '.');
+            }
+            send('ui/update-model-context', { content: [{ type: 'text', text: lines.join('\n') }] }, 5000).catch(function () { });
+          }
+          function schedule(r) {
+            ctx.params = clean(r.nextStatusParameters);
+            var wait = Math.min(Math.max(r.retryAfterSeconds || 30, 10), 60);
+            setTimeout(check, wait * 1000);
+          }
+          function check() {
+            if (++checks > MAX_CHECKS) {
+              tracking = false;
+              state('The business case is taking longer than expected. Ask Copilot in the chat for its status.', '');
+              size(); return;
+            }
+            send('tools/call', { name: STATUS_TOOL, arguments: ctx.params }, 25000).then(function (res) {
+              var s = findResult(res, 0);
+              if (!s || s.success === false) { throw new Error((s && s.error) || 'unreadable status'); }
+              failures = 0;
+              var changed = !ctx.last || ctx.last.status !== s.status || ctx.last.stage !== s.stage;
+              ctx.last = s; save(s); render(s);
+              if (changed) { tellModel(s); }
+              if (s.status === 'Running' && s.nextStatusParameters) { schedule(s); } else { tracking = false; }
+            }).catch(function () {
+              // A cut-off call may still have moved the business case on; the next call with the same parameters picks that up.
+              if (++failures >= MAX_FAILURES) {
+                tracking = false;
+                state('Could not check the business case status here. Ask Copilot in the chat for its status.', '');
+                size(); return;
+              }
+              setTimeout(check, 30000);
+            });
+          }
+          function onToolResult(params) {
+            var r = findResult(params, 0);
+            if (!r) { size(); return; }
+            var saved = load(r);
+            if (saved && (saved.isCompleted || (saved.stageNumber || 1) >= (r.stageNumber || 1))) { r = saved; }
+            ctx.last = r;
+            if (!ctx.startedAt) { ctx.startedAt = Date.now(); }
+            render(r);
+            if (!tracking && r.success !== false && r.status === 'Running' && r.nextStatusParameters) { tracking = true; schedule(r); }
           }
           window.addEventListener('message', function (e) {
             var m = e.data;
@@ -276,7 +357,7 @@ internal static class BusinessCaseReportWidget
             }, function () { if (want === 'fullscreen') { expandInline(); } });
           });
           send('ui/initialize', {
-            appInfo: { name: 'azurecatalyst-business-case-report', version: '0.2.0' },
+            appInfo: { name: 'azurecatalyst-business-case-report', version: '0.3.0' },
             appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] }, protocolVersion: '2025-06-18'
           }, 8000)
             .then(function (res) {

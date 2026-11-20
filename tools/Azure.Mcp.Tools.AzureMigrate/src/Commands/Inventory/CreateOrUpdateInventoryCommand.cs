@@ -40,7 +40,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "block, without retyping or shortening it. " +
         "Next: success means the inventory has started, not finished. Start tracking it right away with the inventory status tool " +
         "using the same 'sessionId' and 'operationId', and keep tracking until it completes, before exporting the inventory or " +
-        "creating an assessment; call the status tool directly yourself, never from a script or code. " +
+        "creating a business case; call the status tool directly yourself, never from a script or code. " +
         "Follow 'instructions'. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -178,16 +178,23 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     /// returns one set of instructions or the other, never both.</remarks>
     internal static string FileInstructions(bool reusedSession) => InventoryUploadWidget.IsEnabled
         ? WidgetFileInstructions(reusedSession)
-        : (reusedSession
-            ? "Tell the user this updates their existing inventory, not a new one. "
-            : "Tell the user the inventory has started. ") +
-        "Show uploadCommand to the user exactly as returned, in a code block; never retype, shorten or split it, never show the URL " +
-        $"inside it on its own, and do not repeat it later. Ask them to replace {FilePathPlaceholder} with the full path of their file " +
-        $"and run it on their own machine within {UploadWindowMinutes} minutes; the file must be at most {MaxFileSizeMegabytes} MB. " +
-        "AzCopy v10 is required (download: https://aka.ms/downloadazcopy-v10-windows). Do not ask them to send the file in the chat. " +
-        "Then start tracking the inventory status right away with this sessionId and operationId; do not wait for the user to say " +
-        "the upload has finished. Keep checking until it completes, then summarise the result. Do not export the inventory or " +
-        "create an assessment before then.";
+        : ReplyFormat.Reply(
+            StartedHeadline(reusedSession),
+            $"the file limit ({MaxFileSizeMegabytes} MB) and the upload window ({UploadWindowMinutes} minutes); that AzCopy v10 is " +
+            "required (https://aka.ms/downloadazcopy-v10-windows). Right after the bullets show uploadCommand exactly as returned, in " +
+            "a code block; never retype, shorten or split it, never show the URL inside it on its own, and do not repeat it later.",
+            $"replace {FilePathPlaceholder} with the full path of the file and run the command on their own machine; do not ask " +
+            "them to send the file in the chat.") +
+        " After this reply text, start tracking the inventory status right away with this sessionId and operationId; do not wait " +
+        "for the user to say the upload has finished. " + TrackUntilDone;
+
+    private static string StartedHeadline(bool reusedSession) => reusedSession
+        ? "Updating your existing inventory (not a new one)."
+        : "Inventory started.";
+
+    private const string TrackUntilDone =
+        "Keep checking quietly until it completes, then reply with the format the final status result gives. Do not export the " +
+        "inventory or create a business case before then.";
 
     /// <summary>Returns the instructions for a successful file-based create or update when the upload widget is shown.</summary>
     /// <remarks>
@@ -201,26 +208,28 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     /// - "Quietly": each status call can take up to about 25 seconds and repeats many times; narrating every check floods the chat.
     /// </remarks>
     internal static string WidgetFileInstructions(bool reusedSession) =>
-        (reusedSession
-            ? "Tell the user this updates their existing inventory, not a new one. "
-            : "Tell the user the inventory has started. ") +
-        $"An upload panel is shown to the user with this result: ask them to choose their file in it within {UploadWindowMinutes} " +
-        $"minutes; the file must be at most {MaxFileSizeMegabytes} MB. Do not show uploadCommand or the URL in it, and do not ask " +
-        "them to send the file in the chat. Only if they say the panel is missing or the upload failed, show uploadCommand exactly " +
-        $"as returned in a code block and ask them to replace {FilePathPlaceholder} with their file path and run it (AzCopy v10). " +
-        "Ask them to choose their file in the panel; they do not need to tell you when it is uploaded. Right away, in this same " +
-        "reply, start tracking the inventory status with this sessionId and operationId and keep calling it quietly while it has " +
-        "not completed: it stays in progress until the file arrives and is processed. Do not wait for the user to say the file " +
-        "is uploaded. When it completes, summarise the result. Do not export the inventory or create an assessment before then.";
+        ReplyFormat.Reply(
+            StartedHeadline(reusedSession),
+            $"choose the file in the upload panel shown with this result, within {UploadWindowMinutes} minutes; the file must be at " +
+            $"most {MaxFileSizeMegabytes} MB. Do not show uploadCommand or the URL in it.",
+            "choose the file in the panel; there is no need to say when it is uploaded, the result follows here.") +
+        " Do not ask them to send the file in the chat. Only if they say the panel is missing or the upload failed, show " +
+        $"uploadCommand exactly as returned in a code block and ask them to replace {FilePathPlaceholder} with their file path and " +
+        "run it (AzCopy v10). Right away, in this same reply, start tracking the inventory status with this sessionId and " +
+        "operationId; it stays in progress until the file arrives and is processed, so do not wait for the user to say the file is " +
+        "uploaded. " + TrackUntilDone;
 
-    internal const string RetryOnceInstructions =
-        "Tell the user the inventory could not be started because of a temporary service problem and offer to try once more. " +
-        "If it fails again, ask them to try again later.";
+    internal static readonly string RetryOnceInstructions = ReplyFormat.Failure(
+        "Inventory could not be started (temporary service problem).",
+        "offer to try once more; if it fails again, ask them to try again later.");
 
     /// <summary>Returns the instructions when the user already has a different active inventory session.</summary>
     internal static string ActiveSessionInstructions(string activeSessionId) =>
-        $"Tell the user they already have an active inventory ('{activeSessionId}') and offer to continue with it. If they agree, " +
-        $"use '{activeSessionId}' as the session ID for this and later updates.";
+        ReplyFormat.Reply(
+            $"You already have an active inventory ('{activeSessionId}').",
+            "that only one active inventory is kept per user.",
+            "offer to continue with it.") +
+        $" If they agree, use '{activeSessionId}' as the session ID for this and later updates.";
 
     /// <summary>
     /// Returns the instructions for a failed call, by the step that failed, the Discovery Service HTTP status (null when it
@@ -228,13 +237,17 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     /// </summary>
     internal static string GetFailureInstructions(string step, int? status, bool textOnly) => (step, status, textOnly) switch
     {
-        ("validation", _, _) => "Tell the user which input is not valid, based on 'error', and ask them for the correct value; do not guess it.",
-        ("auth", _, _) => "Tell the user their sign-in could not be verified and ask them to sign in again, then try once more.",
-        ("invokeSession", 404, true) => "Tell the user this inventory could not be found for them and offer to start a new inventory with their file.",
-        ("invokeSession", 400, true) => "Tell the user this inventory has no completed import yet, so it cannot be changed in text; " +
-            "ask them to upload their inventory file first.",
+        ("validation", _, _) => ReplyFormat.Failure("Inventory not started: an input is not valid.",
+            "ask for the correct value of that input; do not guess it."),
+        ("auth", _, _) => ReplyFormat.Failure("Inventory not started: your sign-in could not be verified.",
+            "sign in again, then try once more."),
+        ("invokeSession", 404, true) => ReplyFormat.Failure("Inventory not found.",
+            "offer to start a new inventory with their file."),
+        ("invokeSession", 400, true) => ReplyFormat.Failure("This inventory cannot be changed in text yet (no completed import).",
+            "upload the inventory file first, then ask for the change again."),
         (_, null or >= 500, _) => RetryOnceInstructions,
-        _ => "Tell the user the inventory could not be started and quote 'error' in plain language.",
+        _ => ReplyFormat.Failure("Inventory could not be started.",
+            "fix the cause named in the bullet (for example the file format or a column) and try again."),
     };
 
     /// <summary>
@@ -301,10 +314,12 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             UploadCommand: null,
             UploadWindowMinutes: null,
             MaxFileSizeMegabytes: null,
-            Instructions: "Tell the user their change is being applied to the inventory and nothing needs to be uploaded. " +
-                "Start tracking the inventory status right away with this sessionId and operationId and keep checking until it " +
-                "completes, then summarise the result, which answers questions or confirms the changes. Do not export the inventory " +
-                "or create an assessment before then.");
+            Instructions: ReplyFormat.Reply(
+                "Applying your change to the inventory.",
+                "the change as the user asked for it, in their words; nothing needs to be uploaded.",
+                "the result follows here when it is applied.") +
+                " Right away, in this same reply, start tracking the inventory status with this sessionId and operationId. " +
+                TrackUntilDone);
 
     /// <summary>
     /// Builds the azcopy command for a write-only blob SAS URL, or returns null if the URL is not a valid http(s) URL.

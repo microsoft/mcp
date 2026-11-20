@@ -70,8 +70,10 @@ public class AzureMigrateSetup : IAreaSetup
 
         // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
-        // MCP Apps card that renders the ROI report (ROI.md) like a Markdown preview; set AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn it off.
-        // It is attached to the status tool: it shows the stage on each poll and the report once the business case succeeds.
+        // MCP Apps card that tracks the business case and renders the ROI report (ROI.md) like a Markdown preview; set
+        // AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn it off. Shown with the create result, it calls the status tool itself until the
+        // business case finishes, so the agent does not poll; it is also shown when the agent checks the status on the user's request.
+        BusinessCaseReportWidget.Register(CreateBusinessCaseCommand.CommandId);
         BusinessCaseReportWidget.Register(GetBusinessCaseStatusCommand.CommandId);
     }
 

@@ -79,9 +79,19 @@ internal static class BusinessCaseStages
         "Check the status again with exactly the values in 'nextStatusParameters', after about 'retryAfterSeconds' seconds. " +
         "Do not change or invent any of them. Call the status tool directly yourself; never write or run a script or code to call it.";
 
+    /// <summary>Used instead of <see cref="CheckAgainInstructions"/> when the business case card tracks the business case itself.</summary>
+    internal const string CardTracksInstructions =
+        "The business case card shown to the user tracks the business case by itself, updates its stage and shows the ROI report " +
+        "when it is ready. Say so in the 'Next step:' line, then end your reply: do not check the status again yourself " +
+        "unless the user asks for it or says the card is not updating, and then use the latest 'nextStatusParameters' in the conversation.";
+
+    /// <summary>Returns what the agent should do next while the business case runs, depending on whether the card tracks it.</summary>
+    internal static string TrackingInstructions => BusinessCaseReportWidget.IsEnabled ? CardTracksInstructions : CheckAgainInstructions;
+
     internal static int StageNumber(string stage) => stage == HaSkill ? 2 : 1;
 
     internal static BusinessCaseCommandResult Invalid(string? error, string? assessmentName = null, string? asOperationId = null) =>
         new(false, error ?? "Unknown error.", null, false, null, null, Total, assessmentName, asOperationId, null, null,
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null,
+            ReplyFormat.Failure("Business case request not valid.", "ask for the correct value of that input; do not guess it."));
 }

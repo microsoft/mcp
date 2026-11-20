@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 /// moves the business case forward on each call (see <see cref="GetBusinessCaseStatusCommand"/>). Nothing is stored on the server.
 /// </summary>
 [CommandMetadata(
-    Id = "eacaf2d9-6983-41dd-bd91-b0502d9ca2d6",
+    Id = CommandId,
     Name = "create",
     Title = "Create Azure Catalyst Business Case",
     Description = "Creates an Azure Catalyst business case for the signed-in user from their inventory: an assessment of their servers " +
@@ -38,10 +38,11 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "(none), network cost (5%), IaaS, PaaS and management labor cost remaining (75%, 60%, 60%), infrastructure growth (5% a year) " +
         "and migration completion by year (0, 20, 50, 100%). " +
         "Returns: 'status', 'stage', 'nextStatusParameters' and 'instructions', which lists the settings used. " +
-        "Next: success means the business case has started, not finished. Follow 'instructions' and start tracking it right away, " +
-        "in the same reply, with the business case status tool using 'nextStatusParameters' unchanged, and keep tracking until it " +
-        "completes; do not wait for the user to ask, and call the status tool directly yourself, never from a script or code. Its 'result' holds the ROI summary: the business case per migration strategy (savings, payback, Azure versus " +
-        "on-premises cost). Do not mention tool or parameter names to the user.",
+        "Next: success means the business case has started, not finished. Follow 'instructions': they say either to start tracking " +
+        "it right away, in the same reply, with the business case status tool using 'nextStatusParameters' unchanged until it " +
+        "completes (without waiting for the user to ask, calling the status tool directly yourself, never from a script or code), " +
+        "or that the business case card tracks it for the user. The status tool's 'result' holds the ROI report. " +
+        "Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,
@@ -53,6 +54,7 @@ public sealed class CreateBusinessCaseCommand(
     IAssessmentCreateClient createClient, IInventoryExportClient exportClient, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<CreateBusinessCaseOptions, BusinessCaseCommandResult>
 {
+    internal const string CommandId = "eacaf2d9-6983-41dd-bd91-b0502d9ca2d6";
     internal const string Currency = "USD";
     internal const double DefaultScalingFactor = 1.3;
     internal const string DefaultSavingsOption = "RI3Year";
@@ -161,9 +163,9 @@ public sealed class CreateBusinessCaseCommand(
                 return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
                     null, null, null, "inventoryExport", export.HttpStatus, null,
                     export.Error ?? "The inventory export did not return a valid link.", null, null, null,
-                    "Tell the user the business case could not be started because their inventory's offline zip could not be " +
-                    "exported: the inventory may still be running, may have failed, or may have been archived. Suggest checking the " +
-                    "inventory status, or giving a read-only SAS URL of a collector ZIP instead.");
+                    ReplyFormat.Failure("Business case not started: the inventory's offline zip could not be exported.",
+                        "check the inventory status (it may still be running, have failed or been archived) and try again once it " +
+                        "is ready, or give a read-only SAS URL of a collector ZIP instead."));
             }
 
             inventorySasUri = export.Uri;
@@ -176,19 +178,27 @@ public sealed class CreateBusinessCaseCommand(
             return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
                 operation.OperationId?.ToString("D"), null, null, "assessmentCreate", operation.HttpStatus, operation.ErrorCode,
                 operation.ErrorMessage ?? $"Assessment create failed (HTTP {operation.HttpStatus}).", null, null, null,
-                "Tell the user the business case could not be started because creating its assessment failed, and quote 'errorMessage'.");
+                ReplyFormat.Failure("Business case not started: its assessment could not be created.",
+                    "fix the input named in the cause if there is one and try again; otherwise offer to try again."));
         }
 
         Guid operationId = operation.OperationId.Value;
         return new(true, null, BusinessCaseStages.Running, false, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
             operationId.ToString("D"), null, null, null, operation.HttpStatus, null, null, null, operation.RetryAfterSeconds ?? 30,
             BusinessCaseNextStatusParameters.Create(name, operationId, inventorySasUri!, haSettings!),
-            "Tell the user the business case '" + name + "' has started (stage 1 of 2: assessment) and can take several minutes, that it uses " +
-            inventorySource + " as the inventory, and show them the settings it uses: " +
-            DescribeSettings(region, assessmentSettings!, haSettings!) + ". " +
-            "Then, right away in this same reply, start tracking the business case status with exactly the values in " +
-            "'nextStatusParameters'; do not wait for the user to ask, do not change or invent any of them, and keep checking until " +
-            "it completes.");
+            ReplyFormat.Reply(
+                $"Business case '{name}' started (stage 1 of 2: assessment, usually several minutes).",
+                "the inventory used: " + inventorySource + "; one short settings bullet with only the region, savings option, Azure " +
+                "Hybrid Benefit, discount and any setting the user asked for, followed by 'other settings are defaults'. The full " +
+                "list, to answer questions only and not to show: " + DescribeSettings(region, assessmentSettings!, haSettings!) + ".",
+                BusinessCaseReportWidget.IsEnabled
+                    ? "the card below updates by itself and shows the ROI report when it is ready."
+                    : "the result follows here when it is ready.") + " " +
+            (BusinessCaseReportWidget.IsEnabled
+                ? BusinessCaseStages.CardTracksInstructions
+                : "Then, right away in this same reply, start tracking the business case status with exactly the values in " +
+                  "'nextStatusParameters'; do not wait for the user to ask, do not change or invent any of them, and keep checking until " +
+                  "it completes."));
     }
 
     /// <summary>Builds a valid business case name from the region and UTC time, for when the user gives none.</summary>
