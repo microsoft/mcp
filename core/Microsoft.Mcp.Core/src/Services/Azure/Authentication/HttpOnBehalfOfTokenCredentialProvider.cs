@@ -36,12 +36,16 @@ public class HttpOnBehalfOfTokenCredentialProvider(
         // exchange with a generic MSAL invalid_request error.
         if (IsAppOnlyToken(httpContext.User))
         {
-            _logger.LogWarning(
-                "The incoming request was authenticated with an application-only token, which cannot be used for an on-behalf-of token request.");
-
             if ((httpContext.User.FindFirst("azp")?.Value ?? httpContext.User.FindFirst("appid")?.Value) is string callerAppId)
             {
-                _logger.LogWarning("Caller application ID: '{CallerAppId}'.", callerAppId);
+                _logger.LogWarning(
+                    "The incoming request was authenticated with an application-only token, which cannot be used for an on-behalf-of token request. Caller application ID: '{CallerAppId}'.",
+                    callerAppId);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "The incoming request was authenticated with an application-only token, which cannot be used for an on-behalf-of token request.");
             }
 
             throw new OnBehalfOfUserTokenRequiredException();
