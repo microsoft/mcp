@@ -193,6 +193,26 @@ public class AzApiDocsGetCommandTests : CommandUnitTestsBase<AzApiDocsGetCommand
     }
 
     [Fact]
+    public async Task ExecuteAsync_NonCanonicalInput_UsesNormalizedTypeForExamples()
+    {
+        Service.GetDocumentation("microsoft.storage/storageaccounts@2023-05-01", null)
+            .Returns(new AzApiDocsResult
+            {
+                ResourceType = "Microsoft.Storage/storageAccounts",
+                ApiVersion = "2023-05-01",
+                Schema = "...",
+                Summary = "..."
+            });
+        _examplesService.GetExamplesAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync("--resource-type", "microsoft.storage/storageaccounts@2023-05-01");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await _examplesService.Received(1).GetExamplesAsync("Microsoft.Storage/storageAccounts", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
         var args = CommandDefinition.Parse(["--resource-type", "Microsoft.Compute/virtualMachines", "--api-version", "2024-03-01"]);

@@ -60,8 +60,9 @@ public sealed class AzApiDocsGetCommand(
         {
             var result = _docsService.GetDocumentation(options.ResourceType, options.ApiVersion);
 
+            // Use the normalized, canonical type (the service accepts Type@version, extra whitespace, etc.).
             var examples = await _examplesService.GetExamplesAsync(
-                options.ResourceType,
+                result.ResourceType,
                 cancellationToken).ConfigureAwait(false);
 
             if (examples.Count > 0)
