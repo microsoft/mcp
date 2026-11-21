@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Standardized built-in Azure namespace command names and retrieval verbs while retaining legacy command names as compatibility aliases. CLI, global tools, consolidated mode, and external MCP proxies are unchanged."
