@@ -241,6 +241,7 @@ internal class Program
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.StorageSync.StorageSyncSetup(),
+            new Azure.Mcp.Tools.Support.SupportSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.WellArchitectedFramework.WellArchitectedFrameworkSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),

@@ -6168,6 +6168,63 @@ azmcp storagesync serverendpoint update --subscription <subscription> \
 azmcp subscription list [--tenant-id <tenant-id>]
 ```
 
+### Azure Support Operations
+
+#### Problem Classification
+
+```bash
+# List the problem classifications for an Azure support service
+# The returned full ID is the --problem-classification value required by 'support ticket create'
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp support problemclassification list --service <service> \
+                                         [--tenant <tenant>]
+```
+
+#### Service
+
+```bash
+# List the Azure services that support tickets can be opened for
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp support service list [--tenant <tenant>]
+```
+
+#### Ticket
+
+```bash
+# Create an Azure support ticket. Run diagnostics first (resource health, AppLens, Azure Monitor, storage disk diagnose),
+# include the evidence (error messages, correlation IDs, timestamps) in the description, and get explicit user confirmation.
+# Severity: minimal, moderate, critical, highestcriticalimpact. Contact method: email (default) or phone.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp support ticket create --subscription <subscription> \
+                            --title <title> \
+                            --description <description> \
+                            --problem-classification <problem-classification-id> \
+                            --severity <severity> \
+                            --first-name <first-name> \
+                            --last-name <last-name> \
+                            --email <email> \
+                            --timezone <timezone> \
+                            --country <country> \
+                            --language <language> \
+                            [--contact-method <contact-method>] \
+                            [--phone-number <phone-number>] \
+                            [--advanced-diagnostic-consent] \
+                            [--technical-resource <resource-id>] \
+                            [--ticket-name <ticket-name>]
+
+# Get an Azure support ticket by name, optionally including its communications
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp support ticket get --subscription <subscription> \
+                         --ticket <ticket-name> \
+                         [--include-communications]
+
+# List Azure support tickets in a subscription, optionally filtered with OData (e.g. "status eq 'Open'")
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp support ticket list --subscription <subscription> \
+                          [--filter <odata-filter>] \
+                          [--top <top>]
+```
+
 ### Azure Terraform Best Practices
 
 ```bash
