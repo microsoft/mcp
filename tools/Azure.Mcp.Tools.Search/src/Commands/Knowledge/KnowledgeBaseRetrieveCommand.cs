@@ -87,7 +87,8 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
         try
         {
             var result = await _searchService.RetrieveFromKnowledgeBase(
-                options.Service, options.KnowledgeBase, options.Query, parsedMessages, options.IncludeReferenceSourceData, cancellationToken);
+                options.Service, options.KnowledgeBase, options.Query, parsedMessages,
+                options.IncludeReferenceSourceData, options.Tenant, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), SearchJsonContext.Default.KnowledgeBaseRetrieveCommandResult);
         }
         catch (Exception ex)
@@ -98,6 +99,15 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException { Status: 401 } requestFailed when !requestFailed.Message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase) =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Retrieval),
+        RequestFailedException { Status: 403 } requestFailed =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Retrieval),
+        _ => base.GetErrorMessage(ex)
+    };
 
     internal static (string role, string content) ParseMessage(string message)
     {

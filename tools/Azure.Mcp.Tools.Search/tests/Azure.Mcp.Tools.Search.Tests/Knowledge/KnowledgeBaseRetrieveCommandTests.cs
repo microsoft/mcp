@@ -14,6 +14,46 @@ namespace Azure.Mcp.Tools.Search.Tests.Knowledge;
 
 public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeBaseRetrieveCommand, ISearchService>
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("11111111-1111-1111-1111-111111111111")]
+    [InlineData("Target tenant")]
+    public async Task ExecuteAsync_ForwardsTenant(string? tenant)
+    {
+        Service.RetrieveFromKnowledgeBase("service123", "base1", "hi", null, null, tenant, Arg.Any<CancellationToken>())
+            .Returns("{}");
+        string[] args = ["--service", "service123", "--knowledge-base", "base1", "--query", "hi"];
+        var response = await ExecuteCommandAsync(tenant is null ? args : [.. args, "--tenant", tenant]);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Contains(CommandDefinition.Options, option => option.Name == "--tenant");
+        await Service.Received(1).RetrieveFromKnowledgeBase(
+            "service123", "base1", "hi", null, null, tenant, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(404)]
+    public async Task ExecuteAsync_PreservesServiceStatus(int status)
+    {
+        Service.RetrieveFromKnowledgeBase("service123", "base1", "hi", null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, "Search request failed"));
+
+        var response = await ExecuteCommandAsync("--service", "service123", "--knowledge-base", "base1", "--query", "hi");
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.Contains("Search request failed", response.Message);
+        if (status is 401 or 403)
+        {
+            Assert.Contains(SearchErrorMessages.Retrieval, response.Message);
+        }
+        else
+        {
+            Assert.DoesNotContain(SearchErrorMessages.Retrieval, response.Message);
+        }
+    }
+
     [Fact]
     public void ReferenceSourceDataOption_IsAnOptionalNullableBoolean()
     {
@@ -34,6 +74,7 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Is("life"),
             Arg.Is<List<(string role, string message)>?>(m => m == null),
             Arg.Is<bool?>(value => value == null),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(json);
 
@@ -58,6 +99,7 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Is<string?>(q => q == null),
             Arg.Is<List<(string role, string message)>?>(m => m != null && m.Count == 1 && m[0].role == "user"),
             Arg.Is<bool?>(value => value == null),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(json);
 
@@ -88,6 +130,7 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Any<string?>(),
             Arg.Any<IEnumerable<(string role, string message)>?>(),
             Arg.Any<bool?>(),
+            null,
             Arg.Any<CancellationToken>())
             .Returns("{}");
 
@@ -112,6 +155,7 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Is<IEnumerable<(string role, string message)>?>(messages =>
                 useMessages ? messages != null && messages.Single().role == "user" && messages.Single().message == "Hello" : messages == null),
             expectedValue,
+            null,
             TestContext.Current.CancellationToken);
     }
 
@@ -169,6 +213,7 @@ public class KnowledgeBaseRetrieveCommandTests : CommandUnitTestsBase<KnowledgeB
             Arg.Any<string?>(),
             Arg.Any<List<(string role, string message)>?>(),
             Arg.Any<bool?>(),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test failure"));
 
