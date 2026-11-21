@@ -692,9 +692,10 @@ public partial class FabricCoreService(
         Dictionary<string, string>? headers = null,
         HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead,
         Action? onSending = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string[]? scopes = null)
     {
-        var tokenRequestContext = new TokenRequestContext(FabricEndpoints.FabricScopes);
+        var tokenRequestContext = new TokenRequestContext(scopes ?? FabricEndpoints.FabricScopes);
         var accessToken = await _credential.GetTokenAsync(tokenRequestContext, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 

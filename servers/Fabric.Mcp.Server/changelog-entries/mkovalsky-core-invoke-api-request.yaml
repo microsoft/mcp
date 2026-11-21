@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added core_invoke-api-request to send one confirmed POST, PUT, PATCH, or DELETE request to an allowlisted Fabric or Power BI REST path that has no dedicated tool, with validated JSON bodies, Fabric long-running operation receipts and optional waiting, and sanitized errors."
