@@ -533,6 +533,13 @@
   <Folder Name="/tools/Azure.Mcp.Tools.StorageSync/tests/">
     <Project Path="tools/Azure.Mcp.Tools.StorageSync/tests/Azure.Mcp.Tools.StorageSync.Tests/Azure.Mcp.Tools.StorageSync.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Support/" />
+  <Folder Name="/tools/Azure.Mcp.Tools.Support/src/">
+    <Project Path="tools/Azure.Mcp.Tools.Support/src/Azure.Mcp.Tools.Support.csproj" />
+  </Folder>
+  <Folder Name="/tools/Azure.Mcp.Tools.Support/tests/">
+    <Project Path="tools/Azure.Mcp.Tools.Support/tests/Azure.Mcp.Tools.Support.Tests/Azure.Mcp.Tools.Support.Tests.csproj" />
+  </Folder>
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/" />
   <Folder Name="/tools/Azure.Mcp.Tools.VirtualDesktop/src/">
     <Project Path="tools/Azure.Mcp.Tools.VirtualDesktop/src/Azure.Mcp.Tools.VirtualDesktop.csproj" />
