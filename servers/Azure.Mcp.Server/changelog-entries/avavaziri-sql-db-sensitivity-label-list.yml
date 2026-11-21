@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added `azmcp sql db sensitivity-label list` to list the current sensitivity labels (data classification) on the columns of an Azure SQL database."

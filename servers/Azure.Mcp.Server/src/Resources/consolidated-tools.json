@@ -4070,7 +4070,7 @@
     },
     {
       "name": "get_azure_database_admin_configuration_details",
-      "description": "Get details about Azure SQL Server Administration configurations including elastic pools, Entra admin assignments, and firewall rules.",
+      "description": "Get details about Azure SQL Server Administration configurations including elastic pools, Entra admin assignments, firewall rules, and database sensitivity labels (data classification).",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -4098,6 +4098,7 @@
         }
       },
       "mappedToolList": [
+        "sql_db_sensitivity-label_list",
         "sql_elastic-pool_list",
         "sql_server_entra-admin_list",
         "sql_server_firewall-rule_list"
