@@ -9,12 +9,14 @@ namespace Fabric.Mcp.Tools.Core.Models;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(ApiResourceGetCommandResult))]
 [JsonSerializable(typeof(AssignWorkspaceToCapacityRequest))]
 [JsonSerializable(typeof(AddWorkspaceRoleAssignmentRequest))]
 [JsonSerializable(typeof(CapacityGetCommandResult))]
 [JsonSerializable(typeof(CapacityListCommandResult))]
 [JsonSerializable(typeof(CapacityListResponse))]
 [JsonSerializable(typeof(CreateFolderRequest))]
+[JsonSerializable(typeof(FabricApiResponse))]
 [JsonSerializable(typeof(FabricFolder))]
 [JsonSerializable(typeof(FolderCreateCommandResult))]
 [JsonSerializable(typeof(FolderDeleteCommandResult))]

@@ -149,8 +149,12 @@ public static class FabricEndpoints
 {
     public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
     public const string FabricScope = "https://api.fabric.microsoft.com/.default";
+    public const string FabricApiHost = "api.fabric.microsoft.com";
+    public const string PowerBIApiHost = "api.powerbi.com";
+    public const string PowerBIScope = "https://analysis.windows.net/powerbi/api/.default";
 
     public static readonly string[] FabricScopes = [FabricScope];
+    public static readonly string[] PowerBIScopes = [PowerBIScope];
 
     public static string GetFabricApiBaseUrl() => FabricApiBaseUrl;
 
