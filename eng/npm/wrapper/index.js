@@ -4,6 +4,8 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const packageJson = require('./package.json')
+const { acquireInstallLock, isInstallInProgress } = require('./installLock')
+const { loadPlatformPackage, installPlatformPackage } = require('./platformCache')
 
 // Check if DEBUG environment variable is set
 const isDebugMode = process.env.DEBUG && (
@@ -44,7 +46,7 @@ const platformPackageName = `${packageName}-${platform}-${arch}`
 // and version. The OS temp directory is deliberately not used: on a shared
 // machine another user could plant a package there for us to load.
 //
-// Neither directory has a package.json of its own: pointing npm at this
+// Each attempt uses a private generation without a package.json: pointing npm at this
 // package's manifest is a no-op, because the platform package is declared
 // there as an optionalDependency that npm is already skipping (that skip is
 // usually why we are in this code path at all).
@@ -79,7 +81,7 @@ function userCacheDir() {
 }
 
 function requireFromInstallDir(installDir) {
-  return require(path.join(installDir, 'node_modules', platformPackageName))
+  return loadPlatformPackage(installDir, platformPackageName, packageVersion)
 }
 
 function isWritableDir(dir) {
@@ -90,82 +92,6 @@ function isWritableDir(dir) {
   } catch (err) {
     debugLog(`Cannot install platform package into ${dir}: ${err.message}`)
     return false
-  }
-}
-
-// MCP clients often start several copies of a server at once, and they all
-// share one install directory. Concurrent npm installs into one prefix undo
-// each other's work (one moves away the package another has just finished), so
-// a lock file lets one process install while the others wait and then load
-// what it installed.
-const installLockName = '.install.lock'
-// Longer than both npm attempts together. The PID check below catches a dead
-// holder sooner; this is the backstop for a PID that has been reused.
-const installLockStaleMs = 3 * 60 * 1000
-const installLockPollMs = 250
-
-// A holder that is killed - say, by an MCP client giving up on a slow first
-// start - never releases its lock, so check whether it is still running rather
-// than waiting the lock out.
-function isStaleLock(lockPath) {
-  if (Date.now() - fs.statSync(lockPath).mtimeMs > installLockStaleMs) {
-    return true
-  }
-  const pid = Number(fs.readFileSync(lockPath, 'utf8'))
-  if (!pid) {
-    return false // created, but the holder has not written its PID yet
-  }
-  try {
-    process.kill(pid, 0)
-    return false
-  } catch (err) {
-    return err.code === 'ESRCH'
-  }
-}
-
-function isInstallInProgress(dir) {
-  try {
-    return !isStaleLock(path.join(dir, installLockName))
-  } catch {
-    return false // no lock
-  }
-}
-
-function sleep(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
-}
-
-function acquireInstallLock(installDir) {
-  const lockPath = path.join(installDir, installLockName)
-  let announced = false
-  for (;;) {
-    try {
-      fs.writeFileSync(lockPath, String(process.pid), { flag: 'wx' })
-      return lockPath
-    } catch (err) {
-      if (err.code !== 'EEXIST') {
-        throw err
-      }
-    }
-
-    try {
-      if (isStaleLock(lockPath)) {
-        debugLog(`Removing stale install lock ${lockPath}`)
-        fs.rmSync(lockPath, { force: true })
-        continue
-      }
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        throw err
-      }
-      continue // released between our attempt and the check
-    }
-
-    if (!announced) {
-      debugLog(`Waiting for another process to finish installing into ${installDir}`)
-      announced = true
-    }
-    sleep(installLockPollMs)
   }
 }
 
@@ -180,40 +106,9 @@ function loadOrInstall(installDir) {
     // Not installed yet
   }
 
-  const { execSync } = require('child_process')
-
   console.error(`Installing missing platform package: ${platformPackageName}`)
   debugLog(`Installing ${platformPackageName} into ${installDir}`)
-
-  // stdout is not inherited: for `server start` it carries the JSON-RPC
-  // protocol stream, and npm output written there would corrupt it.
-  const installOptions = {
-    cwd: installDir,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: 60000 // 60 second timeout
-  }
-  // --prefix is relative to cwd so that no path goes through the shell, which
-  // would expand any `$` or backtick in it.
-  const installCommand = `npm install ${platformPackageName}@${packageVersion} --no-save --no-audit --no-fund --prefix .`
-
-  // Try to install the platform package
-  try {
-    execSync(installCommand, installOptions)
-  } catch (npmErr) {
-    // If npm install fails, try again against the registry
-    debugLog(`npm install failed, trying alternative installation methods: ${npmErr.message}`)
-
-    execSync(`${installCommand} --prefer-online`, installOptions)
-  }
-
-  // Clear module cache and try to require again after installation
-  Object.keys(require.cache).forEach(key => {
-    if (key.includes(platformPackageName)) {
-      delete require.cache[key]
-    }
-  })
-
-  const installed = requireFromInstallDir(installDir)
+  const installed = installPlatformPackage(installDir, platformPackageName, packageVersion, debugLog)
   console.error(`✅ Successfully installed and loaded ${platformPackageName}`)
   return installed
 }
@@ -259,11 +154,11 @@ if (!platformPackage) {
       throw new Error(`No writable directory to install into (tried ${installDirs.join(', ')})`)
     }
 
-    const lockPath = acquireInstallLock(installDir)
+    const releaseLock = acquireInstallLock(installDir, debugLog)
     try {
       platformPackage = loadOrInstall(installDir)
     } finally {
-      fs.rmSync(lockPath, { force: true })
+      releaseLock()
     }
   } catch (installErr) {
     debugLog(`Auto-install failed: ${installErr.message}`)
