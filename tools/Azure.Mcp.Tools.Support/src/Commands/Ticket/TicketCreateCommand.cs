@@ -20,15 +20,16 @@ namespace Azure.Mcp.Tools.Support.Commands.Ticket;
     Name = "create",
     Title = "Create Azure Support Ticket",
     Description = """
-        Create a new Azure support ticket (support request) in a subscription. This opens a case with Microsoft
-        support and may notify support engineers, so only call it as a last resort. Before calling: (1) run available
-        diagnostics first, such as resource health, AppLens, Azure Monitor, or storage disk diagnose tools, because
-        they often resolve the issue without a ticket; (2) check existing tickets with the ticket list tool to avoid
-        duplicates; (3) find a valid problem classification ID with the service list and problem classification list
-        tools; (4) include the diagnostic evidence (error messages, correlation/activity IDs, timestamps, resource
-        health status, AppLens findings) in the description; and (5) show the user the full ticket details, including
-        contact information and severity, and get their explicit confirmation. Required: title, description, problem
-        classification, severity, and contact details (first name, last name, email, time zone, country, language).
+        Create a new Azure support ticket (support request). Tickets are worked by human Microsoft support
+        engineers, so only create one when the user has explicitly asked to escalate to support. Before calling:
+        (1) run available diagnostics (resource health, AppLens, Azure Monitor) and include the evidence (errors,
+        correlation IDs, timestamps) in the description; (2) check for duplicates with the ticket list tool;
+        (3) get a problem classification ID from the service and problem classification list tools; (4) show the
+        user the exact title, severity and description that will be sent (call out 'critical' or
+        'highestcriticalimpact' severity prominently) plus contact details, and wait for their explicit approval.
+        Never include secrets (keys, passwords, tokens, connection strings); requests containing them are
+        rejected. Advanced diagnostic consent is not set by this tool; Microsoft support requests it through
+        its own flow. Required: title, description, problem classification, severity, and contact details.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -78,6 +79,14 @@ public sealed partial class TicketCreateCommand(ILogger<TicketCreateCommand> log
             validationResult.AddError("--email must be a valid email address.", "Invalid email address.");
         }
 
+        var secretCategories = SupportTicketSecretScanner.Scan(options.Title, options.Description, options.TechnicalResource, options.TicketName);
+        if (secretCategories.Count > 0)
+        {
+            validationResult.AddError(
+                $"The ticket text appears to contain secrets ({string.Join("; ", secretCategories)}). Remove them from the ticket text before creating the ticket; support tickets must not contain credentials.",
+                "Ticket text contains secrets.");
+        }
+
         if (!string.IsNullOrWhiteSpace(options.ProblemClassification) && !ProblemClassificationIdRegex().IsMatch(options.ProblemClassification))
         {
             validationResult.AddError(
@@ -103,7 +112,6 @@ public sealed partial class TicketCreateCommand(ILogger<TicketCreateCommand> log
                 options.Timezone,
                 options.Country,
                 options.Language,
-                options.AdvancedDiagnosticConsent,
                 options.TechnicalResource,
                 options.TicketName);
 

@@ -64,7 +64,6 @@ public class TicketCreateCommandTests : SubscriptionCommandUnitTestsBase<TicketC
                 r.Timezone == "Pacific Standard Time" &&
                 r.Country == "USA" &&
                 r.Language == "en-US" &&
-                !r.AdvancedDiagnosticConsent &&
                 r.TechnicalResourceId == "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1" &&
                 r.TicketName == null),
             null,
@@ -119,6 +118,37 @@ public class TicketCreateCommandTests : SubscriptionCommandUnitTestsBase<TicketC
         var response = await ExecuteCommandAsync([.. args]);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await Service.DidNotReceive().CreateTicketAsync(Arg.Any<string>(), Arg.Any<SupportTicketCreateRequest>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsAdvancedDiagnosticConsentOption()
+    {
+        var response = await ExecuteCommandAsync(RequiredArgs + " --advanced-diagnostic-consent");
+
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        await Service.DidNotReceive().CreateTicketAsync(Arg.Any<string>(), Arg.Any<SupportTicketCreateRequest>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSecretsWithoutCallingService()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123",
+            "--title", "Storage access failing",
+            "--description", "Using DefaultEndpointsProtocol=https;AccountName=acct;AccountKey=abcd1234efgh5678;EndpointSuffix=core.windows.net",
+            "--problem-classification", ProblemClassificationId,
+            "--severity", "moderate",
+            "--first-name", "Ada",
+            "--last-name", "Lovelace",
+            "--email", "ada@contoso.com",
+            "--timezone", "UTC",
+            "--country", "USA",
+            "--language", "en-US");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("connection string credential", response.Message);
+        Assert.DoesNotContain("abcd1234efgh5678", response.Message);
         await Service.DidNotReceive().CreateTicketAsync(Arg.Any<string>(), Arg.Any<SupportTicketCreateRequest>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 

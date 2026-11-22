@@ -16,6 +16,5 @@ public sealed record SupportTicketCreateRequest(
     string Timezone,
     string Country,
     string Language,
-    bool AdvancedDiagnosticConsent,
     string? TechnicalResourceId,
     string? TicketName);

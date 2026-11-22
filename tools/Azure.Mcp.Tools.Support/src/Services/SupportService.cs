@@ -95,7 +95,7 @@ public sealed class SupportService(IAzureService azureService) : BaseAzureServic
             request.Description,
             request.ProblemClassificationId,
             new SupportSeverityLevel(request.Severity.ToLowerInvariant()),
-            request.AdvancedDiagnosticConsent ? AdvancedDiagnosticConsent.Yes : AdvancedDiagnosticConsent.No,
+            AdvancedDiagnosticConsent.No,
             contact,
             request.Title,
             GetServiceIdFromProblemClassificationId(request.ProblemClassificationId));

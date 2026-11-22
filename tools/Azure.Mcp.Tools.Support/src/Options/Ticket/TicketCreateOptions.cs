@@ -44,9 +44,6 @@ public class TicketCreateOptions : ISubscriptionOption
     [Option(Description = SupportOptionDescriptions.PhoneNumber)]
     public string? PhoneNumber { get; set; }
 
-    [Option(Description = SupportOptionDescriptions.AdvancedDiagnosticConsent)]
-    public bool AdvancedDiagnosticConsent { get; set; }
-
     [Option(Description = SupportOptionDescriptions.TechnicalResource)]
     public string? TechnicalResource { get; set; }
 

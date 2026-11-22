@@ -1,3 +1,3 @@
 changes:
   - section: "Features Added"
-    description: "Added the `support` toolset for Azure support tickets: `support_ticket_list`, `support_ticket_get` (optionally with communications), `support_ticket_create`, `support_service_list`, and `support_problemclassification_list`. Ticket creation is marked destructive, so it is excluded in read-only mode and requires user confirmation."
+    description: "Added the `support` toolset for Azure support tickets: `support_ticket_list`, `support_ticket_get` (optionally with communications), `support_ticket_create`, `support_service_list`, and `support_problemclassification_list`. Ticket creation is marked destructive, so it is excluded in read-only mode and requires user confirmation; ticket text containing secrets is rejected before any API call."
