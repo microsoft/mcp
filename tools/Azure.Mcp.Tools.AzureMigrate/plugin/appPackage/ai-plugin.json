@@ -7,8 +7,8 @@
   "description_for_model": "Creates or updates an Azure Migrate inventory for the signed-in user (returning an azcopy command the user runs to upload their file), gets the status of an inventory operation, exports the refined inventory or offline zip, creates an assessment followed by an HA assessment, and gets assessment and HA status.",
   "functions": [
     {
-      "name": "azuremigrate_inventory_createorupdate",
-      "description": "Starts Discovery, the mandatory first step before assessing an estate: creates or updates an Azure Migrate inventory and returns an upload command for the user's file plus the session and operation IDs to track it with.",
+      "name": "azure_catalyst_inventory_createorupdate",
+      "description": "Create or Update Azure Catalyst Inventory.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -18,8 +18,8 @@
       }
     },
     {
-      "name": "azuremigrate_inventory_status",
-      "description": "Tracks an Azure Migrate inventory operation (upload and transformation); call it again with the same session and operation until it completes, before export or assessment.",
+      "name": "azure_catalyst_inventory_status",
+      "description": "Get Azure Catalyst Inventory Status.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -29,8 +29,8 @@
       }
     },
     {
-      "name": "azuremigrate_inventory_export",
-      "description": "Gets a download link for the refined inventory or the offline zip of a finished inventory.",
+      "name": "azure_catalyst_inventory_export",
+      "description": "Export Azure Catalyst Inventory.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -40,8 +40,8 @@
       }
     },
     {
-      "name": "azuremigrate_assessment_create",
-      "description": "Creates an Azure Migrate assessment from the collector ZIP with optional settings (savings, hybrid benefit, discount, disks, uptime and more; defaults apply when not given), waits for it and starts the HA assessment.",
+      "name": "azure_catalyst_businesscase_create",
+      "description": "Create Azure Catalyst Business Case.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -51,8 +51,8 @@
       }
     },
     {
-      "name": "azuremigrate_assessment_status",
-      "description": "Gets the current status of an Azure Migrate assessment operation.",
+      "name": "azure_catalyst_businesscase_status",
+      "description": "Get Azure Catalyst Business Case Status.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -62,8 +62,30 @@
       }
     },
     {
-      "name": "azuremigrate_assessment_hastatus",
-      "description": "Gets the current status of an HA assessment operation.",
+      "name": "azure_catalyst_businesscase_wait",
+      "description": "Wait For Azure Catalyst Business Case.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azure_catalyst_inventory_wait",
+      "description": "Wait For Azure Catalyst Inventory.",
+      "capabilities": {
+        "security_info": {
+          "data_handling": [
+            "DataTransform"
+          ]
+        }
+      }
+    },
+    {
+      "name": "azure_catalyst_session_archive",
+      "description": "Start a New Azure Catalyst Session.",
       "capabilities": {
         "security_info": {
           "data_handling": [
@@ -86,12 +108,14 @@
         }
       },
       "run_for_functions": [
-        "azuremigrate_inventory_createorupdate",
-        "azuremigrate_inventory_status",
-        "azuremigrate_inventory_export",
-        "azuremigrate_assessment_create",
-        "azuremigrate_assessment_status",
-        "azuremigrate_assessment_hastatus"
+        "azure_catalyst_inventory_createorupdate",
+        "azure_catalyst_inventory_status",
+        "azure_catalyst_inventory_export",
+        "azure_catalyst_businesscase_create",
+        "azure_catalyst_businesscase_status",
+        "azure_catalyst_businesscase_wait",
+        "azure_catalyst_inventory_wait",
+        "azure_catalyst_session_archive"
       ]
     }
   ]
