@@ -10,10 +10,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme;
 
@@ -81,7 +81,7 @@ internal static class AdmeServiceHelper
 
     public static Task<AdmeResponse<T>> SendAsync<T>(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -93,7 +93,7 @@ internal static class AdmeServiceHelper
         CancellationToken cancellationToken = default) =>
         SendAsync(
             endpointValidator,
-            credentialProvider,
+            azureService,
             httpClientFactory,
             endpoint,
             dataPartition,
@@ -109,7 +109,7 @@ internal static class AdmeServiceHelper
 
     public static Task<AdmeResponse<T>> SendAsync<T>(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -120,7 +120,7 @@ internal static class AdmeServiceHelper
         CancellationToken cancellationToken) =>
         SendAsync(
             endpointValidator,
-            credentialProvider,
+            azureService,
             httpClientFactory,
             endpoint,
             dataPartition,
@@ -136,7 +136,7 @@ internal static class AdmeServiceHelper
 
     public static Task<AdmeResponse<TResponse>> PostAsync<TRequest, TResponse>(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -151,7 +151,7 @@ internal static class AdmeServiceHelper
         CancellationToken cancellationToken = default) =>
         SendAsync(
             endpointValidator,
-            credentialProvider,
+            azureService,
             httpClientFactory,
             endpoint,
             dataPartition,
@@ -168,7 +168,7 @@ internal static class AdmeServiceHelper
 
     public static Task<AdmeResponse<TResponse>> PutAsync<TRequest, TResponse>(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -181,7 +181,7 @@ internal static class AdmeServiceHelper
         CancellationToken cancellationToken = default) =>
         SendAsync(
             endpointValidator,
-            credentialProvider,
+            azureService,
             httpClientFactory,
             endpoint,
             dataPartition,
@@ -197,7 +197,7 @@ internal static class AdmeServiceHelper
 
     public static async Task DeleteAsync(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -208,7 +208,7 @@ internal static class AdmeServiceHelper
     {
         await SendAsync<object?>(
             endpointValidator,
-            credentialProvider,
+            azureService,
             httpClientFactory,
             endpoint,
             dataPartition,
@@ -225,7 +225,7 @@ internal static class AdmeServiceHelper
 
     private static async Task<AdmeResponse<T>> SendAsync<T>(
         IEndpointValidator endpointValidator,
-        IAzureTokenCredentialProvider credentialProvider,
+        IAzureService azureService,
         IHttpClientFactory httpClientFactory,
         string endpoint,
         string dataPartition,
@@ -242,7 +242,8 @@ internal static class AdmeServiceHelper
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataPartition);
         var endpointUri = AdmeServiceValidator.ValidateEndpoint(endpointValidator, new Uri(endpoint));
-        var credential = await credentialProvider.GetTokenCredentialAsync(tenant, cancellationToken);
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await azureService.ResolveTenantIdAsync(tenant, cancellationToken);
+        var credential = await azureService.GetTokenCredentialAsync(tenantId, cancellationToken);
         var accessToken = await credential.GetTokenAsync(
             new TokenRequestContext([GetAuthScope(authAppId)]), cancellationToken);
 

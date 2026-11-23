@@ -64,7 +64,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
 
         try
         {
-            var response = await httpHelper.GetAsync(url, cancellationToken);
+            var response = await httpHelper.GetAsync(url, context.Tenant, cancellationToken);
 
             if (string.IsNullOrEmpty(response))
                 return false;
@@ -112,7 +112,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
 
         logger.LogInformation("Generating landing zone.");
 
-        var response = await httpHelper.PostAsync(url, payload, AzureMigrateJsonContext.Default, cancellationToken);
+        var response = await httpHelper.PostAsync(url, payload, AzureMigrateJsonContext.Default, context.Tenant, cancellationToken);
         ThrowIfFailed(response);
 
         return "Generation initiated. Use 'download' action in 1-2 minutes to retrieve files.";
@@ -122,7 +122,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     public async Task<string> DownloadAsync(PlatformLandingZoneContext context, string outputPath, CancellationToken cancellationToken = default)
     {
         var url = BuildUrl(context, "DownloadPlatformLandingZone");
-        var response = await httpHelper.PostAsync(url, cancellationToken);
+        var response = await httpHelper.PostAsync(url, context.Tenant, cancellationToken);
         ThrowIfFailed(response);
 
         var downloadUrl = TryGetValidatedDownloadUrl(AzureService, response);

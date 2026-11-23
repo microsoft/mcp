@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
 
@@ -12,10 +12,10 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// </summary>
 public sealed class HealthService(
     IEndpointValidator endpointValidator,
-    IAzureTokenCredentialProvider credentialProvider,
+    IAzureService azureService,
     IHttpClientFactory httpClientFactory) : IHealthService
 {
-    private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider;
+    private readonly IAzureService _azureService = azureService;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <summary>
@@ -29,7 +29,7 @@ public sealed class HealthService(
         CancellationToken cancellationToken = default)
     {
         return await AdmeServiceHelper.SendAsync(endpointValidator,
-            _credentialProvider,
+            _azureService,
             _httpClientFactory,
             endpoint,
             dataPartition,
