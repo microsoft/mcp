@@ -75,12 +75,16 @@ public sealed class StorageRecordedTests(
         page1Arguments["kind"] = WellKind;
         page1Arguments["limit"] = 1;
 
-        var page1 = await CallToolResultsAsync(RecordListTool, page1Arguments);
-        var cursor = page1.GetProperty("cursor").GetString();
+        var page1Response = await CallToolResponseAsync(RecordListTool, page1Arguments);
+        var page1 = page1Response.GetProperty("result");
+        var cursor = page1Response.GetProperty("nextCursor").GetString();
         Assert.False(string.IsNullOrEmpty(cursor));
+        Assert.False(page1.TryGetProperty("cursor", out _));
 
         var page2Arguments = new Dictionary<string, object?>(page1Arguments) { ["cursor"] = cursor };
-        var page2 = await CallToolResultsAsync(RecordListTool, page2Arguments);
+        var page2Response = await CallToolResponseAsync(RecordListTool, page2Arguments);
+        var page2 = page2Response.GetProperty("result");
+        Assert.False(page2.TryGetProperty("cursor", out _));
 
         Assert.NotEqual(
             page1.GetProperty("results").EnumerateArray().Single().GetString(),

@@ -1149,10 +1149,14 @@ Example prompts that generate Azure CLI commands:
 * "Aggregate ADME search results by kind and sort them by id"
 * "Start a point-in-time ADME search snapshot to process more than 10,000 records"
 * "Continue an ADME snapshot search from its cursor"
+* "Continue an ADME search or record listing using the previous response's nextCursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
 * "List all versions of an OSDU record in my ADME data partition"
+
+ADME search and record listings return `nextCursor` for continuation. Pass it unchanged as `--cursor` with the original
+target and query parameters. Record listings allow you to change `--limit` between pages.
 
 For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 
@@ -1278,6 +1282,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure Marketplace
+
+Marketplace product listings return one page at a time. To get the next page, pass `nextCursor` unchanged as `--cursor`
+with the same subscription, tenant, and listing options. Stop when `nextCursor` is absent.
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
@@ -1402,6 +1411,10 @@ _These tools come from the [Azure Monitor dashboards with Grafana remote MCP ser
 * "Get details about my Storage container"
 * "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
+
+Blob, container, and table listings return one page of up to 100 items. To continue, pass `nextCursor` unchanged as
+`--cursor` with the same account and tenant, plus the same container and prefix where applicable.
+An empty page can still include `nextCursor`; continue until it is absent.
 
 ### 🔄 Azure Migrate
 
