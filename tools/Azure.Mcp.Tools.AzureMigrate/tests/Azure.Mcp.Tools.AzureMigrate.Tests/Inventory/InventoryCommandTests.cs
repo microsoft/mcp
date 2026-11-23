@@ -196,8 +196,9 @@ public class InventoryCommandTests
     {
         var r = GetInventoryStatusCommand.Parse("s1", "op", new(200, "{\"status\":\"Running\"}", null, null));
 
-        Assert.Contains("keep checking until isCompleted is true", r.Instructions);
-        Assert.Contains("do not repeat it on later checks", r.Instructions);
+        Assert.Contains("keep calling it until isCompleted is true", r.Instructions);
+        Assert.Contains("never tell them to upload their file or that you are waiting for it", r.Instructions);
+        Assert.Contains("Call the inventory wait tool again quietly", r.Instructions);
         Assert.DoesNotContain("wait for them to confirm the upload", r.Instructions);
     }
 
@@ -352,5 +353,50 @@ public class InventoryCommandTests
         Assert.True(r.Success);
         Assert.Equal("offline", r.Output);
         Assert.Contains("offline zip package is ready", r.Instructions);
+    }
+
+    [Fact]
+    public void ReadActiveSessionIds_ReturnsOnlyActiveSessionsOfSkill()
+    {
+        const string json = """
+            {"value":[
+              {"id":"inv-a","properties":{"skillType":"Discovery","sessionState":"InvocationSucceeded"}},
+              {"id":"inv-b","properties":{"skillType":"Discovery","sessionState":"Archived"}},
+              {"id":"bc-c","properties":{"skillType":"Unknown","sessionState":"InvocationSucceeded"}},
+              {"id":"inv-d","properties":{"skillType":"discovery","sessionState":"Invoking"}}
+            ]}
+            """;
+
+        Assert.Equal(["inv-a", "inv-d"], Azure.Mcp.Tools.AzureMigrate.Commands.Session.ArchiveSessionCommand.ReadActiveSessionIds(json, "Discovery"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("not json")]
+    [InlineData("{\"value\":{}}")]
+    public void ReadActiveSessionIds_InvalidBody_ReturnsEmpty(string? json) =>
+        Assert.Empty(Azure.Mcp.Tools.AzureMigrate.Commands.Session.ArchiveSessionCommand.ReadActiveSessionIds(json, "Discovery"));
+
+    [Fact]
+    public void ArchiveSession_BuildResult_BusinessCaseFails_ReportsPartialClose()
+    {
+        var r = Azure.Mcp.Tools.AzureMigrate.Commands.Session.ArchiveSessionCommand.BuildResult(
+            new(true, true, null), new(false, true, "timeout"));
+
+        Assert.False(r.Success);
+        Assert.True(r.InventoryArchived);
+        Assert.False(r.BusinessCaseArchived);
+        Assert.Equal("Business case: timeout", r.Error);
+        Assert.Contains("inventory was closed, but your business case could not be closed", r.Instructions);
+    }
+
+    [Fact]
+    public void ArchiveSession_BuildResult_BothClosed_Succeeds()
+    {
+        var r = Azure.Mcp.Tools.AzureMigrate.Commands.Session.ArchiveSessionCommand.BuildResult(
+            new(true, true, null), new(true, false, null));
+
+        Assert.True(r.Success);
+        Assert.Contains("Previous session closed", r.Instructions);
     }
 }

@@ -227,6 +227,53 @@ public class BusinessCaseCommandTests
         Assert.Contains(instructions, result.Instructions);
     }
 
+    [Fact]
+    public async Task Status_FinalStageAlreadyStarted_ReturnsTheSameSessionWithoutStartingAgain()
+    {
+        AssessmentSucceeded();
+        Evaluations(new EvaluationResult(200, "Succeeded", TcoUri, null, null, null), new EvaluationResult(200, "Succeeded", HaUri, null, null, null));
+        string dsOperationId = Guid.NewGuid().ToString("D");
+        _ha.StartInSessionAsync(default!, default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaSessionResult(null, 202, "bc-x", false, dsOperationId, "req", null));
+
+        var first = await StatusCommand().RunAsync(StatusOptions(), TestContext.Current.CancellationToken);
+        var second = await StatusCommand().RunAsync(StatusOptions(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(dsOperationId, first.NextStatusParameters!.DsOperationId);
+        Assert.Equal(("bc-x", dsOperationId), (second.NextStatusParameters!.DsSessionId, second.NextStatusParameters.DsOperationId));
+        await _ha.ReceivedWithAnyArgs(1).StartInSessionAsync(default!, default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Wait_ChecksUntilTheBusinessCaseFinishes()
+    {
+        Guid dsOperationId = Guid.NewGuid();
+        _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaOperationStatus(200, "Running", null, null, null, null, null),
+            new HaOperationStatus(200, "Failed", null, "HaFailed", "bad", null, null));
+        WaitBusinessCaseCommand.CheckInterval = TimeSpan.Zero;
+
+        var result = await new WaitBusinessCaseCommand(StatusCommand()).RunAsync(
+            StatusOptions(o => { o.DsSessionId = "bc-x"; o.DsOperationId = dsOperationId.ToString("D"); }), TimeSpan.FromSeconds(10),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Failed", result.Status);
+        Assert.True(result.IsCompleted);
+        await _ha.ReceivedWithAnyArgs(2).GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Wait_StillRunningWhenTimeIsUp_SaysToWaitAgain()
+    {
+        AssessmentStatus(new AssessmentOperation(200, _asOperationId, "Running", null, 15, null, null));
+
+        var result = await new WaitBusinessCaseCommand(StatusCommand()).RunAsync(StatusOptions(), TimeSpan.Zero, TestContext.Current.CancellationToken);
+
+        Assert.Equal("Running", result.Status);
+        Assert.NotNull(result.NextStatusParameters);
+        Assert.Equal(BusinessCaseStages.WaitAgainInstructions, result.Instructions);
+    }
+
     [Theory]
     [InlineData(200, "Succeeded", "Succeeded", true)]
     [InlineData(200, "Failed", "Failed", true)]
@@ -251,6 +298,24 @@ public class BusinessCaseCommandTests
         Assert.Equal(expectedStatus == "Succeeded" ? "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x" : null, result.Result);
         await _ha.Received(1).GetOperationStatusAsync("token", "bc-0123456789abcdef", dsOperationId, Arg.Any<CancellationToken>());
         await _asStatus.DidNotReceiveWithAnyArgs().GetOperationAsync(default, default, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Wait_Succeeded_SaysToShowTheReportCardWithoutTheReport()
+    {
+        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaOperationStatus(200, "Succeeded", null, null, null, null, null));
+        _ha.ExportAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, uri, null));
+        _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns("# ROI");
+
+        var result = await new WaitBusinessCaseCommand(StatusCommand()).RunAsync(
+            StatusOptions(o => { o.DsSessionId = "bc-0123456789abcdef"; o.DsOperationId = Guid.NewGuid().ToString(); }),
+            TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsCompleted);
+        Assert.Null(result.Report);
+        Assert.Equal(BusinessCaseStages.ShowReportInstructions, result.Instructions);
     }
 
     [Fact]
@@ -414,4 +479,87 @@ public class BusinessCaseCommandTests
     private CreateBusinessCaseCommand CreateCommand() => new(_create, _export, Accessor());
 
     private GetBusinessCaseStatusCommand StatusCommand() => new(_asStatus, _evaluation, _ha, Accessor());
+
+    private const string RoiReport = """
+        # ROI
+
+        **Scope: report-ready figures.**
+
+        ## Summary
+
+        - Largest modeled saving: LiftAndShift.
+
+        ## Annual comparison
+
+        ### Full-cost estimate
+
+        | Strategy | Current on-premises (annual) | Azure (annual) | Kept licences (annual) | Retained on-premises (annual) | Future (annual) | Savings (annual) | Status | Currency | Basis |
+        |---|---|---|---|---|---|---|---|---|---|
+        | LiftAndShift | 180,332.21 | 118,563.95 | 2,616.22 | 0.00 | 121,180.17 | 59,152.04 | Complete | USD | Full-cost estimate |
+
+        | Strategy | Future cost (annual) | Savings (annual) | ROI | NPV | Payback (months) | Currency | Basis |
+        |---|---|---|---|---|---|---|---|
+        | LiftAndShift | 121,180.17 | 59,152.04 | 20.03% | 109,411.27 | 12 | USD | Full-cost estimate |
+
+        ## Yearly view
+
+        ### LiftAndShift (Full-cost estimate)
+
+        | Year | Current | Future | Savings |
+        |---|---|---|---|
+        | 0 | 180,332.21 | 180,332.21 | 0.00 |
+        | 1 | 189,348.82 | 176,926.89 | 12,421.93 |
+
+        ## Cost by pillar
+
+        ### LiftAndShift
+
+        | Pillar | Current (annual) | Azure (annual) |
+        |---|---|---|
+        | Compute | 17,934.97 | 15,990.00 |
+        | Licence | 0.00 | 0.00 |
+        | Extended Security Update savings | 0.00 | 11,150.50 |
+        | Management labour | not applicable | 3,132.00 |
+        """;
+
+    [Fact]
+    public void RoiVisuals_AddsChartsFromTheReportTables_BeforeTheFirstSection()
+    {
+        string enriched = RoiVisuals.Enrich(RoiReport);
+
+        int start = enriched.IndexOf(RoiVisuals.StartMarker, StringComparison.Ordinal);
+        int end = enriched.IndexOf(RoiVisuals.EndMarker, StringComparison.Ordinal);
+        Assert.True(start > enriched.IndexOf("**Scope", StringComparison.Ordinal) && end < enriched.IndexOf("## Summary", StringComparison.Ordinal));
+        string block = enriched[start..end];
+        Assert.Contains("USD 59,152.04", block);
+        Assert.Contains("20.03%", block);
+        Assert.Contains("USD 109,411.27", block);
+        Assert.Contains("12 months", block);
+        Assert.Contains("conic-gradient(#107c10 0 32.8%,#0078d4 32.8% 100%)", block);
+        Assert.Contains("Savings by year", block);
+        Assert.Contains("Management labour", block);
+        Assert.DoesNotContain(">Licence<", block);
+        Assert.DoesNotContain("Extended Security Update", block);
+        Assert.DoesNotContain("<style", block);
+        Assert.DoesNotContain("\n\n", block);
+        Assert.Contains("\n\n" + RoiVisuals.StartMarker, enriched);
+        Assert.Contains(RoiVisuals.EndMarker + "\n\n## Summary", enriched);
+        Assert.Equal(RoiReport.Replace("\r\n", "\n"), enriched.Replace(enriched[(start - 1)..(end + RoiVisuals.EndMarker.Length + 2)], string.Empty));
+    }
+
+    [Theory]
+    [InlineData("# ROI\n| a | b |")]
+    [InlineData("# ROI\n\n## Annual comparison\n\nNo table.")]
+    public void RoiVisuals_ReturnsTheReportUnchanged_WhenItsFiguresAreNotFound(string report)
+    {
+        Assert.Equal(report, RoiVisuals.Enrich(report));
+    }
+
+    [Fact]
+    public void RoiVisuals_DoesNotAddChartsTwice()
+    {
+        string once = RoiVisuals.Enrich(RoiReport);
+
+        Assert.Equal(once, RoiVisuals.Enrich(once));
+    }
 }

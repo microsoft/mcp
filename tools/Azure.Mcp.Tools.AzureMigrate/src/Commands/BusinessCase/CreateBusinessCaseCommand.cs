@@ -28,7 +28,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "(the 'sessionId' of the user's inventory, from the inventory tools) to use a fresh link to that inventory's offline zip, or " +
         "'inventory-sas-uri' only when the user gives a read-only https SAS URL of a collector ZIP; when you take it from the chat, " +
         "        tell the user you are using the inventory SAS URL from the chat. Before calling, ask the user for any of these " +
-                "they have not given (target region, which inventory) and wait for the answer; do not invent or assume them. Never ask " +
+                "they have not given (target region, which inventory) and wait for the answer; do not invent or assume them. " +
+                ReplyFormat.AskRegion + "Never ask " +
                 "for a business case name: pass 'assessment-name' only when the user gives one, otherwise leave it out and a name is " +
                 "generated. Only USD is supported. Optional settings use their defaults when left out; pass them only when the " +
         "user asks for them and do not ask for them otherwise: scaling factor (1.3), storage scaling factor (1), savings option " +
@@ -187,15 +188,13 @@ public sealed class CreateBusinessCaseCommand(
             operationId.ToString("D"), null, null, null, operation.HttpStatus, null, null, null, operation.RetryAfterSeconds ?? 30,
             BusinessCaseNextStatusParameters.Create(name, operationId, inventorySasUri!, haSettings!),
             ReplyFormat.Reply(
-                $"Business case '{name}' started (stage 1 of 2: assessment, usually several minutes).",
+                $"Business case '{name}' started. It usually takes 2 to 5 minutes: first assessing the servers, then building the ROI report.",
                 "the inventory used: " + inventorySource + "; one short settings bullet with only the region, savings option, Azure " +
                 "Hybrid Benefit, discount and any setting the user asked for, followed by 'other settings are defaults'. The full " +
                 "list, to answer questions only and not to show: " + DescribeSettings(region, assessmentSettings!, haSettings!) + ".",
-                BusinessCaseReportWidget.IsEnabled
-                    ? "the card below updates by itself and shows the ROI report when it is ready."
-                    : "the result follows here when it is ready.") + " " +
+                "the ROI summary and report follow here when it is ready.") + " " +
             (BusinessCaseReportWidget.IsEnabled
-                ? BusinessCaseStages.CardTracksInstructions
+                ? BusinessCaseStages.WaitInstructions
                 : "Then, right away in this same reply, start tracking the business case status with exactly the values in " +
                   "'nextStatusParameters'; do not wait for the user to ask, do not change or invent any of them, and keep checking until " +
                   "it completes."));

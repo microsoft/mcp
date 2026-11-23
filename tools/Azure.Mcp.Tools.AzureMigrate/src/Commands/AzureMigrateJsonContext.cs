@@ -12,6 +12,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands;
 [JsonSerializable(typeof(Inventory.CreateOrUpdateInventoryCommand.CreateOrUpdateInventoryCommandResult))]
 [JsonSerializable(typeof(Inventory.GetInventoryStatusCommand.GetInventoryStatusCommandResult))]
 [JsonSerializable(typeof(Inventory.ExportInventoryCommand.ExportInventoryCommandResult))]
+[JsonSerializable(typeof(Session.ArchiveSessionCommand.ArchiveSessionCommandResult))]
 [JsonSerializable(typeof(Assessment.CreateAssessmentCommand.CreateAssessmentCommandResult))]
 [JsonSerializable(typeof(Assessment.GetAssessmentStatusCommand.GetAssessmentStatusCommandResult))]
 [JsonSerializable(typeof(BusinessCase.BusinessCaseCommandResult))]

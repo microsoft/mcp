@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// spaces the checks without a client timer.
 /// </remarks>
 [CommandMetadata(
-    Id = "6e866a7d-d20d-4e98-9737-8240b7ad9957",
+    Id = CommandId,
     Name = "status",
     Title = "Get Azure Catalyst Inventory Status",
     Description = "Tracks an Azure Catalyst inventory operation (file upload and transformation, or a text-only update) started by " +
@@ -46,6 +46,16 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand> logger, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<GetInventoryStatusOptions, GetInventoryStatusCommand.GetInventoryStatusCommandResult>
 {
+    internal const string CommandId = "6e866a7d-d20d-4e98-9737-8240b7ad9957";
+
+    /// <summary>
+    /// Instructions the wait tool returns once the inventory completes: the agent calls the status tool once, which shows the
+    /// inventory summary card, and replies once with that result's instructions.
+    /// </summary>
+    internal const string ShowSummaryInstructions =
+        "The inventory has completed. Write nothing yet: call the inventory status tool once with the same sessionId and " +
+        "operationId (this shows the inventory summary card), then reply once, following that result's instructions.";
+
     private static readonly string[] s_terminalStatuses = ["Succeeded", "Failed", "Canceled", "Cancelled"];
 
     // Re-checks within one call while the operation runs: 2, 4, 8 and 11 seconds apart (about 25 seconds in total).
@@ -72,7 +82,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
         return context.Response;
     }
 
-    private async Task<GetInventoryStatusCommandResult> RunAsync(string baseUrl, GetInventoryStatusOptions options, CancellationToken cancellationToken)
+    internal async Task<GetInventoryStatusCommandResult> RunAsync(string baseUrl, GetInventoryStatusOptions options, CancellationToken cancellationToken)
     {
         string? sessionId = options.SessionId?.Trim();
         string? operationIdText = options.OperationId?.Trim();
@@ -191,13 +201,15 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
         bool inventory = subject == InventorySubject;
         if (!isCompleted)
         {
-            // "Tell the user once ... quietly": the agent calls this repeatedly in one reply; repeating the same progress line
-            // on every call floods the chat. Running covers both waiting for the upload and processing it.
+            // "Quietly": the agent calls this repeatedly in one reply, and Running covers both waiting for the upload and
+            // processing it, so any progress text can contradict the upload panel; the agent replies only once it completes.
             return inventory
-                ? "If you have not already said so, tell the user once that you are waiting for their upload or processing their " +
-                    "inventory; do not repeat it on later checks. Then check the status again quietly with the same sessionId and " +
-                    "operationId, and keep checking until isCompleted is true before exporting the inventory or creating a business case. " +
-                    "Call the status tool directly yourself; never write or run a script or code to call it."
+                ? "Do not write anything to the user yet, and never tell them to upload their file or that you are waiting for it: " +
+                    "this status cannot tell whether the file has arrived. Call the inventory wait tool again quietly with the same " +
+                    "sessionId and operationId, and keep calling it until isCompleted is true before exporting the inventory or creating " +
+                    "a business case; give your explanation only in the final reply. If you must stop before it completes, reply only: " +
+                    "'Your inventory isn't ready yet. Ask me for its status in a minute.' Call the wait tool directly yourself; never " +
+                    "write or run a script or code to call it."
                 : $"Tell the user the {subject} is still in progress. If they have not uploaded their file yet, remind them to run the " +
                     "upload command shared earlier within the upload window. Suggest checking again in about a minute.";
         }
@@ -223,7 +235,10 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
                 "the most useful exact figures from 'result' (for example cores, memory, databases or applications) and any " +
                 "issues found, such as missing or invalid data, with counts.",
                 "when there are issues the user can fix, say how (correct the file and upload it again, or describe the fix in " +
-                "text) and that the business case can still be created; otherwise " + ReplyFormat.AfterInventory);
+                "text) and that the business case can still be created; otherwise " + ReplyFormat.AfterInventory) +
+                (InventorySummaryWidget.IsEnabled
+                    ? " The full inventory summary is shown in the card above, so keep the reply short and do not paste 'result'."
+                    : string.Empty);
         }
 
         if (string.Equals(errorCode, "NoFileUploadedForImport", StringComparison.OrdinalIgnoreCase))

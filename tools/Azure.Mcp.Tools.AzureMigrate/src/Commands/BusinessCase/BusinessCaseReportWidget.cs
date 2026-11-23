@@ -6,17 +6,16 @@ using Microsoft.Mcp.Core.Areas.Server.McpApps;
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 
 /// <summary>
-/// POC: MCP Apps card for the business case create and status tools. Shown with the create result, it tracks the business case by
-/// calling the status tool itself (each call moves the business case to its next stage) and updates its stage in place, so the agent
-/// does not poll and the chat shows one card instead of a tool call per check. Once the business case succeeds it renders the ROI
-/// report ('report', the ROI.md Markdown) like an editor's Markdown preview (headings, tables, lists, code), with buttons to open the
-/// full view, copy the Markdown and download the report. It tells the agent the latest state through ui/update-model-context and
-/// never posts chat messages. The report comes in the tool result, so the card needs no connect domains. Everything is escaped
+/// POC: MCP Apps card for the business case status tool (also used, in inventory mode, by <see cref="Inventory.InventorySummaryWidget"/>). It renders the status result it is shown with and does not track the
+/// business case itself: the agent waits for the business case and then calls the status tool once, so the card appears together
+/// with the agent's summary. Once the business case succeeds it renders the ROI
+/// report ('report', the ROI.md Markdown) like an editor's Markdown preview (headings, tables, lists, code), with buttons to
+/// open the full (side panel) view and download the report. It never posts chat messages. The report comes in the tool result, so the card needs no connect domains. Everything is escaped
 /// before rendering and only http(s) links are kept.
 /// </summary>
 internal static class BusinessCaseReportWidget
 {
-    internal const string ResourceUri = "ui://azurecatalyst/business-case-report.html";
+    internal const string ResourceUri = "ui://azurecatalyst/business-case-report-v6.html";
 
     /// <summary>Set to 'false' to turn the card off.</summary>
     internal const string EnabledSetting = "AZMIGRATE_REPORT_WIDGET_ENABLED";
@@ -47,6 +46,8 @@ internal static class BusinessCaseReportWidget
         .bar .sub{color:var(--muted);font-weight:400;margin-left:6px}
         button{font:inherit;font-size:12px;padding:3px 10px;border:1px solid var(--border);border-radius:6px;background:var(--alt);color:var(--fg);cursor:pointer}
         button:hover{border-color:var(--muted)}
+        button.primary{background:#0078D4;border-color:#0078D4;color:#fff;font-weight:600}
+        button.primary:hover{background:#106EBE;border-color:#106EBE}
         .state{padding:10px 12px;color:var(--muted)}.state.ok{color:var(--ok)}.state.err{color:var(--err)}
         #doc{padding:4px 20px 16px;overflow:auto}
         #doc.collapsed{max-height:520px}
@@ -73,8 +74,7 @@ internal static class BusinessCaseReportWidget
         </head>
         <body>
         <div class="bar"><span class="title" id="title">Business case<span class="sub" id="sub"></span></span>
-          <button id="full" style="display:none">Open full view</button>
-          <button id="copy" style="display:none">Copy Markdown</button>
+          <button id="full" class="primary" style="display:none">&#10530; View full ROI report</button>
           <button id="open" style="display:none">Download ROI.md</button></div>
         <div class="state" id="state">Waiting for the business case...</div>
         <div id="doc" class="markdown collapsed"></div>
@@ -82,6 +82,7 @@ internal static class BusinessCaseReportWidget
         <script>
         (function () {
           var el = function (id) { return document.getElementById(id); };
+          var MODE = 'businesscase';
           var ctx = { report: null, link: null };
           function size() {
             var h = Math.ceil(document.body.getBoundingClientRect().height) + 4;
@@ -153,6 +154,12 @@ internal static class BusinessCaseReportWidget
               var l = L[i];
               if (!l.trim()) { i++; continue; }
               var m;
+              // The server's own charts section (inline-styled HTML it generates with escaped values) is shown as is.
+              if (l.trim() === '<!-- azure-catalyst:visuals -->') {
+                var v = []; i++;
+                while (i < L.length && L[i].trim() !== '<!-- /azure-catalyst:visuals -->') { v.push(L[i++]); }
+                i++; out += v.join('\n'); continue;
+              }
               if (/^\s*```/.test(l)) {
                 var code = []; i++;
                 while (i < L.length && !/^\s*```/.test(L[i])) { code.push(L[i++]); }
@@ -198,20 +205,32 @@ internal static class BusinessCaseReportWidget
           }
           function state(text, cls) { var s = el('state'); s.textContent = text; s.className = 'state ' + (cls || ''); s.style.display = text ? '' : 'none'; }
           var stageText = { Assessment: 'assessing the servers and evaluating costs', HaSkill: 'building the ROI report' };
-          function elapsed() {
-            if (!ctx.startedAt) { return ''; }
-            var m = Math.floor((Date.now() - ctx.startedAt) / 60000);
-            return m < 1 ? '' : ' (' + m + ' min)';
+          function renderInventory(r) {
+            el('title').firstChild.textContent = 'Inventory summary';
+            if (r.success === false) { state(r.error || 'The inventory status could not be read.', 'err'); size(); return; }
+            if (r.status === 'Succeeded' && r.result) {
+              ctx.report = r.result;
+              state('');
+              el('doc').innerHTML = markdown(r.result);
+              el('toggle').textContent = 'Show full summary';
+              el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
+            } else if (r.status === 'Succeeded') {
+              state('The inventory is ready.', 'ok');
+            } else if (r.isCompleted) {
+              state('The inventory did not complete' + (r.errorMessage ? ': ' + r.errorMessage : '.'), 'err');
+            } else {
+              state('Building your inventory... Copilot posts the result in the chat when it is ready.', '');
+            }
+            size();
           }
           function render(r) {
-            if (r.assessmentName) { el('sub').textContent = r.assessmentName; }
+            if (MODE === 'inventory') { renderInventory(r); return; }
             if (r.success === false) { state(r.error || 'The business case request was not valid.', 'err'); size(); return; }
             if (r.status === 'Succeeded' && r.report) {
               ctx.report = r.report; ctx.link = /^https:\/\//.test(r.result || '') ? r.result : null;
               el('title').firstChild.textContent = 'ROI report';
               state('');
               el('doc').innerHTML = markdown(r.report);
-              el('copy').style.display = '';
               el('full').style.display = '';
               el('open').style.display = ctx.link ? '' : 'none';
               el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
@@ -221,83 +240,17 @@ internal static class BusinessCaseReportWidget
               state('The business case failed' + (r.errorMessage ? ': ' + r.errorMessage : '.'), 'err');
             } else {
               var n = r.stageNumber || 1;
-              state('Stage ' + n + ' of ' + (r.totalStages || 2) + ': ' + (stageText[r.stage] || 'running') + '...' + elapsed() +
-                ' This card updates by itself.', '');
+              state('Stage ' + n + ' of ' + (r.totalStages || 2) + ': ' + (stageText[r.stage] || 'running') + '... Copilot posts the result in the chat when it is ready.', '');
             }
             size();
           }
 
-          // ---- Tracking ----
-          // The card calls the status tool itself until the business case finishes, so the agent does not poll and the chat shows one
-          // card instead of a tool call per check. Each status call also moves the business case to its next stage. Calls must stay
-          // short: hosts cut off a card's tools/call after about 27 seconds. The latest state is saved per business case so a reloaded
-          // card resumes from it instead of starting the business case's next stage again; the agent is told the latest state through
-          // ui/update-model-context so it can answer questions about it. It never sends ui/message: hosts show it as the user's message.
-          var STATUS_TOOL = 'azure_catalyst_businesscase_status', MAX_CHECKS = 120, MAX_FAILURES = 3;
-          var tracking = false, checks = 0, failures = 0;
-          function storageKey(r) { return r && r.asOperationId ? 'azurecatalyst-bc-' + r.asOperationId : null; }
-          function load(r) {
-            try { var k = storageKey(r), v = k && window.localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; }
-          }
-          function save(r) {
-            try { var k = storageKey(r); if (k) { window.localStorage.setItem(k, JSON.stringify(r)); } } catch (e) { }
-          }
-          function clean(p) {
-            var o = {};
-            for (var k in p) { if (p[k] !== null && p[k] !== undefined) { o[k] = p[k]; } }
-            return o;
-          }
-          function tellModel(r) {
-            var lines = ['Business case card update for "' + (r.assessmentName || r.asOperationId) + '": status ' + r.status +
-              ', stage ' + (r.stageNumber || 1) + ' of ' + (r.totalStages || 2) + '.'];
-            if (r.status === 'Running' && r.nextStatusParameters) {
-              lines.push('The card is tracking it. If the user asks for the status, use these nextStatusParameters: ' + JSON.stringify(clean(r.nextStatusParameters)));
-            } else if (r.status === 'Succeeded') {
-              lines.push('The ROI report is shown to the user in the card.' + (r.result ? ' Report link: ' + r.result : ''));
-              if (r.report) { lines.push('ROI report (ROI.md):\n' + String(r.report).slice(0, 12000)); }
-            } else if (r.status === 'Failed') {
-              lines.push('Error: ' + (r.errorMessage || 'unknown') + '.');
-            }
-            send('ui/update-model-context', { content: [{ type: 'text', text: lines.join('\n') }] }, 5000).catch(function () { });
-          }
-          function schedule(r) {
-            ctx.params = clean(r.nextStatusParameters);
-            var wait = Math.min(Math.max(r.retryAfterSeconds || 30, 10), 60);
-            setTimeout(check, wait * 1000);
-          }
-          function check() {
-            if (++checks > MAX_CHECKS) {
-              tracking = false;
-              state('The business case is taking longer than expected. Ask Copilot in the chat for its status.', '');
-              size(); return;
-            }
-            send('tools/call', { name: STATUS_TOOL, arguments: ctx.params }, 25000).then(function (res) {
-              var s = findResult(res, 0);
-              if (!s || s.success === false) { throw new Error((s && s.error) || 'unreadable status'); }
-              failures = 0;
-              var changed = !ctx.last || ctx.last.status !== s.status || ctx.last.stage !== s.stage;
-              ctx.last = s; save(s); render(s);
-              if (changed) { tellModel(s); }
-              if (s.status === 'Running' && s.nextStatusParameters) { schedule(s); } else { tracking = false; }
-            }).catch(function () {
-              // A cut-off call may still have moved the business case on; the next call with the same parameters picks that up.
-              if (++failures >= MAX_FAILURES) {
-                tracking = false;
-                state('Could not check the business case status here. Ask Copilot in the chat for its status.', '');
-                size(); return;
-              }
-              setTimeout(check, 30000);
-            });
-          }
+          // The card only renders the status result it is shown with; it does not track the business case itself. The agent waits
+          // for the business case and then calls the status tool once, so the card and the agent's reply always agree.
           function onToolResult(params) {
             var r = findResult(params, 0);
             if (!r) { size(); return; }
-            var saved = load(r);
-            if (saved && (saved.isCompleted || (saved.stageNumber || 1) >= (r.stageNumber || 1))) { r = saved; }
-            ctx.last = r;
-            if (!ctx.startedAt) { ctx.startedAt = Date.now(); }
             render(r);
-            if (!tracking && r.success !== false && r.status === 'Running' && r.nextStatusParameters) { tracking = true; schedule(r); }
           }
           window.addEventListener('message', function (e) {
             var m = e.data;
@@ -318,20 +271,10 @@ internal static class BusinessCaseReportWidget
             var a = e.target.closest && e.target.closest('a[data-link]');
             if (a) { e.preventDefault(); openLink(a.getAttribute('href')); }
           });
-          el('copy').addEventListener('click', function () {
-            var done = function () { el('copy').textContent = 'Copied'; setTimeout(function () { el('copy').textContent = 'Copy Markdown'; }, 1500); };
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(ctx.report).then(done, fallback);
-            } else { fallback(); }
-            function fallback() {
-              var ta = document.createElement('textarea'); ta.value = ctx.report; document.body.appendChild(ta); ta.select();
-              try { document.execCommand('copy'); done(); } catch (e) { el('copy').textContent = 'Copy failed'; }
-              ta.remove();
-            }
-          });
           el('toggle').addEventListener('click', function () {
             var d = el('doc'); d.classList.toggle('collapsed');
-            el('toggle').textContent = d.classList.contains('collapsed') ? 'Show full report' : 'Collapse report';
+            var what = MODE === 'inventory' ? 'summary' : 'report';
+            el('toggle').textContent = d.classList.contains('collapsed') ? 'Show full ' + what : 'Collapse ' + what;
             size();
           });
           // Full view: ask the host for its fullscreen display mode (MCP Apps); hosts without it get the full report inline.
@@ -339,7 +282,7 @@ internal static class BusinessCaseReportWidget
           function setMode(mode) {
             displayMode = mode === 'fullscreen' ? 'fullscreen' : 'inline';
             document.body.classList.toggle('fullscreen', displayMode === 'fullscreen');
-            el('full').textContent = displayMode === 'fullscreen' ? 'Exit full view' : 'Open full view';
+            el('full').textContent = displayMode === 'fullscreen' ? 'Exit full view' : '\u2922 View full ROI report';
             size();
           }
           function applyHostContext(hc) {

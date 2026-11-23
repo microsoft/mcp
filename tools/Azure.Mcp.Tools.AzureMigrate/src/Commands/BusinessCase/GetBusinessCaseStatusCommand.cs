@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -40,8 +41,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "Returns: 'status' (Running, Succeeded or Failed), 'stage' and 'stageNumber' of 'totalStages', 'isCompleted', " +
         "'nextStatusParameters' while it is running, 'result' once it succeeded (a read link to the ROI report), 'report' (the ROI " +
         "report Markdown, when available) and 'instructions'. " +
-        "Next: follow 'instructions': while 'status' is Running they say whether to call this tool again with the new " +
-        "'nextStatusParameters' or that the business case card tracks it for the user; once it has succeeded, follow 'instructions' " +
+        "Next: follow 'instructions': while 'status' is Running they say how to keep tracking it with the new " +
+        "'nextStatusParameters'; once it has succeeded, follow 'instructions' " +
         "to show the report. Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
@@ -73,6 +74,12 @@ public sealed class GetBusinessCaseStatusCommand(
         "bc-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(asOperationId.ToString("D"))))[..16].ToLowerInvariant();
 
     /// <summary>Returns true for an HTTP status worth retrying on the next call: none (network error), 408, 429, 500, 502, 503 or 504.</summary>
+    /// <summary>How the agent opens the ROI report in its file preview (side panel) when the user asks.</summary>
+    internal const string OpenReportInstructions =
+        "Later, if the user asks to open, preview or view the ROI report in the side panel or as a file, create a file named ROI.md " +
+        "whose content is 'report' exactly as given, byte for byte, and open it; do not rewrite, " +
+        "summarise or reformat it.";
+
     internal static bool IsTransient(int? httpStatus) => httpStatus is null or 408 or 429 or 500 or 502 or 503 or 504;
 
     /// <inheritdoc/>
@@ -168,15 +175,18 @@ public sealed class GetBusinessCaseStatusCommand(
                             "'Business case ready:' followed by the total annual savings and the payback period of the recommended " +
                             "migration strategy from 'report', quoting the figures exactly, for example 'Business case ready: $1.2M " +
                             "annual savings, payback in 1.8 years'.",
-                            "the ROI, NPV and annual savings per migration strategy and the number of servers, quoting 'report' " +
-                            "exactly; any issue the report names (for example servers not ready for Azure), with counts; a clickable " +
-                            "Markdown link to 'result' exactly as given, for example [Download the ROI report (ROI.md)](<result>), " +
-                            "never retyped, shortened or shown on its own, noting that the link expires." +
+                            "exactly 3 bullets, each a single short line of at most 15 words with no explanations, no cost " +
+                            "breakdowns and no figures already in the headline: (a) ROI, NPV and number of servers of the recommended " +
+                            "strategy, quoting 'report' exactly with currency symbols, for example 'ROI 16.47%, NPV $92,605.44, 12 " +
+                            "servers'; (b) the main issues the report names, as counts only, for example '3 servers out of support, " +
+                            "2 more within a year'; (c) a clickable Markdown link to 'result' exactly as given, for example " +
+                            "[Download the ROI report (ROI.md)](<result>), never retyped, shortened or shown on its own, followed by " +
+                            "'(link expires soon)'." +
                             (BusinessCaseReportWidget.IsEnabled
-                                ? " The full report is shown in the card, so do not paste 'report'."
+                                ? " The full report is shown in the card above, so do not paste 'report' or repeat its other strategies."
                                 : " Right after the bullets render 'report' as Markdown exactly as given, keeping its headings and " +
                                   "tables, not in a code block."),
-                            ReplyFormat.AfterBusinessCase)) with { Report = markdown };
+                            ReplyFormat.AfterBusinessCase) + " " + OpenReportInstructions) with { Report = markdown };
                 }
 
                 return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
@@ -253,11 +263,67 @@ public sealed class GetBusinessCaseStatusCommand(
             return await FinishFromHaEvaluationAsync(ctx, ha.ManifestUri!, cancellationToken);
         }
 
+        // The card and the agent's wait tool can both move the same business case forward: start its final stage only once per
+        // assessment operation and give later callers the same session and operation.
+        if (s_started.TryGetValue(ctx.AsOperationId, out StartedStage? started))
+        {
+            return Running(ctx, BusinessCaseStages.HaSkill, started.SessionId, started.OperationId, null, null, FinalStageRunningText);
+        }
+
+        SemaphoreSlim gate = s_startGates.GetOrAdd(ctx.AsOperationId, _ => new SemaphoreSlim(1, 1));
+        if (!await gate.WaitAsync(StartGateTimeout, cancellationToken))
+        {
+            return Running(ctx, BusinessCaseStages.Assessment, null, null, null, null, AssessmentRunningText);
+        }
+
+        try
+        {
+            if (s_started.TryGetValue(ctx.AsOperationId, out started))
+            {
+                return Running(ctx, BusinessCaseStages.HaSkill, started.SessionId, started.OperationId, null, null, FinalStageRunningText);
+            }
+
+            return await StartFinalStageAsync(ctx, token, operation.OutputUrl!, tco.ManifestUri!, ha.ManifestUri!, cancellationToken);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> s_startGates = new();
+    private static readonly ConcurrentDictionary<Guid, StartedStage> s_started = new();
+    private static readonly TimeSpan StartGateTimeout = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan StartedRetention = TimeSpan.FromHours(6);
+
+    private sealed record StartedStage(string SessionId, string OperationId, DateTime StartedUtc);
+
+    private const string FinalStageRunningText =
+        "If you have not already said so, tell the user once that the business case is in its final stage (2 of 2).";
+
+    private static void RememberStart(Guid asOperationId, string sessionId, string operationId)
+    {
+        DateTime now = DateTime.UtcNow;
+        foreach (KeyValuePair<Guid, StartedStage> entry in s_started)
+        {
+            if (now - entry.Value.StartedUtc > StartedRetention && s_started.TryRemove(entry.Key, out _))
+            {
+                s_startGates.TryRemove(entry.Key, out _);
+            }
+        }
+
+        s_started[asOperationId] = new(sessionId, operationId, now);
+    }
+
+    private async Task<BusinessCaseCommandResult> StartFinalStageAsync(
+        Context ctx, string token, string assessmentOutputUrl, string tcoManifestUri, string haManifestUri, CancellationToken cancellationToken)
+    {
         HaSessionResult start = await _haClient.StartInSessionAsync(
-            token, new HaInput(ctx.InventorySasUri, operation.OutputUrl!, tco.ManifestUri, ha.ManifestUri), SessionIdFor(ctx.AsOperationId),
+            token, new HaInput(ctx.InventorySasUri, assessmentOutputUrl, tcoManifestUri, haManifestUri), SessionIdFor(ctx.AsOperationId),
             cancellationToken);
         if (start.FailedStep is null && start.SessionId is not null && start.OperationId is not null)
         {
+            RememberStart(ctx.AsOperationId, start.SessionId, start.OperationId);
             return Running(ctx, BusinessCaseStages.HaSkill, start.SessionId, start.OperationId, start.HttpStatus, null,
                 "Tell the user the business case evaluations have completed and its final stage (2 of 2) has started.");
         }

@@ -22,8 +22,14 @@ internal static class ReplyFormat
 
     /// <summary>Journey step after an inventory is ready.</summary>
     internal const string AfterInventory =
-        "offer to create the business case and ROI summary from this inventory, asking for their target Azure region if they have " +
-        "not given it.";
+        "offer to create the business case and ROI summary from this inventory. If they have not given a target Azure region, " +
+        "after the reply ask for it with your question tool that shows choices (a dropdown), offering common regions such as " +
+        "Central India, East US, West Europe, UK South, Southeast Asia and Australia East; do not ask for the region in text.";
+
+    /// <summary>How to ask the user for a missing target region.</summary>
+    internal const string AskRegion =
+        "Ask for a missing target region with your question tool that shows choices (a dropdown), offering common regions such as " +
+        "Central India, East US, West Europe, UK South, Southeast Asia and Australia East, not in text. ";
 
     /// <summary>Journey step after a business case is ready.</summary>
     internal const string AfterBusinessCase =

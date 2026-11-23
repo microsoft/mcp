@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
+using Azure.Mcp.Tools.AzureMigrate.Commands.Session;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
@@ -48,6 +49,7 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<CreateOrUpdateInventoryCommand>();
         services.AddSingleton<GetInventoryStatusCommand>();
         services.AddSingleton<ExportInventoryCommand>();
+        services.AddSingleton<WaitInventoryCommand>();
 
         // Assessment (POC): external assessment create and operation status APIs (placeholders for now).
         services.AddSingleton<IAssessmentCreateClient, AssessmentCreateClient>();
@@ -67,14 +69,18 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<IInventoryExportClient, InventoryExportClient>();
         services.AddSingleton<CreateBusinessCaseCommand>();
         services.AddSingleton<GetBusinessCaseStatusCommand>();
+        services.AddSingleton<WaitBusinessCaseCommand>();
+        services.AddSingleton<ArchiveSessionCommand>();
 
         // MCP Apps upload widget for create-or-update; registered only when AZMIGRATE_INVENTORY_WIDGET_DOMAINS is set.
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
-        // MCP Apps card that tracks the business case and renders the ROI report (ROI.md) like a Markdown preview; set
-        // AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn it off. Shown with the create result, it calls the status tool itself until the
-        // business case finishes, so the agent does not poll; it is also shown when the agent checks the status on the user's request.
-        BusinessCaseReportWidget.Register(CreateBusinessCaseCommand.CommandId);
+        // MCP Apps card that renders the ROI report (ROI.md) like a Markdown preview; set AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn
+        // it off. Shown only with status results: the agent tracks the business case with the wait tool and then calls the status tool
+        // once, so the card appears together with the agent's summary and never shows a stale stage.
         BusinessCaseReportWidget.Register(GetBusinessCaseStatusCommand.CommandId);
+        // The same card in inventory mode, shown with inventory status results: the agent waits with the inventory wait tool and
+        // then calls the status tool once, so the summary card appears together with the agent's reply.
+        InventorySummaryWidget.Register(GetInventoryStatusCommand.CommandId);
     }
 
     /// <inheritdoc/>
@@ -110,6 +116,8 @@ public class AzureMigrateSetup : IAreaSetup
         inventory.AddCommand<CreateOrUpdateInventoryCommand>(serviceProvider);
         inventory.AddCommand<GetInventoryStatusCommand>(serviceProvider);
         inventory.AddCommand<ExportInventoryCommand>(serviceProvider);
+        // No card: the agent calls it repeatedly to wait quietly until the inventory completes.
+        inventory.AddCommand<WaitInventoryCommand>(serviceProvider);
 
         // Assessment tools are hidden for now; the business case tools run the assessment themselves.
         // var assessment = new CommandGroup(
@@ -128,6 +136,15 @@ public class AzureMigrateSetup : IAreaSetup
         azureMigrate.AddSubGroup(businessCase);
         businessCase.AddCommand<CreateBusinessCaseCommand>(serviceProvider);
         businessCase.AddCommand<GetBusinessCaseStatusCommand>(serviceProvider);
+        // No card: the agent calls it repeatedly to wait quietly until the business case finishes.
+        businessCase.AddCommand<WaitBusinessCaseCommand>(serviceProvider);
+        var session = new CommandGroup(
+            "session",
+            "Azure Catalyst session operations - Close the signed-in user's current inventory and business case sessions together " +
+            "when the user explicitly asks to archive or reset their session.");
+        azureMigrate.AddSubGroup(session);
+        // Closes both the inventory and business case sessions when the user chooses to start a new session.
+        session.AddCommand<ArchiveSessionCommand>(serviceProvider);
 
         return azureMigrate;
     }

@@ -8,14 +8,13 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// <summary>
 /// POC: MCP Apps upload widget for the inventory create-or-update tool. The host renders it with the tool result; it reads
 /// the write-only SAS URL from 'uploadCommand', lets the user pick the file, PUTs it straight to blob storage from the browser
-/// (needs storage CORS for the host's widget origin), then shows the inventory status and, once it completes, the summary from
-/// the operation status 'result' (or 'errorMessage'). It never posts chat messages: hosts show ui/message as if the user wrote
-/// it, so the panel is where the summary appears when the agent's reply has already ended.
+/// (needs storage CORS for the host's widget origin). It does not track the inventory: the agent waits for it and then calls the
+/// status tool once, whose card shows the summary together with the agent's reply, so the panel never shows a stale state.
 /// Enabled only when <see cref="DomainsSetting"/> lists the storage origins the widget may connect to.
 /// </summary>
 internal static class InventoryUploadWidget
 {
-    internal const string ResourceUri = "ui://azuremigrate/inventory-upload.html";
+    internal const string ResourceUri = "ui://azuremigrate/inventory-upload-v2.html";
 
     /// <summary>Comma-separated origins (e.g. https://acct.blob.core.windows.net) the widget may connect to.</summary>
     internal const string DomainsSetting = "AZMIGRATE_INVENTORY_WIDGET_DOMAINS";
@@ -106,8 +105,7 @@ internal static class InventoryUploadWidget
             if (!m) {
               // The host renders the panel on every call of the tool, including text-only updates. Show progress, not a file picker.
               el('title').textContent = 'Updating your inventory';
-              show('hint', 'Applying your change; nothing needs to be uploaded. The summary will appear here when it is done.', 'muted');
-              poll(0);
+              show('hint', 'Applying your change; nothing needs to be uploaded. Copilot posts the result in the chat when it is done.', 'muted');
               return;
             }
             ctx.uploadUrl = m[1];
@@ -148,8 +146,7 @@ internal static class InventoryUploadWidget
               diag.put = { status: xhr.status, ms: Date.now() - started };
               if (xhr.status === 201) {
                 progEl.value = 100;
-                show('status', 'Uploaded ' + f.name + '. Building your inventory; the summary will appear here when it is ready.', 'ok');
-                poll(0);
+                show('status', 'Uploaded ' + f.name + '. Building your inventory; Copilot posts the result in the chat when it is ready.', 'ok');
               } else {
                 fileEl.disabled = false;
                 show('status', 'Upload failed (HTTP ' + xhr.status + '). Try again, or ask for the command-line upload instead.', 'err');
@@ -163,49 +160,6 @@ internal static class InventoryUploadWidget
             show('status', 'Uploading ' + f.name + '...');
             xhr.send(f);
           });
-
-          // The DS 'result' is Markdown. Escape everything first, then allow only **bold**, `code` and '- ' bullets.
-          function renderMarkdown(text) {
-            var esc = function (s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
-            var inline = function (s) { return esc(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>'); };
-            var html = '', inList = false;
-            String(text).split(/\r?\n/).forEach(function (line) {
-              var m = /^\s*[-*]\s+(.*)$/.exec(line);
-              if (m) { if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + inline(m[1]) + '</li>'; return; }
-              if (inList) { html += '</ul>'; inList = false; }
-              if (line.trim()) { html += '<p>' + inline(line) + '</p>'; }
-            });
-            return html + (inList ? '</ul>' : '');
-          }
-          function showSummary(s) {
-            var text = s.status === 'Succeeded' ? s.result : (s.errorMessage || s.result);
-            if (!text) { return; }
-            el('summary').innerHTML = renderMarkdown(text);
-            size();
-          }
-          // The panel tracks the inventory and shows the summary from the operation status when it completes, because the
-          // agent's reply may have ended before the file arrived and nothing can wake it then. It never sends ui/message,
-          // because hosts show it as a message from the user. It asks for 'no-wait' because hosts cut off a widget's
-          // tools/call after about 27 seconds, while a normal status call waits up to 25 seconds. 60 checks 30 seconds apart cover
-          // the 30-minute upload window.
-          function poll(n) {
-            if (!ctx.operationId || n >= 60) { return; }
-            send('tools/call', { name: 'azure_catalyst_inventory_status', arguments: { 'session-id': ctx.sessionId, 'operation-id': ctx.operationId, 'no-wait': true } }, 20000)
-              .then(function (r) {
-                var s = findResult(r, 0);
-                diag.lastStatus = s ? { status: s.status, isCompleted: s.isCompleted } : 'unreadable';
-                if (s && s.isCompleted) {
-                  show('inv', 'Inventory ' + (s.status || 'completed') + '.', s.status === 'Succeeded' ? 'ok' : 'err');
-                  showSummary(s);
-                  return;
-                }
-                show('inv', 'Inventory status: ' + ((s && s.status) || 'checking') + '...', 'muted');
-                setTimeout(function () { poll(n + 1); }, 30000);
-              }, function (err) {
-                diag.lastStatus = 'failed: ' + err.message.slice(0, 200);
-                show('inv', 'Could not check the status here; ask Copilot in the chat for it.', 'muted');
-              });
-          }
 
           show('status', '');
           send('ui/initialize', { appInfo: { name: 'azmigrate-inventory-upload', version: '0.1.0' }, appCapabilities: {}, protocolVersion: '2025-06-18' }, 8000)

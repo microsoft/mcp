@@ -79,14 +79,30 @@ internal static class BusinessCaseStages
         "Check the status again with exactly the values in 'nextStatusParameters', after about 'retryAfterSeconds' seconds. " +
         "Do not change or invent any of them. Call the status tool directly yourself; never write or run a script or code to call it.";
 
-    /// <summary>Used instead of <see cref="CheckAgainInstructions"/> when the business case card tracks the business case itself.</summary>
-    internal const string CardTracksInstructions =
-        "The business case card shown to the user tracks the business case by itself, updates its stage and shows the ROI report " +
-        "when it is ready. Say so in the 'Next step:' line, then end your reply: do not check the status again yourself " +
-        "unless the user asks for it or says the card is not updating, and then use the latest 'nextStatusParameters' in the conversation.";
+    /// <summary>
+    /// Used instead of <see cref="CheckAgainInstructions"/> when the report card is enabled: the agent keeps its turn open by waiting
+    /// quietly with the wait tool, then shows the report card with one status call and replies once with the ROI summary.
+    /// </summary>
+    internal const string WaitInstructions =
+        "Right away, without waiting for the user, call the business case wait tool with exactly the values in " +
+        "'nextStatusParameters', and keep calling it with the latest 'nextStatusParameters' it returns, one call at a time, until " +
+        "'isCompleted' is true. Do not write anything to the user between these calls and do not call the business case status tool " +
+        "for this; once 'isCompleted' is true, follow the 'instructions' of that last result.";
 
-    /// <summary>Returns what the agent should do next while the business case runs, depending on whether the card tracks it.</summary>
-    internal static string TrackingInstructions => BusinessCaseReportWidget.IsEnabled ? CardTracksInstructions : CheckAgainInstructions;
+    /// <summary>Instructions of a wait tool result while the business case still runs.</summary>
+    internal const string WaitAgainInstructions =
+        "The business case is still running. Call the business case wait tool again right away with exactly the values in " +
+        "'nextStatusParameters', without writing anything to the user and without changing or inventing any value. Call it directly " +
+        "yourself; never write or run a script or code to call it.";
+
+    /// <summary>Instructions of a wait tool result once the business case succeeded and the report card is enabled.</summary>
+    internal const string ShowReportInstructions =
+        "The business case has finished. Right away, without writing anything to the user first, call the business case status tool " +
+        "once with exactly the same values you passed to this last wait call; it shows the ROI report card to the user. Then reply once " +
+        "by following the 'instructions' of that status result.";
+
+    /// <summary>Returns what the agent should do next while the business case runs, depending on whether the card is enabled.</summary>
+    internal static string TrackingInstructions => BusinessCaseReportWidget.IsEnabled ? WaitInstructions : CheckAgainInstructions;
 
     internal static int StageNumber(string stage) => stage == HaSkill ? 2 : 1;
 
