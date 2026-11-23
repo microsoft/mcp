@@ -1763,6 +1763,21 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | subscription_list | What is my current subscription? | none |
 | subscription_list | What subscriptions do I have? | none |
 
+## Azure Support
+
+| Tool Name | Test Prompt | Interaction |
+|:----------|:------------|:------------|
+| support_problemclassification_list | List the problem classifications for Azure support service \<service-name> | none |
+| support_problemclassification_list | What problem types can I choose when opening a support ticket for service \<service-name>? | none |
+| support_service_list | List the Azure services I can open a support ticket for | none |
+| support_service_list | Which Azure support service should I use for a virtual machine issue? | none |
+| support_ticket_create | Create an Azure support ticket for my virtual machine \<vm-name> that won't start | clarification-required |
+| support_ticket_create | Open a moderate severity support request with Microsoft for the storage account \<account-name> | clarification-required |
+| support_ticket_get | Get the details of Azure support ticket \<ticket-name> | none |
+| support_ticket_get | Show me the latest communications on support ticket \<ticket-name> | none |
+| support_ticket_list | List my open Azure support tickets | none |
+| support_ticket_list | Show me the support requests created in my subscription in the last 30 days | none |
+
 ## Azure Terraform Best Practices
 
 | Tool Name | Test Prompt | Interaction |

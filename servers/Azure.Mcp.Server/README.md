@@ -1403,6 +1403,13 @@ _These tools come from the [Azure Monitor dashboards with Grafana remote MCP ser
 * "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
 
+### 🎫 Azure Support
+
+* "List my open Azure support tickets"
+* "Show me the communications on support ticket 'my-ticket'"
+* "Which problem classifications can I use for an Azure Virtual Machine support ticket?"
+* "Run diagnostics on my VM 'my-vm' and, if the issue isn't resolved, open a support ticket with the findings"
+
 ### 🔄 Azure Migrate
 
 * "Generate a Platform Landing Zone"
@@ -1567,6 +1574,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
+- 🎫 **Azure Support** - Support ticket listing, details, and creation, plus service and problem classification lookups
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure

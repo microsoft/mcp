@@ -479,6 +479,12 @@
 # ServiceLabel: %tools-StorageSync
 # ServiceOwners:                       @ankushbindlish2 @kszobi
 
+# PRLabel: %tools-Support
+/tools/Azure.Mcp.Tools.Support/        @jennyf19 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Support
+# ServiceOwners:                       @jennyf19
+
 # PRLabel: %tools-Deploy
 /tools/Azure.Mcp.Tools.Deploy/         @qianwens @xfz11 @wchigit @microsoft/azure-mcp
 /tools/Azure.Mcp.Tools.Quota/          @qianwens @xfz11 @wchigit @microsoft/azure-mcp
