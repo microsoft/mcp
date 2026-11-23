@@ -218,6 +218,56 @@ public sealed class OAuthProtectedResourceMetadataHelperTests
         }
     }
 
+    [Fact]
+    public async Task ConfiguredMetadata_IsServedWhenRequestUsesInternalOrigin()
+    {
+        McpHttpEndpointOptions endpointOptions = CreateOptions(
+            ("McpServer:EndpointPath", "/mcp"),
+            ("McpServer:ProtectedResource:Resource", "https://mcp.contoso.com/mcp"));
+        McpAuthenticationOptions configuredOptions = new();
+        OAuthProtectedResourceMetadataHelper.ConfigureAuthenticationOptions(
+            configuredOptions,
+            endpointOptions,
+            new MicrosoftIdentityApplicationOptions
+            {
+                ClientId = "client-id",
+                TenantId = "tenant-id",
+                Instance = "https://login.microsoftonline.com"
+            });
+        Uri metadataUri = Assert.IsType<Uri>(OAuthProtectedResourceMetadataHelper.GetConfiguredMetadataUri(endpointOptions));
+        ServiceProvider services = CreateSdkServices(configuredOptions);
+
+        try
+        {
+            DefaultHttpContext metadataContext = CreateContext(services, HttpMethods.Get, "/.well-known/oauth-protected-resource/mcp");
+            metadataContext.Request.Scheme = "http";
+            metadataContext.Request.Host = new HostString("localhost", 1031);
+            IAuthenticationRequestHandler unchangedHandler = await GetMcpHandlerAsync(services, metadataContext);
+            Assert.False(await unchangedHandler.HandleRequestAsync());
+
+            Assert.True(OAuthProtectedResourceMetadataHelper.ApplyConfiguredMetadataOrigin(metadataContext.Request, metadataUri));
+            IAuthenticationRequestHandler metadataHandler = await GetMcpHandlerAsync(services, metadataContext);
+            Assert.True(await metadataHandler.HandleRequestAsync());
+
+            metadataContext.Response.Body.Position = 0;
+            using JsonDocument metadata = await JsonDocument.ParseAsync(
+                metadataContext.Response.Body,
+                cancellationToken: TestContext.Current.CancellationToken);
+            Assert.Equal("https://mcp.contoso.com/mcp", metadata.RootElement.GetProperty("resource").GetString());
+
+            DefaultHttpContext mcpContext = CreateContext(services, HttpMethods.Post, "/mcp");
+            mcpContext.Request.Scheme = "http";
+            mcpContext.Request.Host = new HostString("localhost", 1031);
+            Assert.False(OAuthProtectedResourceMetadataHelper.ApplyConfiguredMetadataOrigin(mcpContext.Request, metadataUri));
+            Assert.Equal("http", mcpContext.Request.Scheme);
+            Assert.Equal("localhost:1031", mcpContext.Request.Host.Value);
+        }
+        finally
+        {
+            await services.DisposeAsync();
+        }
+    }
+
     [Theory]
     [InlineData("McpServer:EndpointPath", "mcp")]
     [InlineData("McpServer:EndpointPath", "/mcp?x=1")]

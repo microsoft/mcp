@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using ModelContextProtocol.AspNetCore.Authentication;
@@ -163,12 +164,49 @@ internal static class OAuthProtectedResourceMetadataHelper
             azureAdOptions.TenantId,
             azureAdOptions.Instance);
 
-        if (protectedResource.Resource is string resource)
+        if (GetConfiguredMetadataUri(endpointOptions) is Uri metadataUri)
         {
-            string endpointPath = NormalizeEndpointPath(endpointOptions.EndpointPath);
-            string resourcePath = GetResourcePath(resource, endpointPath);
-            authenticationOptions.ResourceMetadataUri = new Uri(GetConfiguredMetadataUrl(resource, resourcePath));
+            authenticationOptions.ResourceMetadataUri = metadataUri;
         }
+    }
+
+    /// <summary>
+    /// Gets the absolute metadata URL for an explicitly configured protected resource.
+    /// </summary>
+    /// <param name="endpointOptions">The HTTP endpoint configuration.</param>
+    /// <returns>The configured metadata URL, or <see langword="null"/> when no resource is configured.</returns>
+    public static Uri? GetConfiguredMetadataUri(McpHttpEndpointOptions endpointOptions)
+    {
+        if (ValidateResource(endpointOptions.ProtectedResource?.Resource) is not string resource)
+        {
+            return null;
+        }
+
+        string endpointPath = NormalizeEndpointPath(endpointOptions.EndpointPath);
+        return new Uri(GetConfiguredMetadataUrl(resource, GetResourcePath(resource, endpointPath)));
+    }
+
+    /// <summary>
+    /// Applies the public origin of the configured metadata URL to a request for that metadata document.
+    /// </summary>
+    /// <remarks>
+    /// The MCP SDK only serves an absolute configured metadata URL when the request's scheme and host match it.
+    /// When TLS terminates in front of the server, the server can receive a different internal scheme and host.
+    /// The metadata document is static and anonymous, so only requests for its configured path are updated.
+    /// </remarks>
+    /// <param name="request">The incoming HTTP request.</param>
+    /// <param name="metadataUri">The configured absolute metadata URL.</param>
+    /// <returns><see langword="true"/> when the request targets the configured metadata path and was updated.</returns>
+    public static bool ApplyConfiguredMetadataOrigin(HttpRequest request, Uri metadataUri)
+    {
+        if (!string.Equals(request.Path.Value, metadataUri.AbsolutePath, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        request.Scheme = metadataUri.Scheme;
+        request.Host = HostString.FromUriComponent(metadataUri);
+        return true;
     }
 
     /// <summary>

@@ -217,7 +217,7 @@ These settings use the standard .NET configuration system. Set them in `appsetti
 
    The response should contain the configured `resource`, `authorization_servers`, and `scopes_supported` values. An unauthenticated request to `/mcp` returns `401` with a `resource_metadata` value that points to this metadata URL.
 
-When `Resource` is configured with a path, the server serves metadata at the corresponding resource-specific URL defined by RFC 9728 (for example `/.well-known/oauth-protected-resource/mcp`), and the `WWW-Authenticate` challenge points to that URL. When `Resource` is omitted, the MCP SDK derives the resource from each request and handles both root and resource-specific metadata URLs. Invalid values cause the server to fail at startup.
+When `Resource` is configured with a path, the server serves metadata at the corresponding resource-specific URL defined by RFC 9728 (for example `/.well-known/oauth-protected-resource/mcp`), and the `WWW-Authenticate` challenge points to that URL. This metadata URL is served even when the server receives requests on a different internal scheme or host than the configured `Resource`. When `Resource` is omitted, the MCP SDK derives the resource from each request and handles both root and resource-specific metadata URLs. Invalid values cause the server to fail at startup.
 
 #### Override advertised authorization servers
 

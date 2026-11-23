@@ -526,13 +526,22 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
             });
         }
 
+        McpHttpEndpointOptions endpointOptions = app.Services.GetRequiredService<IOptions<McpHttpEndpointOptions>>().Value;
+        if (OAuthProtectedResourceMetadataHelper.GetConfiguredMetadataUri(endpointOptions) is Uri configuredMetadataUri)
+        {
+            app.Use((context, next) =>
+            {
+                OAuthProtectedResourceMetadataHelper.ApplyConfiguredMetadataOrigin(context.Request, configuredMetadataUri);
+                return next(context);
+            });
+        }
+
         // AuthN/Z are always required in the remote HTTP service scenario.
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.Use(ValidateMcpRoutingHeadersMiddleware);
 
-        McpHttpEndpointOptions endpointOptions = app.Services.GetRequiredService<IOptions<McpHttpEndpointOptions>>().Value;
         string endpointPath = OAuthProtectedResourceMetadataHelper.NormalizeEndpointPath(endpointOptions.EndpointPath);
         IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp(endpointPath);
         // All MCP endpoints require MCP.All scope or role
