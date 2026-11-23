@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -24,7 +25,7 @@ public sealed class MonitorLogSearchServerModeTests
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(120);
 
     private static string AzmcpPath =>
-        Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp");
+        McpTestUtilities.GetAzMcpExecutablePath();
 
     [Theory]
     [InlineData("server start --mode all --namespace monitor --structured-output-mode duplicated")]

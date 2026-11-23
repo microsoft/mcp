@@ -10,7 +10,7 @@ namespace Fabric.Mcp.Tools.Core.Services;
 
 internal static class FabricOperationHttp
 {
-    internal const int MaxJsonBytes = 1024 * 1024;
+    internal const int MaxJsonBytes = FabricResponseBodyReader.DefaultMaxJsonBytes;
     internal const double FallbackPollSeconds = 20;
     internal const double EarlyPollSeconds = 3;
 
@@ -75,31 +75,10 @@ internal static class FabricOperationHttp
                 "Only JSON and empty Fabric operation results are supported. Binary and other media types are not downloaded.");
         }
 
-        if (response.Content.Headers.ContentLength > maxJsonBytes)
-        {
-            throw ResultTooLarge(maxJsonBytes);
-        }
+        var body = await FabricResponseBodyReader.ReadAsync(
+            response, maxJsonBytes, () => ResultTooLarge(maxJsonBytes), cancellationToken);
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var buffer = new MemoryStream();
-        var chunk = new byte[8192];
-        while (true)
-        {
-            // Read at most one byte beyond the limit, including streams without Content-Length.
-            var count = (int)Math.Min(chunk.Length, (long)maxJsonBytes + 1 - buffer.Length);
-            var read = await stream.ReadAsync(chunk.AsMemory(0, count), cancellationToken);
-            if (read == 0)
-            {
-                break;
-            }
-            if (buffer.Length + read > maxJsonBytes)
-            {
-                throw ResultTooLarge(maxJsonBytes);
-            }
-            buffer.Write(chunk, 0, read);
-        }
-
-        if (buffer.Length == 0)
+        if (body.Length == 0)
         {
             return new(operationId, false, default);
         }
@@ -110,7 +89,7 @@ internal static class FabricOperationHttp
 
         try
         {
-            var value = JsonSerializer.Deserialize(buffer.GetBuffer().AsSpan(0, (int)buffer.Length), CoreJsonContext.Default.JsonElement);
+            var value = JsonSerializer.Deserialize(body.Span, CoreJsonContext.Default.JsonElement);
             return new(operationId, true, value);
         }
         catch (JsonException)

@@ -6,7 +6,6 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.Helpers;
 using Azure.ResourceManager;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -80,14 +79,7 @@ public abstract class BaseAzureService(IAzureService azureService)
     {
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await AzureService.ResolveTenantIdAsync(tenant, cancellationToken);
 
-        try
-        {
-            return await AzureService.GetTokenCredentialAsync(tenantId, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to get credential: {ex.Message}", ex);
-        }
+        return await AzureService.GetTokenCredentialAsync(tenantId, cancellationToken);
     }
 
     /// <summary>

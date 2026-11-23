@@ -4,12 +4,12 @@
 using System.Net;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -22,9 +22,9 @@ public sealed class HealthServiceTests
     [Fact]
     public async Task CheckHealthAsync_SucceedsAndSendsAuthenticationHeaders()
     {
-        var provider = CreateCredentialProvider(TestConstants.AccessToken);
+        var azureService = CreateAzureService(TestConstants.AccessToken);
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -37,7 +37,51 @@ public sealed class HealthServiceTests
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
         Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
         Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
-        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CheckHealthAsync_WithTenantDisplayName_UsesResolvedTenantCredential()
+    {
+        const string tenantName = "Contoso Ltd";
+        const string tenantId = "22222222-2222-2222-2222-222222222222";
+        var resolvedCredential = Substitute.For<TokenCredential>();
+        resolvedCredential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken(TestConstants.AccessToken, DateTimeOffset.UtcNow.AddHours(1)));
+        var azureService = Substitute.For<IAzureService>();
+        azureService.ResolveTenantIdAsync(tenantName, Arg.Any<CancellationToken>()).Returns(tenantId);
+        azureService.GetTokenCredentialAsync(tenantId, Arg.Any<CancellationToken>()).Returns(resolvedCredential);
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
+
+        await service.CheckHealthAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            tenantName,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(TestConstants.AccessToken, handler.LastRequest!.Headers.Authorization!.Parameter);
+        await azureService.Received(1).GetTokenCredentialAsync(tenantId, Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetTokenCredentialAsync(tenantName, Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task CheckHealthAsync_WithoutTenant_UsesDefaultCredentialWithoutResolvingTenant(string? tenant)
+    {
+        var azureService = CreateAzureService();
+        var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
+
+        await service.CheckHealthAsync(
+            TestConstants.Endpoint,
+            TestConstants.DataPartition,
+            tenant,
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        await azureService.DidNotReceive().ResolveTenantIdAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -49,10 +93,10 @@ public sealed class HealthServiceTests
                 context.Scopes.SequenceEqual(new[] { $"{AuthAppId}/.default" })),
                 Arg.Any<CancellationToken>())
             .Returns(new AccessToken(TestConstants.AccessToken, DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>()).Returns(credential);
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>()).Returns(credential);
         var handler = new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
-        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         var result = await service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -71,12 +115,12 @@ public sealed class HealthServiceTests
     [Fact]
     public async Task CheckHealthAsync_WhenAuthenticationFails_DoesNotCallAdme()
     {
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns<Task<TokenCredential>>(_ => throw new InvalidOperationException("no credential available"));
         var handler = new StubHttpMessageHandler(_ =>
             throw new InvalidOperationException("ADME should not be called when auth fails"));
-        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -95,7 +139,7 @@ public sealed class HealthServiceTests
         {
             Content = new StringContent(errorResponse)
         });
-        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -124,7 +168,7 @@ public sealed class HealthServiceTests
             response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
             return response;
         });
-        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.CheckHealthAsync(
             TestConstants.Endpoint,
@@ -146,7 +190,7 @@ public sealed class HealthServiceTests
     public async Task CheckHealthAsync_RejectsUntrustedEndpoint(string endpoint)
     {
         var service = new HealthService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
-            CreateCredentialProvider(),
+            CreateAzureService(),
             new FakeHttpClientFactory(new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))));
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.CheckHealthAsync(
@@ -156,13 +200,13 @@ public sealed class HealthServiceTests
             cancellationToken: TestContext.Current.CancellationToken));
     }
 
-    private static IAzureTokenCredentialProvider CreateCredentialProvider(string token = "fake-token")
+    private static IAzureService CreateAzureService(string token = "fake-token")
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return provider;
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        return azureService;
     }
 }

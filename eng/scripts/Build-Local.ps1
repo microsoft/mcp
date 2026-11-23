@@ -53,6 +53,10 @@ if ($IncludeNative) {
     -OperatingSystems $oses `
     -Architectures $architectures `
     -Native
+
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
 }
 
 # build_info.json is initialized with all buildable platforms, native and not
@@ -80,12 +84,22 @@ if ($VerifyNpx -and !$NoUsePaths) {
 
     foreach($tgzFile in $tgzFiles) {
         Push-Location -Path $RepoRoot
+        $cacheDirectory = $null
         try {
-            Invoke-LoggedCommand "npx -y clear-npx-cache"
-            Invoke-LoggedCommand "npx -y `"file://$tgzFile`" tools list"
+            $cachePath = Join-Path ([IO.Path]::GetTempPath()) "mcp-npx-$([Guid]::NewGuid().ToString('N'))"
+            $cacheDirectory = New-Item -ItemType Directory -Path $cachePath
+            $cacheArgument = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($cacheDirectory.FullName)
+            $packageArgument = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($tgzFile.FullName)
+            Invoke-LoggedCommand "npx --cache '$cacheArgument' -y 'file:$packageArgument' tools list" -DoNotExitOnFailedExitCode
+            if ($LASTEXITCODE -ne 0) {
+                throw "NPX verification failed for '$($tgzFile.FullName)' with exit code $LASTEXITCODE."
+            }
         }
         finally {
             Pop-Location
+            if ($cacheDirectory) {
+                Remove-Item -LiteralPath $cacheDirectory.FullName -Recurse -Force
+            }
         }
     }
 }

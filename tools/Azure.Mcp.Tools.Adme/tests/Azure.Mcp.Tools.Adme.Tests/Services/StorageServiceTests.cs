@@ -6,13 +6,13 @@ using System.Text;
 using System.Text.Json;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -28,8 +28,8 @@ public sealed class StorageServiceTests
     public async Task GetRecordAsync_SendsEscapedIdAuthenticationPartitionAndTenant()
     {
         var handler = JsonHandler(HttpStatusCode.OK, $$"""{"id":"{{RecordId}}","kind":"{{TestConstants.WellKind}}"}""");
-        var provider = CreateCredentialProvider("token-abc", TestConstants.Tenant);
-        var service = new StorageService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), provider, new FakeHttpClientFactory(handler));
+        var azureService = CreateAzureService("token-abc", TestConstants.Tenant);
+        var service = new StorageService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         var result = await service.GetRecordAsync(
             TestConstants.Endpoint, TestConstants.DataPartition, RecordId, null, null,
@@ -40,7 +40,7 @@ public sealed class StorageServiceTests
         Assert.Equal(HttpMethod.Get, handler.LastRequest.Method);
         Assert.Equal("token-abc", handler.LastRequest.Headers.Authorization!.Parameter);
         Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
-        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -355,17 +355,17 @@ public sealed class StorageServiceTests
     }
 
     private static StorageService CreateService(StubHttpMessageHandler handler) =>
-        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
-    private static IAzureTokenCredentialProvider CreateCredentialProvider(
+    private static IAzureService CreateAzureService(
         string token = "fake-token", string? tenant = null)
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(tenant, Arg.Any<CancellationToken>()).Returns(credential);
-        return provider;
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(tenant, Arg.Any<CancellationToken>()).Returns(credential);
+        return azureService;
     }
 
     private static StubHttpMessageHandler JsonHandler(HttpStatusCode status, string content) =>

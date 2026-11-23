@@ -453,7 +453,7 @@ public class AppLensService(IAzureService azureService)
         return new(insights, solutions, session.ResourceId, "Resource");
     }
 
-    private static AppLensSession ParseGetTokenResponse(string rawResponse)
+    internal static AppLensSession ParseGetTokenResponse(string rawResponse)
     {
         using var jsonDoc = JsonDocument.Parse(rawResponse);
 
@@ -464,44 +464,57 @@ public class AppLensService(IAzureService azureService)
         const int TokenColumnIndex = 1;
         const int ExpiresInColumnIndex = 2;
 
-        if (!jsonDoc.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
+        if (jsonDoc.RootElement.ValueKind != JsonValueKind.Object)
         {
-            if (jsonDoc.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                IEnumerable<string> propertyNames = jsonDoc.RootElement.EnumerateObject().Select(property => property.Name);
-                string joinedPropertyNames = string.Join(", ", propertyNames);
-                throw new Exception($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
-            }
-
-            throw new Exception("'properties' not found. Root element is not a JSON object.");
+            throw new JsonException("'properties' not found. Root element is not a JSON object.");
         }
 
-        if (!propertiesElement.TryGetProperty("dataset", out JsonElement datasetElement))
+        if (!jsonDoc.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
         {
-            throw new Exception("'properties.dataset' not found.");
+            IEnumerable<string> propertyNames = jsonDoc.RootElement.EnumerateObject().Select(property => property.Name);
+            string joinedPropertyNames = string.Join(", ", propertyNames);
+            throw new JsonException($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
+        }
+
+        if (propertiesElement.ValueKind != JsonValueKind.Object ||
+            !propertiesElement.TryGetProperty("dataset", out JsonElement datasetElement) ||
+            datasetElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new JsonException("'properties.dataset' must be a JSON array.");
         }
 
         foreach (JsonElement datasetItem in datasetElement.EnumerateArray())
         {
-            if (!datasetItem.TryGetProperty("table", out JsonElement tableElement))
+            if (datasetItem.ValueKind != JsonValueKind.Object ||
+                !datasetItem.TryGetProperty("table", out JsonElement tableElement) ||
+                tableElement.ValueKind != JsonValueKind.Object)
             {
-                throw new Exception("'properties.dataset.table' not found.");
+                throw new JsonException("'properties.dataset.table' must be a JSON object.");
             }
 
-            if (!tableElement.TryGetProperty("rows", out JsonElement rowsElement))
+            if (!tableElement.TryGetProperty("rows", out JsonElement rowsElement) ||
+                rowsElement.ValueKind != JsonValueKind.Array)
             {
-                throw new Exception("'properties.dataset.table.rows' not found.");
+                throw new JsonException("'properties.dataset.table.rows' must be a JSON array.");
             }
 
             foreach (JsonElement rowJsonElement in rowsElement.EnumerateArray())
             {
-                JsonElement[] row = rowJsonElement.Deserialize(AppLensJsonContext.Default.JsonElementArray)!;
+                if (rowJsonElement.ValueKind != JsonValueKind.Array ||
+                    rowJsonElement.GetArrayLength() <= ExpiresInColumnIndex ||
+                    rowJsonElement[SessionIdColumnIndex].ValueKind != JsonValueKind.String ||
+                    rowJsonElement[TokenColumnIndex].ValueKind != JsonValueKind.String ||
+                    rowJsonElement[ExpiresInColumnIndex].ValueKind != JsonValueKind.Number ||
+                    !rowJsonElement[ExpiresInColumnIndex].TryGetInt32(out int expiresIn))
+                {
+                    throw new JsonException("AppLens session rows must contain a session ID, token, and integer expiration.");
+                }
 
                 session = new(
-                    SessionId: row[SessionIdColumnIndex].GetString()!,
+                    SessionId: rowJsonElement[SessionIdColumnIndex].GetString()!,
                     ResourceId: "", // Filled in by the caller
-                    Token: row[TokenColumnIndex].GetString()!,
-                    ExpiresIn: row[ExpiresInColumnIndex].GetInt32()
+                    Token: rowJsonElement[TokenColumnIndex].GetString()!,
+                    ExpiresIn: expiresIn
                 );
 
                 break;
@@ -510,7 +523,7 @@ public class AppLensService(IAzureService azureService)
 
         if (session is null)
         {
-            throw new Exception("session is null.");
+            throw new JsonException("The AppLens token response did not contain a session.");
         }
 
         return session;

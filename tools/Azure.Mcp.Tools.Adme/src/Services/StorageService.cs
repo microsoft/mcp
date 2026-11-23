@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Globalization;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Storage;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Adme.Services;
 
@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Adme.Services;
 /// </summary>
 public sealed class StorageService(
     IEndpointValidator endpointValidator,
-    IAzureTokenCredentialProvider credentialProvider,
+    IAzureService azureService,
     IHttpClientFactory httpClientFactory) : IStorageService
 {
     private const string BasePath = "/api/storage/v2";
@@ -23,7 +23,7 @@ public sealed class StorageService(
     private const string FrameOfReferenceNormalized =
         "units=SI;crs=wgs84;elevation=msl;azimuth=true north;dates=utc;";
 
-    private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider;
+    private readonly IAzureService _azureService = azureService;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public Task<AdmeResponse<StorageRecord>> GetRecordAsync(
@@ -43,7 +43,7 @@ public sealed class StorageService(
             : $"{BasePath}/records/{Uri.EscapeDataString(id)}/{version.Value.ToString(CultureInfo.InvariantCulture)}";
 
         return AdmeServiceHelper.SendAsync(endpointValidator,
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             AppendAttributes(path, attributes), AdmeJsonContext.Default.StorageRecord, authAppId,
             cancellationToken: cancellationToken);
     }
@@ -61,7 +61,7 @@ public sealed class StorageService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         return AdmeServiceHelper.SendAsync(endpointValidator,
-            _credentialProvider,
+            _azureService,
             _httpClientFactory,
             endpoint,
             dataPartition,
@@ -89,7 +89,7 @@ public sealed class StorageService(
         AdmeServiceHelper.Add(query, "cursor", cursor);
 
         return AdmeServiceHelper.SendAsync(endpointValidator,
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             AdmeServiceHelper.AppendQuery($"{BasePath}/query/records", query),
             AdmeJsonContext.Default.QueryRecordsResponse,
             authAppId,
@@ -121,7 +121,7 @@ public sealed class StorageService(
         };
 
         return AdmeServiceHelper.PostAsync(endpointValidator,
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             projecting ? $"{BasePath}/query/records" : $"{BasePath}/query/records:batch",
             body, AdmeJsonContext.Default.FetchRecordsRequest,
             AdmeJsonContext.Default.FetchRecordsResponse,
@@ -146,7 +146,7 @@ public sealed class StorageService(
         }
 
         return AdmeServiceHelper.PutAsync(endpointValidator,
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/records", records.ToArray(), AdmeJsonContext.Default.StorageRecordArray,
             AdmeJsonContext.Default.UpsertRecordsResponse, authAppId, cancellationToken);
     }
@@ -161,7 +161,7 @@ public sealed class StorageService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(id);
         return AdmeServiceHelper.DeleteAsync(endpointValidator,
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/records/{Uri.EscapeDataString(id)}", authAppId, cancellationToken);
     }
 

@@ -80,7 +80,7 @@ Describe 'Microsoft US holiday calendar' {
 }
 
 Describe 'Pacific release-preparation schedules' {
-    It 'selects exactly one noon-Pacific trigger on every eligible day from 2026 through 2030' {
+    It 'selects exactly one 10 AM Pacific trigger on every eligible day from 2026 through 2030' {
         $scheduledHolidayDates = @(
             '2026-01-01', '2026-11-26', '2026-12-24',
             '2027-11-25',
@@ -99,7 +99,7 @@ Describe 'Pacific release-preparation schedules' {
                     $utcTime = [DateTimeOffset]::new($date.AddHours($hour), [timespan]::Zero)
                     $decision = Get-ReleasePrepSchedule -ScheduleName $schedule.displayName -UtcNow $utcTime
                     if ($decision.ShouldRun) {
-                        [TimeZoneInfo]::ConvertTime($utcTime, $zone).Hour | Should -Be 12 -Because "$date must run at noon Pacific"
+                        [TimeZoneInfo]::ConvertTime($utcTime, $zone).Hour | Should -Be 10 -Because "$date must run at 10 AM Pacific"
                         $decision.ReleaseDate | Should -Be $date.ToString('yyyy-MM-dd')
                         $schedule
                     }
@@ -111,7 +111,7 @@ Describe 'Pacific release-preparation schedules' {
     }
 
     It 'does not run on a Wednesday' {
-        $decision = Get-ReleasePrepSchedule -ScheduleName 'Release preparation (PDT)' -UtcNow '2026-10-28T19:00:00Z'
+        $decision = Get-ReleasePrepSchedule -ScheduleName 'Release preparation (PDT)' -UtcNow '2026-10-28T17:00:00Z'
         $decision.ShouldRun | Should -BeFalse
         $decision.Reason | Should -Match 'not a Tuesday or Thursday'
     }
@@ -124,7 +124,7 @@ Describe 'Pacific release-preparation schedules' {
     }
 
     It 'uses the selected schedule rather than the delayed agent start hour' {
-        $decision = Get-ReleasePrepSchedule -ScheduleName 'Release preparation (PDT)' -UtcNow '2026-10-29T20:45:00Z'
+        $decision = Get-ReleasePrepSchedule -ScheduleName 'Release preparation (PDT)' -UtcNow '2026-10-29T18:45:00Z'
         $decision.ShouldRun | Should -BeTrue
     }
 
@@ -435,7 +435,7 @@ Describe 'Release-preparation pipeline configuration' {
     It 'disables CI and PR triggers and schedules both UTC candidates on main' {
         $script:Pipeline.trigger | Should -Be 'none'
         $script:Pipeline.pr | Should -Be 'none'
-        ($script:Pipeline.schedules.cron -join '|') | Should -Be '0 19 * * 2,4|0 20 * * 2,4'
+        ($script:Pipeline.schedules.cron -join '|') | Should -Be '0 17 * * 2,4|0 18 * * 2,4'
         foreach ($schedule in $script:Pipeline.schedules) {
             $schedule.always | Should -BeTrue
             $schedule.branches.include | Should -Contain 'main'

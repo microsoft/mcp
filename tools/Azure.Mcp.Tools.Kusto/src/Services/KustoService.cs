@@ -194,7 +194,7 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
         {
             return string.Join(Environment.NewLine, result);
         }
-        throw new Exception($"No schema found for table '{tableName}' in database '{databaseName}'.");
+        throw new KeyNotFoundException($"No schema found for table '{tableName}' in database '{databaseName}'.");
     }
 
     public async Task<List<JsonElement>> QueryItemsAsync(
@@ -347,7 +347,7 @@ public sealed class KustoService(IAzureService azureService, ICacheService cache
 
         if (string.IsNullOrEmpty(value))
         {
-            throw new Exception($"Could not retrieve ClusterUri for cluster '{clusterName}'");
+            throw new InvalidOperationException($"Could not retrieve ClusterUri for cluster '{clusterName}'");
         }
 
         return value!;

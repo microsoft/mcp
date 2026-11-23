@@ -955,13 +955,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 📊 Azure Advisor
 
+Recommendation list and summary use `subscriptions`, `recommendation-type-ids`, and
+`resource-types` arrays, including one-element arrays for single selections. Prevalidation
+also uses `subscriptions` but retains one required `recommendation-type-id`. Single-target
+get operations and recommendation-update inputs are unchanged.
+
 * "List my Advisor recommendations"
+* "Show the next page of my Advisor recommendations using the returned continuation token"
 * "List Advisor recommendations for service group 'my-service-group'"
 * "Show the prioritized Advisor recommendations for service group 'my-service-group'"
 * "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
 * "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Prevalidate the selected idle resources for locks, dependencies, and recent activity without deleting or changing anything"
 * "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
@@ -970,8 +977,13 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 * "Dismiss an Advisor recommendation because the risk is acceptable"
 * "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
+* "Postpone these selected Advisor recommendation IDs together in my service group until \<future-date-time-with-offset>, with one batch approval"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "Show Advisor insights for service group 'my-service-group'"
+* "Show Advisor insights for my subscription"
+* "Give me Advisor insights across all my service groups and subscriptions"
+* "How much retirement exposure has my subscription reduced or increased since its Day 1 count?"
 * "What is the status of service group 'my-service-group'?"
 * "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
@@ -1274,9 +1286,12 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "Why is my Azure Monitor Health Model 'my-health-model' degraded? Trace it to the signals that drive it"
 * "List the distributed trace accounts in my subscription"
 * "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Find attributes distinguishing traces with span_count > 10 from other traces in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg', using the last 30 minutes for both windows"
+* "Analyze the critical path for trace ID '<trace-id>' in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg' from '<start-time>' to '<end-time>'"
 * "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 
@@ -1289,6 +1304,16 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Start Azure Monitor instrumentation orchestration for my local workspace"
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
+
+### Azure Monitor dashboards with Grafana
+
+* Find, inspect, and update saved Azure Monitor dashboards with Grafana
+* Query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health
+* Run PromQL queries against Azure Monitor managed service for Prometheus workspaces
+* Run KQL queries against Azure Data Explorer (Kusto) clusters
+* Inspect Azure Monitor health models and their history
+
+_These tools come from the [Azure Monitor dashboards with Grafana remote MCP server](https://learn.microsoft.com/azure/managed-grafana/azure-monitor-dashboards-mcp-server), which accepts Microsoft Entra ID user accounts only. They are unavailable when Azure MCP authenticates as a service principal or managed identity._
 
 ### 💾 Azure NetApp Files
 

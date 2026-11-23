@@ -146,6 +146,12 @@ public sealed partial class EndpointValidator
             UsGov: [".confidential-ledger.azure.us"],
             Germany: [], // Confidential Ledger is not offered in the Germany cloud; leave empty so validation fails rather than implicitly accepting a public-cloud host.
             UseLegacyCheck: false),
+        ["deviceprovisioning"] = new AllowedSuffixManager(
+            Public: [".azure-devices-provisioning.net"],
+            China: [".azure-devices-provisioning.cn"],
+            UsGov: [".azure-devices-provisioning.us"],
+            Germany: [],
+            UseLegacyCheck: false),
         ["eventgrid"] = new AllowedSuffixManager(
             Public: [".eventgrid.azure.net"],
             China: [".eventgrid.azure.cn"],

@@ -51,7 +51,7 @@ public partial class FabricCoreService
             {
                 Error = error with
                 {
-                    ErrorCode = IsSafeErrorCode(error.ErrorCode) ? error.ErrorCode : null,
+                    ErrorCode = FabricCoreHttpHelpers.IsSafeErrorCode(error.ErrorCode) ? error.ErrorCode : null,
                     RequestId = error.RequestId == Guid.Empty ? null : error.RequestId
                 }
             };
@@ -82,9 +82,6 @@ public partial class FabricCoreService
         Guid.TryParse(operationId, out var id) && id != Guid.Empty
             ? id
             : throw new ArgumentException("Operation ID must be a nonempty UUID.", nameof(operationId));
-
-    private static bool IsSafeErrorCode(string? code) =>
-        code is { Length: > 0 and <= 128 } && code.All(static ch => char.IsAsciiLetterOrDigit(ch) || ch is '_' or '-' or '.');
 
     private static FabricOperationException InvalidState() =>
         new("InvalidOperationState", "Fabric returned an invalid operation state. Completion could not be determined from this response.");

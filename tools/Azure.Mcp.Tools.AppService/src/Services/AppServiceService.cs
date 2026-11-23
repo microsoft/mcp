@@ -514,7 +514,7 @@ public class AppServiceService(IAzureService azureService, ILogger<AppServiceSer
         var clientRequestId = "AzMcp" + Guid.NewGuid().ToString();
         var tokenRequestContext = new TokenRequestContext(scopes, clientRequestId);
 
-        var tokenCredential = await AzureService.GetTokenCredentialAsync(tenant, cancellationToken: cancellationToken);
+        var tokenCredential = await GetCredential(tenant, cancellationToken);
         var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
         httpRequest.Headers.Authorization = new("bearer", accessToken.Token);
         httpRequest.Headers.Add("User-Agent", UserAgent);

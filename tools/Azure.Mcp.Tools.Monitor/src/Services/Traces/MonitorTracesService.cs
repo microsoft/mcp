@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.ResourceManager;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -39,6 +38,10 @@ public sealed class MonitorTracesService(
     internal const string TraceDataPlaneScope = "https://data.monitor.azure.com/.default";
     internal const string TraceDataPlaneHostSuffix = ".data.monitor.azure.com";
     internal const string TraceDataPlaneApiVersion = "2026-01-10-preview";
+
+    private const string QueryEndpointPath = "traces:query";
+    private const string CompareEndpointPath = "traces:compare";
+    private const string CriticalPathEndpointPath = "traces:critical-path";
 
     // Bounded so a slow query hands back an operationId instead of blocking the MCP transport.
     private static readonly TimeSpan PollDelay = TimeSpan.FromSeconds(2);
@@ -183,7 +186,34 @@ public sealed class MonitorTracesService(
         };
     }
 
-    public async Task<TraceQueryResult> RunQueryAsync(
+    public Task<TraceQueryResult> CompareAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string query,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        int maxResults,
+        string? tenant = null,
+        CancellationToken cancellationToken = default) =>
+        RunOperationAsync(subscription, resourceGroup, workspace, query, startTime, endTime,
+            new() { MaxResults = maxResults }, false, CompareEndpointPath, null, tenant, cancellationToken);
+
+    public Task<TraceQueryResult> CriticalPathAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string query,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        string[] traceIds,
+        TraceQueryOptionsBody options,
+        string? tenant = null,
+        CancellationToken cancellationToken = default) =>
+        RunOperationAsync(subscription, resourceGroup, workspace, query, startTime, endTime,
+            options, false, CriticalPathEndpointPath, string.Join(",", traceIds), tenant, cancellationToken);
+
+    public Task<TraceQueryResult> RunQueryAsync(
         string subscription,
         string resourceGroup,
         string workspace,
@@ -193,7 +223,23 @@ public sealed class MonitorTracesService(
         int maxResults,
         bool includeSpans,
         string? tenant = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        RunOperationAsync(subscription, resourceGroup, workspace, query, startTime, endTime,
+            new() { MaxResults = maxResults }, includeSpans, QueryEndpointPath, null, tenant, cancellationToken);
+
+    private async Task<TraceQueryResult> RunOperationAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string query,
+        DateTimeOffset startTime,
+        DateTimeOffset endTime,
+        TraceQueryOptionsBody options,
+        bool includeSpans,
+        string endpointPath,
+        string? traceId,
+        string? tenant,
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -204,10 +250,12 @@ public sealed class MonitorTracesService(
         var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
 
         string operationId = await SendSubmitAsync(
-            session, query, startTime, endTime, maxResults, cancellationToken).ConfigureAwait(false);
+            session, query, startTime, endTime, options, endpointPath, traceId, cancellationToken).ConfigureAwait(false);
 
+        // Compare samples traces, but returns attribute rows: a lower sample must not stop result paging.
+        var maxRows = endpointPath == CompareEndpointPath ? MaxResumeRows : options.MaxResults;
         return await PollForResultsAsync(
-            session, operationId, maxResults, maxResults, includeSpans, cancellationToken).ConfigureAwait(false);
+            session, operationId, maxRows, maxRows, includeSpans, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TraceQueryResult> ResumeQueryAsync(
@@ -306,10 +354,11 @@ public sealed class MonitorTracesService(
             return (cached.AmwResourceId, cached.Endpoint);
         }
 
-        ResourceGroupResource resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription, resourceGroup, tenant, cancellationToken).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
-        ResourceIdentifier workspaceId = new($"{resourceGroupResource.Id}/providers/{MonitorAccountResourceType}/{workspace}");
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken).ConfigureAwait(false);
+        // Construct the parent ID locally: fetching the RG would require permissions beyond the AMW.
+        ResourceIdentifier workspaceId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{MonitorAccountResourceType}/{workspace}");
         string amwResourceId = workspaceId.ToString();
         var armClient = await CreateArmClientWithApiVersionAsync(
             MonitorAccountResourceType, MonitorAccountApiVersion, tenant, cancellationToken).ConfigureAwait(false);
@@ -393,10 +442,12 @@ public sealed class MonitorTracesService(
         string query,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
-        int maxResults,
+        TraceQueryOptionsBody options,
+        string endpointPath,
+        string? traceId,
         CancellationToken cancellationToken)
     {
-        var submitUrl = $"{session.EndpointBase}/traces:query?preserveQueryFieldNames=true&api-version={TraceDataPlaneApiVersion}";
+        var submitUrl = $"{session.EndpointBase}/{endpointPath}?preserveQueryFieldNames=true&api-version={TraceDataPlaneApiVersion}";
 
         var body = new TraceQueryRequest
         {
@@ -408,7 +459,8 @@ public sealed class MonitorTracesService(
                 StartTime = FormatUtc(startTime),
                 EndTime = FormatUtc(endTime),
             },
-            Options = new TraceQueryOptionsBody { MaxResults = maxResults },
+            TraceId = traceId,
+            Options = options,
         };
 
         var content = RequestContent.Create(
@@ -587,9 +639,9 @@ public sealed class MonitorTracesService(
 
     private static string FormatUtc(DateTimeOffset value)
     {
-        // Trace data-plane strictly requires the trailing 'Z' form (e.g. 2026-07-24T18:03:00Z).
-        // DateTimeOffset.ToString("o") emits +00:00 offset instead, which fails validation.
-        return value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+        // Preserve fractional seconds so compare's embedded selection stays inside the outer window.
+        // The data plane requires a trailing 'Z', not DateTimeOffset's +00:00 offset.
+        return value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.FFFFFFFZ", System.Globalization.CultureInfo.InvariantCulture); // cspell:ignore FFFFFFFZ
     }
 
     private static string Truncate(string content, int max = 1024)

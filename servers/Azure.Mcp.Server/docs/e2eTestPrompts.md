@@ -42,16 +42,19 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 ## Azure Advisor
 
+Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a resolved scope and selection; reuse existing results when they already answer the question. Remediation examples retrieve guidance, not execute cleanup.
+
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
 | advisor_metadata_get | Get the Advisor metadata for recommendation type id \<recommendation-type-id> | none |
-| advisor_metadata_get | What does Advisor recommendation type \<recommendation-type-id> mean? | none |
+| advisor_metadata_get | What does Advisor recommendation type \<recommendation-type-id> mean? | investigation-required |
 | advisor_metadata_get | Show me the catalog details for Advisor recommendation type \<recommendation-type-id> | none |
 | advisor_metadata_get | Get the German (de) metadata for Advisor recommendation type \<recommendation-type-id> | none |
-| advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | none |
-| advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | none |
+| advisor_metadata_get | Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records | investigation-required |
+| advisor_metadata_get | When does Advisor recommendation type \<recommendation-type-id> retire? | investigation-required |
 | advisor_metadata_get | Use Advisor recommendation metadata get to explain what recommendation type \<recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records | none |
 | advisor_metadata_list | List the Advisor recommendation metadata catalog | none |
+| advisor_metadata_list | Retrieve the next page of the Advisor metadata catalog using the returned continuation token, keeping the language and filters unchanged | none |
 | advisor_metadata_list | List Advisor recommendation metadata types applicable to virtual machines before deployment; use the metadata catalog, not active recommendation records | none |
 | advisor_metadata_list | List high-impact Advisor metadata for microsoft.sql/servers/databases | none |
 | advisor_metadata_list | Show the German metadata catalog for Advisor recommendations | none |
@@ -60,6 +63,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_metadata_list | Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records | none |
 | advisor_metadata_list | List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records | none |
 | advisor_recommendation_list | List all recommendations in my subscription | none |
+| advisor_recommendation_list | Show the next page of the selected Advisor recommendation type using its continuation token and the same scope, filters, ordering and page size | none |
+| advisor_recommendation_list | List all resources for my selected idle-resource recommendation type, following continuation tokens without treating the 15-row display expansion as data retrieval | none |
 | advisor_recommendation_list | List active Advisor recommendations in my subscription | none |
 | advisor_recommendation_list | Show me Advisor recommendations in the subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor recommendation records affecting resource named my-web-app in subscription \<subscription> | none |
@@ -73,9 +78,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Show High Availability Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List Operational Excellence Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription \<subscription> | none |
+| advisor_recommendation_list | Return up to 10 individual medium-impact Azure Advisor Cost recommendation records in subscription \<subscription>; no priority ranking is needed | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records whose problem text mentions "right-size" in subscription \<subscription> | none |
 | advisor_recommendation_list | List individual active Azure Advisor Security recommendation records in subscription \<subscription> | none |
 | advisor_recommendation_list | List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription \<subscription> | none |
+| advisor_recommendation_list | List Advisor recommendations using subscriptions ["\<subscription>"], recommendation-type-ids ["1d70919c-1a4a-4f79-8300-bb576c291e9d"], and resource-types ["Microsoft.Compute/virtualMachines"]; do not use singular aliases | none |
 | advisor_recommendation_list | List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor ZoneResiliency recommendations in subscription \<subscription> | none |
 | advisor_recommendation_list | Show Advisor recommendations in the Reservations subcategory in subscription \<subscription> | none |
@@ -95,8 +102,9 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions "encryption" in subscription \<subscription> | none |
 | advisor_recommendation_list | Find individual active Azure Advisor recommendation records for resource \<resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
 | advisor_recommendation_list | Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription \<subscription> | none |
-| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | none |
+| advisor_recommendation_list | List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription \<subscription> | investigation-required |
 | advisor_recommendation_list | List Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_list | Show Advisor's unused-resource recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | List Cost Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show high-impact Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_list | Show High Availability Advisor recommendations for service group \<service-group> | none |
@@ -117,14 +125,31 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_list | List completed Azure Advisor recommendation records for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by criticality | none |
 | advisor_recommendation_list | List Azure Advisor Cost recommendation records and affected-resource details for recommendation type \<recommendation-type-id> in subscription \<subscription>, ordered by largest savings first | none |
 | advisor_recommendation_list | List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters | context-required |
-| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | none |
+| advisor_recommendation_list | Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type \<recommendation-type-id> in service group \<service-group>, ordered by criticality | investigation-required |
 | advisor_recommendation_list | Show affected resources for Advisor cost recommendation type \<recommendation-type-id> in subscription \<subscription>, largest savings first | none |
+| advisor_recommendation_list | List unused-resource recommendations across subscriptions \<subscription-1> and \<subscription-2> | none |
+| advisor_recommendation_list | List unused-resource recommendations in resource group \<resource-group> in subscription \<subscription> | none |
+| advisor_recommendation_list | Show unused Storage resources in subscription \<subscription> with at least USD 100 in annual potential savings | none |
+| advisor_recommendation_list | Show dismissed unused-resource recommendations in service group \<service-group> | none |
+| advisor_recommendation_list | List individual Advisor recommendations in subscription \<subscription> whose metadata service family is Analytics | none |
+| advisor_recommendation_prevalidate | Check whether unused resources for Advisor recommendation type \<recommendation-type-id> in service group \<service-group> are safe to delete | none |
+| advisor_recommendation_prevalidate | Check deletion safety for resource \<resource-id> under Advisor recommendation type \<recommendation-type-id> in subscription \<subscription>, requiring 45 days of inactivity | none |
+| advisor_recommendation_prevalidate | Are these selected unused resources safe to delete? | context-required |
+| advisor_recommendation_prevalidate | Validate all 125 unused resources for Advisor recommendation type \<recommendation-type-id> in subscription \<subscription>; do not stop at 25 or 100 | none |
+| advisor_recommendation_prevalidate | Recheck only the exact affected-resource ARM IDs in the previous result, without matching resource names | context-required |
 | advisor_recommendation_summary | Summarize the key themes from my Advisor recommendations | none |
+| advisor_recommendation_summary | What Azure resources am I paying for that are no longer being used? | clarification-required |
+| advisor_recommendation_summary | For service group Trey Research Shared Services, what Azure resources am I paying for that are no longer being used? | none |
+| advisor_recommendation_summary | How much could we save by deleting those unused resources? | context-required |
 | advisor_recommendation_summary | Show me the top 10 medium-impact Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show me the top 10 Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Show the top 5 Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show unused-resource savings for service group /providers/Microsoft.Management/serviceGroups/\<service-group-id> in tenant \<tenant> | none |
 | advisor_recommendation_summary | Show the prioritized Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | Show prioritized high-impact Cost Advisor recommendations for service group \<service-group> | none |
+| advisor_recommendation_summary | Show the top 3 unused-resource savings opportunities in service group \<service-group> | none |
+| advisor_recommendation_summary | Summarize Advisor recommendations in subscription \<subscription> whose metadata service family is AI + Machine Learning | none |
+| advisor_recommendation_summary | Prioritize Advisor recommendation types in service group \<service-group> whose metadata service family is Analytics | none |
 | advisor_recommendation_summary | Which Advisor recommendations should I fix first in subscription \<subscription>? | none |
 | advisor_recommendation_summary | Show the most critical Advisor recommendations in subscription \<subscription> | none |
 | advisor_recommendation_summary | Which Cost Advisor recommendations should I address first in subscription \<subscription>? | none |
@@ -136,6 +161,13 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Give me an executive summary of Advisor recommendations for service group \<service-group> | none |
 | advisor_recommendation_summary | What are the main themes across my active Advisor recommendations? | none |
 | advisor_recommendation_summary | How many active Advisor recommendations do I have in each category? | none |
+| advisor_recommendation_summary | How much could we save by deleting unused resources in subscription \<subscription>? | none |
+| advisor_recommendation_summary | How much waste has accumulated since unused resources were flagged in subscription \<subscription>? | none |
+| advisor_recommendation_summary | How much have we saved after cleaning up unused resources in service group \<service-group>? | clarification-required |
+| advisor_recommendation_summary | Summarize completed Advisor recommendations by category in subscription \<subscription> | none |
+| advisor_recommendation_summary | Show estimated savings from unused resources across subscriptions \<subscription-1> and \<subscription-2> | none |
+| advisor_recommendation_summary | Report savings from unused resources deleted in July 2026 in subscription \<subscription>, as of August 1, 2026 UTC | none |
+| advisor_recommendation_list | Show Advisor recommendations for resource types Microsoft.Compute/virtualMachines and Microsoft.Web/serverfarms in subscription \<subscription> | none |
 | advisor_recommendation_summary | How many active Advisor recommendations are in each category for service group \<service-group>? | none |
 | advisor_recommendation_summary | Break down my Advisor recommendations by impact | none |
 | advisor_recommendation_summary | Break down Advisor recommendations in service group \<service-group> by impact | none |
@@ -161,38 +193,67 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | advisor_recommendation_summary | Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions "encryption"; do not list individual records | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in subscription \<subscription> | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> as completed in service group \<service-group> | none |
+| advisor_recommendation_update | After confirmation, postpone Advisor recommendation \<recommendation-id> in Service Group "Trey Research Shared Services" until \<future-date-time> | none |
 | advisor_recommendation_update | Change Advisor recommendation \<recommendation-id> state to Completed for service group \<service-group> | none |
 | advisor_recommendation_update | Mark Advisor recommendation \<recommendation-id> done for service group \<service-group> | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in subscription \<subscription> | none |
+| advisor_recommendation_update | Dismiss unused-resource recommendation \<recommendation-id> in subscription \<subscription> because we are keeping the resource | none |
 | advisor_recommendation_update | Dismiss Advisor recommendation \<recommendation-id> because the risk is acceptable in service group \<service-group> | none |
 | advisor_recommendation_update | Ignore Advisor recommendation \<recommendation-id> because the risk is acceptable for service group \<service-group> | none |
 | advisor_recommendation_update | Set Advisor recommendation \<recommendation-id> status to Dismissed in subscription \<subscription> | none |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
+| advisor_recommendation_update | Postpone unused-resource recommendations \<recommendation-id-1> and \<recommendation-id-2> in service group \<service-group> until \<future-date-time-with-offset> | none |
+| advisor_recommendation_update | Dismiss unused-resource recommendations \<recommendation-id-1> and \<recommendation-id-2> in subscription \<subscription> because we use an alternative solution | none |
+| advisor_recommendation_update | Mark unused-resource recommendation \<recommendation-id> as completed in subscription \<subscription> after cleanup | none |
+| advisor_recommendation_update | Reactivate unused-resource recommendation \<recommendation-id> in service group \<service-group> | none |
+| advisor_recommendation_update | Postpone those unused-resource recommendations until \<future-date-time-with-offset> | context-required |
 | advisor_recommendation_update | Postpone Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in service group \<service-group> | none |
+| advisor_recommendation_update | Postpone these selected Advisor recommendation IDs \<id1>, \<id2> together in subscription \<subscription> until \<future-date-time-with-offset>, with one batch approval | context-required |
+| advisor_recommendation_update | Dismiss selected Advisor recommendation IDs \<id1>, \<id2> in service group \<service-group> because the risk is acceptable, and report each result | context-required |
 | advisor_recommendation_update | Snooze Advisor recommendation \<recommendation-id> until \<future-date-time-with-offset> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reactivate Advisor recommendation \<recommendation-id> in service group \<service-group> | none |
 | advisor_recommendation_update | Reopen completed Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
 | advisor_recommendation_update | Reset Advisor recommendation \<recommendation-id> to New in service group \<service-group> | none |
 | advisor_recommendation_update | Update the customer state of Advisor recommendation \<recommendation-id> in subscription \<subscription> | none |
+| advisor_insight_list | Show pre-aggregated Azure Advisor insight KPIs for service group \<service-group> | none |
+| advisor_insight_list | Show pre-aggregated Azure Advisor insight KPIs for subscription \<subscription> | none |
+| advisor_insight_list | List Azure Advisor insights across all accessible Service Groups and subscriptions without specifying a scope | none |
+| advisor_insight_list | Show IdleResources insights for service group \<service-group>, including idle resource counts and potential savings in USD | none |
+| advisor_insight_list | How many idle resources exist in service group \<service-group>, and what is their potential savings amount in USD? | none |
+| advisor_insight_list | Show ZonalResiliency insight coverage percentages for service group \<service-group> | none |
+| advisor_insight_list | Get the ServiceRetirement insight for service group \<service-group>, including Day 1 baseline exposure, current remaining exposure, and exposure reduction percentage | none |
+| advisor_insight_list | Get the ServiceRetirement insight for subscription \<subscription>, including Day 1 baseline exposure, current remaining exposure, and exposure reduction percentage | none |
+| advisor_insight_list | How much has subscription \<subscription>'s service retirement exposure reduced or increased since its Day 1 baseline count? | none |
+| advisor_insight_list | How much has service group \<service-group>'s service retirement exposure reduced or increased since its Day 1 baseline count? | none |
+| advisor_insight_list | Compare accessible subscriptions by current remaining service retirement exposure using pre-aggregated Advisor insights | none |
+| advisor_insight_list | Compare accessible Service Groups by current remaining service retirement backlog using pre-aggregated Advisor insights | none |
+| advisor_insight_list | Which accessible subscriptions or Service Groups have reached 100 percent service retirement exposure reduction with zero remaining exposure? | none |
+| advisor_insight_list | List Azure Advisor insights with the default limit of 50 results | none |
+| advisor_insight_list | List Azure Advisor insights with the maximum limit of 500 results | none |
+| advisor_insight_list | Show Advisor insights for subscription \<subscription>, including each insight's name, domain, scope type and ID, last updated time, and typed KPI values with units for USD amounts | none |
+| advisor_insight_list | Show pre-aggregated Advisor insight KPIs for service group \<service-group>, not individual resources, recommendation records, or recommendation summaries | none |
 | advisor_remediation_get | Get the remediation package for Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Show cleanup steps and scripts for unused-resource recommendation type \<recommendation-type-id> | investigation-required |
+| advisor_remediation_get | Show cleanup guidance for those unused disks | context-required |
 | advisor_remediation_get | Fix or remediate the Advisor recommendation type id <recommendation-type-id>? | none |
-| advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Show me the remediation steps for Advisor recommendation type id \<recommendation-type-id> | investigation-required |
 | advisor_remediation_get | Show me the remediation actions for recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Give me the CLI and PowerShell scripts to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its ARM template and Bicep remediation artifacts; do not apply or list recommendations | none |
 | advisor_remediation_get | Use Advisor remediation get for recommendation type id \<recommendation-type-id> and return its Terraform remediation artifact; do not apply or list recommendations | none |
-| advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | none |
+| advisor_remediation_get | Resolve or remediate Advisor recommendation type id <recommendation-type-id>? | investigation-required |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its step-by-step remediation instructions | none |
 | advisor_remediation_get | Give me a ready-to-run script to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the executable automation artifacts to remediate recommendation type id \<recommendation-type-id> | none |
 | advisor_remediation_get | Get the deployment artifacts to fix Advisor recommendation type id \<recommendation-type-id> | none |
-| advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | none |
+| advisor_remediation_get | Is remediating recommendation type id \<recommendation-type-id> destructive or reversible? | investigation-required |
 | advisor_remediation_get | Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks | none |
-| advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | none |
+| advisor_remediation_get | Get the Azure CLI commands to remediate recommendation type id \<recommendation-type-id> | investigation-required |
 | advisor_servicegroupintelligence_get | Give me the status of my service group commerce | none |
 | advisor_servicegroupintelligence_get | How is the Advisor status of service group commerce calculated? | none |
 | advisor_servicegroupintelligence_get | Give me the status of all service groups | none |
+| advisor_servicegroupintelligence_get | Retrieve the next page of Service Group status with the returned continuation token, keeping the tenant, filters and page size unchanged | none |
 | advisor_servicegroupintelligence_get | Which mission critical service groups need attention? | none |
 | advisor_servicegroupintelligence_get | Which service groups are at risk? | none |
 | advisor_servicegroupintelligence_get | Show me the tier 0 service groups that are in critical status | none |
@@ -298,7 +359,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> | none |
 | appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> | none |
 | appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> | none |
-| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> | none |
+| appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> | investigation-required |
 | appservice_webapp_diagnostic_diagnose | Use Azure App Service diagnostics to diagnose web app \<webapp> in resource group <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval \<interval> | investigation-required |
 | appservice_webapp_diagnostic_list | List the Azure App Service diagnostic detectors for web app \<webapp> in resource group <resource_group> | investigation-required |
 | appservice_webapp_change-state | Start the web app \<app> in resource group <resource_group> | none |
@@ -444,6 +505,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | azurebackup_vault_get | Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA | investigation-required |
 | azurebackup_vault_get | Get vault <vault_name> in resource group <resource_group> and include all extended posture fields | investigation-required |
+| azurebackup_vault_get | Get details of the backup vault with resource ID <vault_resource_id> | investigation-required |
 | azurebackup_vault_update | Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete | investigation-required |
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
 | azurebackup_vault_update | Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned | investigation-required |
@@ -662,7 +724,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 
 | Tool Name | Test Prompt | Interaction |
 |:----------|:------------|:------------|
-| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | none |
+| optimization_recommendation_list | Show me the top cost-saving recommendations for my subscription | investigation-required |
 | optimization_recommendation_list | What are my cost optimization recommendations? | none |
 | optimization_recommendation_list | Show cost optimization recommendations across all my accessible subscriptions | none |
 | optimization_recommendation_alternatives | Show me alternative resize options for the VM <resource_id> | none |
@@ -751,6 +813,10 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | deviceprovisioning_service_get | Get details for Device Provisioning Service <service_name> in resource group <resource_group_name> | none |
 | deviceprovisioning_service_get | Show the configuration of DPS instance <service_name> in subscription <subscription_id> | none |
 | deviceprovisioning_service_get | Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name> | none |
+| deviceprovisioning_onboarding_validate | Validate the existing DPS individual enrollment <registration_id> in service <service_name> and explain blockers or unverified conditions | none |
+| deviceprovisioning_onboarding_validate | Check whether enrollment group <enrollment_group_id> is consistently configured with the linked IoT Hubs in DPS <service_name> | none |
+| deviceprovisioning_onboarding_validate | Compare this public device certificate chain with the selected DPS enrollment and explain compatibility limitations | none |
+| deviceprovisioning_onboarding_validate | Validate these 10 X.509 devices against enrollment group <enrollment_group_id> in DPS <service_name> before production rollout | context-required |
 
 ## Azure Device Registry
 
@@ -820,7 +886,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | fileshares_fileshare_get | Get details of file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | Show me the file share <file_share_name> in resource group <resource_group_name> | none |
 | fileshares_fileshare_get | What file shares exist in resource group <resource_group_name>? | none |
-| fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | none |
+| fileshares_limits | Get the file share limits for subscription \<subscription> in location \<location> | investigation-required |
 | fileshares_limits | Get the Azure Files share service limits in my subscription for location \<location> | none |
 | fileshares_limits | Use Azure File Shares service limits to show provisioning constants for location \<location>; do not use Azure resource quota usage | none |
 | fileshares_fileshare_check-name-availability | Check if file share name <file_share_name> is available in \<location> in subscription \<subscription> | none |
@@ -1129,6 +1195,14 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 |:----------|:------------|:------------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> | none |
 | monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> | none |
+| monitor_healthmodels_inspect | Get the signal history of entity <entity_name> in health model <health_model_name> for the last day | none |
+| monitor_healthmodels_inspect | List the entities of health model <health_model_name> and their health history | none |
+| monitor_healthmodels_inspect | Show the dependencies of health model <health_model_name>: which entities roll up into which | none |
+| monitor_healthmodels_inspect | Show what depends on entity <entity_name> in health model <health_model_name> | none |
+| monitor_healthmodels_inspect | What are the degraded and unhealthy thresholds of the signals on entity <entity_name> in health model <health_model_name>? | none |
+| monitor_healthmodels_inspect | Which entities of health model <health_model_name> are not healthy? | none |
+| monitor_healthmodels_inspect | Why is health model <health_model_name> degraded? Trace it down to the signals that drive it | none |
+| monitor_healthmodels_inspect | Why was health model <health_model_name> degraded at <time>? Trace it down to the signals that drove it then | none |
 | monitor_healthmodels_list | List the Azure Monitor health models in my subscription | none |
 | monitor_healthmodels_list | What health models are in resource group <resource_group>? | none |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> | investigation-required |
@@ -1142,7 +1216,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_instrumentation_orchestrator-next | Continue Azure Monitor instrumentation onboarding by returning the next orchestrator action for session <session_id> after completion note <completion_note> | none |
 | monitor_instrumentation_orchestrator-start | Start Azure Monitor instrumentation orchestration for workspace <workspace_path> | none |
 | monitor_instrumentation_orchestrator-start | Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step | none |
-| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | none |
+| monitor_instrumentation_orchestrator-start | Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one | investigation-required |
 | monitor_instrumentation_send-brownfield-analysis | Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested | investigation-required |
 | monitor_instrumentation_send-brownfield-analysis | Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id> | none |
 | monitor_instrumentation_send-brownfield-analysis | Send completed brownfield telemetry analysis <findings_json> to Azure Monitor instrumentation onboarding session <session_id> | none |
@@ -1172,14 +1246,20 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> | none |
 | monitor_traces_account_list | List the distributed trace accounts in my subscription | none |
 | monitor_traces_account_list | Show me the Azure Monitor Workspaces enabled for Trace Store | none |
-| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | none |
+| monitor_traces_account_list | Which trace stores do I have in resource group <resource_group>? | investigation-required |
 | monitor_traces_field_list | Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_field_list | What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>? | none |
+| monitor_traces_query_analyze-critical-path | Analyze the critical path for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time> | none |
+| monitor_traces_query_analyze-critical-path | Which services dominate end-to-end latency on the critical path of trace IDs <trace_ids> in Azure Monitor Workspace Trace Store <workspace_name> in resource group <resource_group> from <start_time> to <end_time>? | none |
+| monitor_traces_query_analyze-critical-path | Show p50, p95, and p99 critical-path latency grouped by service and operation for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time> | none |
+| monitor_traces_query_analyze-top-attributes | Find top attributes distinguishing traces where duration_nano > <threshold> during <selection_start_time> to <selection_end_time> from the pool of traces in Trace Store workspace <workspace_name> in resource group <resource_group> from <overall_start_time> to <overall_end_time> | none |
+| monitor_traces_query_analyze-top-attributes | What attributes distinguish traces where error_rate > <threshold> during <selection_start_time> to <selection_end_time> from the baseline in Trace Store workspace <workspace_name> in resource group <resource_group> over <overall_start_time> to <overall_end_time>? | none |
+| monitor_traces_query_analyze-top-attributes | Which attributes distinguish traces with more than <span_count> spans during <selection_start_time> to <selection_end_time> from the overall pool in Trace Store workspace <workspace_name> in resource group <resource_group> during <overall_start_time> to <overall_end_time>? Compare up to 10000 traces | none |
 | monitor_traces_query_cancel | Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_resume | Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_resume | Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query | none |
 | monitor_traces_query_resume | Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group> | none |
-| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
+| monitor_traces_query_run | Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | investigation-required |
 | monitor_traces_query_run | Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
 | monitor_traces_query_run | Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration> | none |
 | monitor_traces_query_run | Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group> | none |
@@ -1276,7 +1356,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_check-resync-readiness | Run a resync readiness check for resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location> | none |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations> | none |
-| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | none |
+| resiliency_drill_validate-for-execution | Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations | investigation-required |
 | resiliency_drill_validate-for-execution | Preflight resilience drill <drill_name> in service group <service_group> using default validation from source location <source_location> | none |
 | resiliency_drill_resource_add-or-update | Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes | none |
 | resiliency_drill_resource_add-or-update | Update or exclude the resources of resilience drill <drill_name> in service group <service_group> | none |
@@ -1292,7 +1372,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_drill_run_failover | Fail over drill run <drill_run_name> of drill <drill_name> in service group <service_group> from <source_location> with user consent allowed even though the recovery plan is not Ready | none |
 | resiliency_drill_run_resume | Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover | none |
 | resiliency_drill_run_mark-complete | Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete | none |
-| resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | none |
+| resiliency_drill_run_mark-complete | Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed | investigation-required |
 | resiliency_drill_run_reprotect | Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> | none |
 | resiliency_drill_run_reprotect | Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection | none |
@@ -1317,12 +1397,12 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_goal_assignment_update-resources | Exclude resource <resource_arm_id> from zonal goal participation in assignment <goal_assignment_name> in service group <service_group> without deleting the resource | none |
 | resiliency_goal_assignment_update-resources | Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience | none |
 | resiliency_goal_assignment_update-resources | In resilience goal assignment <goal_assignment_name> in service group <service_group>, confirm that I approve the ZonePinnedVmWithZrsDisk zonal resilience solution for goal resource <resource_arm_id> | none |
-| resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | none |
+| resiliency_goal_resource_get | List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group> | investigation-required |
 | resiliency_goal_resource_get | Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation | none |
 | resiliency_recoveryjob_get | List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_get | Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_resource_get | List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
-| resiliency_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryjob_resource_get | Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group> | investigation-required |
 | resiliency_recoveryjob_resume | Resume paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> with description \<description> | none |
 | resiliency_recoveryjob_resume | Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_recoveryjob_retry | Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
@@ -1370,7 +1450,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliency_recoveryplan_resource_update | Keep recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but exclude it from recovery operations | none |
 | resiliency_recoveryplan_resource_update | Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources | none |
 | resiliency_recoveryplan_resource_update | Include virtual machine recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> using CrossZoneVMRecovery with target zone <target_zone> | none |
-| resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | none |
+| resiliency_recoveryplan_resource_get | List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group> | investigation-required |
 | resiliency_recoveryplan_resource_get | Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group> | none |
 | resiliency_usageplan_create | Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name> | none |
 | resiliency_usageplan_create | Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name> | none |
@@ -1415,11 +1495,11 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | resiliencyagent_guidance_get | How should I begin improving the resiliency of a new Azure application? | none |
 | resiliencyagent_file_attach | Prepare `C:\workspace\architecture.md` as a local attachment and return an attachment ID; do not assess the architecture yet | context-required |
 | resiliencyagent_file_attach | Prepare `C:\workspace\infra\main.bicep` for review | context-required |
-| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | none |
+| resiliencyagent_architecture_assess | Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency | context-required |
 | resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
 | resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
-| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | none |
-| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | none |
+| resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | context-required |
+| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | context-required |
 | resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
 | resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
 | resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
@@ -1739,7 +1819,7 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 | wellarchitectedframework_serviceguide_get | List the Azure services available in the Well-Architected Framework service-guide catalog | none |
 | wellarchitectedframework_serviceguide_get | Get Well-Architected Framework guidance for App Service | none |
 | wellarchitectedframework_serviceguide_get | What's the waf guidance for a VM? | none |
-| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | none |
+| wellarchitectedframework_serviceguide_get | What's the architectural guidance for Azure Cosmos DB | investigation-required |
 
 ## Azure Workbooks
 

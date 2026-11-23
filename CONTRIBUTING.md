@@ -245,6 +245,68 @@ Requirements:
 - Mock external service calls
 - Test argument validation
 
+Azure tool tests build the Azure MCP server as a process dependency, without copying
+its full runtime into each test output. Build the test project normally, then use
+`McpTestUtilities.GetAzMcpExecutablePath()` when launching the server. MSBuild writes
+`AzureMcpServer.path` beside the test executable with the relative path to the
+referenced server's evaluated output directory. Do not copy the server manually
+or assume a fixed configuration, framework, or runtime identifier.
+
+Azure server tests load server types in-process. Their runtime dependencies live in
+`.work/test-runtime/Azure.Mcp.Server/<configuration>/<framework>/`, with an additional
+runtime identifier directory for RID-specific builds. Intermediate files stay in
+the project's `obj` directory. Production server build and publish paths are
+unchanged. Explicit project output overrides still take precedence over this default.
+Azure core tests and performance benchmarks also load server types in-process but
+keep their own output directories. Do not add other projects to this runtime
+directory: `Test-Code.ps1` can run test projects concurrently while coverage
+instrumentation rewrites the assemblies in a test's output directory in place, and
+the performance pipeline and scripts expect the benchmarks under their project's
+`bin` directory.
+Run tests through `dotnet test --project <test-project>` or `Test-Code.ps1` rather
+than assuming that every test executable lives under its project's `bin` directory.
+
+Cleaning the server tests removes their own files, not dependencies or content in
+that runtime directory. Dependency copies remain as a
+development cache, like the SDK's shared assembly copies. To reclaim the entire
+runtime directory, stop its test processes before removing it, then rebuild the
+projects you need. A normal project clean can also clean referenced projects,
+including the canonical server; rebuild before using `--no-build` after cleaning
+dependencies.
+
+#### Measuring build output
+
+After the build and tests have stopped writing output, capture a size report:
+
+```powershell
+.\eng\scripts\Measure-BuildOutput.ps1 -Profile Debug -OutputPath .work\build-output-size.json
+```
+
+`-Profile` labels the snapshot; it does not build or filter configurations. The
+report includes all recognized output, including `obj`, the shared test runtime,
+publish and package staging, final archives, and exported container images. Source
+dependency caches and links are excluded; dependencies inside package staging and
+publish output are counted. The script does not delete files or clear caches.
+Use `-AdditionalOutputPath` for other output directories within the measured root.
+
+Compare identical build profiles and record the SDK, host, commit, and commands.
+Category totals are disjoint, but recursive directory totals overlap. Duplicate
+hashes identify an investigation opportunity, not permission to remove a runtime
+dependency. Compare multiple snapshots saved outside the measured root so earlier
+reports do not count as additional output. Docker's external image store and
+physical disk allocation are not included.
+
+Successful CI build jobs retain separate `size-checkout.json` and
+`size-artifacts.json` snapshots in their build artifact. These are report-only
+baselines, not enforced size budgets. CI hashes duplicate candidates of at least
+10 MiB to bound reporting cost; the local default is 1 MiB. Compare reports with
+the same threshold and profile. Signing and final packaging remain separate stages
+and need their own measurements before changing delivery payloads.
+
+`Build-Local.ps1 -VerifyNpx` verifies generated wrappers with a fresh temporary
+cache per package, then removes only that cache. It does not clear or modify the
+caller's shared npm cache.
+
 #### Cancellation plumbing
 
 To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
@@ -668,6 +730,7 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - Use descriptive variable and method names
 - Follow the exact file structure and naming conventions
 - Use proper error handling patterns
+- Throw specific exception types (CA2201 is enforced for production code). Preserve Azure SDK, authentication, HTTP, and cancellation exceptions so command handlers retain their status codes and diagnostics.
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
 

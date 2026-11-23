@@ -1,9 +1,6 @@
 parameters:
 - name: ServerName
   type: string
-- name: NuGetFeedIndexUrl
-  type: string
-  default: 'https://api.nuget.org/v3/index.json'
 - name: DependsOn
   type: object
 - name: PackageMCPB
@@ -43,16 +40,6 @@ jobs:
           -ServerJsonPath '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
           -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
 
-  - task: Powershell@2
-    displayName: 'Verify Nuget package was published'
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-NuGetRelease.ps1
-      arguments: >
-        -ServerName '${{ parameters.ServerName }}'
-        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
-        -NuGetFeedIndexUrl '${{ parameters.NuGetFeedIndexUrl }}'
-
   - pwsh: |
       $serverJsonPath = '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
       Write-Host "Contents of server.json before staging:"
@@ -71,8 +58,8 @@ jobs:
       path: $(Build.ArtifactStagingDirectory)/server-json
       artifact: server.json_${{ parameters.ServerName }}
   
-  - task: ESRPRelease@12
-    displayName: Publish server.json to MCP Repository
+  - task: EsrpRelease@14
+    displayName: Publish to the Official MCP Registry
     inputs:
       ConnectedServiceName: 'Azure SDK PME Managed Identity'
       ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
@@ -85,7 +72,8 @@ jobs:
       McpRegistryType: 'Official'
       ContentSource: 'Folder'
       FolderLocation: '$(Build.ArtifactStagingDirectory)/server-json'
+      WaitForReleaseCompletion: true
       Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
       ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-      MainPublisher: 'ESRPRELPACMANTEST'
+      MainPublisher: 'ESRPRELPACMAN'

@@ -35,7 +35,7 @@ public class ApplicationInsightsService(IAzureService azureService, IProfilerDat
         List<JsonNode> results = [];
         var components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, cancellationToken).ConfigureAwait(false);
 
-        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), cancellationToken: cancellationToken).ConfigureAwait(false);
+        var insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id), tenant: tenant, cancellationToken: cancellationToken).ConfigureAwait(false);
         results.AddRange(insights);
 
         // Return all results for this resource group (outer method enforces global max)
@@ -56,7 +56,7 @@ public class ApplicationInsightsService(IAzureService azureService, IProfilerDat
 
         // Otherwise, query by resource group
         var rgResource = await AzureService.GetResourceGroupResource(subscription, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
+            ?? throw new KeyNotFoundException($"Resource group {resourceGroup} not found in subscription {subscription}");
         return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 

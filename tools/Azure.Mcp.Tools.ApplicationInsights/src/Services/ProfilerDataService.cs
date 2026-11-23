@@ -28,7 +28,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
 
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, string? tenant, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(resourceIds);
 
@@ -40,14 +40,15 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
         List<Guid> appIds = [];
         foreach (ResourceIdentifier resourceId in resourceIds)
         {
-            appIds.Add(await ResolveAppIdAsync(resourceId, cancellationToken).ConfigureAwait(false));
+            appIds.Add(await ResolveAppIdAsync(resourceId, tenant, cancellationToken).ConfigureAwait(false));
         }
 
-        return await GetInsightsAsync(appIds, startDateTimeUtc, endDateTimeUtc, cancellationToken).ConfigureAwait(false);
+        return await GetInsightsAsync(appIds, tenant, startDateTimeUtc, endDateTimeUtc, cancellationToken).ConfigureAwait(false);
     }
 
     private Task<IEnumerable<JsonNode>> GetInsightsAsync(
         IEnumerable<Guid> appIds,
+        string? tenant,
         DateTime? startDateTimeUtc = null,
         DateTime? endDateTimeUtc = null,
         CancellationToken cancellationToken = default)
@@ -59,10 +60,10 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
             throw new ArgumentException($"'{nameof(appIds)}' cannot be empty.", nameof(appIds));
         }
 
-        return GetInsightsImpAsync(appIds, startDateTimeUtc, endDateTimeUtc, cancellationToken);
+        return GetInsightsImpAsync(appIds, tenant, startDateTimeUtc, endDateTimeUtc, cancellationToken);
     }
 
-    private async Task<IEnumerable<JsonNode>> GetInsightsImpAsync(IEnumerable<Guid> appIds, DateTime? startDateTimeUtc, DateTime? endDateTimeUtc, CancellationToken cancellationToken)
+    private async Task<IEnumerable<JsonNode>> GetInsightsImpAsync(IEnumerable<Guid> appIds, string? tenant, DateTime? startDateTimeUtc, DateTime? endDateTimeUtc, CancellationToken cancellationToken)
     {
         endDateTimeUtc ??= DateTime.UtcNow;
         startDateTimeUtc ??= endDateTimeUtc.Value.AddDays(-1);
@@ -80,7 +81,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
         };
 
         using JsonContent appsPostBody = JsonContent.Create(bulkAppsPostBody, ApplicationInsightsJsonContext.Default.BulkAppsPostBody, mediaType: MediaTypeHeaderValue.Parse("application/json"));
-        using HttpResponseMessage response = await PostAsync(path, queries, apiVersion: "2025-01-07-preview", clientRequestId: null, appsPostBody, additionalHeaders: null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage response = await PostAsync(path, queries, apiVersion: "2025-01-07-preview", clientRequestId: null, appsPostBody, additionalHeaders: null, tenant: tenant, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         return await JsonSerializer.DeserializeAsync(
             await response.Content.ReadAsStreamAsync(cancellationToken),
@@ -88,7 +89,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
             cancellationToken).ConfigureAwait(false) ?? [];
     }
 
-    private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
+    private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, string? tenant, CancellationToken cancellationToken)
     {
         UriBuilder uriBuilder = new(GetDiagnosticServiceEndpoint())
         {
@@ -115,7 +116,7 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
-        TokenCredential tokenCredential = await GetCredential(null, cancellationToken).ConfigureAwait(false);
+        TokenCredential tokenCredential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
 
         request.Headers.Authorization = new("Bearer", accessToken.Token);
@@ -151,17 +152,18 @@ public class ProfilerDataService(ILogger<ProfilerDataService> logger, IAzureServ
     /// <param name="clientRequestId">Optional client request ID.</param>
     /// <param name="httpContent">The content of the incoming request.</param>
     /// <param name="additionalHeaders">Additional headers to be added to the request</param>
+    /// <param name="tenant">Optional tenant ID or display name used to authenticate the request.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, CancellationToken cancellationToken)
+    internal async ValueTask<HttpResponseMessage> PostAsync(string path, IDictionary<string, string>? queries, string apiVersion, string? clientRequestId, HttpContent? httpContent, IDictionary<string, IEnumerable<string>>? additionalHeaders, string? tenant, CancellationToken cancellationToken)
     {
-        using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, cancellationToken);
+        using HttpRequestMessage request = await CreateRequestAsync(HttpMethod.Post, path, queries, apiVersion, clientRequestId, httpContent, additionalHeaders, tenant, cancellationToken);
         var client = AzureService.GetClient();
         return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, CancellationToken cancellationToken, string? tenantId = null)
+    private async Task<Guid> ResolveAppIdAsync(ResourceIdentifier resourceId, string? tenant, CancellationToken cancellationToken)
     {
-        ArmClient armClient = await CreateArmClientAsync(tenantId).ConfigureAwait(false);
+        ArmClient armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         ApplicationInsightsComponentResource applicationInsightsComponentResource = armClient.GetApplicationInsightsComponentResource(resourceId);
 

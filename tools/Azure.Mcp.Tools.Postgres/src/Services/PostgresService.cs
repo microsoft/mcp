@@ -297,9 +297,8 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         else
         {
             // List Flexible Servers scoped to the given resource group
-            var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken);
-            if (rg == null)
-                throw new Exception($"Resource group '{resourceGroup}' not found.");
+            var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, cancellationToken: cancellationToken)
+                ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
             await foreach (var name in ListResourceGroupServerNamesAsync(rg, cancellationToken))
                 serverList.Add(name);
         }
@@ -332,7 +331,7 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         CancellationToken cancellationToken = default)
     {
         var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
         var pgServerData = pgServer.Value.Data;
@@ -355,14 +354,14 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         CancellationToken cancellationToken = default)
     {
         var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
         if (configResponse?.Value?.Data == null)
         {
-            throw new Exception($"Parameter '{param}' not found.");
+            throw new KeyNotFoundException($"Parameter '{param}' not found.");
         }
         return configResponse.Value.Data.Value;
     }
@@ -377,14 +376,14 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         CancellationToken cancellationToken = default)
     {
         var rg = await AzureService.GetResourceGroupResource(subscriptionId, resourceGroup, tenant, cancellationToken: cancellationToken)
-            ?? throw new Exception($"Resource group '{resourceGroup}' not found.");
+            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found.");
 
         var pgServer = await rg.GetPostgreSqlFlexibleServerAsync(server, cancellationToken);
 
         var configResponse = await pgServer.Value.GetPostgreSqlFlexibleServerConfigurationAsync(param, cancellationToken);
         if (configResponse?.Value?.Data == null)
         {
-            throw new Exception($"Parameter '{param}' not found.");
+            throw new KeyNotFoundException($"Parameter '{param}' not found.");
         }
 
         var configData = new PostgreSqlFlexibleServerConfigurationData
@@ -401,7 +400,7 @@ public class PostgresService(IAzureService azureService, IEntraTokenProvider ent
         }
         else
         {
-            throw new Exception($"Failed to update parameter '{param}' to value '{value}'.");
+            throw new InvalidOperationException($"Failed to update parameter '{param}' to value '{value}'.");
         }
     }
 

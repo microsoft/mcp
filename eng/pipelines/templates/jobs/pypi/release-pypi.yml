@@ -37,7 +37,7 @@ jobs:
             Get-ChildItem $esrpDirectory
           displayName: Isolate files for ESRP Publish
 
-        - task: EsrpRelease@9
+        - task: EsrpRelease@14
           displayName: 'Publish to ESRP'
           inputs:
             ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -52,7 +52,7 @@ jobs:
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-            MainPublisher: 'ESRPRELPACMANTEST'
+            MainPublisher: 'ESRPRELPACMAN'
 
         - ${{ if eq(parameters.IncludeNative, true) }}:
           - pwsh: |
@@ -64,7 +64,7 @@ jobs:
               Get-ChildItem $esrpDirectory
             displayName: Isolate native files for ESRP Publish
 
-          - task: EsrpRelease@9
+          - task: EsrpRelease@14
             displayName: 'Publish native package to ESRP'
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'
@@ -79,4 +79,4 @@ jobs:
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
-              MainPublisher: 'ESRPRELPACMANTEST'
+              MainPublisher: 'ESRPRELPACMAN'

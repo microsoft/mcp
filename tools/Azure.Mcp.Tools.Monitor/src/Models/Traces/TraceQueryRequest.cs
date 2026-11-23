@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
+
 namespace Azure.Mcp.Tools.Monitor.Models.Traces;
 
 /// <summary>
-/// Wire body for the trace data-plane submit endpoint
-/// (POST {amwEndpoint}/traces:query?api-version=...).
+/// Wire body for trace query and analysis submissions.
 /// </summary>
 internal sealed class TraceQueryRequest
 {
@@ -18,4 +19,7 @@ internal sealed class TraceQueryRequest
     public required TraceQueryTimeRange TimeRange { get; init; }
 
     public required TraceQueryOptionsBody Options { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? TraceId { get; init; }
 }

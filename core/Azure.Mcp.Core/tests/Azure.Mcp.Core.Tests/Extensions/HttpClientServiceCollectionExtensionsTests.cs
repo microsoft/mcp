@@ -61,32 +61,65 @@ public class HttpClientServiceCollectionExtensionsTests
         Assert.Equal("CustomAgent", options.Value.DefaultUserAgent);
     }
 
-    [Fact]
-    public void AddHttpClientServices_ReadsEnvironmentVariables()
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void AddHttpClientServices_ReadsEnvironmentVariables(bool lowercase, bool uppercase)
     {
-        // Arrange
-        var services = new ServiceCollection();
+        Assert.SkipWhen(lowercase && uppercase && OperatingSystem.IsWindows(),
+            "Windows environment variable names are case-insensitive.");
 
-        // Set environment variables
-        Environment.SetEnvironmentVariable("HTTP_PROXY", "http://test.proxy:8080");
-        Environment.SetEnvironmentVariable("NO_PROXY", "localhost");
+        (string Name, string UppercaseValue, string LowercaseValue)[] variables =
+        [
+            ("ALL_PROXY", "http://upper.all.proxy:8080", "http://lower.all.proxy:8080"),
+            ("HTTP_PROXY", "http://upper.http.proxy:8080", "http://lower.http.proxy:8080"),
+            ("HTTPS_PROXY", "http://upper.https.proxy:8080", "http://lower.https.proxy:8080"),
+            ("NO_PROXY", "localhost,upper.internal", "localhost,lower.internal")
+        ];
+        var savedVariables = variables
+            .SelectMany(static variable => new[] { variable.Name, variable.Name.ToLowerInvariant() })
+            .Distinct(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)
+            .Select(static name => (Name: name, Value: Environment.GetEnvironmentVariable(name)))
+            .ToArray();
 
         try
         {
-            // Act
-            services.AddHttpClientServices();
-            var serviceProvider = services.BuildServiceProvider();
+            // Inherited lowercase proxy settings take precedence over uppercase test values on Unix.
+            foreach (var (name, _) in savedVariables)
+            {
+                Environment.SetEnvironmentVariable(name, null);
+            }
 
-            // Assert
-            var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>();
-            Assert.Equal("http://test.proxy:8080", options.Value.HttpProxy);
-            Assert.Contains("localhost", options.Value.NoProxy);
+            foreach (var variable in variables)
+            {
+                if (uppercase)
+                {
+                    Environment.SetEnvironmentVariable(variable.Name, variable.UppercaseValue);
+                }
+                if (lowercase)
+                {
+                    Environment.SetEnvironmentVariable(variable.Name.ToLowerInvariant(), variable.LowercaseValue);
+                }
+            }
+
+            var services = new ServiceCollection();
+            services.AddHttpClientServices();
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var options = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
+            string prefix = lowercase ? "lower" : "upper";
+            Assert.Equal($"http://{prefix}.all.proxy:8080", options.AllProxy);
+            Assert.Equal($"http://{prefix}.http.proxy:8080", options.HttpProxy);
+            Assert.Equal($"http://{prefix}.https.proxy:8080", options.HttpsProxy);
+            Assert.Equal($"localhost,{prefix}.internal", options.NoProxy);
         }
         finally
         {
-            // Clean up
-            Environment.SetEnvironmentVariable("HTTP_PROXY", null);
-            Environment.SetEnvironmentVariable("NO_PROXY", null);
+            foreach (var (name, value) in savedVariables)
+            {
+                Environment.SetEnvironmentVariable(name, value);
+            }
         }
     }
 }
