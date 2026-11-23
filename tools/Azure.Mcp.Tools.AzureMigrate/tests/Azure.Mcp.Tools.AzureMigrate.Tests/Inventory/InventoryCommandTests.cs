@@ -163,6 +163,14 @@ public class InventoryCommandTests
     public void GetFailureInstructions_SelectsByStepAndStatus(string step, int? status, bool textOnly, string expected) =>
         Assert.Contains(expected, CreateOrUpdateInventoryCommand.GetFailureInstructions(step, status, textOnly));
 
+    [Theory]
+    [InlineData(400, "{\"error\":{\"fdsErrorCode\":\"BadRequest\",\"message\":\"An invalid parameter SessionState was passed.\"}}", true)]
+    [InlineData(400, "{\"error\":{\"fdsErrorCode\":\"BadRequest\",\"message\":\"An invalid parameter InputType was passed.\"}}", false)]
+    [InlineData(500, "SessionState", false)]
+    [InlineData(400, null, false)]
+    public void IsSessionBusy_DetectsInvokeRejectedWhileSessionRuns(int? status, string? error, bool expected) =>
+        Assert.Equal(expected, CreateOrUpdateInventoryCommand.IsSessionBusy(status, error));
+
     [Fact]
     public void Fail_UsesExplicitInstructionsWhenGiven()
     {

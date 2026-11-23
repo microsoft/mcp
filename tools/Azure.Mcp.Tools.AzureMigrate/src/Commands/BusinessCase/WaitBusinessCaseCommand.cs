@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "Returns: the same fields as the business case status tool: 'status', 'stage', 'isCompleted', 'nextStatusParameters' while it " +
         "runs, 'result' and 'report' once it succeeded, and 'instructions'. " +
         "Next: follow 'instructions': call this tool again while it runs, without writing to the user; once 'isCompleted' is true, " +
-        "do what they say. Do not mention tool or parameter names to the user.",
+        "do what they say. Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,

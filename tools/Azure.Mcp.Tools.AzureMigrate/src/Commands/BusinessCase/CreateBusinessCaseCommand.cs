@@ -43,7 +43,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "it right away, in the same reply, with the business case status tool using 'nextStatusParameters' unchanged until it " +
         "completes (without waiting for the user to ask, calling the status tool directly yourself, never from a script or code), " +
         "or that the business case card tracks it for the user. The status tool's 'result' holds the ROI report. " +
-        "Do not mention tool or parameter names to the user.",
+        "Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = false,

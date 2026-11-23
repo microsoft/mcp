@@ -35,7 +35,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "Next: while 'isCompleted' is false, call it again quietly with the same 'session-id' and 'operation-id'; the inventory " +
         "must be complete before it is exported or used for a business case. Call it directly yourself, one call at a time; never " +
         "write or run a script or code to call it. When it is done, reply in the format 'instructions' give. " +
-        "Follow 'instructions'. Do not mention tool or parameter names to the user.",
+        "Follow 'instructions'. Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,

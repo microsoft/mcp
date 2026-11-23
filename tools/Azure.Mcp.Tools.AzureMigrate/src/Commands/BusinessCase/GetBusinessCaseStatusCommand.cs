@@ -43,7 +43,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "report Markdown, when available) and 'instructions'. " +
         "Next: follow 'instructions': while 'status' is Running they say how to keep tracking it with the new " +
         "'nextStatusParameters'; once it has succeeded, follow 'instructions' " +
-        "to show the report. Do not mention tool or parameter names to the user.",
+        "to show the report. Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,

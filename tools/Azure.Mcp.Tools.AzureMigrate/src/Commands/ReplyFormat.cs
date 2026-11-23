@@ -16,11 +16,20 @@ internal static class ReplyFormat
         "line 1 a headline in bold; " +
         "line 2 (only if needed) one sentence of at most 25 words with the key exact figures or the issue found, taken from this " +
         "result without inventing details (leave out a figure the result does not give, never say it is missing); " +
-        "line 3 starting with 'Next step:'. " +
+        "line 3 starting with '**Next step:**' in bold. Put each line in its own paragraph, separated by a blank line, so the " +
+        "'**Next step:**' line always starts on a new line. " +
         "Never use tables, bullet lists, headings or extra paragraphs, and never repeat or re-list what a card above already " +
         "shows (servers, VMs, costs or report sections). A link asked for below goes inside line 2; only a code block explicitly " +
         "asked for below may follow the 3 lines. No greeting, preamble, recap of earlier messages, closing questions or extra " +
         "offers, and no tool or parameter names. Check the reply before sending: if it is longer than 3 lines, shorten it.";
+
+    /// <summary>Reply-length rule added to every Azure Catalyst tool description, so it also covers replies Copilot writes on its
+    /// own (for example after a wait gives up or a tool fails), not only replies that follow a tool result.</summary>
+    internal const string ToolRule =
+        "HARD LIMIT for every reply to the user about Azure Catalyst, including after a timeout or error: at most 3 short lines " +
+        "(a bold headline, one short sentence of key facts, and a '**Next step:**' line in bold on its own new line, each separated " +
+        "by a blank line). No tables, bullet lists, headings or extra " +
+        "paragraphs, and never re-list servers, files or report content.";
 
     /// <summary>Journey step after an inventory is ready.</summary>
     internal const string AfterInventory =

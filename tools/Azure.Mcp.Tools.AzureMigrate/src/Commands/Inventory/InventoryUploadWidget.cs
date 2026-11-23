@@ -97,9 +97,16 @@ internal static class InventoryUploadWidget
           }
           function onToolResult(params) {
             var r = findResult(params, 0);
-            diag.toolResult = r ? { success: r.success, sessionId: r.sessionId, operationId: r.operationId, hasUploadCommand: !!r.uploadCommand } : 'not found';
+            // Session and operation IDs stay out of the panel: users never see them.
+            diag.toolResult = r ? { success: r.success, httpStatus: r.httpStatus, hasUploadCommand: !!r.uploadCommand } : 'not found';
             if (!r || ctx.uploadUrl) { show('status', ''); return; }
-            if (!r.success) { show('hint', 'The inventory could not be started. See the chat for details.', 'err'); return; }
+            if (!r.success) {
+              // Show the tool's own error when it is a readable sentence; raw service payloads stay in the chat.
+              var reason = typeof r.error === 'string' && r.error.length < 300 && !/^\s*[{\[]/.test(r.error) ? r.error : null;
+              el('title').textContent = 'Inventory not started';
+              show('hint', reason || 'The inventory could not be started. See the chat for details.', 'err');
+              return;
+            }
             ctx.sessionId = r.sessionId; ctx.operationId = r.operationId;
             var m = /"(https:\/\/[^"]+)"\s+--from-to/.exec(r.uploadCommand || '');
             if (!m) {

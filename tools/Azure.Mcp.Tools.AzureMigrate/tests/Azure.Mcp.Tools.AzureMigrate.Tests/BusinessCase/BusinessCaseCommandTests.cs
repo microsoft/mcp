@@ -335,7 +335,7 @@ public class BusinessCaseCommandTests
         Assert.Equal(uri, result.Result);
         Assert.Equal("# ROI\n| a | b |", result.Report);
         Assert.Contains("full report is shown in the card", result.Instructions);
-        Assert.Contains("'Next step:'", result.Instructions);
+        Assert.Contains("'**Next step:**'", result.Instructions);
     }
 
     [Fact]

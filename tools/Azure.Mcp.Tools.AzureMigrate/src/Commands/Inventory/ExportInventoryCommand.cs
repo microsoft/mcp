@@ -26,7 +26,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "'offline' for the offline zip package; ask the user if it is unclear which one they want. " +
         "Returns: 'downloadUrl', 'downloadCommand' (an azcopy command) and 'instructions'. " +
         "Next: share the download link or command with the user, then follow 'instructions' for the next step. " +
-        "Do not mention tool or parameter names to the user.",
+        "Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,

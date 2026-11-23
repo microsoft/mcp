@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "Returns: the same fields as the inventory status tool: 'status', 'isCompleted', 'instructions' and, when finished, either " +
         "'result' or 'errorCode'/'errorMessage'. " +
         "Next: follow 'instructions': call this tool again while 'isCompleted' is false, without writing to the user; once it is " +
-        "true, do what they say. Do not mention tool or parameter names to the user.",
+        "true, do what they say. Do not mention tool or parameter names to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,

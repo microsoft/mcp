@@ -36,7 +36,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Session;
         "How: takes no parameters. " +
         "Returns: 'inventoryArchived', 'businessCaseArchived' (true once closed, or when there was nothing to close) and " +
         "'instructions'. " +
-        "Next: follow 'instructions'. Do not mention tool or parameter names, or session IDs, to the user.",
+        "Next: follow 'instructions'. Do not mention tool or parameter names, or session IDs, to the user. " + ReplyFormat.ToolRule,
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
