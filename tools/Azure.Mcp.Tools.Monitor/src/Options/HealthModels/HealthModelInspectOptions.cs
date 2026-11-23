@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.HealthModels;
 
-public sealed class HealthModelInspectOptions : ISubscriptionOption
+public sealed class HealthModelInspectOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the health model to inspect.")]
     public required string HealthModel { get; set; }

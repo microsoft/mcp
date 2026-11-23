@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Redis.Options;
 
-public sealed class ResourceCreateOptions : ISubscriptionOption
+public sealed class ResourceCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// The name of the Redis resource to create.

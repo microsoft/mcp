@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Compute.Options.Disk;
 /// <summary>
 /// Options for the DiskGet command.
 /// </summary>
-public sealed class DiskGetOptions : ISubscriptionOption
+public sealed class DiskGetOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the disk.

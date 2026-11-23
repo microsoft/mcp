@@ -191,7 +191,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.{Toolset}.Options.{Resource};
 
-public class {Resource}{Operation}Options : ISubscriptionOption
+public class {Resource}{Operation}Options : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Description of what this option does (e.g., 'The name of the resource').")]
     public string? MyOption { get; set; }
@@ -209,6 +209,7 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 
 Rules:
 - Implement `ISubscriptionOption` for commands that need subscription resolution
+- Implement `ITenantOption` for options exposing `Tenant`, independently of `ISubscriptionOption`. Keep the tenant optional and its `[Option]` attribute on the concrete property.
 - Use `[Option(Description = "description")]` to expose each option — property name auto-converts to `--kebab-case`. Public properties without `[Option]` or `[OptionContainer<TContainer>]` are not bound.
 - Specify `Name` only when the default kebab-case conversion is wrong (e.g., `[Option(Name = "foobar", Description = "...")]` on `FooBar` gives `--foobar` instead of `--foo-bar`).
 - Use `[Option(Description = OptionDescriptions.X)]` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`).
@@ -1191,7 +1192,7 @@ Custom prompts file formats:
 Before creating the PR, verify all of these:
 
 ### Core Implementation
-- [ ] Options class is flat POCO with `[Option]` attributes implementing `ISubscriptionOption`
+- [ ] Options class is flat POCO with `[Option]` attributes implementing `ISubscriptionOption` and/or `ITenantOption` as applicable
 - [ ] Command inherits `SubscriptionCommand<TOptions, TResult>` with `ISubscriptionResolver`
 - [ ] `ExecuteAsync` takes `(CommandContext, TOptions, CancellationToken)` — no `ParseResult`
 - [ ] Service interface and implementation complete

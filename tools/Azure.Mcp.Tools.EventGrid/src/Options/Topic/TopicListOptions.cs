@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Options.Topic;
 
-public sealed class TopicListOptions : ISubscriptionOption
+public sealed class TopicListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.CloudEndpoint;
 /// <summary>
 /// Options for CloudEndpointTriggerChangeDetectionCommand.
 /// </summary>
-public sealed class CloudEndpointTriggerChangeDetectionOptions : ISubscriptionOption
+public sealed class CloudEndpointTriggerChangeDetectionOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

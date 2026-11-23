@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class ClusterGetOptions : ISubscriptionOption
+public sealed class ClusterGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = KustOptionDescriptions.Cluster)]
     public required string Cluster { get; set; }

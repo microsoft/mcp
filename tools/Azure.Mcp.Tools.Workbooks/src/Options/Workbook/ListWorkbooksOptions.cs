@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public sealed class ListWorkbooksOptions : ISubscriptionOption
+public sealed class ListWorkbooksOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Filter workbooks by kind (e.g., 'shared', 'user'). If not specified, all kinds will be returned.")]
     public string? Kind { get; set; }

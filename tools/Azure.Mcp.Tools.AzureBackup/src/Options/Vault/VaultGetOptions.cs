@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
-public sealed class VaultGetOptions : ISubscriptionOption
+public sealed class VaultGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = AzureBackupOptionDefinitions.Vault)]
     public string? Vault { get; set; }

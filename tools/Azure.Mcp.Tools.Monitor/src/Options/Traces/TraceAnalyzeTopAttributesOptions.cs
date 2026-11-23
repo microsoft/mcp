@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.Traces;
 
-public sealed class TraceAnalyzeTopAttributesOptions : ISubscriptionOption
+public sealed class TraceAnalyzeTopAttributesOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

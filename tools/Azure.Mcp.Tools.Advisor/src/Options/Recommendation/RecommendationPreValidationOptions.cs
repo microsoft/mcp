@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
-public sealed class RecommendationPreValidationOptions : IRecommendationReadScopeOptions
+public sealed class RecommendationPreValidationOptions : IRecommendationReadScopeOptions, ITenantOption
 {
     [Option(Description = "The exact Advisor recommendation type ID GUID selected from existing recommendations. Only onboarded Cost/IdleResources deletion recommendations support prevalidation.")]
     public required string RecommendationTypeId { get; set; }

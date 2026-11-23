@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 
-public sealed class AvailabilityStatusGetOptions : ISubscriptionOption
+public sealed class AvailabilityStatusGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The Azure resource ID to get health status for (e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{vm}).", Name = "resourceId")]
     public string? ResourceId { get; set; }

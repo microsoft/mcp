@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Optimization.Options.Recommendation;
 
-public class RecommendationAlternativesOptions : ISubscriptionOption
+public class RecommendationAlternativesOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Full Azure ARM resource id of the VM or VM Scale Set, e.g. " +
         "'/subscriptions/<subId>/resourceGroups/<rg>/providers/Microsoft.Compute/virtualMachines/<name>'. " +

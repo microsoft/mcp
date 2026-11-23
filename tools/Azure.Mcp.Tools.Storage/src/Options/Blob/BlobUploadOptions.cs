@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobUploadOptions
+public class BlobUploadOptions : ITenantOption
 {
     [Option(Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.")]
     public required string LocalFilePath { get; set; }

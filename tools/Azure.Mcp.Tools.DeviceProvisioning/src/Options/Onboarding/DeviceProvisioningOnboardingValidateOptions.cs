@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.DeviceProvisioning.Options.Onboarding;
 
-public sealed class DeviceProvisioningOnboardingValidateOptions : ISubscriptionOption
+public sealed class DeviceProvisioningOnboardingValidateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure Device Provisioning Service instance.")]
     public required string Service { get; set; }

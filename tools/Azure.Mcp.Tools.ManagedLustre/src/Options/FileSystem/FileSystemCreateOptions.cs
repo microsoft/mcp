@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 
-public sealed class FileSystemCreateOptions : ISubscriptionOption
+public sealed class FileSystemCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.Name)]
     public required string Name { get; set; }

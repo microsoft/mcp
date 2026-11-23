@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Item;
 
-public sealed class ItemGetOptions : ISubscriptionOption
+public sealed class ItemGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The id of the document to retrieve.")]
     public required string Id { get; set; }

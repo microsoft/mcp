@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 /// <summary>
 /// Options for StorageSyncServiceCreateCommand.
 /// </summary>
-public sealed class StorageSyncServiceCreateOptions : ISubscriptionOption
+public sealed class StorageSyncServiceCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

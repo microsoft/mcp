@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.Sku;
 
-public sealed class SkuGetOptions : ISubscriptionOption
+public sealed class SkuGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.Location)]
     public string? Location { get; set; }

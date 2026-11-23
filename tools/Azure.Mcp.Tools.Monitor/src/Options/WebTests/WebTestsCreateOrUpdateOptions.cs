@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.WebTests;
 
-public sealed class WebTestsCreateOrUpdateOptions : ISubscriptionOption
+public sealed class WebTestsCreateOrUpdateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = MonitorOptionDescriptions.WebtestResource)]
     public required string WebtestResource { get; set; }

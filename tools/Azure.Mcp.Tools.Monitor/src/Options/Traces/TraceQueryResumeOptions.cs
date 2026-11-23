@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.Traces;
 
-public sealed class TraceQueryResumeOptions : ISubscriptionOption
+public sealed class TraceQueryResumeOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Operation id returned by a 'monitor traces query' command.")]
     public required string OperationId { get; set; }

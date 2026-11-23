@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// <summary>
 /// Specifies the records to fetch in one call and how to shape them.
 /// </summary>
-public sealed class RecordFetchOptions
+public sealed class RecordFetchOptions : ITenantOption
 {
     [Option(Description = "The fully-qualified record ids to fetch, each '{partition}:{object-type}:{unique-id}'. Up to 20 ids without --attributes, or 100 with it.")]
     public required string[] Ids { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Account;
 
-public class AccountGetOptions : ISubscriptionOption
+public class AccountGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public string? Account { get; set; }

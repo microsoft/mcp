@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Recovery.Jobs.Resources;
 
-public sealed class RecoveryJobResourceGetOptions
+public sealed class RecoveryJobResourceGetOptions : ITenantOption
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }

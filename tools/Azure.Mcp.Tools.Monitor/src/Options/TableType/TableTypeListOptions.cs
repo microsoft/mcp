@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.TableType;
 
-public sealed class TableTypeListOptions : ISubscriptionOption
+public sealed class TableTypeListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = MonitorOptionDescriptions.Workspace)]
     public required string Workspace { get; set; }

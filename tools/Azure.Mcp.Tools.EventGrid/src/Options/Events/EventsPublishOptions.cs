@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.EventGrid.Options.Events;
 
-public sealed class EventsPublishOptions : ISubscriptionOption
+public sealed class EventsPublishOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = EventGridOptionDescriptions.Topic)]
     public required string Topic { get; set; }

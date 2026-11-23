@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.HealthModels;
 
-public sealed class HealthModelListOptions : ISubscriptionOption
+public sealed class HealthModelListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

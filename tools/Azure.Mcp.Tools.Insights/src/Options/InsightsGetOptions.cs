@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Insights.Options;
 
-public class InsightsGetOptions : ISubscriptionOption
+public class InsightsGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = InsightsOptionDefinitions.QueryDescription)]
     public string? Query { get; set; }

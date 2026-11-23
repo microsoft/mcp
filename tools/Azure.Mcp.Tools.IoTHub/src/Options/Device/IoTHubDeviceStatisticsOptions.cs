@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.IoTHub.Options.Device;
 
-public sealed class IoTHubDeviceStatisticsOptions : ISubscriptionOption
+public sealed class IoTHubDeviceStatisticsOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the IoT Hub.")]
     public required string HubName { get; set; }

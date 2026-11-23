@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.SyncGroup;
 /// <summary>
 /// Options for SyncGroupGetCommand.
 /// </summary>
-public sealed class SyncGroupGetOptions : ISubscriptionOption
+public sealed class SyncGroupGetOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Account;
 
-public class AccountCreateOptions : ISubscriptionOption
+public class AccountCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.")]
     public required string Account { get; set; }

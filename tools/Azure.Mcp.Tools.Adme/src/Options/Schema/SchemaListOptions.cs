@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Schema;
 /// <summary>
 /// Specifies filters and paging for listing schemas.
 /// </summary>
-public sealed class SchemaListOptions
+public sealed class SchemaListOptions : ITenantOption
 {
     [Option(Description = "Filter by the authority segment of the kind, for example 'osdu' in 'osdu:wks:master-data--Well:1.0.0'.")]
     public string? Authority { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Compute.Options.Vm;
 
-public sealed class VmGetOptions : ISubscriptionOption
+public sealed class VmGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ComputeOptionDescriptions.VmName, Aliases = ["name"])]
     public string? VmName { get; set; }

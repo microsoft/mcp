@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Goals.Assignments;
 
-public sealed class GoalAssignmentCreateOptions : IGoalAssignmentOptions
+public sealed class GoalAssignmentCreateOptions : IGoalAssignmentOptions, ITenantOption
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem;
 
-public sealed class FileSystemListOptions : ISubscriptionOption
+public sealed class FileSystemListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

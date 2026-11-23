@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ResourceGuard;
 
-public sealed class ResourceGuardCreateOptions : ISubscriptionOption
+public sealed class ResourceGuardCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Name of the Resource Guard to create (Microsoft.DataProtection/resourceGuards).")]
     public required string ResourceGuard { get; set; }

@@ -9,7 +9,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 /// <summary> Options for filtering and limiting Advisor recommendation list results. </summary>
-public class RecommendationListOptions : IRecommendationReadScopeOptions
+public class RecommendationListOptions : IRecommendationReadScopeOptions, ITenantOption
 {
     [Option(Description = "Filter recommendations by category (e.g., 'Security', 'Cost', 'Performance', 'HighAvailability', 'OperationalExcellence'). Case-insensitive exact match against English recommendation metadata.")]
     public string? Category { get; set; }

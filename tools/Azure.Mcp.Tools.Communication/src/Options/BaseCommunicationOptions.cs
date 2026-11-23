@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Communication.Options;
 /// <summary>
 /// Base options class for Communication Services commands.
 /// </summary>
-public class BaseCommunicationOptions
+public class BaseCommunicationOptions : ITenantOption
 {
     [Option(Description = "The Communication Services URI endpoint (e.g., https://myservice.communication.azure.com). Required for credential authentication.")]
     public required string Endpoint { get; set; }

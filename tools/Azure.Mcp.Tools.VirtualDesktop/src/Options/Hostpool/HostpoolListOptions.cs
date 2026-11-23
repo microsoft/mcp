@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
-public sealed class HostpoolListOptions : ISubscriptionOption
+public sealed class HostpoolListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

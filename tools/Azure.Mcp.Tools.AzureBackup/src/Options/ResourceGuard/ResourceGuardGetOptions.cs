@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.ResourceGuard;
 
-public sealed class ResourceGuardGetOptions : ISubscriptionOption
+public sealed class ResourceGuardGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Name of the Resource Guard to fetch. Omit to list Resource Guards (in --resource-group if provided, otherwise across the subscription).")]
     public string? ResourceGuard { get; set; }

@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.FileShares.Options.FileShare;
 /// <summary>
 /// Options for FileShareCreateCommand.
 /// </summary>
-public sealed class FileShareCreateOptions : ISubscriptionOption
+public sealed class FileShareCreateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the file share to create.

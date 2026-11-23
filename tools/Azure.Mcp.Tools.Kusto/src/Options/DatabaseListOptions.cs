@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class DatabaseListOptions : ISubscriptionOption, IClusterOption
+public sealed class DatabaseListOptions : ISubscriptionOption, ITenantOption, IClusterOption
 {
     [Option(Description = KustOptionDescriptions.ClusterUri)]
     public string? ClusterUri { get; set; }

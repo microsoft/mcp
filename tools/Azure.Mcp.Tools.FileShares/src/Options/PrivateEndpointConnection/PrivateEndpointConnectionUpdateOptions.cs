@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FileShares.Options.PrivateEndpointConnection;
 
-public sealed class PrivateEndpointConnectionUpdateOptions : ISubscriptionOption
+public sealed class PrivateEndpointConnectionUpdateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FileSharesOptionDescriptions.FileShareName)]
     public required string FileShareName { get; set; }

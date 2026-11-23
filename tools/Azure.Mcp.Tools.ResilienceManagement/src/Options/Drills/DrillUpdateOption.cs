@@ -9,7 +9,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.Drills;
 
-public sealed class DrillUpdateOptions
+public sealed class DrillUpdateOptions : ITenantOption
 {
     [Option(Description = ResilienceManagementOptionDescriptions.ServiceGroup)]
     public required string ServiceGroup { get; set; }

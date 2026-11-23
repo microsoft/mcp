@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Options;
 
-public sealed class SubscriptionListOptions
+public sealed class SubscriptionListOptions : ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

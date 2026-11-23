@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Schema;
 /// <summary>
 /// Specifies the schema kind to retrieve.
 /// </summary>
-public sealed class SchemaGetOptions
+public sealed class SchemaGetOptions : ITenantOption
 {
     [Option(Description = "The fully-qualified kind 'authority:source:type:version', for example 'osdu:wks:master-data--Well:1.0.0'. Wildcards are not supported; use the schema list operation to discover valid kinds and versions.")]
     public required string Kind { get; set; }

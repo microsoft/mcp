@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ServiceFabric.Options.ManagedCluster;
 
-public sealed class ManagedClusterNodeGetOptions : ISubscriptionOption
+public sealed class ManagedClusterNodeGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ServiceFabricOptionDescriptions.ClusterDescription)]
     public required string Cluster { get; set; }

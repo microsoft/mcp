@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.CloudEndpoint;
 /// <summary>
 /// Options for CloudEndpointUpdateCommand.
 /// </summary>
-public sealed class CloudEndpointUpdateOptions : ISubscriptionOption
+public sealed class CloudEndpointUpdateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = StorageSyncOptionDescriptions.StorageSyncService.NameDescription, Aliases = ["n"])]
     public required string Name { get; set; }

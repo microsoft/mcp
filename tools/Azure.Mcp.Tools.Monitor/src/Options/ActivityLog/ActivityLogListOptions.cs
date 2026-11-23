@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 
-public class ActivityLogListOptions : ISubscriptionOption
+public class ActivityLogListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure resource to retrieve activity logs for.")]
     public required string ResourceName { get; set; }

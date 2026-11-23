@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public sealed class DeleteWorkbookOptions
+public sealed class DeleteWorkbookOptions : ITenantOption
 {
     [Option(Description = WorkbooksOptionDescriptions.WorkbookIdsDescription)]
     public required string[] WorkbookIds { get; set; }

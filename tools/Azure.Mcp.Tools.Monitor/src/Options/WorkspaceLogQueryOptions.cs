@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options;
 
-public sealed class WorkspaceLogQueryOptions : ISubscriptionOption
+public sealed class WorkspaceLogQueryOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = MonitorOptionDescriptions.Workspace)]
     public required string Workspace { get; set; }

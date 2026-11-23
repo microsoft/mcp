@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Backup;
 
-public sealed class BackupStatusOptions : ISubscriptionOption
+public sealed class BackupStatusOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = AzureBackupOptionDefinitions.DatasourceId)]
     public required string DatasourceId { get; set; }

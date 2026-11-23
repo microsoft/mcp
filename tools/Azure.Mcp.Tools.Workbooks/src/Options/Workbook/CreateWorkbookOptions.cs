@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Workbooks.Options.Workbook;
 
-public sealed class CreateWorkbookOptions : ISubscriptionOption
+public sealed class CreateWorkbookOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = WorkbooksOptionDescriptions.DisplayNameDescription)]
     public required string DisplayName { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Areas.Group.Options;
 
-public sealed class ResourceListOptions : ISubscriptionOption
+public sealed class ResourceListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

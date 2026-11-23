@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
-public class BaseHostPoolOptions : ISubscriptionOption
+public class BaseHostPoolOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Azure Virtual Desktop host pool. This is the unique name you chose for your hostpool.")]
     public string? Hostpool { get; set; }

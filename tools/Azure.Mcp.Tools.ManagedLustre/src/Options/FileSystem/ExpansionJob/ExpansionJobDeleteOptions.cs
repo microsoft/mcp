@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.ExpansionJob;
 
-public sealed class ExpansionJobDeleteOptions : ISubscriptionOption
+public sealed class ExpansionJobDeleteOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.FileSystemName)]
     public required string FilesystemName { get; set; }

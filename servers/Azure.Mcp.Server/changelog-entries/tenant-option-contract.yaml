@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added an independent ITenantOption contract to tenant-exposing options without changing command parameters or authentication behavior."

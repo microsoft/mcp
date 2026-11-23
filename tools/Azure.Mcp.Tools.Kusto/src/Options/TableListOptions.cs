@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class TableListOptions : ISubscriptionOption, IDatabaseOption
+public sealed class TableListOptions : ISubscriptionOption, ITenantOption, IDatabaseOption
 {
     [Option(Description = KustOptionDescriptions.Database)]
     public required string Database { get; set; }

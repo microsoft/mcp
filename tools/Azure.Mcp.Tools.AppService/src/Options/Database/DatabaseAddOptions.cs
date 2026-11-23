@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppService.Options.Database;
 
-public sealed class DatabaseAddOptions : ISubscriptionOption
+public sealed class DatabaseAddOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = AppServiceOptionDefinitions.App)]
     public required string App { get; set; }

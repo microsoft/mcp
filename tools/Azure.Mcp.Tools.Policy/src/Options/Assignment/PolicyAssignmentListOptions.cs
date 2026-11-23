@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Policy.Options.Assignment;
 
-public sealed class PolicyAssignmentListOptions : ISubscriptionOption
+public sealed class PolicyAssignmentListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The scope of the policy assignment (e.g., /subscriptions/{subscriptionId}, /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}).")]
     public string? Scope { get; set; }

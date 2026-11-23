@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Authorization.Options;
 
-public sealed class RoleAssignmentListOptions : ISubscriptionOption
+public sealed class RoleAssignmentListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Scope at which the role assignment applies, e.g., /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup/providers/Microsoft.Compute/virtualMachines/myVM, or /providers/Microsoft.Management/managementGroups/myManagementGroup.")]
     public required string Scope { get; set; }

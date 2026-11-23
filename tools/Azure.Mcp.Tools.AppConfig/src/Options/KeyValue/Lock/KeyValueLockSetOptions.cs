@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Options.KeyValue.Lock;
 
-public class KeyValueLockSetOptions : ISubscriptionOption
+public class KeyValueLockSetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).")]
     public bool? Lock { get; set; }

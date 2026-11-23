@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options.Item;
 
-public sealed class ItemListRecentOptions : ISubscriptionOption
+public sealed class ItemListRecentOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = CosmosOptionDescriptions.Count)]
     public int? Count { get; set; }

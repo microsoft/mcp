@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Optimization.Options.Recommendation;
 
-public class RecommendationListOptions : ISubscriptionOption
+public class RecommendationListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Maximum number of cost-saving recommendations to return (1-1000, default 100). " +
         "Results are ranked by impact then currency-normalized annual savings.")]

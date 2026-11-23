@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Search.Options.Service;
 
-public sealed class ServiceListOptions : ISubscriptionOption
+public sealed class ServiceListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public string? ResourceGroup { get; set; }

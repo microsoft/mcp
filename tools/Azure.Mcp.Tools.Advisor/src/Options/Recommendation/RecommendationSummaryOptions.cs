@@ -8,7 +8,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Recommendation;
 
 /// <summary>Options for aggregating Advisor recommendations into per-bucket counts.</summary>
-public sealed class RecommendationSummaryOptions : IRecommendationReadScopeOptions
+public sealed class RecommendationSummaryOptions : IRecommendationReadScopeOptions, ITenantOption
 {
     [Option(Description = "The ID of the Azure service group whose recommendations should be summarized, provided as the name segment in its ARM resource ID, for example '/providers/Microsoft.Management/serviceGroups/{serviceGroupName}'. Specify either --service-group or --subscriptions. If both are omitted, the configured default subscription is used. A unique display name or full ARM resource ID is also accepted in the selected tenant; ambiguous display names produce an error listing matching full ARM IDs for explicit selection.")]
     public string? ServiceGroup { get; set; }

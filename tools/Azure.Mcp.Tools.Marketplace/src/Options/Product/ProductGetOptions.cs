@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Marketplace.Options.Product;
 
-public sealed class ProductGetOptions : ISubscriptionOption
+public sealed class ProductGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The ID of the marketplace product to retrieve. This is the unique identifier for the product in the Azure Marketplace.")]
     public required string ProductId { get; set; }

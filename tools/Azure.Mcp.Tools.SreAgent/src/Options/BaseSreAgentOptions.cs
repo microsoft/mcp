@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.SreAgent.Options;
 
-public class BaseSreAgentOptions : ISubscriptionOption
+public class BaseSreAgentOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = SreAgentOptionDefinitions.AgentDescription)]
     public required string Agent { get; set; }

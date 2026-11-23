@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Aks.Options.Nodepool;
 
-public class NodepoolGetOptions : ISubscriptionOption
+public class NodepoolGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

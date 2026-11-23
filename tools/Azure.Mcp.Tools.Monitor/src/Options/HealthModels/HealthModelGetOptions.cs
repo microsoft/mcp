@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.HealthModels;
 
-public sealed class HealthModelGetOptions : ISubscriptionOption
+public sealed class HealthModelGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the health model to retrieve.")]
     public required string HealthModel { get; set; }

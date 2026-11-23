@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class OpenAiChatCompletionsCreateOptions : ISubscriptionOption
+public sealed class OpenAiChatCompletionsCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FoundryExtensionsOptionDescriptions.ResourceName)]
     public required string ResourceName { get; set; }

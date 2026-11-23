@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class ResourceGetOptions : ISubscriptionOption
+public sealed class ResourceGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FoundryExtensionsOptionDescriptions.ResourceName)]
     public string? ResourceName { get; set; }

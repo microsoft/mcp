@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class KnowledgeIndexSchemaOptions
+public sealed class KnowledgeIndexSchemaOptions : ITenantOption
 {
     [Option(Description = "The name of the knowledge index.")]
     public required string Index { get; set; }

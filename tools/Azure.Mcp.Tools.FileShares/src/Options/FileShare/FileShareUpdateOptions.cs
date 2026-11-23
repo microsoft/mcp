@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.FileShares.Options.FileShare;
 /// <summary>
 /// Options for FileShareUpdateCommand.
 /// </summary>
-public sealed class FileShareUpdateOptions : ISubscriptionOption
+public sealed class FileShareUpdateOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the file share to update.

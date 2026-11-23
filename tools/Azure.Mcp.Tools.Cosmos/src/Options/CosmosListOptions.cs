@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Cosmos.Options;
 
-public sealed class CosmosListOptions : ISubscriptionOption
+public sealed class CosmosListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the database (optional). Requires --account to be specified. When provided, lists containers within this database.")]
     public string? Database { get; set; }

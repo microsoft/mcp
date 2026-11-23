@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Compute.Options.Disk;
 /// <summary>
 /// Options for the DiskDelete command.
 /// </summary>
-public sealed class DiskDeleteOptions : ISubscriptionOption
+public sealed class DiskDeleteOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the name of the disk.

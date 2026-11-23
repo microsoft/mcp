@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Adme.Options.Search;
 
-public sealed class SearchOptions
+public sealed class SearchOptions : ITenantOption
 {
     [Option(Description = "One or more kind selectors 'authority:source:type:version' with optional '*' wildcards, e.g. ['osdu:wks:master-data--Well:1.0.0']. Several kinds are searched as a union. Use the narrowest kind; each '*' widens the scan and its cost.")]
     public required string[] Kind { get; set; }

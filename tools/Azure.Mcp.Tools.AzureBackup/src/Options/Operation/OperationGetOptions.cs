@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.AzureBackup.Options.Operation;
 
-public sealed class OperationGetOptions : ISubscriptionOption
+public sealed class OperationGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The opaque RSV operation ID, not a job ID, resource ID, or URL. Supply the decoded ID from the operation-status response header.")]
     public required string Operation { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 
-public sealed class FunctionAppGetOptions : ISubscriptionOption
+public sealed class FunctionAppGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "The name of the Function App.")]
     public string? FunctionApp { get; set; }

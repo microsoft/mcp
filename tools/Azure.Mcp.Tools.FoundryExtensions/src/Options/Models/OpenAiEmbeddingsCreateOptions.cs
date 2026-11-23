@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.FoundryExtensions.Options.Models;
 
-public sealed class OpenAiEmbeddingsCreateOptions : ISubscriptionOption
+public sealed class OpenAiEmbeddingsCreateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = FoundryExtensionsOptionDescriptions.ResourceName)]
     public required string ResourceName { get; set; }

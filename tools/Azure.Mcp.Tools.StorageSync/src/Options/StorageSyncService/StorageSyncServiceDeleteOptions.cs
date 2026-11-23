@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.StorageSync.Options.StorageSyncService;
 /// <summary>
 /// Options for StorageSyncServiceDeleteCommand.
 /// </summary>
-public sealed class StorageSyncServiceDeleteOptions : ISubscriptionOption
+public sealed class StorageSyncServiceDeleteOptions : ISubscriptionOption, ITenantOption
 {
     /// <summary>
     /// Gets or sets the storage sync service name.

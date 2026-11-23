@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.SubnetSize;
 
-public sealed class SubnetSizeValidateOptions : ISubscriptionOption
+public sealed class SubnetSizeValidateOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = ManagedLustreOptionDescriptions.Sku)]
     public required string Sku { get; set; }

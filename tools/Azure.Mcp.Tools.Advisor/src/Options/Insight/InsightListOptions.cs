@@ -7,7 +7,7 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.Advisor.Options.Insight;
 
 /// <summary> Options for listing Advisor insights for a Service Group or subscription. </summary>
-public sealed class InsightListOptions : ISubscriptionOption
+public sealed class InsightListOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = "Service Group name (for example 'commerce'), not its full ARM ID. " +
         "Returns insights for that Service Group. Mutually exclusive with --subscription. " +

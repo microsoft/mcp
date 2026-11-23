@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Options.UsagePlans.Enrollments;
 
-public sealed class UsagePlanEnrollmentGetOptions : ISubscriptionOption
+public sealed class UsagePlanEnrollmentGetOptions : ISubscriptionOption, ITenantOption
 {
     [Option(Description = OptionDescriptions.ResourceGroup)]
     public required string ResourceGroup { get; set; }

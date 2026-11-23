@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Options.Ingestion;
 
-public sealed class IngestionUploadOptions
+public sealed class IngestionUploadOptions : ITenantOption
 {
     [Option(Description = "The data collection endpoint (DCE) log ingestion URL, for example 'https://my-dce.eastus-1.ingest.monitor.azure.com'.")]
     public required string IngestionEndpoint { get; set; }

@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Options;
 
-public sealed class QueryOptions : ISubscriptionOption, IDatabaseOption
+public sealed class QueryOptions : ISubscriptionOption, ITenantOption, IDatabaseOption
 {
     [Option(Description = "Kusto query to execute. Uses KQL syntax.")]
     public required string Query { get; set; }

@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tools.Adme.Options.Storage;
 /// <summary>
 /// Specifies the record whose versions are listed.
 /// </summary>
-public sealed class RecordVersionListOptions
+public sealed class RecordVersionListOptions : ITenantOption
 {
     [Option(Description = "The fully-qualified record id '{partition}:{object-type}:{unique-id}', for example 'opendes:well:W-99'.")]
     public required string Id { get; set; }
