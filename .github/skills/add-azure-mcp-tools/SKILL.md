@@ -223,6 +223,10 @@ Rules:
  > **Note:** Options are defined entirely via `[Option]` attributes.
  > A static `{Toolset}OptionDefinitions` class is not needed
 
+For tools that expose paged results, follow the [cursor pagination guide](../../../docs/tool-pagination.md).
+Use `ICursorOption` for the `cursor` input and return `nextCursor` when there is another page. Document which
+arguments must stay fixed between pages and test both continuation and completion.
+
 ### 1c. Service Interface and Implementation
 
 File: `src/Services/I{Toolset}Service.cs`

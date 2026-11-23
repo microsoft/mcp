@@ -1274,6 +1274,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure Marketplace
+
+Marketplace product listings return one page at a time. To get the next page, pass `nextCursor` unchanged as `--cursor`
+with the same subscription, tenant, and listing options. Stop when `nextCursor` is absent.
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
@@ -1385,6 +1390,10 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Get details about my Storage container"
 * "Diagnose disk performance and throttling for my Azure virtual machine"
 * "Upload my file to the blob container"
+
+Blob, container, and table listings return one page of up to 100 items. To continue, pass `nextCursor` unchanged as
+`--cursor` with the same account and tenant, plus the same container and prefix where applicable.
+An empty page can still include `nextCursor`; continue until it is absent.
 
 ### 🔄 Azure Migrate
 
