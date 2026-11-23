@@ -122,7 +122,7 @@ public class TableListCommandTests : CommandUnitTestsBase<TableListCommand, ISto
         await Service.Received(1).ListTables(_knownStorageAccount, marker, "tenant", Arg.Any<CancellationToken>());
 
         Service.ClearReceivedCalls();
-        var mismatch = await ExecuteCommandAsync([.. args, "--account", "otheraccount", "--cursor", result.NextCursor]);
+        var mismatch = await ExecuteCommandAsync([.. args, "--account", "storage456", "--cursor", result.NextCursor]);
         Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
         Assert.Contains("does not match the original request", mismatch.Message);
         Assert.Empty(Service.ReceivedCalls());
