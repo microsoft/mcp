@@ -181,7 +181,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         : ReplyFormat.Reply(
             StartedHeadline(reusedSession),
             $"the file limit ({MaxFileSizeMegabytes} MB) and the upload window ({UploadWindowMinutes} minutes); that AzCopy v10 is " +
-            "required (https://aka.ms/downloadazcopy-v10-windows). Right after the bullets show uploadCommand exactly as returned, in " +
+            "required (https://aka.ms/downloadazcopy-v10-windows). After the 3 lines show uploadCommand exactly as returned, in " +
             "a code block; never retype, shorten or split it, never show the URL inside it on its own, and do not repeat it later.",
             $"replace {FilePathPlaceholder} with the full path of the file and run the command on their own machine; do not ask " +
             "them to send the file in the chat.") +
@@ -251,7 +251,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             "upload the inventory file first, then ask for the change again."),
         (_, null or >= 500, _) => RetryOnceInstructions,
         _ => ReplyFormat.Failure("Inventory could not be started.",
-            "fix the cause named in the bullet (for example the file format or a column) and try again."),
+            "fix the cause named above (for example the file format or a column) and try again."),
     };
 
     /// <summary>

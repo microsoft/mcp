@@ -189,8 +189,7 @@ public sealed class CreateBusinessCaseCommand(
             BusinessCaseNextStatusParameters.Create(name, operationId, inventorySasUri!, haSettings!),
             ReplyFormat.Reply(
                 $"Business case '{name}' started. It usually takes 2 to 5 minutes: first assessing the servers, then building the ROI report.",
-                "the inventory used: " + inventorySource + "; one short settings bullet with only the region, savings option, Azure " +
-                "Hybrid Benefit, discount and any setting the user asked for, followed by 'other settings are defaults'. The full " +
+                "the inventory used (" + inventorySource + ") and the region, plus any setting the user asked for. The full " +
                 "list, to answer questions only and not to show: " + DescribeSettings(region, assessmentSettings!, haSettings!) + ".",
                 "the ROI summary and report follow here when it is ready.") + " " +
             (BusinessCaseReportWidget.IsEnabled

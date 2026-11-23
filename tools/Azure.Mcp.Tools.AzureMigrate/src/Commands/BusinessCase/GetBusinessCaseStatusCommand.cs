@@ -175,17 +175,11 @@ public sealed class GetBusinessCaseStatusCommand(
                             "'Business case ready:' followed by the total annual savings and the payback period of the recommended " +
                             "migration strategy from 'report', quoting the figures exactly, for example 'Business case ready: $1.2M " +
                             "annual savings, payback in 1.8 years'.",
-                            "exactly 3 bullets, each a single short line of at most 15 words with no explanations, no cost " +
-                            "breakdowns and no figures already in the headline: (a) ROI, NPV and number of servers of the recommended " +
-                            "strategy, quoting 'report' exactly with currency symbols, for example 'ROI 16.47%, NPV $92,605.44, 12 " +
-                            "servers'; (b) the main issues the report names, as counts only, for example '3 servers out of support, " +
-                            "2 more within a year'; (c) a clickable Markdown link to 'result' exactly as given, for example " +
-                            "[Download the ROI report (ROI.md)](<result>), never retyped, shortened or shown on its own, followed by " +
-                            "'(link expires soon)'." +
-                            (BusinessCaseReportWidget.IsEnabled
-                                ? " The full report is shown in the card above, so do not paste 'report' or repeat its other strategies."
-                                : " Right after the bullets render 'report' as Markdown exactly as given, keeping its headings and " +
-                                  "tables, not in a code block."),
+                            "ROI and NPV of the recommended strategy quoting 'report' exactly with currency symbols, then a clickable " +
+                            "Markdown link to 'result' exactly as given, for example 'ROI 16.47%, NPV $92,605.44. [Download the ROI " +
+                            "report](<result>) (link expires soon)'; never retype or shorten the link. Do not paste 'report' or " +
+                            "repeat its strategies, costs or issues" +
+                            (BusinessCaseReportWidget.IsEnabled ? "; the full report is shown in the card above." : "."),
                             ReplyFormat.AfterBusinessCase) + " " + OpenReportInstructions) with { Report = markdown };
                 }
 
@@ -374,8 +368,8 @@ public sealed class GetBusinessCaseStatusCommand(
                 ReplyFormat.Reply(
                     "'Business case ready:' followed by the annual savings and payback period of the strategy with the highest " +
                     "savings from 'result', in 'currency', quoting the figures exactly.",
-                    "per migration strategy: annual savings, payback in years, and total Azure versus on-premises cost, from " +
-                    "'result'; a strategy with 'unavailableReason' gets one bullet saying it has no business case and why.",
+                    "the ROI and total Azure versus on-premises cost of that strategy from 'result', in 'currency'; do not list " +
+                    "the other strategies.",
                     ReplyFormat.AfterBusinessCase), BusinessCaseStages.HaSkill);
         }
 

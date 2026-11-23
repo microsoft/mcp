@@ -232,12 +232,12 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
                 "'Inventory ready:' followed by the server count, with the OS split and the total storage when 'result' gives them, for " +
                 "example 'Inventory ready: 312 servers (280 Windows, 32 Linux), 4.1 TB storage'. If this was a text change or a " +
                 "question, the headline confirms the change or answers the question instead.",
-                "the most useful exact figures from 'result' (for example cores, memory, databases or applications) and any " +
-                "issues found, such as missing or invalid data, with counts.",
-                "when there are issues the user can fix, say how (correct the file and upload it again, or describe the fix in " +
-                "text) and that the business case can still be created; otherwise " + ReplyFormat.AfterInventory) +
+                "the total storage only if the headline does not already give it, and the count of any issues found, such as " +
+                "missing or invalid data. Never list the servers or VMs; they are in the card.",
+                "when there are issues the user can fix, say how in a few words (correct the file and upload it again, or describe " +
+                "the fix in text); then " + ReplyFormat.AfterInventory) +
                 (InventorySummaryWidget.IsEnabled
-                    ? " The full inventory summary is shown in the card above, so keep the reply short and do not paste 'result'."
+                    ? " The full inventory summary is shown in the card above; do not paste 'result' or any table."
                     : string.Empty);
         }
 

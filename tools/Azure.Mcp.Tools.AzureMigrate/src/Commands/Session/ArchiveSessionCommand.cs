@@ -93,7 +93,7 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
             return new(true, null, true, true,
                 ReplyFormat.Reply(
                     nothingClosed ? "There was no active session to close; you can start fresh." : "Previous session closed; a new session is ready.",
-                    "none, or one bullet that the previous inventory, business case and report are no longer used, without session IDs.",
+                    "none; skip this line.",
                     "offer to start a new inventory with their file."));
         }
 

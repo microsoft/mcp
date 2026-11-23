@@ -25,8 +25,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
         "there is none. Set 'output' to 'refined' for the refined (cleaned-up) inventory file, which is the default, or to " +
         "'offline' for the offline zip package; ask the user if it is unclear which one they want. " +
         "Returns: 'downloadUrl', 'downloadCommand' (an azcopy command) and 'instructions'. " +
-        "Next: share the download link or command with the user, then continue to the business case. " +
-        "Follow 'instructions'. Do not mention tool or parameter names to the user.",
+        "Next: share the download link or command with the user, then follow 'instructions' for the next step. " +
+        "Do not mention tool or parameter names to the user.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
