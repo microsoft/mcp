@@ -31,9 +31,20 @@ public sealed class ContainerListAvailableCommand(ILogger<ContainerListAvailable
     private readonly ILogger<ContainerListAvailableCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
+    public override void PostBindOptions(ContainerListAvailableOptions options)
+    {
+        options.Subscription = BackupVaultReferenceParser.ResolveSubscription(options.Subscription, options.Vault, options.ResourceGroup);
+        base.PostBindOptions(options);
+    }
+
     public override void ValidateOptions(ContainerListAvailableOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        var reference = BackupVaultReferenceParser.Normalize(
+            options.Subscription, options.ResourceGroup, options.Vault, vaultType: null, rsvOnly: true, validationResult);
+        options.ResourceGroup = reference.ResourceGroup ?? options.ResourceGroup;
+        options.Vault = reference.Vault ?? options.Vault;
 
         if (options.Filter is { Length: > 4096 })
         {

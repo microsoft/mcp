@@ -46,7 +46,7 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     [Fact]
     public void AddScopeTags_NullActivity_DoesNotThrow()
     {
-        AdvisorTelemetryTags.AddScopeTags(null, new RecommendationListOptions { Subscription = "sub" });
+        AdvisorTelemetryTags.AddScopeTags(null, new RecommendationListOptions { Subscriptions = ["sub"] });
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     {
         using var activity = StartActivity();
 
-        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = "00000000-0000-0000-0000-000000000001" });
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscriptions = ["00000000-0000-0000-0000-000000000001"] });
 
         Assert.Equal("00000000-0000-0000-0000-000000000001", activity.GetTagItem(AdvisorTelemetryTags.Subscription));
         Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.ServiceGroup));
@@ -79,7 +79,7 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     {
         using var activity = StartActivity();
 
-        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = value, ServiceGroup = value });
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscriptions = [value!], ServiceGroup = value });
 
         Assert.Empty(activity.TagObjects);
     }
@@ -183,7 +183,7 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     {
         using var activity = StartActivity();
 
-        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = subscription });
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscriptions = [subscription] });
 
         Assert.Equal(expected, activity.GetTagItem(AdvisorTelemetryTags.Subscription));
     }
@@ -193,9 +193,63 @@ public sealed class AdvisorTelemetryTagsTests : IDisposable
     {
         using var activity = StartActivity();
 
-        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscription = "Contoso Production" });
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions { Subscriptions = ["Contoso Production"] });
 
         Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+    }
+
+    [Fact]
+    public void AddScopeTags_SingletonCollectionRetainsNormalizedScalar()
+    {
+        using var activity = StartActivity();
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions
+        {
+            Subscriptions = ["53B36492-771D-40CB-8527-DC4C191366A7"],
+        });
+
+        Assert.Equal("53b36492-771d-40cb-8527-dc4c191366a7", activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.SubscriptionCount));
+    }
+
+    [Fact]
+    public void AddScopeTags_MultipleSubscriptionsUsesOnlyDistinctCount()
+    {
+        using var activity = StartActivity();
+        AdvisorTelemetryTags.AddScopeTags(activity, new RecommendationListOptions
+        {
+            Subscriptions = ["Contoso Production", "contoso production", "Contoso Development"],
+        });
+
+        Assert.Equal(2, activity.GetTagItem(AdvisorTelemetryTags.SubscriptionCount));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.Subscription));
+        AdvisorTelemetryTags.AddScopeTags(null, new RecommendationListOptions { Subscriptions = ["one", "two"] });
+    }
+
+    [Fact]
+    public void AddRecommendationTags_CombinedSingletonRetainsNormalizedScalar()
+    {
+        using var activity = StartActivity();
+        AdvisorTelemetryTags.AddRecommendationTags(activity,
+            "262C35D4-83FE-457F-AFA7-CAC774C371D8",
+            recommendationTypeIds: ["262c35d4-83fe-457f-afa7-cac774c371d8", "not-a-guid"]);
+
+        Assert.Equal("262c35d4-83fe-457f-afa7-cac774c371d8", activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeId));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeCount));
+    }
+
+    [Fact]
+    public void AddRecommendationTags_MultipleTypesUsesOnlyDistinctValidCount()
+    {
+        using var activity = StartActivity();
+        string[] ids = ["262c35d4-83fe-457f-afa7-cac774c371d8", "53b36492-771d-40cb-8527-dc4c191366a7", "not-a-guid"];
+        AdvisorTelemetryTags.AddRecommendationTags(activity,
+            ids[0], category: "Cost", subCategory: "IdleResources", recommendationTypeIds: ids);
+
+        Assert.Equal(2, activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeCount));
+        Assert.Null(activity.GetTagItem(AdvisorTelemetryTags.RecommendationTypeId));
+        Assert.Equal("Cost", activity.GetTagItem(AdvisorTelemetryTags.Category));
+        Assert.Equal("IdleResources", activity.GetTagItem(AdvisorTelemetryTags.SubCategory));
+        AdvisorTelemetryTags.AddRecommendationTags(null, recommendationTypeIds: ids);
     }
 
     [Fact]

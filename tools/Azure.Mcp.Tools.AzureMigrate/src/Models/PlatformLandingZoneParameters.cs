@@ -96,7 +96,12 @@ public record PlatformLandingZoneParameters
 /// <summary>
 /// Represents the context for a platform landing zone generation session.
 /// </summary>
+/// <param name="SubscriptionId">The subscription containing the Azure Migrate project.</param>
+/// <param name="ResourceGroupName">The resource group containing the Azure Migrate project.</param>
+/// <param name="MigrateProjectName">The Azure Migrate project name.</param>
+/// <param name="Tenant">Optional Microsoft Entra ID tenant ID or display name used to authenticate requests.</param>
 public record PlatformLandingZoneContext(
     string SubscriptionId,
     string ResourceGroupName,
-    string MigrateProjectName);
+    string MigrateProjectName,
+    string? Tenant = null);

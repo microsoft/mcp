@@ -580,14 +580,15 @@ public sealed partial class MonitorTracesService(
                 }
             }
         }
-        catch (OperationCanceledException ex) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && (budget.IsCancellationRequested || pollInFlight))
         {
             if (pollInFlight)
             {
                 throw new TraceQueryException(CreateResult("Failed"), new TimeoutException("Trace result page timed out.", ex));
             }
         }
-        catch (Exception ex) when (payload is not null && ex is HttpRequestException or RequestFailedException or JsonException or OperationCanceledException)
+        catch (Exception ex) when ((payload is not null || (pollInFlight && ex is not OperationCanceledException))
+            && ex is HttpRequestException or RequestFailedException or JsonException or OperationCanceledException)
         {
             throw new TraceQueryException(CreateResult("Failed"), ex);
         }

@@ -58,6 +58,30 @@ public sealed record RecommendationPrioritizationSignals
     [JsonPropertyName("annualSavingsCurrency")]
     public string? AnnualSavingsCurrency { get; init; }
 
+    /// <summary>Annualized retail potential savings for the recommendation type.</summary>
+    [JsonPropertyName("yearlyPotentialSavings")]
+    public double? YearlyPotentialSavings { get; init; }
+
+    /// <summary>Accumulated retail cost for open recommendations, when available.</summary>
+    [JsonPropertyName("cost")]
+    public double? Cost { get; init; }
+
+    /// <summary>Realized retail savings for completed recommendations, when available.</summary>
+    [JsonPropertyName("realizedSavings")]
+    public double? RealizedSavings { get; init; }
+
+    /// <summary>Currency for the returned savings values.</summary>
+    [JsonPropertyName("currency")]
+    public string? Currency { get; init; }
+
+    /// <summary>Pricing basis for the returned savings values.</summary>
+    [JsonPropertyName("pricingBasis")]
+    public string? PricingBasis { get; init; }
+
+    /// <summary>Lifecycle state used for this prioritized group.</summary>
+    [JsonPropertyName("status")]
+    public string? Status { get; init; }
+
     /// <summary>Published resource-type criticality, such as Networking, OperationalData, Compute, or Storage.</summary>
     [JsonPropertyName("resourceTypeCriticality")]
     public string? ResourceTypeCriticality { get; init; }

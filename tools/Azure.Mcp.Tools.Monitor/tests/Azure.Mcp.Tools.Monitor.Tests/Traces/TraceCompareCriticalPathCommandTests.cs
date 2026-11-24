@@ -52,6 +52,7 @@ public sealed class TraceCompareCriticalPathCommandTests()
     [InlineData("--query \"Traces | where root_span_name == 'GET|POST'\" --compare-query \"Traces | where root_span_name == '$$'\"", true)]
     [InlineData("--query \"Traces | where root_span_name == 'it''s|POST$$'\" --compare-query \"Traces | where root_span_name == @'it''s|POST$$'\"", true)]
     [InlineData("--query \"Traces | where duration_nano > 1000000 $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>\" --compare-query Traces", true)]
+    [InlineData("--query \"T | where duration_nano > 1000000 $$ << T | where ['service.name'] == 'gateway' $$ T | where ['service.name'] == 'backend' >>\" --compare-query T", true)]
     [InlineData($"--trace-ids {Id} --compare-query Traces", true)]
     [InlineData($"--trace-ids {Id} --query Traces --compare-trace-ids {Id}", false)]
     [InlineData($"--trace-ids invalid --compare-trace-ids {Id}", false)]
@@ -83,6 +84,22 @@ public sealed class TraceCompareCriticalPathCommandTests()
                 "Traces | summarize p50=percentile(duration_nano, 50), p95=percentile(duration_nano, 95), p99=percentile(duration_nano, 99) by ['span.name']",
                 Arg.Any<string?>(), Arg.Any<CancellationToken>());
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NormalizesGuidFormatsContainingCommas()
+    {
+        Service.ComparePopulationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<TraceComparisonRequest>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>()).Returns(new TraceQueryResult { Status = "Succeeded", OperationId = "operation" });
+        string id = Guid.Parse(Id).ToString("X");
+
+        var response = await ExecuteCommandAsync($"{Target} --trace-ids \"{id}\" --compare-trace-ids {Id}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ComparePopulationsAsync("sub", "rg", "amw", "critical-path",
+            Arg.Is<TraceComparisonRequest>(request => request.Current.TraceId == Id && request.CompareTo.TraceId == Id),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]

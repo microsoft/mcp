@@ -33,7 +33,7 @@ public class NetAppFilesAccountService(IAzureService azureService) : BaseAzureSe
         }
 
         var accountResources = await resourceGroupResource.GetNetAppAccounts().GetAllAsync(cancellationToken).ToListAsync(cancellationToken);
-        return accountResources.Select(Map).ToList();
+        return [.. accountResources.Select(Map)];
     }
 
     public async Task<NetAppFilesAccount> CreateAccountAsync(

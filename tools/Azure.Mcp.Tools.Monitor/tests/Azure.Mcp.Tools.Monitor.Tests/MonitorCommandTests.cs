@@ -31,7 +31,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         EntityHealthState.Degraded.ToString(),
         EntityHealthState.Unhealthy.ToString(),
         EntityHealthState.Unknown.ToString(),
-        EntityHealthState.Deleted.ToString(),
+        "Deleted",
     ];
 
     private static readonly string[] s_sanitizedHeaders =
@@ -77,6 +77,7 @@ public sealed class MonitorCommandTests(ITestOutputHelper output, TestProxyFixtu
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..resourceGroup")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..TimeZone")),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..Owners")),
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..customerId")
         {
             Value = EmptyGuid

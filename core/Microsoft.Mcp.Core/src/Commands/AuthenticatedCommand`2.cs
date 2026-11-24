@@ -6,6 +6,7 @@ using System.Net;
 using Azure;
 using Azure.Identity;
 using Microsoft.Identity.Client;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -42,6 +43,7 @@ public abstract class AuthenticatedCommand<
         ArgumentException => HttpStatusCode.BadRequest,
         KeyNotFoundException => HttpStatusCode.NotFound,
         AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        OnBehalfOfUserTokenRequiredException => HttpStatusCode.Forbidden,
         RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
         MsalServiceException msalServiceEx => (HttpStatusCode)msalServiceEx.StatusCode,
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,

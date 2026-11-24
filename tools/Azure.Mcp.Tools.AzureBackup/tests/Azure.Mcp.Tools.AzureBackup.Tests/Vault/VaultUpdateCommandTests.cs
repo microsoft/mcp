@@ -325,4 +325,18 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Assert.Contains(options, o => o.Name == "--identity-type");
         Assert.Contains(options, o => o.Name == "--tags");
     }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSubscriptionNameWithVaultResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "Other Subscription",
+            "--vault", "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v",
+            "--resource-group", "rg",
+            "--identity-type", "SystemAssigned");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.SubscriptionNameWithResourceIdMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
 }

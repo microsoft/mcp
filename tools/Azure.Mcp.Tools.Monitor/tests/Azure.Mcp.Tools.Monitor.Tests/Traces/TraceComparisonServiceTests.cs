@@ -68,6 +68,25 @@ public sealed class TraceComparisonServiceTests()
     }
 
     [Fact]
+    public async Task Comparison_ReportsFirstPageHttpClientTimeoutAsUncertain()
+    {
+        using var handler = new MonitorTracesTestHandler(1, false, stallPollOnCall: 1);
+        var (service, azureService) = MonitorTracesServiceTests.CreateService(handler);
+        azureService.GetClient(Arg.Any<string?>()).Returns(_ =>
+            new HttpClient(handler, disposeHandler: false) { Timeout = TimeSpan.FromMilliseconds(100) });
+
+        var error = await Assert.ThrowsAsync<TraceQueryException>(() => service.ComparePopulationsAsync(
+            MonitorTracesTestHandler.Subscription, "rg", "amw0", "statistics", Request(false),
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, error.StatusCode);
+        Assert.Equal("op-1234", error.PartialResult.OperationId);
+        Assert.Null(error.PartialResult.Payload);
+        Assert.Contains("Restart", error.Message, StringComparison.Ordinal);
+        Assert.Equal(1, handler.PollCalls);
+    }
+
+    [Fact]
     public async Task Comparison_RemainsResumableWhenPollDelayTimesOut()
     {
         using var pending = new HttpResponseMessage(HttpStatusCode.Accepted);
@@ -239,6 +258,24 @@ public sealed class TraceComparisonServiceTests()
         Assert.Equal(Id, body.RootElement.GetProperty("current").GetProperty("traceId").GetString());
     }
 
+    [Fact]
+    public async Task CriticalPath_DeduplicatesExplicitIdsBeforeSubmitting()
+    {
+        using var handler = new MonitorTracesTestHandler(1, false);
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler);
+        var request = Request(true);
+        request.Current.Options = new() { MaxResults = 2 };
+        request.Current.TraceId = $"{Id},01234567-89ab-cdef-0123-456789abcdef,{ComparisonId},{ComparisonId.ToUpperInvariant()}";
+        request.CompareTo.TraceId = $"{ComparisonId},{Id},{Id.ToUpperInvariant()}";
+
+        await service.ComparePopulationsAsync(MonitorTracesTestHandler.Subscription, "rg", "amw0",
+            "critical-path", request, "Traces", cancellationToken: TestContext.Current.CancellationToken);
+
+        using var body = JsonDocument.Parse(handler.LastSubmitBody!);
+        Assert.Equal($"{Id},{ComparisonId}", body.RootElement.GetProperty("current").GetProperty("traceId").GetString());
+        Assert.Equal($"{ComparisonId},{Id}", body.RootElement.GetProperty("compareTo").GetProperty("traceId").GetString());
+    }
+
     [Theory]
     [InlineData(true, false)]
     [InlineData(true, true)]
@@ -327,6 +364,8 @@ public sealed class TraceComparisonServiceTests()
         "Traces | where root_span_name == 'it''s|POST$$' | project trace_id $$ <<Traces | where ['span.name'] == @'it''s|POST$$'>>")]
     [InlineData("Traces $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>",
         "Traces | project trace_id $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>")]
+    [InlineData("T | where duration_nano > 10 $$ << T | where ['service.name'] == 'gateway' $$ T | where ['service.name'] == 'backend' >>",
+        "T | where duration_nano > 10 | project trace_id $$ << T | where ['service.name'] == 'gateway' $$ T | where ['service.name'] == 'backend' >>")]
     [InlineData("Traces | where start_time_unix_nano > 0 $$ <<Traces | where ['span.name'] == 'GET'>>",
         "Traces | where start_time_unix_nano > 0 | project trace_id $$ <<Traces | where ['span.name'] == 'GET'>>")]
     public async Task CriticalPath_DiscoveryPreservesQuotedSeparatorsForBothPopulations(string query, string expected)

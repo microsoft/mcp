@@ -167,7 +167,7 @@ public sealed class MySqlService(IAzureService azureService)
             Database = database,
             UserID = user,
             Password = password,
-            SslMode = MySqlSslMode.Required
+            SslMode = MySqlSslMode.VerifyFull // See: https://mysqlconnector.net/connection-options/#SslMode
         };
         return builder.ConnectionString;
     }

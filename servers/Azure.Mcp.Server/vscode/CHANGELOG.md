@@ -1,5 +1,88 @@
 # Release History
 
+## 4.0.10 (2026-11-20) (pre-release)
+
+### Added
+
+- Added `azmcp monitor healthmodels inspect`, a read-only tool for the entities of an Azure Monitor Health Model: their health state, signals with values and both evaluation rules, what drives an entity's state (`--walk Causes`), what it depends on or what depends on it, health state history, signal history and data annotations, now or at a past instant (`--timestamp`). [[#4077](https://github.com/microsoft/mcp/pull/4077)]
+
+### Changed
+
+- Updated MySQL tools to use the 'VerifyFull' SSL mode, which validates the server certificate and hostname when connecting to Azure Database for MySQL. [[#4205](https://github.com/microsoft/mcp/pull/4205)]
+- Added Azure resource type telemetry for `resourcehealth_availability-status_get`. Unsupported resource types now return success with an explanatory message and a link to supported resource types; other 422 responses remain errors. [[#4213](https://github.com/microsoft/mcp/pull/4213)]
+#### Dependency Updates
+- Updated `Azure.ResourceManager.CloudHealth` from 1.0.0-beta.3 to 1.0.0, `Azure.Core` from 1.61.0 to 1.64.0 and `System.ClientModel` from 1.15.0 to 1.16.0. [[#4077](https://github.com/microsoft/mcp/pull/4077)]
+
+## 4.0.9 (2026-11-17) (pre-release)
+
+### Added
+
+- Added the Azure Monitor dashboards with Grafana remote MCP server (`https://mcp.dashboard.azure.com`) to the registry, exposing its dashboard, Azure Monitor, Prometheus, Kusto, and health model tools through the `dashboards` namespace. [[#4172](https://github.com/microsoft/mcp/pull/4172)]
+
+### Changed
+
+- **Breaking:** SRE Agent: `connectors create_mcp`, `incidents setup_servicenow` and `incidents setup_pagerduty` are now available only when the server runs locally (stdio). [[#4194](https://github.com/microsoft/mcp/pull/4194)]
+
+### Fixed
+
+- Fixed local NPX package verification on Linux and paths containing special characters. [[#4175](https://github.com/microsoft/mcp/pull/4175)]
+- Fixed Azure Backup 'vault create --storage-type' and 'vault update --redundancy' failing with BMSUserErrorRedundancySettingsUseVaultApi; redundancy is now applied through the vault API when required. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Azure Backup commands now accept a full vault resource ID for '--vault' and a resource group resource ID for '--resource-group' instead of failing with 'Invalid resource id', and report clear errors for malformed or conflicting values. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Fixed Azure Backup 'protecteditem get' failing with ArgumentNullException for Backup vault instances whose datasource resourceProperties has no objectType; such instances no longer prevent the rest of the vault from being listed. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+- Azure Backup 'backup status' now returns actionable guidance for unregistered resource providers and tenant mismatches. [[#4183](https://github.com/microsoft/mcp/pull/4183)]
+
+## 4.0.8 (2026-11-12) (pre-release)
+
+### Added
+
+- Added `monitor traces query analyze-top-attributes` for top distinguishing attributes from trace-cohort comparisons with up to 10000 requested traces and `monitor traces query analyze-critical-path` for aggregated critical-path analysis in Azure Monitor Workspace Trace Store. [[#4130](https://github.com/microsoft/mcp/pull/4130)]
+- Added read-only Device Provisioning Service onboarding validation for individual enrollments and enrollment-group cohorts of up to 10 devices, including verified CA resolution and complete public X.509 chain checks, plus an agent skill for checkpointed fleet orchestration. [[#4119](https://github.com/microsoft/mcp/pull/4119)]
+
+### Changed
+
+- Moved scheduled Azure MCP release-preparation pull requests to 10 AM Pacific on Tuesdays and Thursdays. [[#4143](https://github.com/microsoft/mcp/pull/4143)]
+- Reduced development build output by sharing Azure MCP server runtime dependencies across tests and performance benchmarks. [[#4115](https://github.com/microsoft/mcp/pull/4115)]
+
+## 4.0.7 (2026-11-10) (pre-release)
+
+### Fixed
+
+- Azure Monitor trace queries now resolve known workspaces without reading parent resource groups or subscription metadata when a subscription ID is supplied. [[#4129](https://github.com/microsoft/mcp/pull/4129)]
+
+## 4.0.6 (2026-11-05) (pre-release)
+
+### Added
+
+- Added `advisor_recommendation_prevalidate` for resource deletion safety checks, batch recommendation updates with `--recommendation-ids`, continuation-token pagination with `--continuation-token`, and Cost/IdleResources summary and list capabilities for savings, lifecycle status, and Service Group scopes. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+
+### Changed
+
+- **Breaking:** Renamed `subscription` to `subscriptions`, `recommendation-type-id` to `recommendation-type-ids`, and `resource-type` to `resource-types` for `advisor_recommendation_list` and `advisor_recommendation_summary`. The new inputs require arrays of strings, including one-element arrays for single selections. The singular input names are no longer accepted. [[#4045](https://github.com/microsoft/mcp/pull/4045)]
+#### Dependency Updates
+- Updated the .NET SDK to 10.0.403 and .NET base library packages to 10.0.14. [[#4096](https://github.com/microsoft/mcp/pull/4096)]
+
+### Fixed
+
+- Fixed Debug recording-proxy routing so loopback playback requests stay local instead of passing through outbound HTTP proxies. [[#4104](https://github.com/microsoft/mcp/pull/4104)]
+
+## 4.0.5 (2026-11-03) (pre-release)
+
+### Added
+
+- Added `azmcp advisor insight list` command to list Azure Advisor insights (idle resources, zonal resiliency, service retirement) with typed KPIs for a Service Group, a subscription, or all accessible Service Groups and subscriptions when no scope is given. Supports `--service-group` or `--subscription` (mutually exclusive), `--insight-name`, `--top`, and `--tenant`. [[#3938](https://github.com/microsoft/mcp/pull/3938)]
+
+### Changed
+
+- Added scheduled Azure MCP release-preparation pull requests at noon Pacific on Tuesdays and Thursdays outside Microsoft US holidays, with configurable release-owner mentions. [[#4067](https://github.com/microsoft/mcp/pull/4067)]
+
+### Fixed
+
+- Reduced repeated Kusto query latency by caching access tokens per client and refreshing them before expiration. [[#4027](https://github.com/microsoft/mcp/pull/4027)]
+- Improved exception handling to preserve authentication, cancellation, and service error details, and correctly identify missing resources and malformed AppLens responses. [[#3795](https://github.com/microsoft/mcp/pull/3795)]
+- Fixed concurrent first calls to namespace tools corrupting the tool-list cache and causing subsequent calls to fail until the server restarts. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Fixed concurrent external MCP client initialization, single-tool discovery cache publication, and overlapping tool-loader disposal. Canceling a caller no longer cancels shared client initialization. [[#4057](https://github.com/microsoft/mcp/pull/4057)]
+- Honor remote MCP tool-list time-to-live values and refresh cached proxy tools when they expire. [[#3780](https://github.com/microsoft/mcp/pull/3780)]
+
 ## 4.0.4 (2026-10-29) (pre-release)
 
 ### Added

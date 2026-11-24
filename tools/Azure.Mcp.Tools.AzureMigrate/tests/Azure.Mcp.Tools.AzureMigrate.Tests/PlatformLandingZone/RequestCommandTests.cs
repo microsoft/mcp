@@ -243,6 +243,42 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
         Assert.Contains(downloadUrl, result.Message);
     }
 
+    [Theory]
+    [InlineData("check")]
+    [InlineData("generate")]
+    [InlineData("download")]
+    public async Task ExecuteAsync_WithTenant_PassesTenantInContext(string action)
+    {
+        const string tenant = "Contoso Ltd";
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>()).Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--action", action,
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--migrate-project-name", "project1",
+            "--tenant", tenant);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        switch (action)
+        {
+            case "check":
+                await Service.Received(1).CheckExistingAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<CancellationToken>());
+                break;
+            case "generate":
+                await Service.Received(1).GenerateAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<CancellationToken>());
+                break;
+            case "download":
+                await Service.Received(1).DownloadAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<string>(), Arg.Any<CancellationToken>());
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(action), action, null);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_GenerateAction_WithDefaultParameters_Succeeds()
     {

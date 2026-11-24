@@ -691,6 +691,7 @@ public partial class FabricCoreService(
         string? jsonContent = null,
         Dictionary<string, string>? headers = null,
         HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead,
+        Action? onSending = null,
         CancellationToken cancellationToken = default)
     {
         var tokenRequestContext = new TokenRequestContext(FabricEndpoints.FabricScopes);
@@ -714,6 +715,9 @@ public partial class FabricCoreService(
             request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+        // Mutations can distinguish authentication/pre-send failures from uncertain sends.
+        onSending?.Invoke();
         return await _httpClient.SendAsync(request, completionOption, cancellationToken);
     }
 

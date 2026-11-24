@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.ServiceGroupIntelligence;
 using Azure.Mcp.Tools.Advisor.Services;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -58,6 +59,10 @@ public sealed class ServiceGroupIntelligenceGetCommand(
     public override void ValidateOptions(ServiceGroupIntelligenceGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+        if (!AdvisorPagination.IsValid(options.ContinuationToken))
+        {
+            validationResult.Errors.Add(AdvisorPagination.Error);
+        }
 
         if (options.ServiceGroup is not null)
         {
@@ -110,10 +115,11 @@ public sealed class ServiceGroupIntelligenceGetCommand(
                 options.Status,
                 options.Top ?? DefaultTop,
                 options.Tenant,
+                options.ContinuationToken,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
-                new(results.Results, results.AreResultsTruncated, StatusCalculationExplanation),
+                new(results.Results, results.AreResultsTruncated, StatusCalculationExplanation, results.ContinuationToken),
                 AdvisorJsonContext.Default.ServiceGroupIntelligenceGetResult);
         }
         catch (Exception ex)
@@ -153,5 +159,6 @@ public sealed class ServiceGroupIntelligenceGetCommand(
     public sealed record ServiceGroupIntelligenceGetResult(
         List<AdvisorServiceGroupStatus> ServiceGroups,
         bool AreResultsTruncated,
-        string StatusCalculationExplanation);
+        string StatusCalculationExplanation,
+        string? ContinuationToken = null);
 }

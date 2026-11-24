@@ -1,0 +1,44 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "warehouseId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMetadata": true,
+    "updateWarehouseDefinitionRequest": {
+      "definition": {
+        "format": "sqlproj",
+        "parts": [
+          {
+            "path": "sqldw.sqlproj",
+            "payload": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjxQcm9qZWN0IERlZmF1bHRUYXJnZXRzPSJCdWlsZCI+DQogIDxTZGs+TWljcm9zb2Z0LkJ1aWxkLlNxbC9TZGsNCiAgPC9TZGs+DQo8L1Byb2plY3Q+",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "dbo/Tables/Table1.sql",
+            "payload": "Q1JFQVRFIFRBQkxFIFtkYm9dLltUYWJsZTFdIChbSWRdIElOVCBOT1QgTlVMTCwgW05hbWVdIE5WQVJDSEFSKDEwMCkp",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".sharedqueries/query.sql",
+            "payload": "U0VMRUNUIFtJZF0sIFtOYW1lXSBGUk9NIFtkYm9dLltUYWJsZTFd",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIldhcmVob3VzZSIsCiAgICAiZGlzcGxheU5hbWUiOiAiV2FyZWhvdXNlXzEiCiAgfSwKICAiY29uZmlnIjogewogICAgInZlcnNpb24iOiAiMi4wIiwKICAgICJsb2dpY2FsSWQiOiAiMDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAwIgogIH0KfQ==",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "200": {},
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

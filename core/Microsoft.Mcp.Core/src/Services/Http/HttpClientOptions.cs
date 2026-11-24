@@ -23,6 +23,7 @@ public sealed class HttpClientOptions
     /// Release builds ignore this setting.
     /// Tests can configure it per provider without changing the process environment.
     /// Configuring a recording proxy disables transport-level SSRF protection, not endpoint validation.
+    /// Loopback recording endpoints bypass configured and runtime HTTP proxies.
     /// </remarks>
     public string? RecordingProxy { get; set; }
 

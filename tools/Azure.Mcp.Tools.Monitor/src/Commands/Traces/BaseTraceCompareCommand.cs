@@ -93,7 +93,7 @@ public abstract class BaseTraceCompareCommand<
                     Query = options.Query,
                     Language = "KQL",
                     TimeRange = Window(options.StartTime, options.EndTime),
-                    TraceId = criticalPathOptions?.TraceIds is null ? null : string.Join(",", criticalPathOptions.TraceIds.Select(id => id.Trim())),
+                    TraceId = criticalPathOptions?.TraceIds is null ? null : string.Join(",", criticalPathOptions.TraceIds.Select(id => Guid.Parse(id.Trim()).ToString("N"))),
                     Options = new()
                     {
                         MaxResults = Math.Clamp(options.MaxResults ?? 10000, 1, 10000),
@@ -108,7 +108,7 @@ public abstract class BaseTraceCompareCommand<
                 {
                     Query = options.CompareQuery,
                     TimeRange = options.CompareStartTime is null ? null : Window(options.CompareStartTime, options.CompareEndTime!),
-                    TraceId = criticalPathOptions?.CompareTraceIds is null ? null : string.Join(",", criticalPathOptions.CompareTraceIds.Select(id => id.Trim())),
+                    TraceId = criticalPathOptions?.CompareTraceIds is null ? null : string.Join(",", criticalPathOptions.CompareTraceIds.Select(id => Guid.Parse(id.Trim()).ToString("N"))),
                 },
             };
             string? aggregation = criticalPath
@@ -173,13 +173,13 @@ public abstract class BaseTraceCompareCommand<
                 string structure = LogSearchQueryValidator.BlankQuotedTextAndRejectComments(query);
                 string[] sections = structure.Split("$$", 2, StringSplitOptions.None);
                 string? spanBlock = sections.Length == 2 ? sections[1].Trim() : null;
-                if (!Regex.IsMatch(sections[0], @"^\s*Traces\s*(?:\||$)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))
+                if (!Regex.IsMatch(sections[0], @"^\s*(?:Traces|T)\s*(?:\||$)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))
                     || Regex.Matches(structure, @"\|\s*(\w+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)).Any(match => match.Groups[1].Value != "where")
                     || (spanBlock is not null && (!spanBlock.StartsWith("<<", StringComparison.Ordinal)
                         || spanBlock.IndexOf("<<", 2, StringComparison.Ordinal) >= 0
                         || spanBlock.IndexOf(">>", StringComparison.Ordinal) != spanBlock.Length - 2)))
                 {
-                    error = $"The {population} selection query must start with Traces and contain only where filters and optionally one $$ span-membership block.";
+                    error = $"The {population} selection query must start with Traces or T and contain only where filters and optionally one $$ span-membership block.";
                 }
             }
             catch (CommandValidationException ex)

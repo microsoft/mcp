@@ -15,6 +15,24 @@ public sealed class FabricCoreHttpHelpersTests()
     private const string DocumentedContinuationToken = "LDEsMTAwMDAwLDA%3D";
 
     [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    [InlineData(128, true)]
+    [InlineData(129, false)]
+    public static void IsSafeErrorCode_EnforcesIdentifierLength(int length, bool expected) =>
+        Assert.Equal(expected, FabricCoreHttpHelpers.IsSafeErrorCode(new string('a', length)));
+
+    [Theory]
+    [InlineData("Job_Failed.1-2", true)]
+    [InlineData(null, false)]
+    [InlineData("private detail", false)]
+    [InlineData("private\r\nheader", false)]
+    [InlineData("https://example.invalid", false)]
+    [InlineData("\u00e9", false)]
+    public static void IsSafeErrorCode_RejectsNonIdentifiers(string? code, bool expected) =>
+        Assert.Equal(expected, FabricCoreHttpHelpers.IsSafeErrorCode(code));
+
+    [Theory]
     [InlineData("0", 0L)]
     [InlineData("45", 45L)]
     [InlineData(" 45 ", 45L)]

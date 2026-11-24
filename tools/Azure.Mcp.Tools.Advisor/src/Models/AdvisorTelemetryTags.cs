@@ -13,9 +13,11 @@ public static class AdvisorTelemetryTags
     private static string AddPrefix(string tagName) => $"advisor/{tagName}";
 
     public const string Subscription = "subscription";
+    public static readonly string SubscriptionCount = AddPrefix("SubscriptionCount");
 
     public static readonly string ServiceGroup = AddPrefix("ServiceGroup");
     public static readonly string RecommendationTypeId = AddPrefix("RecommendationTypeId");
+    public static readonly string RecommendationTypeCount = AddPrefix("RecommendationTypeCount");
     public static readonly string Category = AddPrefix("Category");
     public static readonly string SubCategory = AddPrefix("SubCategory");
     public static readonly string Impact = AddPrefix("Impact");
@@ -24,7 +26,15 @@ public static class AdvisorTelemetryTags
 
     public static void AddScopeTags(Activity? activity, IRecommendationScopeOptions options)
     {
-        AddTagIfPresent(activity, Subscription, NormalizeSubscriptionId(options.Subscription));
+        var subscriptions = RecommendationScopeValidator.GetSubscriptions(options);
+        if (subscriptions.Length > 1)
+        {
+            activity?.AddTag(SubscriptionCount, subscriptions.Length);
+        }
+        else
+        {
+            AddTagIfPresent(activity, Subscription, NormalizeSubscriptionId(subscriptions.SingleOrDefault()));
+        }
         AddTagIfPresent(activity, ServiceGroup, options.ServiceGroup);
     }
 
@@ -33,9 +43,19 @@ public static class AdvisorTelemetryTags
         string? recommendationTypeId = null,
         string? category = null,
         string? subCategory = null,
-        string? impact = null)
+        string? impact = null,
+        IReadOnlyList<string>? recommendationTypeIds = null)
     {
-        AddTagIfPresent(activity, RecommendationTypeId, RecommendationFilterValidator.NormalizeRecommendationTypeId(recommendationTypeId));
+        var typeIds = RecommendationFilterValidator.NormalizeRecommendationTypeIds(
+            RecommendationFilterValidator.CombineValues(recommendationTypeId, recommendationTypeIds));
+        if (typeIds.Count > 1)
+        {
+            activity?.AddTag(RecommendationTypeCount, typeIds.Count);
+        }
+        else
+        {
+            AddTagIfPresent(activity, RecommendationTypeId, typeIds.SingleOrDefault());
+        }
         AddTagIfPresent(activity, Category, RecommendationFilterValidator.NormalizeAllowedValue(category, RecommendationFilterValidator.AllowedCategories));
         AddTagIfPresent(activity, SubCategory, subCategory?.Trim());
         AddTagIfPresent(activity, Impact, RecommendationFilterValidator.NormalizeAllowedValue(impact, RecommendationFilterValidator.AllowedImpacts));

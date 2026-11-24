@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.ServiceGroupIntelligence;
@@ -23,6 +24,9 @@ public sealed class ServiceGroupIntelligenceGetOptions
 
     [Option(Description = "Maximum number of Service Groups to return (1-500, default 50).")]
     public int? Top { get; set; }
+
+    [Option(Description = AdvisorPagination.Description)]
+    public string? ContinuationToken { get; set; }
 
     [Option(Description = OptionDescriptions.Tenant)]
     public string? Tenant { get; set; }

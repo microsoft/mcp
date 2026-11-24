@@ -8,41 +8,80 @@ import:
   - ../../.vscode/cspell.json
 words:
   - advisorresources
+  - annualize
+  - applicationgateways
   - applicationgatewaywebapplicationfirewallpolicies
   - aseries
+  - asrseeddisk
+  - attentionneeded
+  - availabilitysets
+  - azcopy
+  - backupfabrics
   - burndown
+  - cands
   - connectedclusters
   - containerregistry
   - databaseaccounts
+  - ddosprotectionplans
+  - diskstate
   - domainservices
   - dpsv
+  - elasticpools
+  - expressroutecircuits
   - expressrouteports
   - famsv
   - fasv
   - flexibleservers
   - frontdoorwebapplicationfirewallpolicies
   - highavailability
+  - idleresources
   - isnotnull
   - isolatedv
   - kubernetesconfiguration
   - lasv
   - leftouter
+  - loadbalancers
   - machinelearningservices
   - managedinstances
+  - metricnames
+  - missioncritical
+  - natgateways
+  - networksecuritygroups
+  - nslookup
+  - predelete
+  - prevalidating
+  - privatednszones
+  - privateendpoints
+  - protecteditems
+  - protectioncontainers
+  - publicipaddresses
   - rdma
   - recommenddata
+  - recoveryservices
+  - recoveryservicesresources
+  - resourcechanges
+  - resourcecontainers
   - scom
   - servicegroups
   - serviceretirement
   - serviceupgradeandretirement
+  - skiptoken
+  - snat
   - startofday
   - staticsites
   - subtag
   - tobool
   - todatetime
   - todouble
+  - toint
   - tolower
+  - trafficmanager
+  - trafficmanagerprofiles
   - undercount
+  - unparseable
   - unscored
   - urity
   - virtualmachinescalesets
+  - virtualnetworkgateways
+  - virtualnetworks
+  - vnets

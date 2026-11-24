@@ -114,6 +114,7 @@ internal class Program
             new Fabric.Mcp.Tools.Docs.FabricDocsSetup(),
             new Fabric.Mcp.Tools.OneLake.FabricOneLakeSetup(),
             new Fabric.Mcp.Tools.Core.FabricCoreSetup(),
+            new Fabric.Mcp.Tools.Core.FabricJobsSetup(),
             new Fabric.Mcp.Tools.DataFactory.DataFactoryAreaSetup(),
         ];
     }

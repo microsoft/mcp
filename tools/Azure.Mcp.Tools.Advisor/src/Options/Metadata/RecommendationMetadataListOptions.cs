@@ -1,12 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Tools.Advisor.Validation;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Advisor.Options.Metadata;
 
 public sealed class RecommendationMetadataListOptions
 {
+    [Option(Description = AdvisorPagination.Description)]
+    public string? ContinuationToken { get; set; }
+
     [Option(
         Description = "Language for localized recommendation metadata. Defaults to English ('en'). " +
             "Supported catalog languages are en, cs, de, es, fr, hu, id, it, ja, ko, nl, pl, pt-BR, pt-PT, ru, sv, tr, zh-Hans, and zh-Hant. " +

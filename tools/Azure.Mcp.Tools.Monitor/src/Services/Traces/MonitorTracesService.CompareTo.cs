@@ -69,8 +69,9 @@ public sealed partial class MonitorTracesService
     {
         if (population.TraceId is not null)
         {
-            ValidateComparisonIdLimit(population.TraceId.Split(',').Select(Guid.Parse).Distinct().Count(), maxResults);
-            return population.TraceId;
+            var explicitIds = population.TraceId.Split(',').Select(Guid.Parse).Distinct().Select(id => id.ToString("N")).ToArray();
+            ValidateComparisonIdLimit(explicitIds.Length, maxResults);
+            return string.Join(",", explicitIds);
         }
 
         string query = population.Query!;

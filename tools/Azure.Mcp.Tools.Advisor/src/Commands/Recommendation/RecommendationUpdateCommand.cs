@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Advisor.Models;
 using Azure.Mcp.Tools.Advisor.Options.Recommendation;
@@ -26,6 +27,7 @@ namespace Azure.Mcp.Tools.Advisor.Commands.Recommendation;
         Postponed requires a future ISO 8601 date and time with a timezone offset. For Dismissed, provide an explicit supported reason when known; if no reason is supplied or the user's intent cannot be mapped to one, Other is used.
         Use --tenant when the target subscription or service group is in a non-default tenant. State changes are rejected for Security category and platform-resolved recommendations.
         Returns the updated ARM recommendation resource. Use this state-changing tool instead of list or summary when the user wants to modify or snooze one recommendation.
+        For Cost/IdleResources, postpone, dismiss, complete, or reactivate unused-resource recommendations without changing resources. Use --recommendation-ids for a batch sharing scope, tenant, status, date, and reason; one consent request covers the batch. Returns per-ID Succeeded, Failed, Unverified, or NotAttempted outcomes; updates are not atomic or automatically retried.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,
@@ -48,9 +50,24 @@ public sealed class RecommendationUpdateCommand(
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrWhiteSpace(options.RecommendationId))
+        if (options.RecommendationId is not null && options.RecommendationIds is not null)
         {
-            validationResult.Errors.Add("--recommendation-id is required and cannot be empty.");
+            validationResult.Errors.Add("Specify either --recommendation-id or --recommendation-ids, not both.");
+        }
+        else if (options.RecommendationIds is { } ids)
+        {
+            if (ids.Length == 0 || ids.Any(string.IsNullOrWhiteSpace))
+            {
+                validationResult.Errors.Add("--recommendation-ids must contain at least one ID and no empty IDs.");
+            }
+            else if (ids.Select(id => id.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != ids.Length)
+            {
+                validationResult.Errors.Add("--recommendation-ids must not contain duplicate IDs.");
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(options.RecommendationId))
+        {
+            validationResult.Errors.Add("--recommendation-id or --recommendation-ids is required and cannot be empty.");
         }
 
         RecommendationStateUpdateValidator.AddCommandValidationErrors(
@@ -76,23 +93,14 @@ public sealed class RecommendationUpdateCommand(
             var recommendationDismissReason = RecommendationStateUpdateValidator.ResolveDismissReason(
                 options.RecommendationStatus,
                 options.RecommendationDismissReason);
-            var recommendation = !string.IsNullOrEmpty(options.ServiceGroup)
-                ? await _advisorService.UpdateServiceGroupRecommendationAsync(
-                    options.ServiceGroup,
-                    options.RecommendationId.Trim(),
-                    options.RecommendationStatus,
-                    postponedUntilDateTime,
-                    recommendationDismissReason,
-                    options.Tenant,
-                    cancellationToken)
-                : await _advisorService.UpdateRecommendationAsync(
-                    options.Subscription!,
-                    options.RecommendationId.Trim(),
-                    options.RecommendationStatus,
-                    postponedUntilDateTime,
-                    recommendationDismissReason,
-                    options.Tenant,
-                    cancellationToken);
+            if (options.RecommendationIds is { } ids)
+            {
+                return await ExecuteBatchAsync(
+                    context, options, ids, postponedUntilDateTime, recommendationDismissReason, cancellationToken);
+            }
+
+            var recommendation = await UpdateRecommendationAsync(
+                options, options.RecommendationId!.Trim(), postponedUntilDateTime, recommendationDismissReason, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(recommendation),
@@ -110,6 +118,91 @@ public sealed class RecommendationUpdateCommand(
             HandleException(context, ex);
         }
 
+        return context.Response;
+    }
+
+    private Task<Models.Recommendation> UpdateRecommendationAsync(
+        RecommendationUpdateOptions options,
+        string recommendationId,
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason,
+        CancellationToken cancellationToken) =>
+        !string.IsNullOrEmpty(options.ServiceGroup)
+            ? _advisorService.UpdateServiceGroupRecommendationAsync(
+                options.ServiceGroup, recommendationId, options.RecommendationStatus,
+                postponedUntilDateTime, recommendationDismissReason, options.Tenant, cancellationToken)
+            : _advisorService.UpdateRecommendationAsync(
+                options.Subscription!, recommendationId, options.RecommendationStatus,
+                postponedUntilDateTime, recommendationDismissReason, options.Tenant, cancellationToken);
+
+    private async Task<CommandResponse> ExecuteBatchAsync(
+        CommandContext context,
+        RecommendationUpdateOptions options,
+        string[] ids,
+        DateTimeOffset? postponedUntilDateTime,
+        RecommendationDismissReason? recommendationDismissReason,
+        CancellationToken cancellationToken)
+    {
+        List<RecommendationUpdateItemResult> results = [];
+        foreach (var id in ids)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Advisor recommendation batch was canceled before all updates were attempted.");
+                break;
+            }
+
+            var recommendationId = id.Trim();
+            try
+            {
+                var recommendation = await UpdateRecommendationAsync(
+                    options, recommendationId, postponedUntilDateTime, recommendationDismissReason, cancellationToken);
+                results.Add(new(recommendationId, RecommendationUpdateOutcome.Succeeded, recommendation, (int)HttpStatusCode.OK));
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Advisor recommendation update was canceled. RecommendationId: {RecommendationId}.", recommendationId);
+                HandleException(context, ex);
+                // A canceled write may have reached Azure; preserve its uncertain outcome and do not retry it.
+                results.Add(new(recommendationId, RecommendationUpdateOutcome.Unverified,
+                    StatusCode: (int)HttpStatusCode.RequestTimeout,
+                    Error: "The update was canceled; recommendation state is unverified. Read its current state before retrying."));
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating Advisor batch recommendation. RecommendationId: {RecommendationId}.", recommendationId);
+                HandleException(context, ex);
+                var isUnverified = ex is HttpRequestException or IOException or JsonException or TimeoutException ||
+                    ex is RequestFailedException { Status: <= 0 or 408 or >= 500 };
+                var statusCode = (int)GetStatusCode(ex);
+                results.Add(new(recommendationId,
+                    isUnverified ? RecommendationUpdateOutcome.Unverified : RecommendationUpdateOutcome.Failed,
+                    StatusCode: statusCode is >= 400 and <= 599 ? statusCode : (int)HttpStatusCode.BadGateway,
+                    Error: isUnverified
+                        ? "The update outcome is unverified. Read its current state before retrying."
+                        : ex is RequestFailedException ? GetErrorMessage(ex) : "Advisor recommendation update failed. Read its current state before retrying."));
+            }
+        }
+
+        while (results.Count < ids.Length)
+        {
+            results.Add(new(ids[results.Count].Trim(), RecommendationUpdateOutcome.NotAttempted,
+                Error: "The batch was canceled before this update was attempted."));
+        }
+
+        var succeeded = results.Count(result => result.Outcome == RecommendationUpdateOutcome.Succeeded);
+        var failed = results.Count(result => result.Outcome == RecommendationUpdateOutcome.Failed);
+        var unverified = results.Count(result => result.Outcome == RecommendationUpdateOutcome.Unverified);
+        var notAttempted = results.Count - succeeded - failed - unverified;
+        context.Response.Status = succeeded == results.Count
+            ? HttpStatusCode.OK
+            : succeeded > 0
+                ? HttpStatusCode.MultiStatus
+                : (HttpStatusCode)(results[0].StatusCode ?? (int)HttpStatusCode.RequestTimeout);
+        context.Response.Message = $"Advisor batch update: {succeeded} succeeded; {failed} failed; {unverified} unverified; {notAttempted} not attempted.";
+        context.Response.Results = ResponseResult.Create(
+            new RecommendationUpdateResult(null) { Results = results }, AdvisorJsonContext.Default.RecommendationUpdateResult);
         return context.Response;
     }
 
@@ -148,5 +241,8 @@ public sealed class RecommendationUpdateCommand(
         _ => base.GetErrorMessage(ex)
     };
 
-    public sealed record RecommendationUpdateResult(Models.Recommendation Recommendation);
+    public sealed record RecommendationUpdateResult(Models.Recommendation? Recommendation)
+    {
+        public IReadOnlyList<RecommendationUpdateItemResult>? Results { get; init; }
+    }
 }

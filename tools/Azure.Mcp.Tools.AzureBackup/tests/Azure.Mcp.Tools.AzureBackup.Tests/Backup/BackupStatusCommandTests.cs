@@ -278,4 +278,31 @@ public class BackupStatusCommandTests : SubscriptionCommandUnitTestsBase<BackupS
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
+
+    [Theory]
+    [InlineData("The subscription is not registered to use namespace 'Microsoft.DataProtection'.", "Microsoft.DataProtection")]
+    [InlineData("Not registered.", "Microsoft.RecoveryServices")]
+    [InlineData("namespace 'Microsoft.Bad; rm -rf'", "Microsoft.RecoveryServices")]
+    public async Task ExecuteAsync_ProviderNotRegistered_ReturnsRegistrationGuidance(string serviceMessage, string expectedNamespace)
+    {
+        Service.GetBackupStatusAsync("ds1", "sub1", "eastus", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, serviceMessage, "ProviderNotRegistered", null));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--datasource-id", "ds1", "--location", "eastus");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains($"az provider register --namespace {expectedNamespace}'", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_TenantMismatch_UsesCoreTenantGuidance()
+    {
+        Service.GetBackupStatusAsync("ds1", "sub1", "eastus", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(401, "Status: 401\nErrorCode: InvalidAuthenticationTokenTenant", "InvalidAuthenticationTokenTenant", null));
+
+        var response = await ExecuteCommandAsync("--subscription", "sub1", "--datasource-id", "ds1", "--location", "eastus");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("tenant mismatch", response.Message);
+    }
 }
