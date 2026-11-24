@@ -1,0 +1,3 @@
+changes:
+  - section: "Other Changes"
+    description: "Added Azure resource type telemetry for `resourcehealth_availability-status_get`. Unsupported resource types now return success with an explanatory message and a link to supported resource types; other 422 responses remain errors."
