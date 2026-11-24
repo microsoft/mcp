@@ -66,7 +66,7 @@ public sealed class WaitBusinessCaseCommand(GetBusinessCaseStatusCommand statusC
             if (result.Success && result.Status == BusinessCaseStages.Succeeded && BusinessCaseReportWidget.IsEnabled)
             {
                 // The agent shows the report card with one status call, which returns the report again; leave it out here.
-                return result with { Report = null, Instructions = BusinessCaseStages.ShowReportInstructions };
+                return result with { Report = null, Artifacts = null, Instructions = BusinessCaseStages.ShowReportInstructions };
             }
 
             if (!result.Success || result.IsCompleted || result.NextStatusParameters is null)

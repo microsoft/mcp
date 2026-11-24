@@ -24,11 +24,14 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     internal static string BaseUrl =>
         (Environment.GetEnvironmentVariable(BaseUrlSettingName) is { Length: > 0 } s ? s.Trim() : DefaultBaseUrl).TrimEnd('/');
 
-    /// <summary>Discovery Service export 'artifacts' value for the business case report: 'internal' is ROI.md, 'external' the migration proposal.</summary>
+    /// <summary>Discovery Service export 'artifacts' value for the business case report: 'external' is ROI.md, 'internal' the artifacts ZIP.</summary>
     internal const string ExportArtifactsSettingName = "AZUREMIGRATE_HA_EXPORT_ARTIFACTS";
 
+    /// <summary>Discovery Service export 'artifacts' value of the business case artifacts ZIP.</summary>
+    internal const string ArtifactsZipArtifacts = "internal";
+
     internal static string ExportArtifacts =>
-        Environment.GetEnvironmentVariable(ExportArtifactsSettingName) is { Length: > 0 } s ? s.Trim() : "internal";
+        Environment.GetEnvironmentVariable(ExportArtifactsSettingName) is { Length: > 0 } s ? s.Trim() : "external";
 
     private static readonly HttpClient s_storageHttp = new() { Timeout = TimeSpan.FromSeconds(30) };
 
@@ -64,11 +67,19 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     }
 
     /// <inheritdoc/>
-    public async Task<InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken)
+    public Task<InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        ExportCoreAsync(token, sessionId, ExportArtifacts, "export business case report", cancellationToken);
+
+    /// <inheritdoc/>
+    public Task<InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        ExportCoreAsync(token, sessionId, ArtifactsZipArtifacts, "export business case artifacts", cancellationToken);
+
+    private async Task<InventoryExportResult> ExportCoreAsync(
+        string token, string sessionId, string artifacts, string operation, CancellationToken cancellationToken)
     {
         DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Get, DsBackdoorClient.ExportUrl(BaseUrl, sessionId, ExportArtifacts), token, null,
-            Guid.NewGuid().ToString(), "export business case report", cancellationToken);
+            _logger, HttpMethod.Get, DsBackdoorClient.ExportUrl(BaseUrl, sessionId, artifacts), token, null,
+            Guid.NewGuid().ToString(), operation, cancellationToken);
         if (response.Status is not (>= 200 and < 300))
         {
             return new(response.Status, null, response.Error);
@@ -96,7 +107,14 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
                 return null;
             }
 
-            string report = await response.Content.ReadAsStringAsync(cancellationToken);
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            if (IsZip(bytes))
+            {
+                _logger.LogWarning("AzureMigrate HA: report {Url} is a ZIP, not Markdown; it is only linked.", logUrl);
+                return null;
+            }
+
+            string report = System.Text.Encoding.UTF8.GetString(bytes);
             return report.Length is > 0 and <= MaxInlineReportLength ? report : null;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
@@ -105,6 +123,10 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
             return null;
         }
     }
+
+    /// <summary>Returns true when the content starts with the ZIP local file header ('PK\x03\x04').</summary>
+    internal static bool IsZip(ReadOnlySpan<byte> content) =>
+        content.Length >= 4 && content[0] == 0x50 && content[1] == 0x4B && content[2] == 0x03 && content[3] == 0x04;
 
     /// <summary>The failed step reported while the reused active session still runs an earlier invocation.</summary>
     internal const string SessionBusyStep = "sessionBusy";

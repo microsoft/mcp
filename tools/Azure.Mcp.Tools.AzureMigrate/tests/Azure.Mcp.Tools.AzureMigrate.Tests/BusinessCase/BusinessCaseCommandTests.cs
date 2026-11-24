@@ -29,6 +29,9 @@ public class BusinessCaseCommandTests
     private readonly IHaSessionClient _ha = Substitute.For<IHaSessionClient>();
     private readonly IInventoryExportClient _export = Substitute.For<IInventoryExportClient>();
 
+    public BusinessCaseCommandTests() =>
+        _ha.ExportArtifactsAsync(default!, default!, default).ReturnsForAnyArgs(new InventoryExportResult(404, null, "none"));
+
     [Fact]
     public async Task Create_StartsAssessmentWithBusinessCaseDefaultsAndReturnsNextStatusParameters()
     {
@@ -322,9 +325,11 @@ public class BusinessCaseCommandTests
     public async Task Status_Succeeded_ReturnsDownloadedReportMarkdown()
     {
         const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        const string zip = "https://acct.blob.core.windows.net/c/BusinessCase-internal.md?sv=1&sig=y";
         _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
             new HaOperationStatus(200, "Succeeded", null, null, null, null, null));
         _ha.ExportAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, uri, null));
+        _ha.ExportArtifactsAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, zip, null));
         _ha.DownloadReportAsync(uri, Arg.Any<CancellationToken>()).Returns("# ROI\n| a | b |");
 
         var result = await StatusCommand().RunAsync(
@@ -334,9 +339,18 @@ public class BusinessCaseCommandTests
         Assert.Equal("Succeeded", result.Status);
         Assert.Equal(uri, result.Result);
         Assert.Equal("# ROI\n| a | b |", result.Report);
+        Assert.Equal(zip, result.Artifacts);
+        Assert.Contains("'artifacts'", result.Instructions);
         Assert.Contains("full report is shown in the card", result.Instructions);
         Assert.Contains("'**Next step:**'", result.Instructions);
     }
+
+    [Theory]
+    [InlineData(new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x14 }, true)]
+    [InlineData(new byte[] { 0x23, 0x20, 0x52, 0x4F, 0x49 }, false)]
+    [InlineData(new byte[] { 0x50, 0x4B }, false)]
+    public void IsZip_DetectsZipHeader(byte[] content, bool expected) =>
+        Assert.Equal(expected, DsHaSessionClient.IsZip(content));
 
     [Fact]
     public async Task Status_RequiresBothDsIds()

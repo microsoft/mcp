@@ -35,6 +35,12 @@ public sealed record BusinessCaseCommandResult(
 {
     /// <summary>The ROI report (ROI.md) Markdown once the business case succeeded, when it could be downloaded; else null.</summary>
     public string? Report { get; init; }
+
+    /// <summary>
+    /// Read SAS URL of the business case artifacts ZIP (the Discovery Service 'internal' export) once the business case succeeded,
+    /// when it could be exported; else null.
+    /// </summary>
+    public string? Artifacts { get; init; }
 }
 
 /// <summary>

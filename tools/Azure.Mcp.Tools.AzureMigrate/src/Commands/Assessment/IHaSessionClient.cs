@@ -29,9 +29,15 @@ public interface IHaSessionClient
 
     /// <summary>
     /// Exports the session output (POST /mcprestapi/sessions/{id}/export) and returns its read SAS URL; for a business case session
-    /// this is the ROI.md report.
+    /// this is the ROI.md report (the 'external' artifacts).
     /// </summary>
     Task<Inventory.InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Exports the session's 'internal' artifacts and returns the read SAS URL of their ZIP; for a business case session this is
+    /// the full set of business case artifacts.
+    /// </summary>
+    Task<Inventory.InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Downloads the exported report (ROI.md) from its read SAS URL and returns its Markdown, or null when it cannot be read or is

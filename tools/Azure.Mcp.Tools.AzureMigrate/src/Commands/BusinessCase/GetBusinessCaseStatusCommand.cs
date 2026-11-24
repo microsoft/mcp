@@ -167,6 +167,11 @@ public sealed class GetBusinessCaseStatusCommand(
             InventoryExportResult report = await _haClient.ExportAsync(token, sessionId, cancellationToken);
             if (report.Uri is not null)
             {
+                InventoryExportResult artifacts = await _haClient.ExportArtifactsAsync(token, sessionId, cancellationToken);
+                string? artifactsUri = artifacts.Uri;
+                string artifactsLink = artifactsUri is null ? "" :
+                    " Also give a clickable Markdown link to 'artifacts' (a ZIP of all business case artifacts) exactly as given, for " +
+                    "example [Download all artifacts (ZIP)](<artifacts>); never retype or shorten it.";
                 string? markdown = await _haClient.DownloadReportAsync(report.Uri, cancellationToken);
                 if (markdown is not null)
                 {
@@ -177,18 +182,18 @@ public sealed class GetBusinessCaseStatusCommand(
                             "annual savings, payback in 1.8 years'.",
                             "ROI and NPV of the recommended strategy quoting 'report' exactly with currency symbols, then a clickable " +
                             "Markdown link to 'result' exactly as given, for example 'ROI 16.47%, NPV $92,605.44. [Download the ROI " +
-                            "report](<result>) (link expires soon)'; never retype or shorten the link. Do not paste 'report' or " +
+                            "report](<result>) (link expires soon)'; never retype or shorten the link." + artifactsLink + " Do not paste 'report' or " +
                             "repeat its strategies, costs or issues" +
                             (BusinessCaseReportWidget.IsEnabled ? "; the full report is shown in the card above." : "."),
-                            ReplyFormat.AfterBusinessCase) + " " + OpenReportInstructions) with { Report = markdown };
+                            ReplyFormat.AfterBusinessCase) + " " + OpenReportInstructions) with { Report = markdown, Artifacts = artifactsUri };
                 }
 
                 return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
                     ReplyFormat.Reply("Business case ready.",
                         "a clickable Markdown link to 'result' (the ROI report, ROI.md) exactly as given, for example " +
                         "[Download the ROI report (ROI.md)](<result>), never retyped, shortened or shown on its own; that the link " +
-                        "expires and asking for the business case status again gives a new one.",
-                        ReplyFormat.AfterBusinessCase));
+                        "expires and asking for the business case status again gives a new one." + artifactsLink,
+                        ReplyFormat.AfterBusinessCase)) with { Artifacts = artifactsUri };
             }
 
             if (IsTransient(report.HttpStatus))

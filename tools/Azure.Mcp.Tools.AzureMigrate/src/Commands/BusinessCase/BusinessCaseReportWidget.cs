@@ -15,7 +15,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 /// </summary>
 internal static class BusinessCaseReportWidget
 {
-    internal const string ResourceUri = "ui://azurecatalyst/business-case-report-v6.html";
+    internal const string ResourceUri = "ui://azurecatalyst/business-case-report-v7.html";
 
     /// <summary>Set to 'false' to turn the card off.</summary>
     internal const string EnabledSetting = "AZMIGRATE_REPORT_WIDGET_ENABLED";
@@ -75,7 +75,8 @@ internal static class BusinessCaseReportWidget
         <body>
         <div class="bar"><span class="title" id="title">Business case<span class="sub" id="sub"></span></span>
           <button id="full" class="primary" style="display:none">&#10530; View full ROI report</button>
-          <button id="open" style="display:none">Download ROI.md</button></div>
+          <button id="open" style="display:none">Download ROI.md</button>
+          <button id="zip" style="display:none">&#11015; Download artifacts</button></div>
         <div class="state" id="state">Waiting for the business case...</div>
         <div id="doc" class="markdown collapsed"></div>
         <div class="more" id="more"><button id="toggle">Show full report</button></div>
@@ -83,7 +84,7 @@ internal static class BusinessCaseReportWidget
         (function () {
           var el = function (id) { return document.getElementById(id); };
           var MODE = 'businesscase';
-          var ctx = { report: null, link: null };
+          var ctx = { report: null, link: null, zip: null };
           function size() {
             var h = Math.ceil(document.body.getBoundingClientRect().height) + 4;
             window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/size-changed', params: { width: document.documentElement.scrollWidth, height: h } }, '*');
@@ -226,6 +227,10 @@ internal static class BusinessCaseReportWidget
           function render(r) {
             if (MODE === 'inventory') { renderInventory(r); return; }
             if (r.success === false) { state(r.error || 'The business case request was not valid.', 'err'); size(); return; }
+            if (r.status === 'Succeeded') {
+              ctx.zip = /^https:\/\//.test(r.artifacts || '') ? r.artifacts : null;
+              el('zip').style.display = ctx.zip ? '' : 'none';
+            }
             if (r.status === 'Succeeded' && r.report) {
               ctx.report = r.report; ctx.link = /^https:\/\//.test(r.result || '') ? r.result : null;
               el('title').firstChild.textContent = 'ROI report';
@@ -267,6 +272,7 @@ internal static class BusinessCaseReportWidget
           // Sandboxed frames cannot navigate, so links go through the host; window.open is the fallback.
           function openLink(url) { send('ui/open-link', { url: url }).catch(function () { window.open(url, '_blank', 'noopener'); }); }
           el('open').addEventListener('click', function () { if (ctx.link) { openLink(ctx.link); } });
+          el('zip').addEventListener('click', function () { if (ctx.zip) { openLink(ctx.zip); } });
           el('doc').addEventListener('click', function (e) {
             var a = e.target.closest && e.target.closest('a[data-link]');
             if (a) { e.preventDefault(); openLink(a.getAttribute('href')); }

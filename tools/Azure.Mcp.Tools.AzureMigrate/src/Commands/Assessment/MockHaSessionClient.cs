@@ -53,5 +53,9 @@ public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : I
         Task.FromResult(new Inventory.InventoryExportResult(null, null, "HA is mocked, so there is no report to export."));
 
     /// <inheritdoc/>
+    public Task<Inventory.InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        Task.FromResult(new Inventory.InventoryExportResult(null, null, "HA is mocked, so there are no artifacts to export."));
+
+    /// <inheritdoc/>
     public Task<string?> DownloadReportAsync(string reportUri, CancellationToken cancellationToken) => Task.FromResult<string?>(null);
 }
