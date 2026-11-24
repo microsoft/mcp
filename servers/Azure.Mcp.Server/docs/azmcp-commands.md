@@ -5986,13 +5986,14 @@ azmcp storage blob container get --account <account> \
                                  [--prefix <prefix>] \
                                  [--cursor <nextCursor>]
 
-# Get detailed properties of a Storage blob, or one page of up to 100 blobs (fixed page size).
-# Pass nextCursor unchanged as --cursor with the same account, container, prefix, and tenant. Do not combine --cursor with --blob.
+# Get detailed properties of a Storage blob, or one page of up to 100 blobs and directory prefixes (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account, container, prefix, delimiter, and tenant. Do not combine --cursor or --delimiter with --blob.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
                            [--prefix <prefix>] \
+                           [--delimiter <delimiter>] \
                            [--cursor <nextCursor>]
 
 # Upload a file to a Storage blob
@@ -6001,6 +6002,25 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+##### Blob Get Listing Parameters
+
+Use `--delimiter /` to browse one level of virtual directories. Each page contains at most 100 blobs and
+directory prefixes combined. `prefixes` contains virtual directory paths, including their delimiter.
+Continue with `--cursor <nextCursor>` and the same account, container, prefix, delimiter, and tenant,
+even when the previous page was empty. Listing requires a data-plane role such as **Storage Blob Data
+Reader** or **Storage Blob Data Contributor**.
+
+```bash
+# Browse blobs and virtual directories under datasets/
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> --prefix datasets/ --delimiter /
+
+# Continue browsing with the cursor from the previous response
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> \
+                      --prefix datasets/ --delimiter / --cursor "<nextCursor>"
 ```
 
 #### Disk Diagnostics

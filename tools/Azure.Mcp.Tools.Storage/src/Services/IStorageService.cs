@@ -36,6 +36,15 @@ public interface IStorageService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
+    Task<BlobListResult> ListBlobs(
+        string account,
+        string container,
+        string delimiter,
+        string? prefix = null,
+        string? cursor = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<(List<ContainerInfo> Containers, string? NextCursor)> GetContainerDetails(
         string account,
         string? container,

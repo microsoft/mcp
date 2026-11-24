@@ -1413,10 +1413,12 @@ _These tools come from the [Azure Monitor dashboards with Grafana remote MCP ser
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
 * "Diagnose disk performance and throttling for my Azure virtual machine"
+* "Browse the top-level blobs and virtual folders in my blob container, returning at most 100 results"
+* "Show the blobs and subfolders directly under datasets/ in my blob container"
 * "Upload my file to the blob container"
 
 Blob, container, and table listings return one page of up to 100 items. To continue, pass `nextCursor` unchanged as
-`--cursor` with the same account and tenant, plus the same container and prefix where applicable.
+`--cursor` with the same account and tenant, plus the same container, prefix, and delimiter where applicable.
 An empty page can still include `nextCursor`; continue until it is absent.
 
 ### 🔄 Azure Migrate
