@@ -1093,7 +1093,7 @@
         "monitor_traces_account_list",
         "monitor_traces_field_list",
         "monitor_traces_query_analyze-compare-attributes",
-        "monitor_traces_query_analyze-compare-critical-path",
+        "monitor_traces_query_analyze-compare-paths",
         "monitor_traces_query_analyze-compare-statistics",
         "monitor_traces_query_analyze-critical-path",
         "monitor_traces_query_analyze-top-attributes",

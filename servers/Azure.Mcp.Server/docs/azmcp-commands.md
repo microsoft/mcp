@@ -4367,7 +4367,7 @@ azmcp monitor traces query analyze-compare-attributes --subscription <subscripti
 
 # Compare critical paths for explicit IDs or filters-only discovery queries
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor traces query analyze-compare-critical-path --subscription <subscription> \
+azmcp monitor traces query analyze-compare-paths --subscription <subscription> \
                                           --resource-group <resource-group> --workspace <workspace> \
                                           --start-time <iso-8601> --end-time <iso-8601> \
                                           [--trace-ids <ids> | --query <selection-kql>] \
