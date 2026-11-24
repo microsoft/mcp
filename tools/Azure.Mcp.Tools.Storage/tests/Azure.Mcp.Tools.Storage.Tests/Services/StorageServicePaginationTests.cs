@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using Azure.Core;
 using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -103,7 +104,7 @@ public sealed class StorageServicePaginationTests()
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1)));
         azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return new StorageService(azureService);
+        return new StorageService(azureService, Substitute.For<IFileSystem>());
     }
 
     private static async Task<(List<string> Names, string? NextCursor)> GetPageAsync(
