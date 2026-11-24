@@ -78,11 +78,11 @@ sequenceDiagram
     DB-->>M: ROI.md SAS
     M->>DB: GET /sessions/{id}/export?artifacts=internal
     DB-->>M: artifacts ZIP SAS
-    M->>S: GET ROI.md (server side, shown inline)
-    S-->>M: ROI.md
-    M-->>A: Succeeded, report, artifacts link
-    A-->>U: ROI summary
+    M-->>A: Succeeded, ROI.md link, artifacts link (no report)
+    A-->>U: "Business case ready" + links
     A->>W: Tool result
+    W->>S: fetch(ROI.md SAS) in the browser (CORS GET)
+    S-->>W: ROI.md
     W-->>U: ROI.md preview + "Download artifacts"
 ```
 
@@ -94,5 +94,5 @@ Notes:
   `invokeSession`, `uploadInput`).
 - With `AZUREMIGRATE_HA_MOCK=true`, stage 1 ends by reading the HA manifest's summary and finishes `Succeeded` without
   the Discovery Service session.
-- [01](01-business-case-roi-client-preview.md) shows the planned change: the card reads ROI.md in the browser instead of
-  the server.
+- The card reads ROI.md in the browser; see [01](01-business-case-roi-client-preview.md). Without storage connect
+  domains, the server downloads it instead and returns it in `report`.

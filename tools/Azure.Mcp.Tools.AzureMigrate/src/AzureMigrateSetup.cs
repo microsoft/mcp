@@ -73,7 +73,8 @@ public class AzureMigrateSetup : IAreaSetup
         InventoryUploadWidget.Register(CreateOrUpdateInventoryCommand.CommandId);
         // MCP Apps card that renders the ROI report (ROI.md) like a Markdown preview; set AZMIGRATE_REPORT_WIDGET_ENABLED=false to turn
         // it off. Shown only with status results: the agent tracks the business case with the wait tool and then calls the status tool
-        // once, so the card appears together with the agent's summary and never shows a stale stage.
+        // once, so the card appears together with the agent's summary and never shows a stale stage. With storage connect domains
+        // (AZMIGRATE_REPORT_WIDGET_DOMAINS, else AZMIGRATE_INVENTORY_WIDGET_DOMAINS) the card reads ROI.md in the browser.
         BusinessCaseReportWidget.Register(GetBusinessCaseStatusCommand.CommandId);
         // The same card in inventory mode, shown with inventory status results: the agent waits with the inventory wait tool and
         // then calls the status tool once, so the summary card appears together with the agent's reply.

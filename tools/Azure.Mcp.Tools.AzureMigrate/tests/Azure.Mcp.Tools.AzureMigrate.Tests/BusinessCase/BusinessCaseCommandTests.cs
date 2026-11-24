@@ -345,6 +345,29 @@ public class BusinessCaseCommandTests
         Assert.Contains("'**Next step:**'", result.Instructions);
     }
 
+    [Fact]
+    public async Task Status_Succeeded_WhenCardFetchesReport_ReturnsLinksWithoutDownloading()
+    {
+        const string uri = "https://acct.blob.core.windows.net/c/ROI.md?sv=1&sig=x";
+        const string zip = "https://acct.blob.core.windows.net/c/artifacts.zip?sv=1&sig=y";
+        _ha.GetOperationStatusAsync(default!, default!, default, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new HaOperationStatus(200, "Succeeded", null, null, null, null, null));
+        _ha.ExportAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, uri, null));
+        _ha.ExportArtifactsAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryExportResult(200, zip, null));
+
+        var command = new GetBusinessCaseStatusCommand(_asStatus, _evaluation, _ha, Accessor()) { CardFetchesReport = true };
+        var result = await command.RunAsync(
+            StatusOptions(o => { o.DsSessionId = "bc-0123456789abcdef"; o.DsOperationId = Guid.NewGuid().ToString(); }),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal(uri, result.Result);
+        Assert.Null(result.Report);
+        Assert.Equal(zip, result.Artifacts);
+        Assert.Contains("shown in the card above", result.Instructions);
+        await _ha.DidNotReceiveWithAnyArgs().DownloadReportAsync(default!, TestContext.Current.CancellationToken);
+    }
+
     [Theory]
     [InlineData(new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x14 }, true)]
     [InlineData(new byte[] { 0x23, 0x20, 0x52, 0x4F, 0x49 }, false)]

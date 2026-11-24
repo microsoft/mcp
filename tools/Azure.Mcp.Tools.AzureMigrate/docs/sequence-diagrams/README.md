@@ -5,7 +5,7 @@ which GitHub renders. Number new files in order (`02-…`, `03-…`) and add the
 
 | # | Flow | State |
 |---|---|---|
-| 01 | [Business case ROI.md preview in the browser](01-business-case-roi-client-preview.md) | Planned (needs CORS `GET`) |
+| 01 | [Business case ROI.md preview in the browser](01-business-case-roi-client-preview.md) | Implemented (needs CORS `GET`) |
 | 02 | [Business case: create to ROI report](02-business-case-end-to-end.md) | Implemented |
 | 03 | [Inventory: upload and tracking](03-inventory-upload-and-tracking.md) | Implemented |
 | 04 | [Start a new session: archive inventory and business case](04-archive-session.md) | Implemented |

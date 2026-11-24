@@ -10,12 +10,14 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 /// business case itself: the agent waits for the business case and then calls the status tool once, so the card appears together
 /// with the agent's summary. Once the business case succeeds it renders the ROI
 /// report ('report', the ROI.md Markdown) like an editor's Markdown preview (headings, tables, lists, code), with buttons to
-/// open the full (side panel) view and download the report. It never posts chat messages. The report comes in the tool result, so the card needs no connect domains. Everything is escaped
+/// open the full (side panel) view and download the report. It never posts chat messages. When <see cref="FetchesReport"/> is true the
+/// card reads ROI.md from its SAS URL ('result') in the browser (needs storage CORS GET for the host's widget origin) and the server
+/// returns only links; otherwise the report comes in the tool result ('report'). Everything is escaped
 /// before rendering and only http(s) links are kept.
 /// </summary>
 internal static class BusinessCaseReportWidget
 {
-    internal const string ResourceUri = "ui://azurecatalyst/business-case-report-v7.html";
+    internal const string ResourceUri = "ui://azurecatalyst/business-case-report-v8.html";
 
     /// <summary>Set to 'false' to turn the card off.</summary>
     internal const string EnabledSetting = "AZMIGRATE_REPORT_WIDGET_ENABLED";
@@ -23,12 +25,31 @@ internal static class BusinessCaseReportWidget
     internal static bool IsEnabled =>
         !string.Equals(Environment.GetEnvironmentVariable(EnabledSetting)?.Trim(), "false", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Comma-separated storage origins (e.g. https://acct.blob.core.windows.net) the card may read the report from; when unset, the
+    /// inventory upload widget's origins (<see cref="Inventory.InventoryUploadWidget.DomainsSetting"/>) are used.
+    /// </summary>
+    internal const string DomainsSetting = "AZMIGRATE_REPORT_WIDGET_DOMAINS";
+
+    internal static IReadOnlyList<string> ConnectDomains
+    {
+        get
+        {
+            string[] domains = (Environment.GetEnvironmentVariable(DomainsSetting) ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return domains.Length > 0 ? domains : Inventory.InventoryUploadWidget.ConnectDomains;
+        }
+    }
+
+    /// <summary>True when the card is enabled and may connect to storage, so it reads ROI.md itself in the browser.</summary>
+    internal static bool FetchesReport => IsEnabled && ConnectDomains.Count > 0;
+
     /// <summary>Registers the card for the given command (the business case create or status command) when enabled.</summary>
     internal static void Register(string commandId)
     {
         if (IsEnabled)
         {
-            McpAppRegistry.Register(commandId, new McpAppWidget(ResourceUri, "Azure Catalyst business case report", Html, []));
+            McpAppRegistry.Register(commandId, new McpAppWidget(ResourceUri, "Azure Catalyst business case report", Html, FetchesReport ? ConnectDomains : []));
         }
     }
 
@@ -224,6 +245,33 @@ internal static class BusinessCaseReportWidget
             }
             size();
           }
+          function showReport(text) {
+            ctx.report = text;
+            el('title').firstChild.textContent = 'ROI report';
+            state('');
+            el('doc').innerHTML = markdown(text);
+            el('full').style.display = '';
+            el('open').style.display = ctx.link ? '' : 'none';
+            el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
+            size();
+          }
+          // Reads ROI.md from its SAS URL in the browser (storage CORS must allow GET from the widget origin). A failure, a ZIP or an
+          // oversized file falls back to the download button.
+          var MAX_REPORT = 800000;
+          function fetchReport(url) {
+            var failed = function () {
+              state('The ROI report could not be shown here. Use Download ROI.md to open it.', 'err'); size();
+            };
+            fetch(url, { method: 'GET', credentials: 'omit', cache: 'no-store' }).then(function (res) {
+              if (!res.ok) { throw new Error('HTTP ' + res.status); }
+              var len = +(res.headers.get('content-length') || 0);
+              if (len > MAX_REPORT) { throw new Error('too large'); }
+              return res.text();
+            }).then(function (text) {
+              if (!text || text.length > MAX_REPORT || text.slice(0, 4) === 'PK\u0003\u0004') { throw new Error('not markdown'); }
+              if (ctx.link === url) { showReport(text); }
+            }).catch(failed);
+          }
           function render(r) {
             if (MODE === 'inventory') { renderInventory(r); return; }
             if (r.success === false) { state(r.error || 'The business case request was not valid.', 'err'); size(); return; }
@@ -232,13 +280,14 @@ internal static class BusinessCaseReportWidget
               el('zip').style.display = ctx.zip ? '' : 'none';
             }
             if (r.status === 'Succeeded' && r.report) {
-              ctx.report = r.report; ctx.link = /^https:\/\//.test(r.result || '') ? r.result : null;
+              ctx.link = /^https:\/\//.test(r.result || '') ? r.result : null;
+              showReport(r.report);
+            } else if (r.status === 'Succeeded' && /^https:\/\//.test(r.result || '')) {
+              ctx.link = r.result;
               el('title').firstChild.textContent = 'ROI report';
-              state('');
-              el('doc').innerHTML = markdown(r.report);
-              el('full').style.display = '';
-              el('open').style.display = ctx.link ? '' : 'none';
-              el('more').style.display = el('doc').scrollHeight > el('doc').clientHeight + 4 ? 'block' : 'none';
+              el('open').style.display = '';
+              state('Loading the ROI report...', '');
+              fetchReport(r.result);
             } else if (r.status === 'Succeeded') {
               state('The business case is ready. Ask Copilot in the chat for the report link.', 'ok');
             } else if (r.status === 'Failed') {
@@ -306,7 +355,7 @@ internal static class BusinessCaseReportWidget
             }, function () { if (want === 'fullscreen') { expandInline(); } });
           });
           send('ui/initialize', {
-            appInfo: { name: 'azurecatalyst-business-case-report', version: '0.3.0' },
+            appInfo: { name: 'azurecatalyst-business-case-report', version: '0.4.0' },
             appCapabilities: { availableDisplayModes: ['inline', 'fullscreen'] }, protocolVersion: '2025-06-18'
           }, 8000)
             .then(function (res) {

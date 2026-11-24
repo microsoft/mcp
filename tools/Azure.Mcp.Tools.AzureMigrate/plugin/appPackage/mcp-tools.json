@@ -366,7 +366,7 @@
       "_meta": {
         "MicrosoftMcpToolId": "83765d81-da5b-4d77-8c0d-526cc20f0066",
         "ui": {
-          "resourceUri": "ui://azurecatalyst/business-case-report-v7.html"
+          "resourceUri": "ui://azurecatalyst/business-case-report-v8.html"
         }
       }
     },

@@ -67,6 +67,12 @@ public sealed class GetBusinessCaseStatusCommand(
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <summary>
+    /// True when the report card reads ROI.md from its SAS URL in the browser (see <see cref="BusinessCaseReportWidget.FetchesReport"/>),
+    /// so the server returns only links and never downloads the report.
+    /// </summary>
+    internal bool CardFetchesReport { get; init; } = BusinessCaseReportWidget.FetchesReport;
+
+    /// <summary>
     /// Returns the Discovery Service session ID of a business case: 'bc-' and 16 hex characters of the SHA-256 of the assessment
     /// operation ID, so repeated calls address the same session (the Discovery Service allows 1-20 characters).
     /// </summary>
@@ -172,6 +178,17 @@ public sealed class GetBusinessCaseStatusCommand(
                 string artifactsLink = artifactsUri is null ? "" :
                     " Also give a clickable Markdown link to 'artifacts' (a ZIP of all business case artifacts) exactly as given, for " +
                     "example [Download all artifacts (ZIP)](<artifacts>); never retype or shorten it.";
+                if (CardFetchesReport)
+                {
+                    return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
+                        ReplyFormat.Reply("Business case ready.",
+                            "that the ROI report is shown in the card above, then a clickable Markdown link to 'result' (the ROI report, " +
+                            "ROI.md) exactly as given, for example [Download the ROI report (ROI.md)](<result>) (link expires soon); never " +
+                            "retype or shorten the link." + artifactsLink + " You do not have the report's contents, so do not quote, guess " +
+                            "or summarise any figures, strategies or costs from it.",
+                            ReplyFormat.AfterBusinessCase)) with { Artifacts = artifactsUri };
+                }
+
                 string? markdown = await _haClient.DownloadReportAsync(report.Uri, cancellationToken);
                 if (markdown is not null)
                 {
