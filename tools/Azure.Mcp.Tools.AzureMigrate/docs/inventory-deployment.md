@@ -190,34 +190,8 @@ card's script. A plain `GET` has no preflight, but storage adds `Access-Control-
 matches both the origin and the method, so without `GET` in the rule the card gets a CORS error even though the blob
 was served. Each method must be listed; the rule is matched per method.
 
-Flow for a business case report card that previews `ROI.md` in the browser:
-
-```mermaid
-sequenceDiagram
-    actor U as User
-    participant C as Cowork chat (model)
-    participant M as MCP server
-    participant DS as Discovery Service
-    participant W as Report card (in Cowork)
-    participant B as Blob storage
-
-    U->>C: "Show my business case"
-    C->>M: azure_catalyst_businesscase_status
-    M->>DS: GET export?artifacts=external
-    DS-->>M: { uri: ROI.md SAS }
-    M->>DS: GET export?artifacts=internal
-    DS-->>M: { uri: artifacts ZIP SAS }
-    M-->>C: result = ROI.md SAS, artifacts = ZIP SAS (no report content)
-    C-->>U: Short reply + links
-    C->>W: Tool result (SAS URLs)
-    W->>B: fetch(ROI.md SAS) [Origin: cowork-<hash>.widget-renderer.usercontent.microsoft]
-    B-->>W: 200 ROI.md + Access-Control-Allow-Origin (needs GET in the CORS rule)
-    W-->>U: Renders the ROI.md preview in the card
-    U->>B: Clicks "Download artifacts" (navigation, no CORS)
-    B-->>U: ZIP file
-```
-
-If the fetch fails (no `GET` in the rule, or an expired SAS), the card shows the download link instead of the preview.
+For the end-to-end flow of a business case card that previews `ROI.md` this way, see
+[sequence diagram 01](sequence-diagrams/01-business-case-roi-client-preview.md).
 
 Rule on each storage account the card reads from (Blob service):
 

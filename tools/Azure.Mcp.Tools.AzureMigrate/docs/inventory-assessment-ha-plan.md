@@ -29,54 +29,13 @@ writes only the caller's own partition.
 
 ## Flow
 
-The HA steps use the mini-zip handoff (see [HA input](#ha-input-mini-zip)).
+The assessment tools in the table above are hidden: the business case tools now run the assessment themselves, and the
+inventory tools add a wait tool. Current sequences:
 
-```mermaid
-sequenceDiagram
-    participant U as User (Cowork)
-    participant M as azmcp
-    participant BC as Business Case Service
-    participant DS as Discovery Service
-    participant ST as DS session storage
-    participant HA as HA skill (Foundry)
+- Inventory: [sequence-diagrams/03-inventory-upload-and-tracking.md](sequence-diagrams/03-inventory-upload-and-tracking.md)
+- Assessment, HA evaluate and the business case skill (mini-zip handoff, see [HA input](#ha-input-mini-zip)):
+  [sequence-diagrams/02-business-case-end-to-end.md](sequence-diagrams/02-business-case-end-to-end.md)
 
-    Note over U,DS: 1. Inventory
-    U->>M: inventory_createorupdate
-    M->>DS: PUT session (skillType: Discovery), POST invoke
-    DS-->>M: operationId + write SAS
-    M-->>U: azcopy upload command
-    U->>M: inventory_status / inventory_export
-    M->>DS: GET operationstatus / POST export
-
-    Note over U,BC: 2. Assessment
-    U->>M: assessment_create (name, region, currency, inventorySasUri)
-    M->>BC: PUT machineAssessmentsFromZip/{name} (inventorySasUri)
-    BC-->>M: 202 + operationId
-    loop Up to 10 polls (1, 2, 4 ... 512 seconds)
-        M->>BC: GET operations/{id}
-    end
-    BC-->>M: Succeeded + output (assessmentSasUri, read, valid one hour)
-
-    Note over M,HA: 3. HA
-    M->>DS: PUT /mcprestapi/sessions/{HA sessionId} (skillType: HA)
-    DS-->>M: 201 HA session created
-    M->>DS: POST /mcprestapi/sessions/{HA sessionId}/invoke
-    DS-->>M: operationId + write SAS for the HA input blob
-    M->>M: Build mini zip with manifest.json { inventorySasUri, assessmentSasUri }
-    M->>ST: PUT mini zip (write SAS, about 1 KB)
-    M-->>U: assessment download command + HA operationId
-    DS->>ST: Check blob size only
-    DS->>HA: Start job with read SAS of the mini zip
-    HA->>ST: Download mini zip, read manifest.json
-    HA->>BC: Download assessment output (assessmentSasUri)
-    HA->>HA: Download inventory (inventorySasUri)
-    HA-->>DS: Outputs + status
-
-    Note over U,DS: 4. Track HA
-    U->>M: assessment_hastatus(operationId)
-    M->>DS: GET operationstatus
-    DS-->>M: Running / Succeeded / Failed
-```
 ## Decisions
 
 - **Separate create and status tools.** Each status tool checks once per call; the client decides

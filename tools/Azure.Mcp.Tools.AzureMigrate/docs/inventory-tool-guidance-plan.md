@@ -291,67 +291,17 @@ summarises the result in the chat. Nothing in the code loops: the agent repeats 
 `isCompleted` is the stop condition. This relies on the model following the text. It worked in every test, but it is
 not enforced in code, and Cowork's limits on how long one turn can run are unknown.
 
-**Intervals**
+**Intervals (as tested on 2026-11-18, superseded; see below)**
 
 | Caller | Interval | Per call |
 | --- | --- | --- |
 | Agent (`inventory_status`) | No timer: calls again as soon as the previous call returns, about every 30 to 40 s on OneBox | Waits up to 25 s on the server: checks the Discovery Service at once, then after gaps of 2, 4, 8 and 11 s. Returns early when complete; otherwise returns the latest status with `isCompleted: false` and the instructions to check again |
 | Panel (display only) | Every 30 s, at most 60 times (about 30 min), until complete | `no-wait`: a single check |
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor U as User (Cowork chat)
-    participant A as Cowork agent
-    participant P as Panel (MCP Apps widget)
-    participant M as azmcp
-    participant D as Discovery Service /mcprestapi
-    participant S as Azure Storage (SAS)
+Superseded: the agent now waits with `inventory_wait` and then calls `inventory_status` once to show the summary
+card, and the panel no longer polls. The current sequence is in
+[sequence-diagrams/03-inventory-upload-and-tracking.md](sequence-diagrams/03-inventory-upload-and-tracking.md).
 
-    U->>A: Request (file inventory or text change)
-    A->>M: inventory_createorupdate
-    alt Non-text mode (file)
-        M->>D: PUT session (create or reuse) + invoke
-        D-->>M: 202 operationId + write-only SAS uri
-        M-->>A: sessionId, operationId, uploadCommand, instructions
-        M-->>P: tool-result (Cowork renders the panel)
-        P->>P: Shows "Upload your inventory file" + file picker
-    else Text mode (text-only = true, existing session)
-        M->>D: invoke (inputType Text, message)
-        D-->>M: 202 operationId (no SAS)
-        M-->>A: sessionId, operationId, instructions (no uploadCommand)
-        M-->>P: tool-result (Cowork renders the panel)
-        P->>P: Shows "Updating your inventory, nothing to upload"
-    end
-
-    Note over A: Same turn, no user message needed:<br/>agent starts tracking right away
-
-    par Agent tracking (drives the chat summary)
-        loop until isCompleted
-            A->>M: inventory_status (sessionId, operationId)
-            loop long-poll up to 25 s (checks at 2/4/8/11 s)
-                M->>D: GET operationstatus
-                D-->>M: status
-            end
-            M-->>A: status, isCompleted
-        end
-        A-->>U: Summary in chat (servers, changes, answers)
-    and Non-text mode only: user uploads in the panel meanwhile
-        U->>P: Choose file
-        P->>S: PUT blob (browser, needs storage CORS)
-        S-->>P: 201 Created
-        P->>P: "Uploaded X. Copilot will summarise it when ready"
-        S-->>D: File picked up, transformation runs
-    and Panel display polling (display only, never posts chat messages)
-        loop every 30 s, up to 60 times, until isCompleted
-            P->>M: tools/call inventory_status (no-wait, via Cowork proxy)
-            M->>D: GET operationstatus (single check)
-            D-->>M: status
-            M-->>P: status
-            P->>P: "Inventory status: Running / Succeeded"
-        end
-    end
-```
 
 **Test results in Cowork**
 

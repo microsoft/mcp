@@ -206,55 +206,11 @@ ids received (see [Stages](#stages)); no single backend operation represents the
 
 ## Flow
 
-```mermaid
-sequenceDiagram
-  autonumber
-  participant C as Card / Agent
-  participant M as azmcp
-  participant AS as Assessment
-  participant B as BCS
-  participant H as HA
-  participant D as DS
+The 3-stage flow first designed here (HA evaluate asynchronous, `haOperationId`, a `HaEvaluate` stage) was
+replaced by the 2-stage flow in [As implemented (v1)](#as-implemented-v1). The current sequence, including the wait
+tool, the reuse of a busy business case session and the report export, is in
+[sequence-diagrams/02-business-case-end-to-end.md](sequence-diagrams/02-business-case-end-to-end.md).
 
-  C->>M: businesscase_create(all settings)
-  M->>AS: PUT machineAssessmentsFromZip/{name}
-  AS-->>M: 202 asOperationId
-  M-->>C: Running, Assessment, assessmentName, asOperationId, settings
-
-  Note over C,AS: Stage 1, repeats for minutes
-  C->>M: status(assessmentName, asOperationId, settings)
-  M->>AS: GET operations/{asOperationId}
-  AS-->>M: Running
-  M-->>C: Running, Assessment (same ids)
-
-  Note over C,H: AS done: BCS and HA start
-  C->>M: status(assessmentName, asOperationId, settings)
-  M->>AS: GET operations/{asOperationId}
-  AS-->>M: Succeeded + output
-  M->>B: POST onprem-tco (sync)
-  B-->>M: manifestUri
-  M->>H: POST ha/evaluate (clientRequestId = asOperationId)
-  H-->>M: haOperationId
-  M-->>C: Running, HaEvaluate, + haOperationId
-
-  Note over C,D: HA done: DS start (one call, under 60 s)
-  C->>M: status(..., haOperationId, settings)
-  M->>H: GET status/{haOperationId}
-  H-->>M: Succeeded + HA result URI
-  M->>AS: GET operation (fresh output SAS)
-  M->>B: POST onprem-tco (fresh manifestUri)
-  M->>D: PUT sessions/bc-hash(asOperationId), skillType HA
-  M->>D: POST invoke
-  D-->>M: 202 dsOperationId + write SAS
-  M->>D: PUT zip with metadata.json (4 SAS URIs)
-  M-->>C: Running, HaSkill, + dsSessionId, dsOperationId
-
-  Note over C,D: Stage 3, repeats
-  C->>M: status(..., dsSessionId, dsOperationId)
-  M->>D: GET sessions/{id}/operationstatus/{dsOperationId}
-  D-->>M: Running / Succeeded / Failed
-  M-->>C: Succeeded + result link (card stops)
-```
 
 How status picks what to check:
 
@@ -355,6 +311,9 @@ stateDiagram-v2
   Succeeded --> [*]
   Failed --> [*]
 ```
+
+Design only: the run cache is not implemented (see [As implemented (v1)](#as-implemented-v1)). The code keeps only a
+per-process start gate so that the final stage starts once per assessment operation.
 
 Sequence with the cache (the cache is memory inside the azmcp process, not a separate service):
 
