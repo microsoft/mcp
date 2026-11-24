@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Win32.SafeHandles;
@@ -8,6 +9,7 @@ using Microsoft.Win32.SafeHandles;
 namespace Microsoft.Mcp.Core.Services.Host;
 
 /// <inheritdoc />
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Guarded IFileSystem implementation; each host operation checks access before invoking platform APIs.")]
 public sealed class FileSystem(IOptions<ServerRuntimeConfiguration> configuration) : IFileSystem
 {
     public bool IsAccessAllowed => !configuration.Value.IsHttpMode;

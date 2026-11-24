@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,7 @@ public class AzureCloudConfiguration : IAzureCloudConfiguration
     /// <param name="configuration">The configuration to read from.</param>
     /// <param name="runtimeConfiguration">Optional runtime configurations that can provide the cloud configuration.</param>
     /// <param name="logger">Optional logger for diagnostics.</param>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Reads host-wide Azure cloud configuration during service initialization.")]
     public AzureCloudConfiguration(
         IConfiguration configuration,
         IOptions<ServerRuntimeConfiguration>? runtimeConfiguration = null,

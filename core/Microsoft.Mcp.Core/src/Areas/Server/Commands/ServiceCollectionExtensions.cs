@@ -313,6 +313,7 @@ public static partial class ServiceCollectionExtensions
     /// </summary>
     /// <param name="assembly">An assembly to load embedded server information settings from.</param>
     /// <returns>An IConfiguration instance.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Loads host configuration during server initialization, not tool requests.")]
     private static IConfiguration GetConfiguration(Assembly? assembly = null)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";

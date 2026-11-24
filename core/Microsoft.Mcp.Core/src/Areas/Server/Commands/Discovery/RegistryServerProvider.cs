@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Helpers;
@@ -179,6 +180,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="versionPattern">Regex pattern with a capture group for the version. Defaults to semver pattern.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>An error message if the check fails, or null if the command meets requirements.</returns>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Checks external server dependencies during server discovery, not tool execution.")]
     internal static async Task<string?> CheckCommandVersionAsync(
         string command, IList<string> versionArgs, string minVersion,
         string? versionPattern, CancellationToken cancellationToken)
@@ -328,6 +330,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client using stdio transport.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid command for stdio transport.</exception>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "External MCP server initialization inherits the host environment as part of server discovery.")]
     private async Task<McpClient> CreateStdioClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_serverInfo.Command))

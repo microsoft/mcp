@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 
@@ -22,6 +23,7 @@ internal class MacOSXMachineInformationProvider(ILogger<MacOSXMachineInformation
     /// </returns>
     /// <exception cref="InvalidOperationException">Thrown if the user's profile directory and the "HOME"
     /// environment variable are both unavailable or invalid.</exception>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Resolves the host telemetry cache location during telemetry initialization.")]
     public override string GetStoragePath()
     {
         var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

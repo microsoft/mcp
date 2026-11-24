@@ -744,6 +744,8 @@ Use the filesystem and environment services' `IsAccessAllowed` property to selec
 
 Process-startup features such as server configuration, logging, telemetry initialization, authentication configuration, and proxy-server discovery continue using the platform APIs directly. Embedded assembly resources and pure path-string manipulation do not require host filesystem access.
 
+Production projects enforce this boundary with `Microsoft.CodeAnalysis.BannedApiAnalyzers` and `eng/BannedSymbols.txt`. Direct host API calls fail compilation with `RS0030`. Only guarded service implementations and host-startup infrastructure may have narrowly scoped `SuppressMessage` exceptions with explicit justifications; tool code must use injection instead. Banned method entries identify exact overloads, so include every relevant overload when extending the list. Run `.\eng\scripts\Test-HostApiAnalyzers.ps1` after building the core project to verify rejected APIs and permitted injected operations.
+
 ### Token Acquisition for HTTP Clients
 
 - Obtain credentials through the existing injected authentication providers. Prefer Azure SDK clients or a reusable Azure Core bearer-token authentication pipeline to manage token caching and refresh.

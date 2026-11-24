@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -49,6 +50,7 @@ public static class OpenTelemetryExtensions
         EnableAzureMonitor(services);
     }
 
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Reads host telemetry configuration during process startup.")]
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
 #if DEBUG

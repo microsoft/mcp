@@ -234,6 +234,7 @@ public sealed class RegistryToolLoader(
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "External server discovery is host initialization infrastructure; this reads test-proxy configuration.")]
     private async Task InitializeAsync(CancellationToken cancellationToken)
     {
         if (_isInitialized)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Azure.Core;
 using Azure.Identity;
@@ -84,6 +85,7 @@ namespace Microsoft.Mcp.Core.Services.Azure.Authentication;
 /// If not set, System-Assigned Managed Identity will be used.
 /// </para>
 /// </remarks>
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Host authentication infrastructure reads process configuration while composing credentials, including lazy initialization.")]
 internal class CustomChainedCredential : TokenCredential
 {
     internal Lazy<TokenCredential> Credential { get; }
