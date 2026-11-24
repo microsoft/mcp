@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
 using Azure.ResourceManager;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
@@ -59,8 +58,9 @@ public sealed partial class MonitorTracesService(
     private static readonly TimeSpan EndpointCacheDuration = TimeSpan.FromMinutes(5);
     private static readonly string UtcTimestampFormat = "yyyy-MM-ddTHH:mm:ss." + new string('F', 7) + "'Z'";
 
-    /// <summary>Everything a data-plane call needs: resolved account, base URL, token and pipeline.</summary>
-    private sealed record TraceSession(string AmwResourceId, string EndpointBase, string? AccountId, string Token, HttpPipeline Pipeline);
+    /// <summary>Resolved account, base URL and authenticated data-plane pipelines.</summary>
+    private sealed record TraceSession(
+        string AmwResourceId, string EndpointBase, string? AccountId, HttpPipeline Pipeline, HttpPipeline ResultsPipeline);
 
     private async Task<TraceSession> OpenSessionAsync(
         string subscription,
@@ -81,36 +81,37 @@ public sealed partial class MonitorTracesService(
             subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
         ValidateTraceEndpoint(AzureService, endpointBase);
         TokenCredential credential = await GetCredential(tenant, cancellationToken).ConfigureAwait(false);
-        AccessToken token = await credential.GetTokenAsync(
-            new TokenRequestContext([scope]), cancellationToken).ConfigureAwait(false);
 
         var options = AddDefaultPolicies(new MonitorTracesClientOptions());
         // Per-attempt cap for a slow submit or poll.
         options.Retry.NetworkTimeout = MaxPollBudget;
         options.Transport = new HttpClientTransport(AzureService.GetClient());
+        options.AddPolicy(new BearerTokenAuthenticationPolicy(credential, scope), HttpPipelinePosition.PerRetry);
 
-        return new TraceSession(amwResourceId, endpointBase, accountId, token.Token, HttpPipelineBuilder.Build(options));
+        var pipeline = HttpPipelineBuilder.Build(options);
+        // The server advances the cursor before sending a page, so retrying can skip data.
+        options.Retry.MaxRetries = 0;
+        return new TraceSession(amwResourceId, endpointBase, accountId, pipeline, HttpPipelineBuilder.Build(options));
     }
 
     private async Task<Response> SendDataPlaneAsync(
-        TraceSession session,
+        HttpPipeline pipeline,
         RequestMethod method,
         string url,
         RequestContent? content,
         CancellationToken cancellationToken)
     {
         AzureService.ValidateAzureServiceEndpoint(endpoint: url, serviceType: "monitor-traces");
-        using var request = session.Pipeline.CreateRequest();
+        using var request = pipeline.CreateRequest();
         request.Method = method;
         request.Uri.Reset(new Uri(url));
-        request.Headers.Add("Authorization", $"Bearer {session.Token}");
         if (content is not null)
         {
             request.Headers.Add("Content-Type", "application/json");
             request.Content = content;
         }
 
-        return await session.Pipeline.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
+        return await pipeline.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     // Carries the backend status so BaseCommand maps it, rather than collapsing everything to 422.
@@ -174,7 +175,7 @@ public sealed partial class MonitorTracesService(
         var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
         var url = $"{session.EndpointBase}/field-names?api-version={TraceDataPlaneApiVersion}";
 
-        using var response = await SendDataPlaneAsync(session, RequestMethod.Get, url, null, cancellationToken).ConfigureAwait(false);
+        using var response = await SendDataPlaneAsync(session.Pipeline, RequestMethod.Get, url, null, cancellationToken).ConfigureAwait(false);
 
         if (response.IsError)
         {
@@ -299,7 +300,7 @@ public sealed partial class MonitorTracesService(
         var session = await OpenSessionAsync(subscription, resourceGroup, workspace, tenant, cancellationToken).ConfigureAwait(false);
         var url = $"{session.EndpointBase}/operations/{Uri.EscapeDataString(operationId)}:cancel?api-version={TraceDataPlaneApiVersion}";
 
-        using var response = await SendDataPlaneAsync(session, RequestMethod.Post, url, null, cancellationToken).ConfigureAwait(false);
+        using var response = await SendDataPlaneAsync(session.Pipeline, RequestMethod.Post, url, null, cancellationToken).ConfigureAwait(false);
         var content = response.Content.ToString();
 
         if (response.Status == 404)
@@ -357,10 +358,11 @@ public sealed partial class MonitorTracesService(
             return (cached.AmwResourceId, cached.Endpoint, cached.AccountId);
         }
 
-        ResourceGroupResource resourceGroupResource = await AzureService.GetResourceGroupResource(
-            subscription, resourceGroup, tenant, cancellationToken).ConfigureAwait(false)
-            ?? throw new KeyNotFoundException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
-        ResourceIdentifier workspaceId = new($"{resourceGroupResource.Id}/providers/{MonitorAccountResourceType}/{workspace}");
+        var subscriptionId = AzureService.IsSubscriptionId(subscription)
+            ? subscription
+            : await AzureService.GetSubscriptionIdByName(subscription, tenant, cancellationToken).ConfigureAwait(false);
+        // Construct the parent ID locally: fetching the RG would require permissions beyond the AMW.
+        ResourceIdentifier workspaceId = new($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{MonitorAccountResourceType}/{workspace}");
         string amwResourceId = workspaceId.ToString();
         var armClient = await CreateArmClientWithApiVersionAsync(
             MonitorAccountResourceType, MonitorAccountApiVersion, tenant, cancellationToken).ConfigureAwait(false);
@@ -479,7 +481,7 @@ public sealed partial class MonitorTracesService(
         CancellationToken cancellationToken)
     {
         var submitUrl = $"{session.EndpointBase}/{endpointPath}?preserveQueryFieldNames=true&api-version={TraceDataPlaneApiVersion}";
-        using var response = await SendDataPlaneAsync(session, RequestMethod.Post, submitUrl, content, cancellationToken);
+        using var response = await SendDataPlaneAsync(session.Pipeline, RequestMethod.Post, submitUrl, content, cancellationToken);
         var payload = response.Content.ToString();
 
         if (response.Status != 202)
@@ -529,12 +531,16 @@ public sealed partial class MonitorTracesService(
         TraceQueryPage? payload = null;
         var deadline = dateTimeProvider.UtcNow + MaxPollBudget;
         using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        budget.CancelAfter(MaxPollBudget);
+        var remaining = deadline - dateTimeProvider.UtcNow;
+        budget.CancelAfter(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+        bool pollInFlight = false;
         try
         {
             while (dateTimeProvider.UtcNow < deadline)
             {
-                using var response = await SendDataPlaneAsync(session, RequestMethod.Get, pollUrl, null, budget.Token).ConfigureAwait(false);
+                pollInFlight = true;
+                using var response = await SendDataPlaneAsync(session.ResultsPipeline, RequestMethod.Get, pollUrl, null, budget.Token).ConfigureAwait(false);
+                pollInFlight = false;
                 if (response.Status == 202)
                 {
                     response.Headers.TryGetValue("Retry-After", out var retryAfter);
@@ -574,9 +580,12 @@ public sealed partial class MonitorTracesService(
                 }
             }
         }
-        catch (OperationCanceledException) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            // The shared deadline also bounds an in-flight request or Retry-After wait.
+            if (pollInFlight)
+            {
+                throw new TraceQueryException(CreateResult("Failed"), new TimeoutException("Trace result page timed out.", ex));
+            }
         }
         catch (Exception ex) when (payload is not null && ex is HttpRequestException or RequestFailedException or JsonException or OperationCanceledException)
         {

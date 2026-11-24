@@ -13,9 +13,10 @@ internal sealed class MonitorTracesTestHandler(
     string endpoint = "https://amw.data.monitor.azure.com",
     string cancelBody = """{"status":"Cancelled"}""",
     IEnumerable<HttpResponseMessage>? resultPages = null,
-    HttpResponseMessage? submitResponse = null,
+    HttpResponseMessage? firstSubmitResponse = null,
     string accountId = MonitorTracesTestHandler.TraceAccount,
-    string submitBody = """{"operationId":"op-1234"}""") : HttpMessageHandler
+    string submitBody = """{"operationId":"op-1234"}""",
+    int? stallPollOnCall = null) : HttpMessageHandler
 {
     private readonly Queue<HttpResponseMessage> _resultPages = new(resultPages ?? []);
     internal const string Subscription = "00000000-0000-0000-0000-000000000001";
@@ -32,12 +33,14 @@ internal sealed class MonitorTracesTestHandler(
     public Uri? LastWorkspaceUri { get; private set; }
     public List<Uri> SubmitUris { get; } = [];
     public List<string> SubmitBodies { get; } = [];
+    public List<string?> DataPlaneAuthorizationHeaders { get; } = [];
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         if (request.RequestUri!.Host != "management.azure.com")
         {
             DataPlaneCalls++;
+            DataPlaneAuthorizationHeaders.Add(request.Headers.Authorization?.ToString());
             LastDataPlaneUri = request.RequestUri;
             if (request.Method == HttpMethod.Post && request.RequestUri.AbsolutePath.Contains("/traces:", StringComparison.Ordinal))
             {
@@ -45,12 +48,18 @@ internal sealed class MonitorTracesTestHandler(
                 LastSubmitBody = await request.Content!.ReadAsStringAsync(cancellationToken);
                 SubmitUris.Add(request.RequestUri);
                 SubmitBodies.Add(LastSubmitBody);
-                return submitResponse ?? new(HttpStatusCode.Accepted) { Content = new StringContent(submitBody) };
+                return SubmitCalls == 1 && firstSubmitResponse is not null
+                    ? firstSubmitResponse
+                    : new(HttpStatusCode.Accepted) { Content = new StringContent(submitBody) };
             }
 
             if (request.RequestUri.AbsolutePath.EndsWith("/results", StringComparison.Ordinal))
             {
                 PollCalls++;
+                if (PollCalls == stallPollOnCall)
+                {
+                    await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+                }
                 if (_resultPages.TryDequeue(out var page))
                 {
                     return page;

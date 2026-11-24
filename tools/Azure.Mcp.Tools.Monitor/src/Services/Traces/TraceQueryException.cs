@@ -9,13 +9,14 @@ namespace Azure.Mcp.Tools.Monitor.Services.Traces;
 
 internal sealed class TraceQueryException(TraceQueryResult partialResult, Exception cause)
     : HttpRequestException(
-        "Trace results retrieval failed after receiving data. Included rows are incomplete; the next page position may be uncertain.",
+        "Trace results retrieval failed. Included rows, if any, are incomplete; the next page position may be uncertain. Restart the query.",
         cause,
         cause switch
         {
             HttpRequestException request => request.StatusCode ?? HttpStatusCode.ServiceUnavailable,
             RequestFailedException request => (HttpStatusCode)request.Status,
             JsonException => HttpStatusCode.BadGateway,
+            TimeoutException => HttpStatusCode.GatewayTimeout,
             _ => HttpStatusCode.ServiceUnavailable
         })
 {

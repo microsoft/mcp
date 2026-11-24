@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Monitor.Commands;
 
 namespace Azure.Mcp.Tools.Monitor.Models.Traces;
 
@@ -34,6 +35,26 @@ internal sealed class TraceQueryPage()
 
         foreach (var property in previousPage.Properties)
         {
+            if (property.Key == "metadata" && property.Value.ValueKind == JsonValueKind.Object)
+            {
+                var currentMetadata = Properties.TryGetValue(property.Key, out var currentProperty)
+                    && currentProperty.ValueKind == JsonValueKind.Object
+                    ? currentProperty
+                    : property.Value;
+                var metadata = currentMetadata.EnumerateObject()
+                    .ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
+                foreach (var item in property.Value.EnumerateObject())
+                {
+                    if (item.Name is "hasLimitReached" or "isPartialResult" or "isSystemLimitHit"
+                        && item.Value.ValueKind == JsonValueKind.True)
+                    {
+                        metadata[item.Name] = item.Value;
+                    }
+                }
+                Properties[property.Key] = JsonSerializer.SerializeToElement(metadata, MonitorJsonContext.Default.DictionaryStringJsonElement);
+                continue;
+            }
+
             if (!Properties.TryGetValue(property.Key, out var current) ||
                 (property.Key is "hasLimitReached" or "isPartialResult" or "isSystemLimitHit" &&
                  property.Value.ValueKind == JsonValueKind.True && current.ValueKind == JsonValueKind.False))

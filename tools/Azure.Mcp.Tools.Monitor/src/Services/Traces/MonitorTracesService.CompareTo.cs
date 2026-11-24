@@ -42,10 +42,11 @@ public sealed partial class MonitorTracesService
             : throw new InvalidOperationException("The workspace does not publish a valid accountId required for trace comparisons.");
         if (analysis == TraceComparisonAnalysis.CriticalPath)
         {
+            int maxResults = request.Current.Options?.MaxResults ?? 10000;
             request.Current.TraceId = await ResolveComparisonIdsAsync(
-                session, request.Current, request.Current.TimeRange!, cancellationToken);
+                session, request.Current, request.Current.TimeRange!, maxResults, cancellationToken);
             request.CompareTo.TraceId = await ResolveComparisonIdsAsync(
-                session, request.CompareTo, request.CompareTo.TimeRange ?? request.Current.TimeRange!, cancellationToken);
+                session, request.CompareTo, request.CompareTo.TimeRange ?? request.Current.TimeRange!, maxResults, cancellationToken);
             // Selection queries discover IDs; both CPA populations must retain the same aggregation.
             request.Current.Query = criticalPathQuery;
             request.CompareTo.Query = null;
@@ -55,7 +56,7 @@ public sealed partial class MonitorTracesService
             JsonSerializer.SerializeToUtf8Bytes(request, MonitorJsonContext.Default.TraceComparisonRequest));
         string operationId = await SendSubmitAsync(session, endpointPath, content, cancellationToken);
 
-        // maxResults selects traces, not joined attribute rows; don't truncate the comparative payload.
+        // The per-population limit does not cap the joined output.
         return await PollForResultsAsync(session, operationId, 1000, int.MaxValue, false, cancellationToken);
     }
 
@@ -63,20 +64,27 @@ public sealed partial class MonitorTracesService
         TraceSession session,
         TraceComparisonPopulation population,
         TraceQueryTimeRange timeRange,
+        int maxResults,
         CancellationToken cancellationToken)
     {
         if (population.TraceId is not null)
         {
+            ValidateComparisonIdLimit(population.TraceId.Split(',').Select(Guid.Parse).Distinct().Count(), maxResults);
             return population.TraceId;
         }
 
         string query = population.Query!;
         int separator = LogSearchQueryValidator.BlankQuotedTextAndRejectComments(query).IndexOf("$$", StringComparison.Ordinal);
-        string discovery = separator < 0 ? query + " | project trace_id"
-            : query[..separator].TrimEnd() + " | project trace_id " + query[separator..];
+        DateTimeOffset start = DateTimeOffset.Parse(timeRange.StartTime, System.Globalization.CultureInfo.InvariantCulture);
+        DateTimeOffset end = DateTimeOffset.Parse(timeRange.EndTime, System.Globalization.CultureInfo.InvariantCulture);
+        long startNanoseconds = checked((start.UtcTicks - DateTimeOffset.UnixEpoch.UtcTicks) * 100 - 1);
+        long endNanoseconds = checked((end.UtcTicks - DateTimeOffset.UnixEpoch.UtcTicks) * 100);
+        string traceQuery = (separator < 0 ? query : query[..separator]).TrimEnd();
+        string spanClause = separator < 0 ? string.Empty : " " + query[separator..];
+        string discovery = FormattableString.Invariant(
+            $"{traceQuery} | where start_time_unix_nano > {startNanoseconds} and start_time_unix_nano < {endNanoseconds} | project trace_id{spanClause}");
         string operationId = await SendSubmitAsync(session, discovery,
-            DateTimeOffset.Parse(timeRange.StartTime, System.Globalization.CultureInfo.InvariantCulture),
-            DateTimeOffset.Parse(timeRange.EndTime, System.Globalization.CultureInfo.InvariantCulture),
+            start, end,
             new TraceQueryOptionsBody { MaxResults = 10000 }, QueryEndpointPath, null, cancellationToken);
         TraceQueryResult result = await PollForResultsAsync(session, operationId, 1000, 10000, false, cancellationToken);
         if (result.Status != "Succeeded" || result.OutputLimitReached || result.Payload is not { } payload
@@ -97,9 +105,9 @@ public sealed partial class MonitorTracesService
             {
                 throw new InvalidOperationException("Critical-path population discovery returned an invalid trace ID.");
             }
-            if (Guid.TryParse(traceId, out _))
+            if (Guid.TryParse(traceId, out var guid))
             {
-                ids.Add(traceId);
+                ids.Add(guid.ToString("N"));
                 continue;
             }
             if (traceId.Length > 32 || !traceId.All(Uri.IsHexDigit))
@@ -113,7 +121,17 @@ public sealed partial class MonitorTracesService
         {
             throw new InvalidOperationException("Critical-path comparison requires 1..1000 distinct trace IDs per population; narrow the query/window.");
         }
+        ValidateComparisonIdLimit(ids.Count, maxResults);
         return string.Join(",", ids);
+    }
+
+    private static void ValidateComparisonIdLimit(int count, int maxResults)
+    {
+        if (count > maxResults)
+        {
+            throw new InvalidOperationException(
+                "A critical-path population exceeds --max-results; narrow the selection or increase the limit. No sampled comparison was submitted.");
+        }
     }
 
     private static bool IsPartialComparisonDiscovery(JsonElement element)

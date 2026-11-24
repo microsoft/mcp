@@ -53,10 +53,13 @@ public abstract class BaseTraceCompareCommand<
             ValidateSelection(criticalPathOptions.TraceIds, options.Query, "current", validationResult);
             ValidateSelection(criticalPathOptions.CompareTraceIds, options.CompareQuery, "comparison", validationResult);
             if (criticalPathOptions.AggregateBy is { Length: > 3 }
-                || criticalPathOptions.AggregateBy?.Any(field => !TraceAnalyzeCriticalPathCommand.IsAggregationField(NormalizeField(field))) == true)
+                || criticalPathOptions.AggregateBy?.Any(field => !TraceQueryValidator.IsFieldReference(NormalizeField(field))) == true)
             {
                 Reject("--aggregate-by accepts at most 3 valid field names.");
             }
+            TraceQueryValidator.ValidateSubtreePrefixes(
+                criticalPathOptions.ExcludeSubtreePrefixes, criticalPathOptions.DeprioritizeSubtreePrefixes,
+                (message, _) => Reject(message));
             TraceAnalyzeCriticalPathCommand.ValidateCriticalPathPercentiles(criticalPathOptions.Percentiles, validationResult);
         }
         else
@@ -168,9 +171,13 @@ public abstract class BaseTraceCompareCommand<
             try
             {
                 string structure = LogSearchQueryValidator.BlankQuotedTextAndRejectComments(query);
-                if (!Regex.IsMatch(structure.Split("$$", 2, StringSplitOptions.None)[0], @"^\s*Traces\s*(?:\||$)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))
+                string[] sections = structure.Split("$$", 2, StringSplitOptions.None);
+                string? spanBlock = sections.Length == 2 ? sections[1].Trim() : null;
+                if (!Regex.IsMatch(sections[0], @"^\s*Traces\s*(?:\||$)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1))
                     || Regex.Matches(structure, @"\|\s*(\w+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1)).Any(match => match.Groups[1].Value != "where")
-                    || structure.Split("$$", StringSplitOptions.None).Length > 2)
+                    || (spanBlock is not null && (!spanBlock.StartsWith("<<", StringComparison.Ordinal)
+                        || spanBlock.IndexOf("<<", 2, StringComparison.Ordinal) >= 0
+                        || spanBlock.IndexOf(">>", StringComparison.Ordinal) != spanBlock.Length - 2)))
                 {
                     error = $"The {population} selection query must start with Traces and contain only where filters and optionally one $$ span-membership block.";
                 }

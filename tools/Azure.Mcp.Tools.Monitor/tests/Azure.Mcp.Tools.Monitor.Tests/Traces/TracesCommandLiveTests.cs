@@ -28,6 +28,13 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             Regex = "tenantId=[0-9a-fA-F-]+,objectId=[0-9a-fA-F-]+",
             Value = "Sanitized",
         }),
+        // The default resource-group sanitizer covers URIs, not ARM IDs in JSON bodies.
+        new(new()
+        {
+            Regex = @"(?i)/resourcegroups/(?<group>[\w\-.()]{1,90})",
+            GroupForReplace = "group",
+            Value = "Sanitized",
+        }),
         // Preserve valid GUID/trace-ID formats so sanitized values still replay in dependent requests.
         new(new()
         {
@@ -57,7 +64,7 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             "$..spanId",
             "$..rootSpanResourceId",
             "$..uniqueRecordId",
-            "$..span.name",
+            "$..['span.name']",
             "$..attribute",
             "$..attributeValue",
             "$..insightsMetadata",
@@ -132,7 +139,7 @@ public sealed class TracesCommandLiveTests(ITestOutputHelper output, TestProxyFi
             ["trace-ids"] = new[] { traceId },
             ["start-time"] = start,
             ["end-time"] = end,
-        });
+        }, resultProcessor: envelope => envelope.TryGetProperty("results", out var results) ? results : envelope);
         if (!hasTraces)
         {
             // Freshly deployed workspaces have no spans; analysis must report that explicitly.

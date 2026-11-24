@@ -12,7 +12,7 @@ public sealed class TraceCompareCriticalPathOptions()
     [Option(Description = "Current population KQL filter query, instead of --trace-ids.")]
     public string? Query { get; set; }
 
-    [Option(Description = "Current population start time, UTC ISO 8601. Each population window must be positive and no longer than one day.")]
+    [Option(Description = "Current population start time, UTC ISO 8601. Each window must be 1 minute to 1 day and cannot start in the future.")]
     public required string StartTime { get; set; }
 
     [Option(Description = "Current population end time, UTC ISO 8601.")]
@@ -27,7 +27,7 @@ public sealed class TraceCompareCriticalPathOptions()
     [Option(Description = "Comparison end time, UTC ISO 8601.")]
     public string? CompareEndTime { get; set; }
 
-    [Option(Description = "Trace sample size per population. Defaults to 10000 and is clamped to 1..10000. This is not the number of returned comparison rows.")]
+    [Option(Description = "Maximum distinct trace IDs per population, default 10000, clamped to 1..10000. The backend separately allows at most 1000 IDs per population. Exceeding either limit fails rather than sampling.")]
     public int? MaxResults { get; set; }
 
     [Option(Description = "Critical-path only: 1..1000 explicit current trace IDs (32 hexadecimal characters or GUIDs), instead of --query.")]
@@ -39,7 +39,7 @@ public sealed class TraceCompareCriticalPathOptions()
     [Option(Description = "Critical-path only: grouping fields. Default span.name; maximum 3. Accepts bare or bracket-quoted field names.")]
     public string[]? AggregateBy { get; set; }
 
-    [Option(Description = "Critical-path only: percentiles, each 1..99. Default 50, 95, 99.")]
+    [Option(Description = "Critical-path only: up to 5 distinct percentiles, each 1..99. Default 50, 95, 99.")]
     public int[]? Percentiles { get; set; }
 
     [Option(Description = "Critical-path only: resolve linked traces. Default false.")]

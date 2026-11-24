@@ -1,3 +1,3 @@
 changes:
   - section: Features Added
-    description: Added Monitor trace comparisons for statistics, attributes, and critical paths across independent queries and time windows, including complete trace ID discovery for critical-path populations.
+    description: Added Monitor trace comparisons for statistics, attributes, and critical paths across independent queries and time windows, including critical-path trace discovery capped at 1000 traces per population.

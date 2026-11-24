@@ -31,7 +31,7 @@ public sealed class TraceAnalyzeCriticalPathCommandTests : SubscriptionCommandUn
             .Returns(new TraceQueryResult { Status = "Running", OperationId = "op-critical" });
 
         var args = custom
-            ? "--aggregate-by span.service.name span.name span.attributes.guid:x-request-id --percentiles 90 99 --exclude-subtree-prefixes sql. redis. --deprioritize-subtree-prefixes background. --resolve-trace-links true --include-samples false --include-rollups true --max-results 1000"
+            ? "--aggregate-by span.service.name span.name span.attributes.guid_x_request_id --percentiles 90 99 --exclude-subtree-prefixes sql. redis. --deprioritize-subtree-prefixes background. --resolve-trace-links true --include-samples false --include-rollups true --max-results 1000"
             : "";
         var target = custom ? Target : "--resource-group rg --workspace amw";
         var response = await ExecuteCommandAsync($"{target} {Window} --trace-ids {Id} {args}");
@@ -40,7 +40,7 @@ public sealed class TraceAnalyzeCriticalPathCommandTests : SubscriptionCommandUn
         Assert.Equal("Running", result.Result.Status);
         Assert.Equal("op-critical", result.Result.OperationId);
         var expectedQuery = custom
-            ? "Traces | summarize p90=percentile(duration_nano, 90), p99=percentile(duration_nano, 99) by ['span.service.name'], ['span.name'], ['span.attributes.guid:x-request-id']"
+            ? "Traces | summarize p90=percentile(duration_nano, 90), p99=percentile(duration_nano, 99) by ['span.service.name'], ['span.name'], ['span.attributes.guid_x_request_id']"
             : "Traces | summarize p50=percentile(duration_nano, 50), p95=percentile(duration_nano, 95), p99=percentile(duration_nano, 99) by ['span.name']";
         await Service.Received(1).CriticalPathAsync(
             "sub", "rg", "amw", expectedQuery, Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(),
@@ -60,12 +60,25 @@ public sealed class TraceAnalyzeCriticalPathCommandTests : SubscriptionCommandUn
     [InlineData("--trace-ids abcdef1234567890abcdef1234567890 --percentiles 0")]
     [InlineData("--trace-ids abcdef1234567890abcdef1234567890 --percentiles 100")]
     [InlineData("--trace-ids abcdef1234567890abcdef1234567890 --percentiles 101")]
-    [InlineData("--trace-ids abcdef1234567890abcdef1234567890 --exclude-subtree-prefixes \" \"")]
+    [InlineData("--trace-ids abcdef1234567890abcdef1234567890 --aggregate-by span.attributes.guid:x-request-id")]
     [InlineData("")]
     public async Task ExecuteAsync_RejectsInvalidArguments(string args)
     {
         var response = await ExecuteCommandAsync($"{Target} {Window} {args}");
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData("--exclude-subtree-prefixes \" \"", "Exclude subtree prefixes must not be empty or whitespace.")]
+    [InlineData("--deprioritize-subtree-prefixes \" \"", "Deprioritize subtree prefixes must not be empty or whitespace.")]
+    [InlineData("--exclude-subtree-prefixes sql. --deprioritize-subtree-prefixes sql.", "The exact same subtree prefix cannot appear in both prefix lists.")]
+    public async Task ExecuteAsync_RejectsInvalidSubtreePrefixes(string args, string error)
+    {
+        var response = await ExecuteCommandAsync($"{Target} {Window} --trace-ids {Id} {args}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(error, response.Message, StringComparison.Ordinal);
         Assert.Empty(Service.ReceivedCalls());
     }
 

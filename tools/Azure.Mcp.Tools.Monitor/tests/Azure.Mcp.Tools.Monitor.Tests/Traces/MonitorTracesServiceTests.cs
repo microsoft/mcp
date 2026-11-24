@@ -35,7 +35,7 @@ public sealed class MonitorTracesServiceTests()
             Content = new StringContent("""{"error":{"code":"InvalidQuery","message":"Invalid trace ID format"}}""")
         };
         using var handler = new MonitorTracesTestHandler(1, false,
-            submitResponse: submitResponse);
+            firstSubmitResponse: submitResponse);
         var (service, _) = CreateService(handler);
         var command = new TraceAnalyzeCriticalPathCommand(
             NullLogger<TraceAnalyzeCriticalPathCommand>.Instance, service, new SubscriptionResolver());
@@ -49,6 +49,24 @@ public sealed class MonitorTracesServiceTests()
         Assert.Contains("Invalid trace ID format", response.Message);
         Assert.Contains("\"traceId\":\"invalid\"", handler.LastSubmitBody);
         Assert.Equal(0, handler.PollCalls);
+    }
+
+    [Fact]
+    public async Task Submit_RetriesTransientResponses()
+    {
+        using var failure = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        failure.Headers.Add("Retry-After", "0");
+        using var handler = new MonitorTracesTestHandler(1, false, firstSubmitResponse: failure);
+        var (service, _) = CreateService(handler);
+        var end = DateTimeOffset.UtcNow;
+
+        var result = await service.RunQueryAsync(
+            MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", "Traces",
+            end.AddMinutes(-30), end, 10, true, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal(2, handler.SubmitCalls);
+        Assert.Equal(1, handler.PollCalls);
     }
 
     [Fact]
@@ -183,22 +201,31 @@ public sealed class MonitorTracesServiceTests()
     }
 
     [Theory]
-    [InlineData("rg-a")]
-    [InlineData("rg-b")]
-    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string resourceGroup)
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-a")]
+    [InlineData(MonitorTracesTestHandler.Subscription, "rg-b")]
+    [InlineData("subscription-name", "rg-a")]
+    public async Task ListFieldNamesAsync_UsesScopedWorkspaceAndValidatesEndpoints(string subscription, string resourceGroup)
     {
         using var handler = new MonitorTracesTestHandler(1, false);
         (MonitorTracesService service, IAzureService azureService) = CreateService(handler);
+        const string tenant = "00000000-0000-0000-0000-000000000003";
+        azureService.GetSubscriptionIdByName("subscription-name", tenant, Arg.Any<CancellationToken>())
+            .Returns(MonitorTracesTestHandler.Subscription);
+
         await service.ListFieldNamesAsync(
-            MonitorTracesTestHandler.Subscription, resourceGroup, "amw0", cancellationToken: TestContext.Current.CancellationToken);
+            subscription, resourceGroup, "amw0", tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Null(handler.LastGraphQuery);
         Assert.Equal(
             $"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Monitor/accounts/amw0",
             handler.LastWorkspaceUri!.AbsolutePath);
         Assert.Contains("api-version=2025-10-03-preview", handler.LastWorkspaceUri.Query);
-        await azureService.Received(1).GetResourceGroupResource(
-            MonitorTracesTestHandler.Subscription, resourceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetResourceGroupResource(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.DidNotReceive().GetSubscription(
+            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
+        await azureService.Received(subscription == "subscription-name" ? 1 : 0).GetSubscriptionIdByName(
+            Arg.Any<string>(), tenant, TestContext.Current.CancellationToken);
         azureService.Received().ValidateAzureServiceEndpoint(
             "https://amw.data.monitor.azure.com", "monitor-traces");
         azureService.Received(1).ValidateAzureServiceEndpoint(
@@ -419,7 +446,7 @@ public sealed class MonitorTracesServiceTests()
         using var handler = new MonitorTracesTestHandler(1, false, resultPages: [page, last]);
         var clock = Substitute.For<IDateTimeProvider>();
         var now = new DateTime(2026, 10, 12, 0, 0, 0, DateTimeKind.Utc);
-        clock.UtcNow.Returns(now, now, now.AddSeconds(180));
+        clock.UtcNow.Returns(now, now, now, now.AddSeconds(180));
         (MonitorTracesService service, IAzureService _) = CreateService(handler, clock);
 
         var result = await service.ResumeQueryAsync(
@@ -449,7 +476,7 @@ public sealed class MonitorTracesServiceTests()
         using var handler = new MonitorTracesTestHandler(1, false, resultPages: [pending]);
         var clock = Substitute.For<IDateTimeProvider>();
         var now = new DateTime(2026, 10, 12, 0, 0, 0, DateTimeKind.Utc);
-        clock.UtcNow.Returns(now, now, now.AddSeconds(180));
+        clock.UtcNow.Returns(now, now, now, now.AddSeconds(180));
         (MonitorTracesService service, IAzureService _) = CreateService(handler, clock);
 
         var result = await service.ResumeQueryAsync(
@@ -493,6 +520,7 @@ public sealed class MonitorTracesServiceTests()
 
     [Theory]
     [InlineData(400, """{"error":"query failed"}""", HttpStatusCode.BadRequest)]
+    [InlineData(503, """{"error":"query unavailable"}""", HttpStatusCode.ServiceUnavailable)]
     [InlineData(200, """{"value":{}}""", HttpStatusCode.BadGateway)]
     [InlineData(200, """{"value":[],"nextLink":123}""", HttpStatusCode.BadGateway)]
     [InlineData(200, "not-json", HttpStatusCode.BadGateway)]
@@ -574,15 +602,10 @@ public sealed class MonitorTracesServiceTests()
             subscriptionId: MonitorTracesTestHandler.Subscription,
             tenantId: Guid.Parse("00000000-0000-0000-0000-000000000002")));
         azureService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(subscription);
+        azureService.IsSubscriptionId(Arg.Any<string>()).Returns(call => Guid.TryParse(call.Arg<string>(), out _));
         azureService.GetResourceGroupResource(
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(call =>
-            {
-                string resourceGroup = call.ArgAt<string>(1);
-                ResourceGroupResource group = Substitute.For<ResourceGroupResource>();
-                group.Id.Returns(new ResourceIdentifier($"/subscriptions/{MonitorTracesTestHandler.Subscription}/resourceGroups/{resourceGroup}"));
-                return group;
-            });
+            .Returns(_ => Task.FromException<ResourceGroupResource?>(new RequestFailedException(403, "Resource group read denied.")));
 
         TokenCredential credential = Substitute.For<TokenCredential>();
         var token = new AccessToken("test-token", DateTimeOffset.UtcNow.AddHours(1));

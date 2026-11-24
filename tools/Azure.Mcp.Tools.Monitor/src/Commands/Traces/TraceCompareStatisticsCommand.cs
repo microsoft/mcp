@@ -14,7 +14,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
     Description = """
         Compare statistics for two independent distributed-trace queries and/or time windows.
         Use matching named aggregations and grouping keys in both queries; the backend validates shape compatibility.
-        Returns joined current/compareTo/diff rows and coverage metadata without ranking or removing rows.
+        Returns joined current/compareTo/diff rows and coverage metadata. max-results limits each
+        population's aggregation rows, not its input trace count, before the join.
         Unlike selection-based attribute comparison, the populations can have disjoint time windows.
         Requires resource-group, workspace, query, start-time and end-time, plus compare-query
         or both comparison timestamps. Subscription may be omitted when an Azure CLI default is available.

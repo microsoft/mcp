@@ -51,13 +51,17 @@ public sealed class TraceCompareCriticalPathCommandTests()
     [InlineData("--query Traces --compare-query Traces", true)]
     [InlineData("--query \"Traces | where root_span_name == 'GET|POST'\" --compare-query \"Traces | where root_span_name == '$$'\"", true)]
     [InlineData("--query \"Traces | where root_span_name == 'it''s|POST$$'\" --compare-query \"Traces | where root_span_name == @'it''s|POST$$'\"", true)]
+    [InlineData("--query \"Traces | where duration_nano > 1000000 $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>\" --compare-query Traces", true)]
     [InlineData($"--trace-ids {Id} --compare-query Traces", true)]
     [InlineData($"--trace-ids {Id} --query Traces --compare-trace-ids {Id}", false)]
     [InlineData($"--trace-ids invalid --compare-trace-ids {Id}", false)]
     [InlineData($"--trace-ids {Id}", false)]
     [InlineData("--query \"Traces | project trace_id\" --compare-query Traces", false)]
     [InlineData("--query \"Traces | summarize count=count() by trace_id\" --compare-query Traces", false)]
+    [InlineData("--query \"Traces $$ <<Traces>> $$ <<Traces>>\" --compare-query Traces", false)]
+    [InlineData("--query \"Traces $$ Traces\" --compare-query Traces", false)]
     [InlineData("--query Traces --compare-query Traces --aggregate-by evil/field", false)]
+    [InlineData("--query Traces --compare-query Traces --aggregate-by \"span.name'] | project trace_id\"", false)]
     [InlineData("--query Traces --compare-query Traces --percentiles 100", false)]
     [InlineData("--query Traces --compare-query Traces --percentiles 0", false)]
     public async Task ValidatesIdsFiltersAndGrouping(string args, bool valid)
@@ -74,10 +78,42 @@ public sealed class TraceCompareCriticalPathCommandTests()
         else
         {
             await Service.Received(1).ComparePopulationsAsync("sub", "rg", "amw", "critical-path",
-                Arg.Is<TraceComparisonRequest>(r => r.Current.Options!.IncludeSamples == true && r.Current.Options.ResolveTraceLinks == false),
+                Arg.Is<TraceComparisonRequest>(r => r.Current.Options!.IncludeSamples == true
+                    && r.Current.Options.ResolveTraceLinks == false && r.Current.Options.MaxResults == 10000),
                 "Traces | summarize p50=percentile(duration_nano, 50), p95=percentile(duration_nano, 95), p99=percentile(duration_nano, 99) by ['span.name']",
                 Arg.Any<string?>(), Arg.Any<CancellationToken>());
         }
+    }
+
+    [Theory]
+    [InlineData("--query Traces --compare-query Traces --exclude-subtree-prefixes \" \"", "Exclude subtree prefixes must not be empty or whitespace.")]
+    [InlineData("--query Traces --compare-query Traces --deprioritize-subtree-prefixes \" \"", "Deprioritize subtree prefixes must not be empty or whitespace.")]
+    [InlineData("--query Traces --compare-query Traces --exclude-subtree-prefixes sql. --deprioritize-subtree-prefixes sql.", "The exact same subtree prefix cannot appear in both prefix lists.")]
+    public async Task RejectsInvalidSubtreePrefixCombinations(string args, string error)
+    {
+        var response = await ExecuteCommandAsync($"{Target} {args}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(error, response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(10001, 10000)]
+    [InlineData(100000, 10000)]
+    public async Task ClampsMaxResultsToComparisonLimit(int requested, int expected)
+    {
+        Service.ComparePopulationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string>(), Arg.Any<TraceComparisonRequest>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>()).Returns(new TraceQueryResult { Status = "Succeeded", OperationId = "operation" });
+
+        var response = await ExecuteCommandAsync($"{Target} --query Traces --compare-query Traces --max-results {requested}");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ComparePopulationsAsync("sub", "rg", "amw", "critical-path",
+            Arg.Is<TraceComparisonRequest>(request => request.Current.Options!.MaxResults == expected),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

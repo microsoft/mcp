@@ -4063,9 +4063,15 @@ Run's `--max-results` and resume's `--page-size` default to 100 and are clamped 
 Resuming does not change the query or its submitted time range and row limit.
 Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
 If the status is `Running`, use `query resume` with the returned operation ID.
+If an error reports an uncertain page position, submit a new query rather than resuming incomplete results.
 Requested row limits are approximate; responses preserve truncation and partial-result indicators.
 For critical-path analysis, `--max-results` defaults to 10 and is clamped to 1-1000 requested rows.
 For top-attributes analysis, it defaults to 10000 and is clamped to 1-10000 sampled traces.
+For trace comparisons, `--max-results` defaults to 10000 and is clamped to 1-10000.
+For statistics it limits aggregation rows per population, not input traces; for attributes it
+limits fetched traces per population. These backend limits may be approximate. Critical-path
+comparisons reject populations over the requested limit instead of sampling; the backend also
+allows at most 1000 trace IDs per population.
 Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
 
 ```bash

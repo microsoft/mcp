@@ -3,7 +3,11 @@
 
 using System.Net;
 using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Tools.Monitor.Models.Traces;
+using Azure.Mcp.Tools.Monitor.Services.Traces;
+using Microsoft.Mcp.Core.Services.Time;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.Tests.Traces;
@@ -12,6 +16,75 @@ public sealed class TraceComparisonServiceTests()
 {
     private const string Id = "0123456789abcdef0123456789abcdef";
     private const string ComparisonId = "fedcba9876543210fedcba9876543210";
+
+    [Fact]
+    public async Task CriticalPath_RefreshesExpiredTokenAcrossDiscoveryAndComparison()
+    {
+        using var current = Page("""{"value":[{"trace_id":"a"}]}""");
+        using var comparison = Page("""{"value":[{"trace_id":"b"}]}""");
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [current, comparison]);
+        var (service, azureService) = MonitorTracesServiceTests.CreateService(handler);
+        TokenCredential credential = await azureService.GetTokenCredentialAsync(null, TestContext.Current.CancellationToken);
+        credential.GetTokenAsync(
+            Arg.Is<TokenRequestContext>(context => context.Scopes.Contains(MonitorTracesService.TraceDataPlaneScope)),
+            Arg.Any<CancellationToken>()).Returns(
+            new AccessToken("expired-token", DateTimeOffset.UtcNow.AddSeconds(-1)),
+            new AccessToken("fresh-token", DateTimeOffset.UtcNow.AddHours(1)));
+
+        await service.ComparePopulationsAsync(MonitorTracesTestHandler.Subscription, "rg", "amw0",
+            "critical-path", Request(false), "Traces | summarize count=count() by ['span.name']",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Bearer fresh-token", handler.DataPlaneAuthorizationHeaders[^1]);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Comparison_ReportsAnInFlightPollTimeoutAsUncertain(int stalledPoll)
+    {
+        using var first = Page("""{"value":[{"id":"first"}],"nextLink":"more"}""");
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [first], stallPollOnCall: stalledPoll);
+        IDateTimeProvider clock = Substitute.For<IDateTimeProvider>();
+        DateTime now = DateTime.UtcNow;
+        clock.UtcNow.Returns(now, now.AddSeconds(179.5));
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler, clock);
+
+        var error = await Assert.ThrowsAsync<TraceQueryException>(() => service.ComparePopulationsAsync(
+            MonitorTracesTestHandler.Subscription, "rg", "amw0", "statistics", Request(false),
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.GatewayTimeout, error.StatusCode);
+        Assert.Equal("Failed", error.PartialResult.Status);
+        Assert.Contains("uncertain", error.Message, StringComparison.Ordinal);
+        if (stalledPoll == 1)
+        {
+            Assert.Null(error.PartialResult.Payload);
+        }
+        else
+        {
+            Assert.Equal("first", error.PartialResult.Payload!.Value.GetProperty("value")[0].GetProperty("id").GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Comparison_RemainsResumableWhenPollDelayTimesOut()
+    {
+        using var pending = new HttpResponseMessage(HttpStatusCode.Accepted);
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [pending]);
+        IDateTimeProvider clock = Substitute.For<IDateTimeProvider>();
+        DateTime now = DateTime.UtcNow;
+        clock.UtcNow.Returns(now, now.AddSeconds(179.5), now.AddSeconds(179));
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler, clock);
+
+        var result = await service.ComparePopulationsAsync(
+            MonitorTracesTestHandler.Subscription, "rg", "amw0", "statistics", Request(false),
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Running", result.Status);
+        Assert.Equal("op-1234", result.OperationId);
+        Assert.Equal(1, handler.PollCalls);
+    }
 
     [Theory]
     [InlineData("", "empty")]
@@ -139,7 +212,7 @@ public sealed class TraceComparisonServiceTests()
 
         Assert.Equal(3, handler.SubmitCalls);
         using var discovery = JsonDocument.Parse(handler.SubmitBodies[0]);
-        Assert.Equal("Traces | where duration_nano > 10 | project trace_id $$ <<Traces | where ['span.name'] == 'GET'>>",
+        Assert.Equal("Traces | where duration_nano > 10 | where start_time_unix_nano > 1767311999999999999 and start_time_unix_nano < 1767315600000000000 | project trace_id $$ <<Traces | where ['span.name'] == 'GET'>>",
             discovery.RootElement.GetProperty("query").GetString());
         Assert.Equal(10000, discovery.RootElement.GetProperty("options").GetProperty("maxResults").GetInt32());
         using var body = JsonDocument.Parse(handler.SubmitBodies[2]);
@@ -147,6 +220,51 @@ public sealed class TraceComparisonServiceTests()
         Assert.Equal(new string('0', 31) + "a", body.RootElement.GetProperty("current").GetProperty("traceId").GetString());
         Assert.Equal(new string('0', 31) + "b", body.RootElement.GetProperty("compareTo").GetProperty("traceId").GetString());
         Assert.False(body.RootElement.GetProperty("compareTo").TryGetProperty("query", out _));
+    }
+
+    [Fact]
+    public async Task CriticalPath_DiscoveryDeduplicatesEquivalentGuidFormats()
+    {
+        using var current = Page($$"""{"value":[{"trace_id":"{{Id}}"},{"trace_id":"01234567-89ab-cdef-0123-456789abcdef"}]}""");
+        using var comparison = Page($$"""{"value":[{"trace_id":"{{ComparisonId}}"}]}""");
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [current, comparison]);
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler);
+        var request = Request(false);
+        request.Current.Options = new() { MaxResults = 1 };
+
+        await service.ComparePopulationsAsync(MonitorTracesTestHandler.Subscription, "rg", "amw0",
+            "critical-path", request, "Traces", cancellationToken: TestContext.Current.CancellationToken);
+
+        using var body = JsonDocument.Parse(handler.LastSubmitBody!);
+        Assert.Equal(Id, body.RootElement.GetProperty("current").GetProperty("traceId").GetString());
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    public async Task CriticalPath_RejectsPopulationsAboveRequestedLimit(bool explicitIds, bool compareTo)
+    {
+        string oneId = $$"""{"value":[{"trace_id":"{{Id}}"}]}""";
+        string twoIds = $$"""{"value":[{"trace_id":"{{Id}}"},{"trace_id":"{{ComparisonId}}"}]}""";
+        using var current = Page(compareTo ? oneId : twoIds);
+        using var comparison = Page(twoIds);
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [current, comparison]);
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler);
+        var request = Request(explicitIds);
+        request.Current.Options = new() { MaxResults = 1 };
+        if (explicitIds)
+        {
+            (compareTo ? request.CompareTo : request.Current).TraceId = $"{Id},{ComparisonId}";
+        }
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.ComparePopulationsAsync(
+            MonitorTracesTestHandler.Subscription, "rg", "amw0", "critical-path", request, "Traces",
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Contains("--max-results", error.Message, StringComparison.Ordinal);
+        Assert.Equal(explicitIds ? 0 : compareTo ? 2 : 1, handler.SubmitCalls);
     }
 
     [Theory]
@@ -165,6 +283,22 @@ public sealed class TraceComparisonServiceTests()
             MonitorTracesTestHandler.Subscription, "rg", "amw0", "critical-path", Request(false), "Traces | summarize count=count() by ['span.name']",
             cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal(1, handler.SubmitCalls);
+        Assert.Equal("/traces:query", handler.SubmitUris[0].AbsolutePath);
+    }
+
+    [Fact]
+    public async Task CriticalPath_DiscoveryPreservesNestedPartialFlagsAcrossPages()
+    {
+        using var firstPage = Page("""{"value":[{"trace_id":"a"}],"nextLink":"more","metadata":{"hasLimitReached":true}}""");
+        using var finalPage = Page("""{"value":[{"trace_id":"b"}],"metadata":{"hasLimitReached":false}}""");
+        using var handler = new MonitorTracesTestHandler(1, false, resultPages: [firstPage, finalPage]);
+        var (service, _) = MonitorTracesServiceTests.CreateService(handler);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ComparePopulationsAsync(
+            MonitorTracesTestHandler.Subscription, "rg", "amw0", "critical-path", Request(false), "Traces",
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Single(handler.SubmitUris);
         Assert.Equal("/traces:query", handler.SubmitUris[0].AbsolutePath);
     }
 
@@ -191,6 +325,10 @@ public sealed class TraceComparisonServiceTests()
     [InlineData("Traces | where root_span_name == '$$'", "Traces | where root_span_name == '$$' | project trace_id")]
     [InlineData("Traces | where root_span_name == 'it''s|POST$$' $$ <<Traces | where ['span.name'] == @'it''s|POST$$'>>",
         "Traces | where root_span_name == 'it''s|POST$$' | project trace_id $$ <<Traces | where ['span.name'] == @'it''s|POST$$'>>")]
+    [InlineData("Traces $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>",
+        "Traces | project trace_id $$ <<Traces | where ['service.name'] == 'gateway' $$ Traces | where ['service.name'] == 'backend'>>")]
+    [InlineData("Traces | where start_time_unix_nano > 0 $$ <<Traces | where ['span.name'] == 'GET'>>",
+        "Traces | where start_time_unix_nano > 0 | project trace_id $$ <<Traces | where ['span.name'] == 'GET'>>")]
     public async Task CriticalPath_DiscoveryPreservesQuotedSeparatorsForBothPopulations(string query, string expected)
     {
         using var current = Page("""{"value":[{"trace_id":"a"}]}""");
@@ -202,13 +340,13 @@ public sealed class TraceComparisonServiceTests()
             Current = new()
             {
                 Query = query,
-                TimeRange = new() { StartTime = "2026-01-02T00:00:00.1Z", EndTime = "2026-01-02T00:00:00.9Z" },
+                TimeRange = new() { StartTime = "2026-01-02T00:00:00.1Z", EndTime = "2026-01-02T00:01:00.9Z" },
                 Options = new() { MaxResults = 10000 },
             },
             CompareTo = new()
             {
                 Query = query,
-                TimeRange = new() { StartTime = "2026-01-01T00:00:00.1Z", EndTime = "2026-01-01T00:00:00.9Z" },
+                TimeRange = new() { StartTime = "2026-01-01T00:00:00.1Z", EndTime = "2026-01-01T00:01:00.9Z" },
             },
         };
         await service.ComparePopulationsAsync(MonitorTracesTestHandler.Subscription, "rg", "amw0",
@@ -219,7 +357,11 @@ public sealed class TraceComparisonServiceTests()
         {
             using var body = JsonDocument.Parse(handler.SubmitBodies[index]);
             var expectedWindow = index == 0 ? request.Current.TimeRange : request.CompareTo.TimeRange;
-            Assert.Equal(expected, body.RootElement.GetProperty("query").GetString());
+            string windowFilter = index == 0
+                ? " | where start_time_unix_nano > 1767312000099999999 and start_time_unix_nano < 1767312060900000000"
+                : " | where start_time_unix_nano > 1767225600099999999 and start_time_unix_nano < 1767225660900000000";
+            Assert.Equal(expected.Replace(" | project trace_id", windowFilter + " | project trace_id", StringComparison.Ordinal),
+                body.RootElement.GetProperty("query").GetString());
             Assert.Equal(expectedWindow!.StartTime, body.RootElement.GetProperty("timeRange").GetProperty("startTime").GetString());
             Assert.Equal(expectedWindow.EndTime, body.RootElement.GetProperty("timeRange").GetProperty("endTime").GetString());
         }
