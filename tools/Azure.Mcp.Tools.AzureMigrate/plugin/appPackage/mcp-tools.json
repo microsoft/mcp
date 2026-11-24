@@ -24,7 +24,7 @@
       "_meta": {
         "MicrosoftMcpToolId": "8f2d4b6a-1c3e-4a5f-9b7d-0e2c4a6b8d1f",
         "ui": {
-          "resourceUri": "ui://azuremigrate/inventory-upload-v2.html"
+          "resourceUri": "ui://azuremigrate/inventory-upload-v3.html"
         }
       },
       "annotations": {

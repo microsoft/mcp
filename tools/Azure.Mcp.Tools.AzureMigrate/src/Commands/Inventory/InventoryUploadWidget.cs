@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 /// </summary>
 internal static class InventoryUploadWidget
 {
-    internal const string ResourceUri = "ui://azuremigrate/inventory-upload-v2.html";
+    internal const string ResourceUri = "ui://azuremigrate/inventory-upload-v3.html";
 
     /// <summary>Comma-separated origins (e.g. https://acct.blob.core.windows.net) the widget may connect to.</summary>
     internal const string DomainsSetting = "AZMIGRATE_INVENTORY_WIDGET_DOMAINS";
@@ -45,13 +45,23 @@ internal static class InventoryUploadWidget
         .muted{color:#666}
         .ok{color:#107c10}.err{color:#a4262c}
         pre{white-space:pre-wrap;word-break:break-word;margin:0;max-height:200px;overflow:auto;background:#f4f4f4;padding:4px}
+        .drop{border:2px dashed #8a8886;border-radius:6px;padding:16px;text-align:center;background:#faf9f8;cursor:pointer}
+        .drop.over{border-color:#0078d4;background:#eff6fc}
+        .drop.busy{cursor:default;opacity:.8}
+        .drop button{font:inherit;padding:4px 12px;margin-left:4px;border:1px solid #0078d4;border-radius:4px;background:#0078d4;color:#fff;cursor:pointer}
+        .drop button:disabled{background:#c8c6c4;border-color:#c8c6c4;cursor:default}
+        #fileinfo{margin-top:6px}
         #summary p{margin:4px 0}#summary ul{margin:4px 0;padding-left:20px}#summary code{background:#f4f4f4;padding:0 2px}
         </style>
         </head>
         <body>
         <b id="title">Azure Catalyst inventory</b>
         <div class="muted" id="hint">Starting...</div>
-        <div class="row" id="filerow" style="display:none"><input type="file" id="file" disabled accept=".zip,.csv,.xlsx,.xls,.json,.txt"></div>
+        <div class="row drop" id="drop" style="display:none" tabindex="0" role="button" aria-label="Choose or drop your inventory file">
+          <div>Drag and drop your file here, or<button type="button" id="pick" disabled>Choose file</button></div>
+          <div class="muted" id="fileinfo">CSV, Excel, JSON, TXT or ZIP, up to 500 MB</div>
+          <input type="file" id="file" disabled hidden accept=".zip,.csv,.xlsx,.xls,.json,.txt">
+        </div>
         <div class="row" id="progrow" style="display:none"><progress id="prog" max="100" value="0"></progress></div>
         <div id="status"></div>
         <div class="row" id="inv"></div>
@@ -63,7 +73,15 @@ internal static class InventoryUploadWidget
           var ctx = { uploadUrl: null, sessionId: null, operationId: null };
           var diag = { origin: location.origin, events: [] };
           var el = function (id) { return document.getElementById(id); };
-          var fileEl = el('file'), progEl = el('prog');
+          var fileEl = el('file'), progEl = el('prog'), dropEl = el('drop'), pickEl = el('pick');
+          var ALLOWED = /\.(zip|csv|xlsx|xls|json|txt)$/i;
+          var busy = false;
+          function sizeText(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+          function setReady(ready) {
+            busy = !ready;
+            fileEl.disabled = !ready; pickEl.disabled = !ready;
+            dropEl.className = 'row drop' + (ready ? '' : ' busy');
+          }
           document.querySelector('details').addEventListener('toggle', function () { size(); });
           // documentElement.scrollHeight never drops below the frame's current height, so measure the body's content instead.
           function size() {
@@ -118,10 +136,12 @@ internal static class InventoryUploadWidget
             ctx.uploadUrl = m[1];
             diag.storageOrigin = ctx.uploadUrl.split('/').slice(0, 3).join('/');
             el('title').textContent = 'Upload your inventory file';
-            el('filerow').style.display = ''; el('progrow').style.display = '';
-            fileEl.disabled = false;
-            show('hint', 'Choose your CMDB, CSV or Excel export (up to 500 MB) within ' + (r.uploadWindowMinutes || 30) + ' minutes. It goes straight to Azure storage.', 'muted');
+            dropEl.style.display = ''; el('progrow').style.display = '';
+            setReady(true);
+            show('hint', 'Choose your CMDB, CSV or Excel export (up to 500 MB) within ' + (r.uploadWindowMinutes || 30) + ' minutes.', 'muted');
           }
+          // Dropping a file outside the area must not make the browser open it in place of the panel.
+          ['dragover', 'drop'].forEach(function (n) { window.addEventListener(n, function (ev) { ev.preventDefault(); }); });
           window.addEventListener('message', function (e) {
             var m = e.data;
             if (!m || m.jsonrpc !== '2.0') { return; }
@@ -135,11 +155,37 @@ internal static class InventoryUploadWidget
             }
           });
 
+          function canPick() { return !!ctx.uploadUrl && !busy; }
+          pickEl.addEventListener('click', function (ev) { ev.stopPropagation(); if (canPick()) { fileEl.click(); } });
+          dropEl.addEventListener('click', function () { if (canPick()) { fileEl.click(); } });
+          dropEl.addEventListener('keydown', function (ev) {
+            if ((ev.key === 'Enter' || ev.key === ' ') && canPick()) { ev.preventDefault(); fileEl.click(); }
+          });
+          ['dragenter', 'dragover'].forEach(function (n) {
+            dropEl.addEventListener(n, function (ev) { ev.preventDefault(); if (canPick()) { dropEl.className = 'row drop over'; } });
+          });
+          dropEl.addEventListener('dragleave', function (ev) { ev.preventDefault(); if (canPick()) { dropEl.className = 'row drop'; } });
+          dropEl.addEventListener('drop', function (ev) {
+            ev.preventDefault();
+            if (!canPick()) { return; }
+            dropEl.className = 'row drop';
+            var files = ev.dataTransfer && ev.dataTransfer.files;
+            if (!files || !files.length) { return; }
+            if (files.length > 1) { show('status', 'Drop one file. Put several files in a ZIP first.', 'err'); return; }
+            upload(files[0]);
+          });
           fileEl.addEventListener('change', function () {
             var f = fileEl.files && fileEl.files[0];
-            if (!f) { return; }
+            fileEl.value = '';
+            if (f) { upload(f); }
+          });
+          function upload(f) {
+            if (!ALLOWED.test(f.name)) { show('status', f.name + ' is not a CSV, Excel, JSON, TXT or ZIP file.', 'err'); return; }
+            if (f.size === 0) { show('status', f.name + ' is empty.', 'err'); return; }
             if (f.size > MAX_BYTES) { show('status', f.name + ' is larger than 500 MB.', 'err'); return; }
-            fileEl.disabled = true;
+            show('fileinfo', f.name + ' (' + sizeText(f.size) + ')', '');
+            progEl.value = 0;
+            setReady(false);
             diag.file = { name: f.name, size: f.size };
             var started = Date.now();
             // A single Put Blob straight to the write-only SAS URL, like the portal's CSV import. The file never passes through
@@ -155,21 +201,21 @@ internal static class InventoryUploadWidget
                 progEl.value = 100;
                 show('status', 'Uploaded ' + f.name + '. Building your inventory; Copilot posts the result in the chat when it is ready.', 'ok');
               } else {
-                fileEl.disabled = false;
+                setReady(true);
                 show('status', 'Upload failed (HTTP ' + xhr.status + '). Try again, or ask for the command-line upload instead.', 'err');
               }
             };
             xhr.onerror = function () {
               diag.put = { status: 'network error' };
-              fileEl.disabled = false;
+              setReady(true);
               show('status', 'Upload was blocked by the browser (network or CORS). Ask for the command-line upload instead.', 'err');
             };
             show('status', 'Uploading ' + f.name + '...');
             xhr.send(f);
-          });
+          }
 
           show('status', '');
-          send('ui/initialize', { appInfo: { name: 'azmigrate-inventory-upload', version: '0.1.0' }, appCapabilities: {}, protocolVersion: '2025-06-18' }, 8000)
+          send('ui/initialize', { appInfo: { name: 'azmigrate-inventory-upload', version: '0.2.0' }, appCapabilities: {}, protocolVersion: '2025-06-18' }, 8000)
             .then(function () { diag.init = 'ok'; window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/initialized', params: {} }, '*'); },
                   function (err) { diag.init = 'failed: ' + err.message; })
             .then(function () { show('status', ''); });

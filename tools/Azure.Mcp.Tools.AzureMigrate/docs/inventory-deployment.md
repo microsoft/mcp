@@ -167,7 +167,7 @@ All three parts are needed:
    Bump the plugin version and re-publish it.
 
 Verify with the same token as in step 6: in `tools/list`, `azuremigrate_inventory_createorupdate` must have
-`_meta.ui.resourceUri` set to `ui://azuremigrate/inventory-upload-v2.html`, and `resources/read` for that URI must return
+`_meta.ui.resourceUri` set to `ui://azuremigrate/inventory-upload-v3.html`, and `resources/read` for that URI must return
 the panel HTML with the storage origins in its CSP connect domains.
 
 Start a new chat after publishing, because an existing chat may keep the old tool list.
