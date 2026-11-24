@@ -116,7 +116,9 @@ internal static class SreAgentCommandHelpers
 
     internal static (string UserId, string DisplayName) GetUser(IEnvironmentVariables environmentVariables, string fallback = "mcp-user")
     {
-        var user = environmentVariables.GetEnvironmentVariable("USER") ?? environmentVariables.GetEnvironmentVariable("USERNAME") ?? fallback;
+        var user = environmentVariables.IsAccessAllowed
+            ? environmentVariables.GetEnvironmentVariable("USER") ?? environmentVariables.GetEnvironmentVariable("USERNAME") ?? fallback
+            : fallback;
         return (user, user == fallback ? "MCP User" : user);
     }
 }

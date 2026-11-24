@@ -10,9 +10,9 @@ using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 using Azure.Mcp.Tools.Monitor.Options.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 

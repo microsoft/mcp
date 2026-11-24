@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Helpers;
-using OptionsFactory = Microsoft.Extensions.Options.Options;
 using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Host;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 

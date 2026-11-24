@@ -50,7 +50,16 @@ public sealed class SubscriptionResolver(IFileSystem fileSystem, IEnvironmentVar
         "default_subscription",
     };
 
-    public string? ResolveSubscription(string? subscription) => ResolveSubscriptionInternal(this, subscription);
+    public string? ResolveSubscription(string? subscription)
+    {
+        var resolvedSubscription = ResolveSubscriptionInternal(this, subscription);
+        if (!fileSystem.IsAccessAllowed && (string.IsNullOrWhiteSpace(resolvedSubscription) || IsPlaceholder(resolvedSubscription)))
+        {
+            throw new ArgumentException("A subscription must be provided explicitly when host subscription defaults are unavailable.", nameof(subscription));
+        }
+
+        return resolvedSubscription;
+    }
 
     internal static string? ResolveSubscriptionInternal(ISubscriptionResolver resolver, string? subscription)
     {
@@ -84,11 +93,12 @@ public sealed class SubscriptionResolver(IFileSystem fileSystem, IEnvironmentVar
 
     public string? GetProfileSubscriptionId()
     {
-        fileSystem.EnsureAccess();
-        return _profileDefault.Value;
+        return fileSystem.IsAccessAllowed ? _profileDefault.Value : null;
     }
 
-    public string? GetEnvironmentSubscriptionId() => environmentVariables.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+    public string? GetEnvironmentSubscriptionId() => environmentVariables.IsAccessAllowed
+        ? environmentVariables.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID")
+        : null;
 
     /// <summary>
     /// Checks if the given <paramref name="value"/> is a common placeholder for subscription ID or name.

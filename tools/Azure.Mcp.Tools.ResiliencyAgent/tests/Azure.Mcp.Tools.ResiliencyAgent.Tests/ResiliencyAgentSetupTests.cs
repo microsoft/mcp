@@ -10,8 +10,8 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 

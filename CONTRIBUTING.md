@@ -740,6 +740,8 @@ Inject `IFileSystem` and `IEnvironmentVariables` from `Microsoft.Mcp.Core.Servic
 
 These services access the host normally in CLI and stdio mode. In HTTP mode, every operation throws `UnauthorizedAccessException`, including existence checks, directory enumeration, environment-variable reads, and stream creation. Preserve this denial rather than treating it as missing data or a successful no-op. Resolve optional inline inputs without probing the filesystem, and guard SDK operations that accept local paths before invoking the SDK.
 
+Use the services' `IsAccessAllowed` property to select a documented host-independent behavior without attempting host access. For example, omit optional local subscription annotations, fetch public documentation anonymously, or use a generic request identity. Required host inputs must still fail explicitly; do not catch access-denied exceptions to manufacture a successful result.
+
 Process-startup features such as server configuration, logging, telemetry initialization, authentication configuration, and proxy-server discovery continue using the platform APIs directly. Embedded assembly resources and pure path-string manipulation do not require host filesystem access.
 
 ### Token Acquisition for HTTP Clients

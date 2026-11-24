@@ -1,3 +1,5 @@
 changes:
   - section: "Bugs Fixed"
     description: "Isolated tool access to host files and environment variables behind injectable services that deny access in HTTP mode while preserving CLI, stdio, and process-startup behavior."
+  - section: "Bugs Fixed"
+    description: "Preserved remote subscription listing, anonymous AVM requests, inline Key Vault certificate import, and SRE Agent fallback identity without accessing host defaults. Local certificate files retain precedence over base64 input."

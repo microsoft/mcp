@@ -5,12 +5,12 @@ using System.Net;
 using Azure.Core;
 using Fabric.Mcp.Tools.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 

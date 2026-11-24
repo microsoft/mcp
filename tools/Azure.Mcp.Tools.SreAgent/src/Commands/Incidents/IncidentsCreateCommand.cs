@@ -39,7 +39,7 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
                 _sreAgentService,
                 options,
                 cancellationToken);
-            var user = environmentVariables.GetEnvironmentVariable("USER") ?? environmentVariables.GetEnvironmentVariable("USERNAME") ?? "mcp-user";
+            var (user, displayName) = SreAgentCommandHelpers.GetUser(environmentVariables);
             var prompt = string.Join('\n', new[]
             {
                 $"🚨 INCIDENT: {options.Title}",
@@ -57,7 +57,7 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
                 {
                     Text = prompt,
                     UserId = user,
-                    DisplayName = user == "mcp-user" ? "MCP User" : user,
+                    DisplayName = displayName,
                     Agent = options.Agent
                 }
             };

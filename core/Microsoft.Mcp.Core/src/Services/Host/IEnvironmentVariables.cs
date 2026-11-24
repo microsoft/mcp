@@ -4,11 +4,17 @@
 namespace Microsoft.Mcp.Core.Services.Host;
 
 /// <summary>
-/// Tool-time access to process environment variables. All operations are denied in HTTP mode.
+/// Tool-time access to process environment variables. Host reads are denied in HTTP mode.
 /// Process startup configuration and authentication infrastructure do not use this service.
 /// </summary>
 public interface IEnvironmentVariables
 {
+    /// <summary>
+    /// Gets whether tool-time access to host environment variables is permitted.
+    /// Checking this property does not read environment variables.
+    /// </summary>
+    bool IsAccessAllowed { get; }
+
     /// <summary>
     /// Gets the value of an environment variable.
     /// </summary>

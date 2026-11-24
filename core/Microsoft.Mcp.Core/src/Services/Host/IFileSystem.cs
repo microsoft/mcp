@@ -6,11 +6,17 @@ using Microsoft.Win32.SafeHandles;
 namespace Microsoft.Mcp.Core.Services.Host;
 
 /// <summary>
-/// Tool-time access to the host filesystem. All operations are denied in HTTP mode.
+/// Tool-time access to the host filesystem. Host reads and writes are denied in HTTP mode.
 /// Process startup and embedded assembly resources do not use this service.
 /// </summary>
 public interface IFileSystem
 {
+    /// <summary>
+    /// Gets whether tool-time access to the host filesystem is permitted.
+    /// Checking this property does not access the filesystem.
+    /// </summary>
+    bool IsAccessAllowed { get; }
+
     /// <summary>
     /// Rejects filesystem access when the server is running in HTTP mode.
     /// </summary>

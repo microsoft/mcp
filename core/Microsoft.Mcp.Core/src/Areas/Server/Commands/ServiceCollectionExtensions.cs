@@ -16,8 +16,8 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
-using Microsoft.Mcp.Core.Services.Http;
 using Microsoft.Mcp.Core.Services.Host;
+using Microsoft.Mcp.Core.Services.Http;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 

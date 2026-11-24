@@ -9,6 +9,8 @@ namespace Microsoft.Mcp.Core.Services.Host;
 /// <inheritdoc />
 public sealed class EnvironmentVariables(IOptions<ServerRuntimeConfiguration> configuration) : IEnvironmentVariables
 {
+    public bool IsAccessAllowed => !configuration.Value.IsHttpMode;
+
     public string? GetEnvironmentVariable(string name)
     {
         EnsureAccess();
@@ -23,7 +25,7 @@ public sealed class EnvironmentVariables(IOptions<ServerRuntimeConfiguration> co
 
     private void EnsureAccess()
     {
-        if (configuration.Value.IsHttpMode)
+        if (!IsAccessAllowed)
         {
             throw new UnauthorizedAccessException("Tool access to host environment variables is not allowed in HTTP mode.");
         }

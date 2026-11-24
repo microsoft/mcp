@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Extension.Services;
-using OptionsFactory = Microsoft.Extensions.Options.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Extension.Tests;
 

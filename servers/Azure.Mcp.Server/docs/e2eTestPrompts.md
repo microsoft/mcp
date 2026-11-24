@@ -1026,6 +1026,8 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> | none |
 | keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> | none |
 | keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> | context-required |
+| keyvault_certificate_import | Import this base64-encoded PFX <base64_certificate> as <certificate_name> into key vault <key_vault_account_name> over HTTP without reading a server file | context-required |
+| keyvault_certificate_import | Import this raw PEM certificate and private key <pem_certificate> as <certificate_name> into key vault <key_vault_account_name> over HTTP | context-required |
 | keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> | clarification-required |
 | keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> | context-required |
 | keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> | context-required |

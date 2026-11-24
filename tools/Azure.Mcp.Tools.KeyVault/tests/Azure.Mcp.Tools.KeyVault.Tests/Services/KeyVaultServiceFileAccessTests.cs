@@ -30,6 +30,21 @@ public sealed class KeyVaultServiceFileAccessTests
     }
 
     [Fact]
+    public async Task LocalMode_Base64CompatibleFileName_TakesPrecedenceOverInlineData()
+    {
+        var fileSystem = Substitute.For<IFileSystem>();
+        fileSystem.IsAccessAllowed.Returns(true);
+        fileSystem.FileExists("cert").Returns(true);
+        byte[] expected = [1, 2, 3];
+        fileSystem.ReadAllBytesAsync("cert", Arg.Any<CancellationToken>()).Returns(expected);
+        var service = new KeyVaultService(Substitute.For<IAzureService>(), fileSystem);
+
+        var bytes = await service.ReadCertificateDataAsync("cert", TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, bytes);
+    }
+
+    [Fact]
     public async Task HttpMode_CertificateFileIsDenied()
     {
         var fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" }));

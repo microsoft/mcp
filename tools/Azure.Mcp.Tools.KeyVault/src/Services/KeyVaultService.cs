@@ -195,18 +195,18 @@ public sealed class KeyVaultService(IAzureService azureService, IFileSystem file
             return System.Text.Encoding.UTF8.GetBytes(certificateData);
         }
 
+        if (fileSystem.IsAccessAllowed && fileSystem.FileExists(certificateData))
+        {
+            return await fileSystem.ReadAllBytesAsync(certificateData, cancellationToken);
+        }
+
         try
         {
-            // Inline content must not probe the host filesystem, including in HTTP mode.
             return Convert.FromBase64String(certificateData);
         }
         catch (FormatException ex)
         {
-            if (fileSystem.FileExists(certificateData))
-            {
-                return await fileSystem.ReadAllBytesAsync(certificateData, cancellationToken);
-            }
-
+            fileSystem.EnsureAccess();
             throw new ArgumentException("The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.", ex);
         }
     }

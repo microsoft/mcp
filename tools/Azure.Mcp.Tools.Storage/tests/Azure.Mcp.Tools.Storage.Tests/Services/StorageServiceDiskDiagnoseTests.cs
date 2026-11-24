@@ -12,12 +12,12 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Host;
-using Microsoft.Mcp.Core.Areas.Server;
 using NSubstitute;
 using Xunit;
 

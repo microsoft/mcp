@@ -10,9 +10,11 @@ namespace Microsoft.Mcp.Core.Services.Host;
 /// <inheritdoc />
 public sealed class FileSystem(IOptions<ServerRuntimeConfiguration> configuration) : IFileSystem
 {
+    public bool IsAccessAllowed => !configuration.Value.IsHttpMode;
+
     public void EnsureAccess()
     {
-        if (configuration.Value.IsHttpMode)
+        if (!IsAccessAllowed)
         {
             throw new UnauthorizedAccessException("Tool access to the host filesystem is not allowed in HTTP mode.");
         }

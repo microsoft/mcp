@@ -5,10 +5,10 @@ using System.Net;
 using System.Reflection;
 using Fabric.Mcp.Tools.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Http;
 using Xunit;
 

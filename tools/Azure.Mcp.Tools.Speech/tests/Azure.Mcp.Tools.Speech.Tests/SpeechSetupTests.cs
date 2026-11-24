@@ -4,8 +4,8 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 

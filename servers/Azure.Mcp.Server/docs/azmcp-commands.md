@@ -15,6 +15,8 @@ The following options are available for most commands:
 
 **HTTP host isolation:** Tools cannot access the server's filesystem or environment variables over HTTP. Attempts fail explicitly; they do not return empty data or ignore writes. Supply subscription and tenant values explicitly rather than relying on local Azure CLI profiles or environment defaults. Local file inputs, local output paths, and environment-variable-backed tool inputs require CLI or stdio mode. Inline inputs remain usable when the operation does not otherwise require host access. Process-startup configuration is unaffected.
 
+Over HTTP, subscription listing omits the host's default-subscription annotation; operations requiring a subscription require an explicit value. AVM documentation and version requests proceed anonymously without reading `GITHUB_TOKEN` and report GitHub authentication or rate-limit failures. SRE Agent requests use the generic `mcp-user` / `MCP User` identity instead of the host username.
+
 ### Discovery with `--learn`
 
 The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:
@@ -3685,7 +3687,8 @@ azmcp keyvault certificate get --vault <vault-name> \
                                [--name <certificate-name>]
 
 # Imports an existing certificate (PFX or PEM) into a key vault
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+# HTTP accepts base64 or raw PEM only; local mode also accepts file paths.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate import --vault <vault-name> \
                                   --certificate <certificate-name> \
                                   --certificate-data <path-or-base64-or-raw-pem> \

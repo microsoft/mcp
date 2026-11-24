@@ -6,12 +6,12 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
-using OptionsFactory = Microsoft.Extensions.Options.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Subscription;
 
@@ -21,16 +21,22 @@ public class SubscriptionResolverTests
         new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())),
         new EnvironmentVariables(OptionsFactory.Create(new ServerRuntimeConfiguration())));
 
-    [Fact]
-    public void HttpResolver_RejectsHostDefaultsButAcceptsExplicitSubscription()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("default")]
+    [InlineData("<subscription>")]
+    public void HttpResolver_SkipsHostDefaultsAndRequiresExplicitSubscription(string? subscription)
     {
         var configuration = OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" });
         var resolver = new SubscriptionResolver(new FileSystem(configuration), new EnvironmentVariables(configuration));
 
         Assert.Equal("explicit-subscription", resolver.ResolveSubscription("explicit-subscription"));
-        Assert.Throws<UnauthorizedAccessException>(() => resolver.GetProfileSubscriptionId());
-        Assert.Throws<UnauthorizedAccessException>(() => resolver.GetEnvironmentSubscriptionId());
-        Assert.Throws<UnauthorizedAccessException>(() => resolver.ResolveSubscription(null));
+        Assert.Null(resolver.GetProfileSubscriptionId());
+        Assert.Null(resolver.GetEnvironmentSubscriptionId());
+        Assert.Null(resolver.GetDefaultSubscriptionId());
+        var exception = Assert.Throws<ArgumentException>(() => resolver.ResolveSubscription(subscription));
+        Assert.Contains("explicitly", exception.Message);
     }
 
     [Fact]

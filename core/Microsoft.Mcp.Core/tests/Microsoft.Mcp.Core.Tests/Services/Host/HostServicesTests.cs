@@ -26,6 +26,8 @@ public sealed class HostServicesTests
         using var provider = services.BuildServiceProvider();
         var fileSystem = provider.GetRequiredService<IFileSystem>();
         var environment = provider.GetRequiredService<IEnvironmentVariables>();
+        Assert.True(fileSystem.IsAccessAllowed);
+        Assert.True(environment.IsAccessAllowed);
         var directory = Path.Combine(fileSystem.GetTempPath(), $"mcp-host-{Guid.NewGuid():N}");
         var path = Path.Combine(directory, "input.txt");
         var variable = $"MCP_HOST_TEST_{Guid.NewGuid():N}";
@@ -73,6 +75,7 @@ public sealed class HostServicesTests
     {
         using var provider = CreateHttpProvider();
         var fileSystem = provider.GetRequiredService<IFileSystem>();
+        Assert.False(fileSystem.IsAccessAllowed);
         const string path = "\0";
         Action action = operation switch
         {
@@ -115,6 +118,7 @@ public sealed class HostServicesTests
     {
         using var provider = CreateHttpProvider();
         var environment = provider.GetRequiredService<IEnvironmentVariables>();
+        Assert.False(environment.IsAccessAllowed);
         Assert.Throws<UnauthorizedAccessException>(() => environment.GetEnvironmentVariable("\0"));
         Assert.Throws<UnauthorizedAccessException>(() => environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
     }
