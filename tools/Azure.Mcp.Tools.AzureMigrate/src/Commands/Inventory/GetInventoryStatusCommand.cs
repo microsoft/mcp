@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
@@ -182,6 +183,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
 
         bool isCompleted = s_terminalStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
         string? errorCode = DiscoveryServiceApi.ReadValue(response.Body, "error", "code");
+        string? result = DiscoveryServiceApi.ReadValue(response.Body, "properties", "result");
         return new(
             Success: true,
             Error: null,
@@ -190,14 +192,15 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             OperationId: operationId,
             Status: status,
             IsCompleted: isCompleted,
-            Result: DiscoveryServiceApi.ReadValue(response.Body, "properties", "result"),
+            Result: result,
             ErrorCode: errorCode,
             ErrorMessage: DiscoveryServiceApi.ReadValue(response.Body, "error", "message"),
             RetryAfterSeconds: isCompleted ? null : response.RetryAfterSeconds ?? 30,
-            Instructions: GetInstructions(status, isCompleted, errorCode, subject));
+            Instructions: GetInstructions(status, isCompleted, errorCode, subject, InventoryIssues.HasWarnings(result)));
     }
 
-    internal static string GetInstructions(string status, bool isCompleted, string? errorCode, string subject = InventorySubject)
+    internal static string GetInstructions(
+        string status, bool isCompleted, string? errorCode, string subject = InventorySubject, bool hasWarnings = false)
     {
         bool inventory = subject == InventorySubject;
         if (!isCompleted)
@@ -229,14 +232,25 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
 
         if (string.Equals(status, "Succeeded", StringComparison.OrdinalIgnoreCase))
         {
-            return ReplyFormat.Reply(
+            const string Headline =
                 "'Inventory ready:' followed by the server count, with the OS split and the total storage when 'result' gives them, for " +
                 "example 'Inventory ready: 312 servers (280 Windows, 32 Linux), 4.1 TB storage'. If this was a text change or a " +
-                "question, the headline confirms the change or answers the question instead.",
-                "the total storage only if the headline does not already give it, and the count of any issues found, such as " +
-                "missing or invalid data. Never list the servers or VMs; they are in the card.",
-                "when there are issues the user can fix, say how in a few words (correct the file and upload it again, or describe " +
-                "the fix in text); then " + ReplyFormat.AfterInventory) +
+                "question, the headline confirms the change or answers the question instead.";
+            string reply = hasWarnings
+                ? ReplyFormat.Reply(Headline,
+                    "the count of servers with missing or invalid data from 'result' in a few words, and that a business case would " +
+                    "estimate those values. Never list the servers or VMs; they are in the card.",
+                    "if the user has already asked in this conversation for a business case or an ROI summary, do not create it yet: " +
+                    "ask whether to fix the data first or continue with the business case. " +
+                    BusinessCase.CreateBusinessCaseCommand.FixOrContinue + " Otherwise say how to fix the data in a few words (correct " +
+                    "the file and upload it again, or describe the fix in text), then offer in one line to create the business case " +
+                    "and ROI summary from this inventory.")
+                : ReplyFormat.Reply(Headline,
+                    "the total storage only if the headline does not already give it, and the count of any issues found, such as " +
+                    "missing or invalid data. Never list the servers or VMs; they are in the card.",
+                    "when there are issues the user can fix, say how in a few words (correct the file and upload it again, or describe " +
+                    "the fix in text); then " + ReplyFormat.AfterInventory);
+            return reply +
                 (InventorySummaryWidget.IsEnabled
                     ? " The full inventory summary is shown in the card above; do not paste 'result' or any table."
                     : string.Empty);

@@ -7,13 +7,21 @@ namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Gets a fresh read SAS link for an inventory output from the Discovery Service export
-/// (POST /mcprestapi/sessions/{id}/export), forwarding the caller's bearer token unchanged.
+/// (POST /mcprestapi/sessions/{id}/export), and reads an inventory operation's status, forwarding the caller's bearer token unchanged.
 /// </summary>
 public interface IInventoryExportService
 {
     /// <summary>Exports the offline collector ZIP (Discovery Service 'artifacts=internal') of the session.</summary>
     Task<InventoryExportResult> ExportOfflineAsync(string sessionId, string token, CancellationToken cancellationToken);
+
+    /// <summary>Reads the status and 'result' of an inventory operation of the session, without waiting.</summary>
+    Task<InventoryOperationResult> GetOperationAsync(string sessionId, Guid operationId, string token, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Status and 'result' of an inventory operation. <see cref="HttpStatus"/> is null on a network error or timeout.
+/// </summary>
+public sealed record InventoryOperationResult(int? HttpStatus, string? Status, string? Result);
 
 /// <summary>
 /// Result of an inventory export. <see cref="Uri"/> is a read SAS URL, so it is left out of <see cref="ToString"/>.
@@ -48,5 +56,17 @@ public sealed class InventoryExportService(ILogger<InventoryExportService> logge
         return string.IsNullOrWhiteSpace(uri)
             ? new(response.Status, null, "The Discovery Service export response did not include a download URL.")
             : new(response.Status, uri, null);
+    }
+
+    /// <inheritdoc/>
+    public async Task<InventoryOperationResult> GetOperationAsync(string sessionId, Guid operationId, string token, CancellationToken cancellationToken)
+    {
+        DiscoveryServiceApi.DsResponse response = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Get, DiscoveryServiceApi.OperationStatusUrl(DiscoveryServiceApi.BaseUrl, sessionId, operationId),
+            token, null, Guid.NewGuid().ToString(), "get operation status", cancellationToken);
+        return response.Status is not (>= 200 and < 300)
+            ? new(response.Status, null, null)
+            : new(response.Status, DiscoveryServiceApi.ReadValue(response.Body, "status"),
+                DiscoveryServiceApi.ReadValue(response.Body, "properties", "result"));
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Xunit;
 using Azure.Mcp.Tools.AzureMigrate.Services;
 
@@ -199,6 +200,29 @@ public class InventoryCommandTests
             GetInventoryStatusCommand.GetInstructions("Succeeded", true, null));
         Assert.DoesNotContain("offer to export", GetInventoryStatusCommand.GetInstructions("Succeeded", true, null, "HA assessment"));
     }
+
+    [Fact]
+    public void ParseStatus_SucceededWithWarnings_AsksToFixOrContinueBeforeTheBusinessCase()
+    {
+        const string Body =
+            "{\"status\":\"Succeeded\",\"properties\":{\"result\":\"**Import completed with warnings.**\\n\\nData-quality items:\\n" +
+            "- **1 server** has no usable storage capacity.\"}}";
+
+        var warned = GetInventoryStatusCommand.Parse("s1", "op", new(200, Body, null, null));
+        var clean = GetInventoryStatusCommand.Parse("s1", "op", new(200, "{\"status\":\"Succeeded\",\"properties\":{\"result\":\"Inventory ready.\"}}", null, null));
+
+        Assert.Contains("'Fix first' and 'Continue anyway'", warned.Instructions);
+        Assert.Contains("do not create it yet", warned.Instructions);
+        Assert.DoesNotContain("Continue anyway", clean.Instructions);
+    }
+
+    [Theory]
+    [InlineData("**Import completed with warnings.** Rows imported.", true)]
+    [InlineData("Data-quality items:\n- **2 servers** have missing memory.", true)]
+    [InlineData("Inventory ready: 12 servers. No issues were found.", false)]
+    [InlineData(null, false)]
+    public void InventoryIssues_HasWarnings_DetectsTheAgentsWarningWording(string? result, bool expected) =>
+        Assert.Equal(expected, InventoryIssues.HasWarnings(result));
 
     [Fact]
     public void ParseStatus_InventoryRunning_TellsAgentToKeepTracking()

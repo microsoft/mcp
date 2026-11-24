@@ -34,6 +34,16 @@ public sealed class CreateBusinessCaseOptions : BusinessCaseHaSettingsOptions
         "is left out, a fresh link to this inventory's offline zip is exported and used. Pass the latest 'sessionId' in the conversation.")]
     public string? SessionId { get; set; }
 
+    /// <summary>Gets or sets the latest inventory operation of <see cref="SessionId"/>, checked for data-quality warnings.</summary>
+    [Option(Description = "Required with 'session-id'. The 'operationId' (a GUID) of the latest inventory operation of that session, from " +
+        "the inventory tools. The inventory is checked for data-quality warnings before the business case is created.")]
+    public string? InventoryOperationId { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether to create the business case although the inventory has warnings.</summary>
+    [Option(Description = "Optional. Set true only after the user chose to continue anyway with an inventory that has data-quality " +
+        "warnings (missing or invalid data). Never set it on your own. Default false.")]
+    public bool? ContinueWithIssues { get; set; }
+
     /// <summary>Gets or sets the compute scaling factor.</summary>
     [Option(Description = "Optional. Compute scaling (comfort) factor between 1 and 2. Default 1.3.")]
     public double? ScalingFactor { get; set; }

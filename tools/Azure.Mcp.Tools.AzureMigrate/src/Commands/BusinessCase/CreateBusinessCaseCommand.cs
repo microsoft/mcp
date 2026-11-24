@@ -27,7 +27,8 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "When: the user asks to create, build or run an assessment, a business case, an ROI or cost savings analysis, an ROI summary, " +
         "or executive artifacts (an executive summary of the migration). Use this tool for all of these. " +
         "How: needs 'target-region' (an Azure region name such as 'eastus') and the inventory: pass 'session-id' " +
-        "(the 'sessionId' of the user's inventory, from the inventory tools) to use a fresh link to that inventory's offline zip, or " +
+        "(the 'sessionId' of the user's inventory, from the inventory tools) with 'inventory-operation-id' (the 'operationId' of " +
+        "its latest inventory operation) to use a fresh link to that inventory's offline zip, or " +
         "'inventory-sas-uri' only when the user gives a read-only https SAS URL of a collector ZIP; when you take it from the chat, " +
         "        tell the user you are using the inventory SAS URL from the chat. Before calling, ask the user for any of these " +
                 "they have not given (target region, which inventory) and wait for the answer; do not invent or assume them. " +
@@ -40,7 +41,9 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
         "redundancy (locally redundant), VM families (all), uptime (31 days, 24 hours), VM security types (none), management services " +
         "(none), network cost (5%), IaaS, PaaS and management labor cost remaining (75%, 60%, 60%), infrastructure growth (5% a year) " +
         "and migration completion by year (0, 20, 50, 100%). " +
-        "Returns: 'status', 'stage', 'nextStatusParameters' and 'instructions', which lists the settings used. " +
+        "Returns: 'status', 'stage', 'nextStatusParameters' and 'instructions', which lists the settings used. 'status' " +
+        "NeedsConfirmation means the business case was not started because the inventory has missing or invalid data: follow " +
+        "'instructions' to let the user fix the data first or continue anyway. " +
         "Next: success means the business case has started, not finished. Follow 'instructions': they say either to start tracking " +
         "it right away, in the same reply, with the business case status tool using 'nextStatusParameters' unchanged until it " +
         "completes (without waiting for the user to ask, calling the status tool directly yourself, never from a script or code), " +
@@ -102,6 +105,7 @@ public sealed class CreateBusinessCaseCommand(
 
         string? inventorySasUri = options.InventorySasUri?.Trim();
         string? sessionId = options.SessionId?.Trim();
+        Guid inventoryOperationId = Guid.Empty;
         if (string.IsNullOrEmpty(inventorySasUri))
         {
             if (string.IsNullOrEmpty(sessionId))
@@ -113,6 +117,13 @@ public sealed class CreateBusinessCaseCommand(
             if (!DiscoveryServiceApi.IsValidSessionId(sessionId))
             {
                 return BusinessCaseStages.Invalid("'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.", name);
+            }
+
+            if (!Guid.TryParse(options.InventoryOperationId?.Trim(), out inventoryOperationId))
+            {
+                return BusinessCaseStages.Invalid(
+                    "'inventory-operation-id' is required with 'session-id': the 'operationId' (a GUID) of the latest inventory " +
+                    "operation of that session.", name);
             }
         }
         else if (!AssessmentValidation.IsValidInventorySasUri(inventorySasUri))
@@ -160,6 +171,17 @@ public sealed class CreateBusinessCaseCommand(
 
         if (string.IsNullOrEmpty(inventorySasUri))
         {
+            if (options.ContinueWithIssues != true)
+            {
+                // Only a completed inventory with warnings stops here; a failed status read is left to the export below.
+                InventoryOperationResult inventory = await _exportService.GetOperationAsync(sessionId!, inventoryOperationId, token, cancellationToken);
+                if (string.Equals(inventory.Status, BusinessCaseStages.Succeeded, StringComparison.OrdinalIgnoreCase)
+                    && InventoryIssues.HasWarnings(inventory.Result))
+                {
+                    return NeedsConfirmation(name, InventoryIssues.Summarize(inventory.Result!));
+                }
+            }
+
             InventoryExportResult export = await _exportService.ExportOfflineAsync(sessionId!, token, cancellationToken);
             if (!AssessmentValidation.IsValidInventorySasUri(export.Uri))
             {
@@ -204,6 +226,30 @@ public sealed class CreateBusinessCaseCommand(
     /// <summary>Builds a valid business case name from the region and UTC time, for when the user gives none.</summary>
     internal static string GenerateName(string region, DateTime utcNow) =>
         $"bc-{region}-{utcNow.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture)}";
+
+    /// <summary>Status of a create that stopped because the inventory has data-quality warnings and the user has not chosen yet.</summary>
+    internal const string NeedsConfirmationStatus = "NeedsConfirmation";
+
+    /// <summary>
+    /// Result of a create that did not start: the inventory has data-quality warnings, so the user chooses to fix the data first or
+    /// continue anyway. <paramref name="issues"/> is the inventory's data-quality items, returned in 'result'.
+    /// </summary>
+    internal static BusinessCaseCommandResult NeedsConfirmation(string? name, string issues) =>
+        new(true, null, NeedsConfirmationStatus, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
+            null, null, null, null, null, null, null, issues, null, null,
+            ReplyFormat.Reply(
+                "Business case not started: the inventory has missing or invalid data.",
+                "the data-quality items in 'result' in a few words, and that the business case would estimate those values, so " +
+                "costs may be less accurate. Never list the servers.",
+                "ask whether to fix the data first or continue with the business case.") + " " + FixOrContinue);
+
+    /// <summary>How the agent asks the user to fix the inventory's data-quality warnings first or continue, and what each choice does.</summary>
+    internal const string FixOrContinue =
+        "After the reply, ask with your question tool that shows choices (a dropdown), not in text, offering exactly 'Fix first' and " +
+        "'Continue anyway'. If they choose Fix first, say in a few words what to correct (correct the file and upload it again, or " +
+        "describe the fix in text); once the corrected inventory is ready, create the business case from its latest operation without " +
+        "asking again. If they choose Continue anyway, create the business case with 'continue-with-issues' set to true (asking for " +
+        "the target region first if they have not given one), and say the estimates for the servers with issues may be less accurate.";
 
     /// <summary>Lists every business case setting with the value used, defaults included, for the user.</summary>
     internal static string DescribeSettings(string region, AssessmentSettings s, BusinessCaseHaSettings ha)

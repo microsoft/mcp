@@ -31,8 +31,19 @@ public class BusinessCaseCommandTests
     private readonly IHaSessionService _ha = Substitute.For<IHaSessionService>();
     private readonly IInventoryExportService _export = Substitute.For<IInventoryExportService>();
 
-    public BusinessCaseCommandTests() =>
+    private const string InventoryOperationId = "bfc64d32-959a-4fb0-ade0-a49f7580e496";
+
+    private const string WarningsResult =
+        "**Import completed with warnings.** 12 servers imported.\n\nData-quality items:\n" +
+        "- **1 server** has a missing or invalid CPU core count.\n- **2 servers** have missing or invalid memory sizes.\n\n" +
+        "The inventory can be used now.";
+
+    public BusinessCaseCommandTests()
+    {
         _ha.ExportArtifactsAsync(default!, default!, default).ReturnsForAnyArgs(new InventoryExportResult(404, null, "none"));
+        _export.GetOperationAsync(default!, default, default!, default).ReturnsForAnyArgs(
+            new InventoryOperationResult(200, "Succeeded", "Inventory ready: 12 servers. No issues were found."));
+    }
 
     [Fact]
     public async Task Create_StartsAssessmentWithBusinessCaseDefaultsAndReturnsNextStatusParameters()
@@ -106,7 +117,7 @@ public class BusinessCaseCommandTests
             new AssessmentOperation(202, _asOperationId, "Running", null, 10, null, null));
 
         var result = await CreateCommand().RunAsync(
-            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1" }, TestContext.Current.CancellationToken);
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1", InventoryOperationId = InventoryOperationId }, TestContext.Current.CancellationToken);
 
         Assert.True(result.Success);
         Assert.Equal("Running", result.Status);
@@ -121,12 +132,61 @@ public class BusinessCaseCommandTests
         _export.ExportOfflineAsync("inv-1", "token", Arg.Any<CancellationToken>()).Returns(new InventoryExportResult(400, null, "SessionState"));
 
         var result = await CreateCommand().RunAsync(
-            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1" }, TestContext.Current.CancellationToken);
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1", InventoryOperationId = InventoryOperationId }, TestContext.Current.CancellationToken);
 
         Assert.Equal("Failed", result.Status);
         Assert.Contains("SessionState", result.ErrorMessage);
         Assert.Equal("inventoryExport", result.FailedStep);
         await _create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_InventoryHasWarnings_AsksToFixOrContinueWithoutExportingOrCreating()
+    {
+        _export.GetOperationAsync("inv-1", Guid.Parse(InventoryOperationId), "token", Arg.Any<CancellationToken>())
+            .Returns(new InventoryOperationResult(200, "Succeeded", WarningsResult));
+
+        var result = await CreateCommand().RunAsync(
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1", InventoryOperationId = InventoryOperationId },
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Equal("NeedsConfirmation", result.Status);
+        Assert.Null(result.NextStatusParameters);
+        Assert.Equal("1 server has a missing or invalid CPU core count; 2 servers have missing or invalid memory sizes.", result.Result);
+        Assert.Contains("'Fix first' and 'Continue anyway'", result.Instructions);
+        await _export.DidNotReceiveWithAnyArgs().ExportOfflineAsync(default!, default!, TestContext.Current.CancellationToken);
+        await _create.DidNotReceiveWithAnyArgs().CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Create_InventoryHasWarningsAndUserContinues_CreatesWithoutCheckingTheInventory()
+    {
+        _export.GetOperationAsync(default!, default, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(new InventoryOperationResult(200, "Succeeded", WarningsResult));
+        _export.ExportOfflineAsync("inv-1", "token", Arg.Any<CancellationToken>()).Returns(new InventoryExportResult(200, SasUri, null));
+        _create.CreateAssessmentAsync(default!, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
+            new AssessmentOperation(202, _asOperationId, "Running", null, 10, null, null));
+
+        var result = await CreateCommand().RunAsync(
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1", InventoryOperationId = InventoryOperationId, ContinueWithIssues = true },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Running", result.Status);
+        await _export.DidNotReceiveWithAnyArgs().GetOperationAsync(default!, default, default!, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("not-a-guid")]
+    public async Task Create_SessionIdWithoutValidOperationId_IsInvalid(string? operationId)
+    {
+        var result = await CreateCommand().RunAsync(
+            new() { AssessmentName = "bc-1", TargetRegion = "eastus", SessionId = "inv-1", InventoryOperationId = operationId },
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Contains("'inventory-operation-id' is required with 'session-id'", result.Error);
+        await _export.DidNotReceiveWithAnyArgs().ExportOfflineAsync(default!, default!, TestContext.Current.CancellationToken);
     }
 
     [Theory]
