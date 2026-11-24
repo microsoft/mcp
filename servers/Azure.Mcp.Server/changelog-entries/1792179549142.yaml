@@ -1,0 +1,3 @@
+changes:
+  - section: "Features Added"
+    description: "Added hierarchical blob browsing to storage_blob_get using --delimiter with cursor-based pagination."
