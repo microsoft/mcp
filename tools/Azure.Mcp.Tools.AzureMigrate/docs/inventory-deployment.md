@@ -1,16 +1,18 @@
-# Deploying the Azure Migrate inventory tools to Azure App Service (Microsoft tenant)
+# Deploying the Azure Catalyst tools to Azure App Service (Microsoft tenant)
 
 This guide hosts the Azure MCP Server on Azure App Service (Linux) in the Microsoft corporate tenant
-(`72f988bf-86f1-41af-91ab-2d7cd011db47`) and exposes only the three Azure Migrate inventory tools:
+(`72f988bf-86f1-41af-91ab-2d7cd011db47`) and exposes only the eight Azure Catalyst tools:
 
 | Tool | Purpose |
 |---|---|
-| `azuremigrate_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command. With `--text-only` (requires `--session-id` and `--message`), it updates an existing inventory from the message alone (Discovery Service invoke `inputType: Text`, no session PUT) and returns no upload command. |
-| `azuremigrate_inventory_status` | Tracks the inventory operation started by create-or-update. Each call waits up to about 60 seconds for it to complete; the agent repeats the call with the same session and operation until it completes, before export or assessment. |
-| `azuremigrate_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
-| `azuremigrate_assessment_create` | Starts a machine assessment from the user's collector ZIP (`inventory-sas-uri`) for a target region and currency, polls its operation (up to 10 times with exponential backoff, 1 to 512 seconds, using the caller's token) and, when it succeeds, returns a download command for the assessment output, starts the HA skill on the Discovery Service (session PUT with skill type `HA`, then invoke) and uploads the HA input: a mini zip whose `manifest.json` holds the inventory and assessment read SAS URIs. If the assessment is still running after the last poll, returns the operation for the status tool and does not start the HA session. The assessment create and operation status calls go through `IAssessmentCreateClient` and `IAssessmentOperationStatusClient`, which call the Assessment Service with the caller's token. |
-| `azuremigrate_assessment_status` | Returns the status of an assessment operation once per call and, when it has succeeded, a new download command for the assessment output. |
-| `azuremigrate_assessment_hastatus` | Returns the Discovery Service operation status of the HA session started by `azuremigrate_assessment_create`, once per call. |
+| `azure_catalyst_inventory_createorupdate` | Creates (or reuses) the caller's inventory session on the Azure Migrate Discovery Service and returns a write-only upload URL and an `azcopy` command, or the upload panel when it is enabled. With `--text-only` (requires `--session-id` and `--message`), it updates an existing inventory from the message alone (Discovery Service invoke `inputType: Text`, no session PUT) and returns no upload command. |
+| `azure_catalyst_inventory_status` | Tracks the inventory operation started by create-or-update. Each call waits briefly for it to complete (or returns at once with `no-wait`); the agent repeats the call with the same session and operation until it completes. |
+| `azure_catalyst_inventory_wait` | Waits quietly, for up to a few minutes per call, for the inventory operation, when the latest inventory result asks for it. |
+| `azure_catalyst_inventory_export` | Returns a read-only download URL and an `azcopy` command for an output of a finished inventory: the refined inventory (`output=refined`, the default; Discovery Service `artifacts=external`) or the offline zip (`output=offline`; `artifacts=internal`). |
+| `azure_catalyst_businesscase_create` | Starts a business case from the user's inventory: a machine assessment from the collector ZIP (`inventory-sas-uri`) for a target region, then the HA skill on the Discovery Service and the business case evaluation. Returns at once with the `nextStatusParameters` for the status tool. The assessment calls go through `IAssessmentService`, which calls the Assessment Service with the caller's token. |
+| `azure_catalyst_businesscase_status` | Moves the business case to its next stage and returns its state, and the ROI report when it finishes. |
+| `azure_catalyst_businesscase_wait` | Waits quietly, for up to a few minutes per call, for the business case, when the latest business case result asks for it. |
+| `azure_catalyst_session_archive` | Archives the user's current inventory and business case sessions so the next ones start fresh. Called only when the user asks. |
 
 ## How authentication works
 
@@ -22,9 +24,9 @@ MCP client ──(user token, aud = MCP app)──▶ Azure MCP Server (App Serv
 - The inventory tools forward the **same** bearer token to the Discovery Service. No On-Behalf-Of exchange happens,
   so the MCP server's app registration must be the audience the Discovery Service accepts.
 - Tokens and SAS query strings are never logged.
-- The Discovery Service endpoint defaults to `DsBackdoorClient.BaseUrl` and can be overridden with
+- The Discovery Service endpoint defaults to `DiscoveryServiceApi.BaseUrl` and can be overridden with
   `AZUREMIGRATE_DS_BASE_URL`.
-- The assessment tools forward the same bearer token to the Assessment Service
+- The business case tools forward the same bearer token to the Assessment Service
   (`/businessCaseRestApi/machineAssessmentsFromZip`, api-version `2022-01-05-preview`). The endpoint defaults to
   Stamp03 and can be overridden with `AZUREMIGRATE_ASSESSMENT_SERVICE_URL`; the workspace id defaults to
   `azure-migrate-mcp` and can be overridden with `AZUREMIGRATE_ASSESSMENT_WORKSPACE_ID`. Create and status calls must
@@ -89,8 +91,8 @@ az webapp config appsettings set -g $rg -n $app --settings `
   the server advertises `http://` URLs in its OAuth protected resource metadata.
 - Optional: `AZUREMIGRATE_INVENTORY_SKILL_TYPE` overrides the Discovery Service skill type (default `Discovery`).
 - Optional: `AZUREMIGRATE_HA_SKILL_TYPE` overrides the Discovery Service skill type used for the HA session (default `HA`).
-- Optional: `AZUREMIGRATE_HA_MOCK` (default on) mocks the HA step until the HA skill is deployed: the create tool returns a
-  `ha-mock-*` session without calling the Discovery Service, and the HA status tool answers it with a mocked result. Set it
+- Optional: `AZUREMIGRATE_HA_MOCK` (default on) mocks the HA step until the HA skill is deployed: the business case tools use a
+  `ha-mock-*` session without calling the Discovery Service and finish the business case from the HA evaluate result. Set it
   to `false` to call the Discovery Service.
 - Optional: `AZUREMIGRATE_DS_BASE_URL` points the inventory tools at a different Discovery Service, for example
   another stamp or a local OneBox.
@@ -101,11 +103,11 @@ az webapp config appsettings set -g $rg -n $app --settings `
 
 ```powershell
 az webapp config set -g $rg -n $app --startup-file `
-  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azuremigrate_inventory_createorupdate --tool azuremigrate_inventory_status --tool azuremigrate_inventory_export --tool azuremigrate_assessment_create --tool azuremigrate_assessment_status --tool azuremigrate_assessment_hastatus --outgoing-auth-strategy UseHostingEnvironmentIdentity"
+  "chmod +x /home/site/wwwroot/azmcp && /home/site/wwwroot/azmcp server start --transport http --tool azure_catalyst_inventory_createorupdate --tool azure_catalyst_inventory_status --tool azure_catalyst_inventory_wait --tool azure_catalyst_inventory_export --tool azure_catalyst_businesscase_create --tool azure_catalyst_businesscase_status --tool azure_catalyst_businesscase_wait --tool azure_catalyst_session_archive --outgoing-auth-strategy UseHostingEnvironmentIdentity"
 ```
 
-- `--tool` limits the server to the three inventory tools.
-- `--outgoing-auth-strategy UseHostingEnvironmentIdentity` avoids the default On-Behalf-Of setup; the inventory tools
+- `--tool` limits the server to the eight Azure Catalyst tools.
+- `--outgoing-auth-strategy UseHostingEnvironmentIdentity` avoids the default On-Behalf-Of setup; the tools
   forward the caller's token themselves and do not use the hosting identity.
 
 ## 5. Publish and deploy
@@ -135,13 +137,13 @@ curl.exe -s -X POST "$url/" -H "Authorization: Bearer $token" -H "Content-Type: 
 ```
 
 The second call requires Azure CLI to be pre-authorized on `<MCP_APP_ID>`. The response should list only
-`azuremigrate_inventory_createorupdate`, `azuremigrate_inventory_status`, `azuremigrate_inventory_export`, `azuremigrate_assessment_create`, `azuremigrate_assessment_status` and `azuremigrate_assessment_hastatus`.
+the eight `azure_catalyst_*` tools in the table above.
 
 ## 7. Optional: enable the inventory upload panel
 
-With the panel on, MCP Apps hosts such as Cowork show an upload panel for `azuremigrate_inventory_createorupdate`
+With the panel on, MCP Apps hosts such as Cowork show an upload panel for `azure_catalyst_inventory_createorupdate`
 instead of an `azcopy` command. The panel uploads the user's file with a single browser PUT to the write-only SAS URL,
-so the file never passes through MCP or the chat. It then polls `azuremigrate_inventory_status` with `no-wait` and
+so the file never passes through MCP or the chat. It then polls `azure_catalyst_inventory_status` with `no-wait` and
 shows the operation's summary when the inventory finishes. Without the setting, the server keeps the `azcopy` flow.
 
 All three parts are needed:
@@ -166,7 +168,7 @@ All three parts are needed:
    `"validDomains": ["<WEB_APP_NAME>.azurewebsites.net", "<REPORT_STORAGE_ACCOUNT>.blob.core.windows.net"]`.
    Bump the plugin version and re-publish it.
 
-Verify with the same token as in step 6: in `tools/list`, `azuremigrate_inventory_createorupdate` must have
+Verify with the same token as in step 6: in `tools/list`, `azure_catalyst_inventory_createorupdate` must have
 `_meta.ui.resourceUri` set to `ui://azuremigrate/inventory-upload-v3.html`, and `resources/read` for that URI must return
 the panel HTML with the storage origins in its CSP connect domains.
 
