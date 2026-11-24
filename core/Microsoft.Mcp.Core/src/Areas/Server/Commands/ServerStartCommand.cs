@@ -529,6 +529,9 @@ public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
         McpHttpEndpointOptions endpointOptions = app.Services.GetRequiredService<IOptions<McpHttpEndpointOptions>>().Value;
         if (OAuthProtectedResourceMetadataHelper.GetConfiguredMetadataUri(endpointOptions) is Uri configuredMetadataUri)
         {
+            // The SDK matches absolute metadata URLs against the request origin. A proxy or tunnel may
+            // replace the public origin with an internal one, so apply the configured origin only to
+            // this metadata path before the SDK handles it.
             app.Use((context, next) =>
             {
                 OAuthProtectedResourceMetadataHelper.ApplyConfiguredMetadataOrigin(context.Request, configuredMetadataUri);
