@@ -33,11 +33,13 @@ For prompts requiring local files or environment variables, verify normal access
 | adme_storage_record_list | List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_storage_record_list | Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor \<cursor> from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_storage_record_list | Fetch up to 25 ADME record IDs on the next page using the previous nextCursor unchanged, keeping the same endpoint, data partition, kind, and authentication options | context-required |
 | adme_storage_record_version_list | List all versions of ADME record \<record-id> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter \<lucene-query> from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records matching \<lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint \<endpoint> in data partition \<data-partition> | none |
+| adme_search | Continue the previous ADME cursor search using nextCursor unchanged as cursor and resend all original criteria; stop when nextCursor is absent | context-required |
 | adme_search | Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint \<endpoint> in data partition \<data-partition> | none |
 | adme_search | Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint \<endpoint> in data partition \<data-partition> | none |
@@ -779,6 +781,12 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | netappfiles_account_get | Get the Azure NetApp Files accounts in resource group \<resource_group> | none |
 | netappfiles_account_get | Show me details for NetApp Files accounts in resource group \<resource_group> | none |
 | netappfiles_account_update | Set the tags on Azure NetApp Files account \<account> in resource group \<resource_group> to {"environment":"production"} | none |
+| netappfiles_pool_create | Create a 4 TiB Premium capacity pool named \<pool> in Azure NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_pool_create | Create an Azure NetApp Files capacity pool called \<pool> with Flexible service level, Manual QoS, and 128 MiB/s custom throughput in account \<account> | none |
+| netappfiles_pool_get | Get capacity pool \<pool> from Azure NetApp Files account \<account> in resource group \<resource_group> | none |
+| netappfiles_pool_get | Show me the configuration and provisioning state of NetApp Files capacity pool \<pool> in account \<account> | none |
+| netappfiles_pool_update | Resize Azure NetApp Files capacity pool \<pool> in account \<account> to 8 TiB | none |
+| netappfiles_pool_update | Set the tags on NetApp Files capacity pool \<pool> in account \<account> to {"environment":"production"} | none |
 
 ## Azure Database for PostgreSQL
 
@@ -1146,6 +1154,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | marketplace_product_get | Get details about marketplace product <product_name> | none |
 | marketplace_product_list | Search for Microsoft products in the marketplace | none |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> | none |
+| marketplace_product_list | Get the next page of the previous Marketplace product listing using nextCursor unchanged as cursor and keep all original arguments, including sort and selected fields | context-required |
 
 ## Azure MCP Best Practices
 
@@ -1199,6 +1208,14 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 |:----------|:------------|:------------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> | none |
 | monitor_healthmodels_get | Show me the health model <health_model_name> in resource group <resource_group> | none |
+| monitor_healthmodels_inspect | Get the signal history of entity <entity_name> in health model <health_model_name> for the last day | none |
+| monitor_healthmodels_inspect | List the entities of health model <health_model_name> and their health history | none |
+| monitor_healthmodels_inspect | Show the dependencies of health model <health_model_name>: which entities roll up into which | none |
+| monitor_healthmodels_inspect | Show what depends on entity <entity_name> in health model <health_model_name> | none |
+| monitor_healthmodels_inspect | What are the degraded and unhealthy thresholds of the signals on entity <entity_name> in health model <health_model_name>? | none |
+| monitor_healthmodels_inspect | Which entities of health model <health_model_name> are not healthy? | none |
+| monitor_healthmodels_inspect | Why is health model <health_model_name> degraded? Trace it down to the signals that drive it | none |
+| monitor_healthmodels_inspect | Why was health model <health_model_name> degraded at <time>? Trace it down to the signals that drove it then | none |
 | monitor_healthmodels_list | List the Azure Monitor health models in my subscription | none |
 | monitor_healthmodels_list | What health models are in resource group <resource_group>? | none |
 | monitor_instrumentation_get-learning-resource | Get the onboarding learning resource at path <resource_path> | investigation-required |
@@ -1706,11 +1723,13 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_blob_container_get | List all blob containers in the storage account \<account> | none |
 | storage_blob_container_get | List all blob containers in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_container_get | Show me the containers in the storage account \<account> | none |
+| storage_blob_container_get | Get the next page of containers using nextCursor \<cursor> with the same storage account and prefix | context-required |
 | storage_blob_get | Show me the properties for blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_blob_get | Get the details about blob \<blob> in the container \<container> in storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
+| storage_blob_get | Get the next page of blobs using nextCursor \<cursor> with the same storage account, container, and prefix | context-required |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
 | storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |
@@ -1721,6 +1740,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_disk_diagnose | Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine \<vm-resource-id> | none |
 | storage_table_list | List all tables in the storage account \<account> | none |
 | storage_table_list | Show me the tables in the storage account \<account> | none |
+| storage_table_list | Get the next page of table names using nextCursor \<cursor> with the same storage account | context-required |
 
 ## Azure Storage Sync
 

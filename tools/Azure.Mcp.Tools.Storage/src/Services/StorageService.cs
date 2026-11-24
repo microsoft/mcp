@@ -21,6 +21,10 @@ namespace Azure.Mcp.Tools.Storage.Services;
 public sealed class StorageService(IAzureService azureService, IFileSystem fileSystem)
     : BaseAzureResourceService(azureService), IStorageService
 {
+    private const int BlobPageSize = 100;
+    private const int ContainerPageSize = 100;
+    private const int TablePageSize = 100;
+
     private static readonly HashSet<string> s_validSkus = new(StringComparer.OrdinalIgnoreCase)
     {
         "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Premium_LRS", "Premium_ZRS",
@@ -158,11 +162,12 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
         }
     }
 
-    public async Task<List<Storage.Models.BlobInfo>> GetBlobDetails(
+    public async Task<(List<Storage.Models.BlobInfo> Blobs, string? NextCursor)> GetBlobDetails(
         string account,
         string container,
         string? blob,
         string? prefix = null,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -170,18 +175,25 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
             (nameof(account), account),
             (nameof(container), container));
 
+        if (!string.IsNullOrEmpty(blob) && cursor is not null)
+        {
+            throw new ArgumentException("A cursor cannot be used with a specific blob.", nameof(cursor));
+        }
+
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
 
         var blobInfos = new List<Storage.Models.BlobInfo>();
         if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blobItem in containerClient.GetBlobsAsync(new()
+            await foreach (var page in containerClient.GetBlobsAsync(new()
             {
                 Prefix = prefix
-            }, cancellationToken: cancellationToken))
+            }, cancellationToken: cancellationToken).AsPages(cursor, BlobPageSize).WithCancellation(cancellationToken))
             {
-                blobInfos.Add(new(
+                foreach (var blobItem in page.Values)
+                {
+                    blobInfos.Add(new(
                     blobItem.Name,
                     blobItem.Properties.LastModified,
                     blobItem.Properties.ETag?.ToString(),
@@ -201,7 +213,10 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
                     blobItem.Properties.HasLegalHold,
                     blobItem.Properties.CreatedOn,
                     blobItem.Properties.ArchiveStatus?.ToString(),
-                    blobItem.VersionId));
+                        blobItem.VersionId));
+                }
+
+                return (blobInfos, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
             }
         }
         else
@@ -233,27 +248,36 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
                 properties.VersionId));
         }
 
-        return blobInfos;
+        return (blobInfos, null);
     }
 
-    public async Task<List<ContainerInfo>> GetContainerDetails(
+    public async Task<(List<ContainerInfo> Containers, string? NextCursor)> GetContainerDetails(
         string account,
         string? container,
         string? prefix = null,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(account), account));
+
+        if (!string.IsNullOrEmpty(container) && cursor is not null)
+        {
+            throw new ArgumentException("A cursor cannot be used with a specific container.", nameof(cursor));
+        }
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
         var containers = new List<ContainerInfo>();
 
         if (string.IsNullOrEmpty(container))
         {
-            await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync(prefix: prefix, cancellationToken: cancellationToken))
+            await foreach (var page in blobServiceClient.GetBlobContainersAsync(prefix: prefix, cancellationToken: cancellationToken)
+                .AsPages(cursor, ContainerPageSize).WithCancellation(cancellationToken))
             {
-                var properties = containerItem.Properties;
-                containers.Add(new(
+                foreach (var containerItem in page.Values)
+                {
+                    var properties = containerItem.Properties;
+                    containers.Add(new(
                     containerItem.Name,
                     properties.LastModified,
                     properties.ETag.ToString(),
@@ -266,7 +290,10 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
                     properties.HasLegalHold,
                     properties.DeletedOn,
                     properties.RemainingRetentionDays,
-                    properties.HasImmutableStorageWithVersioning));
+                        properties.HasImmutableStorageWithVersioning));
+                }
+
+                return (containers, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
             }
         }
         else
@@ -291,7 +318,7 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
                 properties.HasImmutableStorageWithVersioning));
         }
 
-        return containers;
+        return (containers, null);
     }
 
     public async Task<ContainerInfo> CreateContainer(
@@ -430,8 +457,9 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
         return new TableServiceClient(defaultUri, await GetCredential(tenant, cancellationToken), options);
     }
 
-    public async Task<List<string>> ListTables(
+    public async Task<(List<string> Tables, string? NextCursor)> ListTables(
         string account,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default)
     {
@@ -439,17 +467,20 @@ public sealed class StorageService(IAzureService azureService, IFileSystem fileS
 
         var tables = new List<string>();
 
-        // First attempt with requested auth method
         var tableServiceClient = await CreateTableServiceClient(
             account,
             tenant,
             cancellationToken);
 
-        await foreach (var table in tableServiceClient.QueryAsync(cancellationToken: cancellationToken))
+        await foreach (var page in tableServiceClient.QueryAsync(maxPerPage: TablePageSize, cancellationToken: cancellationToken)
+            .AsPages(cursor, TablePageSize).WithCancellation(cancellationToken))
         {
-            tables.Add(table.Name);
+            // Table Storage can return a continuation on an empty page. Return it instead of
+            // fetching ahead so the caller controls when to continue.
+            tables.AddRange(page.Values.Select(table => table.Name));
+            return (tables, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
         }
-        return tables;
+        return (tables, null);
     }
 
     internal static void ValidateStorageAccountName(string account)

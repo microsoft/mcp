@@ -11,8 +11,6 @@ public sealed record SearchResponse
 
     public long? TotalCount { get; init; }
 
-    public string? Cursor { get; init; }
-
     public IReadOnlyList<SearchAggregation>? Aggregations { get; init; }
 
     public IReadOnlyList<string>? PhraseSuggestions { get; init; }

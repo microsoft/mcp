@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -1108,6 +1109,28 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
+    public async Task CallToolHandler_CommandErrorWithoutException_RecordsStatusCodeTelemetry()
+    {
+        var response = new CommandResponse
+        {
+            Status = HttpStatusCode.NotFound,
+            Message = "Resource not found."
+        };
+        var (toolLoader, _) = CreateStructuredToolLoader(response);
+
+        using var activity = new Activity("test-activity");
+        activity.Start();
+
+        var result = await toolLoader.CallToolHandler(
+            CreateCallRequest(),
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsError);
+        var exceptionMessage = Assert.IsType<JsonObject>(activity.GetTagItem(TagName.ExceptionMessage));
+        Assert.Equal((int)HttpStatusCode.NotFound, exceptionMessage["StatusCode"]!.GetValue<int>());
+    }
+
+    [Fact]
     public async Task CallToolHandler_SuccessWithoutResults_UsesFullContentWithoutStructuredContent()
     {
         var response = new CommandResponse
@@ -1631,6 +1654,7 @@ public class CommandFactoryToolLoaderTests
 
         // Validate telemetry
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        activity.AssertTagEquals(TagName.ToolFailureMessage, ToolFailureReason.ReadOnlyMode);
         activity.AssertTagEquals(TagName.IsServerCommandInvoked, false);
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
@@ -1794,6 +1818,7 @@ public class CommandFactoryToolLoaderTests
         activity.AssertTagEquals(TagName.ToolName, toolName);
         activity.AssertTagEquals(TagName.ToolId, fakeCommand.Id);
         activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
+        activity.AssertTagEquals(TagName.ToolFailureMessage, ToolFailureReason.InvalidArguments);
         activity.AssertTagEquals(TagName.ToolParameters, toolParameters =>
         {
             var parameterList = JsonSerializer.Deserialize(toolParameters.ToString()!, ModelsJsonContext.Default.ListString);

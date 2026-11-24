@@ -60,4 +60,19 @@ public class HealthModelListCommandTests : SubscriptionCommandUnitTestsBase<Heal
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ListHealthModels(Arg.Any<string>(), Arg.Is(TestResourceGroup), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
+
+    [Theory]
+    [InlineData(404, "ResourceGroupNotFound", "Resource group not found.")]
+    [InlineData(403, "AuthorizationFailed", "Authorization failed listing health models. Details: Forbidden")]
+    public async Task ExecuteAsync_MapsServiceFailures(int status, string errorCode, string message)
+    {
+        Service.ListHealthModels(TestSubscription, TestResourceGroup, Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException<List<HealthModelSummary>>(new RequestFailedException(status, "Forbidden\nHeaders:\nx-ms-request-id: 1", errorCode, null)));
+
+        var response = await ExecuteCommandAsync("--subscription", TestSubscription, "--resource-group", TestResourceGroup);
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.StartsWith(message, response.Message);
+        Assert.DoesNotContain("x-ms-request-id", response.Message);
+    }
 }
