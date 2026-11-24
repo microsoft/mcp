@@ -34,3 +34,35 @@ sequenceDiagram
 
 If the fetch fails (no `GET` in the rule, an expired SAS, a ZIP or a file over 800 KB), the card shows the
 "Download ROI.md" button instead of the preview.
+
+## Inside the card
+
+All of this runs in the card's JavaScript (`BusinessCaseReportWidget`). The server only supplies the links.
+
+```mermaid
+sequenceDiagram
+    participant H as Cowork host
+    participant R as render()
+    participant F as fetchReport(url)
+    participant B as Blob storage
+    participant S as showReport(text)
+
+    H->>R: Tool result (status, result = ROI.md SAS, artifacts = ZIP SAS)
+    alt Succeeded with a result URL and no report text
+        R->>F: fetchReport(result)
+        F->>B: fetch GET, credentials omit, cache no-store
+        B-->>F: Response
+        alt HTTP error, over 800 KB, empty or a ZIP (starts with PK)
+            F-->>R: Error state + "Download ROI.md" button
+        else Markdown text, and the card still shows this link
+            F->>S: showReport(text)
+            S->>S: markdown(text) to HTML in the card
+            S-->>H: Preview + "Show more", "Download ROI.md", "Download artifacts"
+        end
+    else Still running or failed
+        R-->>H: Progress or error state (no fetch)
+    end
+```
+
+The SAS links are short-lived. After they expire the fetch fails and the card falls back to the download button; asking
+for the business case status again returns fresh links.
