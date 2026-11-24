@@ -3,6 +3,7 @@
 
 using System.Security;
 using System.Text.Json;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
@@ -16,19 +17,20 @@ public static class AzureCliProfileHelper
     /// Gets the default subscription ID from the Azure CLI profile (~/.azure/azureProfile.json).
     /// </summary>
     /// <returns>The default subscription ID if found, null otherwise.</returns>
-    public static string? GetDefaultSubscriptionId()
+    public static string? GetDefaultSubscriptionId(IFileSystem fileSystem, IEnvironmentVariables environmentVariables)
     {
+        fileSystem.EnsureAccess();
+        var profilePath = GetAzureProfilePath(environmentVariables);
         try
         {
-            var profilePath = GetAzureProfilePath();
-            if (string.IsNullOrEmpty(profilePath) || !File.Exists(profilePath))
+            if (string.IsNullOrEmpty(profilePath) || !fileSystem.FileExists(profilePath))
             {
                 return null;
             }
 
             // Synchronous read is intentional: the Azure CLI profile is a small local file
-            // and the result is cached by CommandHelper so this runs at most once per process.
-            var json = File.ReadAllText(profilePath);
+            // and the result is cached by the owning subscription resolver.
+            var json = fileSystem.ReadAllText(profilePath);
             return ParseDefaultSubscriptionId(json);
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or SecurityException)
@@ -67,9 +69,9 @@ public static class AzureCliProfileHelper
         return null;
     }
 
-    internal static string? GetAzureProfilePath()
+    internal static string? GetAzureProfilePath(IEnvironmentVariables environmentVariables)
     {
-        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var userProfile = environmentVariables.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (string.IsNullOrEmpty(userProfile))
         {
             return null;

@@ -4,16 +4,20 @@
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Tests.Services;
 
 public sealed class ArtifactWriterTests : IDisposable
 {
+    private static readonly IFileSystem s_fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration()));
     private readonly string _workingDirectory;
     private readonly string _originalDirectory;
-    private readonly ArtifactWriter _writer = new(Substitute.For<ILogger<ArtifactWriter>>());
+    private readonly ArtifactWriter _writer = new(Substitute.For<ILogger<ArtifactWriter>>(), s_fileSystem);
 
     public ArtifactWriterTests()
     {
@@ -23,6 +27,17 @@ public sealed class ArtifactWriterTests : IDisposable
         Directory.CreateDirectory(requestedWorkingDirectory);
         Environment.CurrentDirectory = requestedWorkingDirectory;
         _workingDirectory = Environment.CurrentDirectory;
+    }
+
+    [Fact]
+    public void Write_HttpModeDenialIsNotConvertedToInlineFallback()
+    {
+        var writer = new ArtifactWriter(Substitute.For<ILogger<ArtifactWriter>>(),
+            new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" })));
+        var artifact = new AgentArtifact("main.bicep", null, "text/plain", "content", "bicep");
+
+        Assert.Throws<UnauthorizedAccessException>(() => writer.Write([artifact], "conv-1"));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(_workingDirectory));
     }
 
     [Fact]
@@ -240,6 +255,7 @@ public sealed class ArtifactWriterTests : IDisposable
         int createCount = 0;
         var writer = new ArtifactWriter(
             Substitute.For<ILogger<ArtifactWriter>>(),
+            s_fileSystem,
             _ =>
             {
                 createCount++;

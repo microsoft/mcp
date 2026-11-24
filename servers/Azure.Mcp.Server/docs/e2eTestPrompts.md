@@ -9,6 +9,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
+For prompts requiring local files or environment variables, verify normal access in CLI/stdio mode and explicit denial in HTTP mode. HTTP tools must not inspect or change the server's host files or environment; an unavailable local-only tool is also an expected denial. Use explicit subscriptions for HTTP prompts instead of host defaults.
+
 ## Azure Data Manager for Energy
 
 | Tool Name | Test Prompt | Interaction |

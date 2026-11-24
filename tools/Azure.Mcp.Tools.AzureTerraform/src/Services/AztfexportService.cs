@@ -3,13 +3,15 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class AztfexportService : IAztfexportService
+public sealed class AztfexportService(IFileSystem fileSystem) : IAztfexportService
 {
     public async Task<bool> IsAztfexportAvailableAsync(CancellationToken cancellationToken = default)
     {
+        fileSystem.EnsureAccess();
         try
         {
             var checkCommand = OperatingSystem.IsWindows() ? "where" : "which";

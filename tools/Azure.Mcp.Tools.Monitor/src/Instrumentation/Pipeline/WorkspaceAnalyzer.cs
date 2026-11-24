@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
@@ -13,7 +14,8 @@ public class WorkspaceAnalyzer(
     IEnumerable<ILanguageDetector> languageDetectors,
     IEnumerable<IAppTypeDetector> appTypeDetectors,
     IEnumerable<IInstrumentationDetector> instrumentationDetectors,
-    IEnumerable<IGenerator> generators)
+    IEnumerable<IGenerator> generators,
+    IFileSystem fileSystem)
 {
     private readonly IEnumerable<ILanguageDetector> _languageDetectors = languageDetectors;
     private readonly IEnumerable<IAppTypeDetector> _appTypeDetectors = appTypeDetectors;
@@ -23,7 +25,7 @@ public class WorkspaceAnalyzer(
     public OnboardingSpec Analyze(string workspacePath)
     {
         // Validate workspace exists
-        if (!Directory.Exists(workspacePath))
+        if (!fileSystem.DirectoryExists(workspacePath))
         {
             return CreateErrorSpec($"Workspace path does not exist: {workspacePath}");
         }

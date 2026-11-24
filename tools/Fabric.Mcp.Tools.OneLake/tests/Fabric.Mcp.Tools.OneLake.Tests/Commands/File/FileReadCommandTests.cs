@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -51,19 +52,19 @@ public class FileReadCommandTests : CommandUnitTestsBase<FileReadCommand, IOneLa
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _configuration));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(null!, Service, _configuration, Substitute.For<IFileSystem>()));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _configuration));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, null!, _configuration, Substitute.For<IFileSystem>()));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenServerStartOptionsIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileReadCommand(Logger, Service, null!, Substitute.For<IFileSystem>()));
     }
 
     [Fact]

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
@@ -29,7 +30,7 @@ namespace Azure.Mcp.Tools.Speech.Commands.Stt;
     ReadOnly = true,
     Secret = false,
     LocalRequired = true)]
-public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
+public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator, IFileSystem fileSystem)
     : BaseSpeechCommand<SttRecognizeOptions, SttRecognizeCommand.SttRecognizeCommandResult>(endpointValidator)
 {
     public sealed record SttRecognizeCommandResult(SpeechRecognitionResult Result);
@@ -54,7 +55,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger, ISp
         }
 
         // Validate file path exists
-        if (!File.Exists(canonicalPath))
+        if (!fileSystem.FileExists(canonicalPath))
         {
             validationResult.AddError($"Audio file not found: {canonicalPath}", "Speech audio file not found.");
         }

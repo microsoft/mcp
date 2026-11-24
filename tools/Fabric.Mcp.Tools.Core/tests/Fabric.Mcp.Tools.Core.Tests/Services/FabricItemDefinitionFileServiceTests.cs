@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Host;
 using Xunit;
 using OptionsFactory = Microsoft.Extensions.Options.Options;
 
@@ -18,7 +19,7 @@ namespace Fabric.Mcp.Tools.Core.Tests.Services;
 public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
 {
     private readonly string _root = FabricDefinitionTestDirectory.Create();
-    private readonly FabricItemDefinitionFileService _service = new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime());
+    private readonly FabricItemDefinitionFileService _service = new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), new FileSystem(Runtime()));
     private CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
@@ -334,6 +335,20 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
         Assert.Empty(Directory.EnumerateFileSystemEntries(_root));
     }
 
+    [Fact]
+    public async Task BothDirections_HostDenialCannotBeBypassedByLocalCapability()
+    {
+        var service = new FabricItemDefinitionFileService(
+            NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(),
+            new FileSystem(Runtime(TransportTypes.Http)));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.ReadAsync("relative", [new("a.txt")], cancellationToken: CancellationToken));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.WriteAsync(Path.Combine(_root, "output"), new([Part("a.txt")]), CancellationToken));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(_root));
+    }
+
     [Theory]
     [InlineData(TransportTypes.Http)]
     [InlineData("")]
@@ -341,7 +356,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     [InlineData("future-transport")]
     public async Task BothDirections_RequireLocalCapabilityBeforePathOrFileAccess(string transport)
     {
-        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(transport));
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(transport), new FileSystem(Runtime(transport)));
 
         await Assert.ThrowsAsync<NotSupportedException>(() =>
             service.ReadAsync("relative", [new("a.txt")], cancellationToken: CancellationToken));
@@ -357,7 +372,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     {
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken);
         var count = 0;
-        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), null, path =>
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), new FileSystem(Runtime()), null, path =>
         {
             if (++count == 2)
             {
@@ -391,7 +406,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     public async Task Write_DestinationCreatedDuringStagingIsPreserved()
     {
         var destination = Path.Combine(_root, "output");
-        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), null, path =>
+        var service = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), new FileSystem(Runtime()), null, path =>
         {
             Directory.CreateDirectory(destination);
             File.WriteAllText(Path.Combine(destination, "keep.txt"), "keep");
@@ -467,7 +482,7 @@ public sealed class FabricItemDefinitionFileServiceTests() : IDisposable
     }
 
     private static FabricItemDefinitionFileService CreateService(FabricItemDefinitionFileLimits limits) =>
-        new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), limits);
+        new(NullLogger<FabricItemDefinitionFileService>.Instance, Runtime(), new FileSystem(Runtime()), limits);
 
     private static IOptions<ServerRuntimeConfiguration> Runtime(string transport = TransportTypes.StdIo) =>
         OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = transport });

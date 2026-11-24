@@ -3,12 +3,16 @@
 
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Tests.Services;
 
 public sealed class AttachmentServicesTests : IDisposable
 {
+    private static readonly IFileSystem s_fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration()));
     private readonly string _root = Path.Combine(
         Path.GetTempPath(),
         "AzureMcpResiliencyAttachments_" + Guid.NewGuid().ToString("N"));
@@ -19,12 +23,25 @@ public sealed class AttachmentServicesTests : IDisposable
     }
 
     [Fact]
+    public async Task Snapshotter_HttpModeDeniesMetadataAndReads()
+    {
+        var fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" }));
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, fileSystem);
+        string path = Path.Combine(_root, "missing.bicep");
+
+        Assert.Throws<UnauthorizedAccessException>(() => snapshotter.Validate(path));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => snapshotter.SnapshotAsync(
+            new ValidatedLocalFile(path, "missing.bicep", "text/plain", 1, DateTime.UtcNow),
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task SnapshotAsync_PreservesExactBytesAndMetadata()
     {
         string path = Path.Combine(_root, "main.bicep");
         byte[] expected = "param location string = 'eastus2'\n"u8.ToArray();
         await File.WriteAllBytesAsync(path, expected, TestContext.Current.CancellationToken);
-        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, s_fileSystem);
 
         ValidatedLocalFile validated = snapshotter.Validate(path);
         AgentAttachment snapshot =
@@ -47,7 +64,7 @@ public sealed class AttachmentServicesTests : IDisposable
         string path = Path.Combine(_root, fileName);
         byte[] expected = "location = \"eastus2\"\n"u8.ToArray();
         await File.WriteAllBytesAsync(path, expected, TestContext.Current.CancellationToken);
-        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, s_fileSystem);
 
         ValidatedLocalFile validated = snapshotter.Validate(path);
         AgentAttachment snapshot =
@@ -63,7 +80,7 @@ public sealed class AttachmentServicesTests : IDisposable
     [InlineData("https://example.test/main.bicep", "URLs")]
     public void Validate_RejectsUnsafePathForms(string path, string expectedMessage)
     {
-        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, s_fileSystem);
 
         ArgumentException exception = Assert.Throws<ArgumentException>(
             () => snapshotter.Validate(path));
@@ -79,7 +96,7 @@ public sealed class AttachmentServicesTests : IDisposable
             return;
         }
 
-        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, s_fileSystem);
 
         ArgumentException exception = Assert.Throws<ArgumentException>(
             () => snapshotter.Validate(@"\\server\share\main.bicep"));
@@ -95,7 +112,7 @@ public sealed class AttachmentServicesTests : IDisposable
             path,
             new byte[1434 * 1024 + 1],
             TestContext.Current.CancellationToken);
-        var snapshotter = new LocalFileSnapshotter(TimeProvider.System);
+        var snapshotter = new LocalFileSnapshotter(TimeProvider.System, s_fileSystem);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => snapshotter.Validate(path));
     }

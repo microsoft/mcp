@@ -18,9 +18,9 @@ public sealed partial class ResilienceManagementService
         string? tenantIdOrName, CancellationToken cancellationToken, ArmClientOptions? armClientOptions = null)
     {
 #if DEBUG
-        if (Environment.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") == "true")
+        if (EnvironmentVariables.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") == "true")
         {
-            if (!Uri.TryCreate(Environment.GetEnvironmentVariable("TEST_PROXY_URL"), UriKind.Absolute, out _))
+            if (!Uri.TryCreate(EnvironmentVariables.GetEnvironmentVariable("TEST_PROXY_URL"), UriKind.Absolute, out _))
             {
                 throw new InvalidOperationException("Goals canary tests require TEST_PROXY_URL to capture every request.");
             }

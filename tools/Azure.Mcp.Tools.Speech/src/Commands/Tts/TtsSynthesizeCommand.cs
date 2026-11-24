@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Commands.Tts;
 
@@ -29,7 +30,7 @@ namespace Azure.Mcp.Tools.Speech.Commands.Tts;
     ReadOnly = false,
     Secret = false,
     LocalRequired = true)]
-public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator)
+public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger, ISpeechService speechService, IEndpointValidator endpointValidator, IFileSystem fileSystem)
     : BaseSpeechCommand<TtsSynthesizeOptions, TtsSynthesizeCommand.TtsSynthesizeCommandResult>(endpointValidator)
 {
     public sealed record TtsSynthesizeCommandResult(SynthesisResult Result);
@@ -60,7 +61,7 @@ public sealed partial class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> l
             {
                 var canonicalPath = FilePathValidator.ValidateAndCanonicalize(options.OutputAudio);
                 // Check if file already exists (don't allow overwriting)
-                if (File.Exists(canonicalPath))
+                if (fileSystem.FileExists(canonicalPath))
                 {
                     validationResult.AddError($"Output file already exists: {canonicalPath}. Please specify a different file path or delete the existing file.",
                         "Speech output file already exists.");

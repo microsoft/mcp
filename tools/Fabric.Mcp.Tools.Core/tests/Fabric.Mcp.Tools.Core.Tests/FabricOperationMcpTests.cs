@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -590,6 +591,7 @@ public sealed class FabricOperationMcpTests()
         var services = new ServiceCollection();
         var setup = new FabricCoreSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
         services.AddSingleton(credential);
         services.AddSingleton(clock ?? TimeProvider.System);

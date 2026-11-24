@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
@@ -29,6 +30,7 @@ public sealed class ResiliencyAgentSetupTests
         cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
         services.AddSingleton(cloudConfiguration);
         setup.ConfigureServices(services);
+        services.AddHostServices();
         using ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         var area = setup.RegisterCommands(serviceProvider);

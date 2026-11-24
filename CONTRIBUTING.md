@@ -734,6 +734,14 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
 
+### Tool access to the host
+
+Inject `IFileSystem` and `IEnvironmentVariables` from `Microsoft.Mcp.Core.Services.Host` for tool-time filesystem and environment-variable access, including in service clients and helpers. Shared server initialization registers these services centrally for CLI and MCP execution; area setups should not register them. Standalone tests that build their own service providers can use `services.AddHostServices()`.
+
+These services access the host normally in CLI and stdio mode. In HTTP mode, every operation throws `UnauthorizedAccessException`, including existence checks, directory enumeration, environment-variable reads, and stream creation. Preserve this denial rather than treating it as missing data or a successful no-op. Resolve optional inline inputs without probing the filesystem, and guard SDK operations that accept local paths before invoking the SDK.
+
+Process-startup features such as server configuration, logging, telemetry initialization, authentication configuration, and proxy-server discovery continue using the platform APIs directly. Embedded assembly resources and pure path-string manipulation do not require host filesystem access.
+
 ### Token Acquisition for HTTP Clients
 
 - Obtain credentials through the existing injected authentication providers. Prefer Azure SDK clients or a reusable Azure Core bearer-token authentication pipeline to manage token caching and refresh.

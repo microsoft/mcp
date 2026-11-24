@@ -16,6 +16,8 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
+using Microsoft.Mcp.Core.Areas.Server;
 using NSubstitute;
 using Xunit;
 
@@ -33,6 +35,22 @@ public class StorageServiceDiskDiagnoseTests
     private const string StorageIntelligenceEndpoint = DefaultStorageIntelligenceEndpoint;
     private const string StorageIntelligenceScope = "00000000-0000-0000-0000-000000000002/.default";
     private const string StorageIntelligenceTenantId = "00000000-0000-0000-0000-000000000003";
+
+    [Fact]
+    public async Task DiagnoseDiskAsync_HttpMode_RejectsHostEnvironmentBeforeAuthenticating()
+    {
+        var credentialProvider = Substitute.For<IAzureTokenCredentialProvider>();
+        var environment = new EnvironmentVariables(Microsoft.Extensions.Options.Options.Create(
+            new ServerRuntimeConfiguration { Transport = "http" }));
+        var service = new StorageIntelligenceService(
+            Substitute.For<IAttachedDiskService>(), credentialProvider,
+            Substitute.For<IHttpClientFactory>(), Substitute.For<IAzureService>(), environment);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.DiagnoseDiskAsync(ResourceId, cancellationToken: TestContext.Current.CancellationToken));
+
+        await credentialProvider.DidNotReceiveWithAnyArgs().GetTokenCredentialAsync(default, TestContext.Current.CancellationToken);
+    }
 
     [Fact]
     public async Task DiagnoseDiskAsync_SendsAuthenticatedRequestAndReturnsAnalysis()
@@ -807,7 +825,9 @@ public class StorageServiceDiskDiagnoseTests
                 endpoint: call.ArgAt<string>(0),
                 serviceType: call.ArgAt<string>(1),
                 armEnvironment: azureService.CloudConfiguration.ArmEnvironment));
-        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService), attachedDiskService, tokenCredentialProvider, credential);
+        return (new StorageIntelligenceService(attachedDiskService, tokenCredentialProvider, httpClientFactory, azureService,
+            new EnvironmentVariables(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration()))),
+            attachedDiskService, tokenCredentialProvider, credential);
     }
 
     private sealed class RecordingHttpMessageHandler(HttpResponseMessage response) : HttpMessageHandler

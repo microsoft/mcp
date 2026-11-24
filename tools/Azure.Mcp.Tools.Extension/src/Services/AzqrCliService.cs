@@ -2,27 +2,34 @@
 // Licensed under the MIT License.
 
 using System.Text.RegularExpressions;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal sealed partial class AzqrCliService(IExternalProcessService processService) : IAzqrCliService
+internal sealed partial class AzqrCliService(IExternalProcessService processService, IFileSystem fileSystem, IEnvironmentVariables environmentVariables) : IAzqrCliService
 {
     private const int VersionCheckTimeoutSeconds = 5;
     private static readonly Version s_minimumSupportedVersion = new(3, 0, 0);
     private readonly Lazy<string?> _supportedExecutablePath = new(() => FindSupportedExecutablePath(
         processService,
-        Environment.GetEnvironmentVariable("PATH"),
-        OperatingSystem.IsWindows()));
+        environmentVariables.GetEnvironmentVariable("PATH"),
+        OperatingSystem.IsWindows(),
+        fileSystem));
 
-    public string? GetSupportedExecutablePath() => _supportedExecutablePath.Value;
+    public string? GetSupportedExecutablePath()
+    {
+        fileSystem.EnsureAccess();
+        return _supportedExecutablePath.Value;
+    }
 
     internal static string? FindSupportedExecutablePath(
         IExternalProcessService processService,
         string? pathEnvironment,
-        bool isWindows)
+        bool isWindows,
+        IFileSystem fileSystem)
     {
-        var executablePath = FindExecutablePath(pathEnvironment, isWindows);
+        var executablePath = FindExecutablePath(pathEnvironment, isWindows, fileSystem);
         if (executablePath is null)
         {
             return null;
@@ -45,7 +52,7 @@ internal sealed partial class AzqrCliService(IExternalProcessService processServ
         }
     }
 
-    internal static string? FindExecutablePath(string? pathEnvironment, bool isWindows)
+    internal static string? FindExecutablePath(string? pathEnvironment, bool isWindows, IFileSystem fileSystem)
     {
         if (string.IsNullOrWhiteSpace(pathEnvironment))
         {
@@ -58,7 +65,7 @@ internal sealed partial class AzqrCliService(IExternalProcessService processServ
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var executablePath = Path.Combine(directory.Trim('"'), executableName);
-            if (File.Exists(executablePath))
+            if (fileSystem.FileExists(executablePath))
             {
                 return executablePath;
             }

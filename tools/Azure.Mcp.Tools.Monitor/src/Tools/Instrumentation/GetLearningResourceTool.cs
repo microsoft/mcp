@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Services.Host;
+
 namespace Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 
-public sealed class GetLearningResourceTool
+public sealed class GetLearningResourceTool(IFileSystem fileSystem)
 {
-    public static string GetLearningResource(string path)
+    public string GetLearningResource(string path)
     {
         // Strip learn:// prefix if present
         if (path.StartsWith("learn://", StringComparison.OrdinalIgnoreCase))
@@ -35,26 +37,26 @@ public sealed class GetLearningResourceTool
             return "Invalid resource path. Call get-learning-resource without the path parameter to list all available resources.";
         }
 
-        if (!File.Exists(resourcePath))
+        if (!fileSystem.FileExists(resourcePath))
         {
             return $"Resource not found: {path}\n\nCall get-learning-resource without the path parameter to list all available resources.";
         }
 
-        return File.ReadAllText(resourcePath);
+        return fileSystem.ReadAllText(resourcePath);
 
     }
 
-    public static List<string> ListLearningResources()
+    public List<string> ListLearningResources()
     {
         var baseDirectory = AppContext.BaseDirectory;
         var resourcesPath = Path.Combine(baseDirectory, "Instrumentation", "Resources");
 
-        if (!Directory.Exists(resourcesPath))
+        if (!fileSystem.DirectoryExists(resourcesPath))
         {
             return [];
         }
 
-        return Directory.GetFiles(resourcesPath, "*.md", SearchOption.AllDirectories)
+        return fileSystem.GetFiles(resourcesPath, "*.md", SearchOption.AllDirectories)
             .Select(filePath => Path.GetRelativePath(resourcesPath, filePath).Replace("\\", "/"))
             .OrderBy(x => x)
             .ToList();

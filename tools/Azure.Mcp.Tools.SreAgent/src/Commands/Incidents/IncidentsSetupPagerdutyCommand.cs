@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
@@ -25,7 +26,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     ReadOnly = false,
     Secret = true,
     LocalRequired = true)]
-public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<IncidentConnectorPagerDutyOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsSetupPagerdutyCommand> _logger = logger;
@@ -40,7 +41,7 @@ public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetu
             validationResult.Errors.Add("PagerDuty subdomain may only contain letters, numbers, and hyphens.");
         }
 
-        var apiKey = Environment.GetEnvironmentVariable(options.ApiKeyEnv);
+        var apiKey = environmentVariables.GetEnvironmentVariable(options.ApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             validationResult.AddError($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.",
@@ -81,7 +82,7 @@ public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetu
                         ["type"] = "http",
                         ["endpoint"] = $"{dataSource}/mcp",
                         ["authType"] = "BearerToken",
-                        ["bearerToken"] = Environment.GetEnvironmentVariable(options.ApiKeyEnv)!
+                        ["bearerToken"] = environmentVariables.GetEnvironmentVariable(options.ApiKeyEnv)!
                     }
                 }
             };

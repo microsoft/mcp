@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
@@ -113,7 +114,7 @@ public sealed class AztfexportToolLoadingTests
     {
         var service = Substitute.For<IAztfexportService>();
         service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        var generator = new AztfexportService();
+        var generator = new AztfexportService(Substitute.For<IFileSystem>());
         service.GenerateResourceCommand(ResourceId, null, "azurerm", null, false, 10, true)
             .Returns(generator.GenerateResourceCommand(ResourceId));
         service.GenerateResourceGroupCommand("my-rg", null, provider, null, false, 10, true)
@@ -224,6 +225,7 @@ public sealed class AztfexportToolLoadingTests
     {
         var services = new ServiceCollection().AddLogging();
         new AzureTerraformSetup().ConfigureServices(services);
+        services.AddHostServices();
         services.AddSingleton(service);
         return services.BuildServiceProvider();
     }

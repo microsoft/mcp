@@ -3,16 +3,17 @@
 
 using System.Xml.Linq;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class DotNetAppTypeDetector : IAppTypeDetector
+public class DotNetAppTypeDetector(IFileSystem fileSystem) : IAppTypeDetector
 {
     public Language SupportedLanguage => Language.DotNet;
 
     public List<ProjectInfo> DetectProjects(string workspacePath)
     {
-        var csprojFiles = Directory.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories);
+        var csprojFiles = fileSystem.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories);
         var projects = new List<ProjectInfo>();
 
         foreach (var csproj in csprojFiles)
@@ -32,7 +33,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         try
         {
-            var doc = XDocument.Load(csprojPath);
+            var doc = XDocument.Parse(fileSystem.ReadAllText(csprojPath));
             var sdk = doc.Root?.Attribute("Sdk")?.Value ?? "";
 
             // Check if this is a legacy (non-SDK-style) project
@@ -67,7 +68,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
                 hostingPattern = DetectHostingPattern(entryPoint);
             }
         }
-        catch
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             // If we can't parse, return unknown
         }
@@ -103,14 +104,14 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     /// Supports both Host.CreateDefaultBuilder/Host.CreateApplicationBuilder (generic host)
     /// and WebApplication.CreateBuilder (minimal API) patterns.
     /// </summary>
-    private static HostingPattern DetectHostingPattern(string? entryPointPath)
+    private HostingPattern DetectHostingPattern(string? entryPointPath)
     {
-        if (string.IsNullOrEmpty(entryPointPath) || !File.Exists(entryPointPath))
+        if (string.IsNullOrEmpty(entryPointPath) || !fileSystem.FileExists(entryPointPath))
             return HostingPattern.Unknown;
 
         try
         {
-            var content = File.ReadAllText(entryPointPath);
+            var content = fileSystem.ReadAllText(entryPointPath);
 
             // Check for ASP.NET Core minimal API pattern
             if (content.Contains("WebApplication.CreateBuilder"))
@@ -124,22 +125,22 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
             return HostingPattern.Unknown;
         }
-        catch
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             return HostingPattern.Unknown;
         }
     }
 
-    private static string? FindEntryPoint(string projectDir)
+    private string? FindEntryPoint(string projectDir)
     {
         // Look for Program.cs first
         var programCs = Path.Combine(projectDir, "Program.cs");
-        if (File.Exists(programCs))
+        if (fileSystem.FileExists(programCs))
             return programCs;
 
         // Look for Startup.cs (older pattern)
         var startupCs = Path.Combine(projectDir, "Startup.cs");
-        if (File.Exists(startupCs))
+        if (fileSystem.FileExists(startupCs))
             return startupCs;
 
         return null;
@@ -213,7 +214,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     private bool IsWcfProject(string projectDir, XDocument doc)
     {
         // Check for .svc files
-        if (Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).Length != 0)
+        if (fileSystem.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).Length != 0)
             return true;
 
         // Check for System.ServiceModel reference
@@ -222,11 +223,11 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         // Check for WCF package in packages.config
         var packagesConfig = Path.Combine(projectDir, "packages.config");
-        if (File.Exists(packagesConfig))
+        if (fileSystem.FileExists(packagesConfig))
         {
             try
             {
-                var packagesDoc = XDocument.Load(packagesConfig);
+                var packagesDoc = XDocument.Parse(fileSystem.ReadAllText(packagesConfig));
                 if (packagesDoc.Descendants("package")
                     .Any(p => p.Attribute("id")?.Value?.Contains("System.ServiceModel") == true))
                     return true;
@@ -235,14 +236,14 @@ public class DotNetAppTypeDetector : IAppTypeDetector
             {
                 // Log or handle IO errors
             }
-            catch
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Handle other exceptions
             }
         }
 
         // Scan source files for WCF attributes
-        var csFiles = Directory.GetFiles(projectDir, "*.cs", SearchOption.AllDirectories)
+        var csFiles = fileSystem.GetFiles(projectDir, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains("\\obj\\") && !f.Contains("\\bin\\"))
             .Take(50); // Limit scan for performance
 
@@ -250,7 +251,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         {
             try
             {
-                var content = File.ReadAllText(file);
+                var content = fileSystem.ReadAllText(file);
                 if (content.Contains("ServiceContract") ||
                     content.Contains("OperationContract") ||
                     content.Contains("ServiceBehavior") ||
@@ -259,7 +260,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
                     return true;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Skip files that can't be read
             }
@@ -272,11 +273,11 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     {
         // Check for OWIN packages in packages.config
         var packagesConfig = Path.Combine(projectDir, "packages.config");
-        if (File.Exists(packagesConfig))
+        if (fileSystem.FileExists(packagesConfig))
         {
             try
             {
-                var packagesDoc = XDocument.Load(packagesConfig);
+                var packagesDoc = XDocument.Parse(fileSystem.ReadAllText(packagesConfig));
                 if (packagesDoc.Descendants("package")
                     .Any(p => p.Attribute("id")?.Value?.Contains("Microsoft.Owin") == true ||
                              p.Attribute("id")?.Value == "Owin"))
@@ -286,7 +287,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
             {
                 // Log or handle IO errors
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Log or handle other exceptions
             }
@@ -298,11 +299,11 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         // Look for Startup.cs with OWIN patterns
         var startupCs = Path.Combine(projectDir, "Startup.cs");
-        if (File.Exists(startupCs))
+        if (fileSystem.FileExists(startupCs))
         {
             try
             {
-                var content = File.ReadAllText(startupCs);
+                var content = fileSystem.ReadAllText(startupCs);
                 if (content.Contains("IAppBuilder") ||
                     content.Contains("using Owin") ||
                     content.Contains("using Microsoft.Owin"))
@@ -310,11 +311,11 @@ public class DotNetAppTypeDetector : IAppTypeDetector
                     return true;
                 }
             }
-            catch { }
+            catch (Exception ex) when (ex is not UnauthorizedAccessException) { }
         }
 
         // Scan source files for OWIN patterns
-        var csFiles = Directory.GetFiles(projectDir, "*.cs", SearchOption.AllDirectories)
+        var csFiles = fileSystem.GetFiles(projectDir, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains("\\obj\\") && !f.Contains("\\bin\\"))
             .Take(50);
 
@@ -322,7 +323,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         {
             try
             {
-                var content = File.ReadAllText(file);
+                var content = fileSystem.ReadAllText(file);
                 if (content.Contains("IAppBuilder") ||
                     content.Contains("IOwinContext") ||
                     content.Contains("OwinContext"))
@@ -330,7 +331,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
                     return true;
                 }
             }
-            catch { }
+            catch (Exception ex) when (ex is not UnauthorizedAccessException) { }
         }
 
         return false;
@@ -340,12 +341,12 @@ public class DotNetAppTypeDetector : IAppTypeDetector
     {
         // Check for Web.config
         var webConfig = Path.Combine(projectDir, "Web.config");
-        if (!File.Exists(webConfig))
+        if (!fileSystem.FileExists(webConfig))
             return false;
 
         try
         {
-            var webConfigDoc = XDocument.Load(webConfig);
+            var webConfigDoc = XDocument.Parse(fileSystem.ReadAllText(webConfig));
             // Check for system.web section
             if (webConfigDoc.Descendants("system.web").Any())
                 return true;
@@ -354,7 +355,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         {
             // Log or handle IOException if needed
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             // Log or handle any other exceptions if needed
         }
@@ -365,9 +366,9 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         // Check for ASP.NET packages
         var packagesConfig = Path.Combine(projectDir, "packages.config");
-        if (File.Exists(packagesConfig))
+        if (fileSystem.FileExists(packagesConfig))
         {
-            var packagesDoc = XDocument.Load(packagesConfig);
+            var packagesDoc = XDocument.Parse(fileSystem.ReadAllText(packagesConfig));
             if (packagesDoc.Descendants("package")
                 .Any(p => p.Attribute("id")?.Value?.StartsWith("Microsoft.AspNet") == true))
                 return true;
@@ -376,15 +377,15 @@ public class DotNetAppTypeDetector : IAppTypeDetector
         return false;
     }
 
-    private static bool HasMvcIndicators(string projectDir, XDocument doc)
+    private bool HasMvcIndicators(string projectDir, XDocument doc)
     {
         // Check for MVC packages
         var packagesConfig = Path.Combine(projectDir, "packages.config");
-        if (File.Exists(packagesConfig))
+        if (fileSystem.FileExists(packagesConfig))
         {
             try
             {
-                var packagesDoc = XDocument.Load(packagesConfig);
+                var packagesDoc = XDocument.Parse(fileSystem.ReadAllText(packagesConfig));
                 if (packagesDoc.Descendants("package")
                     .Any(p => p.Attribute("id")?.Value?.Contains("Microsoft.AspNet.Mvc") == true))
                     return true;
@@ -393,7 +394,7 @@ public class DotNetAppTypeDetector : IAppTypeDetector
             {
                 // Log or handle IO errors
             }
-            catch (Exception)
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Log or handle other exceptions
             }
@@ -401,25 +402,25 @@ public class DotNetAppTypeDetector : IAppTypeDetector
 
         // Check for Controllers folder
         var controllersDir = Path.Combine(projectDir, "Controllers");
-        if (Directory.Exists(controllersDir) && Directory.GetFiles(controllersDir, "*.cs").Length != 0)
+        if (fileSystem.DirectoryExists(controllersDir) && fileSystem.GetFiles(controllersDir, "*.cs").Length != 0)
             return true;
 
         // Check for Views folder
         var viewsDir = Path.Combine(projectDir, "Views");
-        if (Directory.Exists(viewsDir) && Directory.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories).Length != 0)
+        if (fileSystem.DirectoryExists(viewsDir) && fileSystem.GetFiles(viewsDir, "*.cshtml", SearchOption.AllDirectories).Length != 0)
             return true;
 
         return false;
     }
 
-    private static bool HasWebFormsIndicators(string projectDir)
+    private bool HasWebFormsIndicators(string projectDir)
     {
         // Check for .aspx files
-        if (Directory.GetFiles(projectDir, "*.aspx", SearchOption.AllDirectories).Length != 0)
+        if (fileSystem.GetFiles(projectDir, "*.aspx", SearchOption.AllDirectories).Length != 0)
             return true;
 
         // Check for .ascx files (user controls)
-        if (Directory.GetFiles(projectDir, "*.ascx", SearchOption.AllDirectories).Length != 0)
+        if (fileSystem.GetFiles(projectDir, "*.ascx", SearchOption.AllDirectories).Length != 0)
             return true;
 
         return false;
@@ -431,19 +432,19 @@ public class DotNetAppTypeDetector : IAppTypeDetector
             .Any(r => r.Attribute("Include")?.Value?.StartsWith(referenceName) == true);
     }
 
-    private static string? FindWcfServiceFile(string projectDir)
+    private string? FindWcfServiceFile(string projectDir)
     {
-        return Directory.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).FirstOrDefault();
+        return fileSystem.GetFiles(projectDir, "*.svc", SearchOption.AllDirectories).FirstOrDefault();
     }
 
-    private static string? FindGlobalAsax(string projectDir)
+    private string? FindGlobalAsax(string projectDir)
     {
         var globalAsax = Path.Combine(projectDir, "Global.asax.cs");
-        if (File.Exists(globalAsax))
+        if (fileSystem.FileExists(globalAsax))
             return globalAsax;
 
         globalAsax = Path.Combine(projectDir, "Global.asax");
-        if (File.Exists(globalAsax))
+        if (fileSystem.FileExists(globalAsax))
             return globalAsax;
 
         return null;

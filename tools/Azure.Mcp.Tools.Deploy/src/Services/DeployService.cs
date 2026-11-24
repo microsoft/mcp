@@ -5,10 +5,11 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 using Azure.Monitor.Query.Logs;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
-public class DeployService(IAzureService azureService) : BaseAzureService(azureService), IDeployService
+public class DeployService(IAzureService azureService, IFileSystem fileSystem) : BaseAzureService(azureService), IDeployService
 {
     public async Task<string> GetAzdResourceLogsAsync(
          string workspaceFolder,
@@ -17,10 +18,12 @@ public class DeployService(IAzureService azureService) : BaseAzureService(azureS
          int? limit = null,
          CancellationToken cancellationToken = default)
     {
+        fileSystem.EnsureAccess();
         var armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
         var logsQueryClient = await CreateLogsQueryClientAsync(cancellationToken);
 
         string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
+            fileSystem,
             armClient,
             logsQueryClient,
             workspaceFolder,

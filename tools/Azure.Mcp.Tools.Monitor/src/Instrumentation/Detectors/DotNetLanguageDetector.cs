@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class DotNetLanguageDetector : ILanguageDetector
+public class DotNetLanguageDetector(IFileSystem fileSystem) : ILanguageDetector
 {
     public bool CanHandle(string workspacePath)
     {
@@ -15,20 +16,20 @@ public class DotNetLanguageDetector : ILanguageDetector
     public Language Detect(string workspacePath)
     {
         // Look for .csproj, .fsproj, .vbproj, or .sln files
-        var projectFiles = Directory.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories)
-            .Concat(Directory.GetFiles(workspacePath, "*.fsproj", SearchOption.AllDirectories))
-            .Concat(Directory.GetFiles(workspacePath, "*.vbproj", SearchOption.AllDirectories))
+        var projectFiles = fileSystem.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories)
+            .Concat(fileSystem.GetFiles(workspacePath, "*.fsproj", SearchOption.AllDirectories))
+            .Concat(fileSystem.GetFiles(workspacePath, "*.vbproj", SearchOption.AllDirectories))
             .ToList();
 
         if (projectFiles.Count > 0)
             return Language.DotNet;
 
-        var slnFiles = Directory.GetFiles(workspacePath, "*.sln", SearchOption.TopDirectoryOnly);
+        var slnFiles = fileSystem.GetFiles(workspacePath, "*.sln", SearchOption.TopDirectoryOnly);
         if (slnFiles.Length > 0)
             return Language.DotNet;
 
         // Check for global.json
-        if (File.Exists(Path.Combine(workspacePath, "global.json")))
+        if (fileSystem.FileExists(Path.Combine(workspacePath, "global.json")))
             return Language.DotNet;
 
         return Language.Unknown;

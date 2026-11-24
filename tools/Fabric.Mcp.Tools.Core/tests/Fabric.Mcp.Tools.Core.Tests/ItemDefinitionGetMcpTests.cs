@@ -10,6 +10,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -291,7 +292,8 @@ public sealed class ItemDefinitionGetMcpTests()
         var destination = Path.Combine(root.Path, "exported");
         var writes = 0;
         var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance,
-            OptionsFactory.Create(new ServerRuntimeConfiguration()), null, path =>
+            OptionsFactory.Create(new ServerRuntimeConfiguration()),
+            new Microsoft.Mcp.Core.Services.Host.FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())), null, path =>
         {
             if (++writes == 2)
             {
@@ -328,7 +330,8 @@ public sealed class ItemDefinitionGetMcpTests()
     {
         using var root = new FabricDefinitionTestDirectory();
         var files = new FabricItemDefinitionFileService(NullLogger<FabricItemDefinitionFileService>.Instance,
-            OptionsFactory.Create(new ServerRuntimeConfiguration()), null,
+            OptionsFactory.Create(new ServerRuntimeConfiguration()),
+            new Microsoft.Mcp.Core.Services.Host.FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())), null,
             _ => throw new IOException("private-file-system-failure"));
         using var handler = new FabricCoreHttpMessageHandler((_, _) => Task.FromResult(ItemDefinitionTestData.Response()));
         await using var provider = Services(handler, FabricOperationTestData.Credential(), TransportTypes.StdIo, files: files);
@@ -382,6 +385,7 @@ public sealed class ItemDefinitionGetMcpTests()
         var services = new ServiceCollection();
         var setup = new FabricCoreSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
         services.AddSingleton(credential);
         services.AddLogging();

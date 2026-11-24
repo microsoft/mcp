@@ -2,13 +2,27 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureTerraform.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
+using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Tests;
 
 public class AztfexportServiceTests
 {
-    private readonly AztfexportService _service = new();
+    private readonly AztfexportService _service = new(Substitute.For<IFileSystem>());
+
+    [Fact]
+    public async Task IsAztfexportAvailableAsync_HttpMode_RejectsHostExecutableLookup()
+    {
+        var service = new AztfexportService(new FileSystem(OptionsFactory.Create(
+            new ServerRuntimeConfiguration { Transport = "http" })));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.IsAztfexportAvailableAsync(TestContext.Current.CancellationToken));
+    }
 
     [Fact]
     public void GenerateResourceCommand_BasicArgs_ReturnsCorrectCommand()

@@ -7,6 +7,7 @@ using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -55,7 +56,7 @@ public sealed class FabricItemDefinitionExportServiceTests()
         using var root = new FabricDefinitionTestDirectory();
         var destination = Path.Combine(root.Path, "output");
         var runtime = new ServerRuntimeConfiguration { Transport = TransportTypes.StdIo };
-        var service = new FabricItemDefinitionExportService(OptionsFactory.Create(runtime), _files);
+        var service = new FabricItemDefinitionExportService(OptionsFactory.Create(runtime), _files, new FileSystem(OptionsFactory.Create(runtime)));
         Assert.Equal(destination, service.ValidateDestination(destination));
         runtime.Transport = TransportTypes.Http;
 
@@ -137,5 +138,6 @@ public sealed class FabricItemDefinitionExportServiceTests()
     }
 
     private FabricItemDefinitionExportService CreateService(string transport = TransportTypes.StdIo) =>
-        new(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = transport }), _files);
+        new(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = transport }), _files,
+            new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = transport })));
 }

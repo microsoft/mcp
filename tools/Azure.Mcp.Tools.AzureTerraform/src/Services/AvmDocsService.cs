@@ -4,10 +4,11 @@
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmDocsService
+public sealed class AvmDocsService(IHttpClientFactory httpClientFactory, IEnvironmentVariables environmentVariables) : IAvmDocsService
 {
     private const string ResourceModulesUrl =
         "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformResourceModules.csv";
@@ -299,12 +300,12 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         return uri.AbsolutePath.TrimStart('/');
     }
 
-    private static void ConfigureGitHubHeaders(HttpClient client)
+    private void ConfigureGitHubHeaders(HttpClient client)
     {
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3+json");
         client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 
-        var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var githubToken = environmentVariables.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(githubToken))
         {
             client.DefaultRequestHeaders.Authorization = new("Bearer", githubToken);

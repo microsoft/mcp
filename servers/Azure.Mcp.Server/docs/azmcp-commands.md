@@ -13,6 +13,8 @@ The following options are available for most commands:
 | `--tenant` | No | - | The Microsoft Entra ID tenant GUID identifier or display name. |
 | `--learn` | No | false | Discover available sub-commands and their parameters without executing any Azure operation. Use on a command group to list commands in that group, or on a specific command to see its options. |
 
+**HTTP host isolation:** Tools cannot access the server's filesystem or environment variables over HTTP. Attempts fail explicitly; they do not return empty data or ignore writes. Supply subscription and tenant values explicitly rather than relying on local Azure CLI profiles or environment defaults. Local file inputs, local output paths, and environment-variable-backed tool inputs require CLI or stdio mode. Inline inputs remain usable when the operation does not otherwise require host access. Process-startup configuration is unaffected.
+
 ### Discovery with `--learn`
 
 The `--learn` flag enables AI agents and users to progressively discover the Azure MCP CLI without starting an MCP server. It works at every level of the command hierarchy:

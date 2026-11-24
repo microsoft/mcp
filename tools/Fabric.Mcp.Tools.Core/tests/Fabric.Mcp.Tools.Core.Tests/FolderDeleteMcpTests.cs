@@ -10,6 +10,7 @@ using Fabric.Mcp.Tools.Core.Commands;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -440,6 +441,7 @@ public sealed class FolderDeleteMcpTests()
         foreach (var area in new IAreaSetup[] { new FabricCoreSetup(), new FabricJobsSetup() })
         {
             area.ConfigureServices(services);
+            services.AddHostServices();
             services.AddSingleton(area);
         }
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -46,6 +47,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
             .AddSingleton(Service)
             .AddSingleton<TCommand>();
         Services.AddEndpointValidation();
+        Services.AddHostServices();
     }
 
     protected Task<CommandResponse> ExecuteCommandAsync(params string[] args)

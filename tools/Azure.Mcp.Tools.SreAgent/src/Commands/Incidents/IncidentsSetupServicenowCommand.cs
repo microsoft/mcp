@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
@@ -25,7 +26,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     ReadOnly = false,
     Secret = true,
     LocalRequired = true)]
-public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<IncidentConnectorServiceNowOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsSetupServicenowCommand> _logger = logger;
@@ -50,7 +51,7 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.TokenEnv)))
+                if (string.IsNullOrWhiteSpace(environmentVariables.GetEnvironmentVariable(options.TokenEnv)))
                 {
                     validationResult.AddError($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.",
                         "ServiceNow token environment variable not set.");
@@ -65,8 +66,8 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             }
             else
             {
-                if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.UsernameEnv)) ||
-                    string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.PasswordEnv)))
+                if (string.IsNullOrWhiteSpace(environmentVariables.GetEnvironmentVariable(options.UsernameEnv)) ||
+                    string.IsNullOrWhiteSpace(environmentVariables.GetEnvironmentVariable(options.PasswordEnv)))
                 {
                     validationResult.Errors.Add("ServiceNow username/password environment variables are not set.");
                 }
@@ -99,12 +100,12 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             if (string.Equals(options.AuthType, "BearerToken", StringComparison.OrdinalIgnoreCase))
             {
                 ext["authType"] = "BearerToken";
-                ext["bearerToken"] = Environment.GetEnvironmentVariable(options.TokenEnv!)!;
+                ext["bearerToken"] = environmentVariables.GetEnvironmentVariable(options.TokenEnv!)!;
             }
             else
             {
-                var username = Environment.GetEnvironmentVariable(options.UsernameEnv!)!;
-                var password = Environment.GetEnvironmentVariable(options.PasswordEnv!)!;
+                var username = environmentVariables.GetEnvironmentVariable(options.UsernameEnv!)!;
+                var password = environmentVariables.GetEnvironmentVariable(options.PasswordEnv!)!;
                 ext["authType"] = "CustomHeaders";
                 ext["headers"] = new Dictionary<string, object>
                 {

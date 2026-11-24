@@ -17,6 +17,7 @@ using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Http;
+using Microsoft.Mcp.Core.Services.Host;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -42,6 +43,7 @@ public static partial class ServiceCollectionExtensions
     /// <returns>The service collection with MCP server services added.</returns>
     public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serverStartOptions)
     {
+        services.AddHostServices();
         services.AddSingleton(new SsrfProtectionPolicy(serverStartOptions.DangerouslyDisableSsrfProtectionsByNamespace));
         services.AddEndpointValidation();
 
@@ -245,6 +247,7 @@ public static partial class ServiceCollectionExtensions
     /// <param name="assembly">The assembly to use for configuration.</param>
     public static void InitializeConfigurationAndOptions(this IServiceCollection services, Assembly assembly)
     {
+        services.AddHostServices();
         services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()

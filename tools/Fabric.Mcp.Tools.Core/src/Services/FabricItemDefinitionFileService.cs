@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
@@ -17,19 +18,21 @@ namespace Fabric.Mcp.Tools.Core.Services;
 public sealed class FabricItemDefinitionFileService(
     ILogger<FabricItemDefinitionFileService> logger,
     IOptions<ServerRuntimeConfiguration> configuration,
+    IFileSystem fileSystem,
     FabricItemDefinitionFileLimits? limits = null) : IFabricItemDefinitionFileService
 {
     private readonly ILogger<FabricItemDefinitionFileService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly FabricItemDefinitionValidator _validator = new(limits ?? new());
-    private readonly Func<string, Stream> _createFile = static path =>
-        new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true);
+    private readonly Func<string, Stream> _createFile = path =>
+        fileSystem.Open(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true);
 
     internal FabricItemDefinitionFileService(
         ILogger<FabricItemDefinitionFileService> logger,
         IOptions<ServerRuntimeConfiguration> configuration,
+        IFileSystem fileSystem,
         FabricItemDefinitionFileLimits? limits,
-        Func<string, Stream> createFile) : this(logger, configuration, limits)
+        Func<string, Stream> createFile) : this(logger, configuration, fileSystem, limits)
     {
         _createFile = createFile;
     }
@@ -49,7 +52,7 @@ public sealed class FabricItemDefinitionFileService(
         _validator.ValidateCount(selectedFiles.Length);
         FabricItemDefinitionValidator.ValidatePaths(selectedFiles.Select(static file => file?.PartPath));
         var directory = FabricItemDefinitionPath.GetDirectory(directoryPath);
-        FabricItemDefinitionPath.EnsureDirectory(directory);
+        FabricItemDefinitionPath.EnsureDirectory(fileSystem, directory);
 
         var sources = selectedFiles.Select(file =>
             FabricItemDefinitionPath.GetFile(directory, (file.SourcePath ?? file.PartPath).Replace('\\', '/'))).ToArray();
@@ -60,9 +63,9 @@ public sealed class FabricItemDefinitionFileService(
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = sources[i];
-            FabricItemDefinitionPath.EnsureNoLinks(source);
-            var modified = File.GetLastWriteTimeUtc(source);
-            await using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
+            FabricItemDefinitionPath.EnsureNoLinks(fileSystem, source);
+            var modified = fileSystem.GetLastWriteTimeUtc(source);
+            await using var stream = fileSystem.Open(source, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, useAsync: true);
             var length = stream.Length;
             totalBytes = _validator.AddBytes(totalBytes, length);
             var bytes = new byte[checked((int)length)];
@@ -79,8 +82,8 @@ public sealed class FabricItemDefinitionFileService(
         foreach (var snapshot in snapshots)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            FabricItemDefinitionPath.EnsureNoLinks(snapshot.Path);
-            var current = new FileInfo(snapshot.Path);
+            FabricItemDefinitionPath.EnsureNoLinks(fileSystem, snapshot.Path);
+            var current = fileSystem.GetFileInfo(snapshot.Path);
             if (current.Length != snapshot.Length || current.LastWriteTimeUtc != snapshot.Modified)
             {
                 throw new IOException("A selected definition file changed during packaging. Save the files and try again.");
@@ -109,8 +112,8 @@ public sealed class FabricItemDefinitionFileService(
         var directory = FabricItemDefinitionPath.GetOutputDirectory(directoryPath);
         var parent = Path.GetDirectoryName(directory) ??
             throw new ArgumentException("The output must be a new directory below an existing parent.", nameof(directoryPath));
-        FabricItemDefinitionPath.EnsureDirectory(parent);
-        FabricItemDefinitionPath.EnsureNewDestination(directory);
+        FabricItemDefinitionPath.EnsureDirectory(fileSystem, parent);
+        FabricItemDefinitionPath.EnsureNewDestination(fileSystem, directory);
 
         // Validate every payload before creating any output. Keep a bounded snapshot so neither
         // a late invalid part nor a caller changing its collection produces a partial definition.
@@ -122,35 +125,35 @@ public sealed class FabricItemDefinitionFileService(
         }
 
         var staging = Path.Combine(parent, $".fabric-definition-{Guid.NewGuid():N}");
-        FabricItemDefinitionPath.EnsureDirectory(parent);
-        FabricItemDefinitionPath.EnsureNewDestination(staging);
-        Directory.CreateDirectory(staging);
+        FabricItemDefinitionPath.EnsureDirectory(fileSystem, parent);
+        FabricItemDefinitionPath.EnsureNewDestination(fileSystem, staging);
+        fileSystem.CreateDirectory(staging);
         try
         {
             for (int i = 0; i < parts.Length; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var output = FabricItemDefinitionPath.GetFile(staging, parts[i].Path);
-                Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-                FabricItemDefinitionPath.EnsureDirectory(Path.GetDirectoryName(output)!);
+                fileSystem.CreateDirectory(Path.GetDirectoryName(output)!);
+                FabricItemDefinitionPath.EnsureDirectory(fileSystem, Path.GetDirectoryName(output)!);
                 await using var stream = _createFile(output);
                 await stream.WriteAsync(decoded[i], cancellationToken);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            FabricItemDefinitionPath.EnsureDirectory(staging);
-            FabricItemDefinitionPath.EnsureNewDestination(directory);
+            FabricItemDefinitionPath.EnsureDirectory(fileSystem, staging);
+            FabricItemDefinitionPath.EnsureNewDestination(fileSystem, directory);
             // Staging is a sibling so publication stays on the same filesystem. Move fails if
             // another caller created the destination; it never merges or replaces that directory.
-            Directory.Move(staging, directory);
+            fileSystem.MoveDirectory(staging, directory);
             return directory;
         }
         catch
         {
             try
             {
-                FabricItemDefinitionPath.EnsureDirectory(staging);
-                Directory.Delete(staging, recursive: true);
+                FabricItemDefinitionPath.EnsureDirectory(fileSystem, staging);
+                fileSystem.DeleteDirectory(staging, recursive: true);
             }
             catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
             {
@@ -166,5 +169,6 @@ public sealed class FabricItemDefinitionFileService(
         {
             throw new NotSupportedException("Local definition files are unavailable on this host.");
         }
+        fileSystem.EnsureAccess();
     }
 }

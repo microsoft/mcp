@@ -15,17 +15,21 @@ using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Speech.Tests.Stt;
 
 public class SttRecognizeCommandTests : IDisposable
 {
+    private static readonly IFileSystem s_fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration()));
     private readonly ISpeechService _speechService;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
@@ -49,9 +53,9 @@ public class SttRecognizeCommandTests : IDisposable
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
-        _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        _speechService = new SpeechService(_azureService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer, s_fileSystem);
 
-        _command = new(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()));
+        _command = new(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), s_fileSystem);
         _commandDefinition = _command.GetCommand();
     }
 
@@ -158,7 +162,7 @@ public class SttRecognizeCommandTests : IDisposable
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
     {
-        var command = new SttRecognizeCommand(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()));
+        var command = new SttRecognizeCommand(_logger, _speechService, new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), s_fileSystem);
         Assert.NotNull(command);
         Assert.Equal("recognize", command.Name);
     }
@@ -319,7 +323,7 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
+            .ThrowsAsync(new InvalidOperationException("Fast transcription unavailable"));
 
         // Mock realtime transcription to return valid result. When fast fails, it should fallback to realtime.
         SetupRealtimeTranscriptionMock("Hello world");
@@ -328,7 +332,7 @@ public class SttRecognizeCommandTests : IDisposable
         var response = await ExecuteCommandAsync($"--endpoint {_knownEndpoint} --file {testFile}");
 
         // Assert
-        // 1. Fast recognizer was called and failed because of UnauthorizedAccessException
+        // 1. Fast recognizer was called and failed with a recoverable error.
         await _fastTranscriptionRecognizer
         .Received(1)
         .RecognizeAsync(

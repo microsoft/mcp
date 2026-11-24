@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using Xunit;
@@ -134,6 +135,7 @@ public class SpeechSetupTests
         // Add required dependencies
         services.AddSingleton(AzureServiceTestHelpers.CreateAzureService());
         setup.ConfigureServices(services);
+        services.AddHostServices();
         return services.BuildServiceProvider();
     }
 }

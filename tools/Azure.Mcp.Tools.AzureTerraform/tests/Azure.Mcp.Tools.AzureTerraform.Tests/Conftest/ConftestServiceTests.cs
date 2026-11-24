@@ -2,13 +2,27 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureTerraform.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
+using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Tests;
 
 public class ConftestServiceTests
 {
-    private readonly ConftestService _service = new();
+    private readonly ConftestService _service = new(Substitute.For<IFileSystem>());
+
+    [Fact]
+    public async Task IsConftestAvailableAsync_HttpMode_RejectsHostExecutableLookup()
+    {
+        var service = new ConftestService(new FileSystem(OptionsFactory.Create(
+            new ServerRuntimeConfiguration { Transport = "http" })));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.IsConftestAvailableAsync(TestContext.Current.CancellationToken));
+    }
 
     [Fact]
     public void GenerateWorkspaceValidationCommand_DefaultPolicySet_ReturnsCorrectCommand()

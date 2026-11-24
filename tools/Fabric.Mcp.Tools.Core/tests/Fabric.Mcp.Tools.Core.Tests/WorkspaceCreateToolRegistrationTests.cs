@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -311,6 +312,7 @@ public sealed class WorkspaceCreateToolRegistrationTests()
         var setup = new FabricCoreSetup();
         services.AddSingleton<IAreaSetup>(setup);
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.AddHttpClient<IFabricCoreService, FabricCoreService>().ConfigurePrimaryHttpMessageHandler(() => handler);
         return services.BuildServiceProvider();
     }

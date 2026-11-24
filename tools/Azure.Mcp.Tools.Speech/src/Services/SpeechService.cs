@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
@@ -15,7 +16,8 @@ public class SpeechService(
     ILogger<SpeechService> logger,
     IFastTranscriptionRecognizer fastTranscriptionRecognizer,
     IRealtimeTranscriptionRecognizer realtimeTranscriptionRecognizer,
-    IRealtimeTtsSynthesizer speechSynthesizer)
+    IRealtimeTtsSynthesizer speechSynthesizer,
+    IFileSystem fileSystem)
     : BaseAzureService(azureService), ISpeechService
 {
     private readonly ILogger<SpeechService> _logger = logger;
@@ -45,7 +47,7 @@ public class SpeechService(
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
-        if (!File.Exists(filePath))
+        if (!fileSystem.FileExists(filePath))
         {
             throw new FileNotFoundException($"Audio file not found: {filePath}");
         }
@@ -53,7 +55,7 @@ public class SpeechService(
         try
         {
             // Use the selector to determine the best transcription method
-            var speechRecognizer = SpeechRecognizerSelector.GetSpeechRecognizer(filePath, language, phrases, format);
+            var speechRecognizer = SpeechRecognizerSelector.GetSpeechRecognizer(fileSystem, filePath, language, phrases, format);
             _logger.LogInformation("Transcription method selection: {RecognizerType}", speechRecognizer);
             var locale = LocaleSupport.MapLanguageToValidLocale(language);
 
@@ -68,7 +70,7 @@ public class SpeechService(
                     return SpeechRecognitionResult.FromFastTranscriptionResult(fastResult);
                 }
                 // Security validation failures are terminal; switching recognizers must not retry rejected input.
-                catch (Exception ex) when (ex is not SecurityException)
+                catch (Exception ex) when (ex is not SecurityException and not UnauthorizedAccessException)
                 {
                     _logger.LogWarning(ex, "Fast Transcription failed for language '{Language}', falling back to Realtime Transcription", language);
                     // Fall through to use Realtime Transcription

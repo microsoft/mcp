@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
@@ -11,61 +12,63 @@ namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 /// Loads and caches Python instrumentation data from the JSON resource file.
 /// This allows the instrumentation list to be updated without code changes.
 /// </summary>
-public static class PythonInstrumentationRegistry
+public class PythonInstrumentationRegistry(IFileSystem fileSystem)
 {
-    private static readonly Lazy<InstrumentationData> _data = new(LoadInstrumentationData);
-    private static readonly Lazy<Dictionary<string, InstrumentationInfo>> _instrumentationLookup =
-        new(() => BuildInstrumentationLookup(_data.Value));
-    private static readonly Lazy<HashSet<string>> _distroSet =
-        new(() => new HashSet<string>(_data.Value.DistroInstrumentations, StringComparer.OrdinalIgnoreCase));
+    private readonly Lazy<(InstrumentationData Data, Dictionary<string, InstrumentationInfo> Lookup, HashSet<string> Distro)> _cache =
+        new(() =>
+        {
+            var data = LoadInstrumentationData(fileSystem);
+            return (data, BuildInstrumentationLookup(data),
+                new HashSet<string>(data.DistroInstrumentations, StringComparer.OrdinalIgnoreCase));
+        });
 
     /// <summary>
     /// Gets the loaded instrumentation data.
     /// </summary>
-    public static InstrumentationData Data => _data.Value;
+    public InstrumentationData Data => _cache.Value.Data;
 
     /// <summary>
     /// Gets the Azure Monitor packages list.
     /// </summary>
-    public static IReadOnlyList<string> AzureMonitorPackages => _data.Value.AzureMonitorPackages;
+    public IReadOnlyList<string> AzureMonitorPackages => Data.AzureMonitorPackages;
 
     /// <summary>
     /// Gets the OpenTelemetry core packages list.
     /// </summary>
-    public static IReadOnlyList<string> OpenTelemetryCorePackages => _data.Value.OpenTelemetryCorePackages;
+    public IReadOnlyList<string> OpenTelemetryCorePackages => Data.OpenTelemetryCorePackages;
 
     /// <summary>
     /// Gets the Application Insights packages list.
     /// </summary>
-    public static IReadOnlyList<string> ApplicationInsightsPackages => _data.Value.ApplicationInsightsPackages;
+    public IReadOnlyList<string> ApplicationInsightsPackages => Data.ApplicationInsightsPackages;
 
     /// <summary>
     /// Gets the set of libraries bundled with Azure Monitor Distro.
     /// </summary>
-    public static IReadOnlySet<string> DistroInstrumentations => _distroSet.Value;
+    public IReadOnlySet<string> DistroInstrumentations => _cache.Value.Distro;
 
     /// <summary>
     /// Check if a library has OpenTelemetry instrumentation available.
     /// </summary>
-    public static bool HasInstrumentation(string libraryName)
+    public bool HasInstrumentation(string libraryName)
     {
         var normalized = NormalizePackageName(libraryName);
-        return _instrumentationLookup.Value.ContainsKey(normalized);
+        return _cache.Value.Lookup.ContainsKey(normalized);
     }
 
     /// <summary>
     /// Get instrumentation info for a library.
     /// </summary>
-    public static InstrumentationInfo? GetInstrumentation(string libraryName)
+    public InstrumentationInfo? GetInstrumentation(string libraryName)
     {
         var normalized = NormalizePackageName(libraryName);
-        return _instrumentationLookup.Value.TryGetValue(normalized, out var info) ? info : null;
+        return _cache.Value.Lookup.TryGetValue(normalized, out var info) ? info : null;
     }
 
     /// <summary>
     /// Get the OpenTelemetry instrumentation package name for a library.
     /// </summary>
-    public static string? GetInstrumentationPackage(string libraryName)
+    public string? GetInstrumentationPackage(string libraryName)
     {
         return GetInstrumentation(libraryName)?.InstrumentationPackage;
     }
@@ -75,7 +78,7 @@ public static class PythonInstrumentationRegistry
     /// Uses the inDistro flag from the instrumentation entry if available,
     /// otherwise falls back to the distroInstrumentations array.
     /// </summary>
-    public static bool IsInDistro(string libraryName)
+    public bool IsInDistro(string libraryName)
     {
         var normalized = NormalizePackageName(libraryName);
 
@@ -87,41 +90,41 @@ public static class PythonInstrumentationRegistry
         }
 
         // Fall back to the distroInstrumentations array for backward compatibility
-        return _distroSet.Value.Contains(normalized);
+        return _cache.Value.Distro.Contains(normalized);
     }
 
     /// <summary>
     /// Get all instrumentations as a flat dictionary.
     /// </summary>
-    public static IReadOnlyDictionary<string, InstrumentationInfo> GetAllInstrumentations()
+    public IReadOnlyDictionary<string, InstrumentationInfo> GetAllInstrumentations()
     {
-        return _instrumentationLookup.Value;
+        return _cache.Value.Lookup;
     }
 
     /// <summary>
     /// Get only instrumentations that are bundled with Azure Monitor Distro.
     /// These are auto-instrumented when using azure-monitor-opentelemetry.
     /// </summary>
-    public static IEnumerable<InstrumentationInfo> GetDistroInstrumentations()
+    public IEnumerable<InstrumentationInfo> GetDistroInstrumentations()
     {
-        return _instrumentationLookup.Value.Values.Where(i => i.InDistro);
+        return _cache.Value.Lookup.Values.Where(i => i.InDistro);
     }
 
     /// <summary>
     /// Get instrumentations that require manual setup (not in distro).
     /// These need their instrumentation packages to be installed and configured.
     /// </summary>
-    public static IEnumerable<InstrumentationInfo> GetManualInstrumentations()
+    public IEnumerable<InstrumentationInfo> GetManualInstrumentations()
     {
-        return _instrumentationLookup.Value.Values.Where(i => !i.InDistro);
+        return _cache.Value.Lookup.Values.Where(i => !i.InDistro);
     }
 
     /// <summary>
     /// Get instrumentations by category.
     /// </summary>
-    public static IEnumerable<InstrumentationInfo> GetByCategory(string category)
+    public IEnumerable<InstrumentationInfo> GetByCategory(string category)
     {
-        return _instrumentationLookup.Value.Values.Where(i =>
+        return _cache.Value.Lookup.Values.Where(i =>
             i.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -130,7 +133,7 @@ public static class PythonInstrumentationRegistry
     /// Returns libraries that have OpenTelemetry instrumentation available,
     /// with information about whether they are in distro or need manual setup.
     /// </summary>
-    public static List<(string Library, string InstrumentationPackage, bool InDistro)> FindInstrumentableLibraries(
+    public List<(string Library, string InstrumentationPackage, bool InDistro)> FindInstrumentableLibraries(
         IEnumerable<string> dependencies)
     {
         var result = new List<(string Library, string InstrumentationPackage, bool InDistro)>();
@@ -138,7 +141,7 @@ public static class PythonInstrumentationRegistry
         foreach (var dep in dependencies)
         {
             var normalized = NormalizePackageName(dep);
-            if (_instrumentationLookup.Value.TryGetValue(normalized, out var info))
+            if (_cache.Value.Lookup.TryGetValue(normalized, out var info))
             {
                 result.Add((normalized, info.InstrumentationPackage, info.InDistro));
             }
@@ -155,23 +158,23 @@ public static class PythonInstrumentationRegistry
         return name.ToLowerInvariant().Replace("_", "-");
     }
 
-    private static InstrumentationData LoadInstrumentationData()
+    private static InstrumentationData LoadInstrumentationData(IFileSystem fileSystem)
     {
         // Try to load from file system first (allows updates without recompilation)
-        var resourcePath = FindResourceFile();
+        var resourcePath = FindResourceFile(fileSystem);
 
-        if (resourcePath != null && File.Exists(resourcePath))
+        if (resourcePath != null && fileSystem.FileExists(resourcePath))
         {
             try
             {
-                var json = File.ReadAllText(resourcePath);
+                var json = fileSystem.ReadAllText(resourcePath);
                 var data = JsonSerializer.Deserialize(json, OnboardingJsonContext.Default.InstrumentationData);
                 if (data != null)
                 {
                     return data;
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 Console.Error.WriteLine($"Warning: Failed to load instrumentations from {resourcePath}: {ex.Message}");
             }
@@ -182,7 +185,7 @@ public static class PythonInstrumentationRegistry
         return GetFallbackData();
     }
 
-    private static string? FindResourceFile()
+    private static string? FindResourceFile(IFileSystem fileSystem)
     {
         // Check multiple locations
         var possiblePaths = new[]
@@ -192,10 +195,10 @@ public static class PythonInstrumentationRegistry
             // Development path
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Resources", "instrumentations", "python-instrumentations.json"),
             // Current directory
-            Path.Combine(Directory.GetCurrentDirectory(), "Resources", "instrumentations", "python-instrumentations.json"),
+            Path.Combine(fileSystem.GetCurrentDirectory(), "Resources", "instrumentations", "python-instrumentations.json"),
         };
 
-        return possiblePaths.FirstOrDefault(File.Exists);
+        return possiblePaths.FirstOrDefault(fileSystem.FileExists);
     }
 
     private static Dictionary<string, InstrumentationInfo> BuildInstrumentationLookup(InstrumentationData data)

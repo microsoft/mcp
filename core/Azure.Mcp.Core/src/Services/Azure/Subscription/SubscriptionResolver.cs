@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
@@ -9,11 +10,11 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 /// Default implementation that resolves subscriptions from command-line arguments,
 /// Azure CLI profile, and the AZURE_SUBSCRIPTION_ID environment variable.
 /// </summary>
-public sealed class SubscriptionResolver : ISubscriptionResolver
+public sealed class SubscriptionResolver(IFileSystem fileSystem, IEnvironmentVariables environmentVariables) : ISubscriptionResolver
 {
     // Cache the Azure CLI profile read to avoid redundant file I/O.
-    // The profile is read at most once per process invocation.
-    private static readonly Lazy<string?> s_profileDefault = new(AzureCliProfileHelper.GetDefaultSubscriptionId);
+    // Keep the cache local to this host's dependency-injection container.
+    private readonly Lazy<string?> _profileDefault = new(() => AzureCliProfileHelper.GetDefaultSubscriptionId(fileSystem, environmentVariables));
 
     /// <summary>
     /// A set of common placeholder values for subscription ID/name options.
@@ -81,9 +82,13 @@ public sealed class SubscriptionResolver : ISubscriptionResolver
         return resolver.GetEnvironmentSubscriptionId();
     }
 
-    public string? GetProfileSubscriptionId() => s_profileDefault.Value;
+    public string? GetProfileSubscriptionId()
+    {
+        fileSystem.EnsureAccess();
+        return _profileDefault.Value;
+    }
 
-    public string? GetEnvironmentSubscriptionId() => EnvironmentHelpers.GetAzureSubscriptionId();
+    public string? GetEnvironmentSubscriptionId() => environmentVariables.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
 
     /// <summary>
     /// Checks if the given <paramref name="value"/> is a common placeholder for subscription ID or name.

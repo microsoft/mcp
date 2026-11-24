@@ -6,7 +6,10 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -14,7 +17,21 @@ namespace Azure.Mcp.Core.Tests.Services.Azure.Subscription;
 
 public class SubscriptionResolverTests
 {
-    private readonly SubscriptionResolver _real = new();
+    private readonly SubscriptionResolver _real = new(
+        new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())),
+        new EnvironmentVariables(OptionsFactory.Create(new ServerRuntimeConfiguration())));
+
+    [Fact]
+    public void HttpResolver_RejectsHostDefaultsButAcceptsExplicitSubscription()
+    {
+        var configuration = OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" });
+        var resolver = new SubscriptionResolver(new FileSystem(configuration), new EnvironmentVariables(configuration));
+
+        Assert.Equal("explicit-subscription", resolver.ResolveSubscription("explicit-subscription"));
+        Assert.Throws<UnauthorizedAccessException>(() => resolver.GetProfileSubscriptionId());
+        Assert.Throws<UnauthorizedAccessException>(() => resolver.GetEnvironmentSubscriptionId());
+        Assert.Throws<UnauthorizedAccessException>(() => resolver.ResolveSubscription(null));
+    }
 
     [Fact]
     public void ResolveSubscription_EmptySubscriptionParameter_ReturnsEnvironmentValue()

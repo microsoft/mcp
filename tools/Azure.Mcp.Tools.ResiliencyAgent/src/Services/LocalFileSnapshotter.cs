@@ -4,6 +4,7 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Win32.SafeHandles;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
@@ -19,7 +20,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 /// the ACP-aligned raw-byte limit. Platform-native all-component no-follow opening is intentionally
 /// deferred; the accepted residual check/open race is documented in the feature design.
 /// </remarks>
-public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : ILocalFileSnapshotter
+public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider, IFileSystem fileSystem) : ILocalFileSnapshotter
 {
     private static readonly HashSet<string> s_reservedWindowsNames =
         new(StringComparer.OrdinalIgnoreCase)
@@ -35,6 +36,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
     /// </summary>
     public ValidatedLocalFile Validate(string untrustedPath)
     {
+        fileSystem.EnsureAccess();
         ValidateSyntax(untrustedPath);
         string canonicalPath;
         try
@@ -49,7 +51,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
         FileInfo file;
         try
         {
-            file = new FileInfo(canonicalPath);
+            file = fileSystem.GetFileInfo(canonicalPath);
             if (!file.Exists)
             {
                 throw new FileNotFoundException("The selected file does not exist or cannot be accessed.", canonicalPath);
@@ -95,7 +97,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
         if (OperatingSystem.IsWindows())
         {
             string root = Path.GetPathRoot(canonicalPath)!;
-            if (new DriveInfo(root).DriveType == DriveType.Network)
+            if (fileSystem.GetDriveInfo(root).DriveType == DriveType.Network)
             {
                 throw new ArgumentException("Files on network drives cannot be attached.", nameof(untrustedPath));
             }
@@ -117,7 +119,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
         ValidatedLocalFile file,
         CancellationToken cancellationToken)
     {
-        using SafeFileHandle handle = File.OpenHandle(
+        using SafeFileHandle handle = fileSystem.OpenHandle(
             file.CanonicalPath,
             FileMode.Open,
             FileAccess.Read,
@@ -150,7 +152,7 @@ public sealed partial class LocalFileSnapshotter(TimeProvider timeProvider) : IL
         byte[] probe = new byte[1];
         if (await RandomAccess.ReadAsync(handle, probe, length, cancellationToken) != 0
             || RandomAccess.GetLength(handle) != length
-            || File.GetLastWriteTimeUtc(file.CanonicalPath) != file.LastWriteTimeUtc)
+            || fileSystem.GetLastWriteTimeUtc(file.CanonicalPath) != file.LastWriteTimeUtc)
         {
             CryptographicOperations.ZeroMemory(content);
             throw new IOException("The selected file changed while it was being read. Try again.");

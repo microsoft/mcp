@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.SreAgent.Options.Threads;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
 /// <summary>
@@ -26,7 +27,7 @@ namespace Azure.Mcp.Tools.SreAgent.Services;
 /// <c>59f0a04a-b322-4310-adc9-39ac41e9631e/.default</c> (matches <c>SRE_API_AUDIENCE</c>
 /// in the Node SRE Agent CLI at <c>src/Agent/Agent.Cli.Node/src/services/auth.ts</c>).
 /// </remarks>
-public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgentService> logger)
+public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgentService> logger, IEnvironmentVariables environmentVariables)
     : BaseAzureResourceService(azureService), ISreAgentService
 {
     private const string SreAgentResourceType = "Microsoft.App/agents";
@@ -987,7 +988,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
 
             if (autoApprove)
             {
-                await ApprovePendingApprovalsAsync(this, endpoint, messages, tenant, cancellationToken);
+                await ApprovePendingApprovalsAsync(this, environmentVariables, endpoint, messages, tenant, cancellationToken);
             }
             else if (HasPendingInteractiveRequest(messages))
             {
@@ -1012,12 +1013,13 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
 
     private static async Task ApprovePendingApprovalsAsync(
         ISreAgentService service,
+        IEnvironmentVariables environmentVariables,
         string endpoint,
         List<SreAgentThreadMessage> messages,
         string? tenant,
         CancellationToken cancellationToken)
     {
-        var (userId, _) = SreAgentCommandHelpers.GetUser("mcp-yolo");
+        var (userId, _) = SreAgentCommandHelpers.GetUser(environmentVariables, "mcp-yolo");
         var approvals = messages
             .Where(m => !string.IsNullOrWhiteSpace(m.Approval?.Id) && IsPendingApproval(m.Approval.Status))
             .Select(m => m.Approval!.Id!)
@@ -1038,7 +1040,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
             (string.Equals(m.MessageType, "UserQuestion", StringComparison.OrdinalIgnoreCase) && string.Equals(m.UserQuestion?.Status, "Pending", StringComparison.OrdinalIgnoreCase)) ||
             (string.Equals(m.MessageType, "Approval", StringComparison.OrdinalIgnoreCase) && IsPendingApproval(m.Approval?.Status)));
 
-    public static async Task<SreAgentInvestigationResult> RunInvestigationAsync(ISreAgentService service, ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
+    public static async Task<SreAgentInvestigationResult> RunInvestigationAsync(ISreAgentService service, IEnvironmentVariables environmentVariables, ThreadsInvestigateOptions options, bool autoApprove, CancellationToken cancellationToken = default)
     {
         var endpoint = await SreAgentCommandHelpers.ResolveAgentEndpointAsync(
             service,
@@ -1048,7 +1050,7 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         var timeoutSeconds = Math.Max(1, options.TimeoutSeconds ?? 600);
         timeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
-        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message, options.Agent), options.Tenant, timeout.Token);
+        var thread = await service.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(environmentVariables, options.Message, options.Agent), options.Tenant, timeout.Token);
         var threadId = thread?.Id;
         if (string.IsNullOrWhiteSpace(threadId))
         {
@@ -1073,10 +1075,10 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
 
             if (action == FollowUpAction.NeedsData && autoApprove)
             {
-                await ApprovePendingApprovalsAsync(service, endpoint, messages, options.Tenant, timeout.Token);
+                await ApprovePendingApprovalsAsync(service, environmentVariables, endpoint, messages, options.Tenant, timeout.Token);
             }
 
-            await service.SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(FollowUpPrompt), options.Tenant, timeout.Token);
+            await service.SendThreadMessageAsync(endpoint, threadId, SreAgentCommandHelpers.CreateMessageRequest(environmentVariables, FollowUpPrompt), options.Tenant, timeout.Token);
             messages = await service.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromSeconds(timeoutSeconds), autoApprove, timeout.Token);
             followUps++;
         }

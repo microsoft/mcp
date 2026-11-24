@@ -4,6 +4,7 @@
 
 using System.Globalization;
 using System.Text;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
@@ -87,41 +88,41 @@ internal static class FabricItemDefinitionPath
         return Path.Combine(directory, relativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
-    internal static void EnsureDirectory(string path)
+    internal static void EnsureDirectory(IFileSystem fileSystem, string path)
     {
-        EnsureNoLinks(path);
-        if ((File.GetAttributes(path) & FileAttributes.Directory) == 0)
+        EnsureNoLinks(fileSystem, path);
+        if ((fileSystem.GetAttributes(path) & FileAttributes.Directory) == 0)
         {
             throw new IOException("The selected path must be a directory.");
         }
     }
 
-    internal static void EnsureNewDestination(string path)
+    internal static void EnsureNewDestination(IFileSystem fileSystem, string path)
     {
-        if (GetAttributesIfPresent(path) is not null)
+        if (GetAttributesIfPresent(fileSystem, path) is not null)
         {
             throw new IOException("The output destination already exists. Select a new directory; existing files are never overwritten.");
         }
     }
 
-    internal static void EnsureNoLinks(string path)
+    internal static void EnsureNoLinks(IFileSystem fileSystem, string path)
     {
         // GetFullPath alone does not resolve links. Check every existing component, including
         // ancestors of the selected root, before opening a file or publishing a directory.
         for (string? current = path; current is not null; current = Path.GetDirectoryName(current))
         {
-            if ((File.GetAttributes(current) & (FileAttributes.ReparsePoint | FileAttributes.Device)) != 0)
+            if ((fileSystem.GetAttributes(current) & (FileAttributes.ReparsePoint | FileAttributes.Device)) != 0)
             {
                 throw new IOException("Symbolic links, junctions, and device paths are not supported for definition files.");
             }
         }
     }
 
-    internal static FileAttributes? GetAttributesIfPresent(string path)
+    internal static FileAttributes? GetAttributesIfPresent(IFileSystem fileSystem, string path)
     {
         try
         {
-            return File.GetAttributes(path);
+            return fileSystem.GetAttributes(path);
         }
         catch (FileNotFoundException)
         {

@@ -14,6 +14,7 @@ using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -187,6 +188,7 @@ public sealed class SreAgentToolLoadingTests
         services.AddSingleton(subscriptionResolver);
         services.AddSingleton<ITelemetryService, NoopTelemetryService>();
         new SreAgentSetup().ConfigureServices(services);
+        services.AddHostServices();
         services.AddSingleton(service);
         return services.BuildServiceProvider();
     }

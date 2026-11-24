@@ -6,6 +6,7 @@ using System.Text.Json;
 using Azure.Core;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -203,6 +204,7 @@ public class WorkspaceListToolRegistrationTests()
         var services = new ServiceCollection();
         var setup = new FabricCoreSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
         services.AddSingleton(credential);
         services.AddLogging();

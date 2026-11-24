@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 /// Based on Azure Monitor OpenTelemetry Distro for Python:
 /// https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/monitor/azure-monitor-opentelemetry
 /// </summary>
-public class PythonGreenfieldGenerator : IGenerator
+public class PythonGreenfieldGenerator(PythonInstrumentationRegistry registry) : IGenerator
 {
     public bool CanHandle(Analysis analysis)
     {
@@ -184,9 +184,9 @@ public class PythonGreenfieldGenerator : IGenerator
     /// Get GenAI instrumentation packages based on detected dependencies.
     /// Returns the instrumentation packages for GenAI libraries found in the project.
     /// </summary>
-    private static List<InstrumentationInfo> GetGenAIInstrumentationPackages(List<string> dependencies)
+    private List<InstrumentationInfo> GetGenAIInstrumentationPackages(List<string> dependencies)
     {
-        var genaiInstrumentations = PythonInstrumentationRegistry.GetByCategory("genai");
+        var genaiInstrumentations = registry.GetByCategory("genai");
         var result = new List<InstrumentationInfo>();
 
         foreach (var dep in dependencies)
@@ -213,7 +213,7 @@ public class PythonGreenfieldGenerator : IGenerator
     /// Returns instrumentation packages for HTTP clients, databases, and other libraries.
     /// Always includes logging instrumentation since it's a built-in module.
     /// </summary>
-    private static List<InstrumentationInfo> GetConsoleInstrumentationPackages(List<string> dependencies)
+    private List<InstrumentationInfo> GetConsoleInstrumentationPackages(List<string> dependencies)
     {
         var result = new List<InstrumentationInfo>();
         var normalized = dependencies.Select(PythonInstrumentationRegistry.NormalizePackageName).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -236,7 +236,7 @@ public class PythonGreenfieldGenerator : IGenerator
         {
             if (normalized.Contains(lib))
             {
-                var instrumentation = PythonInstrumentationRegistry.GetInstrumentation(lib);
+                var instrumentation = registry.GetInstrumentation(lib);
                 if (instrumentation != null && !string.IsNullOrEmpty(instrumentation.InstrumentationPackage))
                 {
                     if (!result.Any(r => r.InstrumentationPackage == instrumentation.InstrumentationPackage))
@@ -253,7 +253,7 @@ public class PythonGreenfieldGenerator : IGenerator
         {
             if (normalized.Contains(lib))
             {
-                var instrumentation = PythonInstrumentationRegistry.GetInstrumentation(lib);
+                var instrumentation = registry.GetInstrumentation(lib);
                 if (instrumentation != null && !string.IsNullOrEmpty(instrumentation.InstrumentationPackage))
                 {
                     if (!result.Any(r => r.InstrumentationPackage == instrumentation.InstrumentationPackage))
@@ -267,7 +267,7 @@ public class PythonGreenfieldGenerator : IGenerator
         // Check for async libraries
         if (normalized.Contains("asyncio") || normalized.Contains("aiohttp"))
         {
-            var asyncioInstrumentation = PythonInstrumentationRegistry.GetInstrumentation("asyncio");
+            var asyncioInstrumentation = registry.GetInstrumentation("asyncio");
             if (asyncioInstrumentation != null && !string.IsNullOrEmpty(asyncioInstrumentation.InstrumentationPackage))
             {
                 if (!result.Any(r => r.InstrumentationPackage == asyncioInstrumentation.InstrumentationPackage))
@@ -283,7 +283,7 @@ public class PythonGreenfieldGenerator : IGenerator
     /// <summary>
     /// Get the instrumentation code snippet for the specific framework.
     /// </summary>
-    private static string GetInstrumentationCode(AppType appType, List<string> dependencies)
+    private string GetInstrumentationCode(AppType appType, List<string> dependencies)
     {
         // Basic instrumentation code that works for all frameworks
         // The distro auto-detects and instruments Django, Flask, FastAPI, etc.
@@ -329,7 +329,7 @@ configure_azure_monitor()
     /// <summary>
     /// Generate GenAI instrumentation code including library-specific instrumentors.
     /// </summary>
-    private static string GetGenAIInstrumentationCode(List<string> dependencies)
+    private string GetGenAIInstrumentationCode(List<string> dependencies)
     {
         var code = @"import logging
 

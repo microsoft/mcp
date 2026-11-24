@@ -11,12 +11,15 @@ using Azure.ResourceManager.Models;
 using Azure.ResourceManager.ResilienceManagement;
 using Azure.ResourceManager.ResilienceManagement.Models;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Services;
 
-public sealed partial class ResilienceManagementService(IAzureService azureService)
+public sealed partial class ResilienceManagementService(IAzureService azureService, IEnvironmentVariables environmentVariables)
     : BaseAzureResourceService(azureService), IResilienceManagementService
 {
+    private IEnvironmentVariables EnvironmentVariables { get; } = environmentVariables;
+
     private static readonly TimeSpan RecoveryPlanPollingInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan RecoveryPlanOperationTimeout = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan UsagePlanOperationTimeout = TimeSpan.FromMinutes(10);

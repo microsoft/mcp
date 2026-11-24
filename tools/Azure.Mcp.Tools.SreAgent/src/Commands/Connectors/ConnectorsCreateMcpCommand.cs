@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
 
@@ -25,7 +26,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Connectors;
     ReadOnly = false,
     Secret = true,
     LocalRequired = true)]
-public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<ConnectorsCreateMcpOptions, ConnectorsCreateMcpCommand.ConnectorsCreateMcpCommandResult>(subscriptionResolver)
 {
     private readonly ILogger<ConnectorsCreateMcpCommand> _logger = logger;
@@ -81,7 +82,7 @@ public sealed class ConnectorsCreateMcpCommand(ILogger<ConnectorsCreateMcpComman
 
                 if (!string.IsNullOrWhiteSpace(options.BearerTokenEnv))
                 {
-                    var bearerToken = Environment.GetEnvironmentVariable(options.BearerTokenEnv)
+                    var bearerToken = environmentVariables.GetEnvironmentVariable(options.BearerTokenEnv)
                         ?? throw new ArgumentException($"Environment variable '{options.BearerTokenEnv}' was not found.");
                     extendedProperties["bearerToken"] = bearerToken;
                 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
@@ -9,7 +10,7 @@ namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 /// Detects Python application type based on framework dependencies.
 /// Uses PythonInstrumentationRegistry to identify known frameworks.
 /// </summary>
-public class PythonAppTypeDetector : IAppTypeDetector
+public class PythonAppTypeDetector(IFileSystem fileSystem, PythonInstrumentationRegistry registry) : IAppTypeDetector
 {
     public Language SupportedLanguage => Language.Python;
 
@@ -25,9 +26,9 @@ public class PythonAppTypeDetector : IAppTypeDetector
         var dependencies = new List<string>();
 
         // Parse requirements.txt
-        if (File.Exists(requirementsPath))
+        if (fileSystem.FileExists(requirementsPath))
         {
-            var content = PythonInstrumentationDetector.TryReadFile(requirementsPath);
+            var content = PythonInstrumentationDetector.TryReadFile(requirementsPath, fileSystem);
             if (content != null)
             {
                 projectFile = requirementsPath;
@@ -36,9 +37,9 @@ public class PythonAppTypeDetector : IAppTypeDetector
         }
 
         // Parse pyproject.toml
-        if (File.Exists(pyprojectPath))
+        if (fileSystem.FileExists(pyprojectPath))
         {
-            var content = PythonInstrumentationDetector.TryReadFile(pyprojectPath);
+            var content = PythonInstrumentationDetector.TryReadFile(pyprojectPath, fileSystem);
             if (content != null)
             {
                 projectFile ??= pyprojectPath;
@@ -80,15 +81,15 @@ public class PythonAppTypeDetector : IAppTypeDetector
     /// Priority order: Django > FastAPI > Flask > GenAI > others
     /// (Django and FastAPI are more specific, Flask is more general)
     /// </summary>
-    private static AppType DetectAppType(List<string> dependencies)
+    private AppType DetectAppType(List<string> dependencies)
     {
         // Get known frameworks from registry
-        var frameworks = PythonInstrumentationRegistry.GetByCategory("framework")
+        var frameworks = registry.GetByCategory("framework")
             .Select(f => PythonInstrumentationRegistry.NormalizePackageName(f.LibraryName))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // Get GenAI libraries from registry
-        var genaiLibraries = PythonInstrumentationRegistry.GetByCategory("genai")
+        var genaiLibraries = registry.GetByCategory("genai")
             .Select(f => PythonInstrumentationRegistry.NormalizePackageName(f.LibraryName))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -147,13 +148,13 @@ public class PythonAppTypeDetector : IAppTypeDetector
     /// <summary>
     /// Detect the entry point file for a Python application.
     /// </summary>
-    private static string? DetectEntryPoint(string workspacePath, AppType appType)
+    private string? DetectEntryPoint(string workspacePath, AppType appType)
     {
         // Django uses manage.py as the main entry point
         if (appType == AppType.Django)
         {
             var managePy = Path.Combine(workspacePath, "manage.py");
-            if (File.Exists(managePy))
+            if (fileSystem.FileExists(managePy))
             {
                 return managePy;
             }
@@ -175,7 +176,7 @@ public class PythonAppTypeDetector : IAppTypeDetector
         foreach (var entryPoint in commonEntryPoints)
         {
             var fullPath = Path.Combine(workspacePath, entryPoint);
-            if (File.Exists(fullPath))
+            if (fileSystem.FileExists(fullPath))
             {
                 return fullPath;
             }

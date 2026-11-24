@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
@@ -15,7 +16,7 @@ namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 /// - OpenTelemetry Python Contrib: https://github.com/open-telemetry/opentelemetry-python-contrib
 /// - Azure Monitor Distro: https://github.com/Azure/azure-sdk-for-python/tree/main/sdk/monitor/azure-monitor-opentelemetry
 /// </summary>
-public class PythonInstrumentationDetector : IInstrumentationDetector
+public class PythonInstrumentationDetector(IFileSystem fileSystem) : IInstrumentationDetector
 {
     public Language SupportedLanguage => Language.Python;
 
@@ -26,9 +27,9 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
 
         // Check for requirements.txt
         var requirementsPath = Path.Combine(workspacePath, "requirements.txt");
-        if (File.Exists(requirementsPath))
+        if (fileSystem.FileExists(requirementsPath))
         {
-            var content = TryReadFile(requirementsPath);
+            var content = TryReadFile(requirementsPath, fileSystem);
             if (content != null)
             {
                 dependencies.AddRange(ParseRequirementsTxt(content));
@@ -38,9 +39,9 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
 
         // Check for pyproject.toml
         var pyprojectPath = Path.Combine(workspacePath, "pyproject.toml");
-        if (File.Exists(pyprojectPath))
+        if (fileSystem.FileExists(pyprojectPath))
         {
-            var content = TryReadFile(pyprojectPath);
+            var content = TryReadFile(pyprojectPath, fileSystem);
             if (content != null)
             {
                 dependencies.AddRange(ParsePyprojectToml(content));
@@ -271,26 +272,21 @@ public class PythonInstrumentationDetector : IInstrumentationDetector
     }
 
     /// <summary>
-    /// Safely read file content with exception handling for locked files,
-    /// permission issues, or encoding problems.
+    /// Read file content with exception handling for locked files or encoding problems.
+    /// Access-denied exceptions propagate to the caller.
     /// </summary>
-    internal static string? TryReadFile(string filePath)
+    internal static string? TryReadFile(string filePath, IFileSystem fileSystem)
     {
         try
         {
-            return File.ReadAllText(filePath);
+            return fileSystem.ReadAllText(filePath);
         }
         catch (IOException)
         {
             // File is locked or inaccessible
             return null;
         }
-        catch (UnauthorizedAccessException)
-        {
-            // Insufficient permissions
-            return null;
-        }
-        catch (Exception)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             // Handle other potential exceptions
             return null;

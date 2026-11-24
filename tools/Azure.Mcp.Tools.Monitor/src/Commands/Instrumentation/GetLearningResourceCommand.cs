@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.Instrumentation;
     ReadOnly = true,
     Secret = false,
     LocalRequired = true)]
-public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger)
+public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceCommand> logger, GetLearningResourceTool learningResourceTool)
     : BaseCommand<GetLearningResourceOptions, GetLearningResourceCommand.GetLearningResourceCommandResult>
 {
     private readonly ILogger<GetLearningResourceCommand> _logger = logger;
@@ -34,7 +34,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 // List all learning resources
-                var resources = GetLearningResourceTool.ListLearningResources();
+                var resources = learningResourceTool.ListLearningResources();
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(new(Resources: resources ?? [], Content: null),
@@ -43,7 +43,7 @@ public sealed class GetLearningResourceCommand(ILogger<GetLearningResourceComman
             else
             {
                 // Get specific learning resource content
-                var content = GetLearningResourceTool.GetLearningResource(options.Path);
+                var content = learningResourceTool.GetLearningResource(options.Path);
 
                 context.Response.Status = HttpStatusCode.OK;
                 context.Response.Results = ResponseResult.Create(new(Resources: null, Content: content),

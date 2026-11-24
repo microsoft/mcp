@@ -6,12 +6,14 @@ using Fabric.Mcp.Tools.Core.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.Core.Services;
 
 public sealed class FabricItemDefinitionExportService(
     IOptions<ServerRuntimeConfiguration> configuration,
-    IFabricItemDefinitionFileService fileService) : IFabricItemDefinitionExportService
+    IFabricItemDefinitionFileService fileService,
+    IFileSystem fileSystem) : IFabricItemDefinitionExportService
 {
     private readonly IOptions<ServerRuntimeConfiguration> _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly IFabricItemDefinitionFileService _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
@@ -32,11 +34,12 @@ public sealed class FabricItemDefinitionExportService(
                 "Local definition export is unavailable on this host. Omit --output-directory to retrieve inline content.",
                 HttpStatusCode.BadRequest);
         }
+        fileSystem.EnsureAccess();
         try
         {
             var destination = FabricItemDefinitionPath.GetOutputDirectory(directory);
-            FabricItemDefinitionPath.EnsureDirectory(Path.GetDirectoryName(destination)!);
-            FabricItemDefinitionPath.EnsureNewDestination(destination);
+            FabricItemDefinitionPath.EnsureDirectory(fileSystem, Path.GetDirectoryName(destination)!);
+            FabricItemDefinitionPath.EnsureNewDestination(fileSystem, destination);
             return destination;
         }
         catch (Exception ex) when (IsFileFailure(ex))

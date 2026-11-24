@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using Azure.Mcp.Tools.Speech.Models;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 
@@ -13,12 +14,13 @@ public static class SpeechRecognizerSelector
     /// Gets the recommended speech recognizer type based on the provided parameters.
     /// </summary>
     /// <param name="filePath">Path to the audio file</param>
+    /// <param name="fileSystem">Guarded access to local audio files.</param>
     /// <param name="language">The target language for transcription</param>
     /// <param name="phrases">Phrase list for improved recognition</param>
     /// <param name="format">Output format specification</param>
     /// <returns>Recommended speech recognizer type</returns>
     /// <exception cref="NotSupportedException">Thrown when the language is not supported by any recognizer</exception>
-    public static RecognizerType GetSpeechRecognizer(string filePath, string? language, string[]? phrases, string? format)
+    public static RecognizerType GetSpeechRecognizer(IFileSystem fileSystem, string filePath, string? language, string[]? phrases, string? format)
     {
         // If language not provided, use Fast Transcription Multi-lingual model
         if (string.IsNullOrWhiteSpace(language))
@@ -33,9 +35,9 @@ public static class SpeechRecognizerSelector
         }
 
         // Check file size constraints (Fast Transcription has a 300 MB limit)
-        if (File.Exists(filePath))
+        if (fileSystem.FileExists(filePath))
         {
-            var fileInfo = new FileInfo(filePath);
+            var fileInfo = fileSystem.GetFileInfo(filePath);
             if (fileInfo.Length > 300 * 1024 * 1024) // 300 MB
             {
                 return RecognizerType.Realtime; // File too large for Fast Transcription, use Realtime

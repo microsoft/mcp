@@ -17,6 +17,7 @@ using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
 using Xunit;
@@ -38,7 +39,8 @@ public sealed class MonitorTracesServiceTests()
             submitResponse: submitResponse);
         var (service, _) = CreateService(handler);
         var command = new TraceAnalyzeCriticalPathCommand(
-            NullLogger<TraceAnalyzeCriticalPathCommand>.Instance, service, new SubscriptionResolver());
+            NullLogger<TraceAnalyzeCriticalPathCommand>.Instance, service,
+            new SubscriptionResolver(Substitute.For<IFileSystem>(), Substitute.For<IEnvironmentVariables>()));
         var args = $"--subscription {MonitorTracesTestHandler.Subscription} --resource-group rg --workspace amw0 "
             + "--trace-ids invalid --start-time 2026-10-12T00:00:00Z --end-time 2026-10-12T01:00:00Z";
 

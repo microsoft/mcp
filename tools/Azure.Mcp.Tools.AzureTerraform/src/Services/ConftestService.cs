@@ -3,16 +3,18 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class ConftestService : IConftestService
+public sealed class ConftestService(IFileSystem fileSystem) : IConftestService
 {
     private const string PolicyRepoUrl = "https://github.com/Azure/policy-library-avm.git";
     private const string PolicyDirectory = "policy";
 
     public async Task<bool> IsConftestAvailableAsync(CancellationToken cancellationToken = default)
     {
+        fileSystem.EnsureAccess();
         try
         {
             var checkCommand = OperatingSystem.IsWindows() ? "where" : "which";

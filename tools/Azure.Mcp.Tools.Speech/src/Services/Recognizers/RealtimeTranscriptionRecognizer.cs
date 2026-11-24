@@ -9,6 +9,7 @@ using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
@@ -16,7 +17,8 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for real-time speech transcription using Azure AI Services Speech SDK.
 /// </summary>
-public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger<RealtimeTranscriptionRecognizer> logger)
+public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger<RealtimeTranscriptionRecognizer> logger,
+    IFileSystem fileSystem)
     : BaseAzureService(azureService), IRealtimeTranscriptionRecognizer
 {
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
@@ -44,7 +46,7 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
         // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
         filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
 
-        if (!File.Exists(filePath))
+        if (!fileSystem.FileExists(filePath))
         {
             throw new FileNotFoundException($"Audio file not found: {filePath}");
         }
@@ -85,7 +87,7 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
                 }
 
                 // Create audio configuration from file
-                using var audioConfig = CreateAudioConfigFromFile(filePath);
+                using var audioConfig = CreateAudioConfigFromFile(fileSystem, filePath);
                 using var recognizer = new SpeechRecognizer(config, audioConfig);
 
                 // Add phrase hints if provided
@@ -288,10 +290,12 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
     /// Supports WAV, MP3, OPUS/OGG, FLAC, and other common audio formats using GStreamer when available.
     /// </summary>
     /// <param name="filePath">Path to the audio file</param>
+    /// <param name="fileSystem">Guarded access to local audio files.</param>
     /// <returns>AudioConfig configured for the specified audio file</returns>
     /// <exception cref="InvalidOperationException">Thrown when compressed audio format is used but GStreamer is not properly configured</exception>
-    private static AudioConfig CreateAudioConfigFromFile(string filePath)
+    private static AudioConfig CreateAudioConfigFromFile(IFileSystem fileSystem, string filePath)
     {
+        fileSystem.EnsureAccess();
         var extension = Path.GetExtension(filePath).ToLowerInvariant();
 
         // WAV files don't require GStreamer
@@ -303,15 +307,15 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
         // For compressed formats, check if GStreamer is available
         return extension switch
         {
-            ".mp3" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MP3),
-            ".ogg" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
-            ".opus" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
-            ".flac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.FLAC),
-            ".alaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ALAW),
-            ".mulaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MULAW),
-            ".mp4" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
-            ".m4a" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
-            ".aac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+            ".mp3" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.MP3),
+            ".ogg" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.OGG_OPUS),
+            ".opus" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.OGG_OPUS),
+            ".flac" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.FLAC),
+            ".alaw" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.ALAW),
+            ".mulaw" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.MULAW),
+            ".mp4" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.ANY),
+            ".m4a" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.ANY),
+            ".aac" => CreateCompressedAudioConfig(fileSystem, filePath, AudioStreamContainerFormat.ANY),
             _ => throw new NotSupportedException($"Audio format '{extension}' is not supported. Supported formats are: .wav, .mp3, .ogg, .opus, .flac, .alaw, .mulaw, .mp4, .m4a, .aac")
         };
     }
@@ -322,14 +326,15 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
     /// </summary>
     /// <param name="filePath">Path to the compressed audio file</param>
     /// <param name="containerFormat">The audio container format</param>
+    /// <param name="fileSystem">Guarded access to local audio files.</param>
     /// <returns>AudioConfig configured for the compressed audio file</returns>
-    private static AudioConfig CreateCompressedAudioConfig(string filePath, AudioStreamContainerFormat containerFormat)
+    private static AudioConfig CreateCompressedAudioConfig(IFileSystem fileSystem, string filePath, AudioStreamContainerFormat containerFormat)
     {
         // Create compressed audio stream format
         var audioFormat = AudioStreamFormat.GetCompressedFormat(containerFormat);
 
         // Create a custom PullAudioInputStream using a callback
-        var callback = new BinaryFileReaderCallback(filePath);
+        var callback = new BinaryFileReaderCallback(fileSystem, filePath);
         var pullStream = AudioInputStream.CreatePullStream(callback, audioFormat);
 
         return AudioConfig.FromStreamInput(pullStream);
@@ -367,9 +372,9 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
     /// Binary file reader callback for PullAudioInputStream.
     /// Reads binary audio data from file for compressed audio processing.
     /// </summary>
-    private sealed class BinaryFileReaderCallback(string filePath) : PullAudioInputStreamCallback
+    private sealed class BinaryFileReaderCallback(IFileSystem fileSystem, string filePath) : PullAudioInputStreamCallback
     {
-        private readonly FileStream _fileStream = File.OpenRead(filePath);
+        private readonly FileStream _fileStream = fileSystem.OpenRead(filePath);
 
         public override int Read(byte[] dataBuffer, uint size)
         {

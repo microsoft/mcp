@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 
@@ -24,7 +25,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<IncidentCreateOptions, SreAgentTextResult>(subscriptionResolver)
 {
     private readonly ILogger<IncidentsCreateCommand> _logger = logger;
@@ -38,7 +39,7 @@ public sealed class IncidentsCreateCommand(ILogger<IncidentsCreateCommand> logge
                 _sreAgentService,
                 options,
                 cancellationToken);
-            var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? "mcp-user";
+            var user = environmentVariables.GetEnvironmentVariable("USER") ?? environmentVariables.GetEnvironmentVariable("USERNAME") ?? "mcp-user";
             var prompt = string.Join('\n', new[]
             {
                 $"🚨 INCIDENT: {options.Title}",

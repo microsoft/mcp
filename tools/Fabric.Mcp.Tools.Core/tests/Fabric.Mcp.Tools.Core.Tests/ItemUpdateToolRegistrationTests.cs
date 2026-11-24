@@ -8,6 +8,7 @@ using Fabric.Mcp.Tools.Core.Models;
 using Fabric.Mcp.Tools.Core.Services;
 using Fabric.Mcp.Tools.Core.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -215,6 +216,7 @@ public sealed class ItemUpdateToolRegistrationTests()
         services.AddSingleton<IAreaSetup>(setup);
         services.AddSingleton(credential);
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.AddHttpClient<IFabricCoreService, FabricCoreService>().ConfigurePrimaryHttpMessageHandler(() => handler);
         services.AddSingleton(Substitute.For<ITelemetryService>());
         services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
