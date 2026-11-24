@@ -2,15 +2,21 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.11 (Unreleased)
+## 4.0.0-beta.11 (2026-11-24)
 
 ### Features Added
 
+- Added `netappfiles account create`, `netappfiles account get`, and `netappfiles account update` commands for creating, retrieving, and updating Azure NetApp Files accounts. [[#3708](https://github.com/microsoft/mcp/pull/3708)]
+- Added `netappfiles pool create`, `netappfiles pool get`, and `netappfiles pool update` commands for managing Azure NetApp Files capacity pools. [[#3721](https://github.com/microsoft/mcp/pull/3721)]
+
 ### Breaking Changes
+
+- Standardized pagination using ICursorOption, opaque cursor input, and root nextCursor output for Marketplace product listing, ADME search and record listing, Storage blob and container listing, and Storage table listing. ADME result.cursor is replaced by nextCursor, and Marketplace uses cursor in place of next-cursor. Storage listings now return fixed pages of up to 100 items. Pass nextCursor unchanged as cursor with the original required parameters to continue. Blank cursors and mismatched continuation requests are rejected. ADME record listings can change limit between pages. Restart without a cursor if you have a raw service cursor from an older version. Specific blob and container lookups are unchanged and reject cursor. [[#4072](https://github.com/microsoft/mcp/pull/4072)]
 
 ### Bugs Fixed
 
-### Other Changes
+- Improved diagnostics for remote HTTP tool failures: on-behalf-of (OBO) requests authenticated with application-only tokens now fail fast with an actionable 403 Forbidden error, MSAL failures record the Microsoft Entra ID AADSTS error code in telemetry, and tool calls rejected before execution record a sanitized failure reason and status code. [[#4179](https://github.com/microsoft/mcp/pull/4179)]
+- Fixed tools that ignored or did not resolve '--tenant': 'applicationinsights recommendation list' now authenticates Profiler requests against the requested tenant, 'azuremigrate platformlandingzone request' now honors '--tenant' for the 'check', 'generate', and 'download' actions, and the 'appservice webapp diagnostic' and 'adme' commands now accept tenant display names in addition to tenant IDs. [[#4212](https://github.com/microsoft/mcp/pull/4212)]
 
 ## 4.0.0-beta.10 (2026-11-20)
 
