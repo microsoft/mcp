@@ -60,9 +60,6 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<IHaSessionClient>(sp => MockHaSessionClient.IsEnabled
             ? sp.GetRequiredService<MockHaSessionClient>()
             : sp.GetRequiredService<DsHaSessionClient>());
-        services.AddSingleton<CreateAssessmentCommand>();
-        services.AddSingleton<GetAssessmentStatusCommand>();
-        services.AddSingleton<GetHaStatusCommand>();
 
         // Business case (POC): create starts the assessment; each status call moves the business case forward, statelessly.
         services.AddSingleton<IBusinessCaseEvaluationClient, BusinessCaseEvaluationClient>();
@@ -118,16 +115,6 @@ public class AzureMigrateSetup : IAreaSetup
         inventory.AddCommand<ExportInventoryCommand>(serviceProvider);
         // No card: the agent calls it repeatedly to wait quietly until the inventory completes.
         inventory.AddCommand<WaitInventoryCommand>(serviceProvider);
-
-        // Assessment tools are hidden for now; the business case tools run the assessment themselves.
-        // var assessment = new CommandGroup(
-        //     "assessment",
-        //     "Azure Catalyst assessment operations - Create an assessment for the signed-in user for a target region and currency, and " +
-        //     "get the status of an assessment operation or of the HA assessment started after it.");
-        // azureMigrate.AddSubGroup(assessment);
-        // assessment.AddCommand<CreateAssessmentCommand>(serviceProvider);
-        // assessment.AddCommand<GetAssessmentStatusCommand>(serviceProvider);
-        // assessment.AddCommand<GetHaStatusCommand>(serviceProvider);
 
         var businessCase = new CommandGroup(
             "businesscase",

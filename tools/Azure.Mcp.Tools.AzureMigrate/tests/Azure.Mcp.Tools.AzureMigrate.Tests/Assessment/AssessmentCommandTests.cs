@@ -433,69 +433,6 @@ public class AssessmentCommandTests
         Assert.Equal(expectedAttempts, handler.Requests.Count);
     }
 
-    [Fact]
-    public void ParseStatus_Running_IsNotCompletedWithRetry()
-    {
-        var result = GetAssessmentStatusCommand.Parse("a", "op", new(200, Guid.NewGuid(), "Running", null, 15, null, null));
-
-        Assert.True(result.Success);
-        Assert.False(result.IsCompleted);
-        Assert.Equal(15, result.RetryAfterSeconds);
-        Assert.Null(result.AssessmentDownloadCommand);
-        Assert.Contains("still running", result.Instructions);
-    }
-
-    [Fact]
-    public void ParseStatus_Succeeded_ReturnsDownloadCommand()
-    {
-        var result = GetAssessmentStatusCommand.Parse(null, "op", new(200, Guid.NewGuid(), "Succeeded", "https://sa/out.json?sig=x", null, null, null));
-
-        Assert.True(result.Success);
-        Assert.True(result.IsCompleted);
-        Assert.Null(result.RetryAfterSeconds);
-        Assert.Equal("https://sa/out.json?sig=x", result.AssessmentOutputUrl);
-        Assert.Equal("azcopy copy \"https://sa/out.json?sig=x\" \"<path to save the file>\" --from-to=BlobLocal", result.AssessmentDownloadCommand);
-        Assert.Contains("completed", result.Instructions);
-    }
-
-    [Fact]
-    public void ParseStatus_Failed_IsCompletedWithError()
-    {
-        var result = GetAssessmentStatusCommand.Parse("a", "op", new(200, Guid.NewGuid(), "Failed", null, null, "Boom", "It failed."));
-
-        Assert.True(result.Success);
-        Assert.True(result.IsCompleted);
-        Assert.Equal("It failed.", result.ErrorMessage);
-        Assert.Contains("did not complete", result.Instructions);
-    }
-
-    [Fact]
-    public void ParseStatus_NotFound_Fails()
-    {
-        var result = GetAssessmentStatusCommand.Parse("a", "op", new(404, Guid.NewGuid(), null, null, null, "OperationNotFound", null));
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.HttpStatus);
-        Assert.Contains("No assessment operation", result.Error);
-    }
-
-    [Fact]
-    public async Task Status_CallsServiceWithoutAssessmentName()
-    {
-        var client = Substitute.For<IAssessmentOperationStatusClient>();
-        Guid id = Guid.NewGuid();
-        client.GetOperationAsync(default, default, default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(Running(id));
-        var context = new DefaultHttpContext();
-        context.Request.Headers.Authorization = "Bearer token";
-        var command = new GetAssessmentStatusCommand(client, new HttpContextAccessor { HttpContext = context });
-
-        var result = await command.RunAsync(new() { OperationId = id.ToString() }, TestContext.Current.CancellationToken);
-
-        Assert.True(result.Success);
-        Assert.Null(result.AssessmentName);
-        await client.Received(1).GetOperationAsync(id, null, "token", Arg.Any<CancellationToken>());
-    }
-
     private ManualTimeProvider Time { get; } = new();
 
     private static AssessmentOperation Running(Guid id, int httpStatus = 200) => new(httpStatus, id, "Running", null, 5, null, null);
