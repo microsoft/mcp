@@ -16,23 +16,23 @@ sequenceDiagram
     U->>A: "Start a new session"
     A->>M: session_archive
     par Inventory
-        M->>DI: GET sessions
+        M->>DI: GET /mcprestapi/sessions
         DI-->>M: sessions (skillType, sessionState)
         loop Each non-archived inventory session
-            M->>DI: POST sessions/{id}/archive
+            M->>DI: POST /mcprestapi/sessions/{id}/archive
         end
         loop Every 3 s, up to 45 s, until all are Archived
-            M->>DI: GET sessions/{id}
+            M->>DI: GET /mcprestapi/sessions/{id}
             DI-->>M: sessionState
         end
     and Business case
-        M->>DB: PUT sessions/{new id} (skillType BusinessCase)
-        alt 201: no active session
+        M->>DB: PUT /mcprestapi/sessions/{new id} (skillType BusinessCase)
+        alt 201 Created: no active session
             Note over M,DB: Nothing to close
-        else 409: active session id in the error
-            M->>DB: POST sessions/{active id}/archive
+        else 409 ActiveSessionAlreadyExists (id)
+            M->>DB: POST /mcprestapi/sessions/{active id}/archive
             loop Every 3 s, up to 45 s, until it no longer blocks
-                M->>DB: PUT sessions/{new id} (probe for the active session)
+                M->>DB: PUT /mcprestapi/sessions/{new id} (probe for the active session)
                 DB-->>M: 201, or 409 with the active session id
             end
         end

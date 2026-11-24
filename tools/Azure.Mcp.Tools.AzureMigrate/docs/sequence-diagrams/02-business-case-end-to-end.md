@@ -21,12 +21,13 @@ sequenceDiagram
     participant H as HA dataplane
     participant DB as Discovery Service (business case)
     participant S as Blob storage (SAS)
+    participant K as Business case skill (TEE workflow + Foundry agent)
     participant W as Report card
 
     U->>A: "Create a business case"
     A->>M: businesscase_create(name, region, settings, session-id or inventory-sas-uri)
     opt No inventory SAS URL given
-        M->>DI: POST export?artifacts=internal (offline zip)
+        M->>DI: POST /mcprestapi/sessions/{inventoryId}/export?artifacts=internal (offline zip)
         DI-->>M: inventory SAS URL
     end
     M->>AS: PUT machineAssessmentsFromZip/{name}
@@ -44,30 +45,38 @@ sequenceDiagram
                 B-->>M: TCO manifest SAS
                 M->>H: POST /dataplane/ha/evaluate (synchronous)
                 H-->>M: HA manifest SAS
-                M->>DB: PUT session bc-{hash(asOperationId)} (skillType BusinessCase)
-                alt 409: user already has an active business case session
-                    M->>DB: PUT the active session (read its state)
-                    Note over M,DB: Still running an earlier business case: stay in stage 1 and retry later
+                M->>DB: PUT /mcprestapi/sessions/bc-{hash(asOperationId)} (skillType BusinessCase)
+                alt New session
+                    DB-->>M: 201 Created
+                else Active session exists
+                    DB-->>M: 409 ActiveSessionAlreadyExists (id)
+                    M->>DB: PUT /mcprestapi/sessions/{active id} (read its state)
+                    Note over M,DB: Reuse it if idle. If it is still running an earlier business case, stay in stage 1 and retry later
                 end
-                M->>DB: POST invoke
-                DB-->>M: dsOperationId + write SAS
+                M->>DB: POST /sessions/{id}/invoke
+                DB->>K: Start InvokeSkillWorkflow
+                DB-->>M: 202 dsOperationId + write-only SAS
                 M->>S: PUT mini zip (manifest.json with the 4 SAS URLs)
-                Note over DB,S: The Discovery Service starts the business case skill, which reads the mini zip and the 4 SAS URLs
                 Note over M: Stage 2 starts: result adds ds-session-id and ds-operation-id
+                K->>S: Mini zip uploaded? (checks blob size only)
+                K->>S: Read manifest.json with the read SAS of the mini zip
+                K->>S: Download inventory, assessment, on-prem TCO and HA outputs
+                K->>K: Build ROI.md and the internal artifacts
+                K-->>DB: Outputs + status
             end
         else Stage 2 (ds-session-id and ds-operation-id)
-            M->>DB: GET operationstatus/{dsOperationId}
+            M->>DB: GET /sessions/{id}/operationstatus/{dsOperationId}
             DB-->>M: Running / Succeeded / Failed
         end
         M-->>A: status, stage, isCompleted, nextStatusParameters
     end
 
     A->>M: businesscase_status(nextStatusParameters), once
-    M->>DB: GET operationstatus/{dsOperationId}
+    M->>DB: GET /sessions/{id}/operationstatus/{dsOperationId}
     DB-->>M: Succeeded
-    M->>DB: GET export?artifacts=external
+    M->>DB: GET /sessions/{id}/export?artifacts=external
     DB-->>M: ROI.md SAS
-    M->>DB: GET export?artifacts=internal
+    M->>DB: GET /sessions/{id}/export?artifacts=internal
     DB-->>M: artifacts ZIP SAS
     M->>S: GET ROI.md (server side, shown inline)
     S-->>M: ROI.md
