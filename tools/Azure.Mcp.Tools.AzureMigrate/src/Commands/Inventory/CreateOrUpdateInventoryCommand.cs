@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
@@ -66,7 +67,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, CreateOrUpdateInventoryOptions options, CancellationToken cancellationToken)
     {
-        CreateOrUpdateInventoryCommandResult result = await RunAsync(DsBackdoorClient.BaseUrl, DsBackdoorClient.SkillType, options, cancellationToken);
+        CreateOrUpdateInventoryCommandResult result = await RunAsync(DiscoveryServiceApi.BaseUrl, DiscoveryServiceApi.SkillType, options, cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.CreateOrUpdateInventoryCommandResult);
@@ -77,7 +78,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     private async Task<CreateOrUpdateInventoryCommandResult> RunAsync(string baseUrl, string skillType, CreateOrUpdateInventoryOptions options, CancellationToken cancellationToken)
     {
         string? requestedSessionId = string.IsNullOrWhiteSpace(options.SessionId) ? null : options.SessionId.Trim();
-        if (requestedSessionId is not null && !DsBackdoorClient.IsValidSessionId(requestedSessionId))
+        if (requestedSessionId is not null && !DiscoveryServiceApi.IsValidSessionId(requestedSessionId))
         {
             return Fail("validation", requestedSessionId, null, null,
                 "'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.");
@@ -89,7 +90,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             return Fail("validation", requestedSessionId, null, null, textOnlyError);
         }
 
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return Fail("auth", requestedSessionId, null, null, authError);
@@ -100,20 +101,20 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
             return await RunTextOnlyAsync(baseUrl, requestedSessionId!, message!, token, cancellationToken);
         }
 
-        string sessionId = requestedSessionId ?? DsBackdoorClient.NewSessionId();
+        string sessionId = requestedSessionId ?? DiscoveryServiceApi.NewSessionId();
         string clientRequestId = Guid.NewGuid().ToString();
         bool reusedSession = false;
 
         // Step 1: create the user-owned session, or confirm the requested one exists (HTTP 200).
-        string createBody = DsBackdoorClient.WriteJson(w =>
+        string createBody = DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteStartObject("properties");
             w.WriteString("skillType", skillType);
             w.WriteEndObject();
         });
-        DsBackdoorClient.DsResponse create = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "create session", cancellationToken);
-        if (create.Status == (int)HttpStatusCode.Conflict && DsBackdoorClient.ReadActiveSessionId(create.Body) is { } activeSessionId)
+        DiscoveryServiceApi.DsResponse create = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Put, DiscoveryServiceApi.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "create session", cancellationToken);
+        if (create.Status == (int)HttpStatusCode.Conflict && DiscoveryServiceApi.ReadActiveSessionId(create.Body) is { } activeSessionId)
         {
             if (requestedSessionId is not null && !string.Equals(activeSessionId, requestedSessionId, StringComparison.OrdinalIgnoreCase))
             {
@@ -138,8 +139,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
 
         // Step 2: invoke it with blob input; the response carries the write-only upload SAS URL.
         string invokeBody = BuildInvokeBody(message, textOnly: false);
-        DsBackdoorClient.DsResponse invoke = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Post, DsBackdoorClient.InvokeUrl(baseUrl, sessionId), token, invokeBody, clientRequestId, "invoke session", cancellationToken);
+        DiscoveryServiceApi.DsResponse invoke = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Post, DiscoveryServiceApi.InvokeUrl(baseUrl, sessionId), token, invokeBody, clientRequestId, "invoke session", cancellationToken);
         if (invoke.Status is not (>= 200 and < 300))
         {
             return IsSessionBusy(invoke.Status, invoke.Error)
@@ -147,8 +148,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 : Fail("invokeSession", sessionId, clientRequestId, invoke.Status, invoke.Error);
         }
 
-        string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
-        string? uploadUrl = DsBackdoorClient.ReadValue(invoke.Body, "uri");
+        string? operationId = DiscoveryServiceApi.ReadValue(invoke.Body, "operationId");
+        string? uploadUrl = DiscoveryServiceApi.ReadValue(invoke.Body, "uri");
         string? uploadCommand = BuildUploadCommand(uploadUrl);
         if (uploadCommand is null)
         {
@@ -288,8 +289,8 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
         string baseUrl, string sessionId, string message, string token, CancellationToken cancellationToken)
     {
         string clientRequestId = Guid.NewGuid().ToString();
-        DsBackdoorClient.DsResponse invoke = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Post, DsBackdoorClient.InvokeUrl(baseUrl, sessionId), token, BuildInvokeBody(message, textOnly: true),
+        DiscoveryServiceApi.DsResponse invoke = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Post, DiscoveryServiceApi.InvokeUrl(baseUrl, sessionId), token, BuildInvokeBody(message, textOnly: true),
             clientRequestId, "invoke session", cancellationToken);
         if (invoke.Status is not (>= 200 and < 300))
         {
@@ -298,7 +299,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
                 : Fail("invokeSession", sessionId, clientRequestId, invoke.Status, invoke.Error, textOnly: true);
         }
 
-        string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
+        string? operationId = DiscoveryServiceApi.ReadValue(invoke.Body, "operationId");
         _logger.LogInformation(
             "AzureMigrate inventory: session {SessionId} invoked with text only (operation {OperationId}, request {RequestId}).",
             sessionId, operationId, clientRequestId);
@@ -316,7 +317,7 @@ public sealed class CreateOrUpdateInventoryCommand(ILogger<CreateOrUpdateInvento
     internal static string BuildInvokeBody(string? message, bool textOnly) =>
         !textOnly && message is null
             ? "{}"
-            : DsBackdoorClient.WriteJson(w =>
+            : DiscoveryServiceApi.WriteJson(w =>
             {
                 if (textOnly)
                 {

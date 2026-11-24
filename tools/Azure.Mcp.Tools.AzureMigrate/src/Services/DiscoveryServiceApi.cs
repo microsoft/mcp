@@ -8,14 +8,14 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// POC helpers shared by the inventory commands to call the Discovery Service MCP backdoor
 /// (/mcprestapi/...). The caller's bearer token is forwarded unchanged and is never logged, nor is any
 /// SAS query string.
 /// </summary>
-internal static partial class DsBackdoorClient
+internal static partial class DiscoveryServiceApi
 {
     internal const string SkillTypeSettingName = "AZUREMIGRATE_INVENTORY_SKILL_TYPE";
     internal const string ApiVersion = "2026-11-11-preview";
@@ -53,6 +53,14 @@ internal static partial class DsBackdoorClient
 
     internal static string ExportUrl(string baseUrl, string sessionId, string artifacts = "external") =>
         $"{baseUrl}/mcprestapi/sessions/{sessionId}/export?api-version={ApiVersion}&artifacts={artifacts}";
+
+    /// <summary>User-facing export output of the offline zip package.</summary>
+    internal const string OfflineExportOutput = "offline";
+
+    /// <summary>
+    /// Maps the user-facing output to the Discovery Service 'artifacts' value: refined is the external output, offline the internal one.
+    /// </summary>
+    internal static string ToArtifacts(string output) => output == OfflineExportOutput ? "internal" : "external";
 
     internal static string OperationStatusUrl(string baseUrl, string sessionId, Guid operationId) =>
         $"{baseUrl}/mcprestapi/sessions/{sessionId}/operationstatus/{operationId:D}?api-version={ApiVersion}";

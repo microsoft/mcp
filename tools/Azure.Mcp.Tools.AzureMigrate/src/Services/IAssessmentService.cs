@@ -1,19 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
-/// Client for the external API that starts an Azure Catalyst machine assessment from a collector ZIP. Creating an assessment is
-/// asynchronous: the call returns an operation that is checked with <see cref="IAssessmentOperationStatusClient"/>.
+/// Service for the external API that runs an Azure Catalyst machine assessment from a collector ZIP. Creating an assessment is
+/// asynchronous: the create call returns an operation that is checked with <see cref="GetOperationAsync"/>.
 /// </summary>
-public interface IAssessmentCreateClient
+public interface IAssessmentService
 {
     /// <summary>
     /// Starts the assessment and returns its operation.
     /// </summary>
     Task<AssessmentOperation> CreateAssessmentAsync(AssessmentRequest request, string token, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reads the current state of an assessment operation.
+    /// </summary>
+    Task<AssessmentOperation> GetOperationAsync(Guid operationId, string? workspaceId, string token, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// State of an assessment operation, or the error returned by the service. <see cref="OutputUrl"/> is set only when the
+/// operation succeeded: a temporary read-only SAS URL of the assessment output.
+/// </summary>
+public sealed record AssessmentOperation(
+    int? HttpStatus,
+    Guid? OperationId,
+    string? Status,
+    string? OutputUrl,
+    int? RetryAfterSeconds,
+    string? ErrorCode,
+    string? ErrorMessage);
 
 /// <summary>
 /// Inputs of the assessment create call. <see cref="InventorySasUri"/> is a read SAS URL, so it is left out of <see cref="ToString"/>.

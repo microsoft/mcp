@@ -4,13 +4,13 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Options.Session;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Session;
 
@@ -71,7 +71,7 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
 
     private async Task<ArchiveSessionCommandResult> RunAsync(CancellationToken cancellationToken)
     {
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return new(false, authError ?? "Unknown error.", false, false,
@@ -79,8 +79,8 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
         }
 
         string clientRequestId = Guid.NewGuid().ToString();
-        Task<Outcome> inventory = ArchiveInventoryAsync(DsBackdoorClient.BaseUrl, token, clientRequestId, cancellationToken);
-        Task<Outcome> businessCase = ArchiveBusinessCaseAsync(DsHaSessionClient.BaseUrl, token, clientRequestId, cancellationToken);
+        Task<Outcome> inventory = ArchiveInventoryAsync(DiscoveryServiceApi.BaseUrl, token, clientRequestId, cancellationToken);
+        Task<Outcome> businessCase = ArchiveBusinessCaseAsync(HaSessionService.BaseUrl, token, clientRequestId, cancellationToken);
         await Task.WhenAll(inventory, businessCase);
         return BuildResult(inventory.Result, businessCase.Result);
     }
@@ -114,14 +114,14 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
 
     private async Task<Outcome> ArchiveInventoryAsync(string baseUrl, string token, string clientRequestId, CancellationToken cancellationToken)
     {
-        DsBackdoorClient.DsResponse list = await DsBackdoorClient.SendAsync(
+        DiscoveryServiceApi.DsResponse list = await DiscoveryServiceApi.SendAsync(
             _logger, HttpMethod.Get, SessionsUrl(baseUrl), token, null, clientRequestId, "list sessions", cancellationToken);
         if (list.Status is not (>= 200 and < 300))
         {
             return new(false, false, list.Error ?? $"Listing sessions failed ({list.Status}).");
         }
 
-        List<string> targets = ReadActiveSessionIds(list.Body, DsBackdoorClient.SkillType);
+        List<string> targets = ReadActiveSessionIds(list.Body, DiscoveryServiceApi.SkillType);
         if (targets.Count == 0)
         {
             return new(true, false, null);
@@ -129,7 +129,7 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
 
         foreach (string id in targets)
         {
-            DsBackdoorClient.DsResponse archive = await DsBackdoorClient.SendAsync(
+            DiscoveryServiceApi.DsResponse archive = await DiscoveryServiceApi.SendAsync(
                 _logger, HttpMethod.Post, ArchiveUrl(baseUrl, id), token, "{}", clientRequestId, "archive session", cancellationToken);
             if (archive.Status is not (>= 200 and < 300))
             {
@@ -145,9 +145,9 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
             await Task.Delay(s_pollDelay, cancellationToken);
             foreach (string id in pending.ToList())
             {
-                DsBackdoorClient.DsResponse get = await DsBackdoorClient.SendAsync(
-                    _logger, HttpMethod.Get, DsBackdoorClient.SessionUrl(baseUrl, id), token, null, clientRequestId, "read session", cancellationToken);
-                if (string.Equals(DsBackdoorClient.ReadValue(get.Body, "properties", "sessionState"), ArchivedState, StringComparison.OrdinalIgnoreCase))
+                DiscoveryServiceApi.DsResponse get = await DiscoveryServiceApi.SendAsync(
+                    _logger, HttpMethod.Get, DiscoveryServiceApi.SessionUrl(baseUrl, id), token, null, clientRequestId, "read session", cancellationToken);
+                if (string.Equals(DiscoveryServiceApi.ReadValue(get.Body, "properties", "sessionState"), ArchivedState, StringComparison.OrdinalIgnoreCase))
                 {
                     pending.Remove(id);
                 }
@@ -170,7 +170,7 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
             return new(true, false, null);
         }
 
-        DsBackdoorClient.DsResponse archive = await DsBackdoorClient.SendAsync(
+        DiscoveryServiceApi.DsResponse archive = await DiscoveryServiceApi.SendAsync(
             _logger, HttpMethod.Post, ArchiveUrl(baseUrl, sessionId), token, "{}", clientRequestId, "archive HA session", cancellationToken);
         if (archive.Status is not (>= 200 and < 300))
         {
@@ -199,29 +199,29 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
     private async Task<(int? Status, string? ActiveSessionId, string? Error)> FindActiveHaSessionAsync(
         string baseUrl, string token, string clientRequestId, CancellationToken cancellationToken)
     {
-        string body = DsBackdoorClient.WriteJson(w =>
+        string body = DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteStartObject("properties");
-            w.WriteString("skillType", DsHaSessionClient.SkillType);
+            w.WriteString("skillType", HaSessionService.SkillType);
             w.WriteEndObject();
         });
-        DsBackdoorClient.DsResponse create = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, DsHaSessionClient.NewSessionId()), token, body, clientRequestId,
+        DiscoveryServiceApi.DsResponse create = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Put, DiscoveryServiceApi.SessionUrl(baseUrl, HaSessionService.NewSessionId()), token, body, clientRequestId,
             "find active HA session", cancellationToken);
         if (create.Status is >= 200 and < 300)
         {
             return (create.Status, null, null);
         }
 
-        return create.Status == (int)HttpStatusCode.Conflict && DsBackdoorClient.ReadActiveSessionId(create.Body) is { } activeId
+        return create.Status == (int)HttpStatusCode.Conflict && DiscoveryServiceApi.ReadActiveSessionId(create.Body) is { } activeId
             ? (create.Status, activeId, null)
             : (create.Status, null, create.Error ?? "The active business case session could not be found.");
     }
 
-    internal static string SessionsUrl(string baseUrl) => $"{baseUrl}/mcprestapi/sessions?api-version={DsBackdoorClient.ApiVersion}";
+    internal static string SessionsUrl(string baseUrl) => $"{baseUrl}/mcprestapi/sessions?api-version={DiscoveryServiceApi.ApiVersion}";
 
     internal static string ArchiveUrl(string baseUrl, string sessionId) =>
-        $"{baseUrl}/mcprestapi/sessions/{sessionId}/archive?api-version={DsBackdoorClient.ApiVersion}";
+        $"{baseUrl}/mcprestapi/sessions/{sessionId}/archive?api-version={DiscoveryServiceApi.ApiVersion}";
 
     /// <summary>Returns the IDs of the listed sessions of the given skill type that are not archived yet.</summary>
     internal static List<string> ReadActiveSessionIds(string? listJson, string skillType)
@@ -243,10 +243,10 @@ public sealed class ArchiveSessionCommand(ILogger<ArchiveSessionCommand> logger,
             foreach (JsonElement session in value.EnumerateArray())
             {
                 string raw = session.GetRawText();
-                string? id = DsBackdoorClient.ReadValue(raw, "id");
-                string? skill = DsBackdoorClient.ReadValue(raw, "properties", "skillType");
-                string? state = DsBackdoorClient.ReadValue(raw, "properties", "sessionState");
-                if (DsBackdoorClient.IsValidSessionId(id)
+                string? id = DiscoveryServiceApi.ReadValue(raw, "id");
+                string? skill = DiscoveryServiceApi.ReadValue(raw, "properties", "skillType");
+                string? state = DiscoveryServiceApi.ReadValue(raw, "properties", "sessionState");
+                if (DiscoveryServiceApi.IsValidSessionId(id)
                     && string.Equals(skill, skillType, StringComparison.OrdinalIgnoreCase)
                     && !string.Equals(state, ArchivedState, StringComparison.OrdinalIgnoreCase))
                 {

@@ -3,8 +3,9 @@
 
 using System.Text.RegularExpressions;
 using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
 /// <summary>
 /// Validation and normalization of the assessment inputs and statuses that the business case commands share.

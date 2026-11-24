@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Xunit;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.Inventory;
 
@@ -65,7 +66,7 @@ public class InventoryCommandTests
     [InlineData("has space", false)]
     [InlineData("abcdefghijklmnopqrstu", false)]
     public void IsValidSessionId(string? id, bool expected) =>
-        Assert.Equal(expected, DsBackdoorClient.IsValidSessionId(id));
+        Assert.Equal(expected, DiscoveryServiceApi.IsValidSessionId(id));
 
     [Fact]
     public void OperationStatusUrl_IsBuiltFromSessionAndOperation()
@@ -74,7 +75,7 @@ public class InventoryCommandTests
 
         Assert.Equal(
             "https://ds/mcprestapi/sessions/s1/operationstatus/11111111-2222-3333-4444-555555555555?api-version=2026-11-11-preview",
-            DsBackdoorClient.OperationStatusUrl("https://ds", "s1", op));
+            DiscoveryServiceApi.OperationStatusUrl("https://ds", "s1", op));
     }
 
     [Fact]
@@ -82,8 +83,8 @@ public class InventoryCommandTests
     {
         const string body = "{\"error\":{\"code\":\"ActiveSessionAlreadyExists\",\"message\":\"An active Session 'inv-abc' already exists.\"}}";
 
-        Assert.Equal("inv-abc", DsBackdoorClient.ReadActiveSessionId(body));
-        Assert.Null(DsBackdoorClient.ReadActiveSessionId("{\"error\":{\"code\":\"Other\"}}"));
+        Assert.Equal("inv-abc", DiscoveryServiceApi.ReadActiveSessionId(body));
+        Assert.Null(DiscoveryServiceApi.ReadActiveSessionId("{\"error\":{\"code\":\"Other\"}}"));
     }
 
     [Fact]
@@ -210,11 +211,11 @@ public class InventoryCommandTests
         Assert.DoesNotContain("wait for them to confirm the upload", r.Instructions);
     }
 
-    private static readonly DsBackdoorClient.DsResponse s_running = new(200, "{\"status\":\"Running\"}", null, null);
-    private static readonly DsBackdoorClient.DsResponse s_succeeded = new(200, "{\"status\":\"Succeeded\",\"properties\":{\"result\":\"ok\"}}", null, null);
+    private static readonly DiscoveryServiceApi.DsResponse s_running = new(200, "{\"status\":\"Running\"}", null, null);
+    private static readonly DiscoveryServiceApi.DsResponse s_succeeded = new(200, "{\"status\":\"Succeeded\",\"properties\":{\"result\":\"ok\"}}", null, null);
 
     private static async Task<(GetInventoryStatusCommand.GetInventoryStatusCommandResult Result, int Calls, List<TimeSpan> Delays)> WaitAsync(
-        params DsBackdoorClient.DsResponse[] responses)
+        params DiscoveryServiceApi.DsResponse[] responses)
     {
         int calls = 0;
         List<TimeSpan> delays = [];
@@ -260,7 +261,7 @@ public class InventoryCommandTests
     [Fact]
     public async Task WaitForCompletion_NotFound_ReturnsImmediately()
     {
-        var (result, calls, delays) = await WaitAsync(new DsBackdoorClient.DsResponse(404, "{}", "x", null));
+        var (result, calls, delays) = await WaitAsync(new DiscoveryServiceApi.DsResponse(404, "{}", "x", null));
 
         Assert.False(result.Success);
         Assert.Equal(1, calls);
@@ -273,7 +274,7 @@ public class InventoryCommandTests
     public void ExportUrl_IsBuiltFromSession() =>
         Assert.Equal(
             "https://ds/mcprestapi/sessions/s1/export?api-version=2026-11-11-preview&artifacts=internal",
-            DsBackdoorClient.ExportUrl("https://ds", "s1", "internal"));
+            DiscoveryServiceApi.ExportUrl("https://ds", "s1", "internal"));
 
     [Fact]
     public void BuildDownloadCommand_QuotesSas()
@@ -343,7 +344,7 @@ public class InventoryCommandTests
         string? output = ExportInventoryCommand.NormalizeOutput(input);
 
         Assert.Equal(expectedOutput, output);
-        Assert.Equal(expectedArtifacts, ExportInventoryCommand.ToArtifacts(output!));
+        Assert.Equal(expectedArtifacts, DiscoveryServiceApi.ToArtifacts(output!));
     }
 
     [Theory]

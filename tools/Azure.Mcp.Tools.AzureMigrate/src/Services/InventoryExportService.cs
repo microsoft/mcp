@@ -3,13 +3,13 @@
 
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Gets a fresh read SAS link for an inventory output from the Discovery Service export
 /// (POST /mcprestapi/sessions/{id}/export), forwarding the caller's bearer token unchanged.
 /// </summary>
-public interface IInventoryExportClient
+public interface IInventoryExportService
 {
     /// <summary>Exports the offline collector ZIP (Discovery Service 'artifacts=internal') of the session.</summary>
     Task<InventoryExportResult> ExportOfflineAsync(string sessionId, string token, CancellationToken cancellationToken);
@@ -28,23 +28,23 @@ public sealed record InventoryExportResult(int? HttpStatus, string? Uri, string?
 /// <summary>
 /// Calls the Discovery Service export for the signed-in user's inventory session.
 /// </summary>
-public sealed class InventoryExportClient(ILogger<InventoryExportClient> logger) : IInventoryExportClient
+public sealed class InventoryExportService(ILogger<InventoryExportService> logger) : IInventoryExportService
 {
-    private readonly ILogger<InventoryExportClient> _logger = logger;
+    private readonly ILogger<InventoryExportService> _logger = logger;
 
     /// <inheritdoc/>
     public async Task<InventoryExportResult> ExportOfflineAsync(string sessionId, string token, CancellationToken cancellationToken)
     {
-        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
+        DiscoveryServiceApi.DsResponse response = await DiscoveryServiceApi.SendAsync(
             _logger, HttpMethod.Post,
-            DsBackdoorClient.ExportUrl(DsBackdoorClient.BaseUrl, sessionId, ExportInventoryCommand.ToArtifacts(ExportInventoryCommand.OfflineOutput)),
+            DiscoveryServiceApi.ExportUrl(DiscoveryServiceApi.BaseUrl, sessionId, DiscoveryServiceApi.ToArtifacts(DiscoveryServiceApi.OfflineExportOutput)),
             token, null, Guid.NewGuid().ToString(), "export", cancellationToken);
         if (response.Status is not (>= 200 and < 300))
         {
             return new(response.Status, null, response.Error);
         }
 
-        string? uri = DsBackdoorClient.ReadValue(response.Body, "uri");
+        string? uri = DiscoveryServiceApi.ReadValue(response.Body, "uri");
         return string.IsNullOrWhiteSpace(uri)
             ? new(response.Status, null, "The Discovery Service export response did not include a download URL.")
             : new(response.Status, uri, null);

@@ -4,7 +4,6 @@
 using System.IO.Compression;
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
@@ -12,6 +11,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
+using Azure.Mcp.Tools.AzureMigrate.Models;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.BusinessCase;
 
@@ -23,11 +25,11 @@ public class BusinessCaseCommandTests
     private const string HaUri = "https://sa.blob.core.windows.net/ha/manifest.json?sp=r&sig=ha";
 
     private readonly Guid _asOperationId = Guid.NewGuid();
-    private readonly IAssessmentCreateClient _create = Substitute.For<IAssessmentCreateClient>();
-    private readonly IAssessmentOperationStatusClient _asStatus = Substitute.For<IAssessmentOperationStatusClient>();
-    private readonly IBusinessCaseEvaluationClient _evaluation = Substitute.For<IBusinessCaseEvaluationClient>();
-    private readonly IHaSessionClient _ha = Substitute.For<IHaSessionClient>();
-    private readonly IInventoryExportClient _export = Substitute.For<IInventoryExportClient>();
+    private readonly IAssessmentService _create = Substitute.For<IAssessmentService>();
+    private readonly IAssessmentService _asStatus = Substitute.For<IAssessmentService>();
+    private readonly IBusinessCaseEvaluationService _evaluation = Substitute.For<IBusinessCaseEvaluationService>();
+    private readonly IHaSessionService _ha = Substitute.For<IHaSessionService>();
+    private readonly IInventoryExportService _export = Substitute.For<IInventoryExportService>();
 
     public BusinessCaseCommandTests() =>
         _ha.ExportArtifactsAsync(default!, default!, default).ReturnsForAnyArgs(new InventoryExportResult(404, null, "none"));
@@ -373,7 +375,7 @@ public class BusinessCaseCommandTests
     [InlineData(new byte[] { 0x23, 0x20, 0x52, 0x4F, 0x49 }, false)]
     [InlineData(new byte[] { 0x50, 0x4B }, false)]
     public void IsZip_DetectsZipHeader(byte[] content, bool expected) =>
-        Assert.Equal(expected, DsHaSessionClient.IsZip(content));
+        Assert.Equal(expected, HaSessionService.IsZip(content));
 
     [Fact]
     public async Task Status_RequiresBothDsIds()
@@ -401,7 +403,7 @@ public class BusinessCaseCommandTests
     [Fact]
     public void HaEvaluateBody_SendsSettingsAndYearRamp()
     {
-        string body = BusinessCaseEvaluationClient.BuildHaEvaluateBody(OutputUri, TcoUri, BusinessCaseHaSettings.Default);
+        string body = BusinessCaseEvaluationService.BuildHaEvaluateBody(OutputUri, TcoUri, BusinessCaseHaSettings.Default);
 
         using JsonDocument doc = JsonDocument.Parse(body);
         JsonElement settings = doc.RootElement.GetProperty("settings");
@@ -414,8 +416,8 @@ public class BusinessCaseCommandTests
     [Fact]
     public void ParseEvaluation_ReadsManifestAndError()
     {
-        var ok = BusinessCaseEvaluationClient.Parse(200, $"{{\"id\":\"x\",\"status\":\"Succeeded\",\"result\":{{\"manifestUri\":\"{TcoUri}\"}}}}", null);
-        var error = BusinessCaseEvaluationClient.Parse(400, "{\"error\":{\"code\":\"InvalidInventory\",\"message\":\"bad\"}}", null);
+        var ok = BusinessCaseEvaluationService.Parse(200, $"{{\"id\":\"x\",\"status\":\"Succeeded\",\"result\":{{\"manifestUri\":\"{TcoUri}\"}}}}", null);
+        var error = BusinessCaseEvaluationService.Parse(400, "{\"error\":{\"code\":\"InvalidInventory\",\"message\":\"bad\"}}", null);
 
         Assert.Equal(("Succeeded", TcoUri), (ok.Status, ok.ManifestUri));
         Assert.Equal(("InvalidInventory", "bad"), (error.ErrorCode, error.ErrorMessage));
@@ -433,7 +435,7 @@ public class BusinessCaseCommandTests
         _evaluation.GetHaSummaryAsync(default!, TestContext.Current.CancellationToken).ReturnsForAnyArgs(
             new HaSummaryResult(httpStatus, summary, summary is null ? "error" : null));
         var command = new GetBusinessCaseStatusCommand(
-            _asStatus, _evaluation, new MockHaSessionClient(NullLogger<MockHaSessionClient>.Instance), Accessor());
+            _asStatus, _evaluation, new MockHaSessionService(NullLogger<MockHaSessionService>.Instance), Accessor());
 
         var result = await command.RunAsync(StatusOptions(), TestContext.Current.CancellationToken);
 
@@ -456,15 +458,15 @@ public class BusinessCaseCommandTests
               "PaasCentric":{"businessCase":null,"businessCaseUnavailableReason":"Not computed."}},"diagnostics":{}}}
             """;
 
-        string? summary = BusinessCaseEvaluationClient.BuildHaSummary(manifest);
+        string? summary = BusinessCaseEvaluationService.BuildHaSummary(manifest);
 
         Assert.Equal(
             "{\"currency\":\"USD\",\"strategies\":[{\"strategy\":\"PaasPreferred\",\"status\":\"Complete\",\"annualSavings\":57273.13," +
             "\"paybackPeriodYears\":1,\"azureTotalCost\":123059.09,\"onPremisesTotalCost\":180332.22,\"yearOnYear\":[{\"year\":\"Year1\"," +
             "\"onPremisesCost\":160274,\"azureCost\":138188.81,\"savings\":22085.19}]},{\"strategy\":\"PaasCentric\",\"unavailableReason\":\"Not computed.\"}]}",
             summary);
-        Assert.Null(BusinessCaseEvaluationClient.BuildHaSummary("{\"summary\":{}}"));
-        Assert.Null(BusinessCaseEvaluationClient.BuildHaSummary("not json"));
+        Assert.Null(BusinessCaseEvaluationService.BuildHaSummary("{\"summary\":{}}"));
+        Assert.Null(BusinessCaseEvaluationService.BuildHaSummary("not json"));
     }
 
     [Fact]

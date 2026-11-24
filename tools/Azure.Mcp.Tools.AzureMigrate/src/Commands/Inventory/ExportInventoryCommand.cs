@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
@@ -39,7 +40,7 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
 {
     internal const string FilePathPlaceholder = "<path to save the file>";
     internal const string RefinedOutput = "refined";
-    internal const string OfflineOutput = "offline";
+    internal const string OfflineOutput = DiscoveryServiceApi.OfflineExportOutput;
 
     private readonly ILogger<ExportInventoryCommand> _logger = logger;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
@@ -47,7 +48,7 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ExportInventoryOptions options, CancellationToken cancellationToken)
     {
-        ExportInventoryCommandResult result = await RunAsync(DsBackdoorClient.BaseUrl, options, cancellationToken);
+        ExportInventoryCommandResult result = await RunAsync(DiscoveryServiceApi.BaseUrl, options, cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.ExportInventoryCommandResult);
@@ -58,7 +59,7 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
     private async Task<ExportInventoryCommandResult> RunAsync(string baseUrl, ExportInventoryOptions options, CancellationToken cancellationToken)
     {
         string? sessionId = options.SessionId?.Trim();
-        if (!DsBackdoorClient.IsValidSessionId(sessionId))
+        if (!DiscoveryServiceApi.IsValidSessionId(sessionId))
         {
             return Fail(sessionId, null, null, "'session-id' is required: 1-20 characters using only letters, digits, '-' or '_'.");
         }
@@ -69,14 +70,14 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
             return Fail(sessionId, null, null, $"'output' must be '{RefinedOutput}' or '{OfflineOutput}'.");
         }
 
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return Fail(sessionId, output, null, authError);
         }
 
-        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Post, DsBackdoorClient.ExportUrl(baseUrl, sessionId!, ToArtifacts(output)), token, null,
+        DiscoveryServiceApi.DsResponse response = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Post, DiscoveryServiceApi.ExportUrl(baseUrl, sessionId!, DiscoveryServiceApi.ToArtifacts(output)), token, null,
             Guid.NewGuid().ToString(), "export", cancellationToken);
         return Parse(sessionId!, output, response);
     }
@@ -94,12 +95,7 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
         return string.Equals(output.Trim(), OfflineOutput, StringComparison.OrdinalIgnoreCase) ? OfflineOutput : null;
     }
 
-    /// <summary>
-    /// Maps the user-facing output to the Discovery Service 'artifacts' value: refined is the external output, offline the internal one.
-    /// </summary>
-    internal static string ToArtifacts(string output) => output == OfflineOutput ? "internal" : "external";
-
-    internal static ExportInventoryCommandResult Parse(string sessionId, string output, DsBackdoorClient.DsResponse response)
+    internal static ExportInventoryCommandResult Parse(string sessionId, string output, DiscoveryServiceApi.DsResponse response)
     {
         string label = output == OfflineOutput ? "offline zip package" : "refined inventory file";
         if (response.Status == (int)HttpStatusCode.NotFound)
@@ -120,7 +116,7 @@ public sealed class ExportInventoryCommand(ILogger<ExportInventoryCommand> logge
             return Fail(sessionId, output, response.Status, response.Error);
         }
 
-        string? downloadUrl = DsBackdoorClient.ReadValue(response.Body, "uri");
+        string? downloadUrl = DiscoveryServiceApi.ReadValue(response.Body, "uri");
         string? downloadCommand = BuildDownloadCommand(downloadUrl);
         if (downloadCommand is null)
         {

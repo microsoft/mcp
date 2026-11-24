@@ -2,13 +2,15 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
+using Azure.Mcp.Tools.AzureMigrate.Models;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 
@@ -52,7 +54,7 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
     Secret = false,
     LocalRequired = false)]
 public sealed class CreateBusinessCaseCommand(
-    IAssessmentCreateClient createClient, IInventoryExportClient exportClient, IHttpContextAccessor httpContextAccessor)
+    IAssessmentService assessmentService, IInventoryExportService exportService, IHttpContextAccessor httpContextAccessor)
     : BaseCommand<CreateBusinessCaseOptions, BusinessCaseCommandResult>
 {
     internal const string CommandId = "eacaf2d9-6983-41dd-bd91-b0502d9ca2d6";
@@ -61,8 +63,8 @@ public sealed class CreateBusinessCaseCommand(
     internal const string DefaultSavingsOption = "RI3Year";
     internal const string DefaultAzureHybridBenefit = "Yes";
 
-    private readonly IAssessmentCreateClient _createClient = createClient;
-    private readonly IInventoryExportClient _exportClient = exportClient;
+    private readonly IAssessmentService _assessmentService = assessmentService;
+    private readonly IInventoryExportService _exportService = exportService;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <inheritdoc/>
@@ -108,7 +110,7 @@ public sealed class CreateBusinessCaseCommand(
                     "An inventory is required: pass 'session-id' of the user's inventory or 'inventory-sas-uri' of a collector ZIP.", name);
             }
 
-            if (!DsBackdoorClient.IsValidSessionId(sessionId))
+            if (!DiscoveryServiceApi.IsValidSessionId(sessionId))
             {
                 return BusinessCaseStages.Invalid("'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.", name);
             }
@@ -146,7 +148,7 @@ public sealed class CreateBusinessCaseCommand(
             return BusinessCaseStages.Invalid(string.Join(" ", new[] { assessmentError, haError }.Where(e => e is not null)), name);
         }
 
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return BusinessCaseStages.Invalid(authError, name);
@@ -158,7 +160,7 @@ public sealed class CreateBusinessCaseCommand(
 
         if (string.IsNullOrEmpty(inventorySasUri))
         {
-            InventoryExportResult export = await _exportClient.ExportOfflineAsync(sessionId!, token, cancellationToken);
+            InventoryExportResult export = await _exportService.ExportOfflineAsync(sessionId!, token, cancellationToken);
             if (!AssessmentValidation.IsValidInventorySasUri(export.Uri))
             {
                 return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
@@ -173,7 +175,7 @@ public sealed class CreateBusinessCaseCommand(
         }
 
         AssessmentRequest request = new(name!, WorkspaceId: null, inventorySasUri!, region, Currency, assessmentSettings);
-        AssessmentOperation operation = await _createClient.CreateAssessmentAsync(request, token, cancellationToken);
+        AssessmentOperation operation = await _assessmentService.CreateAssessmentAsync(request, token, cancellationToken);
         if (operation.HttpStatus is not (>= 200 and < 300) || operation.OperationId is null)
         {
             return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,

@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
+namespace Azure.Mcp.Tools.AzureMigrate.Models;
 
 /// <summary>
 /// Business case settings sent to the HA evaluate, all percentages from 0 to 100. <see cref="MigrationCompletionByYear"/> holds the

@@ -4,15 +4,16 @@
 using System.Net;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Microsoft.Extensions.Logging;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Starts the HA skill on the Discovery Service MCP backdoor: a session PUT with the HA skill type, an invoke, whose response carries
 /// the write-only SAS URL for the HA input, and the upload of the HA input mini zip to that URL. The caller's bearer token is
 /// forwarded unchanged to the Discovery Service only, never to the SAS URL, and is never logged, nor is any SAS query string.
 /// </summary>
-public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSessionClient
+public sealed class HaSessionService(ILogger<HaSessionService> logger) : IHaSessionService
 {
     internal const string SkillTypeSettingName = "AZUREMIGRATE_HA_SKILL_TYPE";
     private const string DefaultSkillType = "BusinessCase";
@@ -35,7 +36,7 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
 
     private static readonly HttpClient s_storageHttp = new() { Timeout = TimeSpan.FromSeconds(30) };
 
-    private readonly ILogger<DsHaSessionClient> _logger = logger;
+    private readonly ILogger<HaSessionService> _logger = logger;
 
     internal static string SkillType =>
         Environment.GetEnvironmentVariable(SkillTypeSettingName) is { Length: > 0 } s ? s.Trim() : DefaultSkillType;
@@ -53,15 +54,15 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     /// <inheritdoc/>
     public async Task<HaOperationStatus> GetOperationStatusAsync(string token, string sessionId, Guid operationId, CancellationToken cancellationToken)
     {
-        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Get, DsBackdoorClient.OperationStatusUrl(BaseUrl, sessionId, operationId), token, null,
+        DiscoveryServiceApi.DsResponse response = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Get, DiscoveryServiceApi.OperationStatusUrl(BaseUrl, sessionId, operationId), token, null,
             Guid.NewGuid().ToString(), "get HA operation status", cancellationToken);
         return new(
             response.Status,
-            DsBackdoorClient.ReadValue(response.Body, "status"),
-            DsBackdoorClient.ReadValue(response.Body, "properties", "result"),
-            DsBackdoorClient.ReadValue(response.Body, "error", "code"),
-            DsBackdoorClient.ReadValue(response.Body, "error", "message"),
+            DiscoveryServiceApi.ReadValue(response.Body, "status"),
+            DiscoveryServiceApi.ReadValue(response.Body, "properties", "result"),
+            DiscoveryServiceApi.ReadValue(response.Body, "error", "code"),
+            DiscoveryServiceApi.ReadValue(response.Body, "error", "message"),
             response.Error,
             response.RetryAfterSeconds);
     }
@@ -77,15 +78,15 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
     private async Task<InventoryExportResult> ExportCoreAsync(
         string token, string sessionId, string artifacts, string operation, CancellationToken cancellationToken)
     {
-        DsBackdoorClient.DsResponse response = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Get, DsBackdoorClient.ExportUrl(BaseUrl, sessionId, artifacts), token, null,
+        DiscoveryServiceApi.DsResponse response = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Get, DiscoveryServiceApi.ExportUrl(BaseUrl, sessionId, artifacts), token, null,
             Guid.NewGuid().ToString(), operation, cancellationToken);
         if (response.Status is not (>= 200 and < 300))
         {
             return new(response.Status, null, response.Error);
         }
 
-        string? uri = DsBackdoorClient.ReadValue(response.Body, "uri");
+        string? uri = DiscoveryServiceApi.ReadValue(response.Body, "uri");
         return string.IsNullOrWhiteSpace(uri)
             ? new(response.Status, null, "The Discovery Service export response did not include a download URL.")
             : new(response.Status, uri, null);
@@ -143,17 +144,17 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
         string clientRequestId = Guid.NewGuid().ToString();
         string skillType = SkillType;
 
-        string createBody = DsBackdoorClient.WriteJson(w =>
+        string createBody = DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteStartObject("properties");
             w.WriteString("skillType", skillType);
             w.WriteEndObject();
         });
-        DsBackdoorClient.DsResponse create = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "create HA session", cancellationToken);
+        DiscoveryServiceApi.DsResponse create = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Put, DiscoveryServiceApi.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "create HA session", cancellationToken);
 
         bool reused = false;
-        if (reuseActiveSession && create.Status == (int)HttpStatusCode.Conflict && DsBackdoorClient.ReadActiveSessionId(create.Body) is { } activeSessionId)
+        if (reuseActiveSession && create.Status == (int)HttpStatusCode.Conflict && DiscoveryServiceApi.ReadActiveSessionId(create.Body) is { } activeSessionId)
         {
             // One active session per user and skill type: on a later run, continue in the caller's existing HA session.
             sessionId = activeSessionId;
@@ -161,9 +162,9 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
 
             // A PUT of an existing session returns it unchanged, with its state. While it still runs an earlier business case, wait
             // for it to finish instead of invoking it.
-            DsBackdoorClient.DsResponse active = await DsBackdoorClient.SendAsync(
-                _logger, HttpMethod.Put, DsBackdoorClient.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "read active HA session", cancellationToken);
-            string? state = DsBackdoorClient.ReadValue(active.Body, "properties", "sessionState");
+            DiscoveryServiceApi.DsResponse active = await DiscoveryServiceApi.SendAsync(
+                _logger, HttpMethod.Put, DiscoveryServiceApi.SessionUrl(baseUrl, sessionId), token, createBody, clientRequestId, "read active HA session", cancellationToken);
+            string? state = DiscoveryServiceApi.ReadValue(active.Body, "properties", "sessionState");
             if (IsBusy(state))
             {
                 _logger.LogInformation("AzureMigrate HA: active session {SessionId} is {State}; waiting for it to finish.", sessionId, state);
@@ -175,15 +176,15 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
             return new("createSession", create.Status, sessionId, false, null, clientRequestId, create.Error);
         }
 
-        DsBackdoorClient.DsResponse invoke = await DsBackdoorClient.SendAsync(
-            _logger, HttpMethod.Post, DsBackdoorClient.InvokeUrl(baseUrl, sessionId), token, "{}", clientRequestId, "invoke HA session", cancellationToken);
+        DiscoveryServiceApi.DsResponse invoke = await DiscoveryServiceApi.SendAsync(
+            _logger, HttpMethod.Post, DiscoveryServiceApi.InvokeUrl(baseUrl, sessionId), token, "{}", clientRequestId, "invoke HA session", cancellationToken);
         if (invoke.Status is not (>= 200 and < 300))
         {
             return new("invokeSession", invoke.Status, sessionId, reused, null, clientRequestId, invoke.Error);
         }
 
-        string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
-        string? uploadUrl = DsBackdoorClient.ReadValue(invoke.Body, "uri");
+        string? operationId = DiscoveryServiceApi.ReadValue(invoke.Body, "operationId");
+        string? uploadUrl = DiscoveryServiceApi.ReadValue(invoke.Body, "uri");
         if (!AssessmentValidation.IsValidInventorySasUri(uploadUrl))
         {
             return new("invokeSession", invoke.Status, sessionId, reused, operationId, clientRequestId,

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.AzureMigrate.Models;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 

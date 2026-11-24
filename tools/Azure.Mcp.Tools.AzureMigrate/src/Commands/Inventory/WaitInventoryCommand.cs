@@ -6,6 +6,7 @@ using System.Net;
 using Azure.Mcp.Tools.AzureMigrate.Options.Inventory;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
@@ -50,7 +51,7 @@ public sealed class WaitInventoryCommand(GetInventoryStatusCommand statusCommand
         do
         {
             result = await _statusCommand.RunAsync(
-                DsBackdoorClient.BaseUrl,
+                DiscoveryServiceApi.BaseUrl,
                 new GetInventoryStatusOptions { SessionId = options.SessionId, OperationId = options.OperationId, NoWait = false },
                 cancellationToken);
         }

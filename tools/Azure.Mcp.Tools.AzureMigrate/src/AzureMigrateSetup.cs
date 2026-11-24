@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Session;
@@ -51,19 +50,18 @@ public class AzureMigrateSetup : IAreaSetup
         services.AddSingleton<ExportInventoryCommand>();
         services.AddSingleton<WaitInventoryCommand>();
 
-        // Assessment (POC): external assessment create and operation status APIs (placeholders for now).
-        services.AddSingleton<IAssessmentCreateClient, AssessmentCreateClient>();
-        services.AddSingleton<IAssessmentOperationStatusClient, AssessmentOperationStatusClient>();
+        // Assessment (POC): external assessment create and operation status APIs.
+        services.AddSingleton<IAssessmentService, AssessmentService>();
         // The business case skill runs on the Discovery Service at AZUREMIGRATE_HA_DS_BASE_URL; set AZUREMIGRATE_HA_MOCK=true to mock it.
-        services.AddSingleton<DsHaSessionClient>();
-        services.AddSingleton<MockHaSessionClient>();
-        services.AddSingleton<IHaSessionClient>(sp => MockHaSessionClient.IsEnabled
-            ? sp.GetRequiredService<MockHaSessionClient>()
-            : sp.GetRequiredService<DsHaSessionClient>());
+        services.AddSingleton<HaSessionService>();
+        services.AddSingleton<MockHaSessionService>();
+        services.AddSingleton<IHaSessionService>(sp => MockHaSessionService.IsEnabled
+            ? sp.GetRequiredService<MockHaSessionService>()
+            : sp.GetRequiredService<HaSessionService>());
 
         // Business case (POC): create starts the assessment; each status call moves the business case forward, statelessly.
-        services.AddSingleton<IBusinessCaseEvaluationClient, BusinessCaseEvaluationClient>();
-        services.AddSingleton<IInventoryExportClient, InventoryExportClient>();
+        services.AddSingleton<IBusinessCaseEvaluationService, BusinessCaseEvaluationService>();
+        services.AddSingleton<IInventoryExportService, InventoryExportService>();
         services.AddSingleton<CreateBusinessCaseCommand>();
         services.AddSingleton<GetBusinessCaseStatusCommand>();
         services.AddSingleton<WaitBusinessCaseCommand>();

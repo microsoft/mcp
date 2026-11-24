@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 
@@ -74,7 +75,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     /// <inheritdoc/>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, GetInventoryStatusOptions options, CancellationToken cancellationToken)
     {
-        GetInventoryStatusCommandResult result = await RunAsync(DsBackdoorClient.BaseUrl, options, cancellationToken);
+        GetInventoryStatusCommandResult result = await RunAsync(DiscoveryServiceApi.BaseUrl, options, cancellationToken);
 
         context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create(result, AzureMigrateJsonContext.Default.GetInventoryStatusCommandResult);
@@ -86,7 +87,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     {
         string? sessionId = options.SessionId?.Trim();
         string? operationIdText = options.OperationId?.Trim();
-        if (!DsBackdoorClient.IsValidSessionId(sessionId))
+        if (!DiscoveryServiceApi.IsValidSessionId(sessionId))
         {
             return Fail(sessionId, operationIdText, null, "'session-id' is required: 1-20 characters using only letters, digits, '-' or '_'.");
         }
@@ -96,25 +97,25 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             return Fail(sessionId, operationIdText, null, "'operation-id' is required and must be a GUID.");
         }
 
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return Fail(sessionId, operationIdText, null, authError);
         }
 
-        string url = DsBackdoorClient.OperationStatusUrl(baseUrl, sessionId!, operationId);
+        string url = DiscoveryServiceApi.OperationStatusUrl(baseUrl, sessionId!, operationId);
         if (options.NoWait == true)
         {
             // The upload panel calls this tool through the host, which cuts off widget tools/call after about 27 seconds, so the
             // panel asks for a single check (no wait). The panel only displays progress; the agent's waiting calls do the tracking.
             return Parse(sessionId!, operationId.ToString("D"),
-                await DsBackdoorClient.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", cancellationToken));
+                await DiscoveryServiceApi.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", cancellationToken));
         }
 
         return await WaitForCompletionAsync(
             sessionId!,
             operationId.ToString("D"),
-            ct => DsBackdoorClient.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", ct),
+            ct => DiscoveryServiceApi.SendAsync(_logger, HttpMethod.Get, url, token, null, Guid.NewGuid().ToString(), "get operation status", ct),
             (delay, ct) => Task.Delay(delay, ct),
             cancellationToken);
     }
@@ -126,7 +127,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     internal static async Task<GetInventoryStatusCommandResult> WaitForCompletionAsync(
         string sessionId,
         string operationId,
-        Func<CancellationToken, Task<DsBackdoorClient.DsResponse>> getStatusAsync,
+        Func<CancellationToken, Task<DiscoveryServiceApi.DsResponse>> getStatusAsync,
         Func<TimeSpan, CancellationToken, Task> delayAsync,
         CancellationToken cancellationToken)
     {
@@ -154,7 +155,7 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
     /// 'inventory' or 'HA assessment') in the error and instructions.
     /// </summary>
     internal static GetInventoryStatusCommandResult Parse(
-        string sessionId, string operationId, DsBackdoorClient.DsResponse response, string subject = InventorySubject)
+        string sessionId, string operationId, DiscoveryServiceApi.DsResponse response, string subject = InventorySubject)
     {
         if (response.Status == (int)HttpStatusCode.NotFound)
         {
@@ -173,14 +174,14 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
                     : null);
         }
 
-        string? status = DsBackdoorClient.ReadValue(response.Body, "status");
+        string? status = DiscoveryServiceApi.ReadValue(response.Body, "status");
         if (string.IsNullOrWhiteSpace(status))
         {
             return Fail(sessionId, operationId, response.Status, "The Discovery Service response did not include a status.");
         }
 
         bool isCompleted = s_terminalStatuses.Contains(status, StringComparer.OrdinalIgnoreCase);
-        string? errorCode = DsBackdoorClient.ReadValue(response.Body, "error", "code");
+        string? errorCode = DiscoveryServiceApi.ReadValue(response.Body, "error", "code");
         return new(
             Success: true,
             Error: null,
@@ -189,9 +190,9 @@ public sealed class GetInventoryStatusCommand(ILogger<GetInventoryStatusCommand>
             OperationId: operationId,
             Status: status,
             IsCompleted: isCompleted,
-            Result: DsBackdoorClient.ReadValue(response.Body, "properties", "result"),
+            Result: DiscoveryServiceApi.ReadValue(response.Body, "properties", "result"),
             ErrorCode: errorCode,
-            ErrorMessage: DsBackdoorClient.ReadValue(response.Body, "error", "message"),
+            ErrorMessage: DiscoveryServiceApi.ReadValue(response.Body, "error", "message"),
             RetryAfterSeconds: isCompleted ? null : response.RetryAfterSeconds ?? 30,
             Instructions: GetInstructions(status, isCompleted, errorCode, subject));
     }

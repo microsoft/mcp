@@ -5,12 +5,14 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Azure.Mcp.Tools.AzureMigrate.Options.BusinessCase;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
+using Azure.Mcp.Tools.AzureMigrate.Models;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
 
@@ -52,18 +54,18 @@ namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
     Secret = false,
     LocalRequired = false)]
 public sealed class GetBusinessCaseStatusCommand(
-    IAssessmentOperationStatusClient assessmentStatusClient,
-    IBusinessCaseEvaluationClient evaluationClient,
-    IHaSessionClient haClient,
+    IAssessmentService assessmentService,
+    IBusinessCaseEvaluationService evaluationService,
+    IHaSessionService haService,
     IHttpContextAccessor httpContextAccessor)
     : BaseCommand<GetBusinessCaseStatusOptions, BusinessCaseCommandResult>
 {
     internal const string CommandId = "83765d81-da5b-4d77-8c0d-526cc20f0066";
     internal const int DefaultRetryAfterSeconds = 30;
 
-    private readonly IAssessmentOperationStatusClient _assessmentStatusClient = assessmentStatusClient;
-    private readonly IBusinessCaseEvaluationClient _evaluationClient = evaluationClient;
-    private readonly IHaSessionClient _haClient = haClient;
+    private readonly IAssessmentService _assessmentService = assessmentService;
+    private readonly IBusinessCaseEvaluationService _evaluationService = evaluationService;
+    private readonly IHaSessionService _haService = haService;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     /// <summary>
@@ -118,7 +120,7 @@ public sealed class GetBusinessCaseStatusCommand(
         string? dsOperationIdText = string.IsNullOrWhiteSpace(options.DsOperationId) ? null : options.DsOperationId.Trim();
         Guid dsOperationId = Guid.Empty;
         if ((dsSessionId is null) != (dsOperationIdText is null)
-            || (dsSessionId is not null && (!DsBackdoorClient.IsValidSessionId(dsSessionId) || !Guid.TryParse(dsOperationIdText, out dsOperationId))))
+            || (dsSessionId is not null && (!DiscoveryServiceApi.IsValidSessionId(dsSessionId) || !Guid.TryParse(dsOperationIdText, out dsOperationId))))
         {
             return BusinessCaseStages.Invalid(
                 "'ds-session-id' and 'ds-operation-id' must be passed together, unchanged from 'nextStatusParameters'.", name, asOperationIdText);
@@ -130,7 +132,7 @@ public sealed class GetBusinessCaseStatusCommand(
             return BusinessCaseStages.Invalid(settingsError, name, asOperationIdText);
         }
 
-        (string? token, string? authError) = DsBackdoorClient.GetBearerToken(_httpContextAccessor);
+        (string? token, string? authError) = DiscoveryServiceApi.GetBearerToken(_httpContextAccessor);
         if (token is null)
         {
             return BusinessCaseStages.Invalid(authError, name, asOperationIdText);
@@ -146,7 +148,7 @@ public sealed class GetBusinessCaseStatusCommand(
         Context ctx, string token, string sessionId, Guid operationId, CancellationToken cancellationToken)
     {
         string operationIdText = operationId.ToString("D");
-        if (MockHaSessionClient.IsMockSession(sessionId))
+        if (MockHaSessionService.IsMockSession(sessionId))
         {
             return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, (int)HttpStatusCode.OK, null, null,
                 "Mocked HA result: the HA skill is not deployed yet, so no HA skill was run.",
@@ -155,7 +157,7 @@ public sealed class GetBusinessCaseStatusCommand(
                     "create the business case again once the HA skill is deployed."));
         }
 
-        HaOperationStatus status = await _haClient.GetOperationStatusAsync(token, sessionId, operationId, cancellationToken);
+        HaOperationStatus status = await _haService.GetOperationStatusAsync(token, sessionId, operationId, cancellationToken);
         if (status.HttpStatus is 401 or 403 or 404)
         {
             return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "haSkillStatus", status.HttpStatus, status.ErrorCode,
@@ -170,10 +172,10 @@ public sealed class GetBusinessCaseStatusCommand(
 
         if (string.Equals(status.Status, BusinessCaseStages.Succeeded, StringComparison.OrdinalIgnoreCase))
         {
-            InventoryExportResult report = await _haClient.ExportAsync(token, sessionId, cancellationToken);
+            InventoryExportResult report = await _haService.ExportAsync(token, sessionId, cancellationToken);
             if (report.Uri is not null)
             {
-                InventoryExportResult artifacts = await _haClient.ExportArtifactsAsync(token, sessionId, cancellationToken);
+                InventoryExportResult artifacts = await _haService.ExportArtifactsAsync(token, sessionId, cancellationToken);
                 string? artifactsUri = artifacts.Uri;
                 string artifactsLink = artifactsUri is null ? "" :
                     " Also give a clickable Markdown link to 'artifacts' (a ZIP of all business case artifacts) exactly as given, for " +
@@ -189,7 +191,7 @@ public sealed class GetBusinessCaseStatusCommand(
                             ReplyFormat.AfterBusinessCase)) with { Artifacts = artifactsUri };
                 }
 
-                string? markdown = await _haClient.DownloadReportAsync(report.Uri, cancellationToken);
+                string? markdown = await _haService.DownloadReportAsync(report.Uri, cancellationToken);
                 if (markdown is not null)
                 {
                     return Finished(ctx, BusinessCaseStages.Succeeded, sessionId, operationIdText, null, report.HttpStatus, null, null, report.Uri,
@@ -237,7 +239,7 @@ public sealed class GetBusinessCaseStatusCommand(
 
     private async Task<BusinessCaseCommandResult> AdvanceAssessmentAsync(Context ctx, string token, CancellationToken cancellationToken)
     {
-        AssessmentOperation operation = await _assessmentStatusClient.GetOperationAsync(ctx.AsOperationId, null, token, cancellationToken);
+        AssessmentOperation operation = await _assessmentService.GetOperationAsync(ctx.AsOperationId, null, token, cancellationToken);
         if (operation.HttpStatus is 401 or 403 or 404)
         {
             return Finished(ctx, BusinessCaseStages.Failed, null, null, "assessmentStatus", operation.HttpStatus, operation.ErrorCode,
@@ -262,19 +264,19 @@ public sealed class GetBusinessCaseStatusCommand(
                 ReplyFormat.Failure("Business case stopped: its assessment returned no output.", RecreateNextStep));
         }
 
-        EvaluationResult tco = await _evaluationClient.GetOnPremTcoAsync(token, operation.OutputUrl!, ctx.InventorySasUri, cancellationToken);
+        EvaluationResult tco = await _evaluationService.GetOnPremTcoAsync(token, operation.OutputUrl!, ctx.InventorySasUri, cancellationToken);
         if (CheckEvaluation(ctx, tco, "onPremTco") is { } tcoResult)
         {
             return tcoResult;
         }
 
-        EvaluationResult ha = await _evaluationClient.EvaluateHaAsync(token, operation.OutputUrl!, tco.ManifestUri!, ctx.Settings, cancellationToken);
+        EvaluationResult ha = await _evaluationService.EvaluateHaAsync(token, operation.OutputUrl!, tco.ManifestUri!, ctx.Settings, cancellationToken);
         if (CheckEvaluation(ctx, ha, "haEvaluate") is { } haResult)
         {
             return haResult;
         }
 
-        if (_haClient is MockHaSessionClient)
+        if (_haService is MockHaSessionService)
         {
             return await FinishFromHaEvaluationAsync(ctx, ha.ManifestUri!, cancellationToken);
         }
@@ -334,7 +336,7 @@ public sealed class GetBusinessCaseStatusCommand(
     private async Task<BusinessCaseCommandResult> StartFinalStageAsync(
         Context ctx, string token, string assessmentOutputUrl, string tcoManifestUri, string haManifestUri, CancellationToken cancellationToken)
     {
-        HaSessionResult start = await _haClient.StartInSessionAsync(
+        HaSessionResult start = await _haService.StartInSessionAsync(
             token, new HaInput(ctx.InventorySasUri, assessmentOutputUrl, tcoManifestUri, haManifestUri), SessionIdFor(ctx.AsOperationId),
             cancellationToken);
         if (start.FailedStep is null && start.SessionId is not null && start.OperationId is not null)
@@ -345,7 +347,7 @@ public sealed class GetBusinessCaseStatusCommand(
         }
 
         // The caller's active session still runs an earlier business case: wait for it to finish, then run in it.
-        if (start.FailedStep == DsHaSessionClient.SessionBusyStep)
+        if (start.FailedStep == HaSessionService.SessionBusyStep)
         {
             return Running(ctx, BusinessCaseStages.Assessment, null, null, start.HttpStatus, null,
                 "If you have not already said so, tell the user once that an earlier ROI summary of theirs is still running and this one " +
@@ -383,7 +385,7 @@ public sealed class GetBusinessCaseStatusCommand(
     /// </summary>
     private async Task<BusinessCaseCommandResult> FinishFromHaEvaluationAsync(Context ctx, string haManifestUri, CancellationToken cancellationToken)
     {
-        HaSummaryResult summary = await _evaluationClient.GetHaSummaryAsync(haManifestUri, cancellationToken);
+        HaSummaryResult summary = await _evaluationService.GetHaSummaryAsync(haManifestUri, cancellationToken);
         if (summary.Summary is not null)
         {
             return Finished(ctx, BusinessCaseStages.Succeeded, null, null, null, summary.HttpStatus, null, null, summary.Summary,

@@ -4,10 +4,11 @@
 using System.IO.Compression;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
 using Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.Assessment;
 
@@ -125,7 +126,7 @@ public class AssessmentCommandTests
         using (Utf8JsonWriter writer = new(stream))
         {
             writer.WriteStartObject();
-            AssessmentCreateClient.WriteSettings(writer, new AssessmentSettings
+            AssessmentService.WriteSettings(writer, new AssessmentSettings
             {
                 SavingsOption = "RI1Year",
                 UptimeHoursPerDay = 8,

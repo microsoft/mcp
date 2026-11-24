@@ -4,19 +4,19 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Mock HA client used until the HA skill is deployed on the Discovery Service. It makes no calls and returns a started HA session
 /// whose id starts with <see cref="SessionIdPrefix"/>, which the HA status tool recognises and answers with a mocked result.
-/// Off by default; set <see cref="MockSettingName"/> to <c>true</c> to use it instead of <see cref="DsHaSessionClient"/>.
+/// Off by default; set <see cref="MockSettingName"/> to <c>true</c> to use it instead of <see cref="HaSessionService"/>.
 /// </summary>
-public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : IHaSessionClient
+public sealed class MockHaSessionService(ILogger<MockHaSessionService> logger) : IHaSessionService
 {
     internal const string MockSettingName = "AZUREMIGRATE_HA_MOCK";
     internal const string SessionIdPrefix = "ha-mock-";
 
-    private readonly ILogger<MockHaSessionClient> _logger = logger;
+    private readonly ILogger<MockHaSessionService> _logger = logger;
 
     /// <summary>True only when <see cref="MockSettingName"/> is set to <c>true</c>.</summary>
     internal static bool IsEnabled =>
@@ -49,12 +49,12 @@ public sealed class MockHaSessionClient(ILogger<MockHaSessionClient> logger) : I
         Task.FromResult(new HaOperationStatus((int)HttpStatusCode.OK, "Succeeded", null, null, null, null, null));
 
     /// <inheritdoc/>
-    public Task<Inventory.InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken) =>
-        Task.FromResult(new Inventory.InventoryExportResult(null, null, "HA is mocked, so there is no report to export."));
+    public Task<InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        Task.FromResult(new InventoryExportResult(null, null, "HA is mocked, so there is no report to export."));
 
     /// <inheritdoc/>
-    public Task<Inventory.InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken) =>
-        Task.FromResult(new Inventory.InventoryExportResult(null, null, "HA is mocked, so there are no artifacts to export."));
+    public Task<InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken) =>
+        Task.FromResult(new InventoryExportResult(null, null, "HA is mocked, so there are no artifacts to export."));
 
     /// <inheritdoc/>
     public Task<string?> DownloadReportAsync(string reportUri, CancellationToken cancellationToken) => Task.FromResult<string?>(null);

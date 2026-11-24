@@ -6,8 +6,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Azure.Mcp.Tools.AzureMigrate.Services;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Helpers;
 
 /// <summary>
 /// Builds and uploads the HA input "mini zip": a zip holding only manifest.json with the read SAS URLs of the inventory and the

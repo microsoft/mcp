@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
+
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// POC client that starts the HA skill on the Discovery Service MCP backdoor after an assessment completes.
 /// </summary>
-public interface IHaSessionClient
+public interface IHaSessionService
 {
     /// <summary>
     /// Creates the caller's HA session, invokes it and uploads the HA input mini zip (see <see cref="HaInputPackage"/>) to the
@@ -31,13 +33,13 @@ public interface IHaSessionClient
     /// Exports the session output (POST /mcprestapi/sessions/{id}/export) and returns its read SAS URL; for a business case session
     /// this is the ROI.md report (the 'external' artifacts).
     /// </summary>
-    Task<Inventory.InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken);
+    Task<InventoryExportResult> ExportAsync(string token, string sessionId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Exports the session's 'internal' artifacts and returns the read SAS URL of their ZIP; for a business case session this is
     /// the full set of business case artifacts.
     /// </summary>
-    Task<Inventory.InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken);
+    Task<InventoryExportResult> ExportArtifactsAsync(string token, string sessionId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Downloads the exported report (ROI.md) from its read SAS URL and returns its Markdown, or null when it cannot be read or is

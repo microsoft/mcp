@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Mcp.Core.Options;
+using Azure.Mcp.Tools.AzureMigrate.Helpers;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 

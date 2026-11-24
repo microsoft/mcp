@@ -6,7 +6,7 @@ using System.Text;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// POC helpers shared by the assessment clients to call the Assessment Service machine assessment API
@@ -77,9 +77,9 @@ internal static class AssessmentApi
 
     internal static AssessmentOperation Parse(int status, string? body, int? retryAfter)
     {
-        Guid? id = Guid.TryParse(DsBackdoorClient.ReadValue(body, "id"), out Guid parsed) ? parsed : null;
-        string? errorCode = DsBackdoorClient.ReadValue(body, "error", "code");
-        string? errorMessage = DsBackdoorClient.ReadValue(body, "error", "message");
+        Guid? id = Guid.TryParse(DiscoveryServiceApi.ReadValue(body, "id"), out Guid parsed) ? parsed : null;
+        string? errorCode = DiscoveryServiceApi.ReadValue(body, "error", "code");
+        string? errorMessage = DiscoveryServiceApi.ReadValue(body, "error", "message");
         if (status is not (>= 200 and < 300) && errorCode is null && errorMessage is null)
         {
             errorMessage = string.IsNullOrWhiteSpace(body) ? null : body.Length > 1000 ? body[..1000] : body;
@@ -88,8 +88,8 @@ internal static class AssessmentApi
         return new(
             status,
             id,
-            DsBackdoorClient.ReadValue(body, "status"),
-            DsBackdoorClient.ReadValue(body, "output"),
+            DiscoveryServiceApi.ReadValue(body, "status"),
+            DiscoveryServiceApi.ReadValue(body, "output"),
             retryAfter,
             errorCode,
             errorMessage);

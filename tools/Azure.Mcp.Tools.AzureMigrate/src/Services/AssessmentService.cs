@@ -4,20 +4,33 @@
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.Assessment;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
-/// Starts a machine assessment from a collector ZIP on the Assessment Service:
-/// PUT /businessCaseRestApi/machineAssessmentsFromZip/{assessmentName}, which returns 202 with the operation.
+/// Runs a machine assessment from a collector ZIP on the Assessment Service. Create is
+/// PUT /businessCaseRestApi/machineAssessmentsFromZip/{assessmentName}, which returns 202 with the operation. Status is
+/// GET /businessCaseRestApi/machineAssessmentsFromZip/operations/{operationId}?workspaceId=..., which returns the status and, once
+/// succeeded, a fresh read-only SAS URL of the recommendations JSON.
 /// </summary>
-public sealed class AssessmentCreateClient(ILogger<AssessmentCreateClient> logger) : IAssessmentCreateClient
+public sealed class AssessmentService(ILogger<AssessmentService> logger) : IAssessmentService
 {
-    private readonly ILogger<AssessmentCreateClient> _logger = logger;
+    private readonly ILogger<AssessmentService> _logger = logger;
+
+    /// <inheritdoc/>
+    public Task<AssessmentOperation> GetOperationAsync(Guid operationId, string? workspaceId, string token, CancellationToken cancellationToken) =>
+        AssessmentApi.SendAsync(
+            _logger,
+            HttpMethod.Get,
+            AssessmentApi.OperationUrl(AssessmentApi.BaseUrl, operationId, AssessmentApi.ResolveWorkspaceId(workspaceId)),
+            token,
+            null,
+            "operation status",
+            cancellationToken);
 
     /// <inheritdoc/>
     public Task<AssessmentOperation> CreateAssessmentAsync(AssessmentRequest request, string token, CancellationToken cancellationToken)
     {
-        string body = DsBackdoorClient.WriteJson(w =>
+        string body = DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteString("workspaceId", AssessmentApi.ResolveWorkspaceId(request.WorkspaceId));
             w.WriteString("inventorySasUri", request.InventorySasUri);

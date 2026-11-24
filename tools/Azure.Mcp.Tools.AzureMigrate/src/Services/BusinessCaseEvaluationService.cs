@@ -6,15 +6,16 @@ using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureMigrate.Commands.Inventory;
 using Microsoft.Extensions.Logging;
+using Azure.Mcp.Tools.AzureMigrate.Models;
 
-namespace Azure.Mcp.Tools.AzureMigrate.Commands.BusinessCase;
+namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Synchronous evaluations a business case runs after its assessment: the Business Case Service on-premises TCO and the HA evaluate.
 /// Both take blob SAS links as input and answer with a SAS link to their result manifest. An identical request reuses the earlier
 /// result, so repeating a call is safe.
 /// </summary>
-public interface IBusinessCaseEvaluationClient
+public interface IBusinessCaseEvaluationService
 {
     /// <summary>POST /dataplane/onprem-tco on the Business Case Service.</summary>
     Task<EvaluationResult> GetOnPremTcoAsync(string token, string assessedMachinesUri, string inventoryUri, CancellationToken cancellationToken);
@@ -57,7 +58,7 @@ public sealed record EvaluationResult(
 /// Calls the Business Case Service and HA service data planes with the caller's bearer token, forwarded unchanged. Neither the token
 /// nor any SAS query string is logged.
 /// </summary>
-public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationClient> logger) : IBusinessCaseEvaluationClient
+public sealed class BusinessCaseEvaluationService(ILogger<BusinessCaseEvaluationService> logger) : IBusinessCaseEvaluationService
 {
     internal const string BcsBaseUrlSettingName = "AZUREMIGRATE_BCS_SERVICE_URL";
     internal const string HaBaseUrlSettingName = "AZUREMIGRATE_HA_SERVICE_URL";
@@ -69,7 +70,7 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
     // Both evaluations run inside one status call, which must finish within the client's tool call limit.
     private static readonly HttpClient s_http = new() { Timeout = TimeSpan.FromSeconds(45) };
 
-    private readonly ILogger<BusinessCaseEvaluationClient> _logger = logger;
+    private readonly ILogger<BusinessCaseEvaluationService> _logger = logger;
 
     internal static string BcsBaseUrl => ReadBaseUrl(BcsBaseUrlSettingName, DefaultBcsBaseUrl);
 
@@ -136,7 +137,7 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
             return null;
         }
 
-        return DsBackdoorClient.WriteJson(w =>
+        return DiscoveryServiceApi.WriteJson(w =>
         {
             if (summary.TryGetProperty("currency", out JsonElement currency) && currency.ValueKind == JsonValueKind.String)
             {
@@ -214,7 +215,7 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
     }
 
     internal static string BuildOnPremTcoBody(string assessedMachinesUri, string inventoryUri) =>
-        DsBackdoorClient.WriteJson(w =>
+        DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteStartObject("inputs");
             w.WriteStartObject("assessedMachines");
@@ -227,7 +228,7 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
         });
 
     internal static string BuildHaEvaluateBody(string assessmentsUri, string onPremTcoUri, BusinessCaseHaSettings settings) =>
-        DsBackdoorClient.WriteJson(w =>
+        DiscoveryServiceApi.WriteJson(w =>
         {
             w.WriteStartObject("inputs");
             w.WriteStartObject("assessments");
@@ -255,8 +256,8 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
 
     internal static EvaluationResult Parse(int status, string? body, int? retryAfter)
     {
-        string? errorCode = DsBackdoorClient.ReadValue(body, "error", "code");
-        string? errorMessage = DsBackdoorClient.ReadValue(body, "error", "message");
+        string? errorCode = DiscoveryServiceApi.ReadValue(body, "error", "code");
+        string? errorMessage = DiscoveryServiceApi.ReadValue(body, "error", "message");
         if (status is not (>= 200 and < 300) && errorCode is null && errorMessage is null && !string.IsNullOrWhiteSpace(body))
         {
             errorMessage = body.Length > 1000 ? body[..1000] : body;
@@ -264,8 +265,8 @@ public sealed class BusinessCaseEvaluationClient(ILogger<BusinessCaseEvaluationC
 
         return new(
             status,
-            DsBackdoorClient.ReadValue(body, "status"),
-            DsBackdoorClient.ReadValue(body, "result", "manifestUri"),
+            DiscoveryServiceApi.ReadValue(body, "status"),
+            DiscoveryServiceApi.ReadValue(body, "result", "manifestUri"),
             errorCode,
             errorMessage,
             retryAfter);
