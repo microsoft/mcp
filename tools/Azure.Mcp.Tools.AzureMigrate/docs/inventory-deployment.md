@@ -172,11 +172,76 @@ the panel HTML with the storage origins in its CSP connect domains.
 
 Start a new chat after publishing, because an existing chat may keep the old tool list.
 
+## 8. Optional: let a card read a blob in the browser (CORS `GET`)
+
+A card (MCP Apps widget) that reads a SAS URL itself, for example to preview the business case `ROI.md` without the
+MCP server downloading it, needs `GET` in the storage CORS rule. Allowing `PUT` for the upload panel does not allow it.
+
+Why a link works but the card's `fetch` does not:
+
+| Who sends the `GET` to the SAS URL | CORS check |
+|---|---|
+| User clicks a download link (browser opens or saves the file) | None. Navigation is not subject to CORS. |
+| MCP server (`HttpClient`) | None. CORS exists only in browsers. |
+| Card JavaScript (`fetch(sasUrl)`) | Yes. The response must carry `Access-Control-Allow-Origin` for the card's origin. |
+
+The SAS token authorizes the request at storage; CORS only decides whether the browser hands the response to the
+card's script. A plain `GET` has no preflight, but storage adds `Access-Control-Allow-Origin` only when a CORS rule
+matches both the origin and the method, so without `GET` in the rule the card gets a CORS error even though the blob
+was served. Each method must be listed; the rule is matched per method.
+
+Flow for a business case report card that previews `ROI.md` in the browser:
+
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant C as Cowork chat (model)
+    participant M as MCP server
+    participant DS as Discovery Service
+    participant W as Report card (in Cowork)
+    participant B as Blob storage
+
+    U->>C: "Show my business case"
+    C->>M: azure_catalyst_businesscase_status
+    M->>DS: GET export?artifacts=external
+    DS-->>M: { uri: ROI.md SAS }
+    M->>DS: GET export?artifacts=internal
+    DS-->>M: { uri: artifacts ZIP SAS }
+    M-->>C: result = ROI.md SAS, artifacts = ZIP SAS (no report content)
+    C-->>U: Short reply + links
+    C->>W: Tool result (SAS URLs)
+    W->>B: fetch(ROI.md SAS) [Origin: cowork-<hash>.widget-renderer.usercontent.microsoft]
+    B-->>W: 200 ROI.md + Access-Control-Allow-Origin (needs GET in the CORS rule)
+    W-->>U: Renders the ROI.md preview in the card
+    U->>B: Clicks "Download artifacts" (navigation, no CORS)
+    B-->>U: ZIP file
+```
+
+If the fetch fails (no `GET` in the rule, or an expired SAS), the card shows the download link instead of the preview.
+
+Rule on each storage account the card reads from (Blob service):
+
+- Allowed origins: `https://*.widget-renderer.usercontent.microsoft` (keep it scoped; do not use `*`)
+- Allowed methods: `PUT`, `GET`, `HEAD`, `OPTIONS` (`HEAD` is optional, to read the size before downloading)
+- Allowed headers: `x-ms-blob-type`, `content-type` (or `*`)
+
+The card must also list the storage origin in its CSP connect domains, and the plugin package must list the storage
+host in `validDomains` (see step 7).
+
+Verify the rule with the card's real origin (each plugin gets its own `cowork-<hash>` subdomain):
+
+```powershell
+$origin = "https://cowork-<hash>.widget-renderer.usercontent.microsoft"
+$r = Invoke-WebRequest -Uri "<SAS_URL>" -Headers @{ Origin = $origin } -SkipHttpErrorCheck
+$r.StatusCode; $r.Headers['Access-Control-Allow-Origin']   # 200 and the origin echoed back
+```
+
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
 | `401` from the MCP server with a token | Token audience must be `<MCP_APP_ID>` or `api://<MCP_APP_ID>` and the tenant must match `AzureAd__TenantId`. |
+| Card shows a CORS error reading a SAS URL, but the same link downloads fine | The storage CORS rule lacks `GET` for the widget origin (step 8). |
 | Tool returns `401`/`403` from the Discovery Service | The client app ID is missing from `Aad.Mcp.AllowedCallerAppIds`, or the token lacks `Mcp.Tools.ReadWrite`. |
 | Create reports an existing session | The user already has an active session for the skill type; the tool reuses it. |
 | App fails to start | Run `az webapp log tail -g $rg -n $app`; confirm the startup command and that `azmcp` is in `/home/site/wwwroot`. |
