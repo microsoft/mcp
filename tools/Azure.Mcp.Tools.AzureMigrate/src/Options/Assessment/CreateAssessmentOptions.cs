@@ -6,7 +6,8 @@ using Microsoft.Mcp.Core.Options;
 namespace Azure.Mcp.Tools.AzureMigrate.Options.Assessment;
 
 /// <summary>
-/// Options for the assessment create command. Optional settings left out are not sent, so the assessment uses its defaults.
+/// Assessment settings validated by <c>AssessmentValidation.BuildSettings</c> for the business case. Optional settings left out are
+/// not sent, so the assessment uses its defaults.
 /// </summary>
 public sealed class CreateAssessmentOptions
 {

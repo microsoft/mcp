@@ -90,7 +90,7 @@ public class BusinessCaseCommandTests
 
         Assert.True(result.Success);
         Assert.Matches(@"^bc-centralindia-\d{8}-\d{6}$", result.AssessmentName);
-        Assert.True(CreateAssessmentCommand.IsValidAssessmentName(result.AssessmentName));
+        Assert.True(AssessmentValidation.IsValidAssessmentName(result.AssessmentName));
         Assert.Equal(result.AssessmentName, result.NextStatusParameters!.AssessmentName);
         await _create.Received(1).CreateAssessmentAsync(
             Arg.Is<AssessmentRequest>(r => r.AssessmentName == result.AssessmentName), "token", Arg.Any<CancellationToken>());
@@ -516,87 +516,4 @@ public class BusinessCaseCommandTests
     private CreateBusinessCaseCommand CreateCommand() => new(_create, _export, Accessor());
 
     private GetBusinessCaseStatusCommand StatusCommand() => new(_asStatus, _evaluation, _ha, Accessor());
-
-    private const string RoiReport = """
-        # ROI
-
-        **Scope: report-ready figures.**
-
-        ## Summary
-
-        - Largest modeled saving: LiftAndShift.
-
-        ## Annual comparison
-
-        ### Full-cost estimate
-
-        | Strategy | Current on-premises (annual) | Azure (annual) | Kept licences (annual) | Retained on-premises (annual) | Future (annual) | Savings (annual) | Status | Currency | Basis |
-        |---|---|---|---|---|---|---|---|---|---|
-        | LiftAndShift | 180,332.21 | 118,563.95 | 2,616.22 | 0.00 | 121,180.17 | 59,152.04 | Complete | USD | Full-cost estimate |
-
-        | Strategy | Future cost (annual) | Savings (annual) | ROI | NPV | Payback (months) | Currency | Basis |
-        |---|---|---|---|---|---|---|---|
-        | LiftAndShift | 121,180.17 | 59,152.04 | 20.03% | 109,411.27 | 12 | USD | Full-cost estimate |
-
-        ## Yearly view
-
-        ### LiftAndShift (Full-cost estimate)
-
-        | Year | Current | Future | Savings |
-        |---|---|---|---|
-        | 0 | 180,332.21 | 180,332.21 | 0.00 |
-        | 1 | 189,348.82 | 176,926.89 | 12,421.93 |
-
-        ## Cost by pillar
-
-        ### LiftAndShift
-
-        | Pillar | Current (annual) | Azure (annual) |
-        |---|---|---|
-        | Compute | 17,934.97 | 15,990.00 |
-        | Licence | 0.00 | 0.00 |
-        | Extended Security Update savings | 0.00 | 11,150.50 |
-        | Management labour | not applicable | 3,132.00 |
-        """;
-
-    [Fact]
-    public void RoiVisuals_AddsChartsFromTheReportTables_BeforeTheFirstSection()
-    {
-        string enriched = RoiVisuals.Enrich(RoiReport);
-
-        int start = enriched.IndexOf(RoiVisuals.StartMarker, StringComparison.Ordinal);
-        int end = enriched.IndexOf(RoiVisuals.EndMarker, StringComparison.Ordinal);
-        Assert.True(start > enriched.IndexOf("**Scope", StringComparison.Ordinal) && end < enriched.IndexOf("## Summary", StringComparison.Ordinal));
-        string block = enriched[start..end];
-        Assert.Contains("USD 59,152.04", block);
-        Assert.Contains("20.03%", block);
-        Assert.Contains("USD 109,411.27", block);
-        Assert.Contains("12 months", block);
-        Assert.Contains("conic-gradient(#107c10 0 32.8%,#0078d4 32.8% 100%)", block);
-        Assert.Contains("Savings by year", block);
-        Assert.Contains("Management labour", block);
-        Assert.DoesNotContain(">Licence<", block);
-        Assert.DoesNotContain("Extended Security Update", block);
-        Assert.DoesNotContain("<style", block);
-        Assert.DoesNotContain("\n\n", block);
-        Assert.Contains("\n\n" + RoiVisuals.StartMarker, enriched);
-        Assert.Contains(RoiVisuals.EndMarker + "\n\n## Summary", enriched);
-        Assert.Equal(RoiReport.Replace("\r\n", "\n"), enriched.Replace(enriched[(start - 1)..(end + RoiVisuals.EndMarker.Length + 2)], string.Empty));
-    }
-
-    [Theory]
-    [InlineData("# ROI\n| a | b |")]
-    [InlineData("# ROI\n\n## Annual comparison\n\nNo table.")]
-    public void RoiVisuals_ReturnsTheReportUnchanged_WhenItsFiguresAreNotFound(string report)
-    {
-        Assert.Equal(report, RoiVisuals.Enrich(report));
-    }
-
-    [Fact]
-    public void RoiVisuals_DoesNotAddChartsTwice()
-    {
-        string once = RoiVisuals.Enrich(RoiReport);
-
-        Assert.Equal(once, RoiVisuals.Enrich(once));
-    }
 }

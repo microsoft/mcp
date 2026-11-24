@@ -184,7 +184,7 @@ public sealed class DsHaSessionClient(ILogger<DsHaSessionClient> logger) : IHaSe
 
         string? operationId = DsBackdoorClient.ReadValue(invoke.Body, "operationId");
         string? uploadUrl = DsBackdoorClient.ReadValue(invoke.Body, "uri");
-        if (!CreateAssessmentCommand.IsValidInventorySasUri(uploadUrl))
+        if (!AssessmentValidation.IsValidInventorySasUri(uploadUrl))
         {
             return new("invokeSession", invoke.Status, sessionId, reused, operationId, clientRequestId,
                 "The Discovery Service did not return a valid upload URL for the HA session.");

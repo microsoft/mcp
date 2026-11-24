@@ -109,7 +109,7 @@ public sealed class GetBusinessCaseStatusCommand(
         }
 
         string? inventorySasUri = options.InventorySasUri?.Trim();
-        if (!CreateAssessmentCommand.IsValidInventorySasUri(inventorySasUri))
+        if (!AssessmentValidation.IsValidInventorySasUri(inventorySasUri))
         {
             return BusinessCaseStages.Invalid("'inventory-sas-uri' is required, from 'nextStatusParameters'.", name, asOperationIdText);
         }
@@ -224,7 +224,7 @@ public sealed class GetBusinessCaseStatusCommand(
                     "ask for the business case status again to retry the download."));
         }
 
-        if (CreateAssessmentCommand.IsTerminal(status.Status))
+        if (AssessmentValidation.IsTerminal(status.Status))
         {
             return Finished(ctx, BusinessCaseStages.Failed, sessionId, operationIdText, "haSkill", status.HttpStatus, status.ErrorCode,
                 status.ErrorMessage, null,
@@ -244,7 +244,7 @@ public sealed class GetBusinessCaseStatusCommand(
                 operation.ErrorMessage, null, NotFoundOrForbidden(operation.HttpStatus));
         }
 
-        if (operation.HttpStatus is not (>= 200 and < 300) || !CreateAssessmentCommand.IsTerminal(operation.Status))
+        if (operation.HttpStatus is not (>= 200 and < 300) || !AssessmentValidation.IsTerminal(operation.Status))
         {
             return Running(ctx, BusinessCaseStages.Assessment, null, null, operation.HttpStatus, operation.RetryAfterSeconds, AssessmentRunningText);
         }
@@ -255,7 +255,7 @@ public sealed class GetBusinessCaseStatusCommand(
                 operation.ErrorMessage, null, ReplyFormat.Failure("Business case assessment did not complete (stage 1 of 2).", RecreateNextStep));
         }
 
-        if (!CreateAssessmentCommand.IsValidInventorySasUri(operation.OutputUrl))
+        if (!AssessmentValidation.IsValidInventorySasUri(operation.OutputUrl))
         {
             return Finished(ctx, BusinessCaseStages.Failed, null, null, "assessmentOutput", operation.HttpStatus, null,
                 "The assessment did not return a valid output URL.", null,
@@ -408,12 +408,12 @@ public sealed class GetBusinessCaseStatusCommand(
     {
         bool succeeded = evaluation.HttpStatus is >= 200 and < 300
             && string.Equals(evaluation.Status, BusinessCaseStages.Succeeded, StringComparison.OrdinalIgnoreCase);
-        if (succeeded && CreateAssessmentCommand.IsValidInventorySasUri(evaluation.ManifestUri))
+        if (succeeded && AssessmentValidation.IsValidInventorySasUri(evaluation.ManifestUri))
         {
             return null;
         }
 
-        if (IsTransient(evaluation.HttpStatus) || (evaluation.HttpStatus is >= 200 and < 300 && !CreateAssessmentCommand.IsTerminal(evaluation.Status)))
+        if (IsTransient(evaluation.HttpStatus) || (evaluation.HttpStatus is >= 200 and < 300 && !AssessmentValidation.IsTerminal(evaluation.Status)))
         {
             return Running(ctx, BusinessCaseStages.Assessment, null, null, evaluation.HttpStatus, evaluation.RetryAfterSeconds, AssessmentRunningText);
         }

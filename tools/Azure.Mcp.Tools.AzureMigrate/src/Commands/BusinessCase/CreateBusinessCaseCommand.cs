@@ -79,13 +79,13 @@ public sealed class CreateBusinessCaseCommand(
     internal async Task<BusinessCaseCommandResult> RunAsync(CreateBusinessCaseOptions options, CancellationToken cancellationToken)
     {
         string? name = string.IsNullOrWhiteSpace(options.AssessmentName) ? null : options.AssessmentName.Trim();
-        if (name is not null && !CreateAssessmentCommand.IsValidAssessmentName(name))
+        if (name is not null && !AssessmentValidation.IsValidAssessmentName(name))
         {
             return BusinessCaseStages.Invalid(
                 "'assessment-name' must be 1-64 characters, starting with a letter or digit, using only letters, digits, '-' or '_'.", name);
         }
 
-        string? region = CreateAssessmentCommand.NormalizeRegion(options.TargetRegion);
+        string? region = AssessmentValidation.NormalizeRegion(options.TargetRegion);
         if (region is null)
         {
             return BusinessCaseStages.Invalid("'target-region' is required and must be an Azure region name such as 'eastus'.", name);
@@ -113,12 +113,12 @@ public sealed class CreateBusinessCaseCommand(
                 return BusinessCaseStages.Invalid("'session-id' must be 1-20 characters using only letters, digits, '-' or '_'.", name);
             }
         }
-        else if (!CreateAssessmentCommand.IsValidInventorySasUri(inventorySasUri))
+        else if (!AssessmentValidation.IsValidInventorySasUri(inventorySasUri))
         {
             return BusinessCaseStages.Invalid("'inventory-sas-uri' must be an https read-only SAS URL of the collector ZIP.", name);
         }
 
-        (AssessmentSettings? assessmentSettings, string? assessmentError) = CreateAssessmentCommand.BuildSettings(new CreateAssessmentOptions
+        (AssessmentSettings? assessmentSettings, string? assessmentError) = AssessmentValidation.BuildSettings(new CreateAssessmentOptions
         {
             ScalingFactor = options.ScalingFactor ?? DefaultScalingFactor,
             SavingsOption = string.IsNullOrWhiteSpace(options.SavingsOption) ? DefaultSavingsOption : options.SavingsOption,
@@ -159,7 +159,7 @@ public sealed class CreateBusinessCaseCommand(
         if (string.IsNullOrEmpty(inventorySasUri))
         {
             InventoryExportResult export = await _exportClient.ExportOfflineAsync(sessionId!, token, cancellationToken);
-            if (!CreateAssessmentCommand.IsValidInventorySasUri(export.Uri))
+            if (!AssessmentValidation.IsValidInventorySasUri(export.Uri))
             {
                 return new(true, null, BusinessCaseStages.Failed, true, BusinessCaseStages.Assessment, 1, BusinessCaseStages.Total, name,
                     null, null, null, "inventoryExport", export.HttpStatus, null,
