@@ -4,8 +4,7 @@ How a new inventory is created from a file. Replaces the earlier "create or upda
 user ran azcopy and then asked for the status.
 
 - **Upload panel** (when `AZMIGRATE_INVENTORY_WIDGET_DOMAINS` is set): the panel PUTs the file straight into blob
-  storage from the browser. The storage CORS rule must allow `PUT`; see
-  [step 7 of the deployment guide](../inventory-deployment.md).
+  storage from the browser. The storage CORS rule must allow `PUT`.
 - **azcopy fallback** (no panel, or the browser upload is blocked): the user runs the returned `azcopy copy` command.
 
 Either way, the agent then waits with the wait tool and calls the status tool once, so the summary card appears

@@ -1,8 +1,7 @@
 # Business case ROI.md preview in the browser
 
 The business case report card reads `ROI.md` from its SAS URL in the browser, so the MCP server returns only links and
-never downloads the report. The storage CORS rule must allow `GET` for the widget origin; see
-[step 8 of the deployment guide](../inventory-deployment.md#8-optional-let-a-card-read-a-blob-in-the-browser-cors-get).
+never downloads the report. The storage CORS rule must allow `GET` for the widget origin.
 
 The card does this when it has storage connect domains: `AZMIGRATE_REPORT_WIDGET_DOMAINS`, or else
 `AZMIGRATE_INVENTORY_WIDGET_DOMAINS`. Without them, the server downloads `ROI.md` and returns it in `report` as before.

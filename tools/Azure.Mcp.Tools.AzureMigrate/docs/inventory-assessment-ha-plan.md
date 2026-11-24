@@ -1,7 +1,7 @@
 # Azure Migrate MCP tools: inventory, assessment and HA plan
 
 This document records the plan, decisions and open items for the Azure Migrate tools in this
-package. For hosting and configuration, see [inventory-deployment.md](inventory-deployment.md).
+package.
 
 ## Goal
 
