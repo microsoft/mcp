@@ -7,11 +7,11 @@ using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class AztfexportService(IFileSystem fileSystem) : IAztfexportService
+public sealed class AztfexportService(IProcessService processService) : IAztfexportService
 {
     public async Task<bool> IsAztfexportAvailableAsync(CancellationToken cancellationToken = default)
     {
-        fileSystem.EnsureAccess();
+        processService.EnsureAccess();
         try
         {
             var checkCommand = OperatingSystem.IsWindows() ? "where" : "which";
@@ -27,7 +27,10 @@ public sealed class AztfexportService(IFileSystem fileSystem) : IAztfexportServi
                 CreateNoWindow = true
             };
 
-            process.Start();
+            if (!processService.Start(process))
+            {
+                return false;
+            }
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             return process.ExitCode == 0;
         }

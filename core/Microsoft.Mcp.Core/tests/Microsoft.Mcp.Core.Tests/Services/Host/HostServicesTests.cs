@@ -1,17 +1,74 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server.Commands;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Services.Host;
+using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Services.Host;
 
 public sealed class HostServicesTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LocalHostServices_StartProcessesAndCaptureOutput(bool registerRuntime)
+    {
+        var services = new ServiceCollection();
+        services.InitializeConfigurationAndOptions(typeof(HostServicesTests).Assembly);
+        if (registerRuntime)
+        {
+            services.AddAzureMcpServer(new() { Transport = TransportTypes.StdIo });
+        }
+        using var provider = services.BuildServiceProvider();
+        var service = new ExternalProcessService(
+            NullLogger<ExternalProcessService>.Instance,
+            provider.GetRequiredService<IProcessService>());
+        var executable = OperatingSystem.IsWindows()
+            ? Path.Combine(Environment.SystemDirectory, "cmd.exe")
+            : "/bin/sh";
+        var arguments = OperatingSystem.IsWindows()
+            ? "/d /c \"echo process-output & echo process-error 1>&2 & exit /b 7\""
+            : "-c \"printf process-output; printf process-error >&2; exit 7\"";
+
+        var result = await service.ExecuteAsync(executable, arguments,
+            operationTimeoutSeconds: 15, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(7, result.ExitCode);
+        Assert.Equal("process-output", result.Output);
+        Assert.Equal("process-error", result.Error);
+    }
+
+    [Fact]
+    public void HttpProcessService_RejectsStartBeforeAccessingHost()
+    {
+        using var provider = CreateHttpProvider();
+        var service = provider.GetRequiredService<IProcessService>();
+        using var process = new Process { StartInfo = new ProcessStartInfo { FileName = "\0" } };
+
+        Assert.Throws<UnauthorizedAccessException>(service.EnsureAccess);
+        var exception = Assert.Throws<UnauthorizedAccessException>(() => service.Start(process));
+        Assert.Contains("HTTP", exception.Message);
+    }
+
+    [Fact]
+    public async Task HttpExternalProcessService_RejectsExecutionBeforeConfiguringProcess()
+    {
+        using var provider = CreateHttpProvider();
+        var service = new ExternalProcessService(
+            NullLogger<ExternalProcessService>.Instance,
+            provider.GetRequiredService<IProcessService>());
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.ExecuteAsync("", "", cancellationToken: TestContext.Current.CancellationToken));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

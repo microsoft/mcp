@@ -114,7 +114,7 @@ public sealed class AztfexportToolLoadingTests
     {
         var service = Substitute.For<IAztfexportService>();
         service.IsAztfexportAvailableAsync(Arg.Any<CancellationToken>()).Returns(true);
-        var generator = new AztfexportService(Substitute.For<IFileSystem>());
+        var generator = new AztfexportService(Substitute.For<IProcessService>());
         service.GenerateResourceCommand(ResourceId, null, "azurerm", null, false, 10, true)
             .Returns(generator.GenerateResourceCommand(ResourceId));
         service.GenerateResourceGroupCommand("my-rg", null, provider, null, false, 10, true)

@@ -7,14 +7,14 @@ using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class ConftestService(IFileSystem fileSystem) : IConftestService
+public sealed class ConftestService(IProcessService processService) : IConftestService
 {
     private const string PolicyRepoUrl = "https://github.com/Azure/policy-library-avm.git";
     private const string PolicyDirectory = "policy";
 
     public async Task<bool> IsConftestAvailableAsync(CancellationToken cancellationToken = default)
     {
-        fileSystem.EnsureAccess();
+        processService.EnsureAccess();
         try
         {
             var checkCommand = OperatingSystem.IsWindows() ? "where" : "which";
@@ -30,7 +30,10 @@ public sealed class ConftestService(IFileSystem fileSystem) : IConftestService
                 CreateNoWindow = true
             };
 
-            process.Start();
+            if (!processService.Start(process))
+            {
+                return false;
+            }
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             return process.ExitCode == 0;
         }

@@ -17,6 +17,7 @@ public static class HostServiceCollectionExtensions
         services.AddOptions<ServerRuntimeConfiguration>();
         services.TryAddSingleton<IFileSystem, FileSystem>();
         services.TryAddSingleton<IEnvironmentVariables, EnvironmentVariables>();
+        services.TryAddSingleton<IProcessService, ProcessService>();
         return services;
     }
 }

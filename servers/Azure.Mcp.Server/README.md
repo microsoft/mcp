@@ -886,6 +886,8 @@ Download the `.mcpb` file for your platform/architecture from **Assets** section
 
 Host the Azure MCP Server as a remote endpoint when your client requires HTTP-based MCP servers (for example, Microsoft Foundry and Microsoft Copilot Studio) or when you want to share a single deployment across users and environments. The server can be self-hosted on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
+Over HTTP, tools cannot access host files or environment variables or start local processes. Use CLI or stdio mode for local inputs and executable-based operations. Process-startup configuration and server discovery are unaffected.
+
 See the remote hosting [azd templates](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/README.md) for deployment options.
 
 # Usage
