@@ -1725,7 +1725,10 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> | none |
 | storage_blob_get | List all blobs in the blob container \<container> in the storage account \<account> with prefix \<prefix> | none |
 | storage_blob_get | Show me the blobs in the blob container \<container> in the storage account \<account> | none |
-| storage_blob_get | Get the next page of blobs using nextCursor \<cursor> with the same storage account, container, and prefix | context-required |
+| storage_blob_get | Get the next page of blobs using nextCursor \<cursor> with the same storage account, container, prefix, and delimiter | context-required |
+| storage_blob_get | Browse the top-level blobs and virtual folders in container \<container> in storage account \<account> using / as the delimiter and at most 100 results | none |
+| storage_blob_get | Show blobs and subfolders directly under datasets/ in container \<container> in storage account \<account>, using / as the delimiter | none |
+| storage_blob_get | Get the next page of blobs and virtual folders under datasets/ using the same account, container, prefix, delimiter, and nextCursor \<cursor> | context-required |
 | storage_blob_upload | Upload file \<local-file-path> to storage blob \<blob> in container \<container> in storage account \<account> | none |
 | storage_disk_diagnose | Diagnose disk performance and throttling for virtual machine \<vm-resource-id> | none |
 | storage_disk_diagnose | Diagnose disks attached to virtual machine scale set instance \<vmss-instance-resource-id> | none |

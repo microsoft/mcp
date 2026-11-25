@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using Azure;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -20,15 +19,17 @@ namespace Azure.Mcp.Tools.Storage.Commands.Blob;
     Title = "Get Storage Blob Details",
     Description = """
         List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or
-        get details for a specific blob. If no blob specified, returns one page of up to 100 blobs, optionally
-        filtering on a prefix. The page size is fixed. Pass nextCursor unchanged as --cursor with the same account,
-        container, prefix, and tenant to retrieve another page, even if the current page is empty.
-        The prefix is ignored if a blob is specified. Do not combine --cursor with --blob.
+        get details for a specific blob. If no blob is specified, returns one page of up to 100 blobs and directory
+        prefixes combined, optionally filtering on a prefix. Use --delimiter '/' to browse virtual directories one
+        level at a time. The page size is fixed. Pass nextCursor unchanged as --cursor with the same account,
+        container, prefix, delimiter, and tenant to retrieve another page, even if the current page is empty.
+        The prefix is ignored if a blob is specified. Do not combine --cursor or --delimiter with --blob.
 
         Required: --account, --container
-        Optional: --blob, --tenant, --prefix, --cursor
+        Optional: --blob, --tenant, --prefix, --delimiter, --cursor
 
         Returns: blob name, size, lastModified, contentType, contentHash, metadata, and blob properties.
+        Hierarchical listings also return prefixes (virtual directory paths).
         Do not use this tool to list containers in the storage account.
         """,
     OperationPlane = ToolOperationPlane.Data,
@@ -51,19 +52,50 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         {
             validationResult.Errors.Add("--cursor cannot be used with --blob.");
         }
+
+        if (options.Delimiter is { Length: 0 })
+        {
+            validationResult.Errors.Add("--delimiter must not be empty.");
+        }
+
+        if (!string.IsNullOrEmpty(options.Blob) && options.Delimiter is not null)
+        {
+            validationResult.Errors.Add("--delimiter cannot be used with --blob.");
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, BlobGetOptions options, CancellationToken cancellationToken)
     {
         try
         {
-            var cursor = new PaginationCursor(Id, options.Account, options.Container, options.Prefix, options.Tenant);
+            // Preserve existing flat-list cursors while binding hierarchy cursors to their delimiter.
+            var cursor = options.Delimiter is null
+                ? new PaginationCursor(Id, options.Account, options.Container, options.Prefix, options.Tenant)
+                : new PaginationCursor(Id, options.Account, options.Container, options.Prefix, options.Tenant, options.Delimiter);
+            var serviceCursor = cursor.Decode(options.Cursor);
+            if (options.Delimiter is not null)
+            {
+                var page = await _storageService.ListBlobs(
+                    options.Account,
+                    options.Container,
+                    options.Delimiter,
+                    options.Prefix,
+                    serviceCursor,
+                    options.Tenant,
+                    cancellationToken);
+
+                context.Response.Results = ResponseResult.Create(
+                    new BlobGetCommandResult(page.Blobs, cursor.Encode(page.NextCursor), page.Prefixes),
+                    StorageJsonContext.Default.BlobGetCommandResult);
+                return context.Response;
+            }
+
             var details = await _storageService.GetBlobDetails(
                 options.Account,
                 options.Container,
                 options.Blob,
                 options.Prefix,
-                cursor.Decode(options.Cursor),
+                serviceCursor,
                 options.Tenant,
                 cancellationToken
             );
@@ -103,5 +135,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger, IStorageServi
         _ => base.GetErrorMessage(ex)
     };
 
-    public record BlobGetCommandResult(List<BlobInfo> Blobs, string? NextCursor = null);
+    public record BlobGetCommandResult(
+        List<BlobInfo> Blobs,
+        string? NextCursor = null,
+        List<string>? Prefixes = null);
 }

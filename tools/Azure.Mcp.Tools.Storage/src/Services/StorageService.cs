@@ -187,32 +187,13 @@ public sealed class StorageService(IAzureService azureService)
         {
             await foreach (var page in containerClient.GetBlobsAsync(new()
             {
-                Prefix = prefix
+                Prefix = prefix,
+                Traits = BlobTraits.Metadata
             }, cancellationToken: cancellationToken).AsPages(cursor, BlobPageSize).WithCancellation(cancellationToken))
             {
                 foreach (var blobItem in page.Values)
                 {
-                    blobInfos.Add(new(
-                    blobItem.Name,
-                    blobItem.Properties.LastModified,
-                    blobItem.Properties.ETag?.ToString(),
-                    blobItem.Properties.ContentLength,
-                    blobItem.Properties.ContentType,
-                    blobItem.Properties.ContentHash,
-                    blobItem.Properties.BlobType?.ToString(),
-                    blobItem.Metadata,
-                    blobItem.Properties.LeaseStatus?.ToString(),
-                    blobItem.Properties.LeaseState?.ToString(),
-                    blobItem.Properties.LeaseDuration?.ToString(),
-                    blobItem.Properties.CopyStatus?.ToString(),
-                    blobItem.Properties.CopySource,
-                    blobItem.Properties.CopyCompletedOn,
-                    blobItem.Properties.AccessTier?.ToString(),
-                    blobItem.Properties.AccessTierChangedOn,
-                    blobItem.Properties.HasLegalHold,
-                    blobItem.Properties.CreatedOn,
-                    blobItem.Properties.ArchiveStatus?.ToString(),
-                        blobItem.VersionId));
+                    blobInfos.Add(ToBlobInfo(blobItem));
                 }
 
                 return (blobInfos, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
@@ -249,6 +230,72 @@ public sealed class StorageService(IAzureService azureService)
 
         return (blobInfos, null);
     }
+
+    public async Task<BlobListResult> ListBlobs(
+        string account,
+        string container,
+        string delimiter,
+        string? prefix = null,
+        string? cursor = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container));
+        ArgumentException.ThrowIfNullOrEmpty(delimiter);
+
+        var blobServiceClient = await CreateBlobServiceClient(account, tenant, cancellationToken);
+        var containerClient = blobServiceClient.GetBlobContainerClient(container);
+
+        await foreach (var page in containerClient.GetBlobsByHierarchyAsync(new GetBlobsByHierarchyOptions
+        {
+            Prefix = prefix,
+            Delimiter = delimiter,
+            Traits = BlobTraits.Metadata
+        }, cancellationToken).AsPages(cursor, BlobPageSize).WithCancellation(cancellationToken))
+        {
+            var blobs = new List<Storage.Models.BlobInfo>();
+            var prefixes = new List<string>();
+            foreach (var item in page.Values)
+            {
+                if (item.IsPrefix)
+                {
+                    prefixes.Add(item.Prefix);
+                }
+                else
+                {
+                    blobs.Add(ToBlobInfo(item.Blob));
+                }
+            }
+
+            return new(blobs, prefixes, string.IsNullOrEmpty(page.ContinuationToken) ? null : page.ContinuationToken);
+        }
+
+        return new([], [], null);
+    }
+
+    private static Storage.Models.BlobInfo ToBlobInfo(BlobItem blobItem) => new(
+        blobItem.Name,
+        blobItem.Properties.LastModified,
+        blobItem.Properties.ETag?.ToString(),
+        blobItem.Properties.ContentLength,
+        blobItem.Properties.ContentType,
+        blobItem.Properties.ContentHash,
+        blobItem.Properties.BlobType?.ToString(),
+        blobItem.Metadata,
+        blobItem.Properties.LeaseStatus?.ToString(),
+        blobItem.Properties.LeaseState?.ToString(),
+        blobItem.Properties.LeaseDuration?.ToString(),
+        blobItem.Properties.CopyStatus?.ToString(),
+        blobItem.Properties.CopySource,
+        blobItem.Properties.CopyCompletedOn,
+        blobItem.Properties.AccessTier?.ToString(),
+        blobItem.Properties.AccessTierChangedOn,
+        blobItem.Properties.HasLegalHold,
+        blobItem.Properties.CreatedOn,
+        blobItem.Properties.ArchiveStatus?.ToString(),
+        blobItem.VersionId);
 
     public async Task<(List<ContainerInfo> Containers, string? NextCursor)> GetContainerDetails(
         string account,
