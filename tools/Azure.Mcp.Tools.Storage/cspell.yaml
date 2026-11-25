@@ -10,8 +10,10 @@ words:
   - existingaccount
   - existingcontainer
   - invalidaccess
+  - maxresults
   - nonexistentaccount
   - nonexistentrg
+  - restype
   - tapansing
   - testacct
   - testblob

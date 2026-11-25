@@ -42,7 +42,7 @@ This keeps all code, options, models, JSON serialization contexts, and tests for
    ```
    - Commands use primary constructors with `ILogger`, service interface, and `ISubscriptionResolver` (for subscription commands).
    - Command classes are always `sealed` unless explicitly designed as an intermediate base class.
-   - Commands inheriting from `SubscriptionCommand` handle `--subscription` resolution automatically via `ISubscriptionResolver`.
+   - Choose the narrowest base class: `SubscriptionCommand<TOptions, TResult>` (needs Azure auth + `--subscription`), `AuthenticatedCommand<TOptions, TResult>` (needs Azure auth without `--subscription`, e.g., data-plane commands like `BlobGetCommand`), or `BaseCommand<TOptions, TResult>` (no Azure auth).
    - Set behavioral characteristics using `[CommandMetadata]`.
 
 ### Command Naming and Group Hierarchy
@@ -140,53 +140,20 @@ public abstract class Base{Resource}Command<
 
 ## Options and Validation
 
-Options classes are flat POCOs with `[Option]` attributes. Registration and binding are handled automatically by `OptionBinder` — no manual `RegisterOptions` or `BindOptions` overrides needed.
+Options classes are flat POCOs with `[Option]` attributes. `OptionBinder` handles registration and binding automatically — never write `RegisterOptions`/`BindOptions` overrides, `OptionDefinitions` static classes, or `Command.Validators.Add` calls.
 
 ### Option Attribute Conventions
 
-- **Flat POCOs:** No class inheritance; implement `ISubscriptionOption` when the command accepts `--subscription` (note: `ISubscriptionOption` provides `Subscription` only — add `Tenant` separately if accepted).
-- **Automatic binding:** `OptionBinder` registers and binds public writable properties marked with `[Option]` or `[OptionContainer<TContainer>]`; unattributed properties are ignored.
-- **Name:** Derived from the property name in kebab-case (`LocalFilePath` → `--local-file-path`). Specify `Name` only when kebab-case produces the wrong name (e.g., `[Option(Name = "foobar", Description = "...")]` on `FooBar` gives `--foobar`).
-- **Required vs. optional:** Driven by the `required` keyword (`RequiredMemberAttribute`), not nullability. Use `required` when callers must supply the option; use nullable types (`?`) for optional values when omission must be distinguishable from a default. Non-nullable value types (e.g., `int`) default to `0` and are valid without `required`.
-- **Descriptions:** Always required (`[Option(Description = "...")]`). Use `OptionDescriptions.X` for shared options (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`), or a toolset `{Toolset}OptionDescriptions` constants class for options reused across commands.
-- **Nested objects:** Use `[OptionContainer<TContainer>(Prefix = "prefix")]` on a complex property so attributed child properties become `--prefix-child-name` (e.g., prefix `hello` + child `World` → `--hello-world`).
-- **Parameter naming:**
-  - Always use `subscription` (never `subscriptionId`) so callers can pass either IDs or names resolved by `ISubscriptionResolver`.
-  - Use `resourceGroup` (never `resourceGroupName`), singular resource nouns (`server` not `serverName`), and omit unnecessary `-name` suffixes (`--account`, `--container`) unless disambiguation is needed (e.g., `--subscription-name`).
-  - Align parameter names and order with Azure SDK parameters and sibling commands.
-- **Property ordering:** Command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`.
-- **No `RegisterOptions`/`BindOptions` or `OptionDefinitions`:** Validation belongs in `ValidateOptions(TOptions, ValidationResult)` — never `Command.Validators.Add`.
+- **Flat POCOs:** No class inheritance; implement `ISubscriptionOption` when accepting `--subscription` (`ISubscriptionOption` defines `Subscription` only — add `Tenant` separately if accepted).
+- **Binding & naming:** Public writable properties with `[Option(Description = "...")]` bind as `--kebab-case` (`LocalFilePath` → `--local-file-path`); unattributed properties are ignored. Set `Name` only when kebab-case is wrong (`[Option(Name = "foobar", ...)]` on `FooBar`). Use `[OptionContainer<TContainer>(Prefix = "prefix")]` for nested option objects (`--prefix-child-name`; optional containers cannot contain `required` children).
+- **Required vs. optional:** Driven by the `required` keyword (`RequiredMemberAttribute`), not nullability. Use `required` when callers must supply the option; use nullable types (`?`) for optional values. Non-nullable value types (e.g., `int`) default to `0` without `required`.
+- **Blank-string gotcha:** `OptionTypeHandler` skips blank/whitespace checks on optional options even when `AllowEmptyOrWhiteSpaceString` is `false`. Explicitly reject supplied blank values in `ValidateOptions` when the tool contract requires it (`ICursorOption.Cursor` is already rejected by `OptionBinder` when blank).
+- **Descriptions & naming:** Use `OptionDescriptions.X` (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`, `Scope`) or a toolset `{Toolset}OptionDescriptions` constants class. Use `subscription` (never `subscriptionId`), `resourceGroup` (never `resourceGroupName`), singular nouns (`server`, `--account` without redundant `-name`), and align names/order with Azure SDK and sibling commands. Order command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`.
+- **Cursor pagination:** For paged tools, follow [`docs/tool-pagination.md`](https://github.com/microsoft/mcp/blob/main/docs/tool-pagination.md): implement `ICursorOption` with `[Option(Description = ICursorOption.CursorDescription)]`, bind fixed arguments with `PaginationCursor`, return `nextCursor` in the result payload (never on `CommandResponse`), and omit `nextCursor`/return `null` on completion.
 
 ### Option Usage Patterns
 
-**Pattern 1: Standard command with required and optional options**
-
-```csharp
-public class {Resource}{Operation}Options : ISubscriptionOption
-{
-    [Option(Description = "The name of the Azure Storage account.")]
-    public required string Account { get; set; }
-
-    [Option(Description = "The name of the container within the storage account.")]
-    public required string Container { get; set; }
-
-    [Option(Description = "Optional filter expression.")]
-    public string? Filter { get; set; }
-
-    [Option(Description = OptionDescriptions.ResourceGroup)]
-    public string? ResourceGroup { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Description = OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-}
-```
-
-**Pattern 2: Mutually exclusive options**
-
-Make both options optional in the POCO and validate in `ValidateOptions`:
+**Mutually exclusive options** — declare both optional and validate in `ValidateOptions`:
 
 ```csharp
 public class MyCommandOptions : ISubscriptionOption
@@ -204,68 +171,36 @@ public class MyCommandOptions : ISubscriptionOption
     public string? Tenant { get; set; }
 }
 
-// In the command class:
-public override void ValidateOptions(MyCommandOptions options, ValidationResult validationResult)
+// In ValidateOptions:
+var hasEither = !string.IsNullOrWhiteSpace(options.EitherThis);
+var hasOr = !string.IsNullOrWhiteSpace(options.OrThat);
+if (!hasEither && !hasOr)
 {
-    base.ValidateOptions(options, validationResult);
-
-    var hasEitherThis = !string.IsNullOrWhiteSpace(options.EitherThis);
-    var hasOrThat = !string.IsNullOrWhiteSpace(options.OrThat);
-
-    if (!hasEitherThis && !hasOrThat)
-    {
-        const string message = "Either --either-this or --or-that must be provided.";
-        validationResult.AddError(message, message);
-    }
-
-    if (hasEitherThis && hasOrThat)
-    {
-        const string message = "Cannot specify both --either-this and --or-that. Use only one.";
-        validationResult.AddError(message, message);
-    }
+    const string message = "Either --either-this or --or-that must be provided.";
+    validationResult.AddError(message, message);
+}
+else if (hasEither && hasOr)
+{
+    const string message = "Cannot specify both --either-this and --or-that. Use only one.";
+    validationResult.AddError(message, message);
 }
 ```
 
-**Pattern 3: Enum or constrained options**
+**Constrained / allowed-value options** — validate deterministically in `ValidateOptions`:
 
 ```csharp
-public class MyCommandOptions : ISubscriptionOption
+if (!s_allowedFormats.Contains(options.Format))
 {
-    [Option(Description = "The output format.")]
-    public required string Format { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Description = OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-}
-
-// In the command class:
-public override void ValidateOptions(MyCommandOptions options, ValidationResult validationResult)
-{
-    base.ValidateOptions(options, validationResult);
-
-    if (!new[] { "json", "table", "csv" }.Contains(options.Format, StringComparer.OrdinalIgnoreCase))
-    {
-        const string message = "--format must be one of: json, table, or csv.";
-        validationResult.AddError(message, message);
-    }
+    const string message = "--format must be one of: json, table, or csv.";
+    validationResult.AddError(message, message);
 }
 ```
 
-**Pattern 4: Interface constraints for shared base command behavior**
+**Shared option interfaces (for intermediate base commands)** — compose small interfaces while keeping the concrete options POCO flat:
 
 ```csharp
-public interface IStorageAccountOption
-{
-    string Account { get; }
-}
-
-public interface IContainerOption : IStorageAccountOption
-{
-    string Container { get; }
-}
+public interface IStorageAccountOption { string Account { get; } }
+public interface IContainerOption : IStorageAccountOption { string Container { get; } }
 
 public class BlobUploadOptions : ISubscriptionOption, IContainerOption
 {
@@ -275,33 +210,8 @@ public class BlobUploadOptions : ISubscriptionOption, IContainerOption
     [Option(Description = "The name of the container within the storage account.")]
     public required string Container { get; set; }
 
-    [Option(Description = "The blob name/path within the container.")]
-    public required string Blob { get; set; }
-
-    [Option(Description = "The local file path to read content from.")]
-    public required string LocalFilePath { get; set; }
-
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }
-
-    [Option(Description = OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
-}
-```
-
-**Pattern 5: List/query commands with optional filtering**
-
-```csharp
-public class StorageAccountListOptions : ISubscriptionOption
-{
-    [Option(Description = OptionDescriptions.ResourceGroup)]
-    public string? ResourceGroup { get; set; }
-
-    [Option(Description = OptionDescriptions.Subscription)]
-    public string? Subscription { get; set; }
-
-    [Option(Description = OptionDescriptions.Tenant)]
-    public string? Tenant { get; set; }
 }
 ```
 
@@ -328,273 +238,80 @@ Test custom validation by asserting both the caller-facing errors and `Telemetry
 
 ## Command Metadata and Result Contracts
 
-### Command Class Pattern
+See [Phase 1c](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md#1c-command-class) for the canonical two-generic command template. Key contract rules:
 
-```csharp
-using System.Net;
-using System.Text.Json.Serialization.Metadata;
-using Azure.Mcp.Core.Commands.Subscription;       // For SubscriptionCommand<TOptions, TResult>
-using Azure.Mcp.Core.Services.Azure.Subscription;  // For ISubscriptionResolver
-using Azure.Mcp.Tools.{Toolset}.Models;
-using Azure.Mcp.Tools.{Toolset}.Options;
-using Azure.Mcp.Tools.{Toolset}.Services;
-using Microsoft.Extensions.Logging;
-using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Models.Command;
+- **Structured output:** Declare the result record `public` inside the command, override `ResultTypeInfo` with the source-generated `JsonTypeInfo<TResult>`, and call `SetResult(context, ...)` on success. When `--structured-output-mode` is enabled, the same type supplies `outputSchema` and `structuredContent`; see [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md).
+- **Empty arrays:** Coalesce null/empty array payloads to `[]`.
 
-[CommandMetadata(
-    Id = "<GUID>",
-    Name = "operation",
-    Title = "Human Readable Title",
-    Description = """
-        Detailed description of what the command does.
-        Returns description of return format.
-          Required options:
-        - list required options
-        """,
-    OperationPlane = ToolOperationPlane.Control,
-    Destructive = false,    // Set to true for tools that modify resources
-    OpenWorld = false,      // Set to true only for unpredictable external systems
-    Idempotent = true,      // Set to false for tools that are not idempotent
-    ReadOnly = true,        // Set to false for tools that modify resources
-    Secret = false,         // Set to true for tools that may return sensitive information
-    LocalRequired = false)] // Set to true for tools requiring local execution/resources
-public sealed class {Resource}{Operation}Command(
-    ILogger<{Resource}{Operation}Command> logger,
-    I{Toolset}Service service,
-    ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<{Resource}{Operation}Options, {Resource}{Operation}Command.{Resource}{Operation}CommandResult>(subscriptionResolver)
-{
-    private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
-    private readonly I{Toolset}Service _service = service;
+### CommandMetadata Properties and Validation
 
-    public override JsonTypeInfo<{Resource}{Operation}CommandResult>? ResultTypeInfo =>
-        {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult;
+Every `[CommandMetadata]` property is required and must be declared explicitly (even when using defaults):
 
-    public override void ValidateOptions({Resource}{Operation}Options options, ValidationResult validationResult)
-    {
-        base.ValidateOptions(options, validationResult);  // checks --subscription
-        // Add custom validation if needed using validationResult.AddError(...)
-    }
+- **`Id`:** Fresh unique GUID per command.
+- **`OperationPlane`:** Classify by the API the tool acts against to produce the user's result (see [`docs/design/operation-plane-metadata.md`](https://github.com/microsoft/mcp/blob/main/docs/design/operation-plane-metadata.md)):
+  - `Control`: Azure Resource Manager or other management-plane APIs (listing/creating/updating resources).
+  - `Data`: Service data-plane APIs. **ARM lookups performed only as setup** (resolving a subscription or reading an endpoint) do **not** make a tool `Both`.
+  - `Both`: Distinct user-facing actions on both planes in one call, or argument-dependent dispatch between planes.
+  - `NotApplicable`: Calls no service (embedded docs, local code generation, server control).
 
-    public override async Task<CommandResponse> ExecuteAsync(
-        CommandContext context, {Resource}{Operation}Options options, CancellationToken cancellationToken)
-    {
-        try
-        {
-            context.Activity?.WithSubscriptionTag(options);
+Cross-check behavioral flags against these heuristics before committing:
 
-            var results = await _service.{Operation}(
-                options.RequiredOption,
-                options.OptionalOption,
-                options.Subscription!,
-                cancellationToken);
-
-            // For enumerable returns, coalesce null into an empty enumerable.
-            SetResult(context, new(results ?? []));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}",
-                Name, options.Subscription);
-            HandleException(context, ex);
-        }
-
-        return context.Response;
-    }
-
-    public record {Resource}{Operation}CommandResult(List<ResultType> Results);
-}
-```
-
-Key requirements:
-- **Two-generic base:** `SubscriptionCommand<TOptions, TResult>` (or `BaseCommand<TOptions, TResult>` when no subscription is needed). Do not override `RegisterOptions`/`BindOptions`, take `ParseResult` in `ExecuteAsync`, or call `Validate()` manually.
-- **Structured output:** Declare the result record `public` inside the command, override `ResultTypeInfo`, and call `SetResult(context, ...)` for success. When `--structured-output-mode` enables structured output, the same source-generated type supplies `outputSchema` and `structuredContent`; see [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md).
-- **Empty arrays:** Commands returning array payloads return `[]` if the service returned `null` or empty.
-- **Error overrides:** Only override `GetErrorMessage` and `GetStatusCode` when behavior differs from the base class.
-
-### Tool ID and CommandMetadata Properties
-
-All `[CommandMetadata]` properties are required; declare every property explicitly even when using defaults, and choose `OperationPlane` to match the APIs the tool acts against.
-
-- **`Id`:** A unique GUID generated per command to uniquely identify the tool across the system.
-- **`OpenWorld`:** `false` for Azure Resource Manager, Microsoft Graph, and well-defined Microsoft APIs (including storage accounts, databases, VMs, Bicep schemas, best practices). Set `true` only for unpredictable external systems, arbitrary URLs, or unstructured third-party sources.
-- **`Destructive`:** `true` if the command deletes, purges, resets, revokes, or modifies critical state/replaces resources; `false` for reads, queries, and non-destructive operations.
-- **`Idempotent`:** `true` if repeated calls with identical inputs produce the same result or converge to the same state; `false` if repeated calls rotate keys, generate new names, or accumulate side effects.
-- **`ReadOnly`:** `true` if the command only retrieves data; `false` if it creates, updates, deletes, writes, or uploads.
-- **`Secret`:** `true` if the command returns access keys, connection strings, passwords, certificates, tokens, or credential metadata; `false` for public or non-sensitive configuration. **When in doubt, set `true`.**
-- **`LocalRequired`:** `true` if the command requires local files, CLI tools (Azure CLI, Docker, npm), or locally installed software; `false` for pure cloud API commands.
-
-### Metadata Validation Checklist
-
-Cross-check `[CommandMetadata]` values before proceeding:
-
-- **`Destructive`:** `true` if name contains `delete`, `remove`, `purge`, `reset`, `revoke`, or `update`, or replaces existing resources; `false` if `list`, `get`, `show`, `query`, or `describe`.
-- **`Idempotent`:** `false` if repeated calls produce different outputs, rotate secrets, or auto-generate names; `true` if outputs or target state are repeatable.
-- **`OpenWorld`:** `false` for Azure Resource Manager, Microsoft Graph, and well-defined Microsoft APIs; `true` only for user-controlled/external unpredictable systems.
-- **`ReadOnly`:** `false` for create/update/delete/write/upload; `true` for retrieval-only commands (usually the inverse of `Destructive`, except both are `false` for creates).
-- **`Secret`:** Default to `true` if the command/resource mentions `credential`, `secret`, `key`, `password`, `certificate`, `token`, or `connectionstring`, unless it provably cannot expose sensitive data.
-- **`LocalRequired`:** `false` for remote API-only commands; `true` only when local filesystem/CLI/software is required.
+| Property | Set `true` when | Set `false` when | Validation heuristic |
+|---|---|---|---|
+| `Destructive` | Deletes, purges, resets, revokes, updates, or replaces resources | Read-only or non-destructive operations | `true` for `delete`/`remove`/`purge`/`reset`/`revoke`/`update`; `false` for `list`/`get`/`show`/`query`/`describe` |
+| `Idempotent` | Repeated calls with identical inputs return the same result or converge to the same state | Rotates keys/secrets, auto-generates names, or accumulates side effects | `false` if calling twice with identical arguments produces a different result |
+| `OpenWorld` | Interacts with arbitrary user-supplied URLs or unpredictable external systems | Calls ARM, Microsoft Graph, or well-defined Microsoft APIs | Most Azure tools are `false` |
+| `ReadOnly` | Only retrieves/queries data | Creates, updates, deletes, writes, or uploads | Usually the inverse of `Destructive` (both `false` for create operations) |
+| `Secret` | May return keys, secrets, connection strings, passwords, tokens, certificates, or credential metadata | Returns only resource names or non-sensitive configuration | Default `true` if name/resource mentions `credential`/`secret`/`key`/`password`/`certificate`/`token`/`connectionstring` — when in doubt, set `true` |
+| `LocalRequired` | Requires local files, CLI tools (Azure CLI, Docker, npm), or locally installed software | Pure remote API calls | `LocalRequired = true` tools are hidden/rejected in remote HTTP mode |
 
 ### JSON Serialization Context
 
-All models and command result record types returned in `Response.Results` must be registered in a source-generated JSON context for AOT safety and performance (`src/Commands/{Toolset}JsonContext.cs`, matching class name):
+Register every top-level result record and returned model in one source-generated context per toolset (`src/Commands/{Toolset}JsonContext.cs`, matching class name), with `[JsonSerializable]` attributes sorted alphabetically by model name:
 
 ```csharp
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.{Toolset}.Commands.{Resource};
-using Azure.Mcp.Tools.{Toolset}.Models;
-
 [JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
 [JsonSerializable(typeof(YourModelType))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-)]
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class {Toolset}JsonContext : JsonSerializerContext;
 ```
 
-Guidelines:
-- Include only types actually serialized as top-level result payloads, sorted alphabetically by `typeof` model name.
-- Use one context per toolset unless size forces logical grouping.
-- Expose `{Toolset}JsonContext.Default.{Resource}{Operation}CommandResult` via `ResultTypeInfo` and assign via `SetResult(context, ...)`.
-
 ### Toolset Registration Reference
 
-Register the new toolset alphabetically in `servers/Azure.Mcp.Server/src/Program.cs`:
-
-```csharp
-private static IAreaSetup[] RegisterAreas()
-{
-    return [
-        // Core toolsets (alphabetical)
-        new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
-        new Azure.Mcp.Tools.Extension.ExtensionSetup(),
-
-        // Azure service toolsets (alphabetical)
-        new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),
-        new Azure.Mcp.Tools.Storage.StorageSetup(),
-    ];
-}
-```
-
-Keep `RegisterAreas()` alphabetically sorted (do **not** modify the `#if !BUILD_NATIVE` block; see [Native AOT Compatibility](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#native-aot-compatibility)).
+Register new toolsets alphabetically in `servers/Azure.Mcp.Server/src/Program.cs` `IAreaSetup[] RegisterAreas()` (outside `#if !BUILD_NATIVE`; do **not** add exclusions there — see [Native AOT Compatibility](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#native-aot-compatibility)).
 
 ## Error Handling
 
-Commands in Azure MCP follow a standardized error handling approach using the base `HandleException` method inherited from `BaseCommand`. Here are the key aspects:
+Always call `HandleException(context, ex)` inside command `catch` blocks. `BaseCommand` and `AuthenticatedCommand` already handle standard error mapping, telemetry, and response formatting:
 
-### 1. Status Code Mapping
-The base implementation returns InternalServerError for all exceptions by default:
-```csharp
-protected virtual HttpStatusCode GetStatusCode(Exception ex) => HttpStatusCode.InternalServerError;
-```
+- **`HandleException` (`BaseCommand`):**
+  - Handles `CommandValidationException` first (status code, formatted missing options, `TelemetryFailureMessage`, `Results = null`).
+  - Records structured telemetry tags (`StatusCode`, plus `ErrorCode`/`RequestId` for `RequestFailedException` and `ErrorCode`/`CorrelationId`/`AadStsErrorCode` for MSAL exceptions).
+  - Sets `response.Status = GetStatusCode(ex)`, appends the troubleshooting link (`https://aka.ms/azmcp/troubleshooting`) to `GetErrorMessage(ex)`, and writes `ExceptionResult` using `CoreJsonContext.Default.ExceptionResult` (stack trace included only in `DEBUG` builds).
+- **Default `GetStatusCode` mappings:**
+  - `BaseCommand`: `ArgumentException` → `400`, `OnBehalfOfUserTokenRequiredException` → `403`, `InvalidOperationException` → `422`, `HttpRequestException` → status or `503`, `RequestFailedException` → Azure status, `MsalServiceException` → MSAL status, fallback → `500`.
+  - `AuthenticatedCommand` (and `SubscriptionCommand`) adds: `KeyNotFoundException` → `404`, `AuthenticationFailedException` → `401`, `TimeoutException` / `TaskCanceledException` → `504`.
+- **Default `GetErrorMessage` mappings (`AuthenticatedCommand`):** Already produces actionable messages for `CredentialUnavailableException`, `AuthenticationFailedException`, `RequestFailedException` with `InvalidAuthenticationTokenTenant` (401 tenant mismatch), `HttpRequestException`, `TimeoutException`, and `TaskCanceledException`.
 
-Commands should override this to provide appropriate status codes:
-```csharp
-protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-{
-    Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,  // Use Azure-reported status
-    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,   // Unauthorized
-    ValidationException => HttpStatusCode.BadRequest,    // Bad request
-    _ => base.GetStatusCode(ex) // Fall back to InternalServerError
-};
-```
+### Overriding Error Handlers
 
-### 2. Error Message Formatting
-The base implementation returns the exception message:
-```csharp
-protected virtual string GetErrorMessage(Exception ex) => ex.Message;
-```
+Override `GetErrorMessage` or `GetStatusCode` **only** to add service-specific guidance (such as specific `RequestFailedException.ErrorCode` values or data-plane RBAC hints), and always fall back to `base`:
 
-Commands should override this to provide user-actionable messages:
 ```csharp
 protected override string GetErrorMessage(Exception ex) => ex switch
 {
-    Azure.Identity.AuthenticationFailedException authEx =>
-        $"Authentication failed. Please run 'az login' to sign in. Details: {authEx.Message}",
-    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+    RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource name and that you have access.",
-    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-        $"Access denied. Ensure you have appropriate RBAC permissions. Details: {reqEx.Message}",
-    Azure.RequestFailedException reqEx => reqEx.Message,
+    RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+        "Access denied. Ensure your identity has the required RBAC role on the target resource.",
     _ => base.GetErrorMessage(ex)
 };
 ```
 
-### 3. Response Format
-The base `HandleException` method in BaseCommand handles the response formatting:
-```csharp
-protected virtual void HandleException(CommandContext context, Exception ex)
-{
-    context.Activity?.SetStatus(ActivityStatusCode.Error);
-
-    var response = context.Response;
-    var result = new ExceptionResult(
-        Message: ex.Message,
-        StackTrace: ex.StackTrace,
-        Type: ex.GetType().Name);
-
-    response.Status = GetStatusCode(ex);
-    response.Message = GetErrorMessage(ex) + ". To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-    response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
-}
-```
-
-Commands should call `HandleException(context, ex)` in their catch blocks.
-
-### 4. Service-Specific Errors
-Commands should override error handlers to add service-specific mappings:
-```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
-{
-    // Add service-specific cases
-    ResourceNotFoundException =>
-        "Resource not found. Verify name and permissions.",
-    ServiceQuotaExceededException =>
-        "Service quota exceeded. Request quota increase.",
-    _ => base.GetErrorMessage(ex) // Fall back to base implementation
-};
-```
-
-### 5. Error Context Logging
-Always log errors with relevant context information:
-```csharp
-catch (Exception ex)
-{
-    _logger.LogError(ex, "Error in {Operation}. Subscription: {Subscription}", Name, options.Subscription);
-    HandleException(context, ex);
-}
-```
-
-**DO NOT** log `{@Options}` as this may log sensitive information. Only log parameters that are known to be safe.
-
-### 6. Common Error Scenarios to Handle
-
-1. **Authentication/Authorization**
-   - Azure credential expiry
-   - Missing RBAC permissions
-   - Invalid connection strings
-
-2. **Validation**
-   - Missing required parameters
-   - Invalid parameter formats
-   - Conflicting options
-
-3. **Resource State**
-   - Resource not found
-   - Resource locked/in use
-   - Invalid resource state
-
-4. **Service Limits**
-   - Throttling/rate limits
-   - Quota exceeded
-   - Service capacity
-
-5. **Network/Connectivity**
-   - Service unavailable
-   - Request timeouts
-   - Network failures
+- Do **not** remap `OnBehalfOfUserTokenRequiredException` away from `403 Forbidden` (it derives from `Exception`, not `InvalidOperationException`, specifically so commands do not mask it as a retryable 5xx error).
+- Never include raw option objects (`{@Options}`), tokens, keys, or raw backend payloads in logs or caller messages — log only individually named, known-safe fields (`Name`, `options.Subscription`, `options.ResourceGroup`).
 
 ## Azure Service Integration and Sovereign Clouds
 
@@ -605,13 +322,13 @@ catch (Exception ex)
 - **Add to `Directory.Packages.props` first** (`<PackageVersion Include="Azure.ResourceManager.{Service}" Version="..." />`), then add `<PackageReference Include="Azure.ResourceManager.{Service}" />` (without version) in `Azure.Mcp.Tools.{Toolset}.csproj`. Keep versions consistent across projects.
 
 **Service Base Class Selection:**
-1. **Azure Resource Graph (ARG) queries (`BaseAzureResourceService`):** Provides `ExecuteResourceQueryAsync<T>()` and `ExecuteSingleResourceQueryAsync<T>()` with subscription resolution and tenant lookup.
+1. **Azure Resource Graph (ARG) queries (`BaseAzureResourceService`):** Provides `ExecuteResourceQueryAsync<T>()`, `ExecuteSingleResourceQueryAsync<T>()`, and `ExecuteManagementGroupResourceQueryAsync<T>()` with subscription resolution and tenant lookup.
    ```csharp
    public class MyService(IAzureService azureService)
        : BaseAzureResourceService(azureService), IMyService
    {
        public async Task<ResourceQueryResults<MyResource>> ListResourcesAsync(
-           string resourceGroup,
+           string? resourceGroup,
            string subscription,
            string? tenant = null,
            CancellationToken cancellationToken = default)
@@ -620,7 +337,6 @@ catch (Exception ex)
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               null,
                ConvertToMyResourceModel,
                tenant: tenant,
                cancellationToken: cancellationToken);
@@ -628,7 +344,7 @@ catch (Exception ex)
 
        public async Task<MyResource?> GetResourceAsync(
            string resourceName,
-           string resourceGroup,
+           string? resourceGroup,
            string subscription,
            string? tenant = null,
            CancellationToken cancellationToken = default)
@@ -637,7 +353,6 @@ catch (Exception ex)
                "Microsoft.MyService/resources",
                resourceGroup,
                subscription,
-               null,
                ConvertToMyResourceModel,
                additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
                tenant: tenant,
@@ -746,15 +461,19 @@ public class MyService(IAzureService azureService)
                 $"https://{resourceName}.service.core.chinacloudapi.cn",
             AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud =>
                 $"https://{resourceName}.service.core.usgovcloudapi.net",
-            _ => $"https://{resourceName}.service.core.windows.net"
+            _ => throw new ArgumentException(
+                $"The configured Azure cloud is not supported. Value given: '{AzureService.CloudConfiguration.CloudType}'.",
+                nameof(AzureService.CloudConfiguration.CloudType))
         };
 }
 ```
 
+Keep cloud suffixes synchronized with `core/Microsoft.Mcp.Core/src/Helpers/EndpointValidator.AllowLists.cs` so `ValidateAzureServiceEndpoint` accepts constructed endpoints for every supported cloud.
+
 | Scenario | Requirement |
 |---|---|
 | Resource Graph or ARM via `BaseAzureResourceService` / `CreateArmClientWithApiVersionAsync` | ✅ Cloud-aware automatically |
-| Data-plane SDK requiring an explicit URL | ✅ `AzureService.CloudConfiguration.CloudType` switch + `ValidateAzureServiceEndpoint` |
+| Data-plane SDK requiring an explicit URL | ✅ `AzureService.CloudConfiguration.CloudType` switch (fail closed on unknown cloud) + `ValidateAzureServiceEndpoint` |
 | Any hardcoded `*.windows.net`, `*.azure.com`, `*.chinacloudapi.cn`, etc. | ❌ Not allowed |
 
 Reference implementations: `StorageService`, `CosmosService`, `SearchService`, and `ConfidentialLedgerService`.
@@ -827,8 +546,8 @@ Requirements:
 
 ### Unit Testing Patterns
 
-- **Base class:** Inherit `SubscriptionCommandUnitTestsBase<TCommand, TService>` for subscription commands (registers a mock `ISubscriptionResolver` in DI — using `CommandUnitTestsBase` causes DI failures), or `CommandUnitTestsBase<TCommand, TService>` for non-subscription commands.
-- **Argument-based execution:** Prefer `ExecuteCommandAsync("--param", "value")` over constructing options directly so `[Option]` registration, `OptionBinder`, `ValidateOptions`, and `ISubscriptionResolver` run end-to-end.
+- **Base class:** Inherit `SubscriptionCommandUnitTestsBase<TCommand, TService>` for subscription commands (registers a mock `ISubscriptionResolver` in DI — using `CommandUnitTestsBase` causes DI failures), or `CommandUnitTestsBase<TCommand, TService>` for `AuthenticatedCommand` / `BaseCommand` commands.
+- **Argument-based execution & context reuse:** Prefer `ExecuteCommandAsync("--param", "value")` so `[Option]` registration, `OptionBinder`, `ValidateOptions`, and `ISubscriptionResolver` run end-to-end. Note that `CommandUnitTestsBase` reuses a single `Context` across `ExecuteCommandAsync` calls within one test — create a fresh `CommandContext` or separate test methods when testing error and success cases.
 - **Mocks & tokens:** Use `Arg.Any<CancellationToken>()` in NSubstitute setups, `TestContext.Current.CancellationToken` when invoking product code, and `Arg.Is(value)` or direct values (never `Arg.Is<T>(x => x == value)`). Never use `CancellationToken.None` or `default`.
 - **Deserialization:** Always use `ValidateAndDeserializeResponse(response, {Toolset}JsonContext.Default.{Operation}CommandResult)` — never define custom test models or call context-less `JsonSerializer.Deserialize<TestModel>(json)`.
 - **Environment variable mutation:** If any test mutates environment variables, reference `$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj` and add `AssemblyAttributes.cs`:
@@ -1043,84 +762,23 @@ Live tests must inherit from `RecordedCommandTestsBase` and follow [`/docs/recor
 
 ## Remote MCP Server Considerations
 
-Commands must be **transport-agnostic** — they work identically in stdio (local) and HTTP (remote) modes with multiple concurrent users.
+Commands must be **transport-agnostic** — they run identically in stdio (local) and HTTP (remote) modes across concurrent users.
 
-### Authentication Strategies
+### Outgoing Authentication Strategies
 
-Azure MCP Server supports two outgoing authentication strategies in remote HTTP mode:
+| Strategy | Flag | Behavior |
+|---|---|---|
+| **On-Behalf-Of (OBO)** | `--outgoing-auth-strategy UseOnBehalfOf` | Exchanges the caller's delegated Entra ID bearer token for downstream Azure tokens; enforces per-user RBAC and audit trails. Requires a user token (app-only tokens throw `OnBehalfOfUserTokenRequiredException`, mapped to `403`). |
+| **Hosting Environment Identity** | `--outgoing-auth-strategy UseHostingEnvironmentIdentity` | Uses the server's Managed Identity / Service Principal; all callers share the server's RBAC permissions. |
 
-1. **On-Behalf-Of (OBO) Flow (`--outgoing-auth-strategy UseOnBehalfOf`):** Client sends an Entra ID bearer token; the server exchanges it for downstream Azure tokens so each API call enforces the user's RBAC permissions and records user identity in audit logs. Test with multiple users having different RBAC levels.
-2. **Hosting Environment Identity (`--outgoing-auth-strategy UseHostingEnvironmentIdentity`):** Server uses its own identity (Managed Identity / Service Principal), sharing one RBAC permission level across all callers (behaves like `DefaultAzureCredential` in stdio mode).
+`IAzureTokenCredentialProvider` and `IAzureService` handle both strategies and stdio automatically — no transport-specific code belongs in commands.
 
-No command-level changes are needed for either strategy; `IAzureTokenCredentialProvider` / `IAzureService` handles credential acquisition automatically across all modes.
-
-### Transport-Agnostic Design and Concurrency
+### Transport-Agnostic Design Rules
 
 - **Stateless & thread-safe:** Inject singleton services via primary constructors; never store per-request `CommandContext` or `TOptions` in instance fields (concurrent HTTP requests will race).
 - **No transport branching:** Never inspect `ASPNETCORE_URLS` or `_httpContextAccessor.HttpContext` inside commands.
-- **Tenant & credential handling:** Pass `options.Tenant` through service APIs to `CreateArmClientAsync(tenant, cancellationToken: cancellationToken)` or `GetCredential(tenant, cancellationToken)` (`IAzureService` validates tenant match in OBO mode and resolves default/requested tenant in hosting/stdio modes).
-
-```csharp
-public sealed class StorageAccountGetCommand(
-    IStorageService storageService,
-    ILogger<StorageAccountGetCommand> logger,
-    ISubscriptionResolver subscriptionResolver)
-    : SubscriptionCommand<StorageAccountGetOptions, StorageAccountGetCommand.StorageAccountGetResult>(subscriptionResolver)
-{
-    private readonly IStorageService _storageService = storageService;
-    private readonly ILogger<StorageAccountGetCommand> _logger = logger;
-
-    public override JsonTypeInfo<StorageAccountGetResult>? ResultTypeInfo =>
-        StorageJsonContext.Default.StorageAccountGetResult;
-
-    public override async Task<CommandResponse> ExecuteAsync(
-        CommandContext context,
-        StorageAccountGetOptions options,
-        CancellationToken cancellationToken)
-    {
-        var accounts = await _storageService.GetStorageAccountsAsync(
-            options.Subscription!,
-            options.ResourceGroup,
-            options.Tenant,
-            cancellationToken);
-
-        SetResult(context, new(accounts ?? []));
-        return context.Response;
-    }
-
-    public record StorageAccountGetResult(List<StorageAccount> Accounts);
-}
-```
-
-### Error Handling and Documentation for Remote Scenarios
-
-Override `GetErrorMessage` when remote auth/tenant errors benefit from clearer caller guidance (without exposing secrets):
-
-```csharp
-protected override string GetErrorMessage(Exception ex) => ex switch
-{
-    RequestFailedException reqEx when reqEx.Status == 401 =>
-        "Authentication failed. In remote mode, ensure your token has the required " +
-        "Mcp.Tools.ReadWrite scope and sufficient RBAC permissions on Azure resources.",
-    RequestFailedException reqEx when reqEx.Status == 403 =>
-        "Authorization failed. Your user account lacks the required RBAC permissions. " +
-        "In remote mode with On Behalf Of flow, permissions come from the authenticated user's identity. Learn more at https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow",
-    InvalidOperationException invEx when invEx.Message.Contains("tenant") =>
-        "Tenant mismatch. In remote OBO mode, the requested tenant must match your " +
-        "authenticated user's tenant ID.",
-    _ => base.GetErrorMessage(ex)
-};
-```
-
-- **Testing remote behavior:** Unit tests mock services; recorded `RecordedCommandTestsBase` tests inherently exercise transport-agnostic behavior, and `LocalRequired = true` tools verify HTTP exclusion via `AssertLocalToolIsUnavailableInHttpMode`.
-- **Permissions docs:** When authentication behavior differs by outgoing identity strategy, document a `### Permissions` section in `azmcp-commands.md`:
-  ```markdown
-  ### Permissions
-
-  **Stdio Mode:** Requires authenticated Azure identity (Azure CLI, VS Code, Managed Identity) using local RBAC permissions.
-  **Remote HTTP Mode (OBO):** Requires `Mcp.Tools.ReadWrite` scope + authenticated user's RBAC permissions.
-  **Remote HTTP Mode (Hosting Environment):** Requires `Mcp.Tools.ReadWrite` scope + server's Managed Identity RBAC permissions.
-  ```
+- **Tenant propagation:** Pass `options.Tenant` through service APIs to `CreateArmClientAsync(tenant, cancellationToken: cancellationToken)` or `GetCredential(tenant, cancellationToken)` so `IAzureService` enforces tenant validation in OBO mode and resolves default/requested tenant in hosting/stdio modes.
+- **Testing:** Unit tests mock services; recorded `RecordedCommandTestsBase` tests exercise transport-agnostic behavior, and `LocalRequired = true` tools verify HTTP exclusion via `AssertLocalToolIsUnavailableInHttpMode`.
 
 ## Consolidated Mode Requirements
 
@@ -1147,29 +805,15 @@ All toolsets and dependencies are validated in CI by the **(Native AOT) Build mo
 
 ### Troubleshooting Common Issues
 
-#### Project Setup and Integration
-- **Missing package references:** Always add `<PackageVersion>` to `Directory.Packages.props` before adding `<PackageReference>` to the `.csproj`.
-- **Missing `test-resources-post.ps1` (`"SelfContainedPostScript is not supported..."`):** Every Azure service toolset must include `tests/test-resources-post.ps1` even if it uses only the basic template.
-- **Missing test imports:** Include `using System.Text.Json;`, `using Xunit;`, `using NSubstitute;`, and `using Azure.Mcp.Tests;`.
-
-#### ARM Compilation Errors
-- **Wrong subscription resolution:** Inject `IAzureService` and call `AzureService.GetSubscription(subscription, tenant, cancellationToken: cancellationToken)` instead of constructing `ArmClient` manually.
+- **Missing package version / restore error:** Add `<PackageVersion>` to `Directory.Packages.props` before adding `<PackageReference>` to the `.csproj`.
+- **`"SelfContainedPostScript is not supported if there is no test-resources-post.ps1"`:** Every Azure service toolset must include `tests/test-resources-post.ps1` even if it uses only the basic template.
 - **`cannot convert from 'CancellationToken' to 'string'`:** Pass named parameter `.GetAsync(resourceName, cancellationToken: cancellationToken)`.
-- **Missing SDK properties (`CreationDate`, `Edition`, etc.):** Verify actual SDK names (`CreatedOn`, `EarliestRestoreOn`, `CurrentSku?.Name`).
-- **`Operator '?' cannot be applied to operand of type 'AzureLocation'`:** `AzureLocation` is a struct — use `Location.ToString()`.
-- **Wrong resource access method (`.GetSqlServerAsync`):** Always access via collections: `.GetSqlServers().GetAsync(name, cancellationToken: cancellationToken)`.
-
-#### Live Test Infrastructure & Project Configuration
-- **Bicep validation / deployment failures:** Run `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`, check `@minLength`/`@maxLength`, supported API versions/locations, and re-run `./eng/scripts/Deploy-TestResources.ps1 -Paths {Toolset}` to inspect deployment logs.
-- **`Resource not found` / `Permission denied`:** Verify `Settings.ResourceBaseName` naming and ensure `testApplicationOid` has the right role assignment GUID on the resource scope.
+- **Missing SDK property (`CreationDate`, `Edition`, etc.) or `Operator '?' cannot be applied to 'AzureLocation'`:** Verify actual SDK names (`CreatedOn`, `EarliestRestoreOn`, `CurrentSku?.Name`) and use `Location.ToString()` (`AzureLocation` is a struct).
+- **Missing ARM method (`.GetSqlServerAsync`):** Access via collections: `.GetSqlServers().GetAsync(name, cancellationToken: cancellationToken)`.
 - **`MCP server process exited unexpectedly` / `azmcp.exe not found`:** Ensure the test `.csproj` has `<OutputType>Exe</OutputType>`, `<HasLiveTests>true</HasLiveTests>`, `<HasUnitTests>true</HasUnitTests>`, and references `$(RepoRoot)servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj`.
-
-#### Service & Base Command Issues
-- **JSON serialization failure:** Register every top-level result record and model type in `{Toolset}JsonContext.cs` and expose `ResultTypeInfo`.
-- **Toolset not discovered / DI errors:** Verify services and commands are registered as singletons in `{Toolset}Setup.cs` and the setup is in `Program.cs` `RegisterAreas()` alphabetically.
-- **`HandleException` signature:** Call `HandleException(context, ex)`, not `HandleException(context.Response, ex)`.
-- **Missing subscription telemetry tag:** Call `context.Activity?.WithSubscriptionTag(options);`.
-- **Wrong base command logger generic / `TrimAnnotations`:** Match the two-generic logger type `ILogger<Base{Resource}Command<TOptions, TResult>>`, and include `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`.
+- **Bicep / live deployment failures (`Resource not found`, `Permission denied`):** Validate with `az bicep build`, verify `Settings.ResourceBaseName` naming and `testApplicationOid` RBAC role GUID/scope, and inspect logs from `./eng/scripts/Deploy-TestResources.ps1 -Paths {Toolset}`.
+- **JSON serialization or DI failure:** Register result/model types in `{Toolset}JsonContext.cs` (and expose `ResultTypeInfo`), register services/commands as singletons in `{Toolset}Setup.cs`, and register new toolsets alphabetically in `Program.cs` `RegisterAreas()`.
+- **Base command errors:** Call `HandleException(context, ex)` (not `context.Response`), match the two-generic logger type `ILogger<Base{Resource}Command<TOptions, TResult>>`, and include `using Microsoft.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`.
 
 ---
 

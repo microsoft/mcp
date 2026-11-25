@@ -443,8 +443,13 @@ azmcp adme search --endpoint <endpoint> \
                   [--auth-app-id <application-id-or-app-id-uri>]
 
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
-Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Supplying `--cursor` or `--search-after` also selects it.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+Cursor searches return `results.nextCursor`.
+Pass `nextCursor` unchanged as `--cursor`. Keep the same endpoint, data partition, tenant, auth app ID, kinds, sort,
+and `--search-after` setting. For snapshot paging, resend all original criteria. With `--search-after`, the service
+may support per-page overrides such as `--limit` and `--returned-fields`.
+`nextCursor` is omitted when the cursor-search result is empty or the service returns no continuation.
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
@@ -476,6 +481,11 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--cursor <cursor>] \
                                  [--tenant <tenant>] \
                                  [--auth-app-id <application-id-or-app-id-uri>]
+
+# The record listing returns results.nextCursor.
+# Pass nextCursor unchanged as --cursor with the same endpoint, data partition, kind, tenant, and auth app ID.
+# You may change --limit between pages. Omit --cursor for the first page and stop when nextCursor is absent.
+# An empty record-ID page can still have a nextCursor.
 
 # List all numeric versions of an OSDU record
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2999,6 +3009,75 @@ when caching is enabled; HTTP mode does not retain clients across calls.
 Tokens remain scoped to the client's credential and cloud; they are not shared
 across tenants.
 
+### Azure NetApp Files Operations
+
+```bash
+# Gets an Azure NetApp Files account by name from a specified resource group.
+# Returns the account name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --account <account> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--tenant <tenant>]
+
+# Creates an Azure NetApp Files account in a specified resource group and region.
+# Returns the account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --account <account> \
+                                 --location <location> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tenant <tenant>]
+
+# Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --account <account> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tags <json-key-value-object>] \
+                                 [--nfs-v4-id-domain <nfs-v4-id-domain>] \
+                                 [--tenant <tenant>]
+
+# Creates a capacity pool in an Azure NetApp Files account.
+# Size is specified in TiB and must be a positive multiple of 4.
+# Returns the pool configuration and provisioning state.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool create --account <account> \
+                              --pool <pool> \
+                              --size <size-in-tib> \
+                              --service-level <Flexible|Premium|Standard|StandardZRS|Ultra> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--location <location>] \
+                              [--qos-type <Auto|Manual>] \
+                              [--cool-access <true|false>] \
+                              [--encryption-type <Single|Double>] \
+                              [--custom-throughput-mibps <throughput>] \
+                              [--tags <json-key-value-object>] \
+                              [--tenant <tenant>]
+
+# Gets a capacity pool by name from an Azure NetApp Files account.
+# Returns the pool configuration, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool get --account <account> \
+                                    --pool <pool> \
+                                    --resource-group <resource-group> \
+                                    --subscription <subscription> \
+                                    [--tenant <tenant>]
+
+# Updates mutable properties of an Azure NetApp Files capacity pool.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated pool configuration and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool update --account <account> \
+                              --pool <pool> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--size <size-in-tib>] \
+                              [--qos-type <Auto|Manual>]
+
 ### Azure Database for MySQL Operations
 
 ```bash
@@ -3854,7 +3933,10 @@ azmcp marketplace product list --subscription <subscription> \
                                [--orderby <odata-orderby>] \
                                [--select <odata-select>] \
                                [--expand <odata-expand>] \
-                               [--next-cursor <pagination-cursor>]
+                               [--cursor <pagination-cursor>]
+
+# Returns one page and nextCursor when more results can be requested.
+# Pass nextCursor unchanged as --cursor with the same subscription, tenant, language, search, filter, orderby, select, and expand.
 
 # Get details about an Azure Marketplace product
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -5896,18 +5978,23 @@ azmcp storage account get --subscription <subscription> \
 azmcp storage blob container create --account <account> \
                                     --container <container>
 
-# Get detailed properties of Storage containers
+# Get detailed properties of a Storage container, or one page of up to 100 containers (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account, prefix, and tenant. Do not combine --cursor with --container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --account <account> \
                                  [--container <container>] \
-                                 [--prefix <prefix>]
+                                 [--prefix <prefix>] \
+                                 [--cursor <nextCursor>]
 
-# Get detailed properties of Storage blobs
+# Get detailed properties of a Storage blob, or one page of up to 100 blobs and directory prefixes (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account, container, prefix, delimiter, and tenant. Do not combine --cursor or --delimiter with --blob.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
-                           [--prefix <prefix>]
+                           [--prefix <prefix>] \
+                           [--delimiter <delimiter>] \
+                           [--cursor <nextCursor>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -5915,6 +6002,25 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+##### Blob Get Listing Parameters
+
+Use `--delimiter /` to browse one level of virtual directories. Each page contains at most 100 blobs and
+directory prefixes combined. `prefixes` contains virtual directory paths, including their delimiter.
+Continue with `--cursor <nextCursor>` and the same account, container, prefix, delimiter, and tenant,
+even when the previous page was empty. Listing requires a data-plane role such as **Storage Blob Data
+Reader** or **Storage Blob Data Contributor**.
+
+```bash
+# Browse blobs and virtual directories under datasets/
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> --prefix datasets/ --delimiter /
+
+# Continue browsing with the cursor from the previous response
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> \
+                      --prefix datasets/ --delimiter / --cursor "<nextCursor>"
 ```
 
 #### Disk Diagnostics
@@ -5973,9 +6079,11 @@ azmcp storage disk diagnose --subscription <subscription> \
 #### Table Storage
 
 ```bash
-# List tables in an Azure Storage account
+# List one page of up to 100 table names in an Azure Storage account (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account and tenant to continue.
+# For all Storage listings, continue after empty pages with nextCursor; an omitted/null nextCursor means completion.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage table list --account <account>
+azmcp storage table list --account <account> [--cursor <nextCursor>]
 ```
 
 ### Azure Storage Sync Operations

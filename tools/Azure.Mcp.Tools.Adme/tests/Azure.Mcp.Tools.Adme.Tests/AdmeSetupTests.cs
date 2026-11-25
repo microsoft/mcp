@@ -3,6 +3,7 @@
 
 using System.Net;
 using System.Net.Http.Headers;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Commands.HealthCheck;
 using Azure.Mcp.Tools.Adme.Commands.Schema;
 using Azure.Mcp.Tools.Adme.Commands.Search;
@@ -10,7 +11,6 @@ using Azure.Mcp.Tools.Adme.Commands.Storage;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -123,7 +123,7 @@ public sealed class AdmeSetupTests
     {
         var setup = new AdmeSetup();
         var services = new ServiceCollection();
-        services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         setup.ConfigureServices(services);
         using var serviceProvider = services.BuildServiceProvider();
 
@@ -160,7 +160,7 @@ public sealed class AdmeSetupTests
         string clientName = AdmeServiceHelper.HttpClientName)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
+        services.AddSingleton(Substitute.For<IAzureService>());
         new AdmeSetup().ConfigureServices(services);
         services.AddHttpClient(clientName)
             .ConfigurePrimaryHttpMessageHandler(() => handler);

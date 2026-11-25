@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.NetAppFiles.Commands.Account;
+using Azure.Mcp.Tools.NetAppFiles.Commands.Pool;
 using Azure.Mcp.Tools.NetAppFiles.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -18,9 +19,13 @@ public class NetAppFilesSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<INetAppFilesAccountService, NetAppFilesAccountService>();
+        services.AddSingleton<INetAppFilesPoolService, NetAppFilesPoolService>();
         services.AddSingleton<AccountCreateCommand>();
         services.AddSingleton<AccountGetCommand>();
         services.AddSingleton<AccountUpdateCommand>();
+        services.AddSingleton<PoolCreateCommand>();
+        services.AddSingleton<PoolGetCommand>();
+        services.AddSingleton<PoolUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -35,6 +40,12 @@ public class NetAppFilesSetup : IAreaSetup
         account.AddCommand<AccountCreateCommand>(serviceProvider);
         account.AddCommand<AccountGetCommand>(serviceProvider);
         account.AddCommand<AccountUpdateCommand>(serviceProvider);
+
+        var pool = new CommandGroup("pool", "Azure NetApp Files capacity pool operations.");
+        root.AddSubGroup(pool);
+        pool.AddCommand<PoolCreateCommand>(serviceProvider);
+        pool.AddCommand<PoolGetCommand>(serviceProvider);
+        pool.AddCommand<PoolUpdateCommand>(serviceProvider);
 
         return root;
     }

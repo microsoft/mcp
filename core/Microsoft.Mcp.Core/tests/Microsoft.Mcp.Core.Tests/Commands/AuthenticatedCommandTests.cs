@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Identity;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Commands;
@@ -70,5 +71,15 @@ public sealed class AuthenticatedCommandTests
 
         Assert.Contains("Authentication failed", message);
         Assert.Contains("az login", message);
+    }
+
+    [Fact]
+    public void ErrorHandling_OnBehalfOfUserTokenRequired_ReturnsForbiddenWithActionableMessage()
+    {
+        var command = new AuthTestCommand();
+        var ex = new OnBehalfOfUserTokenRequiredException();
+
+        Assert.Equal(HttpStatusCode.Forbidden, command.InvokeGetStatusCode(ex));
+        Assert.Contains("UseHostingEnvironmentIdentity", command.InvokeGetErrorMessage(ex));
     }
 }

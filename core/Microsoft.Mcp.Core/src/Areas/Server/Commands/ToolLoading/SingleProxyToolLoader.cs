@@ -598,6 +598,7 @@ public sealed class SingleProxyToolLoader(
             {
                 if (!realCommand.TryParseFromDictionary(jsonElementParameters, out commandOptions, out var parseErrors))
                 {
+                    RecordToolFailure(activity, ToolFailureReason.InvalidArguments);
                     return new CallToolResult
                     {
                         Content =
@@ -625,6 +626,7 @@ public sealed class SingleProxyToolLoader(
             {
                 commandResponse = await baseCommand.ExecuteAsync(commandContext, commandOptions!, cancellationToken);
             }
+            RecordCommandResponseFailure(activity, commandResponse);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

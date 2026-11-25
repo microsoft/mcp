@@ -108,15 +108,19 @@ public sealed class SearchRecordedTests(
         firstPageArguments["limit"] = 1;
         firstPageArguments["returned-fields"] = new[] { "id" };
 
-        var firstPage = await CallToolResultsAsync(SearchTool, firstPageArguments);
-        var cursor = firstPage.GetProperty("cursor").GetString();
+        var firstResponse = await CallToolResponseAsync(SearchTool, firstPageArguments);
+        var firstPage = firstResponse.GetProperty("result");
+        var cursor = firstResponse.GetProperty("nextCursor").GetString();
         Assert.False(string.IsNullOrEmpty(cursor));
+        Assert.False(firstPage.TryGetProperty("cursor", out _));
 
         var nextPageArguments = new Dictionary<string, object?>(firstPageArguments)
         {
             ["cursor"] = cursor,
         };
-        var nextPage = await CallToolResultsAsync(SearchTool, nextPageArguments);
+        var nextResponse = await CallToolResponseAsync(SearchTool, nextPageArguments);
+        var nextPage = nextResponse.GetProperty("result");
+        Assert.False(nextPage.TryGetProperty("cursor", out _));
 
         Assert.NotEqual(
             firstPage.GetProperty("results").EnumerateArray().Single().GetProperty("id").GetString(),

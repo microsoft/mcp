@@ -81,8 +81,9 @@ Required setup steps:
    ```
 3. Register the toolset in `servers/Azure.Mcp.Server/src/Program.cs` `RegisterAreas()` in **alphabetical order** (outside the `#if !BUILD_NATIVE` block — do not add new exclusions there).
 4. Choose the command base class:
-   - **Commands needing an Azure subscription** (most Azure service tools) → inherit `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`.
-   - **Commands not needing a subscription** (CLI wrappers, documentation, best-practice advisors) → inherit `BaseCommand<TOptions, TResult>` directly.
+   - **Commands needing an Azure subscription** (most ARM/ARG tools) → inherit `SubscriptionCommand<TOptions, TResult>` and inject `ISubscriptionResolver`.
+   - **Commands needing Azure authentication without `--subscription`** (e.g., data-plane tools using `--account` + `--tenant`) → inherit `AuthenticatedCommand<TOptions, TResult>`.
+   - **Commands not needing Azure authentication** (CLI wrappers, documentation, best-practice advisors) → inherit `BaseCommand<TOptions, TResult>` directly.
    - Add an intermediate base command only when sharing real cross-command logic (validation/error handling).
 5. Implement `{Toolset}Setup : IAreaSetup` and register both the service and command as singletons in `ConfigureServices`:
    ```csharp
@@ -108,7 +109,6 @@ File: `src/Options/{Resource}/{Resource}{Operation}Options.cs`
 
 ```csharp
 using Azure.Mcp.Core.Options;
-using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.{Toolset}.Options.{Resource};
@@ -130,14 +130,12 @@ public class {Resource}{Operation}Options : ISubscriptionOption
 ```
 
 Rules:
-- Keep options classes **flat POCOs** (no inheritance); implement `ISubscriptionOption` when subscription resolution is needed (note: `ISubscriptionOption` provides `Subscription` only — add `Tenant` separately if accepted).
-- Use `[Option(Description = "...")]` on every bound property (`OptionBinder` auto-converts to `--kebab-case`). Specify `Name` only when default kebab-case is wrong (e.g., `[Option(Name = "foobar", ...)]` on `FooBar`). Unattributed properties are ignored.
-- Use `OptionDescriptions.X` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`), or a toolset `{Toolset}OptionDescriptions` constants class for options reused across commands.
-- Use `[OptionContainer<TContainer>(Prefix = "prefix")]` for nested option objects (`--prefix-child-name`).
-- Use `required` on required options and nullable types (`?`) on optional options; non-nullable value types (e.g., `int`) default to `0` and are valid without `required`.
-- Naming: use `subscription` (never `subscriptionId`), `resourceGroup` (never `resourceGroupName`), singular resource nouns (`server` not `serverName`), and omit unnecessary `-name` suffixes (`Account` / `--account`). Align names and parameter order with Azure SDK parameters and sibling commands.
-- Property order: command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`.
-- Do not create a static `{Toolset}OptionDefinitions` class.
+- Keep options classes **flat POCOs** (no inheritance); implement `ISubscriptionOption` when subscription resolution is needed (`ISubscriptionOption` provides `Subscription` only — add `Tenant` separately if accepted).
+- Decorate every bound property with `[Option(Description = "...")]` (`OptionBinder` auto-converts names to `--kebab-case`; specify `Name` only when default conversion is wrong) or `[OptionContainer<TContainer>(Prefix = "prefix")]` for nested objects. Unattributed properties are ignored; do not create a static `{Toolset}OptionDefinitions` class.
+- Use `OptionDescriptions.X` for shared descriptions (`Subscription`, `Tenant`, `ResourceGroup`, `AuthMethod`, `Scope`), or a toolset `{Toolset}OptionDescriptions` constants class for options reused across commands.
+- Use `required` for required options and nullable types (`?`) for optional options; non-nullable value types (e.g., `int`) default to `0` without `required`. Note that optional string options skip automatic blank-string rejection — reject blank values in `ValidateOptions` when the contract requires it.
+- Naming & order: use `subscription` (never `subscriptionId`), `resourceGroup` (never `resourceGroupName`), singular nouns (`server`, `--account`, not `-name`), aligned with Azure SDK parameters and sibling commands. Order command-specific options first, then `ResourceGroup`, `Subscription`, `Tenant`, `AuthMethod`.
+- **Cursor pagination (when exposing paged results):** Follow the [cursor pagination guide](https://github.com/microsoft/mcp/blob/main/docs/tool-pagination.md). Implement `ICursorOption` for `--cursor`, bind fixed arguments with `PaginationCursor`, return `nextCursor` when another page exists, document fixed vs. overridable arguments, and test continuation and completion.
 
 See [Options and Validation](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#options-and-validation) for mutually exclusive, enum, and interface-constrained patterns.
 
@@ -177,7 +175,6 @@ public class {Toolset}Service(IAzureService azureService)
             "Microsoft.{Provider}/{resourceType}",
             resourceGroup,
             subscription,
-            null,
             ConvertToModel,
             tenant: tenant,
             cancellationToken: cancellationToken);
@@ -202,7 +199,7 @@ public class {Toolset}Service(IAzureService azureService)
    - Verify actual Azure SDK property names via IntelliSense or assembly inspection before coding, cast `data.Tags as IReadOnlyDictionary<string, string>`, and use `Location.ToString()` (see [SDK Property Name Discovery](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#sdk-property-name-discovery)).
 3. **Sovereign clouds & endpoint validation:**
    - ARM and ARG operations handle sovereign clouds automatically.
-   - Data-plane SDKs requiring an explicit URL must switch on `AzureService.CloudConfiguration.CloudType` (never hardcode `*.windows.net`, `*.azure.com`, etc.) and call `AzureService.ValidateAzureServiceEndpoint(endpoint, serviceType)` before credential acquisition or client creation. See [Sovereign Cloud Support](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#sovereign-cloud-support).
+   - Data-plane SDKs requiring an explicit URL must switch on `AzureService.CloudConfiguration.CloudType` (fail closed on unsupported clouds; never hardcode `*.windows.net`, `*.azure.com`, etc.) and call `AzureService.ValidateAzureServiceEndpoint(endpoint, serviceType)` before credential acquisition or client creation. See [Sovereign Cloud Support](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#sovereign-cloud-support).
    - Without `IAzureService`, inject `IEndpointValidator` (register with `services.AddEndpointValidation()`). Use `EndpointValidator.ValidateExternalUrl(url, allowedHosts)` for known external hosts and `ValidatePublicTargetUrl(url)` for arbitrary public targets. Never construct a production validator or pass a namespace manually.
    - Control-plane ARM calls use `ResourceIdentifier` or ARM collection helpers — never string-interpolate IDs.
 4. **Long-running operations (when applicable):**
@@ -286,11 +283,11 @@ public sealed class {Resource}{Operation}Command(
 ```
 
 Rules:
-- **Two-generic pattern:** Make the class `sealed` with a primary constructor; inherit `SubscriptionCommand<TOptions, TResult>` (or `BaseCommand<TOptions, TResult>` when no subscription is needed). `ExecuteAsync` takes pre-bound `TOptions` — never `ParseResult`, `RegisterOptions()`, `BindOptions()`, or manual `Validate()`.
-- **Metadata (`[CommandMetadata]`):** Generate a fresh GUID `Id`, set `OperationPlane`, and declare all behavioral properties (`Destructive`, `Idempotent`, `OpenWorld`, `ReadOnly`, `Secret`, `LocalRequired`) even when using defaults. Cross-check against the [Metadata Validation Checklist](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#metadata-validation-checklist) (notably: set `Secret = true` whenever keys, tokens, secrets, or credential metadata may be returned; `OpenWorld = false` for Azure APIs).
+- **Two-generic pattern:** Make the class `sealed` with a primary constructor; inherit `SubscriptionCommand<TOptions, TResult>`, `AuthenticatedCommand<TOptions, TResult>` (Azure auth without `--subscription`), or `BaseCommand<TOptions, TResult>` (no Azure auth). `ExecuteAsync` takes pre-bound `TOptions` — never `ParseResult`, `RegisterOptions()`, `BindOptions()`, or manual `Validate()`.
+- **Metadata (`[CommandMetadata]`):** Generate a fresh GUID `Id`, classify `OperationPlane` (`Control`, `Data`, `Both`, or `NotApplicable` — ARM setup lookups do not make a data-plane tool `Both`), and declare all behavioral properties even when using defaults. Cross-check against [CommandMetadata Properties and Validation](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#commandmetadata-properties-and-validation) (set `Secret = true` whenever keys, tokens, secrets, or credential metadata may be returned; `OpenWorld = false` for Azure APIs).
 - **Structured output:** Declare the result record `public` inside the command, override `ResultTypeInfo`, and call `SetResult(context, ...)` for success (see [`docs/output-schema-migration.md`](https://github.com/microsoft/mcp/blob/main/docs/output-schema-migration.md)). Return `[]` for null/empty array payloads.
 - **Stateless & transport-agnostic:** Never store per-request state in fields, inspect `HttpContext`, or branch on transport (`ASPNETCORE_URLS`). Pass `options.Tenant` through to services.
-- **Logging & error handling:** Never log `{@Options}` or secret values; log only known-safe fields individually. Always call `HandleException(context, ex)` in `catch`. Override `GetErrorMessage`/`GetStatusCode` only when adding service-specific or remote-mode context, and strip raw secrets/tokens from caller messages (see [Error Handling](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#error-handling)).
+- **Logging & error handling:** Never log `{@Options}` or secret values; log only known-safe fields individually. Always call `HandleException(context, ex)` in `catch`. `BaseCommand` and `AuthenticatedCommand` already map standard HTTP/ARM/MSAL/OBO/timeout errors — override `GetErrorMessage`/`GetStatusCode` only for service-specific cases, and never strip `OnBehalfOfUserTokenRequiredException` from 403 or leak raw tokens (see [Error Handling](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md#error-handling)).
 - **Custom validation & telemetry safety:** Override `ValidateOptions` for resource-specific naming rules (length, character/category checks), mutual exclusivity, and allowed values — prefer deterministic checks first. Always add errors with `ValidationResult.AddError(message, telemetrySafeMessage)`:
   - Static caller text without tool parameter values can be passed for both arguments.
   - If the caller message includes any tool parameter value (even non-secret ones), pass a separate static `telemetrySafeMessage` without parameter values, identifiers, secrets, or exception text.
@@ -474,11 +471,11 @@ See [`docs/recorded-tests.md`](https://github.com/microsoft/mcp/blob/main/docs/r
 
 ## Phase 4: Documentation and Registration
 
-Complete all applicable documentation and registry updates before evaluating tool descriptions:
+Build `servers/Azure.Mcp.Server/src` first so `azmcp` is up to date, then complete all applicable documentation and registry updates before evaluating tool descriptions:
 
 1. **Command Reference (`servers/Azure.Mcp.Server/docs/azmcp-commands.md`):**
-   - Add the command in alphabetical order within its service section, documenting parameters (required vs. optional) and remote `Permissions` when authentication behavior differs by outgoing identity strategy.
-   - Regenerate metadata (CI fails if skipped):
+   - Add the command in alphabetical order within its service section, documenting parameters (required vs. optional) and any special RBAC or pagination requirements.
+   - Regenerate metadata badges from the built server (CI fails if skipped):
      ```powershell
      ./eng/scripts/Update-AzCommandsMetadata.ps1
      ```
@@ -493,7 +490,10 @@ Complete all applicable documentation and registry updates before evaluating too
      ./azmcp[.exe] tools list --name --namespace <tool_area>
      ```
 4. **Package README (`servers/Azure.Mcp.Server/README.md`):**
-   - Add example prompts under **What can you do with the Azure MCP Server?** (grouped by service) and update **Complete List of Supported Azure Services** if adding a toolset. Validate via `./eng/scripts/Process-PackageReadMe.ps1` (and `./eng/scripts/Build-Local.ps1 -VerifyNpx`).
+   - Add example prompts under **What can you do with the Azure MCP Server?** (grouped by service) and update **Complete List of Supported Azure Services** if adding a toolset. Validate with:
+     ```powershell
+     & "eng\scripts\Process-PackageReadMe.ps1" -Command "validate" -InputReadMePath "servers/Azure.Mcp.Server/README.md"
+     ```
 5. **Changelog Entry:**
    - Run `./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath servers/Azure.Mcp.Server/CHANGELOG.md` (or author manually per [`docs/changelog-entries.md`](https://github.com/microsoft/mcp/blob/main/docs/changelog-entries.md)).
 6. **CODEOWNERS (new toolsets only — `.github/CODEOWNERS`):**

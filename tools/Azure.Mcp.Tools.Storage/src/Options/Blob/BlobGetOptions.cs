@@ -6,13 +6,19 @@ using Microsoft.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobGetOptions
+public class BlobGetOptions : ICursorOption
 {
+    [Option(Description = ICursorOption.CursorDescription)]
+    public string? Cursor { get; set; }
+
     [Option(Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').")]
     public string? Blob { get; set; }
 
     [Option(Description = "The prefix to filter blobs when listing blobs in a container. Only blobs whose names start with the specified prefix will be listed.")]
     public string? Prefix { get; set; }
+
+    [Option(Description = "The non-empty delimiter used to group blobs into virtual directories, such as '/'. Returns blobs and directory prefixes at one level. Cannot be used with --blob.")]
+    public string? Delimiter { get; set; }
 
     [Option(Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').")]
     public required string Account { get; set; }
