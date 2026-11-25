@@ -10,6 +10,7 @@ using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Core.Services.Time;
@@ -50,6 +51,8 @@ public sealed class VisualStudioToolNameTests
             .AddSingleton(Substitute.For<IAzureTokenCredentialProvider>())
             .AddSingleton(Substitute.For<IAzureCloudConfiguration>())
             .AddSingleton(Substitute.For<ISubscriptionResolver>());
+
+        serviceCollection.AddHostServices();
 
         foreach (var area in areaSetups)
         {

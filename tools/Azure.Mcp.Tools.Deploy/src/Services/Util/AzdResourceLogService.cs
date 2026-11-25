@@ -3,6 +3,7 @@
 
 using Azure.Monitor.Query.Logs;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Services.Host;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
@@ -13,6 +14,7 @@ public static class AzdResourceLogService
     private const string AzureYamlFileName = "azure.yaml";
 
     public static async Task<string> GetAzdResourceLogsAsync(
+        IFileSystem fileSystem,
         ArmClient armClient,
         LogsQueryClient logsQueryClient,
         string workspaceFolder,
@@ -21,6 +23,7 @@ public static class AzdResourceLogService
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
+        fileSystem.EnsureAccess();
         var toolErrorLogs = new List<string>();
         var appLogs = new List<string>();
 
@@ -30,7 +33,7 @@ public static class AzdResourceLogService
             await azdAppLogRetriever.InitializeAsync(cancellationToken);
             await azdAppLogRetriever.GetLogAnalyticsWorkspacesInfoAsync(cancellationToken);
 
-            var services = GetServicesFromAzureYaml(workspaceFolder);
+            var services = GetServicesFromAzureYaml(fileSystem, workspaceFolder);
 
             foreach (var (serviceName, service) in services)
             {
@@ -67,16 +70,16 @@ public static class AzdResourceLogService
         return "No logs found.";
     }
 
-    private static Dictionary<string, Service> GetServicesFromAzureYaml(string workspaceFolder)
+    private static Dictionary<string, Service> GetServicesFromAzureYaml(IFileSystem fileSystem, string workspaceFolder)
     {
         var azureYamlPath = Path.Combine(workspaceFolder, AzureYamlFileName);
 
-        if (!File.Exists(azureYamlPath))
+        if (!fileSystem.FileExists(azureYamlPath))
         {
             throw new FileNotFoundException($"Azure YAML file not found at {azureYamlPath}");
         }
 
-        var yamlContent = File.ReadAllText(azureYamlPath);
+        var yamlContent = fileSystem.ReadAllText(azureYamlPath);
 
         using var stringReader = new StringReader(yamlContent);
         var parser = new Parser(stringReader);

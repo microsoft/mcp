@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
@@ -9,11 +11,11 @@ namespace Azure.Mcp.Core.Services.Azure.Subscription;
 /// Default implementation that resolves subscriptions from command-line arguments,
 /// Azure CLI profile, and the AZURE_SUBSCRIPTION_ID environment variable.
 /// </summary>
-public sealed class SubscriptionResolver : ISubscriptionResolver
+public sealed class SubscriptionResolver(IFileSystem fileSystem, IEnvironmentVariables environmentVariables) : ISubscriptionResolver
 {
     // Cache the Azure CLI profile read to avoid redundant file I/O.
-    // The profile is read at most once per process invocation.
-    private static readonly Lazy<string?> s_profileDefault = new(AzureCliProfileHelper.GetDefaultSubscriptionId);
+    // Keep the cache local to this host's dependency-injection container.
+    private readonly Lazy<string?> _profileDefault = new(() => AzureCliProfileHelper.GetDefaultSubscriptionId(fileSystem, environmentVariables));
 
     /// <summary>
     /// A set of common placeholder values for subscription ID/name options.
@@ -49,7 +51,16 @@ public sealed class SubscriptionResolver : ISubscriptionResolver
         "default_subscription",
     };
 
-    public string? ResolveSubscription(string? subscription) => ResolveSubscriptionInternal(this, subscription);
+    public string? ResolveSubscription(string? subscription)
+    {
+        var resolvedSubscription = ResolveSubscriptionInternal(this, subscription);
+        if (!fileSystem.IsAccessAllowed && (string.IsNullOrWhiteSpace(resolvedSubscription) || IsPlaceholder(resolvedSubscription)))
+        {
+            throw new CommandValidationException("A subscription must be provided explicitly when host subscription defaults are unavailable.");
+        }
+
+        return resolvedSubscription;
+    }
 
     internal static string? ResolveSubscriptionInternal(ISubscriptionResolver resolver, string? subscription)
     {
@@ -81,9 +92,14 @@ public sealed class SubscriptionResolver : ISubscriptionResolver
         return resolver.GetEnvironmentSubscriptionId();
     }
 
-    public string? GetProfileSubscriptionId() => s_profileDefault.Value;
+    public string? GetProfileSubscriptionId()
+    {
+        return fileSystem.IsAccessAllowed ? _profileDefault.Value : null;
+    }
 
-    public string? GetEnvironmentSubscriptionId() => EnvironmentHelpers.GetAzureSubscriptionId();
+    public string? GetEnvironmentSubscriptionId() => environmentVariables.IsAccessAllowed
+        ? environmentVariables.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID")
+        : null;
 
     /// <summary>
     /// Checks if the given <paramref name="value"/> is a common placeholder for subscription ID or name.

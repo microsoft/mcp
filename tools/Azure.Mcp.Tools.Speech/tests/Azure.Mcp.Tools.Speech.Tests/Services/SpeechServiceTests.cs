@@ -7,13 +7,17 @@ using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Speech.Tests.Services;
 
 public class SpeechServiceTests
 {
+    private static readonly IFileSystem s_fileSystem = new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration()));
     private readonly IAzureService _azureService;
     private readonly ILogger<SpeechService> _logger;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
@@ -29,14 +33,14 @@ public class SpeechServiceTests
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
         _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
 
-        _speechService = new SpeechService(_azureService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        _speechService = new SpeechService(_azureService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer, s_fileSystem);
     }
 
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
     {
         // Arrange & Act
-        var service = new SpeechService(_azureService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
+        var service = new SpeechService(_azureService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer, s_fileSystem);
 
         // Assert
         Assert.NotNull(service);

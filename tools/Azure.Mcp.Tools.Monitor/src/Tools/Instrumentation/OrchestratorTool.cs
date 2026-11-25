@@ -37,7 +37,7 @@ public class OrchestratorTool(WorkspaceAnalyzer analyzer)
         {
             spec = _analyzer.Analyze(workspacePath);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             return Respond(new OrchestratorResponse
             {

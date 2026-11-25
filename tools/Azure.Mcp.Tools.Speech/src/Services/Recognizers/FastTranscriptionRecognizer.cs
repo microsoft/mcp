@@ -10,13 +10,15 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 
 /// <summary>
 /// Recognizer for Fast Transcription using Azure AI Services Speech REST API.
 /// </summary>
-public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<FastTranscriptionRecognizer> logger)
+public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<FastTranscriptionRecognizer> logger,
+    IFileSystem fileSystem)
     : BaseAzureService(azureService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
@@ -37,13 +39,13 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
         // Canonicalize and validate the file path (rejects UNC/device paths, traversal)
         filePath = FilePathValidator.ValidateAndCanonicalize(filePath);
 
-        if (!File.Exists(filePath))
+        if (!fileSystem.FileExists(filePath))
         {
             throw new FileNotFoundException($"Audio file not found: {filePath}");
         }
 
         // Check file size (Fast Transcription has a 300 MB limit)
-        var fileInfo = new FileInfo(filePath);
+        var fileInfo = fileSystem.GetFileInfo(filePath);
         if (fileInfo.Length > 300 * 1024 * 1024)
         {
             throw new InvalidOperationException($"Audio file is too large ({fileInfo.Length / (1024.0 * 1024):F1} MB). Fast Transcription supports files up to 300 MB.");
@@ -90,7 +92,7 @@ public class FastTranscriptionRecognizer(IAzureService azureService, ILogger<Fas
                 using var formContent = new MultipartFormDataContent();
 
                 // Add audio file
-                var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(filePath, cancellationToken));
+                var fileContent = new ByteArrayContent(await fileSystem.ReadAllBytesAsync(filePath, cancellationToken));
                 fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(GetMimeType(filePath));
                 formContent.Add(fileContent, "audio", Path.GetFileName(filePath));
 

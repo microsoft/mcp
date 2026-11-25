@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
@@ -24,7 +25,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ThreadsInvestigateCommand(ILogger<ThreadsInvestigateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed class ThreadsInvestigateCommand(ILogger<ThreadsInvestigateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<ThreadsInvestigateOptions, SreAgentInvestigationResult>(subscriptionResolver)
 {
     private readonly ILogger<ThreadsInvestigateCommand> _logger = logger;
@@ -34,7 +35,7 @@ public sealed class ThreadsInvestigateCommand(ILogger<ThreadsInvestigateCommand>
     {
         try
         {
-            var result = await SreAgentService.RunInvestigationAsync(_sreAgentService, options, autoApprove: false, cancellationToken);
+            var result = await SreAgentService.RunInvestigationAsync(_sreAgentService, environmentVariables, options, autoApprove: false, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, SreAgentJsonContext.Default.SreAgentInvestigationResult);
         }
         catch (Exception ex)

@@ -1,4 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Production code must use the guarded host services. Tests and engineering
+       utilities may access their own host directly. Keep this analyzer build-only. -->
+  <ItemGroup Condition="$(_RelativeProjectDir.EndsWith('src')) and ($(_RelativeProjectDir.StartsWith('core')) or $(_RelativeProjectDir.StartsWith('tools')) or $(_RelativeProjectDir.StartsWith('servers')))">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(RepoRoot)eng\BannedSymbols.txt" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(IsTestProject)' == 'true' or '$(IsPerfProject)' == 'true' or '$(IsStressProject)' == 'true'">
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>SourcePath</_Parameter1>

@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Isolated tool access to host files, environment variables, and process creation behind centrally injected services that deny access in HTTP mode, with build-time enforcement against direct host APIs. Preserved CLI, stdio, process-startup behavior, remote subscription listing, anonymous AVM requests, inline Key Vault certificate import, and SRE Agent fallback identity. Local certificate files retain precedence over base64 input."

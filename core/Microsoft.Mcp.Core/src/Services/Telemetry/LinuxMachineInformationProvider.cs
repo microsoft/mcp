@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 
@@ -17,6 +18,7 @@ internal class LinuxMachineInformationProvider(ILogger<LinuxMachineInformationPr
     /// Gets the base folder for the cache to be stored.
     /// The final path should be $HOME\.cache\Microsoft\DeveloperTools.
     /// </summary>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Resolves the host telemetry cache location during telemetry initialization.")]
     public override string GetStoragePath()
     {
         var userDir = Environment.GetEnvironmentVariable(PrimaryPathEnvVar);

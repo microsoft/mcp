@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using Xunit;
 
@@ -13,6 +15,20 @@ namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
 public class SubscriptionCommandTests : SubscriptionCommandUnitTestsBase<AccountGetCommand, IStorageService>
 {
+
+    [Fact]
+    public async Task ExecuteAsync_SubscriptionResolverValidationError_ReturnsBadRequest()
+    {
+        SubscriptionResolver
+            .ResolveSubscription(null)
+            .Returns(_ => throw new CommandValidationException(
+                "A subscription must be provided explicitly when host subscription defaults are unavailable."));
+
+        var response = await ExecuteCommandAsync();
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("subscription must be provided explicitly", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
 
     [Fact]
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()

@@ -32,6 +32,7 @@ public interface IExternalProcessService
     /// <returns>
     /// A <see cref="ProcessResult"/> containing the exit code, standard output, standard error, and command string.
     /// </returns>
+    /// <exception cref="UnauthorizedAccessException">Host process creation is not permitted in HTTP mode.</exception>
     Task<ProcessResult> ExecuteAsync(
         string executablePath,
         string arguments,

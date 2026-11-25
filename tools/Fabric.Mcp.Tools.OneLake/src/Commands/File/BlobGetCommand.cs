@@ -11,6 +11,7 @@ using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -29,7 +30,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 public sealed class BlobGetCommand(
     ILogger<BlobGetCommand> logger,
     IOneLakeService oneLakeService,
-    IOptions<ServerRuntimeConfiguration> configuration) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
+    IOptions<ServerRuntimeConfiguration> configuration,
+    IFileSystem fileSystem) : AuthenticatedCommand<BlobGetOptions, BlobGetCommand.BlobGetCommandResult>
 {
     private readonly ILogger<BlobGetCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
@@ -80,14 +82,14 @@ public sealed class BlobGetCommand(
                     : Path.GetFullPath(candidatePath);
 
                 var directory = Path.GetDirectoryName(downloadPath);
-                if (!string.IsNullOrWhiteSpace(directory) && !Directory.Exists(directory))
+                if (!string.IsNullOrWhiteSpace(directory) && !fileSystem.DirectoryExists(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    fileSystem.CreateDirectory(directory);
                 }
             }
 
             await using var fileStream = downloadPath is not null
-                ? new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None)
+                ? fileSystem.Open(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None)
                 : null;
 
             var downloadOptions = new BlobDownloadOptions

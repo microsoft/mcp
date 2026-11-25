@@ -12,6 +12,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
@@ -42,6 +43,7 @@ internal static class ItemDefinitionUpdateTestData
         var services = new ServiceCollection();
         var setup = new FabricCoreSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
         services.AddSingleton(credential);
         services.AddLogging();

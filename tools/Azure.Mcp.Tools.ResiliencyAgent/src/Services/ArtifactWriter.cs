@@ -3,11 +3,12 @@
 
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 
 /// <inheritdoc />
-public sealed class ArtifactWriter : IArtifactWriter
+public sealed class ArtifactWriter(ILogger<ArtifactWriter> logger, IFileSystem fileSystem) : IArtifactWriter
 {
     /// <summary>
     /// Folder created under the caller's working directory. Artifacts are grouped rather than written
@@ -15,25 +16,15 @@ public sealed class ArtifactWriter : IArtifactWriter
     /// </summary>
     private const string OutputFolderName = "azure-resiliency";
 
-    private readonly ILogger<ArtifactWriter> _logger;
-    private readonly Func<string, Stream> _createFile;
-
-    public ArtifactWriter(ILogger<ArtifactWriter> logger)
-        : this(
-            logger,
-            static path => new FileStream(
-                path,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None))
-    {
-    }
+    private readonly ILogger<ArtifactWriter> _logger = logger;
+    private readonly Func<string, Stream> _createFile = path =>
+        fileSystem.Open(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
 
     internal ArtifactWriter(
         ILogger<ArtifactWriter> logger,
-        Func<string, Stream> createFile)
+        IFileSystem fileSystem,
+        Func<string, Stream> createFile) : this(logger, fileSystem)
     {
-        _logger = logger;
         _createFile = createFile;
     }
 
@@ -41,8 +32,9 @@ public sealed class ArtifactWriter : IArtifactWriter
         IEnumerable<AgentArtifact> artifacts,
         string conversationId)
     {
+        fileSystem.EnsureAccess();
         List<ArtifactWriteResult> results = [];
-        string root = Path.Combine(Environment.CurrentDirectory, OutputFolderName);
+        string root = Path.Combine(fileSystem.GetCurrentDirectory(), OutputFolderName);
 
         HashSet<string> usedNames = new(StringComparer.OrdinalIgnoreCase);
 
@@ -62,7 +54,7 @@ public sealed class ArtifactWriter : IArtifactWriter
 
             try
             {
-                Directory.CreateDirectory(root);
+                fileSystem.CreateDirectory(root);
                 (fileName, string path) = WriteUniqueFile(root, fileName, artifact.Content, usedNames);
                 results.Add(new ArtifactWriteResult(
                     artifact,
@@ -76,6 +68,7 @@ public sealed class ArtifactWriter : IArtifactWriter
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                fileSystem.EnsureAccess();
                 _logger.LogWarning(ex, "Could not write artifact {Name}.", fileName);
                 results.Add(new ArtifactWriteResult(artifact, fileName, null));
             }
@@ -252,7 +245,7 @@ public sealed class ArtifactWriter : IArtifactWriter
             {
                 stream = _createFile(path);
             }
-            catch (IOException) when (File.Exists(path))
+            catch (IOException) when (fileSystem.FileExists(path))
             {
                 // Another response or process already owns this name. Keep the existing file and
                 // atomically try the next suffix rather than overwriting user-visible output.
@@ -273,7 +266,7 @@ public sealed class ArtifactWriter : IArtifactWriter
             {
                 try
                 {
-                    File.Delete(path);
+                    fileSystem.DeleteFile(path);
                 }
                 catch (Exception cleanupException) when (
                     cleanupException is IOException or UnauthorizedAccessException)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Services.Http;
 
@@ -37,6 +38,7 @@ public static class HttpClientServiceCollectionExtensions
     /// <param name="configureOptions">Action to configure HttpClient options.</param>
     /// <param name="configureDefaults">If true, applies default settings.</param>
     /// <returns>The service collection for chaining.</returns>
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Captures host proxy configuration during HTTP client service registration.")]
     public static IServiceCollection AddHttpClientServices(
         this IServiceCollection services,
         Action<HttpClientOptions> configureOptions,

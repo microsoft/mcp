@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -25,7 +26,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class BlobPutCommand(ILogger<BlobPutCommand> logger, IOneLakeService oneLakeService)
+public sealed class BlobPutCommand(ILogger<BlobPutCommand> logger, IOneLakeService oneLakeService,
+    IFileSystem fileSystem)
     : AuthenticatedCommand<BlobPutOptions, BlobPutCommand.BlobPutCommandResult>
 {
     private readonly ILogger<BlobPutCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -57,7 +59,7 @@ public sealed class BlobPutCommand(ILogger<BlobPutCommand> logger, IOneLakeServi
                 ? options.ItemId
                 : options.Item!;
 
-            using var contentStream = ResolveContentStream(options, out var contentLength);
+            using var contentStream = ResolveContentStream(fileSystem, options, out var contentLength);
 
             var result = await _oneLakeService.PutBlobAsync(
                 workspaceIdentifier,
@@ -102,16 +104,16 @@ public sealed class BlobPutCommand(ILogger<BlobPutCommand> logger, IOneLakeServi
         return context.Response;
     }
 
-    private static Stream ResolveContentStream(BlobPutOptions options, out long contentLength)
+    private static Stream ResolveContentStream(IFileSystem fileSystem, BlobPutOptions options, out long contentLength)
     {
         if (!string.IsNullOrEmpty(options.LocalFilePath))
         {
-            if (!System.IO.File.Exists(options.LocalFilePath))
+            if (!fileSystem.FileExists(options.LocalFilePath))
             {
                 throw new FileNotFoundException($"Local file not found: {options.LocalFilePath}");
             }
 
-            var fileStream = System.IO.File.OpenRead(options.LocalFilePath);
+            var fileStream = fileSystem.OpenRead(options.LocalFilePath);
             contentLength = fileStream.Length;
             return fileStream;
         }

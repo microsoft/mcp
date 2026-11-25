@@ -5,8 +5,11 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tests.Commands;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -15,6 +18,21 @@ namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
 public class SubscriptionListCommandTests : SubscriptionCommandUnitTestsBase<SubscriptionListCommand, IAzureService>
 {
+    [Fact]
+    public async Task ExecuteAsync_HttpMode_ListsSubscriptionsWithoutHostDefault()
+    {
+        var configuration = Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration { Transport = "http" });
+        var resolver = new SubscriptionResolver(new FileSystem(configuration), new EnvironmentVariables(configuration));
+        Service.GetSubscriptions(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1")]);
+        Service.GetDefaultSubscriptionId().Returns(_ => resolver.GetDefaultSubscriptionId());
+
+        var response = await ExecuteCommandAsync();
+
+        var result = ValidateAndDeserializeResponse(response, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
+        Assert.False(Assert.Single(result.Subscriptions).IsDefault);
+    }
+
     [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
     {

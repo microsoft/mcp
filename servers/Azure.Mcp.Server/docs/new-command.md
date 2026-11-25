@@ -38,6 +38,22 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 - **Azure Service Commands**: ACR Registry List, SQL Database List, Storage Account Get
 - **Non-Azure Commands**: Azure CLI wrapper, Best Practices guidance, Documentation tools
 
+## System-level host access
+
+Tool-time code, including service clients and helpers, must inject the centrally registered host interfaces from `Microsoft.Mcp.Core.Services.Host`:
+
+| Interface | Use for |
+|-----------|---------|
+| `IFileSystem` | File and directory operations, file streams, filesystem metadata, and temporary or working directories. |
+| `IEnvironmentVariables` | Environment variables and special-folder paths. |
+| `IProcessService` | Starting a configured `Process`. Prefer the existing `IExternalProcessService` when output capture, timeouts, and cancellation are needed; it uses the same process guard. |
+
+CLI and stdio permit host access. HTTP rejects these operations with `UnauthorizedAccessException`, including existence checks and executable availability probes. Preserve that denial through command error handling; do not turn it into missing data or success. Resolve inline inputs without probing local files. Use `IsAccessAllowed` on the filesystem or environment service only to select an explicitly documented host-independent behavior.
+
+Do not instantiate the concrete adapters, re-register them in toolsets, or use static host helpers as a bypass. Shared server initialization calls `AddHostServices()`; standalone test service providers can call it too. Inject substitutes in unit tests and verify both local behavior and HTTP denial, including inline-only remote alternatives where supported.
+
+Production builds enforce this boundary with `Microsoft.CodeAnalysis.BannedApiAnalyzers` and `eng/BannedSymbols.txt`; direct host API usage produces error `RS0030`. Keep pure path manipulation and stream-based readers/writers usable. Server-startup configuration, authentication, logging, telemetry initialization, and external-server discovery remain outside the tool boundary. Only guarded adapters and these host-infrastructure operations may have narrowly scoped, justified `SuppressMessage` exceptions. Do not suppress the diagnostic in tools or disable it project-wide.
+
 ## Secure Resource Provisioning Defaults
 
 Tools that create or create-or-update Azure resources must produce a secure configuration when the caller omits security-related options. Do not rely on an Azure service's current defaults. Explicitly set every supported security property in the typed SDK request model so a service-side default change cannot make the tool less secure.

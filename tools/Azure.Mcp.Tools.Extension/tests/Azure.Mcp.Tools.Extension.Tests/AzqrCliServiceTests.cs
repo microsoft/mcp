@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Extension.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Extension.Tests;
 
@@ -15,7 +18,8 @@ public sealed class AzqrCliServiceTests
     {
         var processService = Substitute.For<IExternalProcessService>();
 
-        var result = AzqrCliService.FindSupportedExecutablePath(processService, string.Empty, isWindows: true);
+        var result = AzqrCliService.FindSupportedExecutablePath(processService, string.Empty, isWindows: true,
+            new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())));
 
         Assert.Null(result);
     }
@@ -44,7 +48,8 @@ public sealed class AzqrCliServiceTests
 
         try
         {
-            var result = AzqrCliService.FindSupportedExecutablePath(processService, directory, isWindows: true);
+            var result = AzqrCliService.FindSupportedExecutablePath(processService, directory, isWindows: true,
+                new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())));
 
             Assert.Equal(expectedSupported ? executablePath : null, result);
         }

@@ -10,13 +10,14 @@ using Azure.Mcp.Tools.AzureMigrate.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Services;
 
 /// <summary>
 /// Service for platform landing zone operations.
 /// </summary>
-public sealed class PlatformLandingZoneService(IAzureService azureService, AzureHttpHelper httpHelper, ILogger<PlatformLandingZoneService> logger)
+public sealed class PlatformLandingZoneService(IAzureService azureService, AzureHttpHelper httpHelper, ILogger<PlatformLandingZoneService> logger, IFileSystem fileSystem)
     : BaseAzureResourceService(azureService), IPlatformLandingZoneService
 {
     private static readonly ConcurrentDictionary<string, PlatformLandingZoneParameters> s_parameterCache = new();
@@ -121,6 +122,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
     /// <inheritdoc/>
     public async Task<string> DownloadAsync(PlatformLandingZoneContext context, string outputPath, CancellationToken cancellationToken = default)
     {
+        fileSystem.EnsureAccess();
         var url = BuildUrl(context, "DownloadPlatformLandingZone");
         var response = await httpHelper.PostAsync(url, context.Tenant, cancellationToken);
         ThrowIfFailed(response);
@@ -131,7 +133,7 @@ public sealed class PlatformLandingZoneService(IAzureService azureService, Azure
 
         var bytes = await httpHelper.DownloadBytesAsync(downloadUrl, cancellationToken);
         var fileName = Path.Combine(outputPath, $"landing-zone-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
-        await File.WriteAllBytesAsync(fileName, bytes, cancellationToken);
+        await fileSystem.WriteAllBytesAsync(fileName, bytes, cancellationToken);
 
         return fileName;
     }

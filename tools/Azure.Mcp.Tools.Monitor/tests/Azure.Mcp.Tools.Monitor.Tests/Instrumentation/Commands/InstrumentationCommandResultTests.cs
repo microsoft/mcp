@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -22,7 +23,7 @@ public sealed class InstrumentationCommandResultTests
     [Fact]
     public async Task OrchestratorStartCommand_ReturnsObjectRoot()
     {
-        var tool = new OrchestratorTool(new WorkspaceAnalyzer([], [], [], []));
+        var tool = new OrchestratorTool(new WorkspaceAnalyzer([], [], [], [], Substitute.For<IFileSystem>()));
         var command = new OrchestratorStartCommand(
             Substitute.For<ILogger<OrchestratorStartCommand>>(),
             tool);
@@ -45,7 +46,7 @@ public sealed class InstrumentationCommandResultTests
     [Fact]
     public async Task OrchestratorNextCommand_ReturnsObjectRoot()
     {
-        var tool = new OrchestratorTool(new WorkspaceAnalyzer([], [], [], []));
+        var tool = new OrchestratorTool(new WorkspaceAnalyzer([], [], [], [], Substitute.For<IFileSystem>()));
         var command = new OrchestratorNextCommand(
             Substitute.For<ILogger<OrchestratorNextCommand>>(),
             tool);

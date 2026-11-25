@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 
@@ -75,7 +76,8 @@ public sealed class RequestCommand(
     ILogger<RequestCommand> logger,
     IPlatformLandingZoneService platformLandingZoneService,
     AzureMigrateProjectHelper azureMigrateProjectHelper,
-    ISubscriptionResolver subscriptionResolver)
+    ISubscriptionResolver subscriptionResolver,
+    IFileSystem fileSystem)
     : SubscriptionCommand<RequestOptions, RequestCommand.RequestCommandResult>(subscriptionResolver)
 {
     private readonly IPlatformLandingZoneService _platformLandingZoneService = platformLandingZoneService;
@@ -197,12 +199,12 @@ public sealed class RequestCommand(
         return $"Platform Landing zone generated successfully. Download URL: {downloadUrl}\nUse 'download' action to retrieve the files.";
     }
 
-    private static async Task<string> HandleDownloadActionAsync(
+    private async Task<string> HandleDownloadActionAsync(
         IPlatformLandingZoneService service,
         PlatformLandingZoneContext context,
         CancellationToken cancellationToken)
     {
-        var outputPath = Environment.CurrentDirectory;
+        var outputPath = fileSystem.GetCurrentDirectory();
         var filePath = await service.DownloadAsync(context, outputPath, cancellationToken);
 
         return $"Platform Landing zone downloaded successfully to: {filePath}. Extract the files to the root of the local workspace. To make changes to the platform landing zone, you can use the 'GetGuidance' command for guidance on modifying the configuration files. Delete the zip after extraction.";

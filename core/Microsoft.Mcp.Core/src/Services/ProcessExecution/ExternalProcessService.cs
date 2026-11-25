@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Host;
 using static Microsoft.Mcp.Core.Services.ProcessExecution.ProcessExtensions;
 
 namespace Microsoft.Mcp.Core.Services.ProcessExecution;
@@ -13,7 +14,7 @@ namespace Microsoft.Mcp.Core.Services.ProcessExecution;
 /// <summary>
 /// Executes external processes and captures their output in a timeout and cancellation aware way.
 /// </summary>
-public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IExternalProcessService
+public class ExternalProcessService(ILogger<ExternalProcessService> logger, IProcessService processService) : IExternalProcessService
 {
     /// <summary>
     /// Executes an external process and captures its stdout and stderr.
@@ -44,6 +45,9 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the process fails to start.
+    /// </exception>
+    /// <exception cref="UnauthorizedAccessException">
+    /// Thrown when host process creation is not permitted in HTTP mode.
     /// </exception>
     /// <exception cref="TimeoutException">
     /// Thrown when the operation (process execution and stream draining) exceeds <paramref name="operationTimeoutSeconds"/>.
@@ -136,13 +140,14 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         int operationTimeoutSeconds = 300,
         CancellationToken cancellationToken = default)
     {
+        processService.EnsureAccess();
         var operationTimeout = ValidateTimeout(operationTimeoutSeconds);
 
         using Process process = CreateProcess(fileName, arguments, environmentVariables);
         using ProcessStreamReader stdoutReader = new(process, isErrorStream: false, logger);
         using ProcessStreamReader stderrReader = new(process, isErrorStream: true, logger);
 
-        if (!process.Start())
+        if (!processService.Start(process))
         {
             throw new InvalidOperationException($"Failed to start process: {fileName}");
         }

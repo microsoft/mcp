@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.Json;
 using Azure.Monitor.OpenTelemetry.Exporter;
@@ -54,6 +55,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands;
     ReadOnly = true,
     Secret = false,
     LocalRequired = false)]
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Server lifecycle and host configuration execute during process startup, not MCP tool requests.")]
 public sealed class ServerStartCommand : BaseCommand<ServerStartOptions, string>
 {
     private static readonly string[] s_stdioHostBuilderArgs =

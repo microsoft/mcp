@@ -10,6 +10,7 @@ using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
 
@@ -34,6 +35,7 @@ public sealed class AzqrCommand(
     IDateTimeProvider dateTimeProvider,
     IExternalProcessService processService,
     ISubscriptionResolver subscriptionResolver,
+    IFileSystem fileSystem,
     int processTimeoutSeconds = 300)
     : SubscriptionCommand<AzqrOptions, AzqrReportResult>(subscriptionResolver)
 {
@@ -61,7 +63,7 @@ public sealed class AzqrCommand(
                 command += $" --resource-group {options.ResourceGroup}";
             }
 
-            var tempDir = Path.GetTempPath();
+            var tempDir = fileSystem.GetTempPath();
             var dateString = _dateTimeProvider.UtcNow.ToString("yyyyMMdd-HHmmss");
             var reportFileName = Path.Combine(tempDir, $"azqr-report-{options.Subscription}-{dateString}");
 
@@ -84,7 +86,7 @@ public sealed class AzqrCommand(
                 return response;
             }
 
-            if (!File.Exists(xlsxReportFilePath) && !File.Exists(jsonReportFilePath))
+            if (!fileSystem.FileExists(xlsxReportFilePath) && !fileSystem.FileExists(jsonReportFilePath))
             {
                 response.Status = HttpStatusCode.InternalServerError;
                 response.Message = $"Report file '{xlsxReportFilePath}' and '{jsonReportFilePath}' were not found after azqr execution.";

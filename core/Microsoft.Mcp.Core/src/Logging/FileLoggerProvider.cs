@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +13,7 @@ namespace Microsoft.Mcp.Core.Logging;
 /// Log entries are queued and written asynchronously to avoid blocking the calling thread.
 /// Log files are automatically created with timestamp-based filenames and rotated hourly.
 /// </summary>
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Host-owned logging infrastructure configured at process startup, not tool-request filesystem access.")]
 public sealed class FileLoggerProvider : ILoggerProvider
 {
     private readonly string _folderPath;

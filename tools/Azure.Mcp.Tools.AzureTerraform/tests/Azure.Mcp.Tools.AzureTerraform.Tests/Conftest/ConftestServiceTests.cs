@@ -1,14 +1,42 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Tools.AzureTerraform.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
+using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Tests;
 
 public class ConftestServiceTests
 {
-    private readonly ConftestService _service = new();
+    private readonly ConftestService _service = new(Substitute.For<IProcessService>());
+
+    [Fact]
+    public async Task IsConftestAvailableAsync_HttpMode_RejectsHostExecutableLookup()
+    {
+        var service = new ConftestService(new ProcessService(OptionsFactory.Create(
+            new ServerRuntimeConfiguration { Transport = "http" })));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.IsConftestAvailableAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task IsConftestAvailableAsync_UsesInjectedProcessService()
+    {
+        var processService = Substitute.For<IProcessService>();
+        var service = new ConftestService(processService);
+
+        Assert.False(await service.IsConftestAvailableAsync(TestContext.Current.CancellationToken));
+
+        processService.Received(1).Start(Arg.Is<Process>(process =>
+            process.StartInfo.FileName == (OperatingSystem.IsWindows() ? "where" : "which")
+            && process.StartInfo.Arguments == "conftest"));
+    }
 
     [Fact]
     public void GenerateWorkspaceValidationCommand_DefaultPolicySet_ReturnsCorrectCommand()

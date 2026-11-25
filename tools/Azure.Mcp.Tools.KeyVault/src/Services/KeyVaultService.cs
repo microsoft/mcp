@@ -11,10 +11,11 @@ using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(IAzureService azureService)
+public sealed class KeyVaultService(IAzureService azureService, IFileSystem fileSystem)
     : BaseAzureService(azureService), IKeyVaultService
 {
     public async Task<List<string>> ListKeys(
@@ -174,36 +175,9 @@ public sealed class KeyVaultService(IAzureService azureService)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData));
 
+        var bytes = await ReadCertificateDataAsync(certificateData, cancellationToken);
         var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential);
-
-        // certificateData expected as base64 PFX bytes or raw PEM text.
-        byte[] bytes;
-
-        if (certificateData.StartsWith("-----BEGIN"))
-        {
-            // Treat as PEM text
-            bytes = System.Text.Encoding.UTF8.GetBytes(certificateData);
-        }
-        else
-        {
-            // Try base64, fallback to file path if exists
-            if (File.Exists(certificateData))
-            {
-                bytes = await File.ReadAllBytesAsync(certificateData, cancellationToken);
-            }
-            else
-            {
-                try
-                {
-                    bytes = Convert.FromBase64String(certificateData);
-                }
-                catch (FormatException ex)
-                {
-                    throw new ArgumentException("The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.", ex);
-                }
-            }
-        }
 
         var importOptions = new ImportCertificateOptions(certificateName, bytes)
         {
@@ -212,6 +186,29 @@ public sealed class KeyVaultService(IAzureService azureService)
 
         var response = await client.ImportCertificateAsync(importOptions, cancellationToken);
         return response.Value;
+    }
+
+    internal async Task<byte[]> ReadCertificateDataAsync(string certificateData, CancellationToken cancellationToken)
+    {
+        if (certificateData.StartsWith("-----BEGIN"))
+        {
+            return System.Text.Encoding.UTF8.GetBytes(certificateData);
+        }
+
+        if (fileSystem.IsAccessAllowed && fileSystem.FileExists(certificateData))
+        {
+            return await fileSystem.ReadAllBytesAsync(certificateData, cancellationToken);
+        }
+
+        try
+        {
+            return Convert.FromBase64String(certificateData);
+        }
+        catch (FormatException ex)
+        {
+            fileSystem.EnsureAccess();
+            throw new ArgumentException("The provided certificate-data is neither a valid file path, raw PEM text, nor valid base64-encoded content.", ex);
+        }
     }
 
     private string BuildVaultUri(string vaultName)

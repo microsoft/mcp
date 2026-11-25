@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
@@ -17,7 +18,8 @@ public sealed class StorageIntelligenceService(
     IAttachedDiskService attachedDiskService,
     IAzureTokenCredentialProvider tokenCredentialProvider,
     IHttpClientFactory httpClientFactory,
-    IAzureService azureService) : IStorageIntelligenceService
+    IAzureService azureService,
+    IEnvironmentVariables environmentVariables) : IStorageIntelligenceService
 {
     internal const int ProvisionalMaxResponseSizeBytes = 10 * 1024 * 1024;
     private const int ResponseReadBufferSizeBytes = 80 * 1024;
@@ -48,7 +50,7 @@ public sealed class StorageIntelligenceService(
         string scope = GetEnvironmentVariableOrDefault(ScopeEnvironmentVariable, DefaultScope);
         string? effectiveTenant = !string.IsNullOrWhiteSpace(tenant)
             ? tenant
-            : Environment.GetEnvironmentVariable(TenantEnvironmentVariable);
+            : environmentVariables.GetEnvironmentVariable(TenantEnvironmentVariable);
         if (string.IsNullOrWhiteSpace(effectiveTenant))
         {
             effectiveTenant = null;
@@ -227,8 +229,8 @@ public sealed class StorageIntelligenceService(
         Exception? innerException = null) =>
         new((int)HttpStatusCode.BadGateway, message, errorCode: null, innerException);
 
-    private static string GetEnvironmentVariableOrDefault(string name, string defaultValue) =>
-        Environment.GetEnvironmentVariable(name) is { Length: > 0 } value
+    private string GetEnvironmentVariableOrDefault(string name, string defaultValue) =>
+        environmentVariables.GetEnvironmentVariable(name) is { Length: > 0 } value
             ? value
             : defaultValue;
 

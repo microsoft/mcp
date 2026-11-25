@@ -93,6 +93,7 @@ csharp_prefer_simple_using_statement = false:none
 csharp_style_prefer_switch_expression = true:suggestion
 
 # Code quality
+dotnet_diagnostic.RS0030.severity = error
 dotnet_style_readonly_field = true:suggestion
 dotnet_code_quality_unused_parameters = non_public:suggestion
 

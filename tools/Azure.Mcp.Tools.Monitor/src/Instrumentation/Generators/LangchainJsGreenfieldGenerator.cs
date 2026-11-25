@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
@@ -9,7 +10,7 @@ namespace Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 /// <summary>
 /// Generator for LangChain.js greenfield projects (no existing telemetry)
 /// </summary>
-public class LangchainJsGreenfieldGenerator : IGenerator
+public class LangchainJsGreenfieldGenerator(IFileSystem fileSystem) : IGenerator
 {
     public bool CanHandle(Analysis analysis)
     {
@@ -84,18 +85,18 @@ public class LangchainJsGreenfieldGenerator : IGenerator
         return builder.Build();
     }
 
-    private static bool IsEsModuleProject(string packageJsonPath)
+    private bool IsEsModuleProject(string packageJsonPath)
     {
         try
         {
-            var content = File.ReadAllText(packageJsonPath);
+            var content = fileSystem.ReadAllText(packageJsonPath);
             using var doc = System.Text.Json.JsonDocument.Parse(content);
             if (doc.RootElement.TryGetProperty("type", out var typeElement))
             {
                 return typeElement.GetString() == "module";
             }
         }
-        catch
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             // Default to CommonJS if we can't parse
         }

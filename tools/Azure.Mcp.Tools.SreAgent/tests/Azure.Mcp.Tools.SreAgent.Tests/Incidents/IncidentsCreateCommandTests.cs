@@ -7,6 +7,8 @@ using Azure.Mcp.Tools.SreAgent.Commands.Incidents;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Areas.Server;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -15,6 +17,25 @@ namespace Azure.Mcp.Tools.SreAgent.Tests.Incidents;
 
 public class IncidentsCreateCommandTests : SubscriptionCommandUnitTestsBase<IncidentsCreateCommand, ISreAgentService>
 {
+    [Fact]
+    public async Task ExecuteAsync_HttpMode_UsesFallbackIdentity()
+    {
+        Services.Configure<ServerRuntimeConfiguration>(configuration => configuration.Transport = "http");
+        Service.GetAgentAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new SreAgentResource { Name = "agent1", Endpoint = "https://agent1.azuresre.ai" });
+        Service.CreateIncidentThreadAsync(Arg.Any<string>(), Arg.Any<IncidentThreadCreateRequest>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new IncidentThreadResponse("thread-1", "created"));
+
+        var response = await ExecuteCommandAsync("--subscription sub --agent agent1 --severity critical --title Test --description Description --services service1");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).CreateIncidentThreadAsync(
+            Arg.Any<string>(),
+            Arg.Is<IncidentThreadCreateRequest>(request => request.StartMessage.UserId == "mcp-user" && request.StartMessage.DisplayName == "MCP User"),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {

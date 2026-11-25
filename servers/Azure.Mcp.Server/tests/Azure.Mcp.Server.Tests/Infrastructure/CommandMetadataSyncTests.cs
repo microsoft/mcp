@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using Xunit;
@@ -32,7 +34,9 @@ public class CommandMetadataSyncTests
         var originalContent = File.ReadAllText(docsPath);
 
         // Act - Run the update script using ExternalProcessService
-        var processService = new ExternalProcessService(NullLogger<ExternalProcessService>.Instance);
+        var processService = new ExternalProcessService(
+            NullLogger<ExternalProcessService>.Instance,
+            new ProcessService(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration())));
         var pwshPath = FindPowerShellExecutable();
         var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
 

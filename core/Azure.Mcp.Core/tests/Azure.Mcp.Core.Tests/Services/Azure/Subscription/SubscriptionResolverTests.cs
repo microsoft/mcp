@@ -6,15 +6,39 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Core.Tests.Services.Azure.Subscription;
 
 public class SubscriptionResolverTests
 {
-    private readonly SubscriptionResolver _real = new();
+    private readonly SubscriptionResolver _real = new(
+        new FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration())),
+        new EnvironmentVariables(OptionsFactory.Create(new ServerRuntimeConfiguration())));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("default")]
+    [InlineData("<subscription>")]
+    public void HttpResolver_SkipsHostDefaultsAndRequiresExplicitSubscription(string? subscription)
+    {
+        var configuration = OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" });
+        var resolver = new SubscriptionResolver(new FileSystem(configuration), new EnvironmentVariables(configuration));
+
+        Assert.Equal("explicit-subscription", resolver.ResolveSubscription("explicit-subscription"));
+        Assert.Null(resolver.GetProfileSubscriptionId());
+        Assert.Null(resolver.GetEnvironmentSubscriptionId());
+        Assert.Null(resolver.GetDefaultSubscriptionId());
+        var exception = Assert.Throws<CommandValidationException>(() => resolver.ResolveSubscription(subscription));
+        Assert.Contains("explicitly", exception.Message);
+    }
 
     [Fact]
     public void ResolveSubscription_EmptySubscriptionParameter_ReturnsEnvironmentValue()

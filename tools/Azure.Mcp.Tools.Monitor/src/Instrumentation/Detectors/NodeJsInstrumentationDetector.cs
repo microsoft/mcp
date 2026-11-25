@@ -3,10 +3,11 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class NodeJsInstrumentationDetector : IInstrumentationDetector
+public class NodeJsInstrumentationDetector(IFileSystem fileSystem) : IInstrumentationDetector
 {
     public Language SupportedLanguage => Language.NodeJs;
 
@@ -29,7 +30,7 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
     {
 
         var packageJsonPath = Path.Combine(workspacePath, "package.json");
-        if (!File.Exists(packageJsonPath))
+        if (!fileSystem.FileExists(packageJsonPath))
         {
             return new InstrumentationResult(
                 InstrumentationState.Greenfield,
@@ -39,7 +40,7 @@ public class NodeJsInstrumentationDetector : IInstrumentationDetector
 
         try
         {
-            var packageJson = JsonDocument.Parse(File.ReadAllText(packageJsonPath));
+            var packageJson = JsonDocument.Parse(fileSystem.ReadAllText(packageJsonPath));
             var root = packageJson.RootElement;
 
             var dependencies = new List<string>();

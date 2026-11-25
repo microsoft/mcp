@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Core.Tests.Areas.Subscription;
 
@@ -116,7 +119,7 @@ public class AzureCliProfileHelperTests
     [Fact]
     public void GetAzureProfilePath_WhenUserProfileAvailable_ReturnsExpectedPath()
     {
-        var result = AzureCliProfileHelper.GetAzureProfilePath();
+        var result = AzureCliProfileHelper.GetAzureProfilePath(new EnvironmentVariables(OptionsFactory.Create(new ServerRuntimeConfiguration())));
 
         // In containerized/CI environments, user profile may not be available
         if (string.IsNullOrEmpty(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)))
@@ -134,7 +137,7 @@ public class AzureCliProfileHelperTests
     [Fact]
     public void GetAzureProfilePath_ReturnsNullOrValidPath()
     {
-        var result = AzureCliProfileHelper.GetAzureProfilePath();
+        var result = AzureCliProfileHelper.GetAzureProfilePath(new EnvironmentVariables(OptionsFactory.Create(new ServerRuntimeConfiguration())));
 
         // The method must either return null (empty user profile) or a valid absolute path
         if (result != null)

@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Mcp.Core.Services.Telemetry;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Persists the host telemetry device identifier during telemetry initialization, not tool-request data.")]
 internal abstract class UnixMachineInformationProvider(ILogger<UnixMachineInformationProvider> logger)
     : MachineInformationProviderBase(logger)
 {

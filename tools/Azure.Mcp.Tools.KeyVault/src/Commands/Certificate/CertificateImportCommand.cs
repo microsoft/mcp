@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Certificate;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false,
-    LocalRequired = true)]
+    LocalRequired = false)]
 public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> logger, IKeyVaultService keyVaultService)
     : AuthenticatedCommand<CertificateImportOptions, CertificateDetails>
 {

@@ -7,6 +7,8 @@ using Azure.Mcp.Tools.Monitor.Instrumentation.Generators;
 using Azure.Mcp.Tools.Monitor.Instrumentation.Pipeline;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
 using Azure.Mcp.Tools.Monitor.Tools.Instrumentation;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -129,7 +131,8 @@ public sealed class OrchestratorToolTests
             [languageDetector],
             [appTypeDetector],
             [instrumentationDetector],
-            generators);
+            generators,
+            new FileSystem(Microsoft.Extensions.Options.Options.Create(new ServerRuntimeConfiguration())));
     }
 
     private static IGenerator CreateGenerator(OnboardingSpec spec)

@@ -9,6 +9,8 @@ The `Interaction` column describes whether a prompt can invoke its tool immediat
 - `context-required`: The user must provide an attachment, project, or other external context. This includes the deployment of Azure resources.
 - `investigation-required`: Tool ownership or command routing requires investigation before this prompt can be evaluated reliably. See https://github.com/microsoft/mcp/issues/3266.
 
+For prompts requiring local files or environment variables, verify normal access in CLI/stdio mode and explicit denial in HTTP mode. HTTP tools must not inspect or change the server's host files or environment; an unavailable local-only tool is also an expected denial. Use explicit subscriptions for HTTP prompts instead of host defaults.
+
 ## Azure Data Manager for Energy
 
 | Tool Name | Test Prompt | Interaction |
@@ -1032,6 +1034,8 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> | none |
 | keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> | none |
 | keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> | context-required |
+| keyvault_certificate_import | Import this base64-encoded PFX <base64_certificate> as <certificate_name> into key vault <key_vault_account_name> over HTTP without reading a server file | context-required |
+| keyvault_certificate_import | Import this raw PEM certificate and private key <pem_certificate> as <certificate_name> into key vault <key_vault_account_name> over HTTP | context-required |
 | keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> | clarification-required |
 | keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> | context-required |
 | keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> | context-required |

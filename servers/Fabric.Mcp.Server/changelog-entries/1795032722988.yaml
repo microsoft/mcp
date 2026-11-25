@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Isolated tool access to host files, environment variables, and process creation behind injectable services that deny access in HTTP mode while preserving CLI, stdio, and process-startup behavior."

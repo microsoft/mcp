@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options;
 using Azure.Mcp.Tools.SreAgent.Services;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands;
 
@@ -101,21 +102,23 @@ internal static class SreAgentCommandHelpers
         return value;
     }
 
-    internal static SreAgentThreadCreateRequest CreateThreadRequest(string message, string agentName)
+    internal static SreAgentThreadCreateRequest CreateThreadRequest(IEnvironmentVariables environmentVariables, string message, string agentName)
     {
-        var (userId, displayName) = GetUser();
+        var (userId, displayName) = GetUser(environmentVariables);
         return new(new(message, userId, displayName, agentName));
     }
 
-    internal static SreAgentThreadMessageRequest CreateMessageRequest(string message, string? agentName = null)
+    internal static SreAgentThreadMessageRequest CreateMessageRequest(IEnvironmentVariables environmentVariables, string message, string? agentName = null)
     {
-        var (userId, displayName) = GetUser();
+        var (userId, displayName) = GetUser(environmentVariables);
         return new(message, userId, displayName, agentName);
     }
 
-    internal static (string UserId, string DisplayName) GetUser(string fallback = "mcp-user")
+    internal static (string UserId, string DisplayName) GetUser(IEnvironmentVariables environmentVariables, string fallback = "mcp-user")
     {
-        var user = Environment.GetEnvironmentVariable("USER") ?? Environment.GetEnvironmentVariable("USERNAME") ?? fallback;
+        var user = environmentVariables.IsAccessAllowed
+            ? environmentVariables.GetEnvironmentVariable("USER") ?? environmentVariables.GetEnvironmentVariable("USERNAME") ?? fallback
+            : fallback;
         return (user, user == fallback ? "MCP User" : user);
     }
 }

@@ -2,30 +2,31 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class PythonLanguageDetector : ILanguageDetector
+public class PythonLanguageDetector(IFileSystem fileSystem) : ILanguageDetector
 {
     public bool CanHandle(string workspacePath)
     {
         // Check for pyproject.toml which indicates a Python project
         var pyprojectTomlPath = Path.Combine(workspacePath, "pyproject.toml");
-        if (File.Exists(pyprojectTomlPath))
+        if (fileSystem.FileExists(pyprojectTomlPath))
         {
             return true;
         }
 
         // Check for setup.py which indicates a Python project
         var setupPyPath = Path.Combine(workspacePath, "setup.py");
-        if (File.Exists(setupPyPath))
+        if (fileSystem.FileExists(setupPyPath))
         {
             return true;
         }
 
         // Check for setup.cfg which indicates a Python project
         var setupCfgPath = Path.Combine(workspacePath, "setup.cfg");
-        if (File.Exists(setupCfgPath))
+        if (fileSystem.FileExists(setupCfgPath))
         {
             return true;
         }
@@ -33,12 +34,7 @@ public class PythonLanguageDetector : ILanguageDetector
         try
         {
             // Abstract out pattern for checking single .py/ .js files later
-            return Directory.EnumerateFiles(workspacePath, "*.py", SearchOption.AllDirectories).Any();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Log or handle the exception as needed
-            return false;
+            return fileSystem.EnumerateFiles(workspacePath, "*.py", SearchOption.AllDirectories).Any();
         }
         catch (DirectoryNotFoundException)
         {

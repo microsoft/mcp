@@ -3,8 +3,10 @@
 
 using System.ClientModel.Primitives;
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.ResilienceManagement.Services;
 using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
 
@@ -60,6 +62,31 @@ public sealed class GoalAssignmentServiceTests
             {"properties":{"requireZonalResiliency":{{(required ? "true" : "false")}},"serviceLevelResources":[]} }
             """);
         Assert.True(JsonElement.DeepEquals(expected.RootElement, document.RootElement), document.RootElement.GetRawText());
+    }
+
+    [Fact]
+    public void ShouldUseGoalTestRouting_HttpMode_SkipsHostEnvironmentReads()
+    {
+        IEnvironmentVariables environmentVariables = Substitute.For<IEnvironmentVariables>();
+        environmentVariables.IsAccessAllowed.Returns(false);
+        var service = new ResilienceManagementService(Substitute.For<IAzureService>(), environmentVariables);
+
+        Assert.False(service.ShouldUseGoalTestRouting());
+
+        environmentVariables.DidNotReceive().GetEnvironmentVariable(Arg.Any<string>());
+    }
+
+    [Fact]
+    public void ShouldUseGoalTestRouting_LocalMode_RequiresRecordingProxyWhenEnabled()
+    {
+        IEnvironmentVariables environmentVariables = Substitute.For<IEnvironmentVariables>();
+        environmentVariables.IsAccessAllowed.Returns(true);
+        environmentVariables.GetEnvironmentVariable("MCP_GOALS_TEST_ECY").Returns("true");
+        environmentVariables.GetEnvironmentVariable("TEST_PROXY_URL").Returns("not-a-url");
+        var service = new ResilienceManagementService(Substitute.For<IAzureService>(), environmentVariables);
+
+        Assert.Throws<InvalidOperationException>(() => service.ShouldUseGoalTestRouting());
+        environmentVariables.Received(1).GetEnvironmentVariable("TEST_PROXY_URL");
     }
 
     [Theory]

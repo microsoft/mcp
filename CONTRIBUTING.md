@@ -734,6 +734,18 @@ This will check all files for spelling errors using the project's dictionary. Ad
 - XML documentation for public APIs
 - Follow Model Context Protocol (MCP) patterns
 
+### Tool access to the host
+
+Inject `IFileSystem`, `IEnvironmentVariables`, and `IProcessService` from `Microsoft.Mcp.Core.Services.Host` for tool-time filesystem access, environment-variable access, and process creation, including in service clients and helpers. Shared server initialization registers these services centrally for CLI and MCP execution; area setups should not register them. Standalone tests that build their own service providers can use `services.AddHostServices()`.
+
+These services access the host normally in CLI and stdio mode. In HTTP mode, every host operation throws `UnauthorizedAccessException`, including existence checks, directory enumeration, environment-variable reads, stream creation, and process launches. Preserve this denial rather than treating it as missing data or a successful no-op. Resolve optional inline inputs without probing the filesystem, and guard SDK operations that accept local paths before invoking the SDK. Use `IProcessService.Start` instead of `Process.Start`; callers retain ownership of process configuration, stream handling, cancellation, and disposal. `IExternalProcessService` uses the same guard for commands that need captured process output.
+
+Use the filesystem and environment services' `IsAccessAllowed` property to select a documented host-independent behavior without attempting host access. For example, omit optional local subscription annotations, fetch public documentation anonymously, or use a generic request identity. Required host inputs must still fail explicitly; do not catch access-denied exceptions to manufacture a successful result.
+
+Process-startup features such as server configuration, logging, telemetry initialization, authentication configuration, and proxy-server discovery continue using the platform APIs directly. Embedded assembly resources and pure path-string manipulation do not require host filesystem access.
+
+Production projects enforce this boundary with `Microsoft.CodeAnalysis.BannedApiAnalyzers` and `eng/BannedSymbols.txt`. Direct host API calls fail compilation with `RS0030`. Only guarded service implementations and host-startup infrastructure may have narrowly scoped `SuppressMessage` exceptions with explicit justifications; tool code must use injection instead. Banned method entries identify exact overloads, so include every relevant overload when extending the list. Run `.\eng\scripts\Test-HostApiAnalyzers.ps1` after building the core project to verify rejected APIs and permitted injected operations.
+
 ### Token Acquisition for HTTP Clients
 
 - Obtain credentials through the existing injected authentication providers. Prefer Azure SDK clients or a reusable Azure Core bearer-token authentication pipeline to manage token caching and refresh.

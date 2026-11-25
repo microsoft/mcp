@@ -1,14 +1,42 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Tools.AzureTerraform.Services;
+using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Services.Host;
+using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Tests;
 
 public class AztfexportServiceTests
 {
-    private readonly AztfexportService _service = new();
+    private readonly AztfexportService _service = new(Substitute.For<IProcessService>());
+
+    [Fact]
+    public async Task IsAztfexportAvailableAsync_HttpMode_RejectsHostExecutableLookup()
+    {
+        var service = new AztfexportService(new ProcessService(OptionsFactory.Create(
+            new ServerRuntimeConfiguration { Transport = "http" })));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            service.IsAztfexportAvailableAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task IsAztfexportAvailableAsync_UsesInjectedProcessService()
+    {
+        var processService = Substitute.For<IProcessService>();
+        var service = new AztfexportService(processService);
+
+        Assert.False(await service.IsAztfexportAvailableAsync(TestContext.Current.CancellationToken));
+
+        processService.Received(1).Start(Arg.Is<Process>(process =>
+            process.StartInfo.FileName == (OperatingSystem.IsWindows() ? "where" : "which")
+            && process.StartInfo.Arguments == "aztfexport"));
+    }
 
     [Fact]
     public void GenerateResourceCommand_BasicArgs_ReturnsCorrectCommand()

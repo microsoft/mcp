@@ -1,0 +1,63 @@
+// Tool-time host operations must use centrally registered services from Microsoft.Mcp.Core.Services.Host.
+// Only guarded implementations and explicitly justified startup infrastructure may suppress RS0030.
+// Ban constructors rather than stream types so streams supplied by IFileSystem and in-memory streams remain usable.
+M:Microsoft.Mcp.Core.Services.Host.FileSystem.#ctor(Microsoft.Extensions.Options.IOptions{Microsoft.Mcp.Core.Areas.Server.ServerRuntimeConfiguration});Resolve IFileSystem through dependency injection instead of constructing its adapter.
+M:Microsoft.Mcp.Core.Services.Host.EnvironmentVariables.#ctor(Microsoft.Extensions.Options.IOptions{Microsoft.Mcp.Core.Areas.Server.ServerRuntimeConfiguration});Resolve IEnvironmentVariables through dependency injection instead of constructing its adapter.
+M:Microsoft.Mcp.Core.Services.Host.ProcessService.#ctor(Microsoft.Extensions.Options.IOptions{Microsoft.Mcp.Core.Areas.Server.ServerRuntimeConfiguration});Resolve IProcessService through dependency injection instead of constructing its adapter.
+T:System.IO.File;Inject IFileSystem instead of accessing the host filesystem directly.
+T:System.IO.Directory;Inject IFileSystem instead of accessing the host filesystem directly.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode,System.IO.FileAccess);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Int32);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Int32,System.Boolean);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Int32,System.IO.FileOptions);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.String,System.IO.FileStreamOptions);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(Microsoft.Win32.SafeHandles.SafeFileHandle,System.IO.FileAccess);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(Microsoft.Win32.SafeHandles.SafeFileHandle,System.IO.FileAccess,System.Int32);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(Microsoft.Win32.SafeHandles.SafeFileHandle,System.IO.FileAccess,System.Int32,System.Boolean);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.IntPtr,System.IO.FileAccess);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.IntPtr,System.IO.FileAccess,System.Boolean);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.IntPtr,System.IO.FileAccess,System.Boolean,System.Int32);Inject IFileSystem to open host file streams.
+M:System.IO.FileStream.#ctor(System.IntPtr,System.IO.FileAccess,System.Boolean,System.Int32,System.Boolean);Inject IFileSystem to open host file streams.
+M:System.IO.FileInfo.#ctor(System.String);Inject IFileSystem.GetFileInfo instead.
+M:System.IO.DirectoryInfo.#ctor(System.String);Inject IFileSystem instead of inspecting host directories directly.
+M:System.IO.DriveInfo.#ctor(System.String);Inject IFileSystem.GetDriveInfo instead.
+M:System.IO.DriveInfo.GetDrives;Inject IFileSystem instead of inspecting host drives directly.
+T:System.IO.FileSystemWatcher;Inject a guarded host service instead of watching host files directly.
+M:System.IO.StreamReader.#ctor(System.String);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.Boolean);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.Text.Encoding);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.Text.Encoding,System.Boolean);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.Text.Encoding,System.Boolean,System.Int32);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.IO.FileStreamOptions);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamReader.#ctor(System.String,System.Text.Encoding,System.Boolean,System.IO.FileStreamOptions);Inject IFileSystem and read the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String);Inject IFileSystem and write to the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String,System.Boolean);Inject IFileSystem and write to the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String,System.Boolean,System.Text.Encoding);Inject IFileSystem and write to the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String,System.Boolean,System.Text.Encoding,System.Int32);Inject IFileSystem and write to the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String,System.IO.FileStreamOptions);Inject IFileSystem and write to the returned stream.
+M:System.IO.StreamWriter.#ctor(System.String,System.Text.Encoding,System.IO.FileStreamOptions);Inject IFileSystem and write to the returned stream.
+M:System.IO.Path.GetTempPath;Inject IFileSystem.GetTempPath instead.
+M:System.IO.Path.GetTempFileName;Inject IFileSystem instead of creating host temporary files directly.
+M:System.Environment.GetEnvironmentVariable(System.String);Inject IEnvironmentVariables instead of reading host environment variables directly.
+M:System.Environment.GetEnvironmentVariable(System.String,System.EnvironmentVariableTarget);Inject IEnvironmentVariables instead of reading host environment variables directly.
+M:System.Environment.GetEnvironmentVariables;Inject IEnvironmentVariables instead of reading host environment variables directly.
+M:System.Environment.GetEnvironmentVariables(System.EnvironmentVariableTarget);Inject IEnvironmentVariables instead of reading host environment variables directly.
+M:System.Environment.SetEnvironmentVariable(System.String,System.String);Use a guarded host service instead of changing host environment variables directly.
+M:System.Environment.SetEnvironmentVariable(System.String,System.String,System.EnvironmentVariableTarget);Use a guarded host service instead of changing host environment variables directly.
+M:System.Environment.ExpandEnvironmentVariables(System.String);Inject IEnvironmentVariables instead of expanding host environment variables directly.
+M:System.Environment.GetFolderPath(System.Environment.SpecialFolder);Inject IEnvironmentVariables.GetFolderPath instead.
+M:System.Environment.GetFolderPath(System.Environment.SpecialFolder,System.Environment.SpecialFolderOption);Inject IEnvironmentVariables.GetFolderPath instead.
+P:System.Environment.CurrentDirectory;Inject IFileSystem instead of accessing the host working directory directly.
+P:System.Environment.UserName;Inject IEnvironmentVariables instead of reading the host identity directly.
+P:System.Environment.UserDomainName;Inject IEnvironmentVariables instead of reading the host identity directly.
+M:Microsoft.Mcp.Core.Helpers.EnvironmentHelpers.GetEnvironmentVariableAsBool(System.String);Inject IEnvironmentVariables instead of using startup environment helpers in tools.
+M:Microsoft.Mcp.Core.Helpers.EnvironmentHelpers.GetAzureSubscriptionId;Inject IEnvironmentVariables instead of using startup environment helpers in tools.
+M:System.Diagnostics.Process.Start;Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.String);Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.String,System.String);Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.String,System.Collections.Generic.IEnumerable{System.String});Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.Diagnostics.ProcessStartInfo);Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.String,System.String,System.Security.SecureString,System.String);Inject IProcessService or IExternalProcessService instead of starting host processes directly.
+M:System.Diagnostics.Process.Start(System.String,System.String,System.String,System.Security.SecureString,System.String);Inject IProcessService or IExternalProcessService instead of starting host processes directly.

@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Protocol;
@@ -384,6 +385,7 @@ public sealed class ItemJobInstanceCancelMcpTests()
         foreach (var area in new IAreaSetup[] { new FabricCoreSetup(), new FabricJobsSetup() })
         {
             area.ConfigureServices(services);
+            services.AddHostServices();
             services.AddSingleton(area);
         }
         services.ConfigureHttpClientDefaults(builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));

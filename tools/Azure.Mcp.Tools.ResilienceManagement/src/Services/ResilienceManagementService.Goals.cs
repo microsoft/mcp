@@ -18,18 +18,29 @@ public sealed partial class ResilienceManagementService
         string? tenantIdOrName, CancellationToken cancellationToken, ArmClientOptions? armClientOptions = null)
     {
 #if DEBUG
-        if (Environment.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") == "true")
+        if (ShouldUseGoalTestRouting())
         {
-            if (!Uri.TryCreate(Environment.GetEnvironmentVariable("TEST_PROXY_URL"), UriKind.Absolute, out _))
-            {
-                throw new InvalidOperationException("Goals canary tests require TEST_PROXY_URL to capture every request.");
-            }
-
             armClientOptions ??= new ArmClientOptions();
             armClientOptions.AddPolicy(new GoalTestRoutingPolicy(), HttpPipelinePosition.PerCall);
         }
 #endif
         return CreateArmClientAsync(tenantIdOrName, armClientOptions, cancellationToken);
+    }
+
+    internal bool ShouldUseGoalTestRouting()
+    {
+        if (!EnvironmentVariables.IsAccessAllowed ||
+            EnvironmentVariables.GetEnvironmentVariable("MCP_GOALS_TEST_ECY") != "true")
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(EnvironmentVariables.GetEnvironmentVariable("TEST_PROXY_URL"), UriKind.Absolute, out _))
+        {
+            throw new InvalidOperationException("Goals canary tests require TEST_PROXY_URL to capture every request.");
+        }
+
+        return true;
     }
 
     public async Task<GoalAssignmentInfo> CreateGoalAssignmentAsync(

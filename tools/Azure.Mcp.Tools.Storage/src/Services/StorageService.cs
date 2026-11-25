@@ -14,10 +14,11 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
-public sealed class StorageService(IAzureService azureService)
+public sealed class StorageService(IAzureService azureService, IFileSystem fileSystem)
     : BaseAzureResourceService(azureService), IStorageService
 {
     private const int BlobPageSize = 100;
@@ -450,7 +451,7 @@ public sealed class StorageService(IAzureService azureService)
             (nameof(blob), blob),
             (nameof(localFilePath), localFilePath));
 
-        if (!File.Exists(localFilePath))
+        if (!fileSystem.FileExists(localFilePath))
         {
             throw new FileNotFoundException($"Local file not found: {localFilePath}");
         }
@@ -460,7 +461,7 @@ public sealed class StorageService(IAzureService azureService)
         var blobClient = blobContainerClient.GetBlobClient(blob);
 
         // Upload the file
-        using var fileStream = File.OpenRead(localFilePath);
+        using var fileStream = fileSystem.OpenRead(localFilePath);
         var response = await blobClient.UploadAsync(fileStream, false, cancellationToken);
 
         return new(

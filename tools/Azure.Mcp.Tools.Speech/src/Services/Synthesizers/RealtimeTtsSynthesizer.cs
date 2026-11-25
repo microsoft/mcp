@@ -8,6 +8,7 @@ using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 
@@ -15,7 +16,8 @@ namespace Azure.Mcp.Tools.Speech.Services.Synthesizers;
 /// Neural speech synthesizer using Azure AI Services Speech SDK.
 /// Implements streaming synthesis for efficient memory management with large texts.
 /// </summary>
-public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<RealtimeTtsSynthesizer> logger)
+public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<RealtimeTtsSynthesizer> logger,
+    IFileSystem fileSystem)
     : BaseAzureService(azureService), IRealtimeTtsSynthesizer
 {
     private readonly ILogger<RealtimeTtsSynthesizer> _logger = logger;
@@ -44,7 +46,7 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
         }
 
         // Record whether the file already exists so we only clean up files we created
-        bool existedBefore = File.Exists(outputFilePath);
+        bool existedBefore = fileSystem.FileExists(outputFilePath);
 
         try
         {
@@ -53,7 +55,7 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
                 wssEndpoint, text, language, voice, format, endpointId, cancellationToken);
 
             // Write the complete audio data to file
-            await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
+            await fileSystem.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
 
             _logger.LogInformation(
                 "Speech synthesized and saved to file: {OutputFile}, Audio size: {AudioSize} bytes",
@@ -74,11 +76,11 @@ public class RealtimeTtsSynthesizer(IAzureService azureService, ILogger<Realtime
             _logger.LogError(ex, "Error during speech synthesis.");
 
             // Clean up only if the file didn't exist before and now does (partial write)
-            if (!existedBefore && File.Exists(outputFilePath))
+            if (!existedBefore && fileSystem.FileExists(outputFilePath))
             {
                 try
                 {
-                    File.Delete(outputFilePath);
+                    fileSystem.DeleteFile(outputFilePath);
                     _logger.LogInformation("Cleaned up partial output file after error: {OutputFile}", outputFilePath);
                 }
                 catch (Exception cleanupEx)

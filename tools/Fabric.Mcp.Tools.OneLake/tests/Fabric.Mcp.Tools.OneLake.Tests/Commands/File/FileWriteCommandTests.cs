@@ -4,6 +4,7 @@
 using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -33,13 +34,13 @@ public class FileWriteCommandTests : CommandUnitTestsBase<FileWriteCommand, IOne
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(null!, Service));
+        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(null!, Service, Substitute.For<IFileSystem>()));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
-        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(Logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new FileWriteCommand(Logger, null!, Substitute.For<IFileSystem>()));
     }
 
     [Fact]

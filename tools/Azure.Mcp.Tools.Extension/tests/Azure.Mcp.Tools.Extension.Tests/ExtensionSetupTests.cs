@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Time;
 using NSubstitute;
@@ -27,6 +28,7 @@ public sealed class ExtensionSetupTests
 
         var setup = new ExtensionSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
 
         services.AddSingleton(Substitute.For<IExternalProcessService>());
         services.AddSingleton(Substitute.For<IAzureService>());

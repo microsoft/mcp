@@ -3,6 +3,7 @@
 
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Host;
 using Xunit;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests;
@@ -40,6 +41,7 @@ public class FabricOneLakeSetupTests
         var services = new ServiceCollection();
         var setup = new FabricOneLakeSetup();
         setup.ConfigureServices(services);
+        services.AddHostServices();
         using var provider = services.BuildServiceProvider();
 
         // Act

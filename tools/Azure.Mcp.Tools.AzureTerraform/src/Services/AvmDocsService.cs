@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tools.AzureTerraform.Models;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmDocsService
+public sealed class AvmDocsService(IHttpClientFactory httpClientFactory, IEnvironmentVariables environmentVariables) : IAvmDocsService
 {
     private const string ResourceModulesUrl =
         "https://raw.githubusercontent.com/Azure/Azure-Verified-Modules/main/docs/static/module-indexes/TerraformResourceModules.csv";
@@ -56,7 +58,7 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         ConfigureGitHubHeaders(client);
 
         var response = await client.GetAsync(new Uri(apiUrl), cancellationToken).ConfigureAwait(false);
-        CheckForRateLimit(response);
+        CheckGitHubResponse(response);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -89,12 +91,14 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
         EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
         var response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
+        CheckGitHubResponse(response);
 
         if (!response.IsSuccessStatusCode)
         {
             readmeUrl = $"https://raw.githubusercontent.com/{repoPath}/{cleanVersion}/README.md";
             EndpointValidator.ValidateExternalUrl(readmeUrl, s_allowedHosts);
             response = await client.GetAsync(new Uri(readmeUrl), cancellationToken).ConfigureAwait(false);
+            CheckGitHubResponse(response);
         }
 
         if (!response.IsSuccessStatusCode)
@@ -299,21 +303,23 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
         return uri.AbsolutePath.TrimStart('/');
     }
 
-    private static void ConfigureGitHubHeaders(HttpClient client)
+    private void ConfigureGitHubHeaders(HttpClient client)
     {
         client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github.v3+json");
         client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 
-        var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var githubToken = environmentVariables.IsAccessAllowed
+            ? environmentVariables.GetEnvironmentVariable("GITHUB_TOKEN")
+            : null;
         if (!string.IsNullOrEmpty(githubToken))
         {
             client.DefaultRequestHeaders.Authorization = new("Bearer", githubToken);
         }
     }
 
-    private static void CheckForRateLimit(HttpResponseMessage response)
+    private void CheckGitHubResponse(HttpResponseMessage response)
     {
-        if ((int)response.StatusCode == 403
+        if ((int)response.StatusCode is 403 or 429
             && response.Headers.TryGetValues("X-RateLimit-Remaining", out var values))
         {
             var remaining = values.FirstOrDefault();
@@ -332,8 +338,15 @@ public sealed class AvmDocsService(IHttpClientFactory httpClientFactory) : IAvmD
 
                 throw new InvalidOperationException(
                     $"GitHub API rate limit exceeded.{resetMessage} " +
-                    "Set a GITHUB_TOKEN environment variable to increase the rate limit.");
+                    (environmentVariables.IsAccessAllowed
+                        ? "Set a GITHUB_TOKEN environment variable to increase the rate limit."
+                        : "Host GitHub credentials are unavailable in HTTP mode. Retry after the rate limit resets."));
             }
+        }
+
+        if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests)
+        {
+            response.EnsureSuccessStatusCode();
         }
     }
 }

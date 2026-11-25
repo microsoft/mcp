@@ -10,9 +10,12 @@ using Azure.Mcp.Tools.AzureMigrate.Services;
 using Azure.Mcp.Tools.AzureMigrate.Tests.TestSupport;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.AzureMigrate.Tests.Services;
 
@@ -38,7 +41,8 @@ public sealed class PlatformLandingZoneServiceTenantTests
         var service = new PlatformLandingZoneService(
             azureService,
             new AzureHttpHelper(azureService),
-            NullLogger<PlatformLandingZoneService>.Instance);
+            NullLogger<PlatformLandingZoneService>.Instance,
+            CreateLocalFileSystem());
         var context = new PlatformLandingZoneContext(SubscriptionId, "rg", $"project-{Guid.NewGuid():N}", TenantName);
         var cancellationToken = TestContext.Current.CancellationToken;
 
@@ -81,7 +85,8 @@ public sealed class PlatformLandingZoneServiceTenantTests
         var service = new PlatformLandingZoneService(
             azureService,
             new AzureHttpHelper(azureService),
-            NullLogger<PlatformLandingZoneService>.Instance);
+            NullLogger<PlatformLandingZoneService>.Instance,
+            CreateLocalFileSystem());
         var context = new PlatformLandingZoneContext(SubscriptionId, "rg", "project");
 
         Assert.True(await service.CheckExistingAsync(context, TestContext.Current.CancellationToken));
@@ -107,6 +112,9 @@ public sealed class PlatformLandingZoneServiceTenantTests
         };
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) };
     }
+
+    private static IFileSystem CreateLocalFileSystem() =>
+        new Microsoft.Mcp.Core.Services.Host.FileSystem(OptionsFactory.Create(new ServerRuntimeConfiguration()));
 
     private static IAzureService CreateAzureService()
     {

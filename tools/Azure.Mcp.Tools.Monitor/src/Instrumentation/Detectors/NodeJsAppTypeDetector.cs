@@ -3,10 +3,11 @@
 
 using System.Text.Json;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class NodeJsAppTypeDetector : IAppTypeDetector
+public class NodeJsAppTypeDetector(IFileSystem fileSystem) : IAppTypeDetector
 {
     public Language SupportedLanguage => Language.NodeJs;
 
@@ -15,14 +16,14 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
         var projects = new List<ProjectInfo>();
 
         var packageJsonPath = Path.Combine(workspacePath, "package.json");
-        if (!File.Exists(packageJsonPath))
+        if (!fileSystem.FileExists(packageJsonPath))
         {
             return projects;
         }
 
         try
         {
-            var packageJson = JsonDocument.Parse(File.ReadAllText(packageJsonPath));
+            var packageJson = JsonDocument.Parse(fileSystem.ReadAllText(packageJsonPath));
             var root = packageJson.RootElement;
 
             // Get project name
@@ -138,7 +139,7 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
         return AppType.ConsoleNodeJs;
     }
 
-    private static string DetectEntryPoint(string workspacePath, JsonElement root)
+    private string DetectEntryPoint(string workspacePath, JsonElement root)
     {
         // Check package.json "main" field
         if (root.TryGetProperty("main", out var mainElement))
@@ -156,7 +157,7 @@ public class NodeJsAppTypeDetector : IAppTypeDetector
         foreach (var entryPoint in commonEntryPoints)
         {
             var fullPath = Path.Combine(workspacePath, entryPoint);
-            if (File.Exists(fullPath))
+            if (fileSystem.FileExists(fullPath))
             {
                 return fullPath;
             }

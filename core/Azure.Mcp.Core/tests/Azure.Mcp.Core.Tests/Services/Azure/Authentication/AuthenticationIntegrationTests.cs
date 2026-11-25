@@ -15,6 +15,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Tests;
 using NSubstitute;
 using Xunit;
@@ -43,6 +44,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         services.AddSingleton<IAzureService, AzureService>();
         services.AddCommandContextAccessor();
         services.AddEndpointValidation();
+        services.AddHostServices();
 
         _serviceProvider = services.BuildServiceProvider();
         _azureService = _serviceProvider.GetRequiredService<IAzureService>();

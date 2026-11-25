@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
 using Azure.Identity;
 
@@ -13,6 +14,7 @@ internal static class AzurePipelinesCredentialFactory
     internal const string ServiceConnectionIdEnvVarName = "AZURESUBSCRIPTION_SERVICE_CONNECTION_ID";
     internal const string SystemAccessTokenEnvVarName = "SYSTEM_ACCESSTOKEN";
 
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Composes the host authentication credential from process configuration, not tool inputs.")]
     internal static TokenCredential? Create(IAzureCloudConfiguration? cloudConfiguration, bool required)
     {
         string? tenantId = Environment.GetEnvironmentVariable(TenantIdEnvVarName);

@@ -73,6 +73,8 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IGenerator, PythonGreenfieldGenerator>();
 
         services.AddSingleton<WorkspaceAnalyzer>();
+        services.AddSingleton<PythonInstrumentationRegistry>();
+        services.AddSingleton<GetLearningResourceTool>();
         services.AddSingleton<OrchestratorTool>();
         services.AddSingleton<SendBrownfieldAnalysisTool>();
 

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.SreAgent.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
 
@@ -24,7 +25,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Threads;
     ReadOnly = false,
     Secret = false,
     LocalRequired = false)]
-public sealed class ThreadsCreateCommand(ILogger<ThreadsCreateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
+public sealed class ThreadsCreateCommand(ILogger<ThreadsCreateCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver, IEnvironmentVariables environmentVariables)
     : SubscriptionCommand<ThreadsCreateOptions, SreAgentThreadOperationResult>(subscriptionResolver)
 {
     private readonly ILogger<ThreadsCreateCommand> _logger = logger;
@@ -38,7 +39,7 @@ public sealed class ThreadsCreateCommand(ILogger<ThreadsCreateCommand> logger, I
                 _sreAgentService,
                 options,
                 cancellationToken);
-            var thread = await _sreAgentService.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(options.Message, options.Agent), options.Tenant, cancellationToken);
+            var thread = await _sreAgentService.CreateThreadAsync(endpoint, SreAgentCommandHelpers.CreateThreadRequest(environmentVariables, options.Message, options.Agent), options.Tenant, cancellationToken);
             var threadId = thread?.Id;
             var messages = string.IsNullOrWhiteSpace(threadId) ? [] : await _sreAgentService.PollThreadForCompletionAsync(endpoint, threadId, options.Tenant, TimeSpan.FromMinutes(2), false, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(threadId, "created", messages), SreAgentJsonContext.Default.SreAgentThreadOperationResult);

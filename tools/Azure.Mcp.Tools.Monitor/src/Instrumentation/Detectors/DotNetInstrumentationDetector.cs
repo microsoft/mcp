@@ -3,18 +3,19 @@
 
 using System.Xml.Linq;
 using Azure.Mcp.Tools.Monitor.Models.Instrumentation;
+using Microsoft.Mcp.Core.Services.Host;
 using static Azure.Mcp.Tools.Monitor.Models.Instrumentation.OnboardingConstants;
 
 namespace Azure.Mcp.Tools.Monitor.Instrumentation.Detectors;
 
-public class DotNetInstrumentationDetector : IInstrumentationDetector
+public class DotNetInstrumentationDetector(IFileSystem fileSystem) : IInstrumentationDetector
 {
     public Language SupportedLanguage => Language.DotNet;
 
     public InstrumentationResult Detect(string workspacePath)
     {
         var evidence = new List<Evidence>();
-        var csprojFiles = Directory.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories);
+        var csprojFiles = fileSystem.GetFiles(workspacePath, "*.csproj", SearchOption.AllDirectories);
 
         foreach (var csproj in csprojFiles)
         {
@@ -49,16 +50,16 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         });
     }
 
-    private static List<Evidence> CheckPackagesConfig(string workspacePath)
+    private List<Evidence> CheckPackagesConfig(string workspacePath)
     {
         var evidence = new List<Evidence>();
-        var packagesConfigs = Directory.GetFiles(workspacePath, "packages.config", SearchOption.AllDirectories);
+        var packagesConfigs = fileSystem.GetFiles(workspacePath, "packages.config", SearchOption.AllDirectories);
 
         foreach (var configFile in packagesConfigs)
         {
             try
             {
-                var doc = XDocument.Load(configFile);
+                var doc = XDocument.Parse(fileSystem.ReadAllText(configFile));
                 var packages = doc.Descendants("package");
 
                 foreach (var pkg in packages)
@@ -72,7 +73,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
                     }
                 }
             }
-            catch
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Skip files we can't parse
             }
@@ -81,13 +82,13 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return evidence;
     }
 
-    private static List<Evidence> AnalyzeProjectReferences(string csprojPath)
+    private List<Evidence> AnalyzeProjectReferences(string csprojPath)
     {
         var evidence = new List<Evidence>();
 
         try
         {
-            var doc = XDocument.Load(csprojPath);
+            var doc = XDocument.Parse(fileSystem.ReadAllText(csprojPath));
             var packageRefs = doc.Descendants("PackageReference");
 
             foreach (var pkgRef in packageRefs)
@@ -111,7 +112,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is not UnauthorizedAccessException)
         {
             // Skip files we can't parse
         }
@@ -119,24 +120,24 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
         return evidence;
     }
 
-    private static List<Evidence> CheckConfigFiles(string workspacePath)
+    private List<Evidence> CheckConfigFiles(string workspacePath)
     {
         var evidence = new List<Evidence>();
 
         // Check for applicationinsights.config (classic)
-        var aiConfig = Directory.GetFiles(workspacePath, "applicationinsights.config", SearchOption.AllDirectories);
+        var aiConfig = fileSystem.GetFiles(workspacePath, "applicationinsights.config", SearchOption.AllDirectories);
         foreach (var config in aiConfig)
         {
             evidence.Add(new(config, "applicationinsights.config file present"));
         }
 
         // Check appsettings.json for instrumentation key or connection string
-        var appSettings = Directory.GetFiles(workspacePath, "appsettings*.json", SearchOption.AllDirectories);
+        var appSettings = fileSystem.GetFiles(workspacePath, "appsettings*.json", SearchOption.AllDirectories);
         foreach (var settings in appSettings)
         {
             try
             {
-                var content = File.ReadAllText(settings);
+                var content = fileSystem.ReadAllText(settings);
                 if (content.Contains("InstrumentationKey", StringComparison.OrdinalIgnoreCase))
                 {
                     evidence.Add(new(settings, "InstrumentationKey found in configuration"));
@@ -146,7 +147,7 @@ public class DotNetInstrumentationDetector : IInstrumentationDetector
                     evidence.Add(new(settings, "ApplicationInsights configuration section found"));
                 }
             }
-            catch
+            catch (Exception ex) when (ex is not UnauthorizedAccessException)
             {
                 // Skip files we can't read
             }

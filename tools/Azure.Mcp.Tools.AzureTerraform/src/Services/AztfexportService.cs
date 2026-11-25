@@ -3,13 +3,15 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Tools.AzureTerraform.Models;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.AzureTerraform.Services;
 
-public sealed class AztfexportService : IAztfexportService
+public sealed class AztfexportService(IProcessService processService) : IAztfexportService
 {
     public async Task<bool> IsAztfexportAvailableAsync(CancellationToken cancellationToken = default)
     {
+        processService.EnsureAccess();
         try
         {
             var checkCommand = OperatingSystem.IsWindows() ? "where" : "which";
@@ -25,7 +27,10 @@ public sealed class AztfexportService : IAztfexportService
                 CreateNoWindow = true
             };
 
-            process.Start();
+            if (!processService.Start(process))
+            {
+                return false;
+            }
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
             return process.ExitCode == 0;
         }

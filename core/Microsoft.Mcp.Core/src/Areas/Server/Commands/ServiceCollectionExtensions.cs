@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Http;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -42,6 +43,7 @@ public static partial class ServiceCollectionExtensions
     /// <returns>The service collection with MCP server services added.</returns>
     public static IServiceCollection AddAzureMcpServer(this IServiceCollection services, ServerStartOptions serverStartOptions)
     {
+        services.AddHostServices();
         services.AddSingleton(new SsrfProtectionPolicy(serverStartOptions.DangerouslyDisableSsrfProtectionsByNamespace));
         services.AddEndpointValidation();
 
@@ -245,6 +247,7 @@ public static partial class ServiceCollectionExtensions
     /// <param name="assembly">The assembly to use for configuration.</param>
     public static void InitializeConfigurationAndOptions(this IServiceCollection services, Assembly assembly)
     {
+        services.AddHostServices();
         services.AddSingleton(GetConfiguration());
 
         services.AddOptions<McpServerConfiguration>()
@@ -310,6 +313,7 @@ public static partial class ServiceCollectionExtensions
     /// </summary>
     /// <param name="assembly">An assembly to load embedded server information settings from.</param>
     /// <returns>An IConfiguration instance.</returns>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Loads host configuration during server initialization, not tool requests.")]
     private static IConfiguration GetConfiguration(Assembly? assembly = null)
     {
         var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";

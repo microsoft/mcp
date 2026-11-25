@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
@@ -25,7 +26,8 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.File;
     OpenWorld = false,
     ReadOnly = false,
     Secret = false)]
-public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeService oneLakeService)
+public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeService oneLakeService,
+    IFileSystem fileSystem)
     : AuthenticatedCommand<FileWriteOptions, FileWriteCommand.FileWriteCommandResult>
 {
     private readonly ILogger<FileWriteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -54,7 +56,7 @@ public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeS
             validationResult.Errors.Add("Provide only one content source. Specify either --content or --local-file-path, not both.");
         }
 
-        if (!string.IsNullOrWhiteSpace(options.LocalFilePath) && !System.IO.File.Exists(options.LocalFilePath))
+        if (!string.IsNullOrWhiteSpace(options.LocalFilePath) && !fileSystem.FileExists(options.LocalFilePath))
         {
             validationResult.AddError($"Local file not found: {options.LocalFilePath}", "Local file not found.");
         }
@@ -78,8 +80,8 @@ public sealed class FileWriteCommand(ILogger<FileWriteCommand> logger, IOneLakeS
             // Determine content source
             if (!string.IsNullOrEmpty(options.LocalFilePath))
             {
-                contentStream = System.IO.File.OpenRead(options.LocalFilePath);
-                contentLength = new FileInfo(options.LocalFilePath).Length;
+                contentStream = fileSystem.OpenRead(options.LocalFilePath);
+                contentLength = contentStream.Length;
             }
             else
             {

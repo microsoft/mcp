@@ -78,6 +78,7 @@
     <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="14.2.1" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Ingest" Version="14.2.1" />
     <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.804" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
     <PackageVersion Include="Microsoft.CognitiveServices.Speech" Version="1.51.1" />
     <PackageVersion Include="Microsoft.DataFactory.MCP.Core" Version="0.22.0-beta" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.9.0" />

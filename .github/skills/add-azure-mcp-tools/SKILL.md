@@ -76,6 +76,17 @@ return $"Request failed: {requestFailedException.Message}"; // may include auth 
 - For new commands and services, always pass `CancellationToken` as the final parameter to all async downstream calls and propagate it throughout — never substitute `CancellationToken.None` or `default` at call sites.
 - Fail closed: if tenant, subscription, or resource context is ambiguous, return an explicit validation error and require the caller to specify the value. Do not silently pick a default.
 
+### System-Level Host Access
+
+- Inject `IFileSystem`, `IEnvironmentVariables`, and/or `IProcessService` from `Microsoft.Mcp.Core.Services.Host` into any tool, service client, or helper that needs filesystem access, environment variables or special folders, or process creation. Never construct the concrete adapters or use static host helpers as a bypass.
+- Shared server initialization registers these interfaces centrally through `AddHostServices()`. Do not re-register them in a toolset; standalone test service providers may call `AddHostServices()`.
+- CLI and stdio allow host operations; HTTP throws `UnauthorizedAccessException`, even for existence checks and executable probes. Preserve the denial through `HandleException`; never swallow it as missing data or success.
+- Resolve inline inputs without checking host files. Use the filesystem/environment service's `IsAccessAllowed` only to select a documented host-independent behavior. Required local inputs must fail explicitly.
+- Use `IProcessService.Start` for a configured `Process`, retaining caller ownership of its lifetime and streams. Prefer the existing `IExternalProcessService` when captured output, timeouts, or cancellation are needed; it delegates process creation to the guarded service.
+- Production builds use `Microsoft.CodeAnalysis.BannedApiAnalyzers` with `eng/BannedSymbols.txt` to reject direct host APIs as `RS0030`. Pure path manipulation and readers/writers over existing streams remain allowed.
+- Startup configuration, authentication, logging, telemetry initialization, and external-server discovery continue using platform APIs. Only guarded adapters and these host-infrastructure operations may use narrowly scoped, justified `SuppressMessage` exceptions. Never suppress the rule in tool code or disable it project-wide.
+- Test injected behavior and HTTP denial, plus host-independent remote alternatives when supported.
+
 ### Secure Resource Provisioning Defaults
 
 Tools that create or create-or-update Azure resources must produce a secure configuration when the caller omits security-related options. Do not rely on an Azure service's current defaults. Explicitly set every supported security property in the typed SDK request model so a service-side default change cannot make the tool less secure.
@@ -115,6 +126,7 @@ Requirements:
 - Prefer SDK/runtime validators and deterministic checks for user input validation.
 - Use `ValidationResult.AddError(message, telemetrySafeMessage)` for every validation error; never add or modify errors through `ValidationResult.Errors`. A static caller message without tool parameter values is telemetry-safe and can be passed for both arguments. Otherwise, use a separate static telemetry message without user input or exception text.
 - Log only individually named, known-safe parameters; never log option objects, credentials, keys, connection strings, or other secret-bearing fields.
+- Inject the centrally registered `IFileSystem`, `IEnvironmentVariables`, and/or `IProcessService` for system-level host operations; preserve HTTP access denial and do not bypass `RS0030`.
 - For endpoint/URL inputs, prefer `IAzureService` validation methods or inject the host-owned `IEndpointValidator`; use static `EndpointValidator.ValidateExternalUrl` only for exact known external hosts. Avoid direct interpolation of unvalidated input into URLs or downstream queries.
 - For create or create-or-update tools, explicitly configure secure resource defaults (private access, HTTPS and strong TLS, and Managed Identity/RBAC where supported). Any weaker behavior must require a narrowly named, documented opt-in option, and omission during an update must not weaken the resource.
 - Add negative tests for relevant security cases introduced by the command (for example malformed names, invalid endpoint hosts, or unsafe query text) rather than a one-size-fits-all set of tests.

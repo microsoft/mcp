@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Mcp.Core.Helpers;
 
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Environment configuration helpers for host startup and test infrastructure; tool-time callers must use IEnvironmentVariables.")]
 public static class EnvironmentHelpers
 {
     internal const string AzureSubscriptionIdEnvironmentVariable = "AZURE_SUBSCRIPTION_ID";

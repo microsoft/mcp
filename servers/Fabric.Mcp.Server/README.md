@@ -7,6 +7,8 @@ cspell:words Retriable
 <!-- insert-section: nuget;pypi {{MCPRepositoryMetadata}} -->
 
 A local-first Model Context Protocol (MCP) server that provides AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Documentation tools use bundled specifications without connecting to live Fabric environments; operational tools call Fabric APIs using the configured identity.
+
+Tool access to host files, environment variables, and process creation is available only in CLI and stdio mode. HTTP mode rejects these operations explicitly, including local uploads and downloads, while bundled documentation and operations using inline content remain available. Process-startup configuration and server discovery are unaffected.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Fabric MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Fabric_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=fabric.vscode-fabric-mcp-server) [![Install Fabric MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Fabric_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/fabric.vscode-fabric-mcp-server)
 

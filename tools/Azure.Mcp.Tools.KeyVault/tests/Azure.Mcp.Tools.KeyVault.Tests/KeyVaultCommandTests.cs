@@ -209,40 +209,22 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [Fact]
     public async Task Should_import_certificate()
     {
-        if (await AssertLocalToolIsUnavailableInHttpMode("keyvault_certificate_import"))
-        {
-            return;
-        }
-
         var fakePassword = _importCertificateAssets.Password;
-        var tempPath = _importCertificateAssets.CreateTempCopy();
+        var certificateName = RegisterOrRetrieveVariable("certificateName", "certificateimport" + Random.Shared.NextInt64());
 
-        try
-        {
-            var certificateName = RegisterOrRetrieveVariable("certificateName", "certificateimport" + Random.Shared.NextInt64());
-
-            var result = await CallToolAsync(
-                "keyvault_certificate_import",
-                new()
-                {
-                    { "vault", Settings.ResourceBaseName },
-                    { "certificate", certificateName },
-                    { "certificate-data", tempPath },
-                    { "password", fakePassword }
-                });
-            var createdCertificateName = result.AssertProperty("name");
-            Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-            Assert.Equal(certificateName, createdCertificateName.GetString());
-            // Validate basic certificate properties
-            ValidateCertificate(result);
-        }
-        finally
-        {
-            if (File.Exists(tempPath))
+        var result = await CallToolAsync(
+            "keyvault_certificate_import",
+            new()
             {
-                File.Delete(tempPath);
-            }
-        }
+                { "vault", Settings.ResourceBaseName },
+                { "certificate", certificateName },
+                { "certificate-data", _importCertificateAssets.PfxBase64 },
+                { "password", fakePassword }
+            });
+        var createdCertificateName = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
+        Assert.Equal(certificateName, createdCertificateName.GetString());
+        ValidateCertificate(result);
     }
 
     [Fact(Skip = "This test requires a Key Vault Managed HSM")]

@@ -2267,8 +2267,8 @@
           "description": "This tool does not handle sensitive or secret information."
         },
         "localRequired": {
-          "value": true,
-          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [

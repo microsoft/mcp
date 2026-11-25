@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.Http;
 using Xunit;
 
@@ -20,6 +21,7 @@ public class FabricCoreSetupTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddHostServices();
         new FabricCoreSetup().ConfigureServices(services);
         using var provider = services.BuildServiceProvider();
 

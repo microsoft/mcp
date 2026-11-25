@@ -15,13 +15,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Host;
 
 namespace Azure.Mcp.Tools.Compute.Services;
 
 public class ComputeService(
     IAzureService azureService,
     ILogger<ComputeService> logger,
-    IOptions<ServerRuntimeConfiguration> configuration)
+    IOptions<ServerRuntimeConfiguration> configuration,
+    IFileSystem fileSystem)
     : BaseAzureResourceService(azureService), IComputeService
 {
     private readonly ILogger<ComputeService> _logger = logger;
@@ -1864,9 +1866,9 @@ public class ComputeService(
         if (!_configuration.Value.IsHttpMode)
         {
             // In stdio mode, allow resolving file paths for convenience
-            if (File.Exists(sshPublicKey))
+            if (fileSystem.FileExists(sshPublicKey))
             {
-                return File.ReadAllText(sshPublicKey).Trim();
+                return fileSystem.ReadAllText(sshPublicKey).Trim();
             }
         }
         else

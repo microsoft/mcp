@@ -5,15 +5,33 @@ using System.Net;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
 using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Tests.Client;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using OptionsFactory = Microsoft.Extensions.Options.Options;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands.File;
 
 public class BlobPutCommandTests : CommandUnitTestsBase<BlobPutCommand, IOneLakeService>
 {
+    [Fact]
+    public async Task ExecuteAsync_HttpModeDeniesLocalUploadBeforeCallingService()
+    {
+        Services.AddSingleton<IOptions<ServerRuntimeConfiguration>>(
+            OptionsFactory.Create(new ServerRuntimeConfiguration { Transport = "http" }));
+
+        var response = await ExecuteCommandAsync(
+            "--workspace-id workspace --item-id item --file-path Files/a.txt --local-file-path missing.txt");
+
+        Assert.NotEqual(HttpStatusCode.Created, response.Status);
+        Assert.Contains("filesystem is not allowed in HTTP mode", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
