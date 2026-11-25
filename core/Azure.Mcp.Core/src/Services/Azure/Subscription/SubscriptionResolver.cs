@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Host;
 
@@ -55,7 +56,7 @@ public sealed class SubscriptionResolver(IFileSystem fileSystem, IEnvironmentVar
         var resolvedSubscription = ResolveSubscriptionInternal(this, subscription);
         if (!fileSystem.IsAccessAllowed && (string.IsNullOrWhiteSpace(resolvedSubscription) || IsPlaceholder(resolvedSubscription)))
         {
-            throw new ArgumentException("A subscription must be provided explicitly when host subscription defaults are unavailable.", nameof(subscription));
+            throw new CommandValidationException("A subscription must be provided explicitly when host subscription defaults are unavailable.");
         }
 
         return resolvedSubscription;

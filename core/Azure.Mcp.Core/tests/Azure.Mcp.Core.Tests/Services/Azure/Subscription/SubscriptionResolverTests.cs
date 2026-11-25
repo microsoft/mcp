@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Areas.Server;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Host;
 using NSubstitute;
@@ -35,7 +36,7 @@ public class SubscriptionResolverTests
         Assert.Null(resolver.GetProfileSubscriptionId());
         Assert.Null(resolver.GetEnvironmentSubscriptionId());
         Assert.Null(resolver.GetDefaultSubscriptionId());
-        var exception = Assert.Throws<ArgumentException>(() => resolver.ResolveSubscription(subscription));
+        var exception = Assert.Throws<CommandValidationException>(() => resolver.ResolveSubscription(subscription));
         Assert.Contains("explicitly", exception.Message);
     }
 
