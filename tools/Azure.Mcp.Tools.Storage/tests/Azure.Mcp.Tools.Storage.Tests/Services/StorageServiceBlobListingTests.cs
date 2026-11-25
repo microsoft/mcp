@@ -35,6 +35,24 @@ public sealed class StorageServiceBlobListingTests()
         """;
 
     [Fact]
+    public async Task GetBlobDetails_FlatListing_RequestsAndReturnsMetadata()
+    {
+        using var httpClient = new HttpClient(new StorageTestHttpMessageHandler((request, _) =>
+        {
+            var query = HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            Assert.Equal("metadata", query["include"], ignoreCase: true);
+            return CreateListResponse(BlobEntry);
+        }));
+        var service = CreateService(httpClient);
+
+        var result = await service.GetBlobDetails(
+            "testaccount", "container", null, cancellationToken: TestContext.Current.CancellationToken);
+
+        var blob = Assert.Single(result.Blobs);
+        Assert.Equal("test", blob.Metadata["category"]);
+    }
+
+    [Fact]
     public async Task ListBlobs_Hierarchy_ReturnsOnePageOfBlobsAndPrefixes()
     {
         var requestCount = 0;
@@ -50,6 +68,7 @@ public sealed class StorageServiceBlobListingTests()
             Assert.Equal("container", query["restype"]);
             Assert.Equal("folder/", query["prefix"]);
             Assert.Equal("/", query["delimiter"]);
+            Assert.Equal("metadata", query["include"], ignoreCase: true);
             Assert.Equal("100", query["maxresults"]);
             Assert.Equal(continuationToken, query["marker"]);
 

@@ -187,7 +187,8 @@ public sealed class StorageService(IAzureService azureService)
         {
             await foreach (var page in containerClient.GetBlobsAsync(new()
             {
-                Prefix = prefix
+                Prefix = prefix,
+                Traits = BlobTraits.Metadata
             }, cancellationToken: cancellationToken).AsPages(cursor, BlobPageSize).WithCancellation(cancellationToken))
             {
                 foreach (var blobItem in page.Values)
@@ -250,7 +251,8 @@ public sealed class StorageService(IAzureService azureService)
         await foreach (var page in containerClient.GetBlobsByHierarchyAsync(new GetBlobsByHierarchyOptions
         {
             Prefix = prefix,
-            Delimiter = delimiter
+            Delimiter = delimiter,
+            Traits = BlobTraits.Metadata
         }, cancellationToken).AsPages(cursor, BlobPageSize).WithCancellation(cancellationToken))
         {
             var blobs = new List<Storage.Models.BlobInfo>();
