@@ -15,6 +15,23 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
+  # cspell:ignore SOURCECOMMITID TARGETBRANCH
+  - pwsh: |
+      $sourceCommit = $env:SYSTEM_PULLREQUEST_SOURCECOMMITID
+      $targetBranch = "origin/$($env:SYSTEM_PULLREQUEST_TARGETBRANCH -replace '^refs/heads/', '')"
+      $changedFiles = git diff --no-renames --name-only "$targetBranch...$sourceCommit" --
+      if ($LASTEXITCODE -ne 0) {
+        throw "git diff failed with exit code $LASTEXITCODE while detecting VSIX dependency changes."
+      }
+
+      $hasVsixDependencyChanges = @($changedFiles | Where-Object {
+        $_ -match '^servers/[^/]+/vscode/package(-lock)?\.json$'
+      }).Count -gt 0
+      Write-Host "##vso[task.setvariable variable=RunVsixPackaging;isOutput=true]$($hasVsixDependencyChanges.ToString().ToLowerInvariant())"
+    name: DetectVsixChanges
+    displayName: "Detect VSIX dependency changes"
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+
   - template: /eng/pipelines/templates/steps/install-dotnet.yml
 
   - pwsh: |
