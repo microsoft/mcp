@@ -140,6 +140,14 @@ public sealed class ArchitectureAssessCommandTests
             expectedStatus);
 
         Assert.Equal(state, result.State);
+        Assert.Equal($"Backend ended in {state}.", result.AuthoritativeUserResponse);
+        Assert.Equal("verbatim", result.PresentationPolicy.Mode);
+        Assert.True(result.PresentationPolicy.Terminal);
+        Assert.False(result.PresentationPolicy.AllowParaphrase);
+        Assert.False(result.PresentationPolicy.AllowSummarization);
+        Assert.False(result.PresentationPolicy.AllowOmission);
+        Assert.False(result.PresentationPolicy.AllowReordering);
+        Assert.True(result.PresentationPolicy.SuggestedNextStepsRequireUserSelection);
         Assert.Contains(state, response.Message, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(response.TelemetryFailureMessage);
     }
@@ -226,9 +234,23 @@ public sealed class BicepReviewCommandTests
             response,
             ResiliencyAgentJsonContext.Default.ResiliencyAgentCommandResult);
         Assert.Equal(reply, result.Reply);
+        Assert.Equal(reply, result.AuthoritativeUserResponse);
+        AssertAuthoritativeTerminalPolicy(result.PresentationPolicy);
         Assert.DoesNotContain(
             "\"files\"",
             JsonSerializer.Serialize(response.Results),
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void AssertAuthoritativeTerminalPolicy(
+        ResiliencyAgentPresentationPolicy policy)
+    {
+        Assert.Equal("verbatim", policy.Mode);
+        Assert.True(policy.Terminal);
+        Assert.False(policy.AllowParaphrase);
+        Assert.False(policy.AllowSummarization);
+        Assert.False(policy.AllowOmission);
+        Assert.False(policy.AllowReordering);
+        Assert.True(policy.SuggestedNextStepsRequireUserSelection);
     }
 }

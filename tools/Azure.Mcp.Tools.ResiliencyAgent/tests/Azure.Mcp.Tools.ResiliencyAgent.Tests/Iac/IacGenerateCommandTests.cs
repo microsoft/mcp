@@ -119,6 +119,14 @@ public sealed class IacGenerateCommandTests
         Assert.Equal("conv-1", result.ConversationId);
         Assert.Equal("completed", result.State);
         Assert.Equal("Done.", result.Reply);
+        Assert.Equal("Done.", result.AuthoritativeUserResponse);
+        Assert.Equal("verbatim", result.PresentationPolicy.Mode);
+        Assert.True(result.PresentationPolicy.Terminal);
+        Assert.False(result.PresentationPolicy.AllowParaphrase);
+        Assert.False(result.PresentationPolicy.AllowSummarization);
+        Assert.False(result.PresentationPolicy.AllowOmission);
+        Assert.False(result.PresentationPolicy.AllowReordering);
+        Assert.True(result.PresentationPolicy.SuggestedNextStepsRequireUserSelection);
         Assert.Empty(result.ElicitationResponses);
         Assert.Contains("Do not run Bicep", result.ArtifactInstructions, StringComparison.Ordinal);
         Assert.Contains("ARM validate/what-if", result.ArtifactInstructions, StringComparison.Ordinal);

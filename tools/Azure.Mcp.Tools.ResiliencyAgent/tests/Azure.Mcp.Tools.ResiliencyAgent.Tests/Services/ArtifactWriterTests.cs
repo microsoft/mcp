@@ -144,6 +144,7 @@ public sealed class ArtifactWriterTests : IDisposable
     [InlineData("main", "text/plain", "terraform", "main.tf")]
     [InlineData("main.txt", "text/plain", "terraform", "main.tf")]
     [InlineData("main.tf", "text/plain", "terraform", "main.tf")]
+    [InlineData("main", "text/plain", "tf", "main.tf")]
     [InlineData("variables.tfvars", "text/plain", "terraform", "variables.tfvars")]
     public void Write_AddsAUsefulExtension(
         string name,

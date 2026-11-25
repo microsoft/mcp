@@ -299,6 +299,72 @@ public sealed class ResiliencyAgentServiceTests
         Assert.Equal(content, artifact.Content);
     }
 
+    [Theory]
+    [InlineData("bicep", "main.bicep", "param location string = 'eastus'")]
+    [InlineData("tf", "main.tf", "terraform { required_version = \">= 1.8\" }")]
+    public void ReadArtifact_PreservesSingleFileTemplateMetadataName(
+        string format,
+        string fileName,
+        string content)
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            $$"""
+            {
+              "name": "{{(format == "bicep" ? "Bicep Templates" : "Terraform Templates")}}",
+              "description": "Generated template",
+              "metadata": {
+                "type": "{{format}}",
+                "templateFileName": "{{fileName}}"
+              },
+              "parts": [{
+                "kind": "text",
+                "text": {{JsonSerializer.Serialize(content)}}
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal(fileName, artifact.Name);
+        Assert.Equal("text/plain", artifact.MimeType);
+        Assert.Equal(content, artifact.Content);
+    }
+
+    [Theory]
+    [InlineData("AzureBackupEligibilityReport.md")]
+    [InlineData("AzureBackupConfigurationStatus.md")]
+    [InlineData("AzureBackupScript-AzureCLI.md")]
+    [InlineData("AzureBackupScript-PowerShell.md")]
+    [InlineData("AzureBackupScript-REST.md")]
+    [InlineData("RetriggerSelectedFailedBackups.md")]
+    [InlineData("DeleteVault-rsv-prod.md")]
+    public void ReadArtifact_AssignsDataResiliencyFamilyToBackupMarkdown(string fileName)
+    {
+        string content = "# Azure Backup";
+        string bytes = Convert.ToBase64String(Encoding.UTF8.GetBytes(content));
+        using JsonDocument document = JsonDocument.Parse(
+            $$"""
+            {
+              "name": "{{fileName}}",
+              "description": "Azure Backup output",
+              "metadata": { "type": "md" },
+              "parts": [{
+                "kind": "file",
+                "file": {
+                  "name": "{{fileName}}",
+                  "mimeType": "text/markdown",
+                  "bytes": "{{bytes}}"
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("data-resiliency", artifact.Family);
+        Assert.Equal(content, artifact.Content);
+    }
+
     [Fact]
     public void ReadArtifact_RendersMultipleResourceTypesAndResources()
     {

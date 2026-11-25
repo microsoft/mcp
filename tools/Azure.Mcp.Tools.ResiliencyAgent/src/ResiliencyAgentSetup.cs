@@ -5,6 +5,7 @@ using Azure.Mcp.Core;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.DataResiliency;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
@@ -72,6 +73,9 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         services.AddSingleton<DiscoveryGetCommand>();
         services.AddSingleton<DiscoveryManageCommand>();
         services.AddSingleton<DiscoveryExecuteCommand>();
+        services.AddSingleton<DataResiliencyGetCommand>();
+        services.AddSingleton<DataResiliencyManageCommand>();
+        services.AddSingleton<DataResiliencyGenerateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -95,7 +99,11 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             updates. Discovery commands inspect saved application discoveries and arrangements,
             configure and run automatic discovery, edit arrangements, and execute confirmed
             discovery-backed Service Group plans. Ordinary Service Group requests remain separate
-            from automatic discovery.
+            from automatic discovery. Data Resiliency commands assess Azure Backup and Azure Site
+            Recovery posture, coverage, alerts, jobs, eligibility, troubleshooting, restore guidance,
+            and portal handoffs; orchestrate supported confirmed Azure Backup changes; or generate
+            customer-run Azure Backup automation. Existing direct Azure Backup commands remain
+            available for their established atomic operations.
             Prefer file attachments for complete templates and multi-file configurations: prepare
             local files through the file attachment command and pass their opaque attachment IDs.
             Templates pasted directly in the user's current prompt are also supported without
@@ -148,6 +156,9 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var discovery = new CommandGroup(
             "discovery",
             "Inspect saved Azure application discoveries, set up or run automatic discovery, edit Service Group arrangements, or execute a confirmed persisted arrangement.");
+        var dataResiliency = new CommandGroup(
+            "dataresiliency",
+            "Assess Azure Backup and recovery posture, orchestrate supported Azure Backup changes, or generate customer-run Azure Backup automation.");
 
         guidance.AddCommand<GuidanceGetCommand>(serviceProvider);
         file.AddCommand<FileAttachCommand>(serviceProvider);
@@ -168,6 +179,9 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         discovery.AddCommand<DiscoveryGetCommand>(serviceProvider);
         discovery.AddCommand<DiscoveryManageCommand>(serviceProvider);
         discovery.AddCommand<DiscoveryExecuteCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyGetCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyManageCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyGenerateCommand>(serviceProvider);
         resiliencyAgent.AddSubGroup(guidance);
         resiliencyAgent.AddSubGroup(file);
         resiliencyAgent.AddSubGroup(architecture);
@@ -180,6 +194,7 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         resiliencyAgent.AddSubGroup(serviceGroup);
         resiliencyAgent.AddSubGroup(zonalResiliency);
         resiliencyAgent.AddSubGroup(discovery);
+        resiliencyAgent.AddSubGroup(dataResiliency);
         return resiliencyAgent;
     }
 }

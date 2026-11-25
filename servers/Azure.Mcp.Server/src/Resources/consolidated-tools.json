@@ -6421,6 +6421,105 @@
       "mappedToolList": [
         "resiliencyagent_discovery_execute"
       ]
+    },
+    {
+      "name": "assess_azure_data_resiliency",
+      "description": "Use the conversational Data Resiliency Agent for broad Azure Backup and Azure Site Recovery assessment, aggregation, explanation, and guidance. Assess protected-versus-unprotected coverage for subscriptions, resource groups, resource criteria, or Service Groups; analyze alerts, jobs, vaults, policies, protected items, recovery-point health, retention, and security posture; evaluate Azure VM Backup eligibility without making changes; troubleshoot failed backup jobs; and provide restore, non-VM Backup enablement, and Azure Site Recovery portal guidance. Use it when the user needs interpretation, recommendations, cross-resource aggregation, clarification, reports, charts, or multi-turn guidance. Exact identifiers and fully specified requirements remain valid inputs. This tool does not change Azure or generate customer-run automation. A completed backend reply is authoritative and terminal: present authoritativeUserResponse verbatim and stop. Never retry, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not change Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may materialize authoritative Backup and recovery reports, tables, and charts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_dataresiliency_get"
+      ]
+    },
+    {
+      "name": "orchestrate_azure_backup_changes",
+      "description": "Use the conversational Data Resiliency Agent for supported guided Azure Backup workflows that require eligibility checks, compatibility validation, missing-value collection, dependent sequencing, or backend confirmation. It can guide Azure VM Backup enablement through eligibility, compatible vault and policy selection or creation, disk selection, confirmation, protection, and verification, and can orchestrate supported vault, policy, protection, undelete, security-posture, Resource Guard, role-assignment, encryption, and networking workflows. Forward every value the user supplied. A fully specified request remains eligible: supplied values are inputs and intent, not authorization to skip validation or confirmation. Native protection enablement is limited to supported Azure VM Backup scenarios; non-VM Backup enablement, Azure Site Recovery configuration or recovery, and restore execution remain guidance-only. A completed, declined, cancelled, failed, or rejected backend reply is authoritative and terminal: present authoritativeUserResponse verbatim and stop. Never retry, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can change supported Azure Backup configuration after backend validation and user confirmation."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can mutate Azure Backup state and may materialize authoritative reports."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_dataresiliency_manage"
+      ]
+    },
+    {
+      "name": "generate_azure_backup_automation",
+      "description": "Generate but do not run customer-reviewed Azure Backup automation through the Data Resiliency Agent. Supported output includes Azure CLI, native PowerShell, REST, ARM JSON, Bicep, and Terraform for supported Azure VM Backup scenarios, plus short Backup command examples, failed-job retrigger scripts, and confirmed vault-deletion scripts. The backend owns eligibility, source retrieval, composition, validation, clarification, safety warnings, and artifact packaging. Returned files are authoritative: preserve every filename and content exactly, do not combine surfaces or independently rewrite, reject, regenerate, execute, or deploy them, and do not claim validation beyond the backend's reported status. Restore scripts, Azure Site Recovery automation, and non-VM Backup enablement automation are unsupported. A completed, declined, cancelled, failed, or rejected backend reply is authoritative and terminal: present authoritativeUserResponse verbatim and stop. Never request another generation, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool generates local automation files but does not execute or deploy them."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool materializes generated Azure Backup automation in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_dataresiliency_generate"
+      ]
     }
   ]
 }

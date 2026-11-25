@@ -22,6 +22,24 @@ internal static class StructuredArtifactMarkdownRenderer
             ["Microsoft.Sql/servers/databases"] = "SQL Databases",
             ["Microsoft.Storage/storageAccounts"] = "Storage Accounts",
         };
+    private static readonly IReadOnlySet<string> s_backupDataGridNames =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Protectable resources",
+            "Alerts",
+            "Alert instances",
+            "Protected items",
+            "Retention",
+            "Security posture",
+            "Recovery point health",
+            "Threat detection",
+            "Jobs",
+            "Other jobs",
+            "Vaults",
+            "Protection policies",
+            "Azure Policies for protection",
+            "Protection compliance",
+        };
 
     internal static AgentArtifact? Render(
         string? artifactName,
@@ -30,7 +48,7 @@ internal static class StructuredArtifactMarkdownRenderer
         JsonElement data)
     {
         if (string.Equals(format, "datagrid", StringComparison.OrdinalIgnoreCase)
-            && TryRenderDataGrid(data, out RenderedMarkdown grid))
+            && TryRenderDataGrid(artifactName, data, out RenderedMarkdown grid))
         {
             return new AgentArtifact(
                 ResolveMarkdownFileName(artifactName, grid.FileName),
@@ -41,8 +59,20 @@ internal static class StructuredArtifactMarkdownRenderer
                 grid.Family);
         }
 
+        if (string.Equals(format, "chart", StringComparison.OrdinalIgnoreCase)
+            && TryRenderChart(artifactName, data, out RenderedMarkdown chart))
+        {
+            return new AgentArtifact(
+                ResolveMarkdownFileName(artifactName, chart.FileName),
+                description,
+                "text/markdown",
+                chart.Content,
+                format,
+                chart.Family);
+        }
+
         if (string.Equals(format, "resiliencyagent", StringComparison.OrdinalIgnoreCase)
-            && TryRenderResiliencyAgent(data, out RenderedMarkdown resiliency))
+            && TryRenderResiliencyAgent(artifactName, data, out RenderedMarkdown resiliency))
         {
             return new AgentArtifact(
                 ResolveMarkdownFileName(artifactName, resiliency.FileName),
@@ -56,7 +86,10 @@ internal static class StructuredArtifactMarkdownRenderer
         return null;
     }
 
-    private static bool TryRenderDataGrid(JsonElement data, out RenderedMarkdown rendered)
+    private static bool TryRenderDataGrid(
+        string? artifactName,
+        JsonElement data,
+        out RenderedMarkdown rendered)
     {
         rendered = default;
         if (data.ValueKind != JsonValueKind.Object
@@ -90,23 +123,29 @@ internal static class StructuredArtifactMarkdownRenderer
         string title;
         string fileName;
         string countLabel;
+        string family;
         if (columnIds.Contains("goalAssignedStatus"))
         {
             title = "Service Group goal status";
             fileName = "ServiceGroupGoalStatus.md";
             countLabel = "Service groups";
+            family = "goals";
         }
         else if (columnIds.Contains("exemptionStatus"))
         {
             title = "Goal resource participation";
             fileName = "GoalResourceExemptionStatus.md";
             countLabel = "Resources";
+            family = "goals";
         }
         else
         {
-            title = "Azure resiliency data";
+            title = string.IsNullOrWhiteSpace(artifactName)
+                ? "Azure resiliency data"
+                : artifactName.Trim();
             fileName = "AzureResiliencyDataGrid.md";
             countLabel = "Rows";
+            family = s_backupDataGridNames.Contains(title) ? "data-resiliency" : "reports";
         }
 
         List<JsonElement> rows = [.. rowsElement.EnumerateArray()];
@@ -135,17 +174,199 @@ internal static class StructuredArtifactMarkdownRenderer
             markdown.Append("| ").Append(string.Join(" | ", cells)).AppendLine(" |");
         }
 
-        rendered = new RenderedMarkdown(fileName, "goals", markdown.ToString().TrimEnd());
+        rendered = new RenderedMarkdown(fileName, family, markdown.ToString().TrimEnd());
         return true;
     }
 
-    private static bool TryRenderResiliencyAgent(JsonElement content, out RenderedMarkdown rendered)
+    private static bool TryRenderChart(
+        string? artifactName,
+        JsonElement data,
+        out RenderedMarkdown rendered)
+    {
+        rendered = default;
+        if (data.ValueKind != JsonValueKind.Object
+            || ReadString(data, "chartType") is not string chartType
+            || ReadString(data, "title") is not string title
+            || !data.TryGetProperty("series", out JsonElement series)
+            || series.ValueKind != JsonValueKind.Array
+            || series.GetArrayLength() == 0)
+        {
+            return false;
+        }
+
+        string normalizedType = chartType.Trim().ToLowerInvariant();
+        var markdown = new StringBuilder()
+            .Append("# ")
+            .AppendLine(title)
+            .AppendLine();
+
+        if (normalizedType == "pie")
+        {
+            JsonElement pieSeries = series[0];
+            if (pieSeries.ValueKind != JsonValueKind.Object
+                || !pieSeries.TryGetProperty("data", out JsonElement slices)
+                || slices.ValueKind != JsonValueKind.Array
+                || slices.GetArrayLength() == 0)
+            {
+                return false;
+            }
+
+            var points = new List<(string Name, double Value)>();
+            foreach (JsonElement slice in slices.EnumerateArray())
+            {
+                if (slice.ValueKind != JsonValueKind.Object
+                    || ReadString(slice, "name") is not string name
+                    || !TryReadDouble(slice, "y", out double value))
+                {
+                    return false;
+                }
+
+                points.Add((name, value));
+            }
+
+            markdown.AppendLine("| Category | Count |")
+                .AppendLine("|---|---:|");
+            foreach ((string name, double value) in points)
+            {
+                markdown.Append("| ")
+                    .Append(EscapeTableCell(name))
+                    .Append(" | ")
+                    .Append(FormatNumber(value))
+                    .AppendLine(" |");
+            }
+
+            markdown.AppendLine()
+                .AppendLine("```mermaid")
+                .AppendLine("pie showData");
+            foreach ((string name, double value) in points)
+            {
+                markdown.Append("    \"")
+                    .Append(EscapeMermaidText(name))
+                    .Append("\" : ")
+                    .AppendLine(FormatNumber(value));
+            }
+
+            markdown.AppendLine("```");
+        }
+        else
+        {
+            if (normalizedType != "column")
+            {
+                return false;
+            }
+
+            if (!data.TryGetProperty("xAxis", out JsonElement xAxis)
+                || xAxis.ValueKind != JsonValueKind.Object
+                || !xAxis.TryGetProperty("categories", out JsonElement categoriesElement)
+                || categoriesElement.ValueKind != JsonValueKind.Array
+                || categoriesElement.GetArrayLength() == 0)
+            {
+                return false;
+            }
+
+            List<string> categories = categoriesElement
+                .EnumerateArray()
+                .Select(category => category.ValueKind == JsonValueKind.String
+                    ? category.GetString() ?? string.Empty
+                    : category.ToString())
+                .ToList();
+            var chartSeries = new List<(string Name, List<double> Values)>();
+            foreach (JsonElement entry in series.EnumerateArray())
+            {
+                if (entry.ValueKind != JsonValueKind.Object
+                    || ReadString(entry, "name") is not string name
+                    || !entry.TryGetProperty("data", out JsonElement valuesElement)
+                    || valuesElement.ValueKind != JsonValueKind.Array)
+                {
+                    return false;
+                }
+
+                List<double> values = [];
+                foreach (JsonElement value in valuesElement.EnumerateArray())
+                {
+                    if (value.ValueKind != JsonValueKind.Number
+                        || !value.TryGetDouble(out double number))
+                    {
+                        return false;
+                    }
+
+                    values.Add(number);
+                }
+
+                if (values.Count != categories.Count)
+                {
+                    return false;
+                }
+
+                chartSeries.Add((name, values));
+            }
+
+            markdown.Append("| Category | ")
+                .Append(string.Join(" | ", chartSeries.Select(item => EscapeTableCell(item.Name))))
+                .AppendLine(" |")
+                .Append("|---|")
+                .Append(string.Concat(chartSeries.Select(_ => "---:|")))
+                .AppendLine();
+            for (int index = 0; index < categories.Count; index++)
+            {
+                markdown.Append("| ")
+                    .Append(EscapeTableCell(categories[index]))
+                    .Append(" | ")
+                    .Append(string.Join(" | ", chartSeries.Select(item => FormatNumber(item.Values[index]))))
+                    .AppendLine(" |");
+            }
+
+            double maximum = chartSeries.SelectMany(item => item.Values).DefaultIfEmpty(0).Max();
+            markdown.AppendLine()
+                .AppendLine("```mermaid")
+                .AppendLine("xychart-beta")
+                .Append("    title \"")
+                .Append(EscapeMermaidText(title))
+                .AppendLine("\"")
+                .Append("    x-axis [")
+                .Append(string.Join(", ", categories.Select(category => $"\"{EscapeMermaidText(category)}\"")))
+                .AppendLine("]")
+                .Append("    y-axis \"Count\" 0 --> ")
+                .AppendLine(FormatNumber(maximum <= 0 ? 1 : maximum));
+            foreach ((string _, List<double> values) in chartSeries)
+            {
+                markdown.Append("    bar [")
+                    .Append(string.Join(", ", values.Select(FormatNumber)))
+                    .AppendLine("]");
+            }
+
+            markdown.AppendLine("```");
+        }
+
+        string family = artifactName?.Contains("backup", StringComparison.OrdinalIgnoreCase) == true
+            || artifactName?.Contains("protection", StringComparison.OrdinalIgnoreCase) == true
+            ? "data-resiliency"
+            : "charts";
+        rendered = new RenderedMarkdown("Chart.md", family, markdown.ToString().TrimEnd());
+        return true;
+    }
+
+    private static bool TryRenderResiliencyAgent(
+        string? artifactName,
+        JsonElement content,
+        out RenderedMarkdown rendered)
     {
         rendered = default;
         if (content.ValueKind != JsonValueKind.Object
             || ReadString(content, "resiliencyAgentArtifactType") is not string artifactType)
         {
             return false;
+        }
+
+        if (string.Equals(artifactType, "GetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            && IsBackupCoverageArtifact(artifactName)
+            && TryRenderBackupProtectionCoverage(content, out string backupCoverage))
+        {
+            rendered = new RenderedMarkdown(
+                "Backup Protection Coverage.md",
+                "data-resiliency",
+                backupCoverage);
+            return true;
         }
 
         if (string.Equals(artifactType, "GetZonalPosture", StringComparison.OrdinalIgnoreCase)
@@ -203,6 +424,88 @@ internal static class StructuredArtifactMarkdownRenderer
         }
 
         return false;
+    }
+
+    private static bool TryRenderBackupProtectionCoverage(
+        JsonElement data,
+        out string markdown)
+    {
+        markdown = string.Empty;
+        if (!data.TryGetProperty("summary", out JsonElement summary)
+            || summary.ValueKind != JsonValueKind.Object
+            || !TryReadNumber(summary, "totalResources", out string totalResources)
+            || !TryReadNumber(summary, "resilientResources", out string protectedResources)
+            || !TryReadNumber(summary, "nonResilientResources", out string unprotectedResources)
+            || !data.TryGetProperty("resources", out JsonElement resources)
+            || resources.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        List<ZonalPostureResource> rows = [];
+        foreach (JsonProperty resourceType in resources.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(resourceType.Name)
+                || resourceType.Value.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
+            {
+                if (resource.ValueKind != JsonValueKind.Object
+                    || ReadString(resource, "resourceId") is not string resourceId
+                    || ReadString(resource, "status") is not string status
+                    || !TryParseResource(resourceId, out ParsedResource parsed))
+                {
+                    return false;
+                }
+
+                rows.Add(new ZonalPostureResource(
+                    parsed.Name,
+                    resourceType.Name,
+                    status,
+                    parsed.ResourceId));
+            }
+        }
+
+        var builder = new StringBuilder()
+            .AppendLine("# Backup Protection Coverage")
+            .AppendLine()
+            .AppendLine("## Summary")
+            .AppendLine()
+            .AppendLine("| Existing Resources | Protected | Unprotected |")
+            .AppendLine("|---:|---:|---:|")
+            .Append("| ")
+            .Append(totalResources)
+            .Append(" | ")
+            .Append(protectedResources)
+            .Append(" | ")
+            .Append(unprotectedResources)
+            .AppendLine(" |")
+            .AppendLine()
+            .AppendLine("> Counts cover existing resources only; deleted resources are not counted.")
+            .AppendLine()
+            .AppendLine("## Resources")
+            .AppendLine()
+            .AppendLine("| Resource | Resource Type | Backup Status |")
+            .AppendLine("|---|---|---|");
+
+        foreach (ZonalPostureResource row in rows)
+        {
+            builder.Append("| [")
+                .Append(EscapeLinkLabel(row.Label))
+                .Append("](")
+                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(") | ")
+                .Append(EscapeTableCell(row.ResourceType))
+                .Append(" | ")
+                .Append(EscapeTableCell(row.Status))
+                .AppendLine(" |");
+        }
+
+        markdown = builder.ToString().TrimEnd();
+        return true;
     }
 
     private static bool TryRenderZonalPosture(JsonElement data, out string markdown)
@@ -744,6 +1047,31 @@ internal static class StructuredArtifactMarkdownRenderer
         JsonValueKind.False => "false",
         _ => value.ToString(),
     };
+
+    private static bool IsBackupCoverageArtifact(string? artifactName) =>
+        artifactName?.Contains("backup coverage", StringComparison.OrdinalIgnoreCase) == true
+        || artifactName?.Contains("protection coverage", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static bool TryReadDouble(
+        JsonElement element,
+        string propertyName,
+        out double value)
+    {
+        value = 0;
+        return element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(propertyName, out JsonElement property)
+            && property.ValueKind == JsonValueKind.Number
+            && property.TryGetDouble(out value);
+    }
+
+    private static string FormatNumber(double value) =>
+        value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string EscapeMermaidText(string value) =>
+        value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "'", StringComparison.Ordinal)
+            .Replace("\r", " ", StringComparison.Ordinal)
+            .Replace("\n", " ", StringComparison.Ordinal);
 
     private static string ResolveMarkdownFileName(string? artifactName, string fallbackName)
     {

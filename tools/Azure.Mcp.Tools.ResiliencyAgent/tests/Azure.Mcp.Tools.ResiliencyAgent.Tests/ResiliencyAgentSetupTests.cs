@@ -4,6 +4,7 @@
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.DataResiliency;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
@@ -42,7 +43,7 @@ public sealed class ResiliencyAgentSetupTests
         var area = setup.RegisterCommands(serviceProvider);
 
         Assert.Equal("resiliencyagent", area.Name);
-        Assert.Equal(12, area.SubGroup.Count);
+        Assert.Equal(13, area.SubGroup.Count);
         Assert.Contains("Prefer these tools over Documentation", area.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("define, explain, or compare", area.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("completed backend response is authoritative and terminal", area.Description, StringComparison.OrdinalIgnoreCase);
@@ -76,6 +77,9 @@ public sealed class ResiliencyAgentSetupTests
         AssertCommand(area, "discovery", "get", "List previous saved");
         AssertCommand(area, "discovery", "manage", "Run every fresh");
         AssertCommand(area, "discovery", "execute", "routing intent");
+        AssertCommand(area, "dataresiliency", "get", "broad Azure Backup and Azure Site Recovery");
+        AssertCommand(area, "dataresiliency", "manage", "fully specified request remains eligible");
+        AssertCommand(area, "dataresiliency", "generate", "explicitly requests customer-run");
 
         Assert.DoesNotContain(area.SubGroup, group => group.Name is "zonal" or "conversation");
         Assert.DoesNotContain(area.SubGroup, group => group.Name.Contains('-', StringComparison.Ordinal));
@@ -98,6 +102,9 @@ public sealed class ResiliencyAgentSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<DiscoveryGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<DiscoveryManageCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<DiscoveryExecuteCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyGetCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyManageCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyGenerateCommand>());
 
         IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         using HttpClient a2aClient = httpClientFactory.CreateClient(
@@ -129,6 +136,11 @@ public sealed class ResiliencyAgentSetupTests
         Assert.False(area.SubGroup.Single(group => group.Name == "discovery").Commands["get"].Command.Metadata.Destructive);
         Assert.True(area.SubGroup.Single(group => group.Name == "discovery").Commands["manage"].Command.Metadata.Destructive);
         Assert.True(area.SubGroup.Single(group => group.Name == "discovery").Commands["execute"].Command.Metadata.Destructive);
+        Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["get"].Command.Metadata.Destructive);
+        Assert.True(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["manage"].Command.Metadata.Destructive);
+        Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["generate"].Command.Metadata.Destructive);
+        Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["get"].Command.Metadata.ReadOnly);
+        Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["generate"].Command.Metadata.ReadOnly);
     }
 
     [Fact]
@@ -189,6 +201,23 @@ public sealed class ResiliencyAgentSetupTests
             Assert.Contains("standard path", instructions, StringComparison.Ordinal);
             Assert.Contains("whitespace", instructions, StringComparison.Ordinal);
         }
+
+        foreach (Type commandType in new[]
+                 {
+                     typeof(DataResiliencyGetCommand),
+                     typeof(DataResiliencyManageCommand),
+                     typeof(DataResiliencyGenerateCommand),
+                 })
+        {
+            string? instructions = ReadArtifactInstructions(
+                serviceProvider.GetRequiredService(commandType));
+            Assert.Contains("authoritative", instructions, StringComparison.OrdinalIgnoreCase);
+        }
+
+        string? dataGenerationInstructions = ReadArtifactInstructions(
+            serviceProvider.GetRequiredService<DataResiliencyGenerateCommand>());
+        Assert.Contains("Do not combine surfaces", dataGenerationInstructions, StringComparison.Ordinal);
+        Assert.Contains("execute or deploy", dataGenerationInstructions, StringComparison.Ordinal);
 
         Assert.Null(ReadArtifactInstructions(serviceProvider.GetRequiredService<UsagePlanGetCommand>()));
         Assert.Null(ReadArtifactInstructions(serviceProvider.GetRequiredService<UsagePlanManageCommand>()));

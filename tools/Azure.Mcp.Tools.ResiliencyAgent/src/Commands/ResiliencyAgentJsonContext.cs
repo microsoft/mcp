@@ -10,6 +10,7 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands;
 [JsonSerializable(typeof(ElicitationResponse))]
 [JsonSerializable(typeof(FileAttachmentResult))]
 [JsonSerializable(typeof(ResiliencyAgentCommandResult))]
+[JsonSerializable(typeof(ResiliencyAgentPresentationPolicy))]
 [JsonSerializable(typeof(WrittenArtifact))]
 [JsonSerializable(typeof(string))]
 [JsonSourceGenerationOptions(

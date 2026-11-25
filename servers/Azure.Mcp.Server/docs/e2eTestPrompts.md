@@ -1553,6 +1553,22 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_discovery_manage | Undo the last change to my saved Discovery arrangement | context-required |
 | resiliencyagent_discovery_execute | Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing | context-required |
 | resiliencyagent_discovery_execute | Apply Plan Group `<plan-group-id>` revision `<revision>` only after showing the exact arrangement and receiving confirmation | context-required |
+| resiliencyagent_dataresiliency_get | Assess Azure Backup protected-versus-unprotected coverage for Service Group `ContosoAppFleetSG` and attach the complete posture report and chart | context-required |
+| resiliencyagent_dataresiliency_get | Analyze why Azure Backup jobs are failing across subscription `<subscription-id>` in the last 7 days and recommend only evidence-backed next steps | context-required |
+| resiliencyagent_dataresiliency_get | Evaluate Azure VM Backup eligibility for resources `<resource-id-1>` and `<resource-id-2>` without changing Azure | context-required |
+| resiliencyagent_dataresiliency_get | Explain the restore options and provide the verified recovery portal route for protected resource `<resource-id>` without performing a restore | context-required |
+| resiliencyagent_dataresiliency_get | Help me configure Azure Site Recovery for VM `<resource-id>` using the supported portal guidance; do not execute ASR configuration | context-required |
+| resiliencyagent_dataresiliency_get | Help me enable Azure Files Backup for storage account `<resource-id>` using the supported portal workflow; do not perform unsupported native enablement | context-required |
+| resiliencyagent_dataresiliency_manage | Assess and safely enable Azure VM Backup for `<resource-id>` by guiding vault, policy, disk selection, confirmation, protection, and verification | none |
+| resiliencyagent_dataresiliency_manage | Enable Backup for VM `<resource-id>` using existing vault `<vault-name>`, policy `<policy-name>`, and all disks, while still validating eligibility and asking for confirmation | none |
+| resiliencyagent_dataresiliency_manage | Improve the Azure Backup security posture of vault `<vault-name>` through the minimum supported confirmed changes | none |
+| resiliencyagent_dataresiliency_manage | Guide me through creating the right Recovery Services vault and VM Backup policy for resources `<resource-id-1>` and `<resource-id-2>` | none |
+| resiliencyagent_dataresiliency_generate | Generate an Azure CLI script to configure Azure VM Backup for `<resource-id>` without changing Azure | context-required |
+| resiliencyagent_dataresiliency_generate | Generate a native PowerShell script to configure Azure VM Backup for `<resource-id>` without executing it | context-required |
+| resiliencyagent_dataresiliency_generate | Generate a validated REST script to configure Azure VM Backup for `<resource-id>` | context-required |
+| resiliencyagent_dataresiliency_generate | Generate ARM JSON, Bicep, and Terraform Azure VM Backup automation as separate authoritative artifacts | context-required |
+| resiliencyagent_dataresiliency_generate | Generate the confirmed customer-run PowerShell script for deleting Recovery Services vault `<vault-name>` after showing its impact | context-required |
+| resiliencyagent_dataresiliency_generate | Generate one PowerShell script to retrigger the selected failed Azure Backup jobs | context-required |
 
 ## Azure Resource Health
 

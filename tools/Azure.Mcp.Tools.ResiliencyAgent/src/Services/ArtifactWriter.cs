@@ -313,7 +313,8 @@ public sealed class ArtifactWriter : IArtifactWriter
             return ReplaceGenericExtension(fileName, extension, ".json");
         }
 
-        if (string.Equals(artifact.Format, "terraform", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(artifact.Format, "terraform", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artifact.Format, "tf", StringComparison.OrdinalIgnoreCase))
         {
             return ReplaceGenericExtension(fileName, extension, ".tf");
         }

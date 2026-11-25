@@ -307,6 +307,9 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         string? format = artifact.TryGetProperty("metadata", out JsonElement artifactMetadata)
             ? ReadString(artifactMetadata, "type")
             : null;
+        string? templateFileName = artifactMetadata.ValueKind == JsonValueKind.Object
+            ? ReadString(artifactMetadata, "templateFileName")
+            : null;
         if (!artifact.TryGetProperty("parts", out JsonElement parts) || parts.ValueKind != JsonValueKind.Array)
         {
             return [new AgentArtifact(name, description, null, null, format, KnownArtifactFamily(name))];
@@ -343,12 +346,12 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                         else
                         {
                             decoded.Add(new AgentArtifact(
-                                name,
+                                templateFileName ?? name,
                                 description,
-                                "text/markdown",
+                                TextArtifactMimeType(format),
                                 text,
                                 format,
-                                KnownArtifactFamily(name)));
+                                KnownArtifactFamily(templateFileName ?? name)));
                         }
 
                         break;
@@ -383,13 +386,29 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
             : "structured-data";
     }
 
-    private static string? KnownArtifactFamily(string name) =>
-        name.StartsWith("Zone-Resilient ", StringComparison.OrdinalIgnoreCase)
+    private static string? KnownArtifactFamily(string name)
+    {
+        if (name.StartsWith("Zone-Resilient ", StringComparison.OrdinalIgnoreCase)
             || name.StartsWith("EnableZonalResiliency-", StringComparison.OrdinalIgnoreCase)
             || name.StartsWith("CreateZonallyResilientResource-", StringComparison.OrdinalIgnoreCase)
-            || name.StartsWith("SG-assessment-report-", StringComparison.OrdinalIgnoreCase)
-                ? "zonal-resiliency"
+            || name.StartsWith("SG-assessment-report-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "zonal-resiliency";
+        }
+
+        return name.StartsWith("AzureBackup", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("RetriggerSelectedFailedBackups", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("DeleteVault-", StringComparison.OrdinalIgnoreCase)
+                ? "data-resiliency"
                 : null;
+    }
+
+    private static string TextArtifactMimeType(string? format) =>
+        string.Equals(format, "bicep", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(format, "terraform", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(format, "tf", StringComparison.OrdinalIgnoreCase)
+            ? "text/plain"
+            : "text/markdown";
 
     /// <summary>
     /// Renders a structured data part as readable Markdown without discarding unfamiliar JSON.

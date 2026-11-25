@@ -142,6 +142,9 @@ public sealed class ConsolidatedToolMetadataTests()
                      "inspect_azure_application_discovery",
                      "manage_azure_application_discovery",
                      "execute_azure_discovery_service_group_plan",
+                     "assess_azure_data_resiliency",
+                     "orchestrate_azure_backup_changes",
+                     "generate_azure_backup_automation",
                  })
         {
             var definition = Assert.Single(definitions, candidate => candidate.Name == name);
@@ -244,6 +247,46 @@ public sealed class ConsolidatedToolMetadataTests()
         Assert.Equal(
             ["resiliencyagent_discovery_execute"],
             discoveryExecutionTool.MappedToolList);
+
+        var dataAssessmentTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "assess_azure_data_resiliency");
+        Assert.False(dataAssessmentTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_dataresiliency_get"],
+            dataAssessmentTool.MappedToolList);
+
+        var dataManagementTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "orchestrate_azure_backup_changes");
+        Assert.True(dataManagementTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_dataresiliency_manage"],
+            dataManagementTool.MappedToolList);
+
+        var dataGenerationTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "generate_azure_backup_automation");
+        Assert.False(dataGenerationTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_dataresiliency_generate"],
+            dataGenerationTool.MappedToolList);
+
+        Assert.Contains(
+            "interpretation, recommendations",
+            dataAssessmentTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "fully specified request remains eligible",
+            dataManagementTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Azure CLI, native PowerShell, REST, ARM JSON, Bicep, and Terraform",
+            dataGenerationTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains("authoritativeUserResponse verbatim", dataAssessmentTool.Description, StringComparison.Ordinal);
+        Assert.Contains("authoritativeUserResponse verbatim", dataManagementTool.Description, StringComparison.Ordinal);
+        Assert.Contains("authoritativeUserResponse verbatim", dataGenerationTool.Description, StringComparison.Ordinal);
     }
 
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>

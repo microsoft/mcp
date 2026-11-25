@@ -5431,6 +5431,21 @@ azmcp resiliencyagent discovery manage --request <request> \
 # ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent discovery execute --request <request> \
                                           [--conversation-id <conversation-id>]
+
+# Assess Azure Backup and recovery posture
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent dataresiliency get --request <request> \
+                                          [--conversation-id <conversation-id>]
+
+# Orchestrate guided Azure Backup changes
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent dataresiliency manage --request <request> \
+                                            [--conversation-id <conversation-id>]
+
+# Generate customer-run Azure Backup automation
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent dataresiliency generate --request <request> \
+                                              [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations
