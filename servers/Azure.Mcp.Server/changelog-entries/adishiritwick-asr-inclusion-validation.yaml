@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed ASR recovery plan resource inclusion rejecting requests without test-failover network parameters, aligning validation with Recovery Orchestration."

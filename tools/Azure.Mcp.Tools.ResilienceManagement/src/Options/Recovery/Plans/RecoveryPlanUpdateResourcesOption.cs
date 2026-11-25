@@ -20,7 +20,7 @@ public sealed class RecoveryPlanUpdateResourcesOptions
         "First inclusion and re-inclusion require matching selectedProtectionSolutionType and selectedProtectionSolutionSetting. " +
         "CustomRunbook requires failoverAction.resourceId and reprotectAction.resourceId values that identify Microsoft.Automation/automationAccounts/runbooks resources. " +
         "AzureSiteRecovery requires a Microsoft.Compute/virtualMachines resource with healthy Azure Site Recovery protection and Microsoft.Compute/disks and Microsoft.Storage/storageAccounts IDs in diskReprotectInputDetails; " +
-        "AzureSiteRecovery also requires testFailoverParams.networkResourceId identifying a Microsoft.Network/virtualNetworks resource. " +
+        "AzureSiteRecovery does not require testFailoverParams because the service does not currently support ASR test failover for Zonal or Regional recovery plans. " +
         "CrossZoneVMRecovery applies only to Microsoft.Compute/virtualMachines resources whose zone-movement protection the service has detected, and accepts optional targetZone and capacityReservationGroupId (Microsoft.Compute/capacityReservationGroups). " +
         "AzureNative cannot be selected for an included resource. " +
         "The service preserves existing settings on sparse updates and permits only inclusionState changes while the resource is excluded. " +

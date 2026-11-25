@@ -131,6 +131,52 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     }
 
     [Fact]
+    public async Task ExecuteAsync_ForwardsAzureSiteRecoveryWithoutTestFailoverNetwork()
+    {
+        const string diskId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/disks/disk";
+        const string storageId = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/staging";
+        string updates = $$$"""
+            [{"properties":{
+                "recoveryResourceUniqueId":"12345678-9012-3456-7890-123456789012",
+                "inclusionState":"Included",
+                "selectedProtectionSolutionType":"AzureSiteRecovery",
+                "selectedProtectionSolutionSetting":{
+                    "protectionSolutionType":"AzureSiteRecovery",
+                    "reprotectParams":{"diskReprotectInputDetails":[
+                        {"diskResourceId":"{{{diskId}}}","stagingStorageAccountResourceId":"{{{storageId}}}"}
+                    ]}
+                }
+            }}]
+            """;
+        UpdateRecoveryResourcesContent? capturedContent = null;
+        Service.UpdateRecoveryPlanResourcesAsync(
+            "sg1", "plan1", Arg.Any<UpdateRecoveryResourcesContent>(), null, Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                capturedContent = call.ArgAt<UpdateRecoveryResourcesContent>(2);
+                return UpdateResult();
+            });
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--resources-to-update", updates);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(capturedContent);
+        var resource = Assert.Single(capturedContent.ResourcesToUpdate);
+        Assert.Equal(ResourceInclusionState.Included, resource.Properties.InclusionState);
+        Assert.Equal(ResourceProtectionSolutionType.AzureSiteRecovery, resource.Properties.SelectedProtectionSolutionType);
+        var setting = Assert.IsType<ResourceSiteRecoveryProtectionSetting>(resource.Properties.SelectedProtectionSolutionSetting);
+        Assert.Null(setting.TestFailoverParamsNetworkResourceId);
+        var disk = Assert.Single(setting.DiskReprotectInputDetails);
+        Assert.Equal(diskId, disk.DiskResourceId.ToString());
+        Assert.Equal(storageId, disk.StagingStorageAccountResourceId.ToString());
+        await Service.Received(1).UpdateRecoveryPlanResourcesAsync(
+            "sg1", "plan1", Arg.Any<UpdateRecoveryResourcesContent>(), null, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_AllowsRemovalOnly()
     {
         Service.UpdateRecoveryPlanResourcesAsync(
