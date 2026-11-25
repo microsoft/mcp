@@ -1058,6 +1058,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
 - [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/.github/skills/add-azure-mcp-tools/SKILL.md)
+- [Microsoft Learn Reference Documentation Skill](https://github.com/microsoft/mcp/blob/main/.github/skills/azure-mcp-mslearn-reference-docs/SKILL.md) - Create or update Learn tool references and follow the documentation PR review and human sign-off workflow.
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 
