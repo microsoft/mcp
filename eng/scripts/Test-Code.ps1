@@ -29,6 +29,8 @@ if ($ScopingBuildInfoPath) {
     $BuildInfo = Get-Content $ScopingBuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 }
 
+$useCachedTestProjects = $BuildInfo -and $BuildInfo.ContainsKey('testProjects')
+
 $workPath = "$RepoRoot/.work/tests"
 Remove-Item -Recurse -Force $workPath -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $workPath -Force | Out-Null
@@ -40,20 +42,37 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
-# Finds all test projects, then filters them based on the specified path filters.
+# Uses Initialize metadata when available, retaining local discovery otherwise.
 function FilterTestProjects {
-    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File
-    | Where-Object {
-        $testProjectDetails = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
-        # Need to parse $testProjectDetails.HasLiveTests and HasUnitTests as they're based on JSON values, therefore will not be a PowerShell boolean
-        $result = $false
-        return ([bool]::TryParse($testProjectDetails.HasLiveTests, [ref]$result) -and $result -and $TestType -in @('Live', 'Recorded', 'All')) -or
-                ([bool]::TryParse($testProjectDetails.HasUnitTests, [ref]$result) -and $result -and $TestType -in @('Unit', 'All'))
+    $candidates = if ($useCachedTestProjects) {
+        $BuildInfo.testProjects | ForEach-Object {
+            $projectPath = Join-Path $RepoRoot $_.path
+            if (!(Test-Path -LiteralPath $projectPath -PathType Leaf)) {
+                Write-Error "Test project from build info not found: $projectPath"
+            }
+            @{
+                FullName = $projectPath
+                Relative = $_.path
+                Details  = $_
+            }
+        }
     }
-    | ForEach-Object { @{
-        FullName = $_.FullName
-        Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
-    }}
+    else {
+        Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*Tests.csproj" -File | ForEach-Object {
+            @{
+                FullName = $_.FullName
+                Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
+                Details  = & "$($PSScriptRoot)/Get-ProjectProperties.ps1" -Path $_.FullName
+            }
+        }
+    }
+
+    $testProjects = @($candidates | Where-Object {
+        $testProjectDetails = $_.Details
+        $result = $false
+        return ([bool]::TryParse([string]$testProjectDetails.hasLiveTests, [ref]$result) -and $result -and $TestType -in @('Live', 'Recorded', 'All')) -or
+                ([bool]::TryParse([string]$testProjectDetails.hasUnitTests, [ref]$result) -and $result -and $TestType -in @('Unit', 'All'))
+    })
 
     # if provided a buildinfo, further scope the tests to only those impacted by changes
     if ($BuildInfo){
@@ -105,6 +124,25 @@ function CreateTestSolution {
 
     # Create solution and add projects
     Write-Host "Creating temporary solution file..."
+
+    if ($useCachedTestProjects) {
+        # Avoid dotnet sln add, which evaluates every project again.
+        $solutionPath = Join-Path $workPath 'Tests.slnx'
+        $writer = [System.Xml.XmlWriter]::Create($solutionPath, [System.Xml.XmlWriterSettings]@{ Indent = $true })
+        try {
+            $writer.WriteStartElement('Solution')
+            foreach ($project in $testProjects) {
+                $writer.WriteStartElement('Project')
+                $writer.WriteAttributeString('Path', [IO.Path]::GetRelativePath($workPath, $project).Replace('\', '/'))
+                $writer.WriteEndElement()
+            }
+            $writer.WriteEndElement()
+        }
+        finally {
+            $writer.Dispose()
+        }
+        return $solutionPath
+    }
 
     Push-Location $workPath
     try {

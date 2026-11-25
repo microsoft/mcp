@@ -318,6 +318,41 @@ function Get-PathsToTest {
     return $pathsToTest
 }
 
+function Get-TestProjects {
+    param([hashtable[]] $pathsToTest)
+
+    $knownProjects = @{}
+    foreach ($path in $pathsToTest) {
+        $projectName = Split-Path $path.path -Leaf
+        $knownProjects["$($path.path)/tests/$projectName.Tests/$projectName.Tests.csproj"] = $path
+    }
+
+    Get-ChildItem -Path $RepoRoot -Recurse -Filter '*Tests.csproj' -File | ForEach-Object {
+        $project = $_
+        $relativePath = (Resolve-Path -LiteralPath $project.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
+        if (@($pathsToTest | Where-Object { $relativePath.StartsWith($_.path) }).Count -eq 0) {
+            return
+        }
+
+        # Reuse the representative project's properties already evaluated by Get-PathsToTest.
+        $details = $knownProjects[$relativePath]
+        if (!$details) {
+            $details = & "$PSScriptRoot/Get-ProjectProperties.ps1" -Path $project.FullName
+        }
+
+        $result = $false
+        $hasUnitTests = [bool]::TryParse([string]$details.hasUnitTests, [ref]$result) -and $result
+        $hasLiveTests = [bool]::TryParse([string]$details.hasLiveTests, [ref]$result) -and $result
+        if ($hasUnitTests -or $hasLiveTests) {
+            @{
+                path         = $relativePath
+                hasUnitTests = $hasUnitTests
+                hasLiveTests = $hasLiveTests
+            }
+        }
+    } | Sort-Object { $_.path }
+}
+
 function Get-TestMatrix {
     param(
         [hashtable[]] $pathsToTest,
@@ -656,6 +691,7 @@ Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $pathsToTest = @(Get-PathsToTest)
+    $testProjects = @(Get-TestProjects $pathsToTest)
     $matrices = Get-BuildMatrices $serverDetails $pathsToTest
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
@@ -701,6 +737,7 @@ try {
         commitSha                = $commitSha
         servers                  = $serverDetails
         pathsToTest              = $pathsToTest
+        testProjects             = $testProjects
         matrices                 = $matrices
     }
 
