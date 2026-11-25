@@ -1,0 +1,5 @@
+changes:
+  - section: "Bugs Fixed"
+    description: >-
+      In single mode, calling the "azure" tool with an unknown "tool" name now returns the list of available tools,
+      as it does for a namespace that is not enabled, instead of failing with "An error occurred invoking 'azure'".
