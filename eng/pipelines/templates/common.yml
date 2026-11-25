@@ -115,7 +115,7 @@ extends:
       dependsOn:
       - Initialize
       - Build
-      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), eq(dependencies.Initialize.outputs['Initialize.DetectVsixChanges.RunVsixPackaging'], 'true'))
       pool:
         name: $(LINUXPOOL)
         image: $(LINUXVMIMAGE)

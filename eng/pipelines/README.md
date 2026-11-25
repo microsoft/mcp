@@ -43,6 +43,7 @@ The release flow is guided by the following requirements, in reverse order of ex
 - When run in a pull request, the early stages should support multi-server builds by not requiring a filled ServerName parameter.
 - Use the `build_info.json` file and `serverMatrix` to determine which servers are being built
 - Jobs should iterate over the configured servers to support multi-platform, multi-server builds
+- Initialize checks for changes to a server's VS Code `package.json` or `package-lock.json`. The PR-only VSIX pack stage is skipped before requesting an agent if neither file changed.
 
 ### Release and Signing Stages
 - Can be written as single-server stages by depending on a required `ServerName` parameter
