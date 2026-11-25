@@ -1511,7 +1511,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
 | resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
 | resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | context-required |
-| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | context-required |
+| resiliencyagent_iac_generate | Create a new zone-resilient Azure Container Registry from scratch in East US 2 and generate ARM JSON | context-required |
 | resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
 | resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
 | resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
@@ -1535,6 +1535,24 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_servicegroup_get | Show the parent, criticality, and resource-type summary for Service Group `ContosoAppFleetSG` | context-required |
 | resiliencyagent_servicegroup_manage | Create a nested Azure Service Group under `ContosoAppFleetSG` and ask for confirmation before writing | none |
 | resiliencyagent_servicegroup_manage | Add resource group `contoso-rg` as a direct scope member of Service Group `ContosoAppFleetSG` | none |
+| resiliencyagent_zonalresiliency_get | Show the zonal-resiliency posture of Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_zonalresiliency_get | Check the zonal-resiliency prerequisites and blockers for Azure resource `<resource-id>` without making changes | context-required |
+| resiliencyagent_zonalresiliency_manage | Enable zone redundancy on Azure resource `<resource-id>` only after explicit confirmation | none |
+| resiliencyagent_zonalresiliency_generate | Generate a PowerShell script to enable zone redundancy on existing Azure resource `<resource-id>` | context-required |
+| resiliencyagent_zonalresiliency_generate | Generate a Bicep replacement scaffold for existing non-zonal NAT Gateway `<resource-id>` | context-required |
+| resiliencyagent_discovery_get | List the previous saved Azure application discoveries for subscription `<subscription-id>` without running discovery again | context-required |
+| resiliencyagent_discovery_get | Show the selected application-resource boundary report from my saved discovery | context-required |
+| resiliencyagent_discovery_get | Display the current unchanged automatic-Discovery arrangement preview for Plan Group `<plan-group-id>` revision `<revision>` without applying it | context-required |
+| resiliencyagent_discovery_get | List the available Discovery Agents for subscription `<subscription-id>` | context-required |
+| resiliencyagent_discovery_get | Check whether Discovery Agent `<agent-name>` has Reader access for resource group `<resource-group-name>` without assigning access | context-required |
+| resiliencyagent_discovery_manage | Create a Discovery Agent for subscription `<subscription-id>` and ask for confirmation before creating it | context-required |
+| resiliencyagent_discovery_manage | Assign Reader access to Discovery Agent `<agent-name>` for resource group `<resource-group-name>` only after confirmation | context-required |
+| resiliencyagent_discovery_manage | The Discovery Agent is already configured; run a fresh application discovery for subscription `<subscription-id>` | context-required |
+| resiliencyagent_discovery_manage | Create a Service Group arrangement from my latest saved application discovery | context-required |
+| resiliencyagent_discovery_manage | Rename and regroup the proposed automatic-Discovery Service Group arrangement, then show the updated preview | context-required |
+| resiliencyagent_discovery_manage | Undo the last change to my saved Discovery arrangement | context-required |
+| resiliencyagent_discovery_execute | Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing | context-required |
+| resiliencyagent_discovery_execute | Apply Plan Group `<plan-group-id>` revision `<revision>` only after showing the exact arrangement and receiving confirmation | context-required |
 
 ## Azure Resource Health
 

@@ -136,6 +136,12 @@ public sealed class ConsolidatedToolMetadataTests()
                      "manage_azure_resiliency_goals",
                      "manage_azure_resiliency_usage_plans",
                      "manage_azure_service_groups",
+                     "assess_azure_zonal_resiliency",
+                     "generate_azure_zonal_resiliency_remediation",
+                     "manage_azure_zonal_resiliency",
+                     "inspect_azure_application_discovery",
+                     "manage_azure_application_discovery",
+                     "execute_azure_discovery_service_group_plan",
                  })
         {
             var definition = Assert.Single(definitions, candidate => candidate.Name == name);
@@ -151,6 +157,12 @@ public sealed class ConsolidatedToolMetadataTests()
         Assert.Contains("resiliencyagent_servicegroup_get", scenarioTool.MappedToolList);
         Assert.DoesNotContain("resiliencyagent_usageplan_manage", scenarioTool.MappedToolList);
         Assert.DoesNotContain("resiliencyagent_servicegroup_manage", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_zonalresiliency_get", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_zonalresiliency_generate", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_zonalresiliency_manage", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_discovery_get", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_discovery_manage", scenarioTool.MappedToolList);
+        Assert.DoesNotContain("resiliencyagent_discovery_execute", scenarioTool.MappedToolList);
 
         var goalManagementTool = Assert.Single(
             definitions,
@@ -169,6 +181,69 @@ public sealed class ConsolidatedToolMetadataTests()
             candidate => candidate.Name == "manage_azure_service_groups");
         Assert.True(serviceGroupManagementTool.ToolMetadata.Destructive);
         Assert.Equal(["resiliencyagent_servicegroup_manage"], serviceGroupManagementTool.MappedToolList);
+
+        var zonalAssessmentTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "assess_azure_zonal_resiliency");
+        Assert.False(zonalAssessmentTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_zonalresiliency_get"],
+            zonalAssessmentTool.MappedToolList);
+
+        var zonalGenerationTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "generate_azure_zonal_resiliency_remediation");
+        Assert.False(zonalGenerationTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_zonalresiliency_generate"],
+            zonalGenerationTool.MappedToolList);
+
+        var zonalManagementTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "manage_azure_zonal_resiliency");
+        Assert.True(zonalManagementTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_zonalresiliency_manage"],
+            zonalManagementTool.MappedToolList);
+        Assert.Contains(
+            "completed backend reply is authoritative and terminal",
+            zonalAssessmentTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "completed backend reply is authoritative and terminal",
+            zonalGenerationTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "completed, declined, or cancelled backend reply is authoritative and terminal",
+            zonalManagementTool.Description,
+            StringComparison.Ordinal);
+        Assert.Contains("suggestedNextSteps", zonalAssessmentTool.Description, StringComparison.Ordinal);
+        Assert.Contains("suggestedNextSteps", zonalGenerationTool.Description, StringComparison.Ordinal);
+        Assert.Contains("suggestedNextSteps", zonalManagementTool.Description, StringComparison.Ordinal);
+
+        var discoveryInspectionTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "inspect_azure_application_discovery");
+        Assert.False(discoveryInspectionTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_discovery_get"],
+            discoveryInspectionTool.MappedToolList);
+
+        var discoveryManagementTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "manage_azure_application_discovery");
+        Assert.True(discoveryManagementTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_discovery_manage"],
+            discoveryManagementTool.MappedToolList);
+
+        var discoveryExecutionTool = Assert.Single(
+            definitions,
+            candidate => candidate.Name == "execute_azure_discovery_service_group_plan");
+        Assert.True(discoveryExecutionTool.ToolMetadata.Destructive);
+        Assert.Equal(
+            ["resiliencyagent_discovery_execute"],
+            discoveryExecutionTool.MappedToolList);
     }
 
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>

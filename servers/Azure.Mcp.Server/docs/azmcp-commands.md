@@ -5401,6 +5401,36 @@ azmcp resiliencyagent servicegroup get --request <request> \
 # ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent servicegroup manage --request <request> \
                                             [--conversation-id <conversation-id>]
+
+# Check Azure zonal posture, prerequisites, and blockers
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent zonalresiliency get --request <request> \
+                                           [--conversation-id <conversation-id>]
+
+# Apply Azure zone-redundancy configuration changes
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent zonalresiliency manage --request <request> \
+                                              [--conversation-id <conversation-id>]
+
+# Generate existing-resource zonal-resiliency remediation scripts
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent zonalresiliency generate --request <request> \
+                                                [--conversation-id <conversation-id>]
+
+# Inspect Discovery Agents, access, saved results, and plans
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent discovery get --request <request> \
+                                      [--conversation-id <conversation-id>]
+
+# Configure and run Discovery or edit arrangement plans
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent discovery manage --request <request> \
+                                         [--conversation-id <conversation-id>]
+
+# Execute the latest persisted plan after confirmation
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent discovery execute --request <request> \
+                                          [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations

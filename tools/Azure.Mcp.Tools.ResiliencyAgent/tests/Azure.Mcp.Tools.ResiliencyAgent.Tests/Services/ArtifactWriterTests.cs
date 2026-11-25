@@ -61,6 +61,25 @@ public sealed class ArtifactWriterTests : IDisposable
     }
 
     [Fact]
+    public void Write_UsesSemanticFamilyForZonalResiliencyArtifacts()
+    {
+        var artifact = new AgentArtifact(
+            "Zone-Resilient Posture Report.md",
+            "posture",
+            "text/markdown",
+            "# Zonal Posture Report",
+            "resiliencyagent",
+            "zonal-resiliency");
+
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-zr"));
+
+        Assert.Contains(
+            Path.Combine("azure-resiliency", "zonal-resiliency-20261112T093045123Z"),
+            written.Path,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Write_UsesStrictUtf8WithoutBom()
     {
         const string content = "# Résilience\n\n東京 — ✅";

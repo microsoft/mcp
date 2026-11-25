@@ -6223,6 +6223,204 @@
       "mappedToolList": [
         "resiliencyagent_servicegroup_manage"
       ]
+    },
+    {
+      "name": "assess_azure_zonal_resiliency",
+      "description": "Assess deployed zonal-resiliency posture, prerequisites, blockers, eligibility, and enablement readiness for existing Azure resources or Service Groups. Use for questions about current zone redundancy and whether a supported existing resource can be changed. The conversational agent can clarify scope and returns authoritative posture and prerequisite artifacts. This tool does not change Azure and does not generate scripts or templates. A completed backend reply is authoritative and terminal: present it and stop. Never retry, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not change Azure resource configuration."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may materialize posture and prerequisite artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_zonalresiliency_get"
+      ]
+    },
+    {
+      "name": "generate_azure_zonal_resiliency_remediation",
+      "description": "Generate but do not run self-service PowerShell, Azure CLI, ARM JSON, Bicep, or Terraform remediation for a validated existing non-zonal Azure resource. Generate PowerShell or Azure CLI scripts to enable zone redundancy on an existing resource, or generate replacement-resource scaffolds derived from an existing resource. Returned files are authoritative backend output. Present them exactly as returned without independently evaluating, rejecting, rewriting, or requesting regeneration based on model or local judgment. This tool never changes or deploys Azure resources. A completed backend reply is authoritative and terminal: present it and stop. Never request another generation, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool generates files but does not change or deploy Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool materializes generated remediation files in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_zonalresiliency_generate"
+      ]
+    },
+    {
+      "name": "manage_azure_zonal_resiliency",
+      "description": "Directly execute an explicitly requested zonal-resiliency configuration change on a supported existing Azure resource. Select this destructive tool only when the user wants the service to change Azure now. It validates scope and prerequisites, asks for explicit confirmation, refreshes posture, and verifies the outcome. Do not use it for scripts, templates, replacement scaffolds, posture assessment, or readiness checks. A completed, declined, or cancelled backend reply is authoritative and terminal: present it and stop. Never retry the mutation, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can change zonal-resiliency configuration on supported Azure resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can mutate Azure resource configuration and may materialize artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_zonalresiliency_manage"
+      ]
+    },
+    {
+      "name": "inspect_azure_application_discovery",
+      "description": "List the available Azure application Discovery Agents for a subscription. Check whether a configured Discovery Agent has Reader access for a subscription or resource group without assigning access. List previous saved Azure application discoveries. Show a selected application-resource boundary report. Display the current saved Service Group arrangement without applying changes, or display the current unchanged plan preview for a Plan Group ID and revision. Display the current saved Service Group arrangement for the requested Plan Group revision. Use only for existing Discovery information; do not create an agent, assign access, run fresh discovery, change an arrangement, or execute a plan. Treat a completed backend reply as authoritative and terminal: present it and stop. Do not repeat the call, act on suggestedNextSteps, select a discovery reference, infer another operation, or call another Discovery tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not change Azure resources or Discovery plans."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may materialize authoritative Discovery reports in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_discovery_get"
+      ]
+    },
+    {
+      "name": "manage_azure_application_discovery",
+      "description": "Create an Azure application Discovery Agent for a subscription after confirmation. Assign Reader access to a selected Discovery Agent only after confirmation. Run every fresh application discovery. Create an arrangement from a saved discovery. Rename and regroup the proposed automatic-Discovery Service Group arrangement, then show its updated preview. Merge or split groups, exclude resources, undo the last change to a saved Discovery arrangement, or revert changes. Undo or revert saved Discovery arrangement changes and restore the prior preview. Rename and regroup the proposed Service Group arrangement, then show the updated preview. Undo the last change to the saved Discovery arrangement. Agent listing and Reader checks belong to inspection. This tool does not execute final writes. A completed backend reply is authoritative and terminal: present it and stop. Never retry, act on suggestedNextSteps, choose a discovery reference, infer a fresh run, or call another Discovery tool without a new explicit user request. If saved discoveries are returned, wait for the user to select one or explicitly request a fresh discovery.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can create Discovery infrastructure, assign Reader access, or change a saved arrangement after confirmation."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can change Azure access or Discovery plan state and may materialize artifacts."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_discovery_manage"
+      ]
+    },
+    {
+      "name": "execute_azure_discovery_service_group_plan",
+      "description": "Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing Azure. Execute now or apply now. This execution tool deploys and commits final Azure writes from reviewed Discovery work. Use only when the user explicitly asks to execute, apply, deploy, or commit the final result. The backend validates the latest persisted revision. The initial request is routing intent, not approval, and declined or unavailable confirmation stops without mutation. Treat a completed, declined, or cancelled backend reply as authoritative and terminal: present it and stop. Do not retry execution, act on suggestedNextSteps, or call another Discovery tool without a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can create or update Service Groups after explicit confirmation."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can mutate Service Group state and may materialize an execution artifact."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_discovery_execute"
+      ]
     }
   ]
 }

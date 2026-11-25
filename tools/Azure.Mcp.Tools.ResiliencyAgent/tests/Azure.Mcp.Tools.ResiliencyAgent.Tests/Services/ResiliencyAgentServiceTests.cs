@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
@@ -155,7 +156,9 @@ public sealed class ResiliencyAgentServiceTests
 
         var artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
 
+        Assert.Equal("zonal-posture-report.md", artifact.Name);
         Assert.Equal("text/markdown", artifact.MimeType);
+        Assert.Equal("zonal-resiliency", artifact.Family);
         Assert.Equal(
             $$"""
             # Zonal Posture Report
@@ -173,6 +176,127 @@ public sealed class ResiliencyAgentServiceTests
             | [ehns-demo](https://portal.azure.com/#@/resource{{resourceId}}) | microsoft.eventhub/namespaces | Enabled |
             """.ReplaceLineEndings("\n"),
             artifact.Content!.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public void ReadArtifact_RendersZonalPrerequisitesAssessment()
+    {
+        const string resourceId =
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/" +
+            "providers/Microsoft.DBforPostgreSQL/flexibleServers/pg-demo";
+        using JsonDocument document = CreateDataArtifact(
+            $$"""
+            {
+              "resiliencyAgentArtifactType": "CheckPrerequisites",
+              "summary": {
+                "totalResources": 1,
+                "alreadyEnabled": 0,
+                "readyToEnableByAgentOrGetScripts": 0,
+                "requiresManualAction": 1
+              },
+              "resources": {
+                "Microsoft.DBforPostgreSQL/flexibleServers": [
+                  {
+                    "resourceId": "{{resourceId}}",
+                    "assessmentStatus": "Blocked",
+                    "blockingReasons": [
+                      "Burstable tier must be upgraded",
+                      "Region | capability is unavailable"
+                    ]
+                  }
+                ]
+              }
+            }
+            """);
+
+        var artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("text/markdown", artifact.MimeType);
+        Assert.Equal("zonal-resiliency", artifact.Family);
+        Assert.Contains("# Zone-Resilient Enablement Assessment", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| 1 | 0 | 0 | 1 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains(
+            $"[pg-demo](https://portal.azure.com/#@/resource{resourceId})",
+            artifact.Content,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Burstable tier must be upgraded<br>Region \\| capability is unavailable",
+            artifact.Content,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_RendersZonalEnablementResults()
+    {
+        const string resourceId =
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/demo-rg/" +
+            "providers/Microsoft.Web/serverfarms/plan-demo";
+        using JsonDocument document = CreateDataArtifact(
+            $$"""
+            {
+              "resiliencyAgentArtifactType": "SetZonalPosture",
+              "summary": {
+                "totalResources": 1,
+                "successfullyEnabled": 1,
+                "failedToEnable": 0
+              },
+              "resources": {
+                "Microsoft.Web/serverfarms": [
+                  {
+                    "resourceId": "{{resourceId}}",
+                    "status": "Enabled",
+                    "remarks": "Zone redundancy enabled | verification pending"
+                  }
+                ]
+              }
+            }
+            """);
+
+        var artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("text/markdown", artifact.MimeType);
+        Assert.Equal("zonal-resiliency", artifact.Family);
+        Assert.Contains("# Zone-Resilient Enablement Results", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| 1 | 1 | 0 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains(
+            $"[plan-demo](https://portal.azure.com/#@/resource{resourceId})",
+            artifact.Content,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Zone redundancy enabled \\| verification pending",
+            artifact.Content,
+            StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("EnableZonalResiliency-PowerShell.md")]
+    [InlineData("CreateZonallyResilientResource-Bicep-Microsoft-Network-natGateways.md")]
+    public void ReadArtifact_AssignsZonalFamilyToGeneratedFile(string fileName)
+    {
+        string content = "# Enable Zone Resiliency";
+        string bytes = Convert.ToBase64String(Encoding.UTF8.GetBytes(content));
+        using JsonDocument document = JsonDocument.Parse(
+            $$"""
+            {
+              "name": "{{fileName}}",
+              "description": "Configuration script for enabling zone resiliency",
+              "metadata": { "type": "powershell" },
+              "parts": [{
+                "kind": "file",
+                "file": {
+                  "name": "{{fileName}}",
+                  "mimeType": "text/markdown",
+                  "bytes": "{{bytes}}"
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal(fileName, artifact.Name);
+        Assert.Equal("zonal-resiliency", artifact.Family);
+        Assert.Equal(content, artifact.Content);
     }
 
     [Fact]
@@ -221,7 +345,7 @@ public sealed class ResiliencyAgentServiceTests
             StringComparison.Ordinal);
         Assert.Contains("Needs \\| review", markdown, StringComparison.Ordinal);
         Assert.Contains(
-            @"[storage \(one\)](https://portal.azure.com/#@/resource/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/storage%20%28one%29)",
+            "[storage (one)](https://portal.azure.com/#@/resource/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/storage%20%28one%29)",
             markdown,
             StringComparison.Ordinal);
         Assert.Contains("| Microsoft.Storage/storageAccounts | ZoneRedundant |", markdown, StringComparison.Ordinal);

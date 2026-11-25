@@ -143,8 +143,42 @@ internal static class StructuredArtifactMarkdownRenderer
     {
         rendered = default;
         if (content.ValueKind != JsonValueKind.Object
-            || ReadString(content, "resiliencyAgentArtifactType") is not string artifactType
-            || !content.TryGetProperty("data", out JsonElement data)
+            || ReadString(content, "resiliencyAgentArtifactType") is not string artifactType)
+        {
+            return false;
+        }
+
+        if (string.Equals(artifactType, "GetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            && TryRenderZonalPosture(content, out string zonalPosture))
+        {
+            rendered = new RenderedMarkdown(
+                "Zone-Resilient Posture Report.md",
+                "zonal-resiliency",
+                zonalPosture);
+            return true;
+        }
+
+        if (string.Equals(artifactType, "CheckPrerequisites", StringComparison.OrdinalIgnoreCase)
+            && TryRenderZonalPrerequisites(content, out string prerequisites))
+        {
+            rendered = new RenderedMarkdown(
+                "Zone-Resilient Enablement Assessment.md",
+                "zonal-resiliency",
+                prerequisites);
+            return true;
+        }
+
+        if (string.Equals(artifactType, "SetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            && TryRenderZonalEnablement(content, out string enablement))
+        {
+            rendered = new RenderedMarkdown(
+                "Zone-Resilient Enablement Results.md",
+                "zonal-resiliency",
+                enablement);
+            return true;
+        }
+
+        if (!content.TryGetProperty("data", out JsonElement data)
             || data.ValueKind != JsonValueKind.Object)
         {
             return false;
@@ -169,6 +203,270 @@ internal static class StructuredArtifactMarkdownRenderer
         }
 
         return false;
+    }
+
+    private static bool TryRenderZonalPosture(JsonElement data, out string markdown)
+    {
+        markdown = string.Empty;
+
+        if (!data.TryGetProperty("summary", out JsonElement summary)
+            || summary.ValueKind != JsonValueKind.Object
+            || !TryReadNumber(summary, "totalResources", out string totalResources)
+            || !TryReadNumber(summary, "resilientResources", out string resilientResources)
+            || !TryReadNumber(summary, "nonResilientResources", out string nonResilientResources)
+            || !data.TryGetProperty("resources", out JsonElement resources)
+            || resources.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        List<ZonalPostureResource> rows = [];
+        foreach (JsonProperty resourceType in resources.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(resourceType.Name)
+                || resourceType.Value.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
+            {
+                if (resource.ValueKind != JsonValueKind.Object
+                    || ReadString(resource, "resourceId") is not string resourceId
+                    || ReadString(resource, "status") is not string status
+                    || string.IsNullOrWhiteSpace(status)
+                    || !TryParseResource(resourceId, out ParsedResource parsed))
+                {
+                    return false;
+                }
+
+                rows.Add(new ZonalPostureResource(
+                    parsed.Name,
+                    resourceType.Name,
+                    status,
+                    parsed.ResourceId));
+            }
+        }
+
+        var builder = new StringBuilder()
+            .AppendLine("# Zonal Posture Report")
+            .AppendLine()
+            .AppendLine("## Summary")
+            .AppendLine()
+            .AppendLine("| Total Resources | Resilient Resources | Non-Resilient Resources |")
+            .AppendLine("|---|---|---|")
+            .AppendLine($"| {totalResources} | {resilientResources} | {nonResilientResources} |")
+            .AppendLine()
+            .AppendLine("## Resources")
+            .AppendLine()
+            .AppendLine("| Resource | Resource Type | Status |")
+            .AppendLine("|---|---|---|");
+
+        foreach (ZonalPostureResource row in rows)
+        {
+            builder.Append("| [")
+                .Append(EscapeLinkLabel(row.Label))
+                .Append("](")
+                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(") | ")
+                .Append(EscapeTableCell(row.ResourceType))
+                .Append(" | ")
+                .Append(EscapeTableCell(row.Status))
+                .AppendLine(" |");
+        }
+
+        markdown = builder.ToString().TrimEnd();
+        return true;
+    }
+
+    private static bool TryRenderZonalPrerequisites(JsonElement data, out string markdown)
+    {
+        markdown = string.Empty;
+
+        if (!data.TryGetProperty("summary", out JsonElement summary)
+            || summary.ValueKind != JsonValueKind.Object
+            || !TryReadNumber(summary, "totalResources", out string totalResources)
+            || !TryReadNumber(summary, "alreadyEnabled", out string alreadyEnabled)
+            || !TryReadNumber(summary, "readyToEnableByAgentOrGetScripts", out string readyToEnable)
+            || !TryReadNumber(summary, "requiresManualAction", out string requiresManualAction)
+            || !data.TryGetProperty("resources", out JsonElement resources)
+            || resources.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        List<ZonalAssessmentResource> rows = [];
+        foreach (JsonProperty resourceType in resources.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(resourceType.Name)
+                || resourceType.Value.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
+            {
+                if (resource.ValueKind != JsonValueKind.Object
+                    || ReadString(resource, "resourceId") is not string resourceId
+                    || ReadString(resource, "assessmentStatus") is not string status
+                    || string.IsNullOrWhiteSpace(status)
+                    || !TryParseResource(resourceId, out ParsedResource parsed))
+                {
+                    return false;
+                }
+
+                List<string> blockingReasons = [];
+                if (resource.TryGetProperty("blockingReasons", out JsonElement reasons))
+                {
+                    if (reasons.ValueKind != JsonValueKind.Array)
+                    {
+                        return false;
+                    }
+
+                    foreach (JsonElement reason in reasons.EnumerateArray())
+                    {
+                        if (reason.ValueKind != JsonValueKind.String)
+                        {
+                            return false;
+                        }
+
+                        blockingReasons.Add(reason.GetString() ?? string.Empty);
+                    }
+                }
+
+                rows.Add(new ZonalAssessmentResource(
+                    parsed.Name,
+                    resourceType.Name,
+                    status,
+                    blockingReasons,
+                    parsed.ResourceId));
+            }
+        }
+
+        var builder = new StringBuilder()
+            .AppendLine("# Zone-Resilient Enablement Assessment")
+            .AppendLine()
+            .AppendLine("## Summary")
+            .AppendLine()
+            .AppendLine("| Total Resources | Already Enabled | Ready to Enable | Requires Manual Action |")
+            .AppendLine("|---|---|---|---|")
+            .AppendLine($"| {totalResources} | {alreadyEnabled} | {readyToEnable} | {requiresManualAction} |")
+            .AppendLine()
+            .AppendLine("## Resources")
+            .AppendLine()
+            .AppendLine("| Resource | Resource Type | Assessment | Blocking Reasons |")
+            .AppendLine("|---|---|---|---|");
+
+        foreach (ZonalAssessmentResource row in rows)
+        {
+            string blockingReasons = row.BlockingReasons.Count > 0
+                ? string.Join("<br>", row.BlockingReasons.Select(EscapeTableCell))
+                : "None";
+            builder.Append("| [")
+                .Append(EscapeLinkLabel(row.Label))
+                .Append("](")
+                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(") | ")
+                .Append(EscapeTableCell(row.ResourceType))
+                .Append(" | ")
+                .Append(EscapeTableCell(row.Status))
+                .Append(" | ")
+                .Append(blockingReasons)
+                .AppendLine(" |");
+        }
+
+        markdown = builder.ToString().TrimEnd();
+        return true;
+    }
+
+    private static bool TryRenderZonalEnablement(JsonElement data, out string markdown)
+    {
+        markdown = string.Empty;
+
+        if (!data.TryGetProperty("summary", out JsonElement summary)
+            || summary.ValueKind != JsonValueKind.Object
+            || !TryReadNumber(summary, "totalResources", out string totalResources)
+            || !TryReadNumber(summary, "successfullyEnabled", out string successfullyEnabled)
+            || !TryReadNumber(summary, "failedToEnable", out string failedToEnable)
+            || !data.TryGetProperty("resources", out JsonElement resources)
+            || resources.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        List<ZonalEnablementResource> rows = [];
+        foreach (JsonProperty resourceType in resources.EnumerateObject())
+        {
+            if (string.IsNullOrWhiteSpace(resourceType.Name)
+                || resourceType.Value.ValueKind != JsonValueKind.Array)
+            {
+                return false;
+            }
+
+            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
+            {
+                if (resource.ValueKind != JsonValueKind.Object
+                    || ReadString(resource, "resourceId") is not string resourceId
+                    || ReadString(resource, "status") is not string status
+                    || string.IsNullOrWhiteSpace(status)
+                    || !TryParseResource(resourceId, out ParsedResource parsed))
+                {
+                    return false;
+                }
+
+                rows.Add(new ZonalEnablementResource(
+                    parsed.Name,
+                    resourceType.Name,
+                    status,
+                    ReadString(resource, "remarks") ?? string.Empty,
+                    parsed.ResourceId));
+            }
+        }
+
+        var builder = new StringBuilder()
+            .AppendLine("# Zone-Resilient Enablement Results")
+            .AppendLine()
+            .AppendLine("## Summary")
+            .AppendLine()
+            .AppendLine("| Total Resources | Successfully Enabled | Failed to Enable |")
+            .AppendLine("|---|---|---|")
+            .AppendLine($"| {totalResources} | {successfullyEnabled} | {failedToEnable} |")
+            .AppendLine()
+            .AppendLine("## Resources")
+            .AppendLine()
+            .AppendLine("| Resource | Resource Type | Status | Remarks |")
+            .AppendLine("|---|---|---|---|");
+
+        foreach (ZonalEnablementResource row in rows)
+        {
+            builder.Append("| [")
+                .Append(EscapeLinkLabel(row.Label))
+                .Append("](")
+                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(") | ")
+                .Append(EscapeTableCell(row.ResourceType))
+                .Append(" | ")
+                .Append(EscapeTableCell(row.Status))
+                .Append(" | ")
+                .Append(EscapeTableCell(row.Remarks))
+                .AppendLine(" |");
+        }
+
+        markdown = builder.ToString().TrimEnd();
+        return true;
+    }
+
+    private static bool TryReadNumber(JsonElement element, string propertyName, out string value)
+    {
+        value = string.Empty;
+        if (!element.TryGetProperty(propertyName, out JsonElement property)
+            || property.ValueKind != JsonValueKind.Number)
+        {
+            return false;
+        }
+
+        value = property.GetRawText();
+        return true;
     }
 
     private static string RenderResourceCriteriaResolution(JsonElement data)
@@ -470,4 +768,21 @@ internal static class StructuredArtifactMarkdownRenderer
         string SubscriptionId,
         string ResourceGroup,
         string ResourceType);
+    private readonly record struct ZonalPostureResource(
+        string Label,
+        string ResourceType,
+        string Status,
+        string ResourceId);
+    private readonly record struct ZonalAssessmentResource(
+        string Label,
+        string ResourceType,
+        string Status,
+        IReadOnlyList<string> BlockingReasons,
+        string ResourceId);
+    private readonly record struct ZonalEnablementResource(
+        string Label,
+        string ResourceType,
+        string Status,
+        string Remarks,
+        string ResourceId);
 }

@@ -67,7 +67,7 @@ public sealed class IacGenerateCommandTests
     {
         var command = Command.GetCommand();
         Assert.Equal("generate", command.Name);
-        Assert.Contains("create or generate new zone-resilient", command.Description, StringComparison.Ordinal);
+        Assert.Contains("create a new Azure resource from scratch", command.Description, StringComparison.Ordinal);
         Assert.Contains("does not review or correct", command.Description, StringComparison.Ordinal);
         Assert.DoesNotContain("open files", ResiliencyAgentOptionDescriptions.Request, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(

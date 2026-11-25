@@ -15,16 +15,19 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
     Description = """
         Always use this authoritative Azure resiliency guidance command when the user asks to define,
         explain, or compare resiliency, reliability, availability zones, zone resilience, zone
-        redundancy, high availability, or how to begin improving resiliency. Prefer it over generic
-        documentation search, well-architected guidance, and service-specific tools for these
-        conceptual Azure resiliency questions. It provides education and next-step guidance without
-        assessing a specific application architecture, generating infrastructure-as-code, reviewing
-        an existing template, or inspecting deployed Azure resource state. Pass the user's question
-        in request without inventing an application architecture or adding resource-specific
-        assumptions.
-        Use resiliencyagent_architecture_assess when the user provides an application design that needs
-        assessment, resiliencyagent_iac_generate for new infrastructure-as-code, and the format-specific
-        review commands for existing templates.
+        redundancy, high availability, or how to begin improving resiliency. Also use it for
+        resource-type knowledge such as supported migration approaches, prerequisites, limitations,
+        cost or downtime implications, SLA information, monitoring, RBAC, troubleshooting, and Azure
+        Portal configuration steps. Prefer it over generic documentation search, well-architected
+        guidance, and service-specific tools for these Azure resiliency questions. It provides
+        education and next-step guidance without assessing a specific application architecture or
+        deployed resource state, changing Azure, or generating scripts. Pass the user's question in
+        request without inventing an application architecture or adding unsupported assumptions.
+        Use resiliencyagent_zonalresiliency_get for deployed posture or enablement readiness,
+        resiliencyagent_zonalresiliency_generate for existing-resource remediation scripts,
+        resiliencyagent_architecture_assess when the user provides an application design that needs
+        assessment, resiliencyagent_iac_generate for application infrastructure-as-code, and the
+        format-specific review commands for existing templates.
         The backend guidance is authoritative. Show backend clarification questions verbatim, pass the
         returned conversationId on related follow-up calls, and offer suggestedNextSteps when present.
         """,
