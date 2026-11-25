@@ -215,11 +215,10 @@ public sealed class TraceComparisonServiceTests()
         Assert.Equal(0, handler.DataPlaneCalls);
     }
 
-    [Theory]
-    [InlineData("false")]
-    public async Task CriticalPath_DiscoveryDeduplicatesAndPadsIdsWithoutReplacingAggregation(string flag)
+    [Fact]
+    public async Task CriticalPath_DiscoveryDeduplicatesAndPadsIdsWithoutReplacingAggregation()
     {
-        using var current = Page($$$$"""{"value":[{"trace_id":"a"},{"trace_id":"a"}],"metadata":{"hasLimitReached":{{{{flag}}}}}}""");
+        using var current = Page("""{"value":[{"trace_id":"a"},{"trace_id":"a"}],"metadata":{"hasLimitReached":false}}""");
         using var comparison = Page("""{"value":[{"trace_id":"b"}]}""");
         using var handler = new MonitorTracesTestHandler(1, false, resultPages: [current, comparison]);
         var (service, _) = MonitorTracesServiceTests.CreateService(handler);

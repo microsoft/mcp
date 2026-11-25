@@ -8,9 +8,12 @@ namespace Azure.Mcp.Tools.Monitor.Validation;
 
 internal static class TraceQueryValidator
 {
-    internal static bool IsFieldReference(string? value) =>
+    internal static bool IsFieldReference(string? value, bool allowCustomAttributeNames = false) =>
         value is { Length: > 0 and <= 1024 } &&
-        Regex.IsMatch(value, @"\A[a-zA-Z_][a-zA-Z0-9_.]*\z", RegexOptions.NonBacktracking);
+        (Regex.IsMatch(value, @"\A[a-zA-Z_][a-zA-Z0-9_.]*\z", RegexOptions.NonBacktracking)
+            || (allowCustomAttributeNames
+                && value.StartsWith("span.attributes.", StringComparison.Ordinal)
+                && value.All(static character => character is not ('\'' or '\\') && !char.IsControl(character))));
 
     public static void ValidateWindow(DateTimeOffset start, DateTimeOffset end, ValidationResult result)
     {

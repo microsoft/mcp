@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
 
-[CommandMetadata(Id = "43a0643d-44ae-4379-a0f0-c2ff841bdbb8", Name = "analyze-compare-paths", Title = "Compare Trace Critical Paths",
+[CommandMetadata(Id = "43a0643d-44ae-4379-a0f0-c2ff841bdbb8", Name = "compare-critical-path", Title = "Compare Trace Critical Paths",
     Description = """
         Compare critical-path latency between two trace populations, with independent optional time windows.
         Supply trace-ids or a filters-only query for the current population, and compare-trace-ids or

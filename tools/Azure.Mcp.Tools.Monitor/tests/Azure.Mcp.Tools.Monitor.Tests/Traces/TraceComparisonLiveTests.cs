@@ -133,9 +133,7 @@ public sealed class TraceComparisonLiveTests(ITestOutputHelper output, TestProxy
             arguments["compare-query"] = query;
         }
 
-        // Keep the "critical-path" case name so existing recordings still match.
-        string tool = analysis == "critical-path" ? "paths" : analysis;
-        var result = await CallToolAsync($"monitor_traces_query_analyze-compare-{tool}", arguments,
+        var result = await CallToolAsync($"monitor_traces_query_compare-{analysis}", arguments,
             resultProcessor: envelope => envelope.TryGetProperty("results", out var results) ? results : envelope);
         var envelope = result.AssertProperty("result");
         Assert.Equal("Succeeded", envelope.AssertProperty("status").GetString());

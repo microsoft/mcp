@@ -53,7 +53,7 @@ public abstract class BaseTraceCompareCommand<
             ValidateSelection(criticalPathOptions.TraceIds, options.Query, "current", validationResult);
             ValidateSelection(criticalPathOptions.CompareTraceIds, options.CompareQuery, "comparison", validationResult);
             if (criticalPathOptions.AggregateBy is { Length: > 3 }
-                || criticalPathOptions.AggregateBy?.Any(field => !TraceQueryValidator.IsFieldReference(NormalizeField(field))) == true)
+                || criticalPathOptions.AggregateBy?.Any(field => !TraceQueryValidator.IsFieldReference(NormalizeField(field), allowCustomAttributeNames: true)) == true)
             {
                 Reject("--aggregate-by accepts at most 3 valid field names.");
             }

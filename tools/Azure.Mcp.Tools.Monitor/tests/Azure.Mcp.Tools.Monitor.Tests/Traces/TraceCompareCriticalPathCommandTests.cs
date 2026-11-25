@@ -63,6 +63,8 @@ public sealed class TraceCompareCriticalPathCommandTests()
     [InlineData("--query \"Traces $$ Traces\" --compare-query Traces", false)]
     [InlineData("--query Traces --compare-query Traces --aggregate-by evil/field", false)]
     [InlineData("--query Traces --compare-query Traces --aggregate-by \"span.name'] | project trace_id\"", false)]
+    [InlineData("--query Traces --compare-query Traces --aggregate-by \"span.attributes.key'] | project trace_id\"", false)]
+    [InlineData("--query Traces --compare-query Traces --aggregate-by span.attributes.key\\", false)]
     [InlineData("--query Traces --compare-query Traces --percentiles 100", false)]
     [InlineData("--query Traces --compare-query Traces --percentiles 0", false)]
     public async Task ValidatesIdsFiltersAndGrouping(string args, bool valid)
@@ -150,20 +152,26 @@ public sealed class TraceCompareCriticalPathCommandTests()
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task ExecuteAsync_NormalizesGroupingBeforeBuildingCustomPercentiles()
+    [Theory]
+    [InlineData("['span.name'] span.service.name", "['span.name'], ['span.service.name']")]
+    [InlineData("span.attributes.http.request.header.user-agent", "['span.attributes.http.request.header.user-agent']")]
+    [InlineData("['span.attributes.http.request.header.user-agent']", "['span.attributes.http.request.header.user-agent']")]
+    [InlineData("span.attributes.guid:x-request-id", "['span.attributes.guid:x-request-id']")]
+    [InlineData("span.attributes.k8s.pod.label.app.kubernetes.io/name", "['span.attributes.k8s.pod.label.app.kubernetes.io/name']")]
+    [InlineData("['span.attributes.k8s.pod.label.app.kubernetes.io/name']", "['span.attributes.k8s.pod.label.app.kubernetes.io/name']")]
+    public async Task ExecuteAsync_NormalizesGroupingBeforeBuildingCustomPercentiles(string fields, string expected)
     {
         Service.ComparePopulationsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<TraceComparisonRequest>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>()).Returns(new TraceQueryResult { Status = "Succeeded", OperationId = "operation" });
 
         var response = await ExecuteCommandAsync(
-            $"{Target} --query Traces --compare-query Traces --aggregate-by ['span.name'] span.service.name --percentiles 25 90");
+            $"{Target} --query Traces --compare-query Traces --aggregate-by {fields} --percentiles 25 90");
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await Service.Received(1).ComparePopulationsAsync("sub", "rg", "amw", "critical-path",
             Arg.Any<TraceComparisonRequest>(),
-            "Traces | summarize p25=percentile(duration_nano, 25), p90=percentile(duration_nano, 90) by ['span.name'], ['span.service.name']",
+            $"Traces | summarize p25=percentile(duration_nano, 25), p90=percentile(duration_nano, 90) by {expected}",
             Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 }

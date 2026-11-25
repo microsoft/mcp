@@ -4358,7 +4358,7 @@ azmcp monitor traces field list --subscription <subscription> \
 
 # Compare independent attribute populations
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor traces query analyze-compare-attributes --subscription <subscription> \
+azmcp monitor traces query compare-attributes --subscription <subscription> \
                                         --resource-group <resource-group> --workspace <workspace> \
                                         --query <current-kql> --start-time <iso-8601> --end-time <iso-8601> \
                                         [--compare-query <comparison-kql>] \
@@ -4367,7 +4367,7 @@ azmcp monitor traces query analyze-compare-attributes --subscription <subscripti
 
 # Compare critical paths for explicit IDs or filters-only discovery queries
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor traces query analyze-compare-paths --subscription <subscription> \
+azmcp monitor traces query compare-critical-path --subscription <subscription> \
                                           --resource-group <resource-group> --workspace <workspace> \
                                           --start-time <iso-8601> --end-time <iso-8601> \
                                           [--trace-ids <ids> | --query <selection-kql>] \
@@ -4381,7 +4381,7 @@ azmcp monitor traces query analyze-compare-paths --subscription <subscription> \
 
 # Compare matching statistics shapes over independent populations
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor traces query analyze-compare-statistics --subscription <subscription> \
+azmcp monitor traces query compare-statistics --subscription <subscription> \
                                         --resource-group <resource-group> --workspace <workspace> \
                                         --query <current-kql> --start-time <iso-8601> --end-time <iso-8601> \
                                         [--compare-query <comparison-kql>] \

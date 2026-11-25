@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
 
-[CommandMetadata(Id = "233772b7-ef6e-459e-a657-2d7c8414d42a", Name = "analyze-compare-attributes", Title = "Compare Trace Attributes",
+[CommandMetadata(Id = "233772b7-ef6e-459e-a657-2d7c8414d42a", Name = "compare-attributes", Title = "Compare Trace Attributes",
     Description = """
         Compare attribute distributions for two independently filtered distributed-trace populations.
         Use for before/after deployments, different services or non-overlapping time windows.

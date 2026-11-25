@@ -10,7 +10,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Traces;
 
-[CommandMetadata(Id = "785fb343-54c0-42f1-846a-d4643f649920", Name = "analyze-compare-statistics", Title = "Compare Trace Statistics",
+[CommandMetadata(Id = "785fb343-54c0-42f1-846a-d4643f649920", Name = "compare-statistics", Title = "Compare Trace Statistics",
     Description = """
         Compare statistics for two independent distributed-trace queries and/or time windows.
         Use matching named aggregations and grouping keys in both queries; the backend validates shape compatibility.
