@@ -137,6 +137,24 @@ public sealed class ConsolidatedToolMetadataTests()
         }
     }
 
+    [Fact]
+    public async Task CertificateImportConsolidatedTool_IsAvailableRemotely()
+    {
+        ServiceCollection serviceCollection = new();
+        Program.ConfigureServices(serviceCollection);
+        await using var services = serviceCollection.BuildServiceProvider();
+
+        var command = services.GetRequiredService<ICommandFactory>().FindCommandByName("keyvault_certificate_import");
+        Assert.NotNull(command);
+        var definition = Assert.Single(
+            services.GetRequiredService<IConsolidatedToolDefinitionProvider>().GetToolDefinitions(),
+            tool => tool.MappedToolList.Contains("keyvault_certificate_import"));
+
+        Assert.False(command.Metadata.LocalRequired);
+        Assert.False(definition.ToolMetadata.LocalRequired);
+        Assert.True(MetadataMatches(command.Metadata, definition.ToolMetadata));
+    }
+
     private static bool MetadataMatches(ToolMetadata actual, ToolMetadata expected) =>
         actual.Destructive == expected.Destructive &&
         actual.Idempotent == expected.Idempotent &&

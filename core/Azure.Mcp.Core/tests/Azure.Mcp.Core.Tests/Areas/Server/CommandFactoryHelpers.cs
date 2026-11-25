@@ -13,6 +13,7 @@ using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Mcp.Core.Services.Caching;
+using Microsoft.Mcp.Core.Services.Host;
 using Microsoft.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Mcp.Core.Services.Time;
@@ -65,6 +66,8 @@ internal class CommandFactoryHelpers
             .AddSingleton(Substitute.For<ISubscriptionResolver>())
             .AddSingleton(Substitute.For<IPluginFileReferenceAllowlistProvider>())
             .AddSingleton(Substitute.For<IPluginSkillNameAllowlistProvider>());
+
+        builder.AddHostServices();
 
         foreach (var area in areaSetups)
         {
