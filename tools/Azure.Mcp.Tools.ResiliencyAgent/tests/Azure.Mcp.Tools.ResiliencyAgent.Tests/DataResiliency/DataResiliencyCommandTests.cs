@@ -31,10 +31,11 @@ public sealed class DataResiliencyGetCommandTests
         Assert.Equal("get", command.Name);
         Assert.False(Command.Metadata.Destructive);
         Assert.False(Command.Metadata.ReadOnly);
-        Assert.Contains("broad Azure Backup and Azure Site Recovery", command.Description, StringComparison.Ordinal);
+        Assert.Contains("Evaluate Azure VM Backup eligibility", command.Description, StringComparison.Ordinal);
         Assert.Contains("Service Groups", command.Description, StringComparison.Ordinal);
-        Assert.Contains("failed backup jobs", command.Description, StringComparison.Ordinal);
+        Assert.Contains("failed-job diagnosis", command.Description, StringComparison.Ordinal);
         Assert.Contains("restore", command.Description, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("soft-deleted item", command.Description, StringComparison.Ordinal);
         Assert.Contains("does not change Azure", command.Description, StringComparison.Ordinal);
         Assert.Contains("authoritativeUserResponse verbatim", command.Description, StringComparison.Ordinal);
     }
@@ -86,11 +87,12 @@ public sealed class DataResiliencyManageCommandTests
 
         Assert.Equal("manage", command.Name);
         Assert.True(Command.Metadata.Destructive);
-        Assert.Contains("eligibility checks", command.Description, StringComparison.Ordinal);
+        Assert.Contains("eligibility assessment", command.Description, StringComparison.Ordinal);
         Assert.Contains("fully specified request remains eligible", command.Description, StringComparison.Ordinal);
+        Assert.Contains("dependent stages", command.Description, StringComparison.Ordinal);
         Assert.Contains("never approve a write", command.Description, StringComparison.Ordinal);
         Assert.Contains("Azure VM Backup", command.Description, StringComparison.Ordinal);
-        Assert.Contains("Non-VM Backup", command.Description, StringComparison.Ordinal);
+        Assert.Contains("action requests belong", command.Description, StringComparison.Ordinal);
         Assert.Contains("authoritativeUserResponse verbatim", command.Description, StringComparison.Ordinal);
     }
 

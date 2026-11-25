@@ -5432,12 +5432,12 @@ azmcp resiliencyagent discovery manage --request <request> \
 azmcp resiliencyagent discovery execute --request <request> \
                                           [--conversation-id <conversation-id>]
 
-# Assess Azure Backup and recovery posture
+# Assess Backup coverage and eligibility or provide recovery guidance
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent dataresiliency get --request <request> \
                                           [--conversation-id <conversation-id>]
 
-# Orchestrate guided Azure Backup changes
+# Orchestrate multi-step Backup readiness and confirmed changes
 # ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent dataresiliency manage --request <request> \
                                             [--conversation-id <conversation-id>]

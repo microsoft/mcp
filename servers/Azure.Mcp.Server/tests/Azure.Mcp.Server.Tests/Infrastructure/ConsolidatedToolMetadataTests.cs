@@ -273,7 +273,7 @@ public sealed class ConsolidatedToolMetadataTests()
             dataGenerationTool.MappedToolList);
 
         Assert.Contains(
-            "interpretation, recommendations",
+            "eligibility for one or more resource IDs",
             dataAssessmentTool.Description,
             StringComparison.Ordinal);
         Assert.Contains(

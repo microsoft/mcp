@@ -77,7 +77,7 @@ public sealed class ResiliencyAgentSetupTests
         AssertCommand(area, "discovery", "get", "List previous saved");
         AssertCommand(area, "discovery", "manage", "Run every fresh");
         AssertCommand(area, "discovery", "execute", "routing intent");
-        AssertCommand(area, "dataresiliency", "get", "broad Azure Backup and Azure Site Recovery");
+        AssertCommand(area, "dataresiliency", "get", "Evaluate Azure VM Backup eligibility");
         AssertCommand(area, "dataresiliency", "manage", "fully specified request remains eligible");
         AssertCommand(area, "dataresiliency", "generate", "explicitly requests customer-run");
 
