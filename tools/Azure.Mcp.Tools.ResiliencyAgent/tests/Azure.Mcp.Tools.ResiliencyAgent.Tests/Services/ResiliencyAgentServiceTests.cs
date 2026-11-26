@@ -37,7 +37,10 @@ public sealed class ResiliencyAgentServiceTests
                         "status": {
                           "state": "completed",
                           "message": {
-                            "parts": [{ "kind": "text", "text": "Done." }]
+                            "parts": [{
+                              "kind": "text",
+                              "text": "Done. [Open Backup](#view/Microsoft_Azure_BCDRCenter/AbcCenterMenuBlade/~/overview)"
+                            }]
                           }
                         },
                         "artifacts": []
@@ -72,6 +75,9 @@ public sealed class ResiliencyAgentServiceTests
             CancellationToken.None);
 
         Assert.Equal("completed", turn.State);
+        Assert.Equal(
+            "Done. [Open Backup](https://portal.azure.com/#view/Microsoft_Azure_BCDRCenter/AbcCenterMenuBlade/~/overview)",
+            turn.Reply);
         Assert.Equal("eu", boundary);
         Assert.Equal(ResiliencyAgentService.HttpClientName, httpClientFactory.LastClientName);
         using JsonDocument payload = JsonDocument.Parse(body!);

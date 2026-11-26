@@ -175,7 +175,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         if (result.TryGetProperty("status", out JsonElement statusElement)
             && statusElement.TryGetProperty("message", out JsonElement statusMessage))
         {
-            reply = ReadTextParts(statusMessage);
+            reply = AzurePortalMarkdownLinkNormalizer.Normalize(ReadTextParts(statusMessage));
         }
 
         List<AgentArtifact> artifacts = [];

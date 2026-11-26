@@ -538,7 +538,8 @@ public abstract class ResiliencyAgentCommand<
 /// <param name="State">Final state of the agent turn.</param>
 /// <param name="Reply">Compatibility copy of the agent's answer.</param>
 /// <param name="AuthoritativeUserResponse">
-/// Exact backend-authored response that must be presented to the user under <paramref name="PresentationPolicy"/>.
+/// Backend-authored response, with Azure Portal-relative links made usable by non-Portal clients,
+/// that must be presented exactly under <paramref name="PresentationPolicy"/>.
 /// </param>
 /// <param name="PresentationPolicy">Model-visible instructions for presenting the terminal backend response.</param>
 /// <param name="SuggestedNextSteps">
