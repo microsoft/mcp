@@ -1357,7 +1357,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --vault-type <vault-type> \
                                [--sku <sku>] \
                                [--enable-public-network-access <true|false>] \
-                               [--storage-type <storage-type>]
+                               [--storage-type <GeoRedundant|LocallyRedundant|ZoneRedundant>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1370,7 +1370,11 @@ azmcp azurebackup vault get --subscription <subscription> \
 # Updates vault-level settings including soft delete, immutability, managed identity, and public network
 # access. Use --identity-type with --user-assigned-identity (comma-separated user-assigned identity
 # resource IDs) to attach user-assigned managed identities. Use --public-network-access ('Enabled' or
-# 'Disabled') to control the Recovery Services vault networking access toggle (RSV only).
+# 'Disabled') to control the Recovery Services vault networking access toggle (RSV only). Use --redundancy
+# ('GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant') to set Recovery Services vault storage redundancy
+# through the vault API (properties.redundancySettings); the stored value is verified by read-back.
+# Redundancy can change only before any item is protected, and LocallyRedundant/ZoneRedundant require
+# Cross-Region Restore to be disabled. 'vault create --storage-type' sets the same property on the new vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault update --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -1383,7 +1387,7 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--user-assigned-identity <user-assigned-identity>] \
                                [--public-network-access <Enabled|Disabled>] \
                                [--tags <tags>] \
-                               [--redundancy <redundancy>]
+                               [--redundancy <GeoRedundant|LocallyRedundant|ZoneRedundant>]
 ```
 
 #### Private Endpoint (RSV only)
@@ -1449,6 +1453,10 @@ azmcp azurebackup vault privateendpoint approve-reject --subscription <subscript
 # Creates a backup policy for a specified workload type with schedule and retention rules.
 # Supports daily/weekly/hourly schedules, multi-tier retention (daily/weekly/monthly/yearly), and archive
 # tiering for Recovery Services vaults (RSV). Backup vaults (DPP) do not currently support archive tiering.
+# Azure VM limits are validated before the request is sent: instant recovery 1-5 days for Standard policies
+# (exactly 5 for Standard Weekly) or 1-30 days for Enhanced policies (Enhanced Hourly: up to 17 days with
+# 6 snapshots per day, such as every 4 hours over 24 hours, and up to 22 days with 4-5), never longer than
+# daily retention; daily retention 7-9999 days; weekly up to 5163 weeks; monthly up to 1188 months; yearly up to 99 years.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy create --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -1537,7 +1545,7 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--hourly-window-start-time <HH:mm>] \
                                 [--hourly-window-duration-hours <4-24>] \
                                 [--policy-sub-type <Standard|Enhanced>] \
-                                [--instant-rp-retention-days <1-30>] \
+                                [--instant-rp-retention-days <1-5 Standard|1-30 Enhanced>] \
                                 [--instant-rp-resource-group <name-prefix>] \
                                 [--snapshot-consistency <ApplicationConsistent|CrashConsistent>] \
                                 [--archive-tier-after-days <int-at-least-45>] \
@@ -1563,10 +1571,11 @@ azmcp azurebackup policy get --subscription <subscription> \
 - An explicitly supplied `--hourly-window-start-time` is local `HH:mm` converted to UTC, as required by the [Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy#tab/powershell). The effective time zone is supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. For example, `08:00` in `India Standard Time` becomes `2000-01-01T02:30:00Z`. Conversion uses local `2000-01-01` time-zone rules, not today's DST offset, and may cross a UTC date boundary. Unknown time zones and invalid or ambiguous local times on that baseline are rejected; future seasonal DST adjustments are not calculated. An omitted hourly start retains its exact timestamp even when the time zone changes; resupply it to reinterpret a local time.
 - Daily/Weekly schedules accept comma-separated `HH:mm` values with `--schedule-times`, or one time with legacy `--schedule-time`. Omission retains all existing times (including the window start when leaving Hourly); explicit schedule changes reconcile all retention times. Azure enforces schedule-specific limits. These two flags are mutually exclusive and cannot be used for Hourly; use `--hourly-window-start-time` instead. Daily/Weekly parsing retains its existing clock-value encoding without the hourly UTC conversion: the [REST example](https://learn.microsoft.com/azure/backup/backup-azure-arm-userestapi-createorupdatepolicy#tab/azure-vm) encodes Standard Weekly 10:00 Pacific as `10:00:00Z` with `timeZone: Pacific Standard Time`. This fix does not establish new Enhanced Daily/Weekly semantics. When leaving Hourly, supply an explicit local schedule time if reusing the unchanged UTC window timestamp would be inappropriate.
 - Explicit `--schedule-frequency Weekly` always requires `--schedule-days-of-week`; an existing Weekly schedule can retain its days when frequency is omitted. Schedule days are not valid for Daily/Hourly. On schedule or retention updates, Weekly requires positive weekly retention whose days are a subset of backup schedule days. Setting weekly retention requires both `--weekly-retention-weeks` and `--weekly-retention-days-of-week`.
-- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`1`–`9999`) if absent, such as when leaving Weekly.
+- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`7`–`9999` for Azure VM policies) if absent, such as when leaving Weekly.
 - Schedule, retention, or instant recovery updates resulting in a **Standard Weekly** policy require effective instant recovery retention of **5 days**. Specify `--instant-rp-retention-days 5` unless the existing value is already 5. Omission preserves the existing value; it is never automatically changed. Tags-only and time-zone-only updates are not blocked by this precondition, which does not apply to Enhanced policies.
 - Monthly retention requires a count plus either absolute day-of-month selectors (`1`–`28` or `Last`) or both relative week-of-month and day-of-week selectors. Yearly retention additionally requires months of the year. Do not mix absolute and relative selectors. Retention-only updates preserve existing retention times; explicit schedule updates reconcile retention times and remove incompatible schedule branches.
-- `--instant-rp-retention-days` accepts `1`–`30`, subject to Azure's schedule- and subtype-specific limits. `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- `--instant-rp-retention-days` accepts `1`–`5` for Standard (V1) Daily policies, exactly `5` for Standard Weekly policies, and `1`–`30` for Enhanced (V2) policies, and cannot exceed the effective daily retention. Enhanced Hourly schedules are further capped by snapshots per day ([Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy)): up to `17` days with 6 snapshots per day (for example, every 4 hours over 24 hours) and up to `22` days with 4–5. Hourly schedule changes are checked against the existing value. These limits are checked against the fetched policy before the update is sent, because Azure otherwise rejects them as `UserErrorInvalidRequestParameter` without naming the parameter (`NO_PARAM`). `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- If Azure still returns `UserErrorInvalidRequestParameter`, the error names the parameter when Azure provides it, lists the options that were supplied, and states the Azure VM policy limits so the request can be corrected.
 - Archive modes are **`TierAfter` or `TierRecommended`, not `CopyOnExpiry`**. `TierAfter` requires at least 45 days, supplied via `--archive-tier-after-days` or retained from an existing `TierAfter` duration in days. Archive days alone select `TierAfter`. `TierRecommended` cannot be combined with archive days.
 - `--smart-tier true` selects `TierRecommended`; **`--smart-tier false` disables archive tiering** (`DoNotTier`). Either value is mutually exclusive with both archive flags. Omission preserves existing tiering. Azure enforces remaining service-side limits and vault security restrictions.
 

@@ -453,6 +453,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_policy_update | Negative test: request archive mode CopyOnExpiry for RSV VM policy <policy_name> in vault <vault_name> under resource group <resource_group>; expect rejection because update accepts TierAfter or TierRecommended | investigation-required |
 | azurebackup_policy_update | Negative test: switch Daily VM policy <policy_name> with positive daily retention to Weekly on Sunday in RSV vault <vault_name> under resource group <resource_group> without explicit weekly retention weeks and days; expect rejection rather than silent removal of daily retention | investigation-required |
 | azurebackup_policy_update | Negative test: switch Weekly VM policy <policy_name> with no daily retention to Daily at 03:00 in RSV vault <vault_name> under resource group <resource_group> without supplying daily retention; expect rejection | investigation-required |
+| azurebackup_policy_update | Negative test: set instant recovery retention to 10 days on Standard Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>; expect rejection explaining Standard policies allow 1-5 days | investigation-required |
 | azurebackup_policy_get | Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
 | azurebackup_policy_get | Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group> | investigation-required |
@@ -500,6 +501,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_vault_create | Create Backup vault <vault_name> with vault-type 'dpp' in <resource_group> in \<location>, rejecting the request if the vault exists | investigation-required |
 | azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location> with public network access disabled | investigation-required |
 | azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location> and explicitly enable public network access for this test deployment | investigation-required |
+| azurebackup_vault_create | Create Recovery Services vault <vault_name> in <resource_group> in \<location> with locally redundant storage | investigation-required |
 | azurebackup_vault_create | Set up a new backup vault called <vault_name> in \<location> under resource group <resource_group> with vault-type 'dpp' | investigation-required |
 | azurebackup_vault_get | Get details of Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
 | azurebackup_vault_get | Show me information about Azure Backup vault <vault_name> in resource group <resource_group> | investigation-required |
@@ -512,6 +514,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | azurebackup_vault_update | Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned | investigation-required |
 | azurebackup_vault_update | Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned | investigation-required |
 | azurebackup_vault_update | Disable public network access on Recovery Services vault <vault_name> in resource group <resource_group> | investigation-required |
+| azurebackup_vault_update | Change the storage redundancy of Recovery Services vault <vault_name> in resource group <resource_group> to zone-redundant | investigation-required |
 | azurebackup_vault_privateendpoint_create | Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it | investigation-required |
 | azurebackup_vault_privateendpoint_create | Provision a Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> connected to subnet <subnet_id> with group-id AzureBackup | investigation-required |
 | azurebackup_vault_privateendpoint_create | Set up private connectivity for Recovery Services vault <vault_name> in resource group <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id> | investigation-required |

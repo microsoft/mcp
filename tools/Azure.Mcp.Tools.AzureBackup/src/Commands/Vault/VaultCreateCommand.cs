@@ -89,7 +89,12 @@ public sealed class VaultCreateCommand(ILogger<VaultCreateCommand> logger, IAzur
         {
             _logger.LogError(ex, "Error creating vault. Vault: {Vault}, ResourceGroup: {ResourceGroup}, Location: {Location}",
                 options.Vault, options.ResourceGroup, options.Location);
-            HandleException(context, ex);
+            HandleAzureBackupException(context, ex, "vault create", AzureBackupErrorGuidance.Supplied(
+                ("--location", true),
+                ("--sku", options.Sku is not null),
+                ("--storage-type", options.StorageType is not null),
+                ("--enable-public-network-access", options.EnablePublicNetworkAccess)),
+                AzureBackupErrorGuidance.VaultLimitsHint);
         }
 
         return context.Response;
