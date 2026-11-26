@@ -1,3 +1,0 @@
-changes:
-  - section: "Features Added"
-    description: "Added core_create-folder to create one logical workspace folder at the root or under an explicit parent UUID, with validated names, typed created metadata, safe creation-outcome guidance, and no lookups, retries, or polling."

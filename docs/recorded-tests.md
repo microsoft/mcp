@@ -9,6 +9,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
 - **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Microsoft.Mcp.Core/tests/Microsoft.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
+  - Uses the version pinned in [`eng/test-proxy-version.txt`](https://github.com/microsoft/mcp/blob/main/eng/test-proxy-version.txt), falling back to `eng/common/testproxy/target_version.txt` when the repository override is absent. Update the repository override to change versions without modifying shared engineering files.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
   - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
@@ -44,6 +45,15 @@ core/Azure.Mcp.Core/tests/...      # RecordedCommandTestsBase and supporting inf
 ```
 
 The `.proxy` directory is recreated whenever a recorded test run needs the Test Proxy. This folder is gitignored by default. Do not commit these binaries.
+
+Local server processes use the server output identified by the build-generated
+`AzureMcpServer.path` file, not a server copy beside each tool test. Building a
+test project also builds its server dependency. Azure server tests keep their
+runtime directory under `.work/test-runtime`; their settings are located using the
+test executable's `SourcePath` assembly metadata. Keep `.testsettings.json`,
+`assets.json`, and recordings in their existing test project locations, not in
+the shared runtime directory. NPX-based stdio tests do not require a local server
+executable.
 
 ## Migration Guide (Live ➜ Recorded)
 

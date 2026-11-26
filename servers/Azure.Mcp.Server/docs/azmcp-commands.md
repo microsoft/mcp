@@ -443,8 +443,13 @@ azmcp adme search --endpoint <endpoint> \
                   [--auth-app-id <application-id-or-app-id-uri>]
 
 Use cursor pagination for point-in-time snapshots, bulk processing, or more than 10000 results.
-Supplying `--cursor` or `--search-after` also selects it; resend the original criteria on continuation requests.
+Supplying `--cursor` or `--search-after` also selects it.
 Cursor pagination cannot use `--offset` or `--aggregate-by`. Query pagination is the default and limits `--offset` plus `--limit` to 10000.
+Cursor searches return `results.nextCursor`.
+Pass `nextCursor` unchanged as `--cursor`. Keep the same endpoint, data partition, tenant, auth app ID, kinds, sort,
+and `--search-after` setting. For snapshot paging, resend all original criteria. With `--search-after`, the service
+may support per-page overrides such as `--limit` and `--returned-fields`.
+`nextCursor` is omitted when the cursor-search result is empty or the service returns no continuation.
 For ADME instances registered with a customer-specific resource application, use `--auth-app-id` to set the token audience. A GUID is interpreted as `<guid>/.default`; an `api://` or `https://` App ID URI is also accepted and has `/.default` appended when needed. This is independent of `--tenant`, which selects the tenant that issues the token.
 
 # Fetch multiple records by fully-qualified OSDU record id
@@ -476,6 +481,11 @@ azmcp adme storage record list --endpoint <endpoint> \
                                  [--cursor <cursor>] \
                                  [--tenant <tenant>] \
                                  [--auth-app-id <application-id-or-app-id-uri>]
+
+# The record listing returns results.nextCursor.
+# Pass nextCursor unchanged as --cursor with the same endpoint, data partition, kind, tenant, and auth app ID.
+# You may change --limit between pages. Omit --cursor for the first page and stop when nextCursor is absent.
+# An empty record-ID page can still have a nextCursor.
 
 # List all numeric versions of an OSDU record
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1289,6 +1299,14 @@ azmcp appservice webapp diagnostic diagnose --subscription "my-subscription" \
 
 ### Azure Backup Operations
 
+`--vault` accepts a vault name or a full vault resource ID
+(`/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.RecoveryServices/vaults/{vault}` or
+`.../providers/Microsoft.DataProtection/backupVaults/{vault}`), and `--resource-group` accepts a resource group name or
+resource group resource ID. A vault resource ID supplies the vault type and, when `--subscription` is omitted, the
+subscription. `vault get` also takes the resource group from the ID; other commands still require `--resource-group`.
+Values that conflict with the resource ID are rejected, and `--subscription` must be omitted or be a subscription ID (not
+a name) when a resource ID is used. Recovery Services-only commands reject Backup vault IDs.
+
 #### Operation Status (RSV only)
 
 ```bash
@@ -1339,7 +1357,7 @@ azmcp azurebackup vault create --subscription <subscription> \
                                --vault-type <vault-type> \
                                [--sku <sku>] \
                                [--enable-public-network-access <true|false>] \
-                               [--storage-type <storage-type>]
+                               [--storage-type <GeoRedundant|LocallyRedundant|ZoneRedundant>]
 
 # Retrieves backup vault information. When --vault and --resource-group are specified, returns detailed information about a single vault including type, location, SKU, storage redundancy, and managed identity details when configured. Identity details include the identity type, principal ID, tenant ID, and attached user-assigned identities with their resource IDs, principal IDs, and client IDs. When omitted, lists all backup vaults (RSV and Backup vaults) in the subscription. Optionally filter by --vault-type ('rsv' or 'dpp') and/or --resource-group to narrow the listing results. Use --expand to include extended posture fields: 'security' (encryption key URI and cross-region restore state; DPP vaults additionally return encryption state — RSV vaults omit it because the vault GET API does not return an explicit state field), 'mua' (Multi-User Authorization / Resource Guard link), or 'all'.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1352,7 +1370,11 @@ azmcp azurebackup vault get --subscription <subscription> \
 # Updates vault-level settings including soft delete, immutability, managed identity, and public network
 # access. Use --identity-type with --user-assigned-identity (comma-separated user-assigned identity
 # resource IDs) to attach user-assigned managed identities. Use --public-network-access ('Enabled' or
-# 'Disabled') to control the Recovery Services vault networking access toggle (RSV only).
+# 'Disabled') to control the Recovery Services vault networking access toggle (RSV only). Use --redundancy
+# ('GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant') to set Recovery Services vault storage redundancy
+# through the vault API (properties.redundancySettings); the stored value is verified by read-back.
+# Redundancy can change only before any item is protected, and LocallyRedundant/ZoneRedundant require
+# Cross-Region Restore to be disabled. 'vault create --storage-type' sets the same property on the new vault.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup vault update --subscription <subscription> \
                                --resource-group <resource-group> \
@@ -1365,7 +1387,7 @@ azmcp azurebackup vault update --subscription <subscription> \
                                [--user-assigned-identity <user-assigned-identity>] \
                                [--public-network-access <Enabled|Disabled>] \
                                [--tags <tags>] \
-                               [--redundancy <redundancy>]
+                               [--redundancy <GeoRedundant|LocallyRedundant|ZoneRedundant>]
 ```
 
 #### Private Endpoint (RSV only)
@@ -1431,6 +1453,10 @@ azmcp azurebackup vault privateendpoint approve-reject --subscription <subscript
 # Creates a backup policy for a specified workload type with schedule and retention rules.
 # Supports daily/weekly/hourly schedules, multi-tier retention (daily/weekly/monthly/yearly), and archive
 # tiering for Recovery Services vaults (RSV). Backup vaults (DPP) do not currently support archive tiering.
+# Azure VM limits are validated before the request is sent: instant recovery 1-5 days for Standard policies
+# (exactly 5 for Standard Weekly) or 1-30 days for Enhanced policies (Enhanced Hourly: up to 17 days with
+# 6 snapshots per day, such as every 4 hours over 24 hours, and up to 22 days with 4-5), never longer than
+# daily retention; daily retention 7-9999 days; weekly up to 5163 weeks; monthly up to 1188 months; yearly up to 99 years.
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azurebackup policy create --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -1519,7 +1545,7 @@ azmcp azurebackup policy update --subscription <subscription> \
                                 [--hourly-window-start-time <HH:mm>] \
                                 [--hourly-window-duration-hours <4-24>] \
                                 [--policy-sub-type <Standard|Enhanced>] \
-                                [--instant-rp-retention-days <1-30>] \
+                                [--instant-rp-retention-days <1-5 Standard|1-30 Enhanced>] \
                                 [--instant-rp-resource-group <name-prefix>] \
                                 [--snapshot-consistency <ApplicationConsistent|CrashConsistent>] \
                                 [--archive-tier-after-days <int-at-least-45>] \
@@ -1545,10 +1571,11 @@ azmcp azurebackup policy get --subscription <subscription> \
 - An explicitly supplied `--hourly-window-start-time` is local `HH:mm` converted to UTC, as required by the [Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy#tab/powershell). The effective time zone is supplied `--time-zone`, otherwise the existing policy time zone, otherwise UTC. For example, `08:00` in `India Standard Time` becomes `2000-01-01T02:30:00Z`. Conversion uses local `2000-01-01` time-zone rules, not today's DST offset, and may cross a UTC date boundary. Unknown time zones and invalid or ambiguous local times on that baseline are rejected; future seasonal DST adjustments are not calculated. An omitted hourly start retains its exact timestamp even when the time zone changes; resupply it to reinterpret a local time.
 - Daily/Weekly schedules accept comma-separated `HH:mm` values with `--schedule-times`, or one time with legacy `--schedule-time`. Omission retains all existing times (including the window start when leaving Hourly); explicit schedule changes reconcile all retention times. Azure enforces schedule-specific limits. These two flags are mutually exclusive and cannot be used for Hourly; use `--hourly-window-start-time` instead. Daily/Weekly parsing retains its existing clock-value encoding without the hourly UTC conversion: the [REST example](https://learn.microsoft.com/azure/backup/backup-azure-arm-userestapi-createorupdatepolicy#tab/azure-vm) encodes Standard Weekly 10:00 Pacific as `10:00:00Z` with `timeZone: Pacific Standard Time`. This fix does not establish new Enhanced Daily/Weekly semantics. When leaving Hourly, supply an explicit local schedule time if reusing the unchanged UTC window timestamp would be inappropriate.
 - Explicit `--schedule-frequency Weekly` always requires `--schedule-days-of-week`; an existing Weekly schedule can retain its days when frequency is omitted. Schedule days are not valid for Daily/Hourly. On schedule or retention updates, Weekly requires positive weekly retention whose days are a subset of backup schedule days. Setting weekly retention requires both `--weekly-retention-weeks` and `--weekly-retention-days-of-week`.
-- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`1`–`9999`) if absent, such as when leaving Weekly.
+- Removing positive daily retention when switching to Weekly requires that explicit weekly retention pair, even when a weekly tier already exists. Daily retention is then removed; Weekly cannot accept `--daily-retention-days`. Daily/Hourly schedule or retention updates require positive daily retention: supply `--daily-retention-days` (`7`–`9999` for Azure VM policies) if absent, such as when leaving Weekly.
 - Schedule, retention, or instant recovery updates resulting in a **Standard Weekly** policy require effective instant recovery retention of **5 days**. Specify `--instant-rp-retention-days 5` unless the existing value is already 5. Omission preserves the existing value; it is never automatically changed. Tags-only and time-zone-only updates are not blocked by this precondition, which does not apply to Enhanced policies.
 - Monthly retention requires a count plus either absolute day-of-month selectors (`1`–`28` or `Last`) or both relative week-of-month and day-of-week selectors. Yearly retention additionally requires months of the year. Do not mix absolute and relative selectors. Retention-only updates preserve existing retention times; explicit schedule updates reconcile retention times and remove incompatible schedule branches.
-- `--instant-rp-retention-days` accepts `1`–`30`, subject to Azure's schedule- and subtype-specific limits. `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- `--instant-rp-retention-days` accepts `1`–`5` for Standard (V1) Daily policies, exactly `5` for Standard Weekly policies, and `1`–`30` for Enhanced (V2) policies, and cannot exceed the effective daily retention. Enhanced Hourly schedules are further capped by snapshots per day ([Enhanced-policy documentation](https://learn.microsoft.com/azure/backup/backup-azure-vms-enhanced-policy)): up to `17` days with 6 snapshots per day (for example, every 4 hours over 24 hours) and up to `22` days with 4–5. Hourly schedule changes are checked against the existing value. These limits are checked against the fetched policy before the update is sent, because Azure otherwise rejects them as `UserErrorInvalidRequestParameter` without naming the parameter (`NO_PARAM`). `--instant-rp-resource-group` is a name prefix (1–50 letters, digits, underscores, or hyphens), not a resource ID. `ApplicationConsistent` restores default application-consistent behavior; `CrashConsistent` requests ARM `OnlyCrashConsistent`.
+- If Azure still returns `UserErrorInvalidRequestParameter`, the error names the parameter when Azure provides it, lists the options that were supplied, and states the Azure VM policy limits so the request can be corrected.
 - Archive modes are **`TierAfter` or `TierRecommended`, not `CopyOnExpiry`**. `TierAfter` requires at least 45 days, supplied via `--archive-tier-after-days` or retained from an existing `TierAfter` duration in days. Archive days alone select `TierAfter`. `TierRecommended` cannot be combined with archive days.
 - `--smart-tier true` selects `TierRecommended`; **`--smart-tier false` disables archive tiering** (`DoNotTier`). Either value is mutually exclusive with both archive flags. Omission preserves existing tiering. Azure enforces remaining service-side limits and vault security restrictions.
 
@@ -2994,6 +3021,75 @@ when caching is enabled; HTTP mode does not retain clients across calls.
 Tokens remain scoped to the client's credential and cloud; they are not shared
 across tenants.
 
+### Azure NetApp Files Operations
+
+```bash
+# Gets an Azure NetApp Files account by name from a specified resource group.
+# Returns the account name, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account get --account <account> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--tenant <tenant>]
+
+# Creates an Azure NetApp Files account in a specified resource group and region.
+# Returns the account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account create --account <account> \
+                                 --location <location> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tenant <tenant>]
+
+# Updates the tags or NFSv4 user ID mapping domain of an Azure NetApp Files account.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated account name, resource ID, location, and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles account update --account <account> \
+                                 --resource-group <resource-group> \
+                                 --subscription <subscription> \
+                                 [--tags <json-key-value-object>] \
+                                 [--nfs-v4-id-domain <nfs-v4-id-domain>] \
+                                 [--tenant <tenant>]
+
+# Creates a capacity pool in an Azure NetApp Files account.
+# Size is specified in TiB and must be a positive multiple of 4.
+# Returns the pool configuration and provisioning state.
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool create --account <account> \
+                              --pool <pool> \
+                              --size <size-in-tib> \
+                              --service-level <Flexible|Premium|Standard|StandardZRS|Ultra> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--location <location>] \
+                              [--qos-type <Auto|Manual>] \
+                              [--cool-access <true|false>] \
+                              [--encryption-type <Single|Double>] \
+                              [--custom-throughput-mibps <throughput>] \
+                              [--tags <json-key-value-object>] \
+                              [--tenant <tenant>]
+
+# Gets a capacity pool by name from an Azure NetApp Files account.
+# Returns the pool configuration, resource ID, location, and provisioning state.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool get --account <account> \
+                                    --pool <pool> \
+                                    --resource-group <resource-group> \
+                                    --subscription <subscription> \
+                                    [--tenant <tenant>]
+
+# Updates mutable properties of an Azure NetApp Files capacity pool.
+# Providing an empty JSON object for --tags removes all tags.
+# Returns the updated pool configuration and provisioning state.
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp netappfiles pool update --account <account> \
+                              --pool <pool> \
+                              --resource-group <resource-group> \
+                              --subscription <subscription> \
+                              [--size <size-in-tib>] \
+                              [--qos-type <Auto|Manual>]
+
 ### Azure Database for MySQL Operations
 
 ```bash
@@ -3849,7 +3945,10 @@ azmcp marketplace product list --subscription <subscription> \
                                [--orderby <odata-orderby>] \
                                [--select <odata-select>] \
                                [--expand <odata-expand>] \
-                               [--next-cursor <pagination-cursor>]
+                               [--cursor <pagination-cursor>]
+
+# Returns one page and nextCursor when more results can be requested.
+# Pass nextCursor unchanged as --cursor with the same subscription, tenant, language, search, filter, orderby, select, and expand.
 
 # Get details about an Azure Marketplace product
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -4064,6 +4163,21 @@ azmcp monitor healthmodels list --subscription <subscription> \
 azmcp monitor healthmodels get --subscription <subscription> \
                                --resource-group <resource-group> \
                                --health-model <health-model-name>
+
+# Inspect the entities of a health model: state, signals, what drives a state, dependencies, history, annotations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor healthmodels inspect --subscription <subscription> \
+                                   --resource-group <resource-group> \
+                                   --health-model <health-model-name> \
+                                   [--entity <entity>] \
+                                   [--where-health <Healthy|Degraded|Unhealthy|Unknown|NotHealthy>] \
+                                   [--walk <Causes|Dependencies|Dependents>] \
+                                   [--include <Signals|History|SignalHistory|Annotations>] \
+                                   [--start-at <start-at>] \
+                                   [--end-at <end-at>] \
+                                   [--timestamp <timestamp>] \
+                                   [--top <top>] \
+                                   [--cursor <cursor>]
 ```
 
 #### Metrics
@@ -5575,8 +5689,8 @@ azmcp sreagent connectors create kusto --subscription <subscription> \
                                        --name <connector-name> \
                                        --cluster-url <kusto-cluster-url>
 
-# Create or update an MCP connector
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
+# Create or update an MCP connector (local-only)
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
 azmcp sreagent connectors create mcp --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --agent <agent-name> \
@@ -5765,9 +5879,11 @@ azmcp sreagent incidents plans create --subscription <subscription> \
                                       --severity <severity> \
                                       --trigger-condition <condition>
 
-# Configure PagerDuty / ServiceNow connectors
-azmcp sreagent incidents setup-pagerduty   --subscription <s> --resource-group <rg> --agent <a> --api-key-env <env>
-azmcp sreagent incidents setup-servicenow  --subscription <s> --resource-group <rg> --agent <a> --instance-url <url> --auth-type <type>
+# Configure PagerDuty / ServiceNow connectors (local-only)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup pagerduty   --subscription <s> --resource-group <rg> --agent <a> --name <n> --api-key-env <env>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ✅ LocalRequired
+azmcp sreagent incidents setup servicenow  --subscription <s> --resource-group <rg> --agent <a> --name <n> --instance-url <url> --auth-type BearerToken --token-env <env>
 ```
 
 #### Workflows
@@ -5874,18 +5990,23 @@ azmcp storage account get --subscription <subscription> \
 azmcp storage blob container create --account <account> \
                                     --container <container>
 
-# Get detailed properties of Storage containers
+# Get detailed properties of a Storage container, or one page of up to 100 containers (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account, prefix, and tenant. Do not combine --cursor with --container.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --account <account> \
                                  [--container <container>] \
-                                 [--prefix <prefix>]
+                                 [--prefix <prefix>] \
+                                 [--cursor <nextCursor>]
 
-# Get detailed properties of Storage blobs
+# Get detailed properties of a Storage blob, or one page of up to 100 blobs and directory prefixes (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account, container, prefix, delimiter, and tenant. Do not combine --cursor or --delimiter with --blob.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --account <account> \
                            --container <container> \
                            [--blob <blob>] \
-                           [--prefix <prefix>]
+                           [--prefix <prefix>] \
+                           [--delimiter <delimiter>] \
+                           [--cursor <nextCursor>]
 
 # Upload a file to a Storage blob
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
@@ -5893,6 +6014,25 @@ azmcp storage blob upload --account <account> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
+
+##### Blob Get Listing Parameters
+
+Use `--delimiter /` to browse one level of virtual directories. Each page contains at most 100 blobs and
+directory prefixes combined. `prefixes` contains virtual directory paths, including their delimiter.
+Continue with `--cursor <nextCursor>` and the same account, container, prefix, delimiter, and tenant,
+even when the previous page was empty. Listing requires a data-plane role such as **Storage Blob Data
+Reader** or **Storage Blob Data Contributor**.
+
+```bash
+# Browse blobs and virtual directories under datasets/
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> --prefix datasets/ --delimiter /
+
+# Continue browsing with the cursor from the previous response
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp storage blob get --account <account> --container <container> \
+                      --prefix datasets/ --delimiter / --cursor "<nextCursor>"
 ```
 
 #### Disk Diagnostics
@@ -5951,9 +6091,11 @@ azmcp storage disk diagnose --subscription <subscription> \
 #### Table Storage
 
 ```bash
-# List tables in an Azure Storage account
+# List one page of up to 100 table names in an Azure Storage account (fixed page size).
+# Pass nextCursor unchanged as --cursor with the same account and tenant to continue.
+# For all Storage listings, continue after empty pages with nextCursor; an omitted/null nextCursor means completion.
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp storage table list --account <account>
+azmcp storage table list --account <account> [--cursor <nextCursor>]
 ```
 
 ### Azure Storage Sync Operations

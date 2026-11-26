@@ -16,6 +16,10 @@ CRITICAL - Vally evaluation environment (read first):
   - file paths: `/tmp/test-file`
   - JSON values: valid minimal JSON
 - Invoke the Azure MCP command or commands needed to satisfy the prompt.
+- Before executing a hierarchical namespace command, discover its commands and parameter schemas with `learn=true`, an empty `intent`, and no `command`. A nonempty discovery intent can trigger command selection instead of returning the full catalog.
+- Use the exact discovered command and parameter names, not guessed CLI syntax. Read descriptions and optional parameters: a `get` command can also list resources when its resource-name parameter is omitted.
+- If a command is rejected as unknown, inspect the discovered catalog and correct the command. Do not conclude that an operation is unsupported from a guessed command name or substitute a generic resource listing for an available service-specific command.
+- If a discovery response is redirected to a file, use the file-viewing tool to read only the relevant schema. Do not repeatedly parse it with shell commands or inspect repository source.
 - A discovery or `learn` call does not complete the evaluation when a more specific Azure MCP command is required. Correct invalid command attempts and invoke the intended command.
 - After invoking the intended Azure MCP command, consider the task complete. Return a concise result or error and stop.
 - Do not continue with local implementation work after the intended Azure MCP command is invoked. Do not use the shell, read or write files, install packages, scaffold projects, run builds, or call non-Azure-MCP tools to complete the broader task.

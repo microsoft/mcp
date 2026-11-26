@@ -27,18 +27,29 @@ public interface IStorageService
         bool allowSharedKeyAccess = false,
         CancellationToken cancellationToken = default);
 
-    Task<List<BlobInfo>> GetBlobDetails(
+    Task<(List<BlobInfo> Blobs, string? NextCursor)> GetBlobDetails(
         string account,
         string container,
         string? blob,
         string? prefix = null,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<ContainerInfo>> GetContainerDetails(
+    Task<BlobListResult> ListBlobs(
+        string account,
+        string container,
+        string delimiter,
+        string? prefix = null,
+        string? cursor = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
+    Task<(List<ContainerInfo> Containers, string? NextCursor)> GetContainerDetails(
         string account,
         string? container,
         string? prefix = null,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
@@ -56,8 +67,9 @@ public interface IStorageService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
-    Task<List<string>> ListTables(
+    Task<(List<string> Tables, string? NextCursor)> ListTables(
         string account,
+        string? cursor = null,
         string? tenant = null,
         CancellationToken cancellationToken = default);
 }

@@ -121,6 +121,12 @@ internal static class IaasVmPolicyUpdater
 
         var retention = policy.RetentionPolicy as LongTermRetentionPolicy
             ?? throw new ArgumentException("The existing VM retention type is unsupported; it cannot be safely replaced.");
+        int? requestedDailyDays = request.DailyRetentionDays is null ? null : PolicyUpdateValidator.ParsePositive(request.DailyRetentionDays);
+        if (IaasVmPolicyLimits.ValidateLongTermRetention(requestedDailyDays, request.WeeklyRetentionWeeks,
+            request.MonthlyRetentionMonths, request.YearlyRetentionYears) is { } retentionIssue)
+        {
+            throw new ArgumentException(IaasVmPolicyLimits.Format(retentionIssue));
+        }
         if (weekly && request.DailyRetentionDays is not null)
         {
             throw new ArgumentException("Weekly schedules cannot have --daily-retention-days.");
@@ -158,6 +164,21 @@ internal static class IaasVmPolicyUpdater
             && instantDays != 5)
         {
             throw new ArgumentException("Standard Weekly policies require effective instant RP retention of 5 days. Specify --instant-rp-retention-days 5; omission preserves the existing value.");
+        }
+        // Standard Daily (1-5 days), Hourly snapshot-count caps, and the daily-retention ceiling are otherwise
+        // rejected by Azure as NO_PARAM. Schedule-only changes to Hourly can lower the cap for the existing value.
+        if (!weekly && instantDays is int effectiveInstantDays
+            && (request.InstantRpRetentionDays is not null || request.DailyRetentionDays is not null || (hourly && scheduleChanged)))
+        {
+            int? effectiveDailyDays = requestedDailyDays ?? retention.DailySchedule?.RetentionDuration?.Count;
+            int? hourlySnapshots = hourly ? IaasVmPolicyLimits.HourlySnapshotsPerDay(interval, duration) : null;
+            if (IaasVmPolicyLimits.ValidateInstantRpRetention(effectiveInstantDays, enhanced, weekly: false, effectiveDailyDays, hourlySnapshots) is { } instantIssue)
+            {
+                var message = IaasVmPolicyLimits.Format(instantIssue);
+                throw new ArgumentException(request.InstantRpRetentionDays is null
+                    ? $"{message} The existing policy keeps {effectiveInstantDays} days of instant restore; supply --instant-rp-retention-days to change it."
+                    : message);
+            }
         }
         var archiveDays = request.ArchiveTierAfterDays is null ? (int?)null : PolicyUpdateValidator.ParsePositive(request.ArchiveTierAfterDays);
         policy.TieringPolicy.TryGetValue("ArchivedRP", out var archive);

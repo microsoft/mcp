@@ -100,9 +100,9 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $environment = "";
 if ($IsWindows) {
-    $environment = "windows"
+    $environment = "azmcp_windows"
 } elseif ($IsLinux) {
-    $environment = "linux"
+    $environment = "azmcp_linux"
 } else {
     Write-Error "Unsupported platform. This script only supports Windows, Linux, and macOS."
     exit 1
@@ -134,7 +134,7 @@ if ([string]::IsNullOrEmpty($commandArg)) {
     exit 0
 }
 
-$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param ENVIRONMENT=$environment"
+$expression = "vally eval --work-dir '$WorkDirectory' --output-dir '$OutputPath' --runs $NumberOfRuns --param AGENT_ENVIRONMENT=$environment"
 
 if ($IsDebug) {
     $expression += " --verbose"

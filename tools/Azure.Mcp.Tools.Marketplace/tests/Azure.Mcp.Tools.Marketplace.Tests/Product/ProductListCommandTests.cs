@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Services;
+using Microsoft.Mcp.Core.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -22,6 +24,80 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         Assert.NotNull(CommandDefinition.Description);
         Assert.NotEmpty(CommandDefinition.Description);
         Assert.Contains("marketplace products", CommandDefinition.Description.ToLower());
+        Assert.DoesNotContain("next-cursor", CommandDefinition.Description, StringComparison.Ordinal);
+        var cursor = Assert.Single(CommandDefinition.Options, option => option.Name == "--cursor");
+        Assert.StartsWith(ICursorOption.CursorDescription, cursor.Description, StringComparison.Ordinal);
+        Assert.DoesNotContain("next-cursor", cursor.Description, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_RejectsRemovedNextCursorOption(bool includeCursor)
+    {
+        var args = new List<string> { "--subscription", "test-sub", "--next-cursor", "legacy-token" };
+        if (includeCursor)
+        {
+            args.AddRange(["--cursor", "current-token"]);
+        }
+
+        var response = await ExecuteCommandAsync(args.ToArray());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("next-cursor", response.Message, StringComparison.Ordinal);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ExecuteAsync_ContinuesPages(bool emptyFirstPage)
+    {
+        const string cursor = " opaque+/=%2F== ";
+        Service.ListProducts(
+                "test-sub", Arg.Any<string?>(), "azure", Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(
+                new ProductListResponseWithNextCursor
+                {
+                    Items = emptyFirstPage ? [] : [new ProductSummary { UniqueProductId = "first-product" }],
+                    NextCursor = cursor,
+                },
+                new ProductListResponseWithNextCursor
+                {
+                    Items = [new ProductSummary { UniqueProductId = "final-product" }],
+                });
+
+        var firstResponse = await ExecuteCommandAsync("--subscription", "test-sub", "--search", "azure");
+        var first = ValidateAndDeserializeResponse(firstResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.NotNull(first.NextCursor);
+        Assert.NotEqual(cursor, first.NextCursor);
+        Assert.Equal(emptyFirstPage ? 0 : 1, first.Products.Count);
+        var firstPayload = JsonSerializer.SerializeToElement(first, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal(first.NextCursor, firstPayload.GetProperty("nextCursor").GetString());
+
+        var finalResponse = await ExecuteCommandAsync(
+            "--subscription", "test-sub", "--search", "azure", "--cursor", first.NextCursor);
+        var final = ValidateAndDeserializeResponse(finalResponse, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.Equal("final-product", Assert.Single(final.Products).UniqueProductId);
+        Assert.Null(final.NextCursor);
+        var finalPayload = JsonSerializer.SerializeToElement(final, MarketplaceJsonContext.Default.ProductListCommandResult);
+        Assert.False(finalPayload.TryGetProperty("nextCursor", out _));
+
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, null, null, null,
+            Arg.Any<CancellationToken>());
+        await Service.Received(1).ListProducts(
+            "test-sub", null, "azure", null, null, null, cursor, null, null,
+            Arg.Any<CancellationToken>());
+
+        Service.ClearReceivedCalls();
+        var mismatch = await ExecuteCommandAsync(
+            "--subscription", "test-sub", "--search", "azure", "--orderby", "displayName desc", "--cursor", first.NextCursor);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatch.Status);
+        Assert.Contains("does not match the original request", mismatch.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 
     [Fact]
@@ -223,7 +299,7 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
     {
         // Arrange
         var subscriptionId = "test-sub";
-        var expectedNextCursor = "next-page-token-456";
+        var serviceCursor = "next-page-token-456";
         var expectedProducts = new List<ProductSummary>
         {
             new()
@@ -241,7 +317,7 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         var productsListResult = new ProductListResponseWithNextCursor
         {
             Items = expectedProducts,
-            NextCursor = expectedNextCursor
+            NextCursor = serviceCursor
         };
 
         Service.ListProducts(
@@ -263,7 +339,8 @@ public class ProductListCommandTests : SubscriptionCommandUnitTestsBase<ProductL
         // Assert
         var result = ValidateAndDeserializeResponse(response, MarketplaceJsonContext.Default.ProductListCommandResult);
 
-        Assert.Equal(expectedNextCursor, result.NextCursor);
+        Assert.NotNull(result.NextCursor);
+        Assert.NotEqual(serviceCursor, result.NextCursor);
         Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-1");
         Assert.Contains(result.Products, p => p.UniqueProductId == "test-product-2");
     }

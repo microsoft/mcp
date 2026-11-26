@@ -22,7 +22,7 @@ This section explains the Native AOT checks enforced in the `azmcp` CI and what 
 
    Use:
    ```powershell
-   ./eng/scripts/Build-Local.ps1 -BuildNative
+   ./eng/scripts/Build-Local.ps1 -IncludeNative
    ```
    This will show you the AOT violations introduced by your changes.
 

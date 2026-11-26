@@ -43,7 +43,7 @@ Offline tests for the Fabric Core toolset.
 - **Validation/FolderUpdateInputTests.cs**: Shared unchanged Create/Update naming rules, exact Unicode character boundaries, invalid surrogate rejection, UUID validation, and no host filesystem rules
 - **Services/FolderUpdateServiceTests.cs**: One exact PATCH with only displayName, authoritative snapshots and matching identities, optional parents, malformed/Unicode/duplicate data, exact byte/depth budgets, status/retry preservation, authentication/cancellation/disposal, and concurrent caller isolation
 - **FolderUpdateMcpTests.cs**: Actual schemas and learn/output modes across all/namespace/single and stdio/HTTP, namespace/read-only exclusion, standard mutation consent, zero-I/O invalid/authentication/declined-consent cases, CLI duplicate/valueless rejection, and confirmed-update errors through the wire envelope
-- **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
+- **Services/FabricItemDefinitionFileServiceTests.cs**: Lossless file/part round trips, explicit file selection, source mappings, path containment, stdio-only capability, Git-metadata export rejection, byte/count budgets, no-overwrite publication, cancellation, failure cleanup, and independent exports
 - **Models/FabricItemDefinitionSerializationTests.cs**: AOT-safe definition/part JSON, optional format, and empty payload preservation
 - **Services/FabricItemDefinitionInputServiceTests.cs**: Strict source-generated input parsing, mutually exclusive sources, capability checks before file access, shared path/byte limits, arbitrary safe layouts across omitted/recognized/unknown formats, cancellation, and safe errors
 - **Options/DefinitionInputOptionsTests.cs**: AOT-aware optional source composition, unchanged flat names/types, operation-neutral descriptions, omitted groups, and independent per-invocation binding
@@ -764,6 +764,9 @@ already exists. It validates all part paths and payloads first, writes into a te
 directory, then moves that completed directory into place. Existing destinations are never merged,
 overwritten, or deleted. It returns the published absolute directory; the caller already has the
 definition's part list and format for its result. Retain that format when reading the files back.
+Like Git checkouts, it rejects any destination or part path with a `.git` segment (case-insensitively,
+including Git's HFS+ ignorable-character and NTFS `git~1` equivalents), so exported content cannot
+create repository metadata whose configuration or hooks run commands.
 
 ```csharp
 var outputDirectory = await definitionFiles.WriteAsync(
@@ -795,7 +798,8 @@ Tools dedicated to disk reads or writes should declare `LocalRequired = true`, r
 whole-tool HTTP restrictions. Create Item and Update Item Definition remain remote-capable: each registered command omits only
 the saved-file options on HTTP hosts, and `FabricItemDefinitionInputService` separately rejects local
 input before parsing paths or calling the file service unless the configured transport is stdio.
-Command logic and the low-level file converter contain no transport checks. Inline content remains
+Command logic contains no transport checks. The low-level file converter repeats the stdio check before
+path parsing or file access, so a direct caller on an HTTP host also fails closed. Inline content remains
 available over HTTP and uses the same content-independent validator and budgets, with no disk access.
 Local file conversion adds no Fabric requests.
 
@@ -911,7 +915,7 @@ Update's synchronous response reader retains the default 1 MiB bound. Actual ser
 discover both tools together while keeping their distinct local-file options hidden over HTTP.
 
 `FabricItemDefinitionExportService` checks host capability before filesystem inspection and again
-before calling the existing writer. Registration removes only `output-directory` over HTTP without
+before calling the existing writer, which repeats the check. Registration removes only `output-directory` over HTTP without
 mutating shared cached binder options. Inline content remains available over HTTP after sensitive-data
 consent. Because the tool can write files, its conservative ReadOnly=false metadata excludes it in
 read-only hosts; Secret=true requires the existing elicitation flow. Tests use synthetic accepted

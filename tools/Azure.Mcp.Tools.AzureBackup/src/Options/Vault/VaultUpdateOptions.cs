@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.AzureBackup.Options.Vault;
 
 public sealed class VaultUpdateOptions : BaseAzureBackupOptions
 {
-    [Option(Description = "Storage redundancy: 'GeoRedundant', 'LocallyRedundant', 'ZoneRedundant', or 'ReadAccessGeoZoneRedundant'.")]
+    [Option(Description = "Storage redundancy for a Recovery Services vault: 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'. Can change only before any item is protected; LocallyRedundant and ZoneRedundant require Cross-Region Restore to be disabled.")]
     public string? Redundancy { get; set; }
 
     [Option(Description = AzureBackupOptionDefinitions.SoftDelete)]

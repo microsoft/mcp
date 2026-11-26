@@ -190,6 +190,26 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
     }
 
     [Fact]
+    public async Task VaultGet_WithBackupVaultResourceId_InfersScopeAndVaultType()
+    {
+        var vaultName = $"{Settings.ResourceBaseName}-dpp";
+        var vaultId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.DataProtection/backupVaults/{vaultName}";
+
+        var result = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", vaultId }
+            });
+
+        var vault = Assert.Single(result.AssertProperty("vaults").EnumerateArray());
+        Assert.Equal(vaultName, vault.AssertProperty("name").GetString());
+        Assert.Equal("dpp", vault.AssertProperty("vaultType").GetString());
+        Assert.Equal(Settings.ResourceGroupName, vault.AssertProperty("resourceGroup").GetString(), ignoreCase: true);
+    }
+
+    [Fact]
     public async Task VaultGet_FiltersByResourceGroup_Successfully()
     {
         // Bug 1.2 fix validation: RG filter should scope results to the specified resource group
@@ -231,6 +251,63 @@ public class AzureBackupCommandTests(ITestOutputHelper output, TestProxyFixture 
         var vault = result.AssertProperty("vault");
         Assert.Equal("Succeeded", vault.AssertProperty("provisioningState").GetString());
         Assert.Equal("Disabled", vault.AssertProperty("publicNetworkAccess").GetString());
+    }
+
+    /// <summary>
+    /// NEW-11: 'vault create --storage-type' and 'vault update --redundancy' must apply the requested storage
+    /// redundancy. The service now rejects the legacy BackupResourceStorageConfig API with
+    /// BMSUserErrorRedundancySettingsUseVaultApi, so the change goes through a vault PATCH.
+    /// </summary>
+    [Fact]
+    public async Task VaultCreate_RsvVault_WithStorageType_ThenUpdateRedundancy_AppliesRedundancy()
+    {
+        var vaultName = RegisterOrRetrieveVariable("createdStorageTypeVaultName", $"test-rsv-{Random.Shared.NextInt64()}");
+
+        var createResult = await CallToolAsync(
+            "azurebackup_vault_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "location", "eastus" },
+                { "storage-type", "LocallyRedundant" }
+            });
+
+        Assert.Equal("Succeeded", createResult.AssertProperty("vault").AssertProperty("provisioningState").GetString());
+        Assert.Equal("LocallyRedundant", createResult.AssertProperty("vault").AssertProperty("storageRedundancy").GetString());
+        Assert.Equal("LocallyRedundant", await GetRsvVaultRedundancyAsync(vaultName));
+
+        var updateResult = await CallToolAsync(
+            "azurebackup_vault_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" },
+                { "redundancy", "ZoneRedundant" }
+            });
+
+        Assert.Equal("Succeeded", updateResult.AssertProperty("result").AssertProperty("status").GetString());
+        Assert.Equal("ZoneRedundant", await GetRsvVaultRedundancyAsync(vaultName));
+    }
+
+    private async Task<string?> GetRsvVaultRedundancyAsync(string vaultName)
+    {
+        var getResult = await CallToolAsync(
+            "azurebackup_vault_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "vault", vaultName },
+                { "vault-type", "rsv" }
+            });
+
+        var vault = Assert.Single(getResult.AssertProperty("vaults").EnumerateArray());
+        return vault.AssertProperty("redundancy").GetString();
     }
 
     [Fact]

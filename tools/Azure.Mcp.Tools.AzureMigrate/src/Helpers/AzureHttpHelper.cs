@@ -16,10 +16,13 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     /// <summary>
     /// Gets an HTTP client with Azure authentication headers.
     /// </summary>
-    public async Task<HttpClient> GetAuthenticatedClientAsync(CancellationToken cancellationToken = default)
+    /// <param name="tenant">Optional Microsoft Entra ID tenant ID or display name used to authenticate the request.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    public async Task<HttpClient> GetAuthenticatedClientAsync(string? tenant, CancellationToken cancellationToken = default)
     {
         var client = azureService.GetClient();
-        var credential = await azureService.GetTokenCredentialAsync(null, cancellationToken);
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await azureService.ResolveTenantIdAsync(tenant, cancellationToken);
+        var credential = await azureService.GetTokenCredentialAsync(tenantId, cancellationToken);
         var token = await credential.GetTokenAsync(
             new([azureService.CloudConfiguration.ArmEnvironment.DefaultScope]), cancellationToken);
         client.DefaultRequestHeaders.Authorization = new("Bearer", token.Token);
@@ -29,9 +32,9 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     /// <summary>
     /// Makes an authenticated GET request.
     /// </summary>
-    public async Task<string> GetAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<string> GetAsync(string url, string? tenant, CancellationToken cancellationToken = default)
     {
-        using var client = await GetAuthenticatedClientAsync(cancellationToken);
+        using var client = await GetAuthenticatedClientAsync(tenant, cancellationToken);
         var response = await client.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
@@ -40,9 +43,9 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     /// <summary>
     /// Makes an authenticated POST request with JSON payload.
     /// </summary>
-    public async Task<string> PostAsync<T>(string url, T payload, JsonSerializerContext context, CancellationToken cancellationToken = default)
+    public async Task<string> PostAsync<T>(string url, T payload, JsonSerializerContext context, string? tenant, CancellationToken cancellationToken = default)
     {
-        using var client = await GetAuthenticatedClientAsync(cancellationToken);
+        using var client = await GetAuthenticatedClientAsync(tenant, cancellationToken);
         var json = JsonSerializer.Serialize(payload, typeof(T), context);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await client.PostAsync(url, content, cancellationToken);
@@ -53,9 +56,9 @@ public sealed class AzureHttpHelper(IAzureService azureService)
     /// <summary>
     /// Makes an authenticated POST request without payload.
     /// </summary>
-    public async Task<string> PostAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<string> PostAsync(string url, string? tenant, CancellationToken cancellationToken = default)
     {
-        using var client = await GetAuthenticatedClientAsync(cancellationToken);
+        using var client = await GetAuthenticatedClientAsync(tenant, cancellationToken);
         var response = await client.PostAsync(url, null, cancellationToken);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);

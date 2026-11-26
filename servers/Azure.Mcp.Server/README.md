@@ -1149,10 +1149,14 @@ Example prompts that generate Azure CLI commands:
 * "Aggregate ADME search results by kind and sort them by id"
 * "Start a point-in-time ADME search snapshot to process more than 10,000 records"
 * "Continue an ADME snapshot search from its cursor"
+* "Continue an ADME search or record listing using the previous response's nextCursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
 * "List all versions of an OSDU record in my ADME data partition"
+
+ADME search and record listings return `nextCursor` for continuation. Pass it unchanged as `--cursor` with the original
+target and query parameters. Record listings allow you to change `--limit` between pages.
 
 For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 
@@ -1278,6 +1282,11 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure Marketplace
+
+Marketplace product listings return one page at a time. To get the next page, pass `nextCursor` unchanged as `--cursor`
+with the same subscription, tenant, and listing options. Stop when `nextCursor` is absent.
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
@@ -1286,6 +1295,7 @@ For customer-hosted ADME instances, pass the resource application ID or App ID U
 * "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "Why is my Azure Monitor Health Model 'my-health-model' degraded? Trace it to the signals that drive it"
 * "List the distributed trace accounts in my subscription"
 * "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
@@ -1304,12 +1314,25 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
 
+### Azure Monitor dashboards with Grafana
+
+* Find, inspect, and update saved Azure Monitor dashboards with Grafana
+* Query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health
+* Run PromQL queries against Azure Monitor managed service for Prometheus workspaces
+* Run KQL queries against Azure Data Explorer (Kusto) clusters
+* Inspect Azure Monitor health models and their history
+
+_These tools come from the [Azure Monitor dashboards with Grafana remote MCP server](https://learn.microsoft.com/azure/managed-grafana/azure-monitor-dashboards-mcp-server), which accepts Microsoft Entra ID user accounts only. They are unavailable when Azure MCP authenticates as a service principal or managed identity._
+
 ### 💾 Azure NetApp Files
 
 * "List my Azure NetApp Files accounts"
 * "Get details about my NetApp account 'mynetappaccount'"
 * "Create a new NetApp account in East US"
 * "Update tags on my NetApp account 'mynetappaccount'"
+* "Create a 4 TiB Premium capacity pool named 'my-pool' in Azure NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Show the configuration and provisioning state of capacity pool 'my-pool' in Azure NetApp Files account 'my-account'"
+* "Resize capacity pool 'my-pool' in Azure NetApp Files account 'my-account' to 8 TiB"
 
 ### 📊 Azure Quota
 
@@ -1390,7 +1413,13 @@ _Distributed trace commands require an Azure Monitor Workspace onboarded to Trac
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
 * "Diagnose disk performance and throttling for my Azure virtual machine"
+* "Browse the top-level blobs and virtual folders in my blob container, returning at most 100 results"
+* "Show the blobs and subfolders directly under datasets/ in my blob container"
 * "Upload my file to the blob container"
+
+Blob, container, and table listings return one page of up to 100 items. To continue, pass `nextCursor` unchanged as
+`--cursor` with the same account and tenant, plus the same container, prefix, and delimiter where applicable.
+An empty page can still include `nextCursor`; continue until it is absent.
 
 ### 🔄 Azure Migrate
 
@@ -1534,7 +1563,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
 - 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
-- 💾 **Azure NetApp Files** - Enterprise file storage account management
+- 💾 **Azure NetApp Files** - Enterprise file storage account and capacity pool management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)

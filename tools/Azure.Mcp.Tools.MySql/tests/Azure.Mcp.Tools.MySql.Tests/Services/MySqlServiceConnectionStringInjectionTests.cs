@@ -37,6 +37,8 @@ public class MySqlServiceConnectionStringInjectionTests
     [Theory]
     [InlineData("mydb;SslMode=None")]
     [InlineData("testdb;Ssl Mode=Disabled")]
+    [InlineData("mydb;SslMode=Required")]
+    [InlineData("mydb;SslMode=VerifyCA")]
     public void BuildConnectionString_WithSslDowngradeInDatabase_DoesNotDisableSsl(string maliciousDatabase)
     {
         // Act
@@ -48,7 +50,7 @@ public class MySqlServiceConnectionStringInjectionTests
 
         // Assert
         var parsed = new MySqlConnectionStringBuilder(connectionString);
-        Assert.Equal(MySqlSslMode.Required, parsed.SslMode);
+        Assert.Equal(MySqlSslMode.VerifyFull, parsed.SslMode);
     }
 
     [Fact]
@@ -66,7 +68,7 @@ public class MySqlServiceConnectionStringInjectionTests
 
         Assert.Equal(legitimateHost, parsed.Server);
         Assert.DoesNotContain("attacker.com", parsed.Server, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(MySqlSslMode.Required, parsed.SslMode);
+        Assert.Equal(MySqlSslMode.VerifyFull, parsed.SslMode);
     }
 
     [Theory]
@@ -84,7 +86,7 @@ public class MySqlServiceConnectionStringInjectionTests
         // Assert
         var parsed = new MySqlConnectionStringBuilder(connectionString);
         Assert.Equal("safe-server.mysql.database.azure.com", parsed.Server);
-        Assert.Equal(MySqlSslMode.Required, parsed.SslMode);
+        Assert.Equal(MySqlSslMode.VerifyFull, parsed.SslMode);
     }
 
     [Fact]
@@ -103,6 +105,6 @@ public class MySqlServiceConnectionStringInjectionTests
         Assert.Equal("mydb", parsed.Database);
         Assert.Equal("admin@server", parsed.UserID);
         Assert.Equal("my-password", parsed.Password);
-        Assert.Equal(MySqlSslMode.Required, parsed.SslMode);
+        Assert.Equal(MySqlSslMode.VerifyFull, parsed.SslMode);
     }
 }

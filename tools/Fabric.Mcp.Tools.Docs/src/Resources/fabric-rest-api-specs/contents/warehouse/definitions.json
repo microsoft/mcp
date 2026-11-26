@@ -106,8 +106,13 @@
           "readOnly": false
         },
         "creationPayload": {
-            "description": "The warehouse creation payload. Use `creationPayload`. You can't use `definition` or `creationPayload` at the same time.",
+            "description": "The warehouse creation payload. You cannot use `definition` and `creationPayload` at the same time.",
             "$ref": "#/definitions/WarehouseCreationPayload",
+            "readOnly": false
+        },
+        "definition": {
+            "description": "The warehouse definition. You cannot use `definition` and `creationPayload` at the same time.",
+            "$ref": "#/definitions/WarehouseDefinition",
             "readOnly": false
         },
         "sensitivityLabelSettings": {
@@ -140,7 +145,7 @@
       }
     },
     "WarehouseDefinitionResponse": {
-      "description": "Warehouse public definition response.",
+      "description": "The warehouse public definition response.",
       "required": ["definition"],
       "properties": {
         "definition": {
@@ -150,12 +155,12 @@
       }
     },
     "WarehouseDefinition": {
-      "description": "Warehouse public definition object.",
+      "description": "The warehouse public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/warehouse-definition) for more details on the structure of the warehouse definition.",
       "type": "object",
       "required": ["parts"],
       "properties": {
         "format": {
-          "description": "The format of the warehouse definition.",
+          "description": "The format of the warehouse definition. Supported formats: `dacpac` and `sqlproj`. If no format is provided, `sqlproj` is used.",
           "type": "string",
           "readOnly": false
         },
@@ -172,14 +177,15 @@
     "WarehouseDefinitionPart": {
       "description": "Warehouse definition part object.",
       "type": "object",
+      "required": ["path", "payload", "payloadType"],
       "properties": {
         "path": {
-          "description": "The warehouse part path.",
+          "description": "The warehouse public definition part path.",
           "type": "string",
           "readOnly": false
         },
         "payload": {
-          "description": "The warehouse part payload.",
+          "description": "The warehouse public definition part payload.",
           "type": "string",
           "readOnly": false
         },

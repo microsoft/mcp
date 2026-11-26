@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     OpenWorld = false,
     ReadOnly = false,
     Secret = true,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<IncidentConnectorPagerDutyOptions, SreAgentTextResult>(subscriptionResolver)
 {

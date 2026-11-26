@@ -81,6 +81,45 @@ public class VaultCreateCommandTests : SubscriptionCommandUnitTestsBase<VaultCre
         Assert.DoesNotContain("choose a different name", response.Message);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RedundancyInvalidParameterAfterCreate_KeepsPartialSuccessGuidance()
+    {
+        const string serviceMessage =
+            "Vault 'v' was created, but setting storage redundancy to 'LocallyRedundant' failed. " +
+            "Before configuring backup, retry with 'azurebackup vault update --subscription \"sub\" --resource-group \"rg\" " +
+            "--vault \"v\" --vault-type rsv --redundancy LocallyRedundant'. Details: Parameter NO_PARAM in request is invalid.";
+        var azureError = new RequestFailedException(400, "Parameter NO_PARAM in request is invalid.", "UserErrorInvalidRequestParameter", null);
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", "rsv", "eastus",
+            Arg.Any<string?>(), "LocallyRedundant", Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, serviceMessage, "UserErrorInvalidRequestParameter", azureError));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription sub --vault v --resource-group rg --vault-type rsv --location eastus --storage-type LocallyRedundant");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("'v' was created", response.Message);
+        Assert.Contains("--redundancy LocallyRedundant", response.Message);
+        Assert.DoesNotContain("Options supplied", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AzureInvalidParameterWithoutName_ReturnsSuppliedOptionsAndLimits()
+    {
+        Service.CreateVaultAsync(
+            "v", "rg", "sub", "rsv", "eastus",
+            Arg.Any<string?>(), "ZoneRedundant", Arg.Any<string?>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, "Parameter NO_PARAM in request is invalid.", "UserErrorInvalidRequestParameter", null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription sub --vault v --resource-group rg --vault-type rsv --location eastus --storage-type ZoneRedundant");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the vault create (UserErrorInvalidRequestParameter)", response.Message);
+        Assert.Contains("Options supplied: --location, --storage-type.", response.Message);
+        Assert.Contains("Storage redundancy accepts GeoRedundant, LocallyRedundant, or ZoneRedundant", response.Message);
+    }
+
     [Theory]
     [InlineData("rsv", "ReadAccessGeoZoneRedundant")]
     [InlineData("rsv", "Invalid")]

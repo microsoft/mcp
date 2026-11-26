@@ -94,6 +94,41 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
     }
 
     [Fact]
+    public async Task ExecuteAsync_AzureInvalidParameterWithoutName_ReturnsSuppliedOptionsAndLimits()
+    {
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400,
+                "Parameter NO_PARAM in request is invalid. Please provide correct value for parameter NO_PARAM",
+                "UserErrorInvalidRequestParameter", null));
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p --instant-rp-retention-days 4 --time-zone UTC");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the policy update (UserErrorInvalidRequestParameter)", response.Message);
+        Assert.Contains("Options supplied: --time-zone, --instant-rp-retention-days.", response.Message);
+        Assert.Contains("daily retention 7-9999 days", response.Message);
+        Assert.DoesNotContain("NO_PARAM", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OtherAzureBadRequest_KeepsSanitizedMessage()
+    {
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, "Backend diagnostic detail", "BMSUserErrorInvalidPolicyInput", null));
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p --daily-retention-days 30");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the policy update", response.Message);
+        Assert.DoesNotContain("Backend diagnostic detail", response.Message);
+        Assert.DoesNotContain("Options supplied", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_ForwardsMultipleScheduleTimes()
     {
         Service.UpdatePolicyAsync(

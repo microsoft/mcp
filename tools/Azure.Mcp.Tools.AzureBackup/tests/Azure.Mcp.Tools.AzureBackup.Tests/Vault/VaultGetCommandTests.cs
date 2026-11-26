@@ -383,4 +383,46 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         Assert.Equal("principal-user-assigned-1", userAssignedIdentity.PrincipalId);
         Assert.Equal("client-user-assigned-1", userAssignedIdentity.ClientId);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsVaultResourceId_WithoutSubscriptionOrResourceGroup()
+    {
+        const string subscription = "f0c630e0-2995-4853-b056-0b3c09cb673f";
+        var vaultId = $"/subscriptions/{subscription}/resourceGroups/myRg/providers/Microsoft.DataProtection/backupVaults/myVault";
+        Service.GetVaultAsync("myVault", "myRg", subscription, "dpp", Arg.Any<string?>(), Arg.Any<CancellationToken>(), Arg.Any<VaultExpand>())
+            .Returns(new BackupVaultInfo(vaultId, "myVault", "dpp", "eastus", "myRg", "Succeeded", null, "LocallyRedundant", null, null, null, null, null, null));
+
+        var response = await ExecuteCommandAsync("--vault", vaultId);
+
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.VaultGetCommandResult);
+        Assert.Equal("myVault", Assert.Single(result.Vaults).Name);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenVaultResourceIdConflictsWithOptions()
+    {
+        var vaultId = "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "11111111-2222-3333-4444-555555555555",
+            "--resource-group", "otherRg",
+            "--vault", vaultId,
+            "--vault-type", "dpp");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.VaultTypeMismatchMessage, response.Message);
+        Assert.Contains(BackupVaultReferenceParser.ResourceGroupMismatchMessage, response.Message);
+        Assert.Contains(BackupVaultReferenceParser.SubscriptionMismatchMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenVaultIsNotNameOrVaultResourceId()
+    {
+        var response = await ExecuteCommandAsync("--subscription", "sub123", "--resource-group", "myRg", "--vault", "/myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.InvalidVaultMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
 }
