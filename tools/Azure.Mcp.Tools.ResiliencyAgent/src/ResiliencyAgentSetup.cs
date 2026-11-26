@@ -7,10 +7,12 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.DataResiliency;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Drills;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.RecoveryPlans;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.ServiceGroup;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
@@ -76,6 +78,10 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         services.AddSingleton<DataResiliencyGetCommand>();
         services.AddSingleton<DataResiliencyManageCommand>();
         services.AddSingleton<DataResiliencyGenerateCommand>();
+        services.AddSingleton<DrillsGetCommand>();
+        services.AddSingleton<DrillsManageCommand>();
+        services.AddSingleton<RecoveryPlansGetCommand>();
+        services.AddSingleton<RecoveryPlansManageCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -104,6 +110,11 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             and portal handoffs; orchestrate supported confirmed Azure Backup changes; or generate
             customer-run Azure Backup automation. Existing direct Azure Backup commands remain
             available for their established atomic operations.
+            Stay Resilient drills commands interpret and check zone-down drills or orchestrate
+            confirmed drill configuration changes. Recovery Plans commands inspect plan health,
+            resources, jobs, readiness, and validation or orchestrate confirmed plan configuration.
+            These agent-backed commands do not execute or delete drills or Recovery Plans; existing
+            direct Azure Resilience Management commands retain their established atomic operations.
             Prefer file attachments for complete templates and multi-file configurations: prepare
             local files through the file attachment command and pass their opaque attachment IDs.
             Templates pasted directly in the user's current prompt are also supported without
@@ -159,6 +170,12 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var dataResiliency = new CommandGroup(
             "dataresiliency",
             "Assess Azure Backup and recovery posture, orchestrate supported Azure Backup changes, or generate customer-run Azure Backup automation.");
+        var drills = new CommandGroup(
+            "drills",
+            "Inspect and check Stay Resilient zone-down drills or perform confirmed drill configuration changes.");
+        var recoveryPlans = new CommandGroup(
+            "recoveryplans",
+            "Inspect and check Stay Resilient Recovery Plans or perform confirmed plan configuration changes.");
 
         guidance.AddCommand<GuidanceGetCommand>(serviceProvider);
         file.AddCommand<FileAttachCommand>(serviceProvider);
@@ -182,6 +199,10 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         dataResiliency.AddCommand<DataResiliencyGetCommand>(serviceProvider);
         dataResiliency.AddCommand<DataResiliencyManageCommand>(serviceProvider);
         dataResiliency.AddCommand<DataResiliencyGenerateCommand>(serviceProvider);
+        drills.AddCommand<DrillsGetCommand>(serviceProvider);
+        drills.AddCommand<DrillsManageCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlansGetCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlansManageCommand>(serviceProvider);
         resiliencyAgent.AddSubGroup(guidance);
         resiliencyAgent.AddSubGroup(file);
         resiliencyAgent.AddSubGroup(architecture);
@@ -195,6 +216,8 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         resiliencyAgent.AddSubGroup(zonalResiliency);
         resiliencyAgent.AddSubGroup(discovery);
         resiliencyAgent.AddSubGroup(dataResiliency);
+        resiliencyAgent.AddSubGroup(drills);
+        resiliencyAgent.AddSubGroup(recoveryPlans);
         return resiliencyAgent;
     }
 }

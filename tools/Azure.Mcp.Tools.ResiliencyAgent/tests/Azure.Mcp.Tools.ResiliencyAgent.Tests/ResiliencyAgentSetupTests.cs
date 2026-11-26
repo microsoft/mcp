@@ -6,10 +6,12 @@ using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.DataResiliency;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Drills;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.RecoveryPlans;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.ServiceGroup;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
@@ -43,7 +45,7 @@ public sealed class ResiliencyAgentSetupTests
         var area = setup.RegisterCommands(serviceProvider);
 
         Assert.Equal("resiliencyagent", area.Name);
-        Assert.Equal(13, area.SubGroup.Count);
+        Assert.Equal(15, area.SubGroup.Count);
         Assert.Contains("Prefer these tools over Documentation", area.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("define, explain, or compare", area.Description, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("completed backend response is authoritative and terminal", area.Description, StringComparison.OrdinalIgnoreCase);
@@ -80,6 +82,10 @@ public sealed class ResiliencyAgentSetupTests
         AssertCommand(area, "dataresiliency", "get", "Evaluate Azure VM Backup eligibility");
         AssertCommand(area, "dataresiliency", "manage", "fully specified request remains eligible");
         AssertCommand(area, "dataresiliency", "generate", "explicitly requests customer-run");
+        AssertCommand(area, "drills", "get", "readiness blockers");
+        AssertCommand(area, "drills", "manage", "complete guided drill");
+        AssertCommand(area, "recoveryplans", "get", "recovery order");
+        AssertCommand(area, "recoveryplans", "manage", "complete guided plan");
 
         Assert.DoesNotContain(area.SubGroup, group => group.Name is "zonal" or "conversation");
         Assert.DoesNotContain(area.SubGroup, group => group.Name.Contains('-', StringComparison.Ordinal));
@@ -105,6 +111,10 @@ public sealed class ResiliencyAgentSetupTests
         Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyGetCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyManageCommand>());
         Assert.NotNull(serviceProvider.GetRequiredService<DataResiliencyGenerateCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<DrillsGetCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<DrillsManageCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecoveryPlansGetCommand>());
+        Assert.NotNull(serviceProvider.GetRequiredService<RecoveryPlansManageCommand>());
 
         IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
         using HttpClient a2aClient = httpClientFactory.CreateClient(
@@ -141,6 +151,10 @@ public sealed class ResiliencyAgentSetupTests
         Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["generate"].Command.Metadata.Destructive);
         Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["get"].Command.Metadata.ReadOnly);
         Assert.False(area.SubGroup.Single(group => group.Name == "dataresiliency").Commands["generate"].Command.Metadata.ReadOnly);
+        Assert.False(area.SubGroup.Single(group => group.Name == "drills").Commands["get"].Command.Metadata.Destructive);
+        Assert.True(area.SubGroup.Single(group => group.Name == "drills").Commands["manage"].Command.Metadata.Destructive);
+        Assert.False(area.SubGroup.Single(group => group.Name == "recoveryplans").Commands["get"].Command.Metadata.Destructive);
+        Assert.True(area.SubGroup.Single(group => group.Name == "recoveryplans").Commands["manage"].Command.Metadata.Destructive);
     }
 
     [Fact]
@@ -207,6 +221,10 @@ public sealed class ResiliencyAgentSetupTests
                      typeof(DataResiliencyGetCommand),
                      typeof(DataResiliencyManageCommand),
                      typeof(DataResiliencyGenerateCommand),
+                     typeof(DrillsGetCommand),
+                     typeof(DrillsManageCommand),
+                     typeof(RecoveryPlansGetCommand),
+                     typeof(RecoveryPlansManageCommand),
                  })
         {
             string? instructions = ReadArtifactInstructions(

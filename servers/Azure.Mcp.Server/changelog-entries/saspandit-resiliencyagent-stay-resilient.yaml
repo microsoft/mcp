@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added Azure Resiliency Agent tools for Stay Resilient drill and Recovery Plan assessment, readiness checks, guided creation, and confirmed configuration changes.
+  - section: Other Changes
+    description: Added authoritative Stay Resilient complete-list artifact handling with portable Azure Portal links while preserving direct Azure Resilience Management execution tools.

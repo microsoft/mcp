@@ -372,6 +372,37 @@ public sealed class ResiliencyAgentServiceTests
     }
 
     [Fact]
+    public void ReadArtifact_AssignsStayResilientFamilyAndNormalizesFullListLinks()
+    {
+        const string content = "# Full list\n\n- [Open drill](#view/Microsoft_Azure_ResiliencyHub/Drills.MenuView)";
+        string bytes = Convert.ToBase64String(Encoding.UTF8.GetBytes(content));
+        using JsonDocument document = JsonDocument.Parse(
+            $$"""
+            {
+              "name": "Full list",
+              "description": "Complete Stay Resilient list",
+              "metadata": { "type": "md" },
+              "parts": [{
+                "kind": "file",
+                "file": {
+                  "name": "FullList.md",
+                  "mimeType": "text/markdown",
+                  "bytes": "{{bytes}}"
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("stay-resilient", artifact.Family);
+        Assert.Contains(
+            "https://portal.azure.com/#view/Microsoft_Azure_ResiliencyHub/Drills.MenuView",
+            artifact.Content,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReadArtifact_RendersMultipleResourceTypesAndResources()
     {
         using JsonDocument document = CreateDataArtifact(

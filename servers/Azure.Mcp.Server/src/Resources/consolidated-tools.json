@@ -6520,6 +6520,138 @@
       "mappedToolList": [
         "resiliencyagent_dataresiliency_generate"
       ]
+    },
+    {
+      "name": "analyze_stay_resilient_drill_outcomes",
+      "description": "Compare outcomes across multiple named Stay Resilient zone-down drills or across several runs of one drill. Correlate fault-injection stages, drill resources, SLI or health-model monitoring, Recovery Plan relationships, readiness observations, failed resources, and historical results into one comparative analysis or complete evidence report. Use this conversational workflow only when several drill records must be interpreted together. A terminal backend reply must be presented verbatim; suggested next steps require a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not execute or delete drills, but it may submit readiness or validation checks."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new conversation turn and checks may start new assessment jobs."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may submit drill checks and materialize authoritative Stay Resilient lists."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_drills_get"
+      ]
+    },
+    {
+      "name": "orchestrate_stay_resilient_drill_prerequisites",
+      "description": "Orchestrate missing prerequisites for a Stay Resilient drill when the customer needs the Drills Agent to discover and settle a zonal goal, Standard Usage Plan enrollment, required Recovery Plan, monitoring choice, or supporting-resource decision across multiple turns. The backend keeps one conversation, explains dependencies, presents one complete proposal, and waits for the customer's plain confirmation. Use this wrapper for unresolved prerequisite orchestration, not one atomic drill command. A terminal backend reply must be presented verbatim; suggested next steps require a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can create or modify supported drill configuration after backend validation and user confirmation."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new conversation turn and may submit a new configuration operation."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can change drill configuration and materialize authoritative Stay Resilient lists."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_drills_manage"
+      ]
+    },
+    {
+      "name": "compare_stay_resilient_recovery_plans",
+      "description": "Compare the configuration and blockers of two or more named Stay Resilient Recovery Plans, normally across different Service Groups. Correlate their protection choices, recovery-group structure, recovery order, drill relationships, and resources needing attention into one cross-plan comparison or complete evidence report. Use this conversational workflow only when several Recovery Plans must be interpreted together. A terminal backend reply must be presented verbatim; suggested next steps require a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool does not execute recovery or delete plans, but it may submit readiness or validation checks."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new conversation turn and checks may start new assessment jobs."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may submit plan checks and materialize authoritative Stay Resilient lists."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_recoveryplans_get"
+      ]
+    },
+    {
+      "name": "orchestrate_stay_resilient_recovery_prerequisites",
+      "description": "Orchestrate missing prerequisites for Stay Resilient recovery setup when the customer needs the Recovery Plans Agent to discover and settle a zonal goal, Standard Usage Plan enrollment, protection choices, recovery-group design, or several dependent resource decisions across multiple turns. The backend keeps one conversation, explains dependencies, presents one complete proposal, and waits for the customer's plain confirmation. Use this wrapper for unresolved prerequisite orchestration, not one atomic Recovery Plan command. A terminal backend reply must be presented verbatim; suggested next steps require a new explicit user request.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can create or modify supported Recovery Plan configuration after backend validation and user confirmation."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new conversation turn and may submit a new configuration operation."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can change Recovery Plan configuration and materialize authoritative Stay Resilient lists."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_recoveryplans_manage"
+      ]
     }
   ]
 }

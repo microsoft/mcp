@@ -1569,6 +1569,22 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_dataresiliency_generate | Generate ARM JSON, Bicep, and Terraform Azure VM Backup automation as separate authoritative artifacts | context-required |
 | resiliencyagent_dataresiliency_generate | Generate the confirmed customer-run PowerShell script for deleting Recovery Services vault `<vault-name>` after showing its impact | context-required |
 | resiliencyagent_dataresiliency_generate | Generate one PowerShell script to retrigger the selected failed Azure Backup jobs | context-required |
+| resiliencyagent_drills_get | Compare several drills across my visible Service Groups and explain their different readiness blockers, monitoring dependencies, Recovery Plan relationships, and recent outcomes | context-required |
+| resiliencyagent_drills_get | Analyze the recent runs of drill `<drill-name>`, compare their outcomes and failed resources, and attach the complete supporting list | context-required |
+| resiliencyagent_drills_get | Correlate drill `<drill-name>` readiness observations, monitoring evidence, failed resources, and historical runs into one diagnosis | context-required |
+| resiliencyagent_drills_get | Compare the failed-resource patterns across drills `<drill-name-1>` and `<drill-name-2>` and explain the evidence behind their different outcomes | context-required |
+| resiliencyagent_drills_manage | Guide me through setting up a drill for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, Recovery Plan, and monitoring choices are not yet settled | none |
+| resiliencyagent_drills_manage | Discover the missing prerequisites for a new drill on `<service-group>`, explain their dependencies, and keep one conversation through the final confirmed proposal | none |
+| resiliencyagent_drills_manage | Help me choose between SLI and health-model monitoring, resolve the required Recovery Plan and usage enrollment, and then propose the complete drill setup for confirmation | none |
+| resiliencyagent_drills_manage | Coordinate the goal, enrollment, Recovery Plan, monitoring, identity, and resource decisions needed before creating the drill for `<service-group>` | none |
+| resiliencyagent_recoveryplans_get | Compare several Recovery Plans across my visible Service Groups and explain their different blockers, protection choices, recovery groups, and job outcomes | context-required |
+| resiliencyagent_recoveryplans_get | Compare the recent recovery outcomes and failed-resource patterns of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and attach the complete supporting list | context-required |
+| resiliencyagent_recoveryplans_get | Correlate the protection choices, recovery order, failed resources, drill relationships, and historical outcomes of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` | context-required |
+| resiliencyagent_recoveryplans_get | Compare plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and explain why their resource blockers and recovery outcomes differ | context-required |
+| resiliencyagent_recoveryplans_manage | Guide me through setting up recovery for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, protection choices, groups, and resources are not yet settled | none |
+| resiliencyagent_recoveryplans_manage | Discover the missing prerequisites and supported protection choices for a new Recovery Plan, then keep one conversation through the confirmed proposal | none |
+| resiliencyagent_recoveryplans_manage | Help me design recovery groups, settle protection for several resources, resolve enrollment dependencies, and present one complete plan proposal for confirmation | none |
+| resiliencyagent_recoveryplans_manage | Coordinate the goal, enrollment, protection, recovery-group, runbook, and resource decisions needed before creating a Recovery Plan for `<service-group>` | none |
 
 ## Azure Resource Health
 

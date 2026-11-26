@@ -322,11 +322,18 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
             {
                 case "file" when part.TryGetProperty("file", out JsonElement file):
                     string fileName = ReadString(file, "name") ?? name;
+                    string mimeType = ReadString(file, "mimeType") ?? "text/plain";
+                    string? content = DecodeFile(file);
+                    if (string.Equals(mimeType, "text/markdown", StringComparison.OrdinalIgnoreCase))
+                    {
+                        content = AzurePortalMarkdownLinkNormalizer.Normalize(content);
+                    }
+
                     decoded.Add(new AgentArtifact(
                         fileName,
                         description,
-                        ReadString(file, "mimeType") ?? "text/plain",
-                        DecodeFile(file),
+                        mimeType,
+                        content,
                         format,
                         KnownArtifactFamily(fileName)));
                     break;
@@ -400,6 +407,8 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
             || name.StartsWith("RetriggerSelectedFailedBackups", StringComparison.OrdinalIgnoreCase)
             || name.StartsWith("DeleteVault-", StringComparison.OrdinalIgnoreCase)
                 ? "data-resiliency"
+                : string.Equals(name, "FullList.md", StringComparison.OrdinalIgnoreCase)
+                    ? "stay-resilient"
                 : null;
     }
 

@@ -5446,6 +5446,26 @@ azmcp resiliencyagent dataresiliency manage --request <request> \
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp resiliencyagent dataresiliency generate --request <request> \
                                               [--conversation-id <conversation-id>]
+
+# Inspect and check Azure resilience drills
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent drills get --request <request> \
+                                  [--conversation-id <conversation-id>]
+
+# Create or configure an Azure resilience drill
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent drills manage --request <request> \
+                                     [--conversation-id <conversation-id>]
+
+# Compare Azure Recovery Plans and analyze recovery history
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent recoveryplans get --request <request> \
+                                         [--conversation-id <conversation-id>]
+
+# Create or configure an Azure Recovery Plan
+# ✅ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp resiliencyagent recoveryplans manage --request <request> \
+                                            [--conversation-id <conversation-id>]
 ```
 
 ### Azure Resource Group Operations
