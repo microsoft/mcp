@@ -1186,6 +1186,19 @@ To fix this, set `AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS` to read the cl
 export AZURE_MCP_DANGEROUSLY_ENABLE_FORWARDED_HEADERS=true
 ```
 
+
+### AADSTS9010010 when signing in to a remote server
+
+**What to check:** Compare the [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter and requested scopes with the server's app registration. Clients may use the `resource` and `scopes_supported` values from the server's protected resource metadata. Check that the resource exactly matches an Application ID URI and that the scope is exposed by the app registration. Pay attention to trailing-slash differences, such as `https://mcp.contoso.com` versus `https://mcp.contoso.com/`. These checks may identify configuration issues, but do not establish the cause of the error.
+
+**Troubleshooting:**
+1. Inspect the metadata the server advertises, for example `curl https://<server-host>/.well-known/oauth-protected-resource/mcp`.
+2. Set `McpServer__ProtectedResource__Resource` to the exact MCP endpoint URI that clients use and configure the same value as an Application ID URI of the server's app registration.
+3. Set `McpServer__ProtectedResource__ScopesSupported__0` to `<Application ID URI>/Mcp.Tools.ReadWrite`.
+4. Prefer a non-root endpoint path such as `/mcp` (`McpServer__EndpointPath=/mcp`) so the resource URI has no ambiguous trailing slash.
+
+For setup steps, see [Protected Resource Metadata and Endpoint Configuration](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#protected-resource-metadata-and-endpoint-configuration).
+
 ### Common Issues
 
 #### 401 Unauthorized - Missing incoming authentication configuration

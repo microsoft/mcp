@@ -1,3 +1,5 @@
+<!-- cspell:ignore CIMD PKCE -->
+
 # Authentication in Azure MCP Server
 
 Azure MCP Server runs in two transport modes — **stdio** (local) and **HTTP** (remote) — each with a different authentication model.
@@ -125,6 +127,111 @@ Every incoming request must carry a valid Entra ID bearer token with the require
 
 > [!NOTE]
 > The inbound authentication is determined entirely by the OAuth flow the client uses — the Azure MCP Server validates the incoming token and required claim but does not control how it is obtained.
+
+### Client ID Metadata Documents (CIMD)
+
+[CIMD support in Microsoft Entra ID](https://learn.microsoft.com/entra/agent-id/client-id-metadata-documents) is in public preview and is not recommended for production workloads. CIMD identifies the **client** using the URL of its metadata document; the MCP server remains a separately registered protected resource. The server does not host the client's document or require CIMD-specific token validation.
+
+The `McpServer` settings below were added to support CIMD discovery and resource alignment. For the CIMD setup documented here, configure a non-root MCP endpoint at `/mcp`, its canonical resource URI, the delegated scope, and the tenant-specific CIMD authorization server. Do not rely on the unchanged root-endpoint defaults for this walkthrough.
+
+> [!IMPORTANT]
+> Use a non-root endpoint such as `https://mcp.contoso.com/mcp` for this setup, and match the resource URI and Application ID URI exactly, including trailing slashes. This avoids root-URL trailing-slash ambiguity; it is not a general CIMD prohibition on root MCP endpoints. The client's CIMD document URL is a separate URL and must itself have a nonempty path.
+
+To use a CIMD-capable client with the remote server:
+
+1. **Prepare the client and tenant.** Use a client that supports CIMD and the authorization code flow with PKCE, and a tenant where CIMD is available. The client must provide a stable, publicly accessible HTTPS metadata document URL with a path. Its document's `client_id` must exactly match that URL, and its redirect URIs must match those used by the client. A public client uses `token_endpoint_auth_method: none`. The client owner normally provides this document; see [Configure a client to use CIMD](https://learn.microsoft.com/entra/agent-id/configure-client-id-metadata-document). CIMD does not support the client credentials flow.
+2. **Configure the server and its app registration.** Follow [Configure an MCP endpoint at `/mcp`](#configure-an-mcp-endpoint-at-mcp) below. That example sets all four `McpServer` options for this CIMD setup. Use the same canonical MCP endpoint URI for the Entra Application ID URI and `McpServer:ProtectedResource:Resource`, expose `Mcp.Tools.ReadWrite`, and advertise the corresponding `<Application ID URI>/Mcp.Tools.ReadWrite` scope. Configure `AzureAd` for the server's tenant and expected token audience.
+3. **Verify CIMD discovery.** The configuration below advertises the tenant-specific preview identifier `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08`. Check `https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08/.well-known/openid-configuration` and confirm `client_id_metadata_document_supported` is `true`. If it is absent or false, do not use a CIMD client ID; use another supported client registration method.
+4. **Approve access.** The client requests the advertised resource and delegated scope. Tenant policy governs whether users can consent or an administrator must add the client and grant consent. During the preview, plan for administrator approval rather than relying on user consent; see [Manage CIMD clients in your tenant](#manage-cimd-clients-in-your-tenant). The signed-in user also needs appropriate Azure RBAC permissions for the requested operations.
+
+#### Manage CIMD clients in your tenant
+
+Entra ID represents each approved CIMD client as an agent identity in the tenant. Tenant administrators control which CIMD clients can access the MCP server. For full guidance, see [Manage CIMD clients in Microsoft Entra ID](https://learn.microsoft.com/entra/agent-id/manage-client-id-metadata-document-clients).
+
+- **Choose who can add clients.** Use an *administrator-curated* posture, in which administrators review and add each client, or *policy-controlled user consent*, in which users can add clients that satisfy a custom permission grant policy. User consent for CIMD clients is controlled by **Allow user consent for unregistered apps and agents using Client ID Metadata Documents** under **Entra ID** > **Enterprise apps** > **Consent and permissions** > **User consent settings**.
+- **Add a client in advance.** In the Microsoft Entra admin center, go to **Entra ID** > **Agents** > **Agent identities** > **Add CIMD client (Preview)** and enter the client's CIMD URL. Alternatively, create the agent identity with Microsoft Graph (beta). Creating an identity requires a role such as **Agent ID Administrator** or **AI Administrator**. Review the client owner, redirect URIs, and requested permissions before approval; CIMD proves control of a URL, not that the client is trustworthy.
+- **Grant the MCP server's delegated scope.** Grant the client only the `Mcp.Tools.ReadWrite` delegated permission on the server's app registration. During the preview, grant permissions through the sign-in and consent endpoints or Microsoft Graph rather than the portal permissions experience. The admin consent request workflow is not available for CIMD clients, so users must give the CIMD URL, resource, and scope to an administrator.
+- **Monitor and respond.** CIMD clients appear as agent identities in Entra sign-in and audit logs. To stop an untrusted client, disable its agent identity, revoke its delegated grants, and delete the identity when it is no longer needed. The CIMD URL is immutable: a client that moves its document to a new URL is a new identity that needs new consent.
+
+### Protected Resource Metadata and Endpoint Configuration
+
+MCP clients that are not pre-configured with authorization details discover them from the server's [OAuth 2.0 Protected Resource Metadata](https://www.rfc-editor.org/rfc/rfc9728) (PRM), which is linked from the `resource_metadata` parameter of the `WWW-Authenticate` header on `401` responses.
+
+The settings in this section support the [CIMD setup above](#client-id-metadata-documents-cimd) by controlling the endpoint and the metadata clients use to obtain tokens. They are opt-in: existing deployments do not need to change. If you don't configure them, the server keeps its default behavior:
+
+- The MCP endpoint is served at `/`.
+- The PRM `resource` is derived from the request scheme and host.
+- The authorization server is `<AzureAd:Instance>/<AzureAd:TenantId>/v2.0`.
+- The advertised scope is `<AzureAd:ClientId>/Mcp.Tools.ReadWrite`.
+
+For the CIMD walkthrough, explicitly configure the values in the example below rather than relying on these defaults. Clients send the PRM `resource` as an [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707) `resource` parameter that must match an Application ID URI registered in Entra ID. These settings can also be used independently of CIMD when a deployment needs explicit endpoint or metadata values.
+
+These settings use the standard .NET configuration system. Set them in `appsettings.json` or another configuration provider, or override them with environment variables.
+
+| Configuration key | Environment variable | Description |
+|---|---|---|
+| `McpServer:EndpointPath` | `McpServer__EndpointPath` | Path at which the MCP endpoint is mapped, for example `/mcp`. Defaults to `/`. When set, `/` no longer serves MCP requests. |
+| `McpServer:ProtectedResource:Resource` | `McpServer__ProtectedResource__Resource` | Canonical URI that clients use for the MCP endpoint, advertised as the PRM `resource`, for example `https://mcp.contoso.com/mcp`. Must be `https` (`http` is allowed only for loopback hosts) and must not contain a query or fragment. The value is advertised exactly as configured. |
+| `McpServer:ProtectedResource:AuthorizationServers:0` | `McpServer__ProtectedResource__AuthorizationServers__0` | Authorization server identifier to advertise instead of the default. For the CIMD preview, use the tenant-specific identifier shown below. Add more entries with `:1`, `:2`, and so on. |
+| `McpServer:ProtectedResource:ScopesSupported:0` | `McpServer__ProtectedResource__ScopesSupported__0` | Delegated scope to advertise instead of the default, for example `https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite`. Add more entries with `:1`, `:2`, and so on. |
+
+#### Configure an MCP endpoint at `/mcp`
+
+1. For this CIMD setup, choose a non-root URL that clients will use for the MCP endpoint, for example `https://mcp.contoso.com/mcp`.
+2. In the MCP server's Entra ID app registration, add the same URL as an Application ID URI. Make sure the app exposes the `Mcp.Tools.ReadWrite` delegated scope. Depending on your tenant's app management policies, Entra ID may require an `https` Application ID URI to use a verified domain of the tenant.
+3. Configure the server's `AzureAd` settings. If tokens are issued with the Application ID URI as their audience, set `AzureAd:Audience` to the value in the token's `aud` claim.
+4. Add all four `McpServer` settings to `appsettings.json`, replacing `<tenant-id>` with the same tenant configured in `AzureAd`:
+
+   ```json
+   {
+     "McpServer": {
+       "EndpointPath": "/mcp",
+       "ProtectedResource": {
+         "Resource": "https://mcp.contoso.com/mcp",
+         "AuthorizationServers": [
+           "https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08"
+         ],
+         "ScopesSupported": [
+           "https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite"
+         ]
+       }
+     }
+   }
+   ```
+
+   Or set the equivalent environment variables:
+
+   ```bash
+   export McpServer__EndpointPath=/mcp
+   export McpServer__ProtectedResource__Resource=https://mcp.contoso.com/mcp
+   export McpServer__ProtectedResource__AuthorizationServers__0="https://login.microsoftonline.com/<tenant-id>/oauth21/2026-08"
+   export McpServer__ProtectedResource__ScopesSupported__0=https://mcp.contoso.com/mcp/Mcp.Tools.ReadWrite
+   ```
+
+5. Start the server in remote HTTP mode and configure MCP clients to connect to `https://mcp.contoso.com/mcp`.
+6. Verify the advertised metadata:
+
+   ```bash
+   curl https://mcp.contoso.com/.well-known/oauth-protected-resource/mcp
+   ```
+
+   The response should contain the configured `resource`, `authorization_servers`, and `scopes_supported` values. An unauthenticated request to `/mcp` returns `401` with a `resource_metadata` value that points to this metadata URL.
+
+When `Resource` is configured with a path, the server serves metadata at the corresponding resource-specific URL defined by RFC 9728 (for example `/.well-known/oauth-protected-resource/mcp`), and the `WWW-Authenticate` challenge points to that URL. This metadata URL is served even when the server receives requests on a different internal scheme or host than the configured `Resource`. When `Resource` is omitted, the MCP SDK derives the resource from each request and handles both root and resource-specific metadata URLs. Invalid values cause the server to fail at startup.
+
+#### Override advertised authorization servers
+
+For the CIMD preview, use the tenant-specific `AuthorizationServers` value in the complete example above. Outside this walkthrough, omitting `AuthorizationServers` preserves the default authorization server derived from `AzureAd`. Override it only when clients need a different authorization server identifier whose endpoints issue tokens for the configured tenant.
+
+The equivalent environment variable is `McpServer__ProtectedResource__AuthorizationServers__0`. Advertise the authorization server identifier, not the full `/.well-known/openid-configuration` metadata URL.
+
+Keep the following in mind when configuring these settings:
+
+- **Align the resource, Application ID URI, and scope.** Clients may request a token with the PRM `resource` as the RFC 8707 `resource` parameter together with the advertised scope. Use exactly the same resource value in server configuration and Entra ID, including any trailing slash, and advertise scopes in the form `<Application ID URI>/Mcp.Tools.ReadWrite`.
+- **Token validation is unchanged.** These settings only change what is advertised to clients and where the endpoint is mapped. Incoming tokens are still validated by Microsoft.Identity.Web using the `AzureAd` configuration section, including the issuer for `AzureAd__TenantId`, the audience, and the `Mcp.Tools.ReadWrite` scope or `Mcp.Tools.ReadWrite.All` app role. Advertised scopes must resolve to the `Mcp.Tools.ReadWrite` delegated permission on the server's app registration. If tokens are issued with an audience other than the client ID or `api://<client ID>`, configure the expected audience in the `AzureAd` section (for example, `AzureAd__Audience`).
+- **Advertised authorization servers must issue tokens the server accepts.** Overriding `AuthorizationServers`, for example to point clients to a different or preview Entra ID discovery endpoint, does not change the issuer the server validates. Only advertise authorization servers whose tokens are issued by the tenant configured in `AzureAd__TenantId`.
+- **Consent.** Users, or an administrator on their behalf, must consent to the client requesting the `Mcp.Tools.ReadWrite` delegated permission. If the client is not pre-registered in your tenant, review your tenant's user consent settings and grant admin consent where required.
+- **Single-tenant only.** Issuer validation is bound to `AzureAd__TenantId`. Multi-tenant configurations (such as `organizations` or `common` authorities) have not been validated with these settings.
 
 ### Outbound Authentication
 
