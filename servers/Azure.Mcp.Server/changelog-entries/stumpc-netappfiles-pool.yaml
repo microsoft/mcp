@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: Added `netappfiles pool create`, `netappfiles pool get`, and `netappfiles pool update` commands for managing Azure NetApp Files capacity pools.

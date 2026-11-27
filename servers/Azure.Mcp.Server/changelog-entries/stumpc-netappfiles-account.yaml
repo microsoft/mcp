@@ -1,3 +1,0 @@
-changes:
-  - section: Features Added
-    description: Added `netappfiles account create`, `netappfiles account get`, and `netappfiles account update` commands for creating, retrieving, and updating Azure NetApp Files accounts.
