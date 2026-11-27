@@ -2,15 +2,31 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 4.0.0-beta.11 (Unreleased)
+## 4.0.0-beta.11 (2026-11-27)
 
 ### Features Added
 
+- Added hierarchical blob browsing to storage_blob_get using --delimiter with cursor-based pagination. [[#4233](https://github.com/microsoft/mcp/pull/4233)]
+- Added Azure Resiliency Agent tools for zonal-resiliency goals, Standard Usage Plans, and ordinary Service Group inspection and management, with Portal-compatible Markdown artifacts and native MCP file delivery. [[#4177](https://github.com/microsoft/mcp/pull/4177)]
+- Added `netappfiles account create`, `netappfiles account get`, and `netappfiles account update` commands for creating, retrieving, and updating Azure NetApp Files accounts. [[#3708](https://github.com/microsoft/mcp/pull/3708)]
+- Added `netappfiles pool create`, `netappfiles pool get`, and `netappfiles pool update` commands for managing Azure NetApp Files capacity pools. [[#3721](https://github.com/microsoft/mcp/pull/3721)]
+
 ### Breaking Changes
+
+- Standardized pagination using ICursorOption, opaque cursor input, and root nextCursor output for Marketplace product listing, ADME search and record listing, Storage blob and container listing, and Storage table listing. ADME result.cursor is replaced by nextCursor, and Marketplace uses cursor in place of next-cursor. Storage listings now return fixed pages of up to 100 items. Pass nextCursor unchanged as cursor with the original required parameters to continue. Blank cursors and mismatched continuation requests are rejected. ADME record listings can change limit between pages. Restart without a cursor if you have a raw service cursor from an older version. Specific blob and container lookups are unchanged and reject cursor. [[#4072](https://github.com/microsoft/mcp/pull/4072)]
 
 ### Bugs Fixed
 
+- Fixed storage_blob_get listings to include user-defined blob metadata. [[#4233](https://github.com/microsoft/mcp/pull/4233)]
+- Improved diagnostics for remote HTTP tool failures: on-behalf-of (OBO) requests authenticated with application-only tokens now fail fast with an actionable 403 Forbidden error, MSAL failures record the Microsoft Entra ID AADSTS error code in telemetry, and tool calls rejected before execution record a sanitized failure reason and status code. [[#4179](https://github.com/microsoft/mcp/pull/4179)]
+- Fixed tools that ignored or did not resolve '--tenant': 'applicationinsights recommendation list' now authenticates Profiler requests against the requested tenant, 'azuremigrate platformlandingzone request' now honors '--tenant' for the 'check', 'generate', and 'download' actions, and the 'appservice webapp diagnostic' and 'adme' commands now accept tenant display names in addition to tenant IDs. [[#4212](https://github.com/microsoft/mcp/pull/4212)]
+- Fixed `azurebackup vault create --storage-type` and `azurebackup vault update --redundancy` for Recovery Services vaults to set storage redundancy through the vault API (`properties.redundancySettings`) instead of the legacy backup storage configuration API, which Azure rejects with `BMSUserErrorRedundancySettingsUseVaultApi`. The applied value is verified by read-back, Cross-Region Restore is preserved, LocallyRedundant/ZoneRedundant are rejected before any vault change while Cross-Region Restore is enabled, and `--redundancy` now accepts only GeoRedundant, LocallyRedundant, or ZoneRedundant. `vault create` returns the applied `storageRedundancy`. [[#4204](https://github.com/microsoft/mcp/pull/4204)]
+- Fixed `azurebackup policy create` and `azurebackup policy update` sending Azure VM instant recovery and retention values that Azure rejects with the unactionable `UserErrorInvalidRequestParameter` (`NO_PARAM`) error. Instant recovery retention is now validated as 1-5 days for Standard policies (exactly 5 for Standard Weekly) and 1-30 days for Enhanced policies (Enhanced Hourly: up to 17 days with 6 snapshots per day and 22 days with 4-5), never longer than daily retention, and VM daily retention as 7-9999 days. The `--instant-rp-retention-days` description for `policy create` previously listed the Standard and Enhanced limits reversed. [[#4204](https://github.com/microsoft/mcp/pull/4204)]
+
 ### Other Changes
+
+- Updated Azure Resiliency Agent artifact materialization to group each completed result into a timestamped artifact-family folder and reject duplicate resolved filenames within one result instead of assigning suffixed names. [[#4177](https://github.com/microsoft/mcp/pull/4177)]
+- `azurebackup policy create`, `policy update`, `vault create`, and `vault update` now replace Azure's `UserErrorInvalidRequestParameter` messages with guidance that names the parameter when Azure provides it, lists the options that were supplied, and states the relevant limits. [[#4204](https://github.com/microsoft/mcp/pull/4204)]
 
 ## 4.0.0-beta.10 (2026-11-20)
 
