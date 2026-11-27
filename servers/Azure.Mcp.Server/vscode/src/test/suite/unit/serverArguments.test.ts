@@ -8,6 +8,33 @@ import * as path from 'path';
 import { buildServerArguments } from '../../../serverArguments';
 
 suite('Azure MCP Extension - server arguments', () => {
+    test('advertises automatic mode selection and every supported explicit mode', () => {
+        const setting = readExtensionManifest().contributes.configuration.properties['azureMcp.serverMode'];
+
+        assert.strictEqual(setting.default, 'auto');
+        assert.deepStrictEqual(setting.enum, ['auto', 'single', 'namespace', 'consolidated', 'all']);
+    });
+
+    for (const uriScheme of ['vscode', 'vscode-insiders', 'code-oss']) {
+        const expectedMode = uriScheme === 'vscode-insiders' ? 'consolidated' : 'namespace';
+
+        for (const serverMode of [undefined, '', 'auto']) {
+            test(`uses ${expectedMode} for ${uriScheme} with mode ${String(serverMode)}`, () => {
+                const args = buildServerArguments(createConfiguration({ serverMode }), uriScheme);
+
+                assert.deepStrictEqual(args, ['server', 'start', '--mode', expectedMode]);
+            });
+        }
+
+        for (const serverMode of ['single', 'namespace', 'consolidated', 'all']) {
+            test(`preserves explicit ${serverMode} mode in ${uriScheme}`, () => {
+                const args = buildServerArguments(createConfiguration({ serverMode }), uriScheme);
+
+                assert.deepStrictEqual(args, ['server', 'start', '--mode', serverMode]);
+            });
+        }
+    }
+
     test('requires user-level opt-in for SSRF overrides', () => {
         const properties = readExtensionManifest().contributes.configuration.properties;
         const setting = properties['azureMcp.dangerouslyDisableSsrfProtectionsByNamespace'];
@@ -32,7 +59,7 @@ suite('Azure MCP Extension - server arguments', () => {
     });
 
     test('keeps SSRF protections enabled by default', () => {
-        const args = buildServerArguments(createConfiguration({}));
+        const args = buildServerArguments(createConfiguration({}), 'vscode');
 
         assert.deepStrictEqual(args, ['server', 'start', '--mode', 'namespace']);
     });
@@ -44,7 +71,7 @@ suite('Azure MCP Extension - server arguments', () => {
             readOnly: true,
             dangerouslyDisableSsrfProtectionsByNamespace: ['storage', 'ALL'],
             dangerouslyWriteSupportLogsToDir: 'C:\\logs'
-        }));
+        }), 'vscode');
 
         assert.deepStrictEqual(args, [
             'server',
@@ -62,6 +89,19 @@ suite('Azure MCP Extension - server arguments', () => {
             'ALL',
             '--dangerously-write-support-logs-to-dir',
             'C:\\logs'
+        ]);
+    });
+
+    test('preserves service and read-only filters in automatic Insiders mode', () => {
+        const args = buildServerArguments(createConfiguration({
+            serverMode: 'auto',
+            enabledServices: ['storage', 'keyvault'],
+            readOnly: true
+        }), 'vscode-insiders');
+
+        assert.deepStrictEqual(args, [
+            'server', 'start', '--mode', 'consolidated',
+            '--namespace', 'storage', '--namespace', 'keyvault', '--read-only'
         ]);
     });
 });
@@ -84,7 +124,8 @@ interface ExtensionManifest {
         configuration: {
             properties: Record<string, {
                 scope?: string;
-                default?: string[];
+                default?: string | string[];
+                enum?: string[];
                 items: {
                     enum: string[];
                     markdownEnumDescriptions: string[];
