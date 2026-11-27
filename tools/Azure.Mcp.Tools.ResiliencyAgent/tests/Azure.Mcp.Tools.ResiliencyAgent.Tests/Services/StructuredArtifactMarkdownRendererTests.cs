@@ -63,6 +63,83 @@ public sealed class StructuredArtifactMarkdownRendererTests
     }
 
     [Fact]
+    public void ReadArtifact_UsesSemanticFallbackNamesWhenStructuredArtifactsHaveNoName()
+    {
+        using JsonDocument goalStatus = JsonDocument.Parse(
+            """
+            {
+              "metadata": { "type": "datagrid" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "columns": [
+                    { "id": "name", "header": "Service Group", "type": "string" },
+                    { "id": "goalAssignedStatus", "header": "Goal Status", "type": "string" }
+                  ],
+                  "data": []
+                }
+              }]
+            }
+            """);
+        using JsonDocument participation = JsonDocument.Parse(
+            """
+            {
+              "metadata": { "type": "datagrid" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "columns": [
+                    { "id": "name", "header": "Resource", "type": "string" },
+                    { "id": "exemptionStatus", "header": "Participation", "type": "string" }
+                  ],
+                  "data": []
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact goalArtifact = Assert.Single(
+            ResiliencyAgentService.ReadArtifact(goalStatus.RootElement));
+        AgentArtifact participationArtifact = Assert.Single(
+            ResiliencyAgentService.ReadArtifact(participation.RootElement));
+
+        Assert.Equal("ServiceGroupGoalStatus.md", goalArtifact.Name);
+        Assert.Equal("GoalResourceExemptionStatus.md", participationArtifact.Name);
+        Assert.NotEqual(goalArtifact.Name, participationArtifact.Name);
+    }
+
+    [Theory]
+    [InlineData("Members of app.prod", "Members of app.prod.md")]
+    [InlineData("Report.md", "Report.md")]
+    [InlineData("Report.MD", "Report.MD")]
+    public void ReadArtifact_AddsMarkdownExtensionUnlessNameAlreadyEndsInMarkdown(
+        string artifactName,
+        string expectedName)
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            $$"""
+            {
+              "name": "{{artifactName}}",
+              "metadata": { "type": "datagrid" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "columns": [
+                    { "id": "name", "header": "Name", "type": "string" }
+                  ],
+                  "data": []
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal(expectedName, artifact.Name);
+        Assert.Equal("text/markdown", artifact.MimeType);
+    }
+
+    [Fact]
     public void ReadArtifact_UsesBackendNameAndEscapesLinkLabelOnce()
     {
         using JsonDocument document = JsonDocument.Parse(

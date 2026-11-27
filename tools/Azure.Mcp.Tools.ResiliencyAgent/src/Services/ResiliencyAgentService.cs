@@ -298,7 +298,8 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
     /// </summary>
     internal static IEnumerable<AgentArtifact> ReadArtifact(JsonElement artifact)
     {
-        string name = ReadString(artifact, "name") ?? "artifact";
+        string? artifactName = ReadString(artifact, "name");
+        string name = artifactName ?? "artifact";
         string? description = ReadString(artifact, "description");
 
         // The agent tags each artifact with the family it belongs to - arm, bicep, terraform - which is
@@ -351,7 +352,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
 
                 case "data" when part.TryGetProperty("data", out JsonElement data):
                     AgentArtifact rendered =
-                        StructuredArtifactMarkdownRenderer.Render(name, description, format, data)
+                        StructuredArtifactMarkdownRenderer.Render(artifactName, description, format, data)
                         ?? new AgentArtifact(
                             name,
                             description,
@@ -460,11 +461,11 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
 
         foreach (ZonalPostureResource row in rows)
         {
-            string portalUrl = BuildPortalResourceUrl(row.ResourceId);
-            string resourceLink = $"[{EscapeMarkdownLinkLabel(row.Label)}]({portalUrl})";
+            string portalUrl = MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId);
+            string resourceLink = $"[{MarkdownRenderingHelpers.EscapeLinkLabel(row.Label)}]({portalUrl})";
             builder.AppendLine(
-                $"| {resourceLink} | {EscapeMarkdownTableCell(row.ResourceType)} | " +
-                $"{EscapeMarkdownTableCell(row.Status)} |");
+                $"| {resourceLink} | {MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType)} | " +
+                $"{MarkdownRenderingHelpers.EscapeTableCell(row.Status)} |");
         }
 
         markdown = builder.ToString().TrimEnd();
@@ -505,32 +506,6 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         label = segments[^1];
         return !string.IsNullOrWhiteSpace(label);
     }
-
-    private static string BuildPortalResourceUrl(string normalizedResourceId)
-    {
-        IEnumerable<string> escapedSegments = normalizedResourceId
-            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .Select(Uri.EscapeDataString);
-
-        return "https://portal.azure.com/#@/resource/" + string.Join("/", escapedSegments);
-    }
-
-    private static string EscapeMarkdownTableCell(string value) =>
-        value
-            .Replace("\\", "\\\\")
-            .Replace("|", "\\|")
-            .Replace("`", "\\`")
-            .Replace("*", "\\*")
-            .Replace("_", "\\_")
-            .Replace("[", "\\[")
-            .Replace("]", "\\]")
-            .Replace("\r", string.Empty)
-            .Replace("\n", " ");
-
-    private static string EscapeMarkdownLinkLabel(string value) =>
-        EscapeMarkdownTableCell(value)
-            .Replace("(", "\\(")
-            .Replace(")", "\\)");
 
     private sealed record ZonalPostureResource(
         string Label,

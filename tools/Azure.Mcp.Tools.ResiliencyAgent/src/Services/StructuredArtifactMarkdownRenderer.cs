@@ -13,7 +13,6 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Services;
 /// </summary>
 internal static class StructuredArtifactMarkdownRenderer
 {
-    private const string PortalOrigin = "https://portal.azure.com";
     private static readonly IReadOnlyDictionary<string, string> s_resourceTypeDisplayNames =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -25,7 +24,7 @@ internal static class StructuredArtifactMarkdownRenderer
         };
 
     internal static AgentArtifact? Render(
-        string artifactName,
+        string? artifactName,
         string? description,
         string? format,
         JsonElement data)
@@ -121,7 +120,7 @@ internal static class StructuredArtifactMarkdownRenderer
             .AppendLine(rows.Count.ToString(System.Globalization.CultureInfo.InvariantCulture))
             .AppendLine()
             .Append("| ")
-            .Append(string.Join(" | ", columns.Select(column => EscapeTableCell(column.Header))))
+            .Append(string.Join(" | ", columns.Select(column => MarkdownRenderingHelpers.EscapeTableCell(column.Header))))
             .AppendLine(" |")
             .Append("|")
             .Append(string.Concat(columns.Select(_ => "---|")))
@@ -263,7 +262,7 @@ internal static class StructuredArtifactMarkdownRenderer
         foreach ((string type, int count) in entries.OrderByDescending(entry => entry.Count))
         {
             markdown.Append("| ")
-                .Append(EscapeTableCell(ResourceTypeDisplayName(type)))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(ResourceTypeDisplayName(type)))
                 .Append(" | ")
                 .Append(count.ToString(System.Globalization.CultureInfo.InvariantCulture))
                 .AppendLine(" |");
@@ -306,9 +305,9 @@ internal static class StructuredArtifactMarkdownRenderer
                 markdown.Append("| ")
                     .Append(RenderResourceLink(resource.Name, resource.ResourceId))
                     .Append(" | ")
-                    .Append(EscapeTableCell(resource.SubscriptionId))
+                    .Append(MarkdownRenderingHelpers.EscapeTableCell(resource.SubscriptionId))
                     .Append(" | ")
-                    .Append(EscapeTableCell(resource.ResourceGroup))
+                    .Append(MarkdownRenderingHelpers.EscapeTableCell(resource.ResourceGroup))
                     .AppendLine(" |");
             }
 
@@ -325,60 +324,30 @@ internal static class StructuredArtifactMarkdownRenderer
             {
                 string? deepLink = ReadString(cell, "deepLink");
                 return string.IsNullOrWhiteSpace(deepLink)
-                    ? EscapeTableCell(label)
-                    : $"[{EscapeLinkLabel(label)}]({AbsolutePortalLink(deepLink)})";
+                    ? MarkdownRenderingHelpers.EscapeTableCell(label)
+                    : $"[{MarkdownRenderingHelpers.EscapeLinkLabel(label)}]({MarkdownRenderingHelpers.AbsolutePortalLink(deepLink)})";
             }
 
             if (string.Equals(type, "iconLabel", StringComparison.OrdinalIgnoreCase))
             {
                 string? icon = ReadString(cell, "icon");
                 return string.IsNullOrWhiteSpace(icon)
-                    ? EscapeTableCell(label)
-                    : $"{EscapeTableCell(IconText(icon))} {EscapeTableCell(label)}";
+                    ? MarkdownRenderingHelpers.EscapeTableCell(label)
+                    : $"{MarkdownRenderingHelpers.EscapeTableCell(IconText(icon))} {MarkdownRenderingHelpers.EscapeTableCell(label)}";
             }
         }
 
-        return EscapeTableCell(Scalar(cell));
+        return MarkdownRenderingHelpers.EscapeTableCell(Scalar(cell));
     }
 
     private static string RenderResourceLink(string label, string resourceId)
     {
         if (string.IsNullOrWhiteSpace(resourceId))
         {
-            return EscapeTableCell(label);
+            return MarkdownRenderingHelpers.EscapeTableCell(label);
         }
 
-        return $"[{EscapeLinkLabel(label)}]({BuildPortalResourceUrl(resourceId)})";
-    }
-
-    private static string AbsolutePortalLink(string link) =>
-        link.StartsWith('#')
-            ? $"{PortalOrigin}/{link}"
-            : link;
-
-    private static string BuildPortalResourceUrl(string resourceId)
-    {
-        string[] segments = resourceId
-            .Replace('\\', '/')
-            .Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        if (segments.Length == 4
-            && string.Equals(segments[0], "providers", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(segments[1], "Microsoft.Management", StringComparison.OrdinalIgnoreCase)
-            && string.Equals(segments[2], "serviceGroups", StringComparison.OrdinalIgnoreCase))
-        {
-            if (Guid.TryParse(segments[3], out _))
-            {
-                string encodedResourceId = Uri.EscapeDataString("/" + string.Join("/", segments));
-                return $"{PortalOrigin}/#view/Microsoft_Azure_Resources/ServiceGroupsBrowse.ReactView/" +
-                    $"id/{encodedResourceId}";
-            }
-
-            return $"{PortalOrigin}/#view/Microsoft_Azure_Resources/ServiceGroup.MenuView/~/overview/" +
-                $"serviceGroupId/{Uri.EscapeDataString(segments[3])}";
-        }
-
-        return $"{PortalOrigin}/#@/resource/{string.Join("/", segments.Select(Uri.EscapeDataString))}";
+        return $"[{MarkdownRenderingHelpers.EscapeLinkLabel(label)}]({MarkdownRenderingHelpers.BuildPortalResourceUrl(resourceId)})";
     }
 
     private static bool TryParseResource(string resourceId, out ParsedResource resource)
@@ -478,24 +447,12 @@ internal static class StructuredArtifactMarkdownRenderer
         _ => value.ToString(),
     };
 
-    private static string EscapeTableCell(string value) =>
-        value.Replace("\\", "\\\\", StringComparison.Ordinal)
-            .Replace("|", "\\|", StringComparison.Ordinal)
-            .Replace("`", "\\`", StringComparison.Ordinal)
-            .Replace("*", "\\*", StringComparison.Ordinal)
-            .Replace("_", "\\_", StringComparison.Ordinal)
-            .Replace("[", "\\[", StringComparison.Ordinal)
-            .Replace("]", "\\]", StringComparison.Ordinal)
-            .Replace("\r", string.Empty, StringComparison.Ordinal)
-            .Replace("\n", " ", StringComparison.Ordinal);
-
-    private static string EscapeLinkLabel(string value) =>
-        EscapeTableCell(value);
-
-    private static string ResolveMarkdownFileName(string artifactName, string fallbackName)
+    private static string ResolveMarkdownFileName(string? artifactName, string fallbackName)
     {
         string candidate = string.IsNullOrWhiteSpace(artifactName) ? fallbackName : artifactName.Trim();
-        return Path.HasExtension(candidate) ? candidate : candidate + ".md";
+        return string.Equals(Path.GetExtension(candidate), ".md", StringComparison.OrdinalIgnoreCase)
+            ? candidate
+            : candidate + ".md";
     }
 
     private static string? ReadString(JsonElement element, string propertyName) =>
